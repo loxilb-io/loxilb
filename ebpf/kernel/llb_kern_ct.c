@@ -97,6 +97,25 @@ dp_ct_proto_xfk_init(struct dp_ctv4_key *key,
     if (key->l4proto != IPPROTO_ICMP)
       xxi->nat_xport = key->dport;
   }
+  if (xi->nat_flags & LLB_NAT_HSRC) {
+    xkey->saddr = key->saddr;
+    xkey->daddr = key->daddr;
+
+    if (key->l4proto != IPPROTO_ICMP) {
+      if (xi->nat_xport)
+        xkey->dport = xi->nat_xport;
+      else
+        xi->nat_xport = key->sport;
+    }
+
+    xxi->nat_flags = LLB_NAT_HDST;
+    xxi->nat_xip = 0;
+    xi->nat_xip = 0;
+    if (key->l4proto != IPPROTO_ICMP)
+      xxi->nat_xport = key->sport;
+    bpf_printk("dport 0x%d", bpf_ntohs(xkey->dport));
+    bpf_printk("sport 0x%d", bpf_ntohs(xkey->sport));
+  }
 
   return 0;  
 }
@@ -579,6 +598,15 @@ dp_ctv4_in(void *ctx, struct xfi *F)
   xi->nat_xip   = F->l4m.nxip;
   xi->nat_xport = F->l4m.nxport;
 
+  if (xi->nat_xip == 0 &&
+      !(F->pm.nf & (LLB_NAT_HDST|LLB_NAT_HSRC))) { 
+    if (F->pm.nf == LLB_NAT_DST) {
+      xi->nat_flags = LLB_NAT_HDST;
+    } else {
+      xi->nat_flags = LLB_NAT_HSRC;
+    }
+  }
+
   dp_ct_proto_xfk_init(&key, xi, &xkey, xxi);
 
   atdat = bpf_map_lookup_elem(&acl_v4_map, &key);
@@ -590,7 +618,7 @@ dp_ctv4_in(void *ctx, struct xfi *F)
     adat->ca.oif = 0;
     adat->ca.cidx = F->pm.rule_id;
     if (xi->nat_flags) {
-      adat->ca.act_type = xi->nat_flags & LLB_NAT_DST ?
+      adat->ca.act_type = xi->nat_flags & (LLB_NAT_DST|LLB_NAT_HDST) ?
                              DP_SET_DNAT: DP_SET_SNAT;
       adat->nat_act.xip = xi->nat_xip;
       adat->nat_act.xport = xi->nat_xport;
@@ -608,7 +636,7 @@ dp_ctv4_in(void *ctx, struct xfi *F)
     axdat->ca.oif = 0;
     axdat->ca.cidx = F->pm.rule_id;
     if (xxi->nat_flags) { 
-      axdat->ca.act_type = xxi->nat_flags & LLB_NAT_DST ?
+      axdat->ca.act_type = xxi->nat_flags & (LLB_NAT_DST|LLB_NAT_HDST) ?
                              DP_SET_DNAT: DP_SET_SNAT;
       axdat->nat_act.xip = xxi->nat_xip;
       axdat->nat_act.xport = xxi->nat_xport;

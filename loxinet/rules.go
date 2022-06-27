@@ -133,12 +133,6 @@ type ruleNatEp struct {
 	inActive bool
 }
 
-const (
-	LB_SEL_RR cmn.EpSelect = iota
-	LB_SEL_HASH
-	LB_SEL_PRIO
-)
-
 type ruleNatActs struct {
 	sel       cmn.EpSelect
 	endPoints []ruleNatEp
@@ -633,11 +627,11 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	switch at := r.act.action.(type) {
 	case *ruleNatActs:
 		switch {
-		case at.sel == LB_SEL_RR:
+		case at.sel == cmn.LB_SEL_RR:
 			nWork.EpSel = EP_RR
-		case at.sel == LB_SEL_HASH:
+		case at.sel == cmn.LB_SEL_HASH:
 			nWork.EpSel = EP_HASH
-		case at.sel == LB_SEL_PRIO:
+		case at.sel == cmn.LB_SEL_PRIO:
 			nWork.EpSel = EP_PRIO
 		default:
 			nWork.EpSel = EP_RR

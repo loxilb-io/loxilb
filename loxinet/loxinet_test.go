@@ -271,7 +271,7 @@ func TestMain(t *testing.T) {
         t.Errorf("add neighbor fail 44.44.44.1 to vlan4\n")
     }
 
-    lbServ := cmn.LbServiceArg{ServIP: "10.10.10.1", ServPort: 2020, Proto: "tcp", Sel: LB_SEL_RR}
+    lbServ := cmn.LbServiceArg{ServIP: "10.10.10.1", ServPort: 2020, Proto: "tcp", Sel: cmn.LB_SEL_RR}
     lbEps := []cmn.LbEndPointArg{
         {
             EpIP:   "32.32.32.1",

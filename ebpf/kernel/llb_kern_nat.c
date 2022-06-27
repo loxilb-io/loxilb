@@ -95,6 +95,10 @@ dp_do_nat4_rule_lkup(void *ctx, struct xfi *F)
         F->l4m.nxport = nxfrm_act->nat_xport;
         F->pm.rule_id =  act->ca.cidx;
         LL_DBG_PRINTK("[NAT4] ACT %x\n", F->pm.nf);
+        /* Special case related to host-dnat */
+        if (F->l3m.ip.saddr == F->l4m.nxip && F->pm.nf == LLB_NAT_DST) {
+          F->l4m.nxip = 0;
+        }
       }
     }
   } else { 
