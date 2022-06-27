@@ -16,9 +16,10 @@
 package loxinet
 
 import (
-	"fmt"
-	"net"
-	"testing"
+    "fmt"
+    "net"
+    "testing"
+    opts "loxilb/options"
 )
 
 type Tk struct {
@@ -26,196 +27,279 @@ type Tk struct {
 
 func TestMain(t *testing.T) {
 
-	fmt.Printf("LoxiLB Unit-Test \n")
-	loxiNetInit()
+    opts.Opts.NoNlp = true
 
-	ifmac := [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x6}
-	_, err := mh.zr.Ports.PortAdd("hs0", 12, PORT_REAL, ROOT_ZONE,
-		PortHwInfo{ifmac, true, true, 1500, "", "", 0},
-		PortLayer2Info{false, 10})
+    fmt.Printf("LoxiLB Unit-Test \n")
+    loxiNetInit()
 
+    ifmac := [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x6}
+    _, err := mh.zr.Ports.PortAdd("hs0", 12, PORT_REAL, ROOT_ZONE,
+        PortHwInfo{ifmac, true, true, 1500, "", "", 0},
+        PortLayer2Info{false, 10})
+
+    if err != nil {
+        t.Errorf("failed to add port %s:%s", "hs0", err)
+    }
+
+    p := mh.zr.Ports.PortFindByName("hs0")
+    if p == nil {
+        t.Errorf("failed to add port %s", "hs0")
+    }
+
+    ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x7}
+    _, err = mh.zr.Ports.PortAdd("bond1", 15, PORT_BOND, ROOT_ZONE,
+        PortHwInfo{ifmac, true, true, 1500, "", "", 0},
+        PortLayer2Info{false, 10})
+
+    if err != nil {
+        t.Errorf("failed to add port %s", "bond1")
+    }
+
+    p = mh.zr.Ports.PortFindByName("bond1")
+    if p == nil {
+        t.Errorf("failed to add port %s", "bond1")
+    }
+
+    _, err = mh.zr.Ports.PortAdd("hs1", 15, PORT_REAL, ROOT_ZONE,
+        PortHwInfo{ifmac, true, true, 1500, "", "", 0},
+        PortLayer2Info{false, 10})
+    if err != nil {
+        t.Errorf("failed to add port hs1")
+    }
+
+    _, err = mh.zr.Ports.PortAdd("hs1", 15, PORT_BONDSIF, ROOT_ZONE,
+        PortHwInfo{ifmac, true, true, 1500, "bond1", "", 0},
+        PortLayer2Info{false, 10})
+    if err != nil {
+        t.Errorf("failed to add port hs1 to bond1")
+    }
+
+    ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x8}
+    _, err = mh.zr.Ports.PortAdd("hs2", 100, PORT_REAL, ROOT_ZONE,
+        PortHwInfo{ifmac, true, true, 1500, "", "", 0},
+        PortLayer2Info{false, 10})
+    if err != nil {
+        t.Errorf("failed to add port %s", "hs2")
+    }
+
+    ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x8}
+    _, err = mh.zr.Ports.PortAdd("hs4", 400, PORT_REAL, ROOT_ZONE,
+        PortHwInfo{ifmac, true, true, 1500, "", "", 0},
+        PortLayer2Info{false, 10})
+    if err != nil {
+        t.Errorf("failed to add port %s", "hs4")
+    }
+
+    ifmac = [6]byte{0xde, 0xdc, 0x1f, 0x62, 0x60, 0x55}
+	_, err = mh.zr.Ports.PortAdd("vxlan4", 20, PORT_VXLANBR, ROOT_ZONE,
+		                PortHwInfo{ifmac, true, true, 1500, "", "hs4", 4},
+		                PortLayer2Info{false, 0})
+    if err != nil {
+        t.Errorf("failed to add port %s", "vxlan4")
+    }
+
+    ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0xa}
+    _, err = mh.zr.Vlans.VlanAdd(100, "vlan100", ROOT_ZONE, 124,
+        PortHwInfo{ifmac, true, true, 1500, "", "", 0})
+    if err != nil {
+        t.Errorf("failed to add port %s", "vlan100")
+    }
+
+    ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0xa}
+    _, err = mh.zr.Vlans.VlanAdd(4, "vlan4", ROOT_ZONE, 126,
+        PortHwInfo{ifmac, true, true, 1500, "", "", 0})
+    if err != nil {
+        t.Errorf("failed to add port %s", "vlan4")
+    }
+
+    _, err = mh.zr.Vlans.VlanPortAdd(4, "vxlan4", false)
 	if err != nil {
-		t.Errorf("failed to add port %s:%s", "hs0", err)
+		t.Errorf("failed to add port %s to vlan %d\n", "vxlan4", 4)
 	}
 
-	p := mh.zr.Ports.PortFindByName("hs0")
-	if p == nil {
-		t.Errorf("failed to add port %s", "hs0")
-	}
+    p = mh.zr.Ports.PortFindByName("vlan100")
+    if p == nil {
+        t.Errorf("failed to add port %s", "vlan100")
+    }
 
-	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x7}
-	_, err = mh.zr.Ports.PortAdd("bond1", 15, PORT_BOND, ROOT_ZONE,
-		PortHwInfo{ifmac, true, true, 1500, "", "", 0},
-		PortLayer2Info{false, 10})
+    _, err = mh.zr.Vlans.VlanPortAdd(100, "hs0", false)
+    if err != nil {
+        t.Errorf("failed to add port %s to vlan %d", "hs0", 100)
+    }
 
+    _, err = mh.zr.Vlans.VlanPortAdd(100, "hs0", true)
+    if err != nil {
+        t.Errorf("failed to add tagged port %s to vlan %d", "hs0", 100)
+    }
+
+    _, err = mh.zr.L3.IfaAdd("vlan100", "21.21.21.1/24")
+    if err != nil {
+        t.Errorf("failed to add l3 ifa to vlan%d", 100)
+    }
+
+    _, err = mh.zr.L3.IfaAdd("hs0", "11.11.11.1/32")
+    if err != nil {
+        t.Errorf("failed to add l3 ifa to hs0")
+    }
+    fmt.Printf("#### Interface List ####\n")
+    mh.zr.Ports.Ports2String(&mh)
+    fmt.Printf("#### IFA List ####\n")
+    mh.zr.L3.Ifas2String(&mh)
+
+    _, err = mh.zr.L3.IfaDelete("vlan100", "21.21.21.1/24")
+    if err != nil {
+        t.Errorf("failed to delete l3 ifa from vlan100")
+    }
+
+    fmt.Printf("#### IFA List ####\n")
+    mh.zr.L3.Ifas2String(&mh)
+
+    fmt.Printf("#### Vlan List ####\n")
+    mh.zr.Vlans.Vlans2String(&mh)
+
+    _, err = mh.zr.Vlans.VlanPortDelete(100, "hs0", false)
+    if err != nil {
+        t.Errorf("failed to delete hs0 from from vlan100")
+    }
+    _, err = mh.zr.Vlans.VlanPortDelete(100, "hs0", true)
+    if err != nil {
+        t.Errorf("failed to delete tagged hs0 from from vlan100")
+    }
+    _, err = mh.zr.Vlans.VlanDelete(100)
+    if err != nil {
+        t.Errorf("failed to delete vlan100")
+    }
+
+    ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0xa}
+    _, err = mh.zr.Vlans.VlanAdd(100, "vlan100", ROOT_ZONE, 124,
+        PortHwInfo{ifmac, true, true, 1500, "", "", 0})
+    if err != nil {
+        t.Errorf("failed to add port %s", "vlan100")
+    }
+
+    fdbKey := FdbKey{[6]byte{0x05, 0x04, 0x03, 0x3, 0x1, 0x0}, 100}
+    fdbAttr := FdbAttr{"hs0", net.ParseIP("0.0.0.0"), FDB_VLAN}
+
+    _, err = mh.zr.L2.L2FdbAdd(fdbKey, fdbAttr)
+    if err != nil {
+        t.Errorf("failed to add fdb hs0:vlan100")
+    }
+    _, err = mh.zr.L2.L2FdbAdd(fdbKey, fdbAttr)
+    if err == nil {
+        t.Errorf("added duplicate fdb vlan100")
+    }
+
+    fdbKey1 := FdbKey{[6]byte{0xb, 0xa, 0x9, 0x8, 0x7, 0x6}, 100}
+    fdbAttr1 := FdbAttr{"hs2", net.ParseIP("0.0.0.0"), FDB_VLAN}
+
+    _, err = mh.zr.L2.L2FdbAdd(fdbKey1, fdbAttr1)
+    if err != nil {
+        t.Errorf("failed to add fdb hs2:vlan100")
+    }
+
+    _, err = mh.zr.L2.L2FdbDel(fdbKey1)
+    if err != nil {
+        t.Errorf("failed to del fdb hs2:vlan100")
+    }
+
+    _, err = mh.zr.L2.L2FdbDel(fdbKey1)
+    if err == nil {
+        t.Errorf("deleted non-existing fdb hs2:vlan100")
+    }
+
+    hwmac, _ := net.ParseMAC("00:00:00:00:00:01")
+    _, err = mh.zr.Nh.NeighAdd(net.IPv4(8, 8, 8, 8), "default", NeighAttr{12, 1, hwmac})
+    if err != nil {
+        t.Errorf("NHAdd fail 8.8.8.8")
+    }
+
+    hwmac1, _ := net.ParseMAC("00:00:00:00:00:00")
+    _, err = mh.zr.Nh.NeighAdd(net.IPv4(10, 10, 10, 10), "default", NeighAttr{12, 1, hwmac1})
+    if err != nil {
+        t.Errorf("NHAdd fail 10.10.10.10")
+    }
+
+    route := net.IPv4(1, 1, 1, 1)
+    mask := net.CIDRMask(24, 32)
+    route = route.Mask(mask)
+    ipnet := net.IPNet{IP: route, Mask: mask}
+    ra := RtAttr{0, 0, false}
+    na := []RtNhAttr{{net.IPv4(8, 8, 8, 8), 12}}
+    _, err = mh.zr.Rt.RtAdd(ipnet, "default", ra, na)
+    if err != nil {
+        t.Errorf("NHAdd fail 1.1.1.1/24 via 8.8.8.8")
+    }
+
+    _, err = mh.zr.Nh.NeighDelete(net.IPv4(8, 8, 8, 8), "default")
+    if err != nil {
+        t.Errorf("NHAdd fail 8.8.8.8")
+    }
+
+    _, err = mh.zr.Rt.RtDelete(ipnet, "default")
+    if err != nil {
+        t.Errorf("RouteDel fail 1.1.1.1/24 via 8.8.8.8")
+    }
+
+    _, err = mh.zr.L3.IfaAdd("hs4", "4.4.4.254/24")
+    if err != nil {
+        t.Errorf("fail to add 4.4.4.4/24 ifa to hs4")
+    }
+
+    hwmac, _ = net.ParseMAC("46:17:8e:50:3c:e5")
+	_, err = mh.zr.Nh.NeighAdd(net.IPv4(4, 4, 4, 1), ROOT_ZONE, NeighAttr{400, 1, hwmac})
 	if err != nil {
-		t.Errorf("failed to add port %s", "bond1")
+		t.Errorf("NHAdd fail 4.4.4.1\n")
 	}
 
-	p = mh.zr.Ports.PortFindByName("bond1")
-	if p == nil {
-		t.Errorf("failed to add port %s", "bond1")
+    fdbKey = FdbKey{[6]byte{0xa, 0xb, 0xc, 0xd, 0xe, 0xf}, 4}
+	fdbAttr = FdbAttr{"vxlan100", net.ParseIP("4.4.4.1"), FDB_TUN}
+    _, err = mh.zr.L2.L2FdbAdd(fdbKey, fdbAttr)
+    if err != nil {
+		t.Errorf("tun FDB add fail 4.4.4.1\n")
 	}
 
-	_, err = mh.zr.Ports.PortAdd("hs1", 15, PORT_REAL, ROOT_ZONE,
-		PortHwInfo{ifmac, true, true, 1500, "", "", 0},
-		PortLayer2Info{false, 10})
-	if err != nil {
-		t.Errorf("failed to add port hs1")
+    _, err = mh.zr.L3.IfaAdd("vlan4", "44.44.44.254/24")
+    if err != nil {
+		t.Errorf("add ifa fail 44.44.44.254 to vlan4\n")
 	}
 
-	_, err = mh.zr.Ports.PortAdd("hs1", 15, PORT_BONDSIF, ROOT_ZONE,
-		PortHwInfo{ifmac, true, true, 1500, "bond1", "", 0},
-		PortLayer2Info{false, 10})
-	if err != nil {
-		t.Errorf("failed to add port hs1 to bond1")
-	}
+    hwmac1, _ = net.ParseMAC("0a:0b:0c:0d:0e:0f")
+	_, err = mh.zr.Nh.NeighAdd(net.IPv4(44, 44, 44, 1), ROOT_ZONE,
+		                      NeighAttr{126, 1, hwmac1})
+    if err != nil {
+        t.Errorf("add neighbor fail 44.44.44.1 to vlan4\n")
+    }
 
-	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x8}
-	_, err = mh.zr.Ports.PortAdd("hs2", 100, PORT_REAL, ROOT_ZONE,
-		PortHwInfo{ifmac, true, true, 1500, "", "", 0},
-		PortLayer2Info{false, 10})
-	if err != nil {
-		t.Errorf("failed to add port %s", "hs2")
-	}
+    lbServ := LbServiceArg{"10.10.10.1", 2020, "tcp", LB_SEL_RR}
+	lbEps := []LbEndPointArg{
+		            {
+		            "32.32.32.1",
+		            5001,
+		            1,
+		            },
+		            {
+		            "32.32.32.1",
+		            5001,
+		            2,
+		            },
+		        }
+    _, err = mh.zr.Rules.AddNatLbRule(lbServ, lbEps[:])
+    if err != nil {
+        t.Errorf("failed to add nat lb rule for 10.10.10.1\n")
+    }
 
-	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0xa}
-	_, err = mh.zr.Vlans.VlanAdd(100, "vlan100", ROOT_ZONE, 124,
-		PortHwInfo{ifmac, true, true, 1500, "", "", 0})
-	if err != nil {
-		t.Errorf("failed to add port %s", "vlan100")
-	}
+    _, err = mh.zr.Rules.DeleteNatLbRule(lbServ)
+    if err != nil {
+        t.Errorf("failed to delete nat lb rule for 10.10.10.1\n")
+    }
 
-	p = mh.zr.Ports.PortFindByName("vlan100")
-	if p == nil {
-		t.Errorf("failed to add port %s", "vlan100")
-	}
+    fmt.Printf("#### Route-List ####\n")
+    mh.zr.Rt.Rts2String(&mh)
 
-	_, err = mh.zr.Vlans.VlanPortAdd(100, "hs0", false)
-	if err != nil {
-		t.Errorf("failed to add port %s to vlan %d", "hs0", 100)
-	}
+    fmt.Printf("#### NH-List ####\n")
+    mh.zr.Nh.Neighs2String(&mh)
 
-	_, err = mh.zr.Vlans.VlanPortAdd(100, "hs0", true)
-	if err != nil {
-		t.Errorf("failed to add tagged port %s to vlan %d", "hs0", 100)
-	}
-
-	_, err = mh.zr.L3.IfaAdd("vlan100", "21.21.21.1/24")
-	if err != nil {
-		t.Errorf("failed to add l3 ifa to vlan%d", 100)
-	}
-
-	_, err = mh.zr.L3.IfaAdd("hs0", "11.11.11.1/32")
-	if err != nil {
-		t.Errorf("failed to add l3 ifa to hs0")
-	}
-	fmt.Printf("#### Interface List ####\n")
-	mh.zr.Ports.Ports2String(&mh)
-	fmt.Printf("#### IFA List ####\n")
-	mh.zr.L3.Ifas2String(&mh)
-
-	_, err = mh.zr.L3.IfaDelete("vlan100", "21.21.21.1/24")
-	if err != nil {
-		t.Errorf("failed to delete l3 ifa from vlan100")
-	}
-
-	fmt.Printf("#### IFA List ####\n")
-	mh.zr.L3.Ifas2String(&mh)
-
-	fmt.Printf("#### Vlan List ####\n")
-	mh.zr.Vlans.Vlans2String(&mh)
-
-	_, err = mh.zr.Vlans.VlanPortDelete(100, "hs0", false)
-	if err != nil {
-		t.Errorf("failed to delete hs0 from from vlan100")
-	}
-	_, err = mh.zr.Vlans.VlanPortDelete(100, "hs0", true)
-	if err != nil {
-		t.Errorf("failed to delete tagged hs0 from from vlan100")
-	}
-	_, err = mh.zr.Vlans.VlanDelete(100)
-	if err != nil {
-		t.Errorf("failed to delete vlan100")
-	}
-
-	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0xa}
-	_, err = mh.zr.Vlans.VlanAdd(100, "vlan100", ROOT_ZONE, 124,
-		PortHwInfo{ifmac, true, true, 1500, "", "", 0})
-	if err != nil {
-		t.Errorf("failed to add port %s", "vlan100")
-	}
-
-	fdbKey := FdbKey{[6]byte{0x05, 0x04, 0x03, 0x3, 0x1, 0x0}, 100}
-	fdbAttr := FdbAttr{"hs0", net.ParseIP("0.0.0.0"), FDB_VLAN}
-
-	_, err = mh.zr.L2.L2FdbAdd(fdbKey, fdbAttr)
-	if err != nil {
-		t.Errorf("failed to add fdb hs0:vlan100")
-	}
-	_, err = mh.zr.L2.L2FdbAdd(fdbKey, fdbAttr)
-	if err == nil {
-		t.Errorf("added duplicate fdb vlan100")
-	}
-
-	fdbKey1 := FdbKey{[6]byte{0xb, 0xa, 0x9, 0x8, 0x7, 0x6}, 100}
-	fdbAttr1 := FdbAttr{"hs2", net.ParseIP("0.0.0.0"), FDB_VLAN}
-
-	_, err = mh.zr.L2.L2FdbAdd(fdbKey1, fdbAttr1)
-	if err != nil {
-		t.Errorf("failed to add fdb hs2:vlan100")
-	}
-
-	_, err = mh.zr.L2.L2FdbDel(fdbKey1)
-	if err != nil {
-		t.Errorf("failed to del fdb hs2:vlan100")
-	}
-
-	_, err = mh.zr.L2.L2FdbDel(fdbKey1)
-	if err == nil {
-		t.Errorf("deleted non-existing fdb hs2:vlan100")
-	}
-
-	hwmac, _ := net.ParseMAC("00:00:00:00:00:01")
-	_, err = mh.zr.Nh.NeighAdd(net.IPv4(8, 8, 8, 8), "default", NeighAttr{12, 1, hwmac})
-	if err != nil {
-		t.Errorf("NHAdd fail 8.8.8.8")
-	}
-
-	hwmac1, _ := net.ParseMAC("00:00:00:00:00:00")
-	_, err = mh.zr.Nh.NeighAdd(net.IPv4(10, 10, 10, 10), "default", NeighAttr{12, 1, hwmac1})
-	if err != nil {
-		t.Errorf("NHAdd fail 10.10.10.10")
-	}
-
-	route := net.IPv4(1, 1, 1, 1)
-	mask := net.CIDRMask(24, 32)
-	route = route.Mask(mask)
-	ipnet := net.IPNet{IP: route, Mask: mask}
-	ra := RtAttr{0, 0, false}
-	na := []RtNhAttr{{net.IPv4(8, 8, 8, 8), 12}}
-	_, err = mh.zr.Rt.RtAdd(ipnet, "default", ra, na)
-	if err != nil {
-		t.Errorf("NHAdd fail 1.1.1.1/24 via 8.8.8.8")
-	}
-
-	_, err = mh.zr.Nh.NeighDelete(net.IPv4(8, 8, 8, 8), "default")
-	if err != nil {
-		t.Errorf("NHAdd fail 8.8.8.8")
-	}
-
-	_, err = mh.zr.Rt.RtDelete(ipnet, "default")
-	if err != nil {
-		t.Errorf("RouteDel fail 1.1.1.1/24 via 8.8.8.8")
-	}
-
-	fmt.Printf("#### Route-List ####\n")
-	mh.zr.Rt.Rts2String(&mh)
-
-	fmt.Printf("#### NH-List ####\n")
-	mh.zr.Nh.Neighs2String(&mh)
-
-	fmt.Printf("#### Trie-List1 ####\n")
-	mh.zr.Rt.Trie4.Trie2String(mh.zr.Rt)
+    fmt.Printf("#### Trie-List1 ####\n")
+    mh.zr.Rt.Trie4.Trie2String(mh.zr.Rt)
 
 }
