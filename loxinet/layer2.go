@@ -18,6 +18,7 @@ package loxinet
 import (
     "errors"
     "fmt"
+    cmn "loxilb/common"
     tk "loxilb/loxilib"
     "net"
     "time"
@@ -32,12 +33,6 @@ const (
 )
 
 const (
-    FDB_PHY   = 0
-    FDB_TUN = 1
-    FDB_VLAN  = 2
-)
-
-const (
     FDB_GTS = 20
 )
 
@@ -48,14 +43,14 @@ type FdbKey struct {
 
 type FdbAttr struct {
     Oif     string
-    Dst 	net.IP
+    Dst     net.IP
     FdbType int
 }
 
 type FdbTunAttr struct {
-    rt      *Rt
-    nh      *Neigh
-    ep      *NeighTunEp
+    rt *Rt
+    nh *Neigh
+    ep *NeighTunEp
 }
 
 type FdbStat struct {
@@ -64,15 +59,15 @@ type FdbStat struct {
 }
 
 type FdbEnt struct {
-    FdbKey  FdbKey
-    FdbAttr FdbAttr
-    FdbTun  FdbTunAttr
-    Port    *Port
-    itime   time.Time
-    stime   time.Time
-    unReach bool  
+    FdbKey   FdbKey
+    FdbAttr  FdbAttr
+    FdbTun   FdbTunAttr
+    Port     *Port
+    itime    time.Time
+    stime    time.Time
+    unReach  bool
     inActive bool
-    Sync    DpStatusT
+    Sync     DpStatusT
 }
 
 type L2H struct {
@@ -106,7 +101,7 @@ func l2FdbAttrCopy(dst *FdbAttr, src *FdbAttr) {
 
 func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
     p := f.Port
-    attr := f.FdbAttr 
+    attr := f.FdbAttr
     unRch := false
 
     if p == nil {
@@ -118,13 +113,13 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
         return false, L2_VXATTR_ERR, errors.New("fdb zone error")
     }
 
-    if p.SInfo.PortType & PORT_VXLANBR == PORT_VXLANBR {
-        if attr.FdbType != FDB_TUN {
+    if p.SInfo.PortType&PORT_VXLANBR == PORT_VXLANBR {
+        if attr.FdbType != cmn.FDB_TUN {
             return false, L2_VXATTR_ERR, errors.New("fdb attr error")
         }
 
         if attr.Dst.To4() == nil {
-            return false, L2_VXATTR_ERR, errors.New("fdb v6 dst unsupported") 
+            return false, L2_VXATTR_ERR, errors.New("fdb v6 dst unsupported")
         }
 
         tk.LogIt(tk.LOG_DEBUG, "fdb tun rt lookup %s\n", attr.Dst.String())
@@ -148,7 +143,7 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
                             f.FdbTun.ep = tep
                             unRch = false
                         }
-                    }    
+                    }
                 }
             }
         } else {
@@ -195,7 +190,7 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
     nfdb.itime = time.Now()
     nfdb.stime = time.Now()
 
-    if p.SInfo.PortType & PORT_VXLANBR == PORT_VXLANBR {
+    if p.SInfo.PortType&PORT_VXLANBR == PORT_VXLANBR {
         unRch, ret, err := nfdb.L2FdbResolveNh()
         if err != nil {
             return ret, err
@@ -222,7 +217,7 @@ func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
         n := 0
         if fdb.FdbTun.rt != nil {
             rt := fdb.FdbTun.rt
-            for _, obj := range(rt.RtDepObjs) {
+            for _, obj := range rt.RtDepObjs {
                 if f, ok := obj.(*FdbEnt); ok {
                     if f == fdb {
                         rt.RtDepObjs = rt.RtRemoveDepObj(n)
@@ -314,7 +309,7 @@ func (f *FdbEnt) DP(work DpWorkT) int {
     l2Wq := new(L2AddrDpWorkQ)
     l2Wq.Work = work
     l2Wq.Status = &f.Sync
-    if f.Port.SInfo.PortType & PORT_VXLANBR == PORT_VXLANBR {
+    if f.Port.SInfo.PortType&PORT_VXLANBR == PORT_VXLANBR {
         l2Wq.Tun = DP_TUN_VXLAN
     }
 
@@ -341,7 +336,7 @@ func (f *FdbEnt) DP(work DpWorkT) int {
         rmWq.Status = nil
 
         if f.Port.SInfo.PortReal == nil ||
-           f.FdbTun.ep == nil {
+            f.FdbTun.ep == nil {
             return -1
         }
 

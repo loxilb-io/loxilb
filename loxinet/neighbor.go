@@ -19,8 +19,9 @@ import (
     "bytes"
     "errors"
     "fmt"
-    tk "loxilb/loxilib"
     "net"
+    tk "loxilb/loxilib"
+    cmn "loxilb/common"
 )
 
 const (
@@ -228,7 +229,7 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) {
                 ne.Resolved = false
             }
         } else {
-            if f.FdbAttr.FdbType == FDB_TUN {
+            if f.FdbAttr.FdbType == cmn.FDB_TUN {
                 if f.unReach {
                     ne.Resolved = false
                 } else {
@@ -314,7 +315,7 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
         }
 
         fdbKey := FdbKey{fdbAddr, vid}
-        fdbAttr := FdbAttr{port.Name, net.ParseIP("0.0.0.0"), FDB_PHY}
+        fdbAttr := FdbAttr{port.Name, net.ParseIP("0.0.0.0"), cmn.FDB_PHY}
 
         _, err = n.Zone.L2.L2FdbAdd(fdbKey, fdbAttr)
         if err != nil {

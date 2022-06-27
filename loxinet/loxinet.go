@@ -20,6 +20,7 @@ import (
 	//"net"
 	apiserver "loxilb/api"
 	tk "loxilb/loxilib"
+	nlp "loxilb/loxinlp"
 	opts "loxilb/options"
 	"sync"
 	"time"
@@ -40,7 +41,6 @@ type loxiNetH struct {
 	dp     *DpH
 	zn     *ZoneH
 	zr     *Zone
-	nl     *NlH
 	mtx    sync.RWMutex
 	ticker *time.Ticker
 	tDone  chan bool
@@ -87,21 +87,22 @@ func loxiNetInit() {
 	mh.zn = ZoneInit()
 	mh.zn.ZoneAdd(ROOT_ZONE)
 	mh.zr, _ = mh.zn.Zonefind(ROOT_ZONE)
-	mh.nl = NlpInit()
 
 	if mh.zr == nil {
-		tk.LogIt(tk.LOG_ERROR, "Root zone not found\n")
-		return
+	    tk.LogIt(tk.LOG_ERROR, "Root zone not found\n")
+	    return
 	}
+	if opts.Opts.NoNlp {
+	    nlp.NlpInit()
+	    nlp.NlpRegister(NetApiInit())
+        }
 
 	if opts.Opts.Bgp {
 		GoBgpInit()
 	}
 	if opts.Opts.Api {
-
 		go apiserver.RunApiServer()
 	}
-
 }
 
 func loxiNetRun() {
