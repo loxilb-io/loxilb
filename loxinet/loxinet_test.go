@@ -20,6 +20,7 @@ import (
     "net"
     "testing"
     opts "loxilb/options"
+    cmn "loxilb/common"
 )
 
 type Tk struct {
@@ -178,7 +179,7 @@ func TestMain(t *testing.T) {
     }
 
     fdbKey := FdbKey{[6]byte{0x05, 0x04, 0x03, 0x3, 0x1, 0x0}, 100}
-    fdbAttr := FdbAttr{"hs0", net.ParseIP("0.0.0.0"), FDB_VLAN}
+    fdbAttr := FdbAttr{"hs0", net.ParseIP("0.0.0.0"), cmn.FDB_VLAN}
 
     _, err = mh.zr.L2.L2FdbAdd(fdbKey, fdbAttr)
     if err != nil {
@@ -190,7 +191,7 @@ func TestMain(t *testing.T) {
     }
 
     fdbKey1 := FdbKey{[6]byte{0xb, 0xa, 0x9, 0x8, 0x7, 0x6}, 100}
-    fdbAttr1 := FdbAttr{"hs2", net.ParseIP("0.0.0.0"), FDB_VLAN}
+    fdbAttr1 := FdbAttr{"hs2", net.ParseIP("0.0.0.0"), cmn.FDB_VLAN}
 
     _, err = mh.zr.L2.L2FdbAdd(fdbKey1, fdbAttr1)
     if err != nil {
@@ -252,7 +253,7 @@ func TestMain(t *testing.T) {
 	}
 
     fdbKey = FdbKey{[6]byte{0xa, 0xb, 0xc, 0xd, 0xe, 0xf}, 4}
-	fdbAttr = FdbAttr{"vxlan100", net.ParseIP("4.4.4.1"), FDB_TUN}
+	fdbAttr = FdbAttr{"vxlan100", net.ParseIP("4.4.4.1"), cmn.FDB_TUN}
     _, err = mh.zr.L2.L2FdbAdd(fdbKey, fdbAttr)
     if err != nil {
 		t.Errorf("tun FDB add fail 4.4.4.1\n")
