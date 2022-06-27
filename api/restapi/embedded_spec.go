@@ -140,7 +140,7 @@ func init() {
     "LoadbalanceEntry": {
       "type": "object",
       "properties": {
-        "end_point": {
+        "endpoints": {
           "description": "values of End point servers",
           "type": "array",
           "items": {
@@ -149,7 +149,7 @@ func init() {
                 "description": "IP address for externel access",
                 "type": "string"
               },
-              "port": {
+              "targetPort": {
                 "description": "port number for access service",
                 "type": "integer"
               },
@@ -160,7 +160,7 @@ func init() {
             }
           }
         },
-        "externel_ip_address": {
+        "external_ip_address": {
           "description": "IP address for externel access",
           "type": "string"
         },
@@ -328,14 +328,14 @@ func init() {
     "LoadbalanceEntry": {
       "type": "object",
       "properties": {
-        "end_point": {
+        "endpoints": {
           "description": "values of End point servers",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/LoadbalanceEntryEndPointItems0"
+            "$ref": "#/definitions/LoadbalanceEntryEndpointsItems0"
           }
         },
-        "externel_ip_address": {
+        "external_ip_address": {
           "description": "IP address for externel access",
           "type": "string"
         },
@@ -349,13 +349,13 @@ func init() {
         }
       }
     },
-    "LoadbalanceEntryEndPointItems0": {
+    "LoadbalanceEntryEndpointsItems0": {
       "properties": {
         "endpoint_ip_address": {
           "description": "IP address for externel access",
           "type": "string"
         },
-        "port": {
+        "targetPort": {
           "description": "port number for access service",
           "type": "integer"
         },
