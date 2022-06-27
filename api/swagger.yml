@@ -1,0 +1,249 @@
+# Author : Inho Gok,  inhogog2@netlox.io
+#
+# Current rules
+# 1. All requests are sync.
+#
+# responses:
+# post:
+#   201 - Created
+#   400 - Bad Request. Malformed arguments for API call
+#   401 - Unauthorized.  Invalid authentication credentials 
+#   403 - Forbidden (capacity isssues)
+#   404 - Object is not found
+#   409 - Conflict. Request cannot be completed due to conflict with current state of target resource. 
+#   500 - Internal Server Error
+#   503 - Service Unavailable
+# patch:
+#   207 - Multi-Status. Consult object body to determine status on a per element basis for the Bulk API.
+#   400 - Bad Request. Malformed arguments for API call
+#   401 - Unauthorized.  Invalid authentication credentials 
+#   403 - Forbidden (capacity isssues)
+#   404 - Object is not found
+#   500 - Internal Server Error
+#   503 - Service Unavailable
+# get:
+#   200 - OK
+#   400 - Bad Request. Malformed arguments for API call
+#   401 - Unauthorized.  Invalid authentication credentials
+#   404 - Object is not found
+#   500 - Internal Server Error
+#   503 - Service Unavailable
+# delete:
+#   200 - OK
+#   204 - No Content
+#   207 - Multi-Status. Consult object body to determine status on a per element basis for the Bulk API.
+#   400 - Bad Request. Malformed arguments for API call
+#   401 - Unauthorized.  Invalid authentication credentials
+#   404 - Object is not found
+#   409 - Conflict. Request cannot be completed due to conflict with current state of target resource. 
+#   500 - Internal Server Error
+#   503 - Service Unavailable
+#
+# dictionary:
+#   vnid
+#   vlan_id
+#   ip_prefix
+#   ip_addr
+#
+# Our dataplane is designed as follow
+# 1. We have virtual routers which represents a "virtual network" for a customer. Virtual networks are
+#    defined using a string vnet_id, this internally creates a virtual router to maintain separate routing/forwarding domain.
+#    The virtual routers are used to bind the customer's unique vnid and customer's local baremetal device ports
+#    and as a result provide Virtual Network connectivity with the rest of Azure
+# 2. We have a virtual routing table which is unique and separated for every virtual router.
+# 3. We have tunnels which represent "Azure" next hops for virtual routing tables.
+# 4. We have vlan specific APIs to define parameters for client ports
+#
+# POST Requests:
+# REST API creation(POST) dependency list:
+# 1. VxLAN VTEP: /config/tunnel/decap/vxlan OR Day 0 configuration. No dependency. 
+# 2. Vrouter/VNET: /config/vrouter/{vnet_id} depends on 1(VxLAN VTEP)
+# 3. VLAN: /config/interface/vlan Depends on 2(VNET) if vlan needs association to vrf/vnet
+# 4. Vlan member: /config/interface/vlan/{vlan_id}/member Depends on 3(VLAN)
+# 5. Vlan Neighbor: /config/interface/vlan/{vlan_id}/neighbor Depends on 3(VLAN)
+# 6. Vrouter/VNET Routes: /config/vrouter/{vnet_id}/routes depends on 2(VNET)
+#
+# DELETE Requests:
+# All children/dependent elements must be deleted prior to deleting any parent config elements
+# This is required for data integrity and sanity of DBs.
+# eg: Vlan Neighbors and Vlan members should be deleted before deleting the Vlan itself 
+# REST API deletion(DELETE) dependency list:
+# 1. Vrouter/VNET Routes: /config/vrouter/{vnet_id}/routes. No dependency
+# 2. Vlan Neighbor: /config/interface/vlan/{vlan_id}/neighbor. No dependency
+# 3. Vlan member: /config/interface/vlan/{vlan_id}/member. No dependency
+# 4. VLAN: /config/interface/vlan Depends on 2(VNET). Dependes on successful deletion on all child elements 2(Vlan Neighbor) and 3(Vlan member)
+# 5. Vrouter/VNET: /config/vrouter/{vnet_id}. Depends on successful deletion of all child elements 4(Vlan) and 1(Routes)
+# 6. VxLAN VTEP: /config/tunnel/decap/vxlan. Depends on successful deletion of all child elements 5(VRF/VNET)
+#
+# Some details about '40X' error responses:
+# - '400' http error returns when there're one or more malformed arguments (wrong type, format, size) in the request.
+# - '404' http error returns when there're one or more references to non-existent values in the request.
+# - '409' HTTP Request cannot be completed due to conflict with current state of target resource:
+#       - Error sub-code 0: Conflict because the resource already exists
+#       - Error sub-code 1: Conflict because of a missing dependency/parent
+#       - Error sub-code 2: Conflict because the caller tries to delete a resource with a dependency/child
+#       - Error format:     '#/definitions/Error'
+# In case of bulk API (vroute API):
+# - If a request has a malformed argument (arguments) or a reference (references) to non-existent values
+#   in its path the API must return '400' or '404' respectively.
+# - if a request has the same error in the attributes of the request, the API must:
+#    - run the request with the valid attributes
+#    - return '207' http status code to inform the caller to look within the body to confirm success/failure
+#      for each of the routes
+#    - put malformed attributes into the list of 'failed' attributes.
+ 
+
+
+swagger: '2.0'
+info:
+  title: Loxilb Rest API
+  description: Loxilb REST API for Baremetal Scenarios
+  version: 0.0.1
+schemes:
+  - http
+  - https
+host: "192.168.20.253:8090"
+basePath: /netlox/v1
+produces:
+  - application/json
+consumes:
+  - application/json
+paths:
+#----------------------------------------------
+# Load Balancer
+#----------------------------------------------
+  '/config/loadbalancer':
+    post:
+      summary: Create a new Load balancer service
+      description: Create a new load balancer service with .
+      parameters:
+        - name: attr
+          in: body
+          required: true    
+          description: Attributes for load balance service
+          schema:
+            $ref: '#/definitions/LoadbalanceEntry'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+    # delete:
+    #   summary: Remove a vlan interface
+    #   description: Remove a vlan interface which is defined by vlan_id. If the vlan interface does not exist on Loxilb it returns a '404' error. If the vlan_id passed is less than 2 or greater than 4094 the API will respond with error '400'. If the delete is called before all associated vlan neighbors/members are deleted, this will return error '409' conflict with sub-code 2. 
+    #   parameters:
+    #     - name: vlan_id
+    #       in: path
+    #       required: true
+    #       type: integer
+    #       format: int32
+    #       description: 12 bit vlanid
+    #   responses:
+    #     '204':
+    #       description: OK
+    #     '400':
+    #       description: Malformed arguments for API call
+    #       schema:
+    #         $ref: '#/definitions/Error'
+    #     '401':
+    #       description: Invalid authentication credentials
+    #       schema:
+    #         $ref: '#/definitions/Error'
+    #     '404':
+    #       description: Vlan interface is not found
+    #       schema:
+    #         $ref: '#/definitions/Error'
+    #     '409':
+    #       description: Resource Conflict
+    #       schema:
+    #         $ref: '#/definitions/Error'
+    #     '500':
+    #       description: Internal service error
+    #       schema:
+    #         $ref: '#/definitions/Error'
+    #     '503':
+    #       description: Maintanence mode
+    #       schema:
+    #         $ref: '#/definitions/Error'  
+  
+
+#----------------------------------------------
+# Schema definitions
+#----------------------------------------------
+definitions:
+  Error:
+    type: object
+    properties:
+      error:
+        type: object
+        required:
+          - code
+          - message
+        properties:
+          code:
+            type: integer
+            format: int32
+          sub-code:
+            type: integer
+            format: int32
+          message:
+            type: string
+          fields:
+            type: array
+            items:
+              type: string
+          details:
+            type: string
+  
+  LoadbalanceEntry:
+    type: object
+    properties:
+      externel_ip_address:
+        type: string
+        description: IP address for externel access
+      port:
+        type: integer
+        description:  port number for the access
+      protocol:
+        type: string
+        description:  value for access protocol
+      end_point:
+        type: array
+        description: values of End point servers
+        items:
+          properties:
+            endpoint_ip_address:
+              type: string
+              description: IP address for externel access
+            weight:
+              type: integer
+              description:  Weight for the load balancing
+            port:
+              type: integer
+              description:  port number for access service

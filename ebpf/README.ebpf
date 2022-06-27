@@ -1,0 +1,10 @@
+
+## Install Dependencies for XDP/eBPF 
+
+sudo apt install clang llvm libelf-dev gcc-multilib libpcap-dev
+sudo apt install linux-tools-$(uname -r)
+sudo apt install elfutils dwarves
+
+cd libbpf/src
+sudo make install
+sudo ldconfig
