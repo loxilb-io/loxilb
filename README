@@ -17,6 +17,12 @@ Step1 - Install package dependencies
 # sudo apt install linux-tools-$(uname -r)
 # sudo apt install elfutils dwarves
 
+Step2 - Build libbpf locally
+
+#  cd libbpf/src/
+#  mkdir build
+#  DESTDIR=build make install
+
 Step2 - Make 
 
 # make
