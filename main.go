@@ -23,10 +23,6 @@ import (
     "github.com/jessevdk/go-flags"
 )
 
-const (
-    ROOT_ZONE = "root"
-)
-
 var version string = "0.0.1"
 
 func main() {
