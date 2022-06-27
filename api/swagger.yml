@@ -7,16 +7,16 @@
 # post:
 #   201 - Created
 #   400 - Bad Request. Malformed arguments for API call
-#   401 - Unauthorized.  Invalid authentication credentials 
+#   401 - Unauthorized.  Invalid authentication credentials
 #   403 - Forbidden (capacity isssues)
 #   404 - Object is not found
-#   409 - Conflict. Request cannot be completed due to conflict with current state of target resource. 
+#   409 - Conflict. Request cannot be completed due to conflict with current state of target resource.
 #   500 - Internal Server Error
 #   503 - Service Unavailable
 # patch:
 #   207 - Multi-Status. Consult object body to determine status on a per element basis for the Bulk API.
 #   400 - Bad Request. Malformed arguments for API call
-#   401 - Unauthorized.  Invalid authentication credentials 
+#   401 - Unauthorized.  Invalid authentication credentials
 #   403 - Forbidden (capacity isssues)
 #   404 - Object is not found
 #   500 - Internal Server Error
@@ -35,7 +35,7 @@
 #   400 - Bad Request. Malformed arguments for API call
 #   401 - Unauthorized.  Invalid authentication credentials
 #   404 - Object is not found
-#   409 - Conflict. Request cannot be completed due to conflict with current state of target resource. 
+#   409 - Conflict. Request cannot be completed due to conflict with current state of target resource.
 #   500 - Internal Server Error
 #   503 - Service Unavailable
 #
@@ -56,7 +56,7 @@
 #
 # POST Requests:
 # REST API creation(POST) dependency list:
-# 1. VxLAN VTEP: /config/tunnel/decap/vxlan OR Day 0 configuration. No dependency. 
+# 1. VxLAN VTEP: /config/tunnel/decap/vxlan OR Day 0 configuration. No dependency.
 # 2. Vrouter/VNET: /config/vrouter/{vnet_id} depends on 1(VxLAN VTEP)
 # 3. VLAN: /config/interface/vlan Depends on 2(VNET) if vlan needs association to vrf/vnet
 # 4. Vlan member: /config/interface/vlan/{vlan_id}/member Depends on 3(VLAN)
@@ -66,7 +66,7 @@
 # DELETE Requests:
 # All children/dependent elements must be deleted prior to deleting any parent config elements
 # This is required for data integrity and sanity of DBs.
-# eg: Vlan Neighbors and Vlan members should be deleted before deleting the Vlan itself 
+# eg: Vlan Neighbors and Vlan members should be deleted before deleting the Vlan itself
 # REST API deletion(DELETE) dependency list:
 # 1. Vrouter/VNET Routes: /config/vrouter/{vnet_id}/routes. No dependency
 # 2. Vlan Neighbor: /config/interface/vlan/{vlan_id}/neighbor. No dependency
@@ -91,7 +91,7 @@
 #    - return '207' http status code to inform the caller to look within the body to confirm success/failure
 #      for each of the routes
 #    - put malformed attributes into the list of 'failed' attributes.
- 
+
 
 
 swagger: '2.0'
@@ -119,7 +119,7 @@ paths:
       parameters:
         - name: attr
           in: body
-          required: true    
+          required: true
           description: Attributes for load balance service
           schema:
             $ref: '#/definitions/LoadbalanceEntry'
@@ -156,7 +156,7 @@ paths:
             $ref: '#/definitions/Error'
     # delete:
     #   summary: Remove a vlan interface
-    #   description: Remove a vlan interface which is defined by vlan_id. If the vlan interface does not exist on Loxilb it returns a '404' error. If the vlan_id passed is less than 2 or greater than 4094 the API will respond with error '400'. If the delete is called before all associated vlan neighbors/members are deleted, this will return error '409' conflict with sub-code 2. 
+    #   description: Remove a vlan interface which is defined by vlan_id. If the vlan interface does not exist on Loxilb it returns a '404' error. If the vlan_id passed is less than 2 or greater than 4094 the API will respond with error '400'. If the delete is called before all associated vlan neighbors/members are deleted, this will return error '409' conflict with sub-code 2.
     #   parameters:
     #     - name: vlan_id
     #       in: path
@@ -190,8 +190,8 @@ paths:
     #     '503':
     #       description: Maintanence mode
     #       schema:
-    #         $ref: '#/definitions/Error'  
-  
+    #         $ref: '#/definitions/Error'
+
 
 #----------------------------------------------
 # Schema definitions
@@ -220,11 +220,11 @@ definitions:
               type: string
           details:
             type: string
-  
+
   LoadbalanceEntry:
     type: object
     properties:
-      externel_ip_address:
+      external_ip_address:
         type: string
         description: IP address for externel access
       port:
@@ -233,7 +233,7 @@ definitions:
       protocol:
         type: string
         description:  value for access protocol
-      end_point:
+      endpoints:
         type: array
         description: values of End point servers
         items:
@@ -244,6 +244,6 @@ definitions:
             weight:
               type: integer
               description:  Weight for the load balancing
-            port:
+            targetPort:
               type: integer
               description:  port number for access service

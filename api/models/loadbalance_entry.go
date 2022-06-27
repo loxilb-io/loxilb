@@ -20,10 +20,10 @@ import (
 type LoadbalanceEntry struct {
 
 	// values of End point servers
-	EndPoint []*LoadbalanceEntryEndPointItems0 `json:"end_point"`
+	Endpoints []*LoadbalanceEntryEndpointsItems0 `json:"endpoints"`
 
 	// IP address for externel access
-	ExternelIPAddress string `json:"externel_ip_address,omitempty"`
+	ExternalIPAddress string `json:"external_ip_address,omitempty"`
 
 	// port number for the access
 	Port int64 `json:"port,omitempty"`
@@ -36,7 +36,7 @@ type LoadbalanceEntry struct {
 func (m *LoadbalanceEntry) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateEndPoint(formats); err != nil {
+	if err := m.validateEndpoints(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -46,22 +46,22 @@ func (m *LoadbalanceEntry) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *LoadbalanceEntry) validateEndPoint(formats strfmt.Registry) error {
-	if swag.IsZero(m.EndPoint) { // not required
+func (m *LoadbalanceEntry) validateEndpoints(formats strfmt.Registry) error {
+	if swag.IsZero(m.Endpoints) { // not required
 		return nil
 	}
 
-	for i := 0; i < len(m.EndPoint); i++ {
-		if swag.IsZero(m.EndPoint[i]) { // not required
+	for i := 0; i < len(m.Endpoints); i++ {
+		if swag.IsZero(m.Endpoints[i]) { // not required
 			continue
 		}
 
-		if m.EndPoint[i] != nil {
-			if err := m.EndPoint[i].Validate(formats); err != nil {
+		if m.Endpoints[i] != nil {
+			if err := m.Endpoints[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("end_point" + "." + strconv.Itoa(i))
+					return ve.ValidateName("endpoints" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("end_point" + "." + strconv.Itoa(i))
+					return ce.ValidateName("endpoints" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -76,7 +76,7 @@ func (m *LoadbalanceEntry) validateEndPoint(formats strfmt.Registry) error {
 func (m *LoadbalanceEntry) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.contextValidateEndPoint(ctx, formats); err != nil {
+	if err := m.contextValidateEndpoints(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -86,16 +86,16 @@ func (m *LoadbalanceEntry) ContextValidate(ctx context.Context, formats strfmt.R
 	return nil
 }
 
-func (m *LoadbalanceEntry) contextValidateEndPoint(ctx context.Context, formats strfmt.Registry) error {
+func (m *LoadbalanceEntry) contextValidateEndpoints(ctx context.Context, formats strfmt.Registry) error {
 
-	for i := 0; i < len(m.EndPoint); i++ {
+	for i := 0; i < len(m.Endpoints); i++ {
 
-		if m.EndPoint[i] != nil {
-			if err := m.EndPoint[i].ContextValidate(ctx, formats); err != nil {
+		if m.Endpoints[i] != nil {
+			if err := m.Endpoints[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("end_point" + "." + strconv.Itoa(i))
+					return ve.ValidateName("endpoints" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("end_point" + "." + strconv.Itoa(i))
+					return ce.ValidateName("endpoints" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -124,33 +124,33 @@ func (m *LoadbalanceEntry) UnmarshalBinary(b []byte) error {
 	return nil
 }
 
-// LoadbalanceEntryEndPointItems0 loadbalance entry end point items0
+// LoadbalanceEntryEndpointsItems0 loadbalance entry endpoints items0
 //
-// swagger:model LoadbalanceEntryEndPointItems0
-type LoadbalanceEntryEndPointItems0 struct {
+// swagger:model LoadbalanceEntryEndpointsItems0
+type LoadbalanceEntryEndpointsItems0 struct {
 
 	// IP address for externel access
 	EndpointIPAddress string `json:"endpoint_ip_address,omitempty"`
 
 	// port number for access service
-	Port int64 `json:"port,omitempty"`
+	TargetPort int64 `json:"targetPort,omitempty"`
 
 	// Weight for the load balancing
 	Weight int64 `json:"weight,omitempty"`
 }
 
-// Validate validates this loadbalance entry end point items0
-func (m *LoadbalanceEntryEndPointItems0) Validate(formats strfmt.Registry) error {
+// Validate validates this loadbalance entry endpoints items0
+func (m *LoadbalanceEntryEndpointsItems0) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this loadbalance entry end point items0 based on context it is used
-func (m *LoadbalanceEntryEndPointItems0) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this loadbalance entry endpoints items0 based on context it is used
+func (m *LoadbalanceEntryEndpointsItems0) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *LoadbalanceEntryEndPointItems0) MarshalBinary() ([]byte, error) {
+func (m *LoadbalanceEntryEndpointsItems0) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -158,8 +158,8 @@ func (m *LoadbalanceEntryEndPointItems0) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *LoadbalanceEntryEndPointItems0) UnmarshalBinary(b []byte) error {
-	var res LoadbalanceEntryEndPointItems0
+func (m *LoadbalanceEntryEndpointsItems0) UnmarshalBinary(b []byte) error {
+	var res LoadbalanceEntryEndpointsItems0
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
