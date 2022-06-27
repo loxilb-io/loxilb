@@ -113,8 +113,6 @@ dp_ct_proto_xfk_init(struct dp_ctv4_key *key,
     xi->nat_xip = 0;
     if (key->l4proto != IPPROTO_ICMP)
       xxi->nat_xport = key->sport;
-    bpf_printk("dport 0x%d", bpf_ntohs(xkey->dport));
-    bpf_printk("sport 0x%d", bpf_ntohs(xkey->sport));
   }
 
   return 0;  

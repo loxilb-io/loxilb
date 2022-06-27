@@ -947,6 +947,15 @@ ctm_proto_xfk_init(struct dp_ctv4_key *key,
         xkey->sport = xi->nat_xport;
     }
   }
+  if (xi->nat_flags & LLB_NAT_HSRC) {
+    xkey->saddr = key->saddr;
+    xkey->daddr = key->daddr;
+
+    if (key->l4proto != IPPROTO_ICMP) {
+      if (xi->nat_xport)
+        xkey->dport = xi->nat_xport;
+    }
+  }
 
   return 0;
 }

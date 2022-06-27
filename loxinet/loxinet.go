@@ -17,7 +17,7 @@ package loxinet
 
 import (
     "fmt"
-    //"net"
+    "net"
     apiserver "loxilb/api"
     tk "loxilb/loxilib"
     nlp "loxilb/loxinlp"
@@ -93,7 +93,7 @@ func loxiNetInit() {
         return
     }
 
-    if opts.Opts.NoNlp {
+    if opts.Opts.NoNlp == false {
         nlp.NlpInit()
         nlp.NlpRegister(NetApiInit())
     }
@@ -113,12 +113,12 @@ func loxiNetRun() {
 }
 
 func LoxiNetMain() {
-    fmt.Printf("Start\n")
+    fmt.Printf("loxilb - start\n")
 
     loxiNetInit()
-
     
-/*
+    // Test stub code -- To be removed
+    if false {       
        ifmac := [6]byte{0xd2, 0x0d, 0xf4, 0x1f, 0xf1, 0x2a}
        mh.zr.Ports.PortAdd("hs1", 2, PORT_REAL, ROOT_ZONE,
                              PortHwInfo{ifmac, true, true, 1500, "", "", 0},
@@ -193,7 +193,7 @@ func LoxiNetMain() {
 
        mh.zr.Rules.AddNatLbRule(lbServ, lbEps[:])
        //mh.zr.Rules.DeleteNatLbRule(lbServ)
-*/  
+    }
 
     loxiNetRun()
 }
