@@ -17,10 +17,10 @@ package loxinet
 
 import (
     "fmt"
+    cmn "loxilb/common"
+    opts "loxilb/options"
     "net"
     "testing"
-    opts "loxilb/options"
-    cmn "loxilb/common"
 )
 
 type Tk struct {
@@ -92,9 +92,9 @@ func TestMain(t *testing.T) {
     }
 
     ifmac = [6]byte{0xde, 0xdc, 0x1f, 0x62, 0x60, 0x55}
-	_, err = mh.zr.Ports.PortAdd("vxlan4", 20, PORT_VXLANBR, ROOT_ZONE,
-		                PortHwInfo{ifmac, true, true, 1500, "", "hs4", 4},
-		                PortLayer2Info{false, 0})
+    _, err = mh.zr.Ports.PortAdd("vxlan4", 20, PORT_VXLANBR, ROOT_ZONE,
+        PortHwInfo{ifmac, true, true, 1500, "", "hs4", 4},
+        PortLayer2Info{false, 0})
     if err != nil {
         t.Errorf("failed to add port %s", "vxlan4")
     }
@@ -114,9 +114,9 @@ func TestMain(t *testing.T) {
     }
 
     _, err = mh.zr.Vlans.VlanPortAdd(4, "vxlan4", false)
-	if err != nil {
-		t.Errorf("failed to add port %s to vlan %d\n", "vxlan4", 4)
-	}
+    if err != nil {
+        t.Errorf("failed to add port %s to vlan %d\n", "vxlan4", 4)
+    }
 
     p = mh.zr.Ports.PortFindByName("vlan100")
     if p == nil {
@@ -247,43 +247,43 @@ func TestMain(t *testing.T) {
     }
 
     hwmac, _ = net.ParseMAC("46:17:8e:50:3c:e5")
-	_, err = mh.zr.Nh.NeighAdd(net.IPv4(4, 4, 4, 1), ROOT_ZONE, NeighAttr{400, 1, hwmac})
-	if err != nil {
-		t.Errorf("NHAdd fail 4.4.4.1\n")
-	}
+    _, err = mh.zr.Nh.NeighAdd(net.IPv4(4, 4, 4, 1), ROOT_ZONE, NeighAttr{400, 1, hwmac})
+    if err != nil {
+        t.Errorf("NHAdd fail 4.4.4.1\n")
+    }
 
     fdbKey = FdbKey{[6]byte{0xa, 0xb, 0xc, 0xd, 0xe, 0xf}, 4}
-	fdbAttr = FdbAttr{"vxlan100", net.ParseIP("4.4.4.1"), cmn.FDB_TUN}
+    fdbAttr = FdbAttr{"vxlan100", net.ParseIP("4.4.4.1"), cmn.FDB_TUN}
     _, err = mh.zr.L2.L2FdbAdd(fdbKey, fdbAttr)
     if err != nil {
-		t.Errorf("tun FDB add fail 4.4.4.1\n")
-	}
+        t.Errorf("tun FDB add fail 4.4.4.1\n")
+    }
 
     _, err = mh.zr.L3.IfaAdd("vlan4", "44.44.44.254/24")
     if err != nil {
-		t.Errorf("add ifa fail 44.44.44.254 to vlan4\n")
-	}
+        t.Errorf("add ifa fail 44.44.44.254 to vlan4\n")
+    }
 
     hwmac1, _ = net.ParseMAC("0a:0b:0c:0d:0e:0f")
-	_, err = mh.zr.Nh.NeighAdd(net.IPv4(44, 44, 44, 1), ROOT_ZONE,
-		                      NeighAttr{126, 1, hwmac1})
+    _, err = mh.zr.Nh.NeighAdd(net.IPv4(44, 44, 44, 1), ROOT_ZONE,
+        NeighAttr{126, 1, hwmac1})
     if err != nil {
         t.Errorf("add neighbor fail 44.44.44.1 to vlan4\n")
     }
 
-    lbServ := LbServiceArg{"10.10.10.1", 2020, "tcp", LB_SEL_RR}
-	lbEps := []LbEndPointArg{
-		            {
-		            "32.32.32.1",
-		            5001,
-		            1,
-		            },
-		            {
-		            "32.32.32.1",
-		            5001,
-		            2,
-		            },
-		        }
+    lbServ := cmn.LbServiceArg{ServIP: "10.10.10.1", ServPort: 2020, Proto: "tcp", Sel: LB_SEL_RR}
+    lbEps := []cmn.LbEndPointArg{
+        {
+            EpIP:   "32.32.32.1",
+            EpPort: 5001,
+            Weight: 1,
+        },
+        {
+            EpIP:   "32.32.32.1",
+            EpPort: 5001,
+            Weight: 2,
+        },
+    }
     _, err = mh.zr.Rules.AddNatLbRule(lbServ, lbEps[:])
     if err != nil {
         t.Errorf("failed to add nat lb rule for 10.10.10.1\n")

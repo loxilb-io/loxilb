@@ -84,6 +84,26 @@ type Routev4Mod struct {
 	Dst       *net.IPNet
 }
 
+type EpSelect uint
+
+type LbServiceArg struct {
+	ServIP   string
+	ServPort uint16
+	Proto    string
+	Sel      EpSelect
+}
+
+type LbEndPointArg struct {
+	EpIP   string
+	EpPort uint16
+	Weight uint8
+}
+
+type LbRuleMod struct {
+	Serv LbServiceArg
+	Eps  []LbEndPointArg
+}
+
 type NetHookInterface interface {
 	NetPortAdd(*PortMod) (int, error)
 	NetPortDel(*PortMod) (int, error)
@@ -99,4 +119,6 @@ type NetHookInterface interface {
 	NetNeighv4Del(*Neighv4Mod) (int, error)
 	NetRoutev4Add(*Routev4Mod) (int, error)
 	NetRoutev4Del(*Routev4Mod) (int, error)
+	NetLbRuleAdd(*LbRuleMod) (int, error)
+	NetLbRuleDel(*LbRuleMod) (int, error)
 }

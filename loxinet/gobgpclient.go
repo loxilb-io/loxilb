@@ -153,7 +153,7 @@ func processRouteSingle(p *api.Path, showIdentifier bgp.BGPAddPathMode) {
 
 }
 
-func processRoute(pathList []*api.Path, showIdentifier bgp.BGPAddPathMode) {
+func processRoute(pathList []*api.Path) {
 	
 	for _, p := range pathList {
 		gbh.eventCh <- goBgpEvent{
@@ -169,7 +169,7 @@ func GetRoutes(client api.GobgpApiClient) int {
 
 	processRoutes := func(recver interface {
 		Recv() (*api.WatchEventResponse, error)
-	}, showIdentifier bgp.BGPAddPathMode) {
+	}) {
 		for {
 			r, err := recver.Recv()
 			if err == io.EOF {
@@ -184,7 +184,7 @@ func GetRoutes(client api.GobgpApiClient) int {
 				break
 			}
 			if t := r.GetTable(); t != nil {
-				processRoute(t.Paths, bgp.BGP_ADD_PATH_NONE)
+				processRoute(t.Paths)
 			}
 		}
 	}
@@ -206,7 +206,7 @@ func GetRoutes(client api.GobgpApiClient) int {
 		return -1
 
 	}
-	processRoutes(routes, bgp.BGP_ADD_PATH_NONE)
+	processRoutes(routes)
 	return 0
 }
 
@@ -291,7 +291,7 @@ func goBgpConnect(host string) {
 	}
 }
 
-func getGoBgpRoutes(conn *grpc.ClientConn) {
+func getGoBgpRoutes() {
 	/* Just for testing */
 	AdvertiseRoute("11.11.11.0", 24, "31.31.31.254")
 
@@ -309,7 +309,7 @@ func processBgpEvent(e goBgpEvent) {
 	case bgpConnected:
 		tk.LogIt(tk.LOG_NOTICE, "******************* BGP %s connected *******************\n", gbh.host)
 		gbh.conn = e.conn
-		getGoBgpRoutes(e.conn)
+		getGoBgpRoutes()
 	case bgpRtRecvd:
 		processRouteSingle(&e.Data, bgp.BGP_ADD_PATH_NONE)
 	}
