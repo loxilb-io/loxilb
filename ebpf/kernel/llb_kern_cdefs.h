@@ -46,7 +46,7 @@ struct ll_xmdpi
 
 struct ll_xmdi {
   union {
-	  __u64 xmd;
+      __u64 xmd;
     struct ll_xmdpi pi;
   };
 } __attribute__((aligned(4)));
@@ -557,17 +557,17 @@ dp_do_map_stats(struct xdp_md *ctx,
 static void __always_inline
 dp_ipv4_new_csum(struct iphdr *iph)
 {
-	__u16 *iph16 = (__u16 *)iph;
-	__u32 csum;
-	int i;
+    __u16 *iph16 = (__u16 *)iph;
+    __u32 csum;
+    int i;
 
-	iph->check = 0;
+    iph->check = 0;
 
 #pragma clang loop unroll(full)
-	for (i = 0, csum = 0; i < sizeof(*iph) >> 1; i++)
-		csum += *iph16++;
+    for (i = 0, csum = 0; i < sizeof(*iph) >> 1; i++)
+        csum += *iph16++;
 
-	iph->check = ~((csum & 0xffff) + (csum >> 16));
+    iph->check = ~((csum & 0xffff) + (csum >> 16));
 }
 
 #ifdef LL_TC_EBPF
@@ -715,8 +715,8 @@ dp_set_tcp_src_ip(void *md, struct xfi *F, __be32 xip)
   int ip_src_off = F->pm.l3_off + offsetof(struct iphdr, saddr);
   __be32 old_sip = F->l3m.ip.saddr;  
 
-	bpf_l4_csum_replace(md, tcp_csum_off, old_sip, xip, BPF_F_PSEUDO_HDR |sizeof(xip));
-	bpf_l3_csum_replace(md, ip_csum_off, old_sip, xip, sizeof(xip));
+    bpf_l4_csum_replace(md, tcp_csum_off, old_sip, xip, BPF_F_PSEUDO_HDR |sizeof(xip));
+    bpf_l3_csum_replace(md, ip_csum_off, old_sip, xip, sizeof(xip));
   bpf_skb_store_bytes(md, ip_src_off, &xip, sizeof(xip), 0);
 
   F->l3m.ip.saddr = xip;  
@@ -733,7 +733,7 @@ dp_set_tcp_dst_ip(void *md, struct xfi *F, __be32 xip)
   __be32 old_dip = F->l3m.ip.daddr;  
 
   bpf_l4_csum_replace(md, tcp_csum_off, old_dip, xip, BPF_F_PSEUDO_HDR | sizeof(xip));
-	bpf_l3_csum_replace(md, ip_csum_off, old_dip, xip, sizeof(xip));
+    bpf_l3_csum_replace(md, ip_csum_off, old_dip, xip, sizeof(xip));
   bpf_skb_store_bytes(md, ip_dst_off, &xip, sizeof(xip), 0);
   F->l3m.ip.daddr = xip;  
 
@@ -779,7 +779,7 @@ dp_set_udp_src_ip(void *md, struct xfi *F, __be32 xip)
   
   /* UDP checksum = 0 is valid */
   bpf_skb_store_bytes(md, udp_csum_off, &csum, sizeof(csum), 0);
-	bpf_l3_csum_replace(md, ip_csum_off, old_sip, xip, sizeof(xip));
+    bpf_l3_csum_replace(md, ip_csum_off, old_sip, xip, sizeof(xip));
   bpf_skb_store_bytes(md, ip_src_off, &xip, sizeof(xip), 0);
   F->l3m.ip.saddr = xip;  
 
@@ -797,7 +797,7 @@ dp_set_udp_dst_ip(void *md, struct xfi *F, __be32 xip)
   
   /* UDP checksum = 0 is valid */
   bpf_skb_store_bytes(md, udp_csum_off, &csum, sizeof(csum), 0);
-	bpf_l3_csum_replace(md, ip_csum_off, old_dip, xip, sizeof(xip));
+    bpf_l3_csum_replace(md, ip_csum_off, old_dip, xip, sizeof(xip));
   bpf_skb_store_bytes(md, ip_dst_off, &xip, sizeof(xip), 0);
   F->l3m.ip.daddr = xip;  
 
@@ -841,7 +841,7 @@ dp_set_icmp_src_ip(void *md, struct xfi *F, __be32 xip)
   int ip_src_off = F->pm.l3_off + offsetof(struct iphdr, saddr);
   __be32 old_sip = F->l3m.ip.saddr;  
   
-	bpf_l3_csum_replace(md, ip_csum_off, old_sip, xip, sizeof(xip));
+    bpf_l3_csum_replace(md, ip_csum_off, old_sip, xip, sizeof(xip));
   bpf_skb_store_bytes(md, ip_src_off, &xip, sizeof(xip), 0);
   F->l3m.ip.saddr = xip;  
 
@@ -855,7 +855,7 @@ dp_set_icmp_dst_ip(void *md, struct xfi *F, __be32 xip)
   int ip_dst_off = F->pm.l3_off + offsetof(struct iphdr, daddr);
   __be32 old_dip = F->l3m.ip.daddr;  
   
-	bpf_l3_csum_replace(md, ip_csum_off, old_dip, xip, sizeof(xip));
+    bpf_l3_csum_replace(md, ip_csum_off, old_dip, xip, sizeof(xip));
   bpf_skb_store_bytes(md, ip_dst_off, &xip, sizeof(xip), 0);
   F->l3m.ip.daddr = xip;  
 
@@ -1253,13 +1253,13 @@ dp_do_ins_vxlan(void *md,
                 int skip_md) 
 {
   void *dend;
-	struct ethhdr *eth;
-	struct ethhdr *ieth;
-	struct iphdr *iph;
-	struct udphdr *udp;
+  struct ethhdr *eth;
+  struct ethhdr *ieth;
+  struct iphdr *iph;
+  struct udphdr *udp;
   struct vxlan_hdr *vx; 
-	int olen, l2_len;
-	__u64 flags;
+  int olen, l2_len;
+  __u64 flags;
 
   /* We do not pass vlan header inside vxlan */
   if (F->l2m.vlan[0] != 0) {
@@ -1272,14 +1272,14 @@ dp_do_ins_vxlan(void *md,
   olen   = sizeof(*iph)  + sizeof(*udp) + sizeof(*vx); 
   l2_len = sizeof(*eth);
 
-	flags = BPF_F_ADJ_ROOM_FIXED_GSO |
+    flags = BPF_F_ADJ_ROOM_FIXED_GSO |
           BPF_F_ADJ_ROOM_ENCAP_L3_IPV4 |
           BPF_F_ADJ_ROOM_ENCAP_L4_UDP |
           BPF_F_ADJ_ROOM_ENCAP_L2(l2_len);
-	olen += l2_len;
+    olen += l2_len;
 
-	/* add room between mac and network header */
-	if (dp_buf_add_room(md, olen, flags)) {
+    /* add room between mac and network header */
+    if (dp_buf_add_room(md, olen, flags)) {
     LLBS_PPLN_DROP(F);
     return -1;
   }
@@ -1314,14 +1314,14 @@ dp_do_ins_vxlan(void *md,
 
   /* Outer IP header */ 
   iph->version  = 4;
-	iph->ihl      = 5;
+  iph->ihl      = 5;
   iph->tot_len  = bpf_htons(F->pm.l3_len +  olen);
-	iph->ttl      = 64; // FIXME - Copy inner
-	iph->protocol = IPPROTO_UDP;
+  iph->ttl      = 64; // FIXME - Copy inner
+  iph->protocol = IPPROTO_UDP;
   iph->saddr    = sip;
   iph->daddr    = rip;
 
-	dp_ipv4_new_csum((void *)iph);
+  dp_ipv4_new_csum((void *)iph);
 
   udp = (void *)(iph + 1);
   if (udp + 1 > dend) {
@@ -1364,7 +1364,7 @@ dp_do_ins_vxlan(void *md,
   F->tm.tun_type  = LLB_TUN_VXLAN;
   F->tm.tunnel_id = bpf_ntohl(tid);
   F->pm.tun_off   = sizeof(*eth) + 
-                    sizeof(*iph)  + 
+                    sizeof(*iph) + 
                     sizeof(*udp);
   F->tm.tun_encap = 1;
 
@@ -1396,7 +1396,7 @@ dp_do_ins_vxlan(void *md,
   F->pm.l3_off = sizeof(*eth);
   F->pm.l4_off = sizeof(*eth) + sizeof(*iph);
   
-	return 0;
+    return 0;
 }
 
 static int __always_inline
