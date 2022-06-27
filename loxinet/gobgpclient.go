@@ -27,6 +27,7 @@ import (
 	api "github.com/osrg/gobgp/v3/api"
 	"github.com/osrg/gobgp/v3/pkg/apiutil"
 	"github.com/osrg/gobgp/v3/pkg/packet/bgp"
+	cmn "loxilb/common"
 )
 
 type goBgpEventType uint8
@@ -153,22 +154,7 @@ func processRouteSingle(p *api.Path, showIdentifier bgp.BGPAddPathMode) {
 }
 
 func processRoute(pathList []*api.Path, showIdentifier bgp.BGPAddPathMode) {
-	/*	pathStrs := make([][]interface{}, len(pathList))
-
-		for i, p := range pathList {
-			pathStrs[i] = makeMonitorRouteArgs(p, showIdentifier)
-		}
-
-		format := time.Now().UTC().Format(time.RFC3339)
-		if showIdentifier == bgp.BGP_ADD_PATH_NONE {
-			format += " [%s] %s via %s aspath [%s] attrs %s\n"
-		} else {
-			format += " [%s] %d:%s via %s aspath [%s] attrs %s\n"
-		}
-		for _, pathStr := range pathStrs {
-			tk.LogIt(tk.LOG_INFO, format, pathStr...)
-		}
-	*/
+	
 	for _, p := range pathList {
 		gbh.eventCh <- goBgpEvent{
 			EventType: bgpRtRecvd,
@@ -269,7 +255,7 @@ func AdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 func GoBgpInit() {
 	gbh = new(GoBgpH)
 
-	gbh.eventCh = make(chan goBgpEvent, RU_WORKQ_LEN)
+	gbh.eventCh = make(chan goBgpEvent, cmn.RU_WORKQ_LEN)
 	gbh.host = "127.0.0.1:50051"
 
 	go goBgpConnect(gbh.host)
@@ -332,7 +318,7 @@ func processBgpEvent(e goBgpEvent) {
 func goBgpMonitor() {
 	tk.LogIt(tk.LOG_NOTICE, "\n\n\n\nBGP Monitor start *******************\n")
 	for {
-		for n := 0; n < RU_WORKQ_LEN; n++ {
+		for n := 0; n < cmn.RU_WORKQ_LEN; n++ {
 			select {
 			case e := <-gbh.eventCh:
 				processBgpEvent(e)
