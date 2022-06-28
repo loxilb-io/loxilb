@@ -542,8 +542,6 @@ func (tep *NeighTunEp)DP(work DpWorkT) int {
         neighWq.dstAddr[i] = uint8(ne.Attr.HardwareAddr[i])
     }
 
-    fmt.Printf("I am here %d\n", neighWq.nextHopNum)
-
     if ne.OifPort != nil {
         for i := 0; i < 6; i++ {
             neighWq.srcAddr[i] = uint8(ne.OifPort.HInfo.MacAddr[i])
@@ -551,9 +549,6 @@ func (tep *NeighTunEp)DP(work DpWorkT) int {
         neighWq.BD = ne.OifPort.L2.Vid
 
     }
-
-    fmt.Printf("I am here1%s:%s\n", tep.rIP.String(), tep.sIP.String())
-
 
     mh.dp.ToDpCh <- neighWq
 
