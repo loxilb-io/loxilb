@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"loxilb/api/restapi/operations"
 	cmn "loxilb/common"
 
@@ -27,11 +28,27 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv = lbServ
 	lbRules.Eps = append(lbRules.Eps, lbEps...)
 
-	//fmt.Printf("lbEps: %v\n", lbEps)
-	//fmt.Printf("lbServ: %v\n", lbServ)
-	//fmt.Printf("lbRules: %v\n", lbRules)
+	fmt.Printf("lbEps: %v\n", lbEps)
+	fmt.Printf("lbServ: %v\n", lbServ)
+	fmt.Printf("lbRules: %v\n", lbRules)
 
 	_, err := ApiHooks.NetLbRuleAdd(&lbRules)
+	if err != nil {
+		return &ResultResponse{Result: err.Error()}
+	}
+	return &ResultResponse{Result: "Success"}
+}
+
+func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
+	var lbServ cmn.LbServiceArg
+	var lbRules cmn.LbRuleMod
+	fmt.Printf("params: %v\n", params)
+	fmt.Printf("lbServ: %v\n", lbServ)
+	lbServ.ServIP = params.IPAddress
+	lbServ.ServPort = uint16(params.Port)
+	lbServ.Proto = params.Proto
+	lbRules.Serv = lbServ
+	_, err := ApiHooks.NetLbRuleDel(&lbRules)
 	if err != nil {
 		return &ResultResponse{Result: err.Error()}
 	}
