@@ -637,12 +637,13 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
             nxfa = (*nxfrmAct)(getPtrOffset(unsafe.Pointer(nxfa),
                 C.sizeof_struct_mf_xfrm_inf))
         }
-        /*
-           for i := len(w.endPoints); i < C.LLB_MAX_NXFRMS; i++ {
-               nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[0]))
-               nxfa.inactive = 1
-           }
-        */
+
+        // Any unused end-points should be marked inactive
+        for i := len(w.endPoints); i < C.LLB_MAX_NXFRMS; i++ {
+            nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[i]))
+            nxfa.inactive = 1
+        }
+
         dat.nxfrm = C.uint(len(w.endPoints))
 
         ret := C.llb_add_table_elem(C.LL_DP_NAT4_MAP,
