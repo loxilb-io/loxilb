@@ -113,7 +113,7 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
         return false, L2_VXATTR_ERR, errors.New("fdb zone error")
     }
 
-    if p.SInfo.PortType&PORT_VXLANBR == PORT_VXLANBR {
+    if p.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
         if attr.FdbType != cmn.FDB_TUN {
             return false, L2_VXATTR_ERR, errors.New("fdb attr error")
         }
@@ -129,11 +129,13 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
             if nh, ok := tDat.(*Neigh); ok {
                 _, pDstNet, perr := net.ParseCIDR(*pStr)
                 if perr != nil {
+                    tk.LogIt(tk.LOG_DEBUG, "1.fdb tun rt lookup %s UNREACHABLE\n", attr.Dst.String())
                     unRch = true
                 } else {
                     rt := zone.Rt.RtFind(*pDstNet, zone.Name)
                     if rt == nil {
                         unRch = true
+                        tk.LogIt(tk.LOG_DEBUG, "2.fdb tun rt lookup %s UNREACHABLE\n", attr.Dst.String())
                     } else {
                         ret, tep := zone.Nh.NeighAddTunEP(nh, attr.Dst, p.HInfo.TunId, DP_TUN_VXLAN, true)
                         if ret == 0 {
@@ -148,7 +150,11 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
             }
         } else {
             unRch = true
+            tk.LogIt(tk.LOG_DEBUG, "3.fdb tun rt lookup %s UNREACHABLE\n", attr.Dst.String())
         }
+    }
+    if unRch {
+        tk.LogIt(tk.LOG_DEBUG, "fdb tun rt lookup %s UNREACHABLE\n", attr.Dst.String())
     }
     return unRch, 0, nil
 }
@@ -190,7 +196,7 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
     nfdb.itime = time.Now()
     nfdb.stime = time.Now()
 
-    if p.SInfo.PortType&PORT_VXLANBR == PORT_VXLANBR {
+    if p.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
         unRch, ret, err := nfdb.L2FdbResolveNh()
         if err != nil {
             return ret, err
@@ -212,7 +218,7 @@ func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
         return L2_NOFDB_ERR, errors.New("No such FDB")
     }
 
-    if fdb.Port.SInfo.PortType == PORT_VXLANBR {
+    if fdb.Port.SInfo.PortType == cmn.PORT_VXLANBR {
         // Remove route dependencies if any
         n := 0
         if fdb.FdbTun.rt != nil {
@@ -309,7 +315,7 @@ func (f *FdbEnt) DP(work DpWorkT) int {
     l2Wq := new(L2AddrDpWorkQ)
     l2Wq.Work = work
     l2Wq.Status = &f.Sync
-    if f.Port.SInfo.PortType&PORT_VXLANBR == PORT_VXLANBR {
+    if f.Port.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
         l2Wq.Tun = DP_TUN_VXLAN
     }
 

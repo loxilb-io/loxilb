@@ -223,7 +223,7 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) {
         key := FdbKey { mac, port.L2.Vid }
 
         if f := n.Zone.L2.L2FdbFind(key); f == nil {
-            has_tun, _ := n.Zone.Ports.PortHasTunSlaves(port.Name, PORT_VXLANBR)
+            has_tun, _ := n.Zone.Ports.PortHasTunSlaves(port.Name, cmn.PORT_VXLANBR)
             if has_tun {
                 ne.tFdb = nil
                 ne.Resolved = false
@@ -301,14 +301,14 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 
     //Add a FDB entry if needed
     if port.HInfo.Master == "" &&
-        port.SInfo.PortType&(PORT_REAL|PORT_BOND) != 0 &&
+        port.SInfo.PortType&(cmn.PORT_REAL|cmn.PORT_BOND) != 0 &&
         ne.Resolved {
         var fdbAddr [6]byte
         var vid int
         for i := 0; i < 6; i++ {
             fdbAddr[i] = uint8(ne.Attr.HardwareAddr[i])
         }
-        if port.SInfo.PortType&PORT_REAL != 0 {
+        if port.SInfo.PortType&cmn.PORT_REAL != 0 {
             vid = port.PortNo + REAL_PORT_VB
         } else {
             vid = port.PortNo + BOND_VB
@@ -343,14 +343,14 @@ func (n *NeighH) NeighDelete(Addr net.IP, Ns string) (int, error) {
     port := ne.OifPort
     if port != nil &&
         port.HInfo.Master == "" &&
-        port.SInfo.PortType&(PORT_REAL|PORT_BOND) != 0 &&
+        port.SInfo.PortType&(cmn.PORT_REAL|cmn.PORT_BOND) != 0 &&
         ne.Resolved {
         var fdbAddr [6]byte
         var vid int
         for i := 0; i < 6; i++ {
             fdbAddr[i] = uint8(ne.Attr.HardwareAddr[i])
         }
-        if port.SInfo.PortType&PORT_REAL != 0 {
+        if port.SInfo.PortType&cmn.PORT_REAL != 0 {
             vid = port.PortNo + REAL_PORT_VB
         } else {
             vid = port.PortNo + BOND_VB

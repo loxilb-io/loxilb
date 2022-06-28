@@ -20,9 +20,10 @@ import (
     "errors"
     "fmt"
     "io"
-    tk "loxilb/loxilib"
     "net"
     "strings"
+    tk "loxilb/loxilib"
+    cmn "loxilb/common"
 )
 
 const (
@@ -40,17 +41,6 @@ const (
     MAX_BOND_IFS = 8
     MAX_PHY_IFS  = 128
     MAX_IFS      = 512
-)
-
-const (
-    PORT_REAL     = 0x1
-    PORT_BONDSIF  = 0x2
-    PORT_BOND     = 0x4
-    PORT_VLANSIF  = 0x8
-    PORT_VLANBR   = 0x10
-    PORT_VXLANSIF = 0x20
-    PORT_VXLANBR  = 0x40
-    PORT_WG       = 0x80
 )
 
 const (
@@ -181,8 +171,8 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 
     if P.portSmap[name] != nil {
         p := P.portSmap[name]
-        if p.SInfo.PortType == PORT_REAL {
-            if ptype == PORT_VLANSIF &&
+        if p.SInfo.PortType == cmn.PORT_REAL {
+            if ptype == cmn.PORT_VLANSIF &&
                 l2i.IsPvid == true {
                 p.HInfo.Master = hwi.Master
                 p.SInfo.PortType |= ptype
@@ -195,7 +185,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
                     return 0, nil
                 }
             }
-            if ptype == PORT_BONDSIF {
+            if ptype == cmn.PORT_BONDSIF {
                 master := P.portSmap[hwi.Master]
                 if master == nil {
                     return PORT_NOMASTER_ERR, errors.New("no such master")
@@ -211,8 +201,8 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
                 return 0, nil
             }
 
-        } else if p.SInfo.PortType == PORT_BOND {
-            if ptype == PORT_VLANSIF &&
+        } else if p.SInfo.PortType == cmn.PORT_BOND {
+            if ptype == cmn.PORT_VLANSIF &&
                 l2i.IsPvid == true {
                 if p.L2 != l2i {
 
@@ -226,8 +216,8 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
                 }
             }
         }
-        if p.SInfo.PortType == PORT_VXLANBR {
-            if ptype == PORT_VLANSIF &&
+        if p.SInfo.PortType == cmn.PORT_VXLANBR {
+            if ptype == cmn.PORT_VLANSIF &&
                 l2i.IsPvid == true {
                 p.HInfo.Master = hwi.Master
                 p.SInfo.PortType |= ptype
@@ -244,7 +234,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
     var rid int
     var err error
 
-    if ptype == PORT_BOND {
+    if ptype == cmn.PORT_BOND {
         rid, err = P.bondHwMark.GetCounter()
     } else {
         rid, err = P.portHwMark.GetCounter()
@@ -259,7 +249,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
         if rp == nil {
             return PORT_NOREALDEV_ERR, errors.New("no such real port")
         }
-    } else if ptype == PORT_VXLANBR {
+    } else if ptype == cmn.PORT_VXLANBR {
         return PORT_NOREALDEV_ERR, errors.New("need real-dev info")
     }
 
@@ -276,7 +266,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
     vMac := [6]byte{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}
 
     switch ptype {
-    case PORT_REAL:
+    case cmn.PORT_REAL:
         p.L2.IsPvid = true
         p.L2.Vid = rid + REAL_PORT_VB
 
@@ -284,7 +274,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
         vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
         zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
             PortHwInfo{vMac, true, true, 9000, "", "", 0})
-    case PORT_BOND:
+    case cmn.PORT_BOND:
         p.L2.IsPvid = true
         p.L2.Vid = rid + BOND_VB
 
@@ -292,7 +282,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
         vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
         zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
             PortHwInfo{vMac, true, true, 9000, "", "", 0})
-    case PORT_VXLANBR:
+    case cmn.PORT_VXLANBR:
         if p.SInfo.PortReal != nil {
             p.SInfo.PortReal.SInfo.PortOvl = p
         }
@@ -325,11 +315,11 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 
     // If phy port was access vlan, it is converted to normal phy port
     // If it has a trunk vlan association, we will have a subinterface
-    if (p.SInfo.PortType&(PORT_REAL|PORT_VLANSIF) == (PORT_REAL|PORT_VLANSIF)) &&
-        ptype == PORT_VLANSIF {
+    if (p.SInfo.PortType&(cmn.PORT_REAL|cmn.PORT_VLANSIF) == (cmn.PORT_REAL|cmn.PORT_VLANSIF)) &&
+        ptype == cmn.PORT_VLANSIF {
         p.DP(DP_REMOVE)
 
-        p.SInfo.PortType = p.SInfo.PortType & ^PORT_VLANSIF
+        p.SInfo.PortType = p.SInfo.PortType & ^cmn.PORT_VLANSIF
         p.HInfo.Master = ""
         p.L2.IsPvid = true
         p.L2.Vid = p.PortNo + REAL_PORT_VB
@@ -337,11 +327,11 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
         return 0, nil
     }
 
-    if (p.SInfo.PortType&(PORT_VXLANBR|PORT_VLANSIF) == (PORT_VXLANBR|PORT_VLANSIF)) &&
-        ptype == PORT_VXLANBR {
+    if (p.SInfo.PortType&(cmn.PORT_VXLANBR|cmn.PORT_VLANSIF) == (cmn.PORT_VXLANBR|cmn.PORT_VLANSIF)) &&
+        ptype == cmn.PORT_VXLANBR {
         p.DP(DP_REMOVE)
 
-        p.SInfo.PortType = p.SInfo.PortType & ^PORT_VLANSIF
+        p.SInfo.PortType = p.SInfo.PortType & ^cmn.PORT_VLANSIF
         p.HInfo.Master = ""
         p.L2.IsPvid = true
         p.L2.Vid = int(p.HInfo.TunId)
@@ -349,20 +339,20 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
         return 0, nil
     }
 
-    if (p.SInfo.PortType&(PORT_BOND|PORT_VLANSIF) == (PORT_BOND | PORT_VLANSIF)) &&
-        ptype == PORT_VLANSIF {
+    if (p.SInfo.PortType&(cmn.PORT_BOND|cmn.PORT_VLANSIF) == (cmn.PORT_BOND | cmn.PORT_VLANSIF)) &&
+        ptype == cmn.PORT_VLANSIF {
         p.DP(DP_REMOVE)
-        p.SInfo.PortType = p.SInfo.PortType & ^PORT_VLANSIF
+        p.SInfo.PortType = p.SInfo.PortType & ^cmn.PORT_VLANSIF
         p.L2.IsPvid = true
         p.L2.Vid = p.PortNo + BOND_VB
         p.DP(DP_CREATE)
         return 0, nil
     }
 
-    if (p.SInfo.PortType&(PORT_REAL|PORT_BONDSIF) == (PORT_REAL | PORT_BONDSIF)) &&
-        ptype == PORT_BONDSIF {
+    if (p.SInfo.PortType&(cmn.PORT_REAL|cmn.PORT_BONDSIF) == (cmn.PORT_REAL | cmn.PORT_BONDSIF)) &&
+        ptype == cmn.PORT_BONDSIF {
         p.DP(DP_REMOVE)
-        p.SInfo.PortType = p.SInfo.PortType & ^PORT_BONDSIF
+        p.SInfo.PortType = p.SInfo.PortType & ^cmn.PORT_BONDSIF
         p.HInfo.Master = ""
         p.L2.IsPvid = true
         p.L2.Vid = p.PortNo + REAL_PORT_VB
@@ -383,12 +373,12 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
     p.DP(DP_REMOVE)
 
     switch p.SInfo.PortType {
-    case PORT_VXLANBR:
+    case cmn.PORT_VXLANBR:
         if p.SInfo.PortReal != nil {
             p.SInfo.PortReal.SInfo.PortOvl = nil
         }
-    case PORT_REAL:
-    case PORT_BOND:
+    case cmn.PORT_REAL:
+    case cmn.PORT_BOND:
         zone := mh.zn.GetPortZone(p.Name)
         if zone != nil {
             zone.Vlans.VlanDelete(p.L2.Vid)
@@ -442,25 +432,25 @@ func port2String(e *Port, it IterIntf) {
         e.Name, pStr, e.HInfo.Mtu, e.Zone)
 
     pStr = ""
-    if e.SInfo.PortType&PORT_REAL == PORT_REAL {
+    if e.SInfo.PortType&cmn.PORT_REAL == cmn.PORT_REAL {
         pStr += "phy,"
     }
-    if e.SInfo.PortType&PORT_VLANSIF == PORT_VLANSIF {
+    if e.SInfo.PortType&cmn.PORT_VLANSIF == cmn.PORT_VLANSIF {
         pStr += "vlan-sif,"
     }
-    if e.SInfo.PortType&PORT_VLANBR == PORT_VLANBR {
+    if e.SInfo.PortType&cmn.PORT_VLANBR == cmn.PORT_VLANBR {
         pStr += "vlan,"
     }
-    if e.SInfo.PortType&PORT_BONDSIF == PORT_BONDSIF {
+    if e.SInfo.PortType&cmn.PORT_BONDSIF == cmn.PORT_BONDSIF {
         pStr += "bond-sif,"
     }
-    if e.SInfo.PortType&PORT_BONDSIF == PORT_BOND {
+    if e.SInfo.PortType&cmn.PORT_BONDSIF == cmn.PORT_BOND {
         pStr += "bond,"
     }
-    if e.SInfo.PortType&PORT_VXLANSIF == PORT_VXLANSIF {
+    if e.SInfo.PortType&cmn.PORT_VXLANSIF == cmn.PORT_VXLANSIF {
         pStr += "vxlan-sif,"
     }
-    if e.SInfo.PortType&PORT_VXLANBR == PORT_VXLANBR {
+    if e.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
         pStr += "vxlan"
         if e.SInfo.PortReal != nil {
             pStr += fmt.Sprintf("(%s)", e.SInfo.PortReal.Name)
@@ -555,55 +545,55 @@ func (P *PortsH) PortDestructAll() {
 
     for _, p := range P.portSmap {
 
-        if p.SInfo.PortType&PORT_REAL == PORT_REAL {
+        if p.SInfo.PortType&cmn.PORT_REAL == cmn.PORT_REAL {
             realDevs = append(realDevs, p)
         }
-        if p.SInfo.PortType&PORT_VLANSIF == PORT_VLANSIF {
+        if p.SInfo.PortType&cmn.PORT_VLANSIF == cmn.PORT_VLANSIF {
             bSlaves = append(bSlaves, p)
         }
-        if p.SInfo.PortType&PORT_VLANBR == PORT_VLANBR {
+        if p.SInfo.PortType&cmn.PORT_VLANBR == cmn.PORT_VLANBR {
             bridges = append(bridges, p)
         }
-        if p.SInfo.PortType&PORT_BONDSIF == PORT_BONDSIF {
+        if p.SInfo.PortType&cmn.PORT_BONDSIF == cmn.PORT_BONDSIF {
             bondSlaves = append(bondSlaves, p)
         }
-        if p.SInfo.PortType&PORT_BONDSIF == PORT_BOND {
+        if p.SInfo.PortType&cmn.PORT_BONDSIF == cmn.PORT_BOND {
             bonds = append(bonds, p)
         }
-        if p.SInfo.PortType&PORT_VXLANSIF == PORT_VXLANSIF {
+        if p.SInfo.PortType&cmn.PORT_VXLANSIF == cmn.PORT_VXLANSIF {
             tunSlaves = append(tunSlaves, p)
         }
-        if p.SInfo.PortType&PORT_VXLANBR == PORT_VXLANBR {
+        if p.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
             tunnels = append(tunnels, p)
         }
     }
 
     for _, p := range tunSlaves {
-        P.PortDel(p.Name, PORT_VXLANSIF)
+        P.PortDel(p.Name, cmn.PORT_VXLANSIF)
     }
 
     for _, p := range bSlaves {
-        P.PortDel(p.Name, PORT_VLANSIF)
+        P.PortDel(p.Name, cmn.PORT_VLANSIF)
     }
 
     for _, p := range bondSlaves {
-        P.PortDel(p.Name, PORT_BONDSIF)
+        P.PortDel(p.Name, cmn.PORT_BONDSIF)
     }
 
     for _, p := range bonds {
-        P.PortDel(p.Name, PORT_BOND)
+        P.PortDel(p.Name, cmn.PORT_BOND)
     }
 
     for _, p := range bridges {
-        P.PortDel(p.Name, PORT_VLANBR)
+        P.PortDel(p.Name, cmn.PORT_VLANBR)
     }
 
     for _, p := range tunnels {
-        P.PortDel(p.Name, PORT_VXLANBR)
+        P.PortDel(p.Name, cmn.PORT_VXLANBR)
     }
 
     for _, p := range realDevs {
-        P.PortDel(p.Name, PORT_REAL)
+        P.PortDel(p.Name, cmn.PORT_REAL)
     }
 }
 
@@ -615,13 +605,13 @@ func (p *Port) DP(work DpWorkT) int {
     }
 
     // When a vxlan interface is created
-    if p.SInfo.PortType == PORT_VXLANBR {
+    if p.SInfo.PortType == cmn.PORT_VXLANBR {
         // Do nothing
         return 0
     }
 
     // When a vxlan interface becomes slave of a bridge
-    if p.SInfo.PortType & (PORT_VXLANBR | PORT_VLANSIF) == (PORT_VXLANBR | PORT_VLANSIF) {
+    if p.SInfo.PortType & (cmn.PORT_VXLANBR | cmn.PORT_VLANSIF) == (cmn.PORT_VXLANBR | cmn.PORT_VLANSIF) {
         rmWq := new(RouterMacDpWorkQ)
         rmWq.Work = work
         rmWq.Status = nil
@@ -646,8 +636,8 @@ func (p *Port) DP(work DpWorkT) int {
     }
 
     // When bond subinterface e.g bond1.100 is created
-    if p.SInfo.PortType == PORT_VLANSIF && p.SInfo.PortReal != nil &&
-        p.SInfo.PortReal.SInfo.PortType&PORT_BOND == PORT_BOND {
+    if p.SInfo.PortType == cmn.PORT_VLANSIF && p.SInfo.PortReal != nil &&
+        p.SInfo.PortReal.SInfo.PortType&cmn.PORT_BOND == cmn.PORT_BOND {
 
         pWq := new(PortDpWorkQ)
 
@@ -663,7 +653,7 @@ func (p *Port) DP(work DpWorkT) int {
     }
 
     // When bond becomes a vlan-port e.g bond1 ==> vlan200
-    if p.SInfo.PortType&(PORT_BOND|PORT_VLANSIF) == (PORT_BOND | PORT_VLANSIF) {
+    if p.SInfo.PortType&(cmn.PORT_BOND|cmn.PORT_VLANSIF) == (cmn.PORT_BOND | cmn.PORT_VLANSIF) {
         _, slaves := zn.Ports.PortGetSlaves(p.Name)
         for _, sp := range slaves {
             pWq := new(PortDpWorkQ)
@@ -679,8 +669,8 @@ func (p *Port) DP(work DpWorkT) int {
         return 0
     }
 
-    if (p.SInfo.PortType&PORT_REAL != PORT_REAL) &&
-        (p.SInfo.PortReal == nil || p.SInfo.PortReal.SInfo.PortType&PORT_REAL != PORT_REAL) {
+    if (p.SInfo.PortType&cmn.PORT_REAL != cmn.PORT_REAL) &&
+        (p.SInfo.PortReal == nil || p.SInfo.PortReal.SInfo.PortType&cmn.PORT_REAL != cmn.PORT_REAL) {
         return 0
     }
 
@@ -710,8 +700,8 @@ func (p *Port) DP(work DpWorkT) int {
     }
 
     if (work == DP_CREATE || work == DP_REMOVE) &&
-        p.SInfo.PortType&PORT_REAL == PORT_REAL ||
-        p.SInfo.PortType&PORT_BOND == PORT_BOND {
+        p.SInfo.PortType&cmn.PORT_REAL == cmn.PORT_REAL ||
+        p.SInfo.PortType&cmn.PORT_BOND == cmn.PORT_BOND {
 
         pWq.LoadEbpf = p.Name
     } else {
