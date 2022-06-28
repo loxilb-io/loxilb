@@ -33,7 +33,7 @@ const (
 )
 
 const (
-    FDB_GTS = 20
+    FDB_GTS = 10
 )
 
 type FdbKey struct {
@@ -251,13 +251,15 @@ func (l2 *L2H) FdbTicker(f *FdbEnt) {
     if time.Now().Sub(f.stime) > FDB_GTS {
         // This scans for inconsistencies in a fdb
         // 1. Do garbage cleaning if underlying oif or vlan is not valid anymore
-        // 2. If FDB is a Vxlan FDB we need to make sure NH is reachable
+        // 2. If FDB is a TunFDB, we need to make sure NH is reachable
         if f.Port.SInfo.PortActive == false {
             l2.L2FdbDel(f.FdbKey)
         } else if f.unReach == true {
+            tk.LogIt(tk.LOG_DEBUG, "Unreachable scan %v", f)
             unRch, _, _ := f.L2FdbResolveNh()
             f.unReach = unRch
         }
+        f.stime = time.Now()
     }
 }
 
