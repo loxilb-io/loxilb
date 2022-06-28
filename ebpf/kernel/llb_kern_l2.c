@@ -293,6 +293,7 @@ dp_do_nh_lkup(void *ctx, struct xfi *F, void *fa_)
     rnh = dp_do_rt_l2_nh(ctx, F, &nha->rt_l2nh);
     /* Check if need to do recursive next-hop lookup */
     if (rnh != 0) {
+      key.nh_num = (__u32)rnh;
       nha = bpf_map_lookup_elem(&nh_map, &key);
       if (!nha) {
         /* No NH - Drop */
