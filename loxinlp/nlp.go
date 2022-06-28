@@ -231,6 +231,11 @@ func AddNeigh(neigh nlp.Neigh, link nlp.Link) int {
 		}
 	} else {
 
+		if neigh.Vlan == 1 {
+			/*FDB comes with vlan 1 also */
+			return 0
+		}
+
 		if mac[0]&0x01 == 1 {
 			/* Multicast MAC address --- IGNORED */
 			return 0
@@ -249,11 +254,11 @@ func AddNeigh(neigh nlp.Neigh, link nlp.Link) int {
 		}
 		vid, _ = strconv.Atoi(strings.Join(re.FindAllString(brLink.Attrs().Name, -1), " "))
 
-		//ret, err = hooks.NetFdbAdd(&cmn.FdbMod{MacAddr: mac, Vid: vid, Dev: name, Type: cmn.FDB_VLAN})
+		ret, err = hooks.NetFdbAdd(&cmn.FdbMod{MacAddr: mac, Vid: vid, Dev: name, Type: cmn.FDB_VLAN})
 		if err != nil {
-			tk.LogIt(tk.LOG_ERROR, "L2fdb %v vlan %v dev %v add failed\n", mac[:], vid, name)
+			tk.LogIt(tk.LOG_ERROR, "L2fdb %v vlan %v %v dev %v add failed\n", mac[:], vid, neigh.Vlan, name)
 		} else {
-			tk.LogIt(tk.LOG_INFO, "L2fdb %v vlan %v dev %v added\n", mac[:], vid, name)
+			tk.LogIt(tk.LOG_INFO, "L2fdb %v vlan %v(%v) dev %v added\n", mac[:], vid, neigh.Vlan, name)
 		}
 	}
 
@@ -281,6 +286,11 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 			tk.LogIt(tk.LOG_ERROR, "NH %v %v deleted\n", neigh.IP.String(), name)
 		}
 	} else {
+
+		if neigh.Vlan == 1 {
+			/*FDB comes with vlan 1 also */
+			return 0
+		}
 
 		copy(mac[:], neigh.HardwareAddr[:6])
 
