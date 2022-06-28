@@ -15,7 +15,9 @@
  */
 package common
 
-import "net"
+import (
+    "net"
+)
 
 const (
     AU_WORKQ_LEN = 1024
@@ -24,14 +26,28 @@ const (
     RU_WORKQ_LEN = 40827
 )
 
+const (
+    PORT_REAL     = 0x1
+    PORT_BONDSIF  = 0x2
+    PORT_BOND     = 0x4
+    PORT_VLANSIF  = 0x8
+    PORT_VLANBR   = 0x10
+    PORT_VXLANSIF = 0x20
+    PORT_VXLANBR  = 0x40
+    PORT_WG       = 0x80
+)
+
 type PortMod struct {
     Dev       string
     LinkIndex int
+    Ptype     int
     MacAddr   [6]byte
     Link      bool
     State     bool
     Mtu       int
-    TunId     uint32
+    Master    string
+    Real      string
+    TunId     int
 }
 
 type VlanMod struct {
@@ -58,10 +74,11 @@ const (
 )
 
 type FdbMod struct {
-    MacAddr [6]byte
-    Vid     int
-    Dev     string
-    Type    int
+    MacAddr 	[6]byte
+    BridgeId    int
+    Dev     	string
+    Dst	        net.IP
+    Type    	int
 }
 
 type Ipv4AddrMod struct {

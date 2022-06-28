@@ -34,7 +34,7 @@ func TestMain(t *testing.T) {
     loxiNetInit()
 
     ifmac := [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x6}
-    _, err := mh.zr.Ports.PortAdd("hs0", 12, PORT_REAL, ROOT_ZONE,
+    _, err := mh.zr.Ports.PortAdd("hs0", 12, cmn.PORT_REAL, ROOT_ZONE,
         PortHwInfo{ifmac, true, true, 1500, "", "", 0},
         PortLayer2Info{false, 10})
 
@@ -48,7 +48,7 @@ func TestMain(t *testing.T) {
     }
 
     ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x7}
-    _, err = mh.zr.Ports.PortAdd("bond1", 15, PORT_BOND, ROOT_ZONE,
+    _, err = mh.zr.Ports.PortAdd("bond1", 15, cmn.PORT_BOND, ROOT_ZONE,
         PortHwInfo{ifmac, true, true, 1500, "", "", 0},
         PortLayer2Info{false, 10})
 
@@ -61,14 +61,14 @@ func TestMain(t *testing.T) {
         t.Errorf("failed to add port %s", "bond1")
     }
 
-    _, err = mh.zr.Ports.PortAdd("hs1", 15, PORT_REAL, ROOT_ZONE,
+    _, err = mh.zr.Ports.PortAdd("hs1", 15, cmn.PORT_REAL, ROOT_ZONE,
         PortHwInfo{ifmac, true, true, 1500, "", "", 0},
         PortLayer2Info{false, 10})
     if err != nil {
         t.Errorf("failed to add port hs1")
     }
 
-    _, err = mh.zr.Ports.PortAdd("hs1", 15, PORT_BONDSIF, ROOT_ZONE,
+    _, err = mh.zr.Ports.PortAdd("hs1", 15, cmn.PORT_BONDSIF, ROOT_ZONE,
         PortHwInfo{ifmac, true, true, 1500, "bond1", "", 0},
         PortLayer2Info{false, 10})
     if err != nil {
@@ -76,7 +76,7 @@ func TestMain(t *testing.T) {
     }
 
     ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x8}
-    _, err = mh.zr.Ports.PortAdd("hs2", 100, PORT_REAL, ROOT_ZONE,
+    _, err = mh.zr.Ports.PortAdd("hs2", 100, cmn.PORT_REAL, ROOT_ZONE,
         PortHwInfo{ifmac, true, true, 1500, "", "", 0},
         PortLayer2Info{false, 10})
     if err != nil {
@@ -84,7 +84,7 @@ func TestMain(t *testing.T) {
     }
 
     ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x8}
-    _, err = mh.zr.Ports.PortAdd("hs4", 400, PORT_REAL, ROOT_ZONE,
+    _, err = mh.zr.Ports.PortAdd("hs4", 400, cmn.PORT_REAL, ROOT_ZONE,
         PortHwInfo{ifmac, true, true, 1500, "", "", 0},
         PortLayer2Info{false, 10})
     if err != nil {
@@ -92,7 +92,7 @@ func TestMain(t *testing.T) {
     }
 
     ifmac = [6]byte{0xde, 0xdc, 0x1f, 0x62, 0x60, 0x55}
-    _, err = mh.zr.Ports.PortAdd("vxlan4", 20, PORT_VXLANBR, ROOT_ZONE,
+    _, err = mh.zr.Ports.PortAdd("vxlan4", 20, cmn.PORT_VXLANBR, ROOT_ZONE,
         PortHwInfo{ifmac, true, true, 1500, "", "hs4", 4},
         PortLayer2Info{false, 0})
     if err != nil {

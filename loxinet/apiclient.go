@@ -17,7 +17,6 @@ package loxinet
 
 import (
 	cmn "loxilb/common"
-	"net"
 )
 
 type NetApiStruct struct {
@@ -30,16 +29,16 @@ func NetApiInit() *NetApiStruct {
 
 func (*NetApiStruct) NetPortAdd(pm *cmn.PortMod) (int, error) {
 	mh.mtx.Lock()
-	ret, err := mh.zr.Ports.PortAdd(pm.Dev, pm.LinkIndex, PORT_REAL, ROOT_ZONE,
-		PortHwInfo{pm.MacAddr, pm.Link, pm.State, pm.Mtu, "", "", 0},
-		PortLayer2Info{false, 0})
+	ret, err := mh.zr.Ports.PortAdd(pm.Dev, pm.LinkIndex, pm.Ptype, ROOT_ZONE,
+		PortHwInfo{pm.MacAddr, pm.Link, pm.State, pm.Mtu, pm.Master, pm.Real,
+			uint32(pm.TunId)}, PortLayer2Info{false, 0})
 	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetPortDel(pm *cmn.PortMod) (int, error) {
 	mh.mtx.Lock()
-	ret, err := mh.zr.Ports.PortDel(pm.Dev, PORT_REAL)
+	ret, err := mh.zr.Ports.PortDel(pm.Dev, pm.Ptype)
 	mh.mtx.Unlock()
 	return ret, err
 }
@@ -92,7 +91,7 @@ func (*NetApiStruct) NetIpv4AddrDel(am *cmn.Ipv4AddrMod) (int, error) {
 
 func (*NetApiStruct) NetNeighv4Add(nm *cmn.Neighv4Mod) (int, error) {
 	mh.mtx.Lock()
-	ret, err := mh.zr.Nh.NeighAdd(nm.Ip, "default", NeighAttr{nm.LinkIndex, nm.State, nm.HardwareAddr})
+	ret, err := mh.zr.Nh.NeighAdd(nm.Ip, ROOT_ZONE, NeighAttr{nm.LinkIndex, nm.State, nm.HardwareAddr})
 	if err != nil {
 		if ret != NEIGH_EXISTS_ERR {
 			return ret, err
@@ -104,14 +103,14 @@ func (*NetApiStruct) NetNeighv4Add(nm *cmn.Neighv4Mod) (int, error) {
 
 func (*NetApiStruct) NetNeighv4Del(nm *cmn.Neighv4Mod) (int, error) {
 	mh.mtx.Lock()
-	ret, err := mh.zr.Nh.NeighDelete(nm.Ip, "default")
+	ret, err := mh.zr.Nh.NeighDelete(nm.Ip, ROOT_ZONE)
 	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetFdbAdd(fm *cmn.FdbMod) (int, error) {
-	fdbKey := FdbKey{fm.MacAddr, fm.Vid}
-	fdbAttr := FdbAttr{fm.Dev, net.ParseIP("0.0.0.0"), fm.Type}
+	fdbKey := FdbKey{fm.MacAddr, fm.BridgeId}
+	fdbAttr := FdbAttr{fm.Dev, fm.Dst, fm.Type}
 	mh.mtx.Lock()
 	ret, err := mh.zr.L2.L2FdbAdd(fdbKey, fdbAttr)
 	mh.mtx.Unlock()
@@ -119,7 +118,7 @@ func (*NetApiStruct) NetFdbAdd(fm *cmn.FdbMod) (int, error) {
 }
 
 func (*NetApiStruct) NetFdbDel(fm *cmn.FdbMod) (int, error) {
-	fdbKey := FdbKey{fm.MacAddr, fm.Vid}
+	fdbKey := FdbKey{fm.MacAddr, fm.BridgeId}
 	mh.mtx.Lock()
 	ret, err := mh.zr.L2.L2FdbDel(fdbKey)
 	mh.mtx.Unlock()

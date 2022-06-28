@@ -41,11 +41,11 @@ int bpf_map_lookup_elem(int fd, const void *key, void *value);
 import "C"
 import (
     "fmt"
+    tk "loxilb/loxilib"
     "net"
     "syscall"
     "time"
     "unsafe"
-    tk "loxilb/loxilib"
 )
 
 const (
@@ -68,27 +68,27 @@ const (
 )
 
 type (
-    sActValue  C.struct_dp_cmn_act
-    intfMapKey C.struct_intf_key
-    intfMapDat C.struct_dp_intf_tact
-    intfSetIfi C.struct_dp_intf_tact_set_ifi
-    sMacKey    C.struct_dp_smac_key
-    dMacKey    C.struct_dp_dmac_key
-    dMacMapDat C.struct_dp_dmac_tact
-    l2VlanAct  C.struct_dp_l2vlan_act
-    tMacKey    C.struct_dp_tmac_key
-    tMacDat    C.struct_dp_tmac_tact
-    rtNhAct    C.struct_dp_rt_nh_act
-    nhKey      C.struct_dp_nh_key
-    nhDat      C.struct_dp_nh_tact
-    rtL2NhAct  C.struct_dp_rt_l2nh_act
+    sActValue   C.struct_dp_cmn_act
+    intfMapKey  C.struct_intf_key
+    intfMapDat  C.struct_dp_intf_tact
+    intfSetIfi  C.struct_dp_intf_tact_set_ifi
+    sMacKey     C.struct_dp_smac_key
+    dMacKey     C.struct_dp_dmac_key
+    dMacMapDat  C.struct_dp_dmac_tact
+    l2VlanAct   C.struct_dp_l2vlan_act
+    tMacKey     C.struct_dp_tmac_key
+    tMacDat     C.struct_dp_tmac_tact
+    rtNhAct     C.struct_dp_rt_nh_act
+    nhKey       C.struct_dp_nh_key
+    nhDat       C.struct_dp_nh_tact
+    rtL2NhAct   C.struct_dp_rt_l2nh_act
     rtVxL2NhAct C.struct_dp_rt_l2vxnh_act
-    rt4Key     C.struct_dp_rtv4_key
-    rtDat      C.struct_dp_rt_tact
-    rtL3NhAct  C.struct_dp_rt_nh_act
-    nat4Key    C.struct_dp_natv4_key
-    nat4Acts   C.struct_dp_natv4_tacts
-    nxfrmAct   C.struct_mf_xfrm_inf 
+    rt4Key      C.struct_dp_rtv4_key
+    rtDat       C.struct_dp_rt_tact
+    rtL3NhAct   C.struct_dp_rt_nh_act
+    nat4Key     C.struct_dp_natv4_key
+    nat4Acts    C.struct_dp_natv4_tacts
+    nxfrmAct    C.struct_mf_xfrm_inf
 )
 
 type DpEbpfH struct {
@@ -99,10 +99,10 @@ type DpEbpfH struct {
 
 func dpEbpfTicker() {
     tbls := []int{int(C.LL_DP_RTV4_STATS_MAP),
-                  int(C.LL_DP_TMAC_STATS_MAP),
-                  int(C.LL_DP_BD_STATS_MAP),
-                  int(C.LL_DP_TX_BD_STATS_MAP),
-                  int(C.LL_DP_ACLV4_STATS_MAP)}
+        int(C.LL_DP_TMAC_STATS_MAP),
+        int(C.LL_DP_BD_STATS_MAP),
+        int(C.LL_DP_TX_BD_STATS_MAP),
+        int(C.LL_DP_ACLV4_STATS_MAP)}
     tLen := len(tbls)
 
     for {
@@ -115,12 +115,12 @@ func dpEbpfTicker() {
         case t := <-mh.dpEbpf.ticker.C:
             sel := mh.dpEbpf.tbN % tLen
             tk.LogIt(-1, "DP Tick at for selector %v:%d\n", t, sel)
-        
+
             // For every tick collect stats for an eBPF map
             // This routine caches stats in a local statsDB
             C.llb_collect_table_stats(C.int(tbls[sel]))
 
-            // Age any entries related to Conntrack 
+            // Age any entries related to Conntrack
             // Conntrack entries also use ACL entries for fast-forwarding
             // which might also get aged out in this process
             C.llb_age_table_entries(C.LL_DP_CTV4_MAP)
@@ -324,7 +324,7 @@ func DpL2AddrMod(w *L2AddrDpWorkQ) int {
 
         if w.Tun == 0 {
             l2va = (*l2VlanAct)(getPtrOffset(unsafe.Pointer(ddat),
-                                C.sizeof_struct_dp_cmn_act))
+                C.sizeof_struct_dp_cmn_act))
             if w.Tagged != 0 {
                 ddat.ca.act_type = C.DP_SET_ADD_L2VLAN
                 l2va.vlan = C.ushort(tk.Htons(uint16(w.BD)))
@@ -345,8 +345,8 @@ func DpL2AddrMod(w *L2AddrDpWorkQ) int {
 
         if w.Tun == 0 {
             ret = C.llb_add_table_elem(C.LL_DP_DMAC_MAP,
-                                       unsafe.Pointer(dkey),
-                                       unsafe.Pointer(ddat))
+                unsafe.Pointer(dkey),
+                unsafe.Pointer(ddat))
             if ret != 0 {
                 C.llb_del_table_elem(C.LL_DP_SMAC_MAP, unsafe.Pointer(skey))
                 return EBPF_ERR_L2ADDR_ADD
@@ -401,19 +401,22 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
             if w.NhNum == 0 {
                 dat.act_type = C.DP_SET_RM_VXLAN
                 rtNhAct := (*rtNhAct)(getPtrOffset(unsafe.Pointer(dat),
-                                  C.sizeof_struct_dp_cmn_act))
+                    C.sizeof_struct_dp_cmn_act))
                 C.memset(unsafe.Pointer(rtNhAct), 0, C.sizeof_struct_dp_rt_nh_act)
                 rtNhAct.nh_num = 0
                 rtNhAct.tid = 0
                 rtNhAct.bd = C.ushort(w.BD)
             } else {
+                /* No need for tunnel ID in case of Access side */
+                key.tunnel_id = 0
+                key.tun_type = 0
                 dat.act_type = C.DP_SET_RT_TUN_NH
                 rtNhAct := (*rtNhAct)(getPtrOffset(unsafe.Pointer(dat),
-                                  C.sizeof_struct_dp_cmn_act))
+                    C.sizeof_struct_dp_cmn_act))
                 C.memset(unsafe.Pointer(rtNhAct), 0, C.sizeof_struct_dp_rt_nh_act)
 
                 rtNhAct.nh_num = C.ushort(w.NhNum)
-                tid := ((w.TunId << 8) & 0xffffff00);
+                tid := ((w.TunId << 8) & 0xffffff00)
                 rtNhAct.tid = C.uint(tk.Htonl(tid))
             }
         } else {
@@ -421,8 +424,8 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
         }
 
         ret := C.llb_add_table_elem(C.LL_DP_TMAC_MAP,
-                                    unsafe.Pointer(key),
-                                    unsafe.Pointer(dat))
+            unsafe.Pointer(key),
+            unsafe.Pointer(dat))
 
         if ret != 0 {
             return EBPF_ERR_TMAC_ADD
@@ -463,15 +466,15 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
                 fmt.Printf("Setting tunNh %x\n", key.nh_num)
                 dat.ca.act_type = C.DP_SET_NEIGH_VXLAN
                 vxAct = (*rtVxL2NhAct)(getPtrOffset(unsafe.Pointer(dat),
-                                            C.sizeof_struct_dp_cmn_act))
+                    C.sizeof_struct_dp_cmn_act))
 
                 ipAddr := tk.IPtonl(w.rIP)
                 vxAct.rip = C.uint(ipAddr)
                 vxAct.sip = C.uint(tk.IPtonl(w.sIP))
-                tid := ((w.tunID << 8) & 0xffffff00);
+                tid := ((w.tunID << 8) & 0xffffff00)
                 vxAct.tid = C.uint(tk.Htonl(tid))
-                
-                fmt.Printf("rip 0x%x sip 0x%x 0x%x\n", vxAct.sip, vxAct.rip,vxAct.tid  )
+
+                fmt.Printf("rip 0x%x sip 0x%x 0x%x\n", vxAct.sip, vxAct.rip, vxAct.tid)
 
                 act = (*rtL2NhAct)(&vxAct.l2nh)
                 C.memcpy(unsafe.Pointer(&act.dmac[0]), unsafe.Pointer(&w.dstAddr[0]), 6)
@@ -480,7 +483,7 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
             } else {
                 dat.ca.act_type = C.DP_SET_NEIGH_L2
                 act = (*rtL2NhAct)(getPtrOffset(unsafe.Pointer(dat),
-                                        C.sizeof_struct_dp_cmn_act))
+                    C.sizeof_struct_dp_cmn_act))
                 C.memcpy(unsafe.Pointer(&act.dmac[0]), unsafe.Pointer(&w.dstAddr[0]), 6)
                 C.memcpy(unsafe.Pointer(&act.smac[0]), unsafe.Pointer(&w.srcAddr[0]), 6)
                 act.bd = C.ushort(w.BD)
@@ -501,8 +504,8 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
         //C.llb_del_table_elem(C.LL_DP_NH_MAP, unsafe.Pointer(key))
         // eBPF array elements cant be delete. Instead we just reset it
         C.llb_add_table_elem(C.LL_DP_NH_MAP,
-                             unsafe.Pointer(key),
-                             unsafe.Pointer(dat))
+            unsafe.Pointer(key),
+            unsafe.Pointer(dat))
         return 0
     }
 
@@ -544,7 +547,7 @@ func DpRouteMod(w *RouteDpWorkQ) int {
         if w.NHwMark >= 0 {
             dat.ca.act_type = C.DP_SET_RT_NHNUM
             act = (*rtL3NhAct)(getPtrOffset(unsafe.Pointer(dat),
-                              C.sizeof_struct_dp_cmn_act))
+                C.sizeof_struct_dp_cmn_act))
             act.nh_num = C.ushort(w.NHwMark)
         } else {
             dat.ca.act_type = C.DP_SET_TOCP
@@ -553,7 +556,7 @@ func DpRouteMod(w *RouteDpWorkQ) int {
         if w.RtHwMark > 0 {
             dat.ca.cidx = C.uint(w.RtHwMark)
         }
-        
+
         ret := C.llb_add_table_elem(C.LL_DP_RTV4_MAP,
             unsafe.Pointer(key),
             unsafe.Pointer(dat))
@@ -594,9 +597,9 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 
     if w.Work == DP_CREATE {
         dat := new(nat4Acts)
-        if (w.NatType == DP_SNAT) {
+        if w.NatType == DP_SNAT {
             dat.ca.act_type = C.DP_SET_SNAT
-        } else if (w.NatType == DP_DNAT) {
+        } else if w.NatType == DP_DNAT {
             dat.ca.act_type = C.DP_SET_DNAT
         } else {
             return EBPF_ERR_NAT4_ADD
@@ -607,36 +610,36 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
             dat.sel_type = C.NAT_LB_SEL_RR
         case w.EpSel == EP_HASH:
             dat.sel_type = C.NAT_LB_SEL_HASH
-        /* Currently not implemented in DP */    
+        /* Currently not implemented in DP */
         /*case w.EpSel == EP_PRIO:
-            dat.sel_type = C.NAT_LB_SEL_PRIO*/
+          dat.sel_type = C.NAT_LB_SEL_PRIO*/
         default:
             dat.sel_type = C.NAT_LB_SEL_RR
         }
         dat.ca.cidx = C.uint(w.HwMark)
 
         nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[0]))
-        
-        for _, k := range(w.endPoints) {
+
+        for _, k := range w.endPoints {
             nxfa.wprio = C.ushort(k.weight)
             nxfa.nat_xport = C.ushort(tk.Htons(k.xPort))
             nxfa.nat_xip = C.uint(tk.IPtonl(k.xIP))
-            
+
             if k.inActive {
                 nxfa.inactive = 1
             }
-        
+
             nxfa = (*nxfrmAct)(getPtrOffset(unsafe.Pointer(nxfa),
-                                 C.sizeof_struct_mf_xfrm_inf))
+                C.sizeof_struct_mf_xfrm_inf))
         }
-/*
-        for i := len(w.endPoints); i < C.LLB_MAX_NXFRMS; i++ {
-            nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[0]))
-            nxfa.inactive = 1
-        }
-*/
+        /*
+           for i := len(w.endPoints); i < C.LLB_MAX_NXFRMS; i++ {
+               nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[0]))
+               nxfa.inactive = 1
+           }
+        */
         dat.nxfrm = C.uint(len(w.endPoints))
-        
+
         ret := C.llb_add_table_elem(C.LL_DP_NAT4_MAP,
             unsafe.Pointer(key),
             unsafe.Pointer(dat))
@@ -687,17 +690,17 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
         return EBPF_ERR_WQ_UNK
     }
 
-    if (w.Work == DP_STATS_GET) {
-        var b C.longlong 
-        var p C.longlong 
+    if w.Work == DP_STATS_GET {
+        var b C.longlong
+        var p C.longlong
 
         packets = 0
         bytes = 0
 
-        for _, t := range(tbl) {		
-            
+        for _, t := range tbl {
+
             ret := C.llb_fetch_table_stats_cached(C.int(t), C.uint(w.HwMark),
-                       (unsafe.Pointer(&b)), unsafe.Pointer(&p))
+                (unsafe.Pointer(&b)), unsafe.Pointer(&p))
             if ret != 0 {
                 return EBPF_ERR_TMAC_ADD
             }
@@ -710,8 +713,8 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
             *w.Packets = uint64(packets)
             *w.Bytes = uint64(bytes)
         }
-    } else if (w.Work == DP_STATS_CLR) {
-        for _, t := range(tbl) {
+    } else if w.Work == DP_STATS_CLR {
+        for _, t := range tbl {
             C.llb_clear_table_stats(C.int(t), C.uint(w.HwMark))
         }
     }
@@ -720,17 +723,17 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 }
 
 type DpCT4Ent struct {
-    dip net.IP
-    sip net.IP
-    dport uint16
-    sport uint16
-    proto string
+    dip    net.IP
+    sip    net.IP
+    dport  uint16
+    sport  uint16
+    proto  string
     cState string
-    cAct string 	
+    cAct   string
 }
 
 func (ct *DpCT4Ent) Key() string {
-    str := fmt.Sprintf("%s%s%d%d%s", ct.dip.String(),ct.sip.String(), ct.dport, ct.sport, ct.proto)
+    str := fmt.Sprintf("%s%s%d%d%s", ct.dip.String(), ct.sip.String(), ct.dport, ct.sport, ct.proto)
     return str
 }
 
@@ -748,17 +751,17 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ctv4_key, ctDat *C.struct_dp_ctv4_dat) *D
         ct.proto = "icmp"
         i := (*C.ct_icmp_pinf_t)(unsafe.Pointer(&ctDat.pi))
         switch {
-        case i.state & C.CT_ICMP_DUNR != 0:
+        case i.state&C.CT_ICMP_DUNR != 0:
             ct.cState = "dest-unr"
-        case i.state & C.CT_ICMP_TTL != 0:
+        case i.state&C.CT_ICMP_TTL != 0:
             ct.cState = "ttl-exp"
-        case i.state & C.CT_ICMP_RDR != 0:
-            ct.cState = "icmp-redir"	
+        case i.state&C.CT_ICMP_RDR != 0:
+            ct.cState = "icmp-redir"
         case i.state == C.CT_ICMP_CLOSED:
             ct.cState = "closed"
         case i.state == C.CT_ICMP_REQS:
             ct.cState = "req-sent"
-        case i.state == C.CT_ICMP_REPS:	
+        case i.state == C.CT_ICMP_REPS:
             ct.cState = "bidir"
         }
     case p == 6:
@@ -799,14 +802,14 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ctv4_key, ctDat *C.struct_dp_ctv4_dat) *D
         ct.proto = fmt.Sprintf("%d", p)
     }
 
-    if ctDat.xi.nat_flags == C.LLB_NAT_DST || 
-       ctDat.xi.nat_flags == C.LLB_NAT_SRC {
+    if ctDat.xi.nat_flags == C.LLB_NAT_DST ||
+        ctDat.xi.nat_flags == C.LLB_NAT_SRC {
         var xip net.IP
 
-        xip = append(xip, uint8(ctDat.xi.nat_xip & 0xff))
-        xip = append(xip, uint8(ctDat.xi.nat_xip >> 8 & 0xff))
-        xip = append(xip, uint8(ctDat.xi.nat_xip >> 16 & 0xff))
-        xip = append(xip, uint8(ctDat.xi.nat_xip >> 24 & 0xff))
+        xip = append(xip, uint8(ctDat.xi.nat_xip&0xff))
+        xip = append(xip, uint8(ctDat.xi.nat_xip>>8&0xff))
+        xip = append(xip, uint8(ctDat.xi.nat_xip>>16&0xff))
+        xip = append(xip, uint8(ctDat.xi.nat_xip>>24&0xff))
 
         port := tk.Ntohs(uint16(ctDat.xi.nat_xport))
 
@@ -825,7 +828,7 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) DpRetT {
 
     ctMap := make(map[string]*DpCT4Ent)
 
-    if (w.Work != DP_TABLE_GET) {
+    if w.Work != DP_TABLE_GET {
         return EBPF_ERR_WQ_UNK
     }
 
@@ -835,16 +838,16 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) DpRetT {
     default:
         return EBPF_ERR_WQ_UNK
     }
-    
-    if (tbl ==  C.LL_DP_ACLV4_MAP) {
+
+    if tbl == C.LL_DP_ACLV4_MAP {
         var n int = 0
         var key *C.struct_dp_ctv4_key = nil
         nextKey := new(C.struct_dp_ctv4_key)
         var tact C.struct_dp_aclv4_tact
         var act *C.struct_dp_ctv4_dat
-    
+
         fd := C.llb_tb2fd(C.int(tbl))
-        
+
         for C.bpf_map_get_next_key(C.int(fd), (unsafe.Pointer)(key), (unsafe.Pointer)(nextKey)) == 0 {
             ctKey := (*C.struct_dp_ctv4_key)(unsafe.Pointer(nextKey))
 
@@ -858,12 +861,12 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) DpRetT {
                 goCt4Ent := convDPCt2GoObj(ctKey, act)
                 ctMap[goCt4Ent.Key()] = goCt4Ent
                 fmt.Println(goCt4Ent)
-                
+
             }
             key = nextKey
             n++
         }
     }
-    
+
     return ctMap
 }

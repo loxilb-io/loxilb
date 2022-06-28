@@ -102,10 +102,9 @@ func ModLink(link nlp.Link, add bool) int {
 		vid, _ = strconv.Atoi(strings.Join(re.FindAllString(name, -1), " "))
 		if add {
 			ret, err = hooks.NetVlanAdd(&cmn.VlanMod{Vid: vid, Dev: name, LinkIndex: idx,
-				MacAddr: ifMac, Link: linkState,
-				State: state, Mtu: mtu, TunId: 0})
+				MacAddr: ifMac, Link: linkState, State: state, Mtu: mtu, TunId: 0})
 		} else {
-			ret, err = hooks.NetVlanAdd(&cmn.VlanMod{Vid: vid})
+			ret, err = hooks.NetVlanDel(&cmn.VlanMod{Vid: vid})
 		}
 
 		if err != nil {
@@ -147,11 +146,28 @@ func ModLink(link nlp.Link, add bool) int {
 		return ret
 	}
 
-	/* Physical port*/
+	/* Physical port/ Bond/ VxLAN */
+	master := ""
+	real := ""
+	pType := cmn.PORT_REAL
+	tunId := 0
+	if vxlan, ok := link.(*nlp.Vxlan); ok {
+		pType = cmn.PORT_VXLANBR
+		tunId = vxlan.VxlanId
+		uif, err := nlp.LinkByIndex(vxlan.VtepDevIndex)
+		if err != nil {
+			fmt.Println(err)
+			return -1
+		}
+		real = uif.Attrs().Name
+		tk.LogIt(tk.LOG_INFO, "Port %v, uif %v %s\n", name, real, mod)
+	}
+
 	if add {
-		ret, err = hooks.NetPortAdd(&cmn.PortMod{Dev: name, LinkIndex: idx, MacAddr: ifMac,
-			Link: linkState, State: state, Mtu: mtu,
-			TunId: 0})
+
+		ret, err = hooks.NetPortAdd(&cmn.PortMod{Dev: name, LinkIndex: idx, Ptype: pType, MacAddr: ifMac,
+			Link: linkState, State: state, Mtu: mtu, Master: master, Real: real,
+			TunId: tunId})
 		if err != nil {
 			tk.LogIt(tk.LOG_ERROR, "Port %v, %v, %v, %v add failed\n", name, ifMac, state, mtu)
 			fmt.Println(err)
@@ -159,7 +175,7 @@ func ModLink(link nlp.Link, add bool) int {
 			tk.LogIt(tk.LOG_INFO, "Port %v, %v, %v, %v add [OK]\n", name, ifMac, state, mtu)
 		}
 	} else if attrs.MasterIndex == 0 {
-		ret, err = hooks.NetPortDel(&cmn.PortMod{Dev: name})
+		ret, err = hooks.NetPortDel(&cmn.PortMod{Dev: name, Ptype: pType})
 		if err != nil {
 			tk.LogIt(tk.LOG_ERROR, "Port %v, %v, %v, %v delete failed\n", name, ifMac, state, mtu)
 			fmt.Println(err)
@@ -205,10 +221,12 @@ func AddAddr(addr nlp.Addr, link nlp.Link) int {
 
 func AddNeigh(neigh nlp.Neigh, link nlp.Link) int {
 	var ret int
-	var vid int
+	var brId int
 	var mac [6]byte
 	var brMac [6]byte
 	var err error
+	var dst net.IP
+	var ftype int
 
 	re := regexp.MustCompile("[0-9]+")
 	attrs := link.Attrs()
@@ -219,46 +237,69 @@ func AddNeigh(neigh nlp.Neigh, link nlp.Link) int {
 	}
 	copy(mac[:], neigh.HardwareAddr[:6])
 
-	if len(neigh.IP) > 0 {
+	if neigh.Family == unix.AF_INET {
 		ret, err = hooks.NetNeighv4Add(&cmn.Neighv4Mod{Ip: neigh.IP, LinkIndex: neigh.LinkIndex,
 			State:        neigh.State,
 			HardwareAddr: neigh.HardwareAddr})
 		if err != nil {
-			tk.LogIt(tk.LOG_ERROR, "NH  %v dev %v add failed %v\n", neigh.IP.String(), name, err)
+			tk.LogIt(tk.LOG_ERROR, "NH %v mac %v dev %v add failed %v\n", neigh.IP.String(), mac,
+				name, err)
 
 		} else {
-			tk.LogIt(tk.LOG_INFO, "NH %v %v added\n", neigh.IP.String(), name)
+			tk.LogIt(tk.LOG_INFO, "NH %v mac %v dev %v added\n", neigh.IP.String(), mac, name)
 		}
-	} else {
+	} else if neigh.Family == unix.AF_BRIDGE {
+
+		if len(neigh.HardwareAddr) == 0 {
+			return -1
+		}
+		copy(mac[:], neigh.HardwareAddr[:6])
 
 		if neigh.Vlan == 1 {
 			/*FDB comes with vlan 1 also */
 			return 0
 		}
 
-		if mac[0]&0x01 == 1 {
-			/* Multicast MAC address --- IGNORED */
+		if mac[0]&0x01 == 1 || mac[0] == 0 {
+			/* Multicast MAC or ZERO address --- IGNORED */
 			return 0
 		}
 
-		brLink, err := nlp.LinkByIndex(neigh.MasterIndex)
-		if err != nil {
-			fmt.Println(err)
-			return -1
+		if neigh.MasterIndex > 0 {
+			brLink, err := nlp.LinkByIndex(neigh.MasterIndex)
+			if err != nil {
+				fmt.Println(err)
+				return -1
+			}
+
+			copy(brMac[:], brLink.Attrs().HardwareAddr[:6])
+			if mac == brMac {
+				/*Same as bridge mac --- IGNORED */
+				return 0
+			}
+			brId, _ = strconv.Atoi(strings.Join(re.FindAllString(brLink.Attrs().Name, -1), " "))
 		}
 
-		copy(brMac[:], brLink.Attrs().HardwareAddr[:6])
-		if mac == brMac {
-			/*Same as bridge mac --- IGNORED */
-			return 0
-		}
-		vid, _ = strconv.Atoi(strings.Join(re.FindAllString(brLink.Attrs().Name, -1), " "))
-
-		ret, err = hooks.NetFdbAdd(&cmn.FdbMod{MacAddr: mac, Vid: vid, Dev: name, Type: cmn.FDB_VLAN})
-		if err != nil {
-			tk.LogIt(tk.LOG_ERROR, "L2fdb %v vlan %v %v dev %v add failed\n", mac[:], vid, neigh.Vlan, name)
+		if vxlan, ok := link.(*nlp.Vxlan); ok {
+			/* Interested in only VxLAN FDB */
+			if len(neigh.IP) > 0 && (neigh.MasterIndex == 0) {
+				dst = neigh.IP
+				brId = vxlan.VxlanId
+				ftype = cmn.FDB_TUN
+			} else {
+				return 0
+			}
 		} else {
-			tk.LogIt(tk.LOG_INFO, "L2fdb %v vlan %v(%v) dev %v added\n", mac[:], vid, neigh.Vlan, name)
+			dst = net.ParseIP("0.0.0.0")
+			ftype = cmn.FDB_VLAN
+		}
+
+		ret, err = hooks.NetFdbAdd(&cmn.FdbMod{MacAddr: mac, BridgeId: brId, Dev: name, Dst: dst,
+			Type: ftype})
+		if err != nil {
+			tk.LogIt(tk.LOG_ERROR, "L2fdb %v brId %v dst %v dev %v add failed\n", mac[:], brId, dst, name)
+		} else {
+			tk.LogIt(tk.LOG_INFO, "L2fdb %v brId %v dst %v dev %v added\n", mac[:], brId, dst, name)
 		}
 	}
 
@@ -270,15 +311,16 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 	var ret int
 	var mac [6]byte
 	var brMac [6]byte
-	var vid int
+	var brId int
 	var err error
+	var dst net.IP
 
 	re := regexp.MustCompile("[0-9]+")
 	attrs := link.Attrs()
 	name := attrs.Name
 
-	if len(neigh.IP) > 0 {
-		ret, err = hooks.NetNeighv4Add(&cmn.Neighv4Mod{Ip: neigh.IP})
+	if neigh.Family == unix.AF_INET {
+		ret, err = hooks.NetNeighv4Del(&cmn.Neighv4Mod{Ip: neigh.IP})
 		if err != nil {
 			tk.LogIt(tk.LOG_ERROR, "NH  %v %v del failed\n", neigh.IP.String(), name)
 			ret = -1
@@ -291,33 +333,49 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 			/*FDB comes with vlan 1 also */
 			return 0
 		}
-
-		copy(mac[:], neigh.HardwareAddr[:6])
-
-		if mac[0]&0x01 == 1 {
-			/* Multicast MAC address --- IGNORED */
-			return 0
-		}
-
-		brLink, err := nlp.LinkByIndex(neigh.MasterIndex)
-		if err != nil {
-			fmt.Println(err)
+		if len(neigh.HardwareAddr) == 0 {
 			return -1
 		}
 
-		copy(brMac[:], brLink.Attrs().HardwareAddr[:6])
-		if mac == brMac {
-			/* Same as bridge mac --- IGNORED */
+		copy(mac[:], neigh.HardwareAddr[:6])
+		if mac[0]&0x01 == 1 || mac[0] == 0 {
+			/* Multicast MAC or ZERO address --- IGNORED */
 			return 0
 		}
-		vid, _ = strconv.Atoi(strings.Join(re.FindAllString(brLink.Attrs().Name, -1), " "))
 
-		ret, err = hooks.NetFdbDel(&cmn.FdbMod{MacAddr: mac, Vid: vid})
+		if neigh.MasterIndex > 0 {
+			brLink, err := nlp.LinkByIndex(neigh.MasterIndex)
+			if err != nil {
+				fmt.Println(err)
+				return -1
+			}
+
+			copy(brMac[:], brLink.Attrs().HardwareAddr[:6])
+			if mac == brMac {
+				/*Same as bridge mac --- IGNORED */
+				return 0
+			}
+			brId, _ = strconv.Atoi(strings.Join(re.FindAllString(brLink.Attrs().Name, -1), " "))
+		}
+
+		if vxlan, ok := link.(*nlp.Vxlan); ok {
+			/* Interested in only VxLAN FDB */
+			if len(neigh.IP) > 0 && (neigh.MasterIndex == 0) {
+				dst = neigh.IP
+				brId = vxlan.VxlanId
+			} else {
+				return 0
+			}
+		} else {
+			dst = net.ParseIP("0.0.0.0")
+		}
+
+		ret, err = hooks.NetFdbDel(&cmn.FdbMod{MacAddr: mac, BridgeId: brId})
 		if err != nil {
-			tk.LogIt(tk.LOG_ERROR, "L2fdb %v vlan %v dev %v delete failed %v\n", mac[:], vid, name, err)
+			tk.LogIt(tk.LOG_ERROR, "L2fdb %v brId %v dst %s dev %v delete failed %v\n", mac[:], brId, dst, name, err)
 			ret = -1
 		} else {
-			tk.LogIt(tk.LOG_INFO, "L2fdb %v vlan %v dev %v deleted\n", mac[:], vid, name)
+			tk.LogIt(tk.LOG_INFO, "L2fdb %v brId %v dst %s dev %v deleted\n", mac[:], brId, dst, name)
 		}
 	}
 	return ret
@@ -481,7 +539,7 @@ func RUWorker(ch chan nlp.RouteUpdate, f chan struct{}) {
 	}
 }
 
-func CreateBridge() {
+func GetBridges() {
 	links, err := nlp.LinkList()
 	if err != nil {
 		return
@@ -500,7 +558,7 @@ func NlpGet() int {
 	var ret int
 	tk.LogIt(tk.LOG_INFO, "Getting device info\n")
 
-	CreateBridge()
+	GetBridges()
 
 	links, err := nlp.LinkList()
 	if err != nil {

@@ -18,8 +18,9 @@ package loxinet
 import (
     "errors"
     "fmt"
-    "strings"
+    cmn "loxilb/common"
     tk "loxilb/loxilib"
+    "strings"
 )
 
 const (
@@ -42,9 +43,9 @@ const (
 )
 
 type vlanStat struct {
-    inBytes   uint64
-    inPackets uint64
-    outBytes  uint64
+    inBytes    uint64
+    inPackets  uint64
+    outBytes   uint64
     outPackets uint64
 }
 
@@ -57,7 +58,7 @@ type Vlan struct {
     TaggedPorts   [MAX_IFS]*Port
     NumUnTagPorts int
     UnTaggedPorts [MAX_IFS]*Port
-    Stat          vlanStat 
+    Stat          vlanStat
 }
 
 type VlansH struct {
@@ -92,7 +93,7 @@ func (V *VlansH) VlanAdd(vlanID int, name string, zone string, osid int, hwi Por
         return VLAN_EXISTS_ERR, errors.New("Vlan zone err")
     }
 
-    ret, err := V.Zone.Ports.PortAdd(name, osid, PORT_VLANBR, zone, hwi, PortLayer2Info{false, vlanID})
+    ret, err := V.Zone.Ports.PortAdd(name, osid, cmn.PORT_VLANBR, zone, hwi, PortLayer2Info{false, vlanID})
     if err != nil || ret != 0 {
         tk.LogIt(tk.LOG_ERROR, "Vlan bridge interface not created %d\n", ret)
         mh.zn.ZoneBrDelete(name)
@@ -127,7 +128,7 @@ func (V *VlansH) VlanDelete(vlanID int) (int, error) {
     v := &V.VlanMap[vlanID]
     mh.zn.ZoneBrDelete(v.Name)
 
-    V.Zone.Ports.PortDel(v.Name, PORT_VLANBR)
+    V.Zone.Ports.PortDel(v.Name, cmn.PORT_VLANBR)
     v.DP(DP_STATS_CLR)
 
     v.Name = ""
@@ -162,7 +163,7 @@ func (V *VlansH) VlanPortAdd(vlanID int, portName string, tagged bool) (int, err
         osID := 4000 + (vlanID * MAX_PHY_IFS) + p.PortNo
         membPortName = fmt.Sprintf("%s.%d", portName, vlanID)
 
-        if p.SInfo.PortType & PORT_VXLANBR == PORT_VXLANBR {
+        if p.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
             return VLAN_PORT_TAGGED_ERR, errors.New("vxlan can not be tagged")
         }
 
@@ -173,7 +174,7 @@ func (V *VlansH) VlanPortAdd(vlanID int, portName string, tagged bool) (int, err
         hInfo := p.HInfo
         hInfo.Real = p.Name
         hInfo.Master = v.Name
-        if e, _ := V.Zone.Ports.PortAdd(membPortName, osID, PORT_VLANSIF, v.Zone,
+        if e, _ := V.Zone.Ports.PortAdd(membPortName, osID, cmn.PORT_VLANSIF, v.Zone,
             hInfo, PortLayer2Info{false, vlanID}); e == 0 {
             tp := V.Zone.Ports.PortFindByName(membPortName)
             if tp == nil {
@@ -190,7 +191,7 @@ func (V *VlansH) VlanPortAdd(vlanID int, portName string, tagged bool) (int, err
         }
         hInfo := p.HInfo
         hInfo.Master = v.Name
-        if e, _ := V.Zone.Ports.PortAdd(portName, p.SInfo.OsId, PORT_VLANSIF, v.Zone,
+        if e, _ := V.Zone.Ports.PortAdd(portName, p.SInfo.OsId, cmn.PORT_VLANSIF, v.Zone,
             hInfo, PortLayer2Info{true, vlanID}); e == 0 {
             v.UnTaggedPorts[p.PortNo] = p
             v.NumUnTagPorts++
@@ -225,11 +226,11 @@ func (V *VlansH) VlanPortDelete(vlanID int, portName string, tagged bool) (int, 
         }
         var membPortName string
         membPortName = fmt.Sprintf("%s.%d", portName, vlanID)
-        V.Zone.Ports.PortDel(membPortName, PORT_VLANSIF)
+        V.Zone.Ports.PortDel(membPortName, cmn.PORT_VLANSIF)
         v.TaggedPorts[p.PortNo] = nil
         v.NumTagPorts--
     } else {
-        V.Zone.Ports.PortDel(portName, PORT_VLANSIF)
+        V.Zone.Ports.PortDel(portName, cmn.PORT_VLANSIF)
         v.UnTaggedPorts[p.PortNo] = nil
         v.NumUnTagPorts--
     }
@@ -313,11 +314,11 @@ func (V *VlansH) VlansSync() {
         v := &V.VlanMap[i]
         if v.Created == true {
             if v.Stat.inPackets != 0 || v.Stat.outPackets != 0 {
-                fmt.Printf("BD stats %d : in %v:%v out %v:%v\n", 
-                       i, v.Stat.inPackets, v.Stat.inBytes,
-                       v.Stat.outPackets, v.Stat.outBytes)
+                fmt.Printf("BD stats %d : in %v:%v out %v:%v\n",
+                    i, v.Stat.inPackets, v.Stat.inBytes,
+                    v.Stat.outPackets, v.Stat.outBytes)
             }
-            v.DP(DP_STATS_GET)	
+            v.DP(DP_STATS_GET)
         }
     }
 }
@@ -336,7 +337,7 @@ func (v *Vlan) DP(work DpWorkT) int {
         iStat.Bytes = &v.Stat.inBytes
         iStat.Packets = &v.Stat.inPackets
         mh.dp.ToDpCh <- iStat
-        
+
         oStat := new(StatDpWorkQ)
         oStat.Work = work
         oStat.HwMark = uint32(v.VlanID)
@@ -351,7 +352,7 @@ func (v *Vlan) DP(work DpWorkT) int {
         cStat.Work = work
         cStat.HwMark = uint32(v.VlanID)
         cStat.Name = "BD"
-        
+
         mh.dp.ToDpCh <- cStat
 
         return 0
