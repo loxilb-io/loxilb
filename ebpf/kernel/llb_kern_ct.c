@@ -600,7 +600,7 @@ dp_ctv4_in(void *ctx, struct xfi *F)
       !(F->pm.nf & (LLB_NAT_HDST|LLB_NAT_HSRC))) { 
     if (F->pm.nf == LLB_NAT_DST) {
       xi->nat_flags = LLB_NAT_HDST;
-    } else {
+    } else if (F->pm.nf == LLB_NAT_SRC){
       xi->nat_flags = LLB_NAT_HSRC;
     }
   }
