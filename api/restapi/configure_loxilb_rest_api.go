@@ -45,7 +45,9 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 
 	api.JSONProducer = runtime.JSONProducer()
 
+	// Load balancer add and delete
 	api.PostConfigLoadbalancerHandler = operations.PostConfigLoadbalancerHandlerFunc(handler.ConfigPostLoadbalancer)
+	api.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler = operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(handler.ConfigDeleteLoadbalancer)
 
 	api.PreServerShutdown = func() {}
 
