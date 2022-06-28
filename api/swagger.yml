@@ -154,6 +154,57 @@ paths:
           description: Maintanence mode
           schema:
             $ref: '#/definitions/Error'
+  '/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}':
+    delete:
+      summary: Create a new Load balancer service
+      description: Create a new load balancer service with .
+      parameters:
+        - name: ip_address
+          in: path
+          type: string
+          required: true
+          description: Attributes for load balance service
+        - name: port
+          in: path
+          type: number
+          required: true
+          description: Attributes for load balance service
+        - name: proto
+          in: path
+          type: string
+          required: true
+          description: Attributes for load balance service
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
     # delete:
     #   summary: Remove a vlan interface
     #   description: Remove a vlan interface which is defined by vlan_id. If the vlan interface does not exist on Loxilb it returns a '404' error. If the vlan_id passed is less than 2 or greater than 4094 the API will respond with error '400'. If the delete is called before all associated vlan neighbors/members are deleted, this will return error '409' conflict with sub-code 2.
