@@ -1190,6 +1190,8 @@ dp_pop_outer_metadata(void *md, struct xfi *F)
   memcpy(F->pm.lkup_dmac, F->il2m.dl_dst, 6);
   F->pm.tcp_flags = F->pm.itcp_flags;
 
+  F->pm.l3_off = F->pm.il3_off;
+  F->pm.l4_off = F->pm.il4_off;
   F->il3m.valid = 0;
   F->il2m.valid = 0;
   F->tm.tun_decap = 1;

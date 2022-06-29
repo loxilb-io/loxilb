@@ -94,7 +94,8 @@ struct dp_pi_mdi {
 #define LLB_NAT_HSRC          0x08
     __u8             nf;
     __u32            rule_id;   
-    __u16            cpu;
+    __u8             il3_off;
+    __u8             il4_off;
     __u8             itcp_flags;
     __u8             qm;
     __u16            l3_len;

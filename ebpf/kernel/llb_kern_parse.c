@@ -540,9 +540,7 @@ dp_parse_packet(void *md,
 static int __always_inline
 dp_ing_pkt_main(void *md, struct xfi *F)
 {
-  F->pm.cpu = bpf_get_smp_processor_id();;
-
-  LL_DBG_PRINTK("[PRSR] -- START cpu %d \n", F->pm.cpu);
+  LL_DBG_PRINTK("[PRSR] -- START cpu %d \n", bpf_get_smp_processor_id());
   LL_DBG_PRINTK("[PRSR] fi  %d\n", sizeof(*F));
   LL_DBG_PRINTK("[PRSR] fm  %d\n", sizeof(F->fm));
   LL_DBG_PRINTK("[PRSR] l2m %d\n", sizeof(F->l2m));
