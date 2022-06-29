@@ -201,6 +201,12 @@ func (z *ZoneH) ZonePortDelete(name string) (int, error) {
 
 func (z *ZoneH) ZoneTicker() {
     for _, zone := range(z.ZoneMap) {
+
+        mh.mtx.Lock()
+        zone.L2.FdbsTicker()
+        zone.Nh.NeighsTicker()
+        mh.mtx.Unlock()
+
         mh.mtx.RLock()
         zone.Rules.RulesTicker()
         mh.mtx.RUnlock()
