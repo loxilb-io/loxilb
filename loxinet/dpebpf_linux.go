@@ -239,6 +239,7 @@ func DpPortPropMod(w *PortDpWorkQ) int {
             }
         }
         data := new(intfMapDat)
+        C.memset(unsafe.Pointer(data), 0, C.sizeof_struct_dp_intf_tact)
         data.ca.act_type = C.DP_SET_IFI
         setIfi = (*intfSetIfi)(getPtrOffset(unsafe.Pointer(data),
             C.sizeof_struct_dp_cmn_act))
@@ -251,15 +252,15 @@ func DpPortPropMod(w *PortDpWorkQ) int {
         setIfi.polid = C.ushort(w.SetPol)
 
         ret := C.llb_add_table_elem(C.LL_DP_INTF_MAP,
-            unsafe.Pointer(key),
-            unsafe.Pointer(data))
+                                    unsafe.Pointer(key),
+                                    unsafe.Pointer(data))
 
         if ret != 0 {
-            tk.LogIt(tk.LOG_ERROR, "[EBPF PORT] Error adding in Intf map %d vlan %d\n", w.OsPortNum, w.IngVlan)
+            tk.LogIt(tk.LOG_ERROR, "error adding in intf map %d vlan %d\n", w.OsPortNum, w.IngVlan)
             return EBPF_ERR_PORTPROP_ADD
         }
 
-        tk.LogIt(tk.LOG_DEBUG, "[EBPF PORT] Intf map added idx %d vlan %d\n", w.OsPortNum, w.IngVlan)
+        tk.LogIt(tk.LOG_DEBUG, "intf map added idx %d vlan %d\n", w.OsPortNum, w.IngVlan)
         txV = C.uint(w.OsPortNum)
         ret = C.llb_add_table_elem(C.LL_DP_TX_INTF_MAP,
             unsafe.Pointer(&txK),
@@ -321,6 +322,7 @@ func DpL2AddrMod(w *L2AddrDpWorkQ) int {
         sdat.act_type = C.DP_SET_NOP
 
         ddat := new(dMacMapDat)
+        C.memset(unsafe.Pointer(ddat), 0, C.sizeof_struct_dp_dmac_tact)
 
         if w.Tun == 0 {
             l2va = (*l2VlanAct)(getPtrOffset(unsafe.Pointer(ddat),
@@ -459,6 +461,7 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 
     if w.Work == DP_CREATE {
         dat := new(nhDat)
+        C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_nh_tact)
         if !w.resolved {
             dat.ca.act_type = C.DP_SET_DROP
         } else {
@@ -466,7 +469,7 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
                 fmt.Printf("Setting tunNh %x\n", key.nh_num)
                 dat.ca.act_type = C.DP_SET_NEIGH_VXLAN
                 vxAct = (*rtVxL2NhAct)(getPtrOffset(unsafe.Pointer(dat),
-                    C.sizeof_struct_dp_cmn_act))
+                                       C.sizeof_struct_dp_cmn_act))
 
                 ipAddr := tk.IPtonl(w.rIP)
                 vxAct.rip = C.uint(ipAddr)
@@ -492,8 +495,8 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
         }
 
         ret := C.llb_add_table_elem(C.LL_DP_NH_MAP,
-            unsafe.Pointer(key),
-            unsafe.Pointer(dat))
+                                    unsafe.Pointer(key),
+                                    unsafe.Pointer(dat))
         if ret != 0 {
             return EBPF_ERR_NH_ADD
         }
@@ -532,7 +535,7 @@ func DpRouteMod(w *RouteDpWorkQ) int {
     len += 16 /* 16-bit ZoneNum + prefix-len */
     key.l.prefixlen = C.uint(len)
     kPtr = (*[6]uint8)(getPtrOffset(unsafe.Pointer(key),
-        C.sizeof_struct_bpf_lpm_trie_key))
+                       C.sizeof_struct_bpf_lpm_trie_key))
 
     kPtr[0] = uint8(w.ZoneNum >> 8 & 0xff)
     kPtr[1] = uint8(w.ZoneNum & 0xff)
@@ -543,6 +546,7 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 
     if w.Work == DP_CREATE {
         dat := new(rtDat)
+        C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_rt_tact)
 
         if w.NHwMark >= 0 {
             dat.ca.act_type = C.DP_SET_RT_NHNUM
@@ -597,6 +601,7 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 
     if w.Work == DP_CREATE {
         dat := new(nat4Acts)
+        C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_natv4_tacts)
         if w.NatType == DP_SNAT {
             dat.ca.act_type = C.DP_SET_SNAT
         } else if w.NatType == DP_DNAT {
@@ -632,17 +637,18 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
             nxfa = (*nxfrmAct)(getPtrOffset(unsafe.Pointer(nxfa),
                 C.sizeof_struct_mf_xfrm_inf))
         }
-        /*
-           for i := len(w.endPoints); i < C.LLB_MAX_NXFRMS; i++ {
-               nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[0]))
-               nxfa.inactive = 1
-           }
-        */
+
+        // Any unused end-points should be marked inactive
+        for i := len(w.endPoints); i < C.LLB_MAX_NXFRMS; i++ {
+            nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[i]))
+            nxfa.inactive = 1
+        }
+
         dat.nxfrm = C.uint(len(w.endPoints))
 
         ret := C.llb_add_table_elem(C.LL_DP_NAT4_MAP,
-            unsafe.Pointer(key),
-            unsafe.Pointer(dat))
+                                    unsafe.Pointer(key),
+                                    unsafe.Pointer(dat))
 
         if ret != 0 {
             return EBPF_ERR_TMAC_ADD
@@ -700,7 +706,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
         for _, t := range tbl {
 
             ret := C.llb_fetch_table_stats_cached(C.int(t), C.uint(w.HwMark),
-                (unsafe.Pointer(&b)), unsafe.Pointer(&p))
+                                                  (unsafe.Pointer(&b)), unsafe.Pointer(&p))
             if ret != 0 {
                 return EBPF_ERR_TMAC_ADD
             }
