@@ -394,12 +394,16 @@ func (n *NeighH) NeighDelete(Addr net.IP, Ns string) (int, error) {
 func (n *NeighH) NeighFind(Addr net.IP, Ns string) (*Neigh, int) {
     key := NeighKey{Addr.String(), Ns}
 
-    nh, found := n.NeighMap[key]
+    ne, found := n.NeighMap[key]
     if found == false {
         return nil, -1
     }
 
-    return nh, -1
+    if ne != nil && ne.Inactive {
+        return nil, -1
+    }
+
+    return ne, -1
 }
 
 func (n *NeighH) NeighPairRt(ne *Neigh, rt *Rt) int {
