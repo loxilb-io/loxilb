@@ -19,9 +19,9 @@ import (
     "bytes"
     "errors"
     "fmt"
-    "net"
-    tk "loxilb/loxilib"
     cmn "loxilb/common"
+    tk "loxilb/loxilib"
+    "net"
 )
 
 const (
@@ -36,8 +36,8 @@ const (
 )
 
 const (
-    MAX_V4NEIGH = 2048
-    MAX_V6NEIGH = 1024
+    MAX_V4NEIGH  = 2048
+    MAX_V6NEIGH  = 1024
     MAX_TUNNEIGH = 1024
 )
 
@@ -53,10 +53,11 @@ type NeighAttr struct {
 }
 
 type NhType uint8
+
 const (
     NH_NORMAL NhType = 1 << iota
     NH_TUN
-    NH_RECURSIVE              
+    NH_RECURSIVE
 )
 
 type NeighTunEp struct {
@@ -66,7 +67,7 @@ type NeighTunEp struct {
     tunType  DpTunT
     HwMark   int
     Parent   *Neigh
-    Inactive bool 
+    Inactive bool
     Sync     DpStatusT
 }
 
@@ -104,19 +105,19 @@ func NeighInit(zone *Zone) *NeighH {
     return nNh
 }
 
-func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, 
-                               tunID uint32, tunType DpTunT, 
-                               sync bool) (int, *NeighTunEp) {
+func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP,
+    tunID uint32, tunType DpTunT,
+    sync bool) (int, *NeighTunEp) {
     // FIXME - Need to be able to support multiple overlays with same entry
     port := ne.OifPort
     if port == nil || port.SInfo.PortOvl == nil {
         return -1, nil
     }
 
-    for  _, tep := range(ne.TunEps) {
+    for _, tep := range ne.TunEps {
         if tep.rIP.Equal(rIP) &&
-           tep.tunID == tunID &&
-           tep.tunType == tunType {
+            tep.tunID == tunID &&
+            tep.tunType == tunType {
             return -1, nil
         }
     }
@@ -154,16 +155,16 @@ func (ne *Neigh) NeighRemoveTunEP(i int) []*NeighTunEp {
     return ne.TunEps[:len(ne.TunEps)-1]
 }
 
-func (n *NeighH) NeighDelTunEP(ne *Neigh, rIP net.IP, 
-                               tunID uint32, tunType DpTunT, 
-                               sync bool) int {
+func (n *NeighH) NeighDelTunEP(ne *Neigh, rIP net.IP,
+    tunID uint32, tunType DpTunT,
+    sync bool) int {
 
     var i int = 0
-    for  _, tep := range(ne.TunEps) {
-        if  tep.rIP.Equal(rIP) &&
+    for _, tep := range ne.TunEps {
+        if tep.rIP.Equal(rIP) &&
             tep.tunID == tunID &&
             tep.tunType == tunType {
-                
+
             if sync {
                 tep.DP(DP_REMOVE)
             }
@@ -180,7 +181,7 @@ func (n *NeighH) NeighDelTunEP(ne *Neigh, rIP net.IP,
 
 func (n *NeighH) NeighDelAllTunEP(ne *Neigh) int {
     var i int = 0
-    for  _, tep := range(ne.TunEps) {          
+    for _, tep := range ne.TunEps {
         tep.DP(DP_REMOVE)
         n.NeighTid.PutCounter(tep.HwMark)
         tep.Inactive = true
@@ -193,34 +194,34 @@ func (n *NeighH) NeighDelAllTunEP(ne *Neigh) int {
 func (n *NeighH) NeighRecursiveResolve(ne *Neigh) {
     zeroHwAddr, _ := net.ParseMAC("00:00:00:00:00:00")
 
-     attr := ne.Attr
-     port := ne.OifPort
+    attr := ne.Attr
+    port := ne.OifPort
 
-     if port == nil {
+    if port == nil {
         return
-     }
+    }
 
-     if bytes.Equal(attr.HardwareAddr, zeroHwAddr) == true {
+    if bytes.Equal(attr.HardwareAddr, zeroHwAddr) == true {
         ne.Resolved = false
     } else {
         ne.Resolved = true
     }
 
-     if ne.tFdb != nil && 
-        (ne.tFdb.inActive || ne.tFdb.unReach)  {
+    if ne.tFdb != nil &&
+        (ne.tFdb.inActive || ne.tFdb.unReach) {
         ne.Resolved = false
         ne.Type &= ^NH_RECURSIVE
         ne.tFdb = nil
-     }
+    }
 
-     if ne.Resolved == true {
+    if ne.Resolved == true {
         mac := [6]uint8{attr.HardwareAddr[0],
-                        attr.HardwareAddr[1],
-                        attr.HardwareAddr[2],
-                        attr.HardwareAddr[3],
-                        attr.HardwareAddr[4],
-                        attr.HardwareAddr[5] }
-        key := FdbKey { mac, port.L2.Vid }
+            attr.HardwareAddr[1],
+            attr.HardwareAddr[2],
+            attr.HardwareAddr[3],
+            attr.HardwareAddr[4],
+            attr.HardwareAddr[5]}
+        key := FdbKey{mac, port.L2.Vid}
 
         if f := n.Zone.L2.L2FdbFind(key); f == nil {
             has_tun, _ := n.Zone.Ports.PortHasTunSlaves(port.Name, cmn.PORT_VXLANBR)
@@ -245,7 +246,6 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) {
 func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error) {
     key := NeighKey{Addr.String(), Zone}
     zeroHwAddr, _ := net.ParseMAC("00:00:00:00:00:00")
-
     ne, found := n.NeighMap[key]
     if found == true {
         if bytes.Equal(Attr.HardwareAddr, zeroHwAddr) == true {
@@ -326,6 +326,8 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
         }
     }
 
+    tk.LogIt(tk.LOG_DEBUG, "neigh added %s\n", Addr.String())
+
     return 0, nil
 }
 
@@ -394,12 +396,16 @@ func (n *NeighH) NeighDelete(Addr net.IP, Ns string) (int, error) {
 func (n *NeighH) NeighFind(Addr net.IP, Ns string) (*Neigh, int) {
     key := NeighKey{Addr.String(), Ns}
 
-    nh, found := n.NeighMap[key]
+    ne, found := n.NeighMap[key]
     if found == false {
         return nil, -1
     }
 
-    return nh, -1
+    if ne != nil && ne.Inactive {
+        return nil, -1
+    }
+
+    return ne, -1
 }
 
 func (n *NeighH) NeighPairRt(ne *Neigh, rt *Rt) int {
@@ -491,7 +497,7 @@ func (ne *Neigh) DP(work DpWorkT) int {
     neighWq.Status = &ne.Sync
     neighWq.resolved = ne.Resolved
     neighWq.nNextHopNum = 0
-    if ne.Type & NH_RECURSIVE == NH_RECURSIVE {
+    if ne.Type&NH_RECURSIVE == NH_RECURSIVE {
         f := ne.tFdb
         if f != nil && f.FdbTun.ep != nil {
             neighWq.nNextHopNum = f.FdbTun.ep.HwMark
@@ -520,12 +526,12 @@ func (ne *Neigh) DP(work DpWorkT) int {
     return 0
 }
 
-func (tep *NeighTunEp)DP(work DpWorkT) int {
+func (tep *NeighTunEp) DP(work DpWorkT) int {
 
     ne := tep.Parent
 
     if ne == nil {
-        return  -1
+        return -1
     }
 
     neighWq := new(NextHopDpWorkQ)

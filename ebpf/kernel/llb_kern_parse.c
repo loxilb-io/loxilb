@@ -102,6 +102,8 @@ proc_inl3:
       return -1;
     }
 
+    F->pm.il3_off = DP_DIFF_PTR(iph, DP_PDATA(md));
+
     F->il3m.valid = 1;
     F->il3m.tos = iph->tos & 0xfc;
     F->il3m.nw_proto = iph->protocol;
@@ -109,6 +111,9 @@ proc_inl3:
     F->il3m.ip.daddr = iph->daddr;
 
     if (!ip_is_fragment(iph)) {
+
+      F->pm.il4_off = DP_DIFF_PTR(DP_ADD_PTR(iph, iphl), DP_PDATA(md));
+
       if (F->il3m.nw_proto == IPPROTO_TCP) {
         struct tcphdr *tcp = DP_ADD_PTR(iph, iphl);
 
@@ -167,6 +172,8 @@ proc_inl3:
       LLBS_PPLN_DROP(F);
       return -1;
     }
+
+    F->pm.il4_off = DP_DIFF_PTR(DP_ADD_PTR(ip6, sizeof(*ip6)), DP_PDATA(md));
 
     F->il3m.valid = 1;
     F->il3m.tos = ((ip6->priority << 4) |
@@ -540,9 +547,7 @@ dp_parse_packet(void *md,
 static int __always_inline
 dp_ing_pkt_main(void *md, struct xfi *F)
 {
-  F->pm.cpu = bpf_get_smp_processor_id();;
-
-  LL_DBG_PRINTK("[PRSR] -- START cpu %d \n", F->pm.cpu);
+  LL_DBG_PRINTK("[PRSR] -- START cpu %d \n", bpf_get_smp_processor_id());
   LL_DBG_PRINTK("[PRSR] fi  %d\n", sizeof(*F));
   LL_DBG_PRINTK("[PRSR] fm  %d\n", sizeof(F->fm));
   LL_DBG_PRINTK("[PRSR] l2m %d\n", sizeof(F->l2m));

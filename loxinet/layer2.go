@@ -105,37 +105,45 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
     unRch := false
 
     if p == nil {
-        return false, L2_VXATTR_ERR, errors.New("fdb port error")
+        return true, L2_VXATTR_ERR, errors.New("fdb port error")
     }
 
     zone, _ := mh.zn.Zonefind(p.Zone)
     if zone == nil {
-        return false, L2_VXATTR_ERR, errors.New("fdb zone error")
+        return true, L2_VXATTR_ERR, errors.New("fdb zone error")
     }
 
     if p.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
         if attr.FdbType != cmn.FDB_TUN {
-            return false, L2_VXATTR_ERR, errors.New("fdb attr error")
+            return true, L2_VXATTR_ERR, errors.New("fdb attr error")
         }
 
         if attr.Dst.To4() == nil {
-            return false, L2_VXATTR_ERR, errors.New("fdb v6 dst unsupported")
+            return true, L2_VXATTR_ERR, errors.New("fdb v6 dst unsupported")
         }
 
         tk.LogIt(tk.LOG_DEBUG, "fdb tun rt lookup %s\n", attr.Dst.String())
         // Check if the end-point is reachable
         err, pStr, tDat := zone.Rt.Trie4.FindTrie(attr.Dst.String())
         if err == 0 {
-            if nh, ok := tDat.(*Neigh); ok {
+            switch rtn := tDat.(type) {
+            case *Neigh:
+                if rtn == nil {
+                    return true, -1, errors.New("no neigh found")
+                }
+            default:
+                return true, -1, errors.New("no neigh found")
+            }
+            if nh, ok := tDat.(*Neigh); ok && !nh.Inactive {
                 _, pDstNet, perr := net.ParseCIDR(*pStr)
                 if perr != nil {
-                    tk.LogIt(tk.LOG_DEBUG, "1.fdb tun rt lookup %s UNREACHABLE\n", attr.Dst.String())
+                    tk.LogIt(tk.LOG_DEBUG, "fdb tun rtlookup %s parse-err\n", attr.Dst.String())
                     unRch = true
                 } else {
                     rt := zone.Rt.RtFind(*pDstNet, zone.Name)
                     if rt == nil {
                         unRch = true
-                        tk.LogIt(tk.LOG_DEBUG, "2.fdb tun rt lookup %s UNREACHABLE\n", attr.Dst.String())
+                        tk.LogIt(tk.LOG_DEBUG, "fdb tun rtlookup %s nort\n", attr.Dst.String())
                     } else {
                         ret, tep := zone.Nh.NeighAddTunEP(nh, attr.Dst, p.HInfo.TunId, DP_TUN_VXLAN, true)
                         if ret == 0 {
@@ -150,11 +158,11 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
             }
         } else {
             unRch = true
-            tk.LogIt(tk.LOG_DEBUG, "3.fdb tun rt lookup %s UNREACHABLE\n", attr.Dst.String())
+            tk.LogIt(tk.LOG_DEBUG, "3.fdb tun rtlookup %s notrie\n", attr.Dst.String())
         }
     }
     if unRch {
-        tk.LogIt(tk.LOG_DEBUG, "fdb tun rt lookup %s UNREACHABLE\n", attr.Dst.String())
+        tk.LogIt(tk.LOG_DEBUG, "fdb tun rtlookup %s unreachable\n", attr.Dst.String())
     }
     return unRch, 0, nil
 }
@@ -257,7 +265,10 @@ func (l2 *L2H) FdbTicker(f *FdbEnt) {
         } else if f.unReach == true {
             tk.LogIt(tk.LOG_DEBUG, "Unreachable scan %v", f)
             unRch, _, _ := f.L2FdbResolveNh()
-            f.unReach = unRch
+            if f.unReach != unRch {
+                f.unReach = unRch
+                f.DP(DP_CREATE)
+            }
         }
         f.stime = time.Now()
     }
