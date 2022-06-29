@@ -257,7 +257,10 @@ func (l2 *L2H) FdbTicker(f *FdbEnt) {
         } else if f.unReach == true {
             tk.LogIt(tk.LOG_DEBUG, "Unreachable scan %v", f)
             unRch, _, _ := f.L2FdbResolveNh()
-            f.unReach = unRch
+            if f.unReach != unRch {
+                f.DP(DP_CREATE)
+                f.unReach = unRch
+            }
         }
         f.stime = time.Now()
     }
