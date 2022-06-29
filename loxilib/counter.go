@@ -88,9 +88,10 @@ func (C *Counter) PutCounter(id int) error {
     if id < C.begin || id >= C.begin+C.len {
         return errors.New("Range")
     }
+    rid := id - C.begin
     var tmp = C.end
-    C.end = id
-    C.counters[tmp] = id
+    C.end = rid
+    C.counters[tmp] = rid
     C.cap++
     if C.start == -1 {
         C.start = C.end
