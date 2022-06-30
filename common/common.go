@@ -118,12 +118,12 @@ type LbServiceArg struct {
 
 type LbEndPointArg struct {
 	EpIP   string `json:"endpointIP"`
-	EpPort uint16 `json:"targetort"`
+	EpPort uint16 `json:"targetPort"`
 	Weight uint8  `json:"weight"`
 }
 
 type LbRuleMod struct {
-	Serv LbServiceArg    `json:"seviceArguments"`
+	Serv LbServiceArg    `json:"serviceArguments"`
 	Eps  []LbEndPointArg `json:"endpoints"`
 }
 
