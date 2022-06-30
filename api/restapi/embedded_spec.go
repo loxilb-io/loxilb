@@ -101,6 +101,43 @@ func init() {
         }
       }
     },
+    "/config/loadbalancer/all": {
+      "get": {
+        "description": "Get all of the load balancer services with conntrack infomation.",
+        "summary": "Get all of the load balancer services",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "attr": {
+                  "$ref": "#/definitions/LoadbalanceEntry"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}": {
       "delete": {
         "description": "Create a new load balancer service with .",
@@ -221,7 +258,7 @@ func init() {
           "type": "array",
           "items": {
             "properties": {
-              "endpoint_ip_address": {
+              "endpointIP": {
                 "description": "IP address for externel access",
                 "type": "string"
               },
@@ -236,17 +273,22 @@ func init() {
             }
           }
         },
-        "external_ip_address": {
-          "description": "IP address for externel access",
-          "type": "string"
-        },
-        "port": {
-          "description": "port number for the access",
-          "type": "integer"
-        },
-        "protocol": {
-          "description": "value for access protocol",
-          "type": "string"
+        "serviceArguments": {
+          "type": "object",
+          "properties": {
+            "externalIP": {
+              "description": "IP address for externel access",
+              "type": "string"
+            },
+            "port": {
+              "description": "port number for the access",
+              "type": "integer"
+            },
+            "protocol": {
+              "description": "value for access protocol",
+              "type": "string"
+            }
+          }
         }
       }
     }
@@ -317,6 +359,43 @@ func init() {
           },
           "409": {
             "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/loadbalancer/all": {
+      "get": {
+        "description": "Get all of the load balancer services with conntrack infomation.",
+        "summary": "Get all of the load balancer services",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "attr": {
+                  "$ref": "#/definitions/LoadbalanceEntry"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -487,23 +566,28 @@ func init() {
             "$ref": "#/definitions/LoadbalanceEntryEndpointsItems0"
           }
         },
-        "external_ip_address": {
-          "description": "IP address for externel access",
-          "type": "string"
-        },
-        "port": {
-          "description": "port number for the access",
-          "type": "integer"
-        },
-        "protocol": {
-          "description": "value for access protocol",
-          "type": "string"
+        "serviceArguments": {
+          "type": "object",
+          "properties": {
+            "externalIP": {
+              "description": "IP address for externel access",
+              "type": "string"
+            },
+            "port": {
+              "description": "port number for the access",
+              "type": "integer"
+            },
+            "protocol": {
+              "description": "value for access protocol",
+              "type": "string"
+            }
+          }
         }
       }
     },
     "LoadbalanceEntryEndpointsItems0": {
       "properties": {
-        "endpoint_ip_address": {
+        "endpointIP": {
           "description": "IP address for externel access",
           "type": "string"
         },
@@ -514,6 +598,23 @@ func init() {
         "weight": {
           "description": "Weight for the load balancing",
           "type": "integer"
+        }
+      }
+    },
+    "LoadbalanceEntryServiceArguments": {
+      "type": "object",
+      "properties": {
+        "externalIP": {
+          "description": "IP address for externel access",
+          "type": "string"
+        },
+        "port": {
+          "description": "port number for the access",
+          "type": "integer"
+        },
+        "protocol": {
+          "description": "value for access protocol",
+          "type": "string"
         }
       }
     }

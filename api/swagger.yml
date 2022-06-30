@@ -154,6 +154,30 @@ paths:
           description: Maintanence mode
           schema:
             $ref: '#/definitions/Error'
+  '/config/loadbalancer/all':
+    get:
+      summary: Get all of the load balancer services
+      description: Get all of the load balancer services with conntrack infomation.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              attr:
+                $ref: '#/definitions/LoadbalanceEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
   '/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}':
     delete:
       summary: Create a new Load balancer service
@@ -205,44 +229,6 @@ paths:
           description: Maintanence mode
           schema:
             $ref: '#/definitions/Error'
-    # delete:
-    #   summary: Remove a vlan interface
-    #   description: Remove a vlan interface which is defined by vlan_id. If the vlan interface does not exist on Loxilb it returns a '404' error. If the vlan_id passed is less than 2 or greater than 4094 the API will respond with error '400'. If the delete is called before all associated vlan neighbors/members are deleted, this will return error '409' conflict with sub-code 2.
-    #   parameters:
-    #     - name: vlan_id
-    #       in: path
-    #       required: true
-    #       type: integer
-    #       format: int32
-    #       description: 12 bit vlanid
-    #   responses:
-    #     '204':
-    #       description: OK
-    #     '400':
-    #       description: Malformed arguments for API call
-    #       schema:
-    #         $ref: '#/definitions/Error'
-    #     '401':
-    #       description: Invalid authentication credentials
-    #       schema:
-    #         $ref: '#/definitions/Error'
-    #     '404':
-    #       description: Vlan interface is not found
-    #       schema:
-    #         $ref: '#/definitions/Error'
-    #     '409':
-    #       description: Resource Conflict
-    #       schema:
-    #         $ref: '#/definitions/Error'
-    #     '500':
-    #       description: Internal service error
-    #       schema:
-    #         $ref: '#/definitions/Error'
-    #     '503':
-    #       description: Maintanence mode
-    #       schema:
-    #         $ref: '#/definitions/Error'
-
 
 #----------------------------------------------
 # Schema definitions
@@ -272,24 +258,28 @@ definitions:
           details:
             type: string
 
+
   LoadbalanceEntry:
     type: object
     properties:
-      external_ip_address:
-        type: string
-        description: IP address for externel access
-      port:
-        type: integer
-        description:  port number for the access
-      protocol:
-        type: string
-        description:  value for access protocol
+      serviceArguments:
+        type: object
+        properties:
+          externalIP:
+            type: string
+            description: IP address for externel access
+          port:
+            type: integer
+            description:  port number for the access
+          protocol:
+            type: string
+            description:  value for access protocol
       endpoints:
         type: array
         description: values of End point servers
         items:
           properties:
-            endpoint_ip_address:
+            endpointIP:
               type: string
               description: IP address for externel access
             weight:
