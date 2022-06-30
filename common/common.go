@@ -98,7 +98,7 @@ type Routev4Mod struct {
 	Flags     int
 	Gw        net.IP
 	LinkIndex int
-	Dst       *net.IPNet
+	Dst       net.IPNet
 }
 
 type EpSelect uint
