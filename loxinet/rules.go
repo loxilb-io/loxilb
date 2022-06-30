@@ -17,6 +17,7 @@
 package loxinet
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	cmn "loxilb/common"
@@ -459,6 +460,91 @@ func (a *ruleAct) String() string {
 	}
 
 	return ks
+}
+
+func (R *RuleH) Rules2Json() ([]byte, error) {
+	var t cmn.LbServiceArg
+	var eps []cmn.LbEndPointArg
+	var ret cmn.LbRuleMod
+	var bret []byte
+	for _, data := range R.Tables[RT_LB].eMap {
+		// Make Service Arguments
+		t.ServIP = data.tuples.l3Dst.addr.IP.String()
+		if data.tuples.l4Prot.val == 6 {
+			t.Proto = "tcp"
+		} else if data.tuples.l4Prot.val == 17 {
+			t.Proto = "udp"
+		} else if data.tuples.l4Prot.val == 1 {
+			t.Proto = "icmp"
+		} else if data.tuples.l4Prot.val == 132 {
+			t.Proto = "sctp"
+		} else {
+			return nil, errors.New("malformed service proto")
+		}
+		t.ServPort = data.tuples.l4Dst.val
+		t.Sel = data.act.action.(*ruleNatActs).sel
+
+		// Make Endpoints
+		tmpEp := data.act.action.(*ruleNatActs).endPoints
+		for _, ep := range tmpEp {
+			eps = append(eps, cmn.LbEndPointArg{
+				EpIP:   ep.xIP.String(),
+				EpPort: ep.xPort,
+				Weight: ep.weight,
+			})
+		}
+		// Make LB rule
+		ret.Serv = t
+		ret.Eps = eps
+
+		js, err := json.Marshal(ret)
+		if err != nil {
+			return nil, err
+		}
+		bret = append(bret, js...)
+		fmt.Printf("js: %v\n", js)
+		fmt.Println(string(js))
+	}
+
+	return bret, nil
+}
+
+func (R *RuleH) GetNatLbRule() (cmn.LbRuleModGet, error) {
+	var res cmn.LbRuleModGet
+
+	for _, data := range R.Tables[RT_LB].eMap {
+		var ret cmn.LbRuleMod
+		// Make Service Arguments
+		ret.Serv.ServIP = data.tuples.l3Dst.addr.IP.String()
+		if data.tuples.l4Prot.val == 6 {
+			ret.Serv.Proto = "tcp"
+		} else if data.tuples.l4Prot.val == 17 {
+			ret.Serv.Proto = "udp"
+		} else if data.tuples.l4Prot.val == 1 {
+			ret.Serv.Proto = "icmp"
+		} else if data.tuples.l4Prot.val == 132 {
+			ret.Serv.Proto = "sctp"
+		} else {
+			return cmn.LbRuleModGet{}, errors.New("malformed service proto")
+		}
+		ret.Serv.ServPort = data.tuples.l4Dst.val
+		ret.Serv.Sel = data.act.action.(*ruleNatActs).sel
+
+		// Make Endpoints
+		tmpEp := data.act.action.(*ruleNatActs).endPoints
+		for _, ep := range tmpEp {
+
+			ret.Eps = append(ret.Eps, cmn.LbEndPointArg{
+				EpIP:   ep.xIP.String(),
+				EpPort: ep.xPort,
+				Weight: ep.weight,
+			})
+		}
+		// Make LB rule
+		res.LbRules = append(res.LbRules, ret)
+	}
+
+	return res, nil
 }
 
 func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPointArg) (int, error) {
