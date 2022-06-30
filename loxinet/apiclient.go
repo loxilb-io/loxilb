@@ -129,14 +129,14 @@ func (*NetApiStruct) NetRoutev4Add(rm *cmn.Routev4Mod) (int, error) {
 	mh.mtx.Lock()
 	ra := RtAttr{rm.Protocol, rm.Flags, false}
 	na := []RtNhAttr{{rm.Gw, rm.LinkIndex}}
-	ret, err := mh.zr.Rt.RtAdd(*rm.Dst, ROOT_ZONE, ra, na)
+	ret, err := mh.zr.Rt.RtAdd(rm.Dst, ROOT_ZONE, ra, na)
 	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetRoutev4Del(rm *cmn.Routev4Mod) (int, error) {
 	mh.mtx.Lock()
-	ret, err := mh.zr.Rt.RtDelete(*rm.Dst, ROOT_ZONE)
+	ret, err := mh.zr.Rt.RtDelete(rm.Dst, ROOT_ZONE)
 	mh.mtx.Unlock()
 	return ret, err
 }

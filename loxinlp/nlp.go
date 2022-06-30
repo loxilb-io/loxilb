@@ -382,24 +382,41 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 }
 
 func AddRoute(route nlp.Route) int {
-
-	ret, err := hooks.NetRoutev4Add(&cmn.Routev4Mod{Protocol: int(route.Protocol), Flags: route.Flags,
-		Gw: route.Gw, LinkIndex: route.LinkIndex, Dst: route.Dst})
-	if err != nil {
-		tk.LogIt(tk.LOG_ERROR, "RT add failed-%s\n", err)
+	var ipNet net.IPNet
+	if route.Dst == nil {
+		r := net.IPv4(0, 0, 0, 0)
+		m := net.CIDRMask(0, 32)
+		r = r.Mask(m)
+		ipNet = net.IPNet{IP: r, Mask: m}
 	} else {
-		tk.LogIt(tk.LOG_DEBUG, "RT %s via %s added\n", route.Dst.String(), route.Gw.String())
+		ipNet = *route.Dst
+	}
+	ret, err := hooks.NetRoutev4Add(&cmn.Routev4Mod{Protocol: int(route.Protocol), Flags: route.Flags,
+		Gw: route.Gw, LinkIndex: route.LinkIndex, Dst: ipNet})
+	if err != nil {
+		tk.LogIt(tk.LOG_ERROR, "RT  %s via %s add failed-%s\n", ipNet.String(), route.Gw.String(), err)
+	} else {
+		tk.LogIt(tk.LOG_DEBUG, "RT %s via %s added\n", ipNet.String(), route.Gw.String())
 	}
 	return ret
 }
 
 func DelRoute(route nlp.Route) int {
 	var ret int
-	ret, err := hooks.NetRoutev4Del(&cmn.Routev4Mod{Dst: route.Dst})
-	if err != nil {
-		tk.LogIt(tk.LOG_ERROR, "RT del failed-%s\n", err)
+	var ipNet net.IPNet
+	if route.Dst == nil {
+		r := net.IPv4(0, 0, 0, 0)
+		m := net.CIDRMask(0, 32)
+		r = r.Mask(m)
+		ipNet = net.IPNet{IP: r, Mask: m}
 	} else {
-		tk.LogIt(tk.LOG_DEBUG, "RT %s via %s deleted\n", route.Dst.String(), route.Gw.String())
+		ipNet = *route.Dst
+	}
+	ret, err := hooks.NetRoutev4Del(&cmn.Routev4Mod{Dst: ipNet})
+	if err != nil {
+		tk.LogIt(tk.LOG_ERROR, "RT %s via %s del failed-%s\n", ipNet.String(), route.Gw.String(), err)
+	} else {
+		tk.LogIt(tk.LOG_DEBUG, "RT %s via %s deleted\n", ipNet.String(), route.Gw.String())
 	}
 	return ret
 }
@@ -463,15 +480,13 @@ func NUWorkSingle(m nlp.NeighUpdate) int {
 
 func RUWorkSingle(m nlp.RouteUpdate) int {
 	var ret int
-	if m.Dst != nil {
-		if m.Type == syscall.RTM_NEWROUTE {
-			ret = AddRoute(m.Route)
-		} else {
-			ret = DelRoute(m.Route)
-		}
+
+	if m.Type == syscall.RTM_NEWROUTE {
+		ret = AddRoute(m.Route)
 	} else {
-		fmt.Println("RT mod missing IP")
+		ret = DelRoute(m.Route)
 	}
+
 	return ret
 }
 
@@ -628,7 +643,7 @@ func NlpGet() int {
 	}
 
 	if len(routes) == 0 {
-		tk.LogIt(tk.LOG_DEBUG, "No routes found in the system!\n")
+		tk.LogIt(tk.LOG_DEBUG, "No STATIC routes found in the system!\n")
 	} else {
 		for _, route := range routes {
 			AddRoute(route)
