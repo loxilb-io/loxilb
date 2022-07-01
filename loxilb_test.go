@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package loxinet
+package main
 
 import (
+    "fmt"
+	ln "loxilb/loxinet"
     "testing"
 )
 
 func TestMain(t *testing.T) {
-    TestLoxinet(t)
+   fmt.Printf("LoxiLB Unit-Test \n")
+   ln.TestLoxinet(t)
 }

@@ -49,7 +49,7 @@ type loxiNetH struct {
 }
 
 func (mh *loxiNetH) NodeWalker(b string) {
-	tk.LogIt(tk.LOG_DEBUG, "%s", b)
+	tk.LogIt(tk.LOG_DEBUG, "%s\n", b)
 }
 
 func (mh *loxiNetH) NodeDat2Str(d tk.TrieData) string {
