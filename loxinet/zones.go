@@ -207,11 +207,12 @@ func (z *ZoneH) ZoneTicker() {
         zone.Nh.NeighsTicker()
         mh.mtx.Unlock()
 
+        /* NOTE - No need to hold lock for an extended period */
+
         mh.mtx.RLock()
         zone.Rules.RulesTicker()
         mh.mtx.RUnlock()
 
-        /* NOTE - No need to hold lock for an extended period */
         //mh.mtx.RLock()
         //zone.Vlans.VlansTicker()
         //mh.mtx.RUnlock()

@@ -747,7 +747,7 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 	if work == DP_TABLE_GET {
 		nTable := new(TableDpWorkQ)
 		nTable.Work = DP_TABLE_GET
-		nTable.Name = "CT4"
+		nTable.Name = MAP_NAME_CT4
 		mh.dp.ToDpCh <- nTable
 		return 0
 	}
@@ -756,7 +756,7 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 		nStat := new(StatDpWorkQ)
 		nStat.Work = work
 		nStat.HwMark = uint32(r.ruleNum)
-		nStat.Name = "NAT4"
+		nStat.Name = MAP_NAME_NAT4
 		nStat.Bytes = &r.stat.bytes
 		nStat.Packets = &r.stat.packets
 

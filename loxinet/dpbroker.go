@@ -16,10 +16,22 @@
 package loxinet
 
 import (
-    tk "loxilb/loxilib"
+    "fmt"
     "net"
     "time"
+    tk "loxilb/loxilib"
+    cmn "loxilb/common"
 )
+
+const (
+    MAP_NAME_CT4   = "CT4"
+    MAP_NAME_CT6   = "CT6"
+    MAP_NAME_NAT4  = "NAT4"
+    MAP_NAME_BD    = "BD"
+    MAP_NAME_RXBD  = "RXBD"
+    MAP_NAME_TXBD  = "TXBD"
+    MAP_NAME_RT4   = "RT4"
+ )
 
 const (
     DP_ERR_BASE = iota - L3_ERR_BASE - 1000
@@ -168,6 +180,21 @@ type NatDpWorkQ struct {
     NatType   NatT
     EpSel     NatSel
     endPoints []NatEP
+}
+
+type DpCtInfo struct {
+    dip    net.IP
+    sip    net.IP
+    dport  uint16
+    sport  uint16
+    proto  string
+    cState string
+    cAct   string
+}
+
+func (ct *DpCtInfo) Key() string {
+    str := fmt.Sprintf("%s%s%d%d%s", ct.dip.String(), ct.sip.String(), ct.dport, ct.sport, ct.proto)
+    return str
 }
 
 type DpRetT interface {
@@ -325,4 +352,28 @@ func DpBrokerInit(dph DpHookInterface) *DpH {
     go DpWorker(nDp, nDp.ToFinCh, nDp.ToDpCh)
 
     return nDp
+}
+
+func (dp *DpH)DpMapGetCt4() []cmn.CtInfo {
+    var CtInfoArr []cmn.CtInfo
+	nTable := new(TableDpWorkQ)
+	nTable.Work = DP_TABLE_GET
+	nTable.Name = MAP_NAME_CT4
+	
+	err, ret := mh.dp.DpWorkOnTableOp(nTable)
+    if err != nil {
+        return nil
+    }
+
+    switch r := ret.(type) {
+    case map[string]*DpCtInfo:
+        for  _, dCti := range r {
+            cti := cmn.CtInfo{Dip:dCti.dip, Sip:dCti.sip,Dport:dCti.dport, Sport: dCti.sport,
+                              Proto: dCti.proto, CState: dCti.cState, CAct: dCti.cAct }
+            CtInfoArr = append(CtInfoArr, cti)
+            fmt.Println(CtInfoArr)
+        }
+    }
+
+    return CtInfoArr
 }
