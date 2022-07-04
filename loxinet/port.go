@@ -22,6 +22,7 @@ import (
     "io"
     "net"
     "strings"
+    "bytes"
     tk "loxilb/loxilib"
     cmn "loxilb/common"
 )
@@ -404,11 +405,15 @@ func (P *PortsH) PortUpdate() {
 func (P *PortsH) Ports2Json(w io.Writer) error {
 
     for _, e := range P.portSmap {
+        var buf bytes.Buffer
         js, err := json.Marshal(e)
         if err != nil {
             return err
         }
-        _, err = w.Write(js)
+        //_, err = w.Write(js)
+        json.Indent(&buf, js, "", "\t")
+        
+        _, err = w.Write(buf.Bytes())
     }
 
     return nil

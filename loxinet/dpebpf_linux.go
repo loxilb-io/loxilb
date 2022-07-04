@@ -41,6 +41,7 @@ int bpf_map_lookup_elem(int fd, const void *key, void *value);
 import "C"
 import (
     "fmt"
+    "errors"
     tk "loxilb/loxilib"
     "net"
     "syscall"
@@ -829,23 +830,23 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ctv4_key, ctDat *C.struct_dp_ctv4_dat) *D
     return ct
 }
 
-func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) DpRetT {
+func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (error, DpRetT) {
     var tbl int
 
-    ctMap := make(map[string]*DpCT4Ent)
 
     if w.Work != DP_TABLE_GET {
-        return EBPF_ERR_WQ_UNK
+        return errors.New("unknown work type"),  EBPF_ERR_WQ_UNK
     }
 
     switch {
     case w.Name == "CT4":
         tbl = C.LL_DP_ACLV4_MAP
     default:
-        return EBPF_ERR_WQ_UNK
+        return errors.New("unknown work type"), EBPF_ERR_WQ_UNK
     }
 
     if tbl == C.LL_DP_ACLV4_MAP {
+        ctMap := make(map[string]*DpCT4Ent)
         var n int = 0
         var key *C.struct_dp_ctv4_key = nil
         nextKey := new(C.struct_dp_ctv4_key)
@@ -872,7 +873,8 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) DpRetT {
             key = nextKey
             n++
         }
+        return nil, ctMap
     }
 
-    return ctMap
+    return errors.New("unknown work type"), EBPF_ERR_WQ_UNK
 }

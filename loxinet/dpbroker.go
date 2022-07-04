@@ -187,7 +187,7 @@ type DpHookInterface interface {
     DpNatLbRuleAdd(*NatDpWorkQ) int
     DpNatLbRuleDel(*NatDpWorkQ) int
     DpStat(*StatDpWorkQ) int
-    DpTableGet(w *TableDpWorkQ) DpRetT
+    DpTableGet(w *TableDpWorkQ) (error, DpRetT)
 }
 
 type DpH struct {
@@ -261,7 +261,7 @@ func (dp *DpH) DpWorkOnStat(nWq *StatDpWorkQ) DpRetT {
     return dp.DpHooks.DpStat(nWq)
 }
 
-func (dp *DpH) DpWorkOnTableOp(nWq *TableDpWorkQ) DpRetT {
+func (dp *DpH) DpWorkOnTableOp(nWq *TableDpWorkQ) (error, DpRetT) {
     return dp.DpHooks.DpTableGet(nWq)
 }
 
@@ -290,7 +290,7 @@ func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
         ret = dp.DpWorkOnStat(mq)
         break
     case *TableDpWorkQ:
-        ret = dp.DpWorkOnTableOp(mq)
+        ret, _ = dp.DpWorkOnTableOp(mq)
     default:
         tk.LogIt(tk.LOG_ERROR, "unexpected type %T\n", mq)
         ret = DP_WQ_UNK_ERR
