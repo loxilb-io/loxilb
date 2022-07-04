@@ -166,7 +166,7 @@ struct dp_qos_mdi {
     __u8             tc;
     __u8             icol;
     __u8             ocol;
-    __u8             r;
+    __u8             qfi;
     __u32            polid;
 };
 

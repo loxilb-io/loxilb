@@ -128,11 +128,15 @@ struct dp_rt_nh_act {
   struct dp_rt_l2nh_act l2nh;
 };
 
-struct dp_rt_l2vxnh_act {
+struct dp_rt_l3tun_act {
   __u32 rip;
   __u32 sip;
   __u32 tid;
   __u32 aux;
+};
+
+struct dp_rt_l2vxnh_act {
+  struct dp_rt_l3tun_act l3t;
   struct dp_rt_l2nh_act l2nh;
 };
 

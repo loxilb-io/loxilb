@@ -1402,6 +1402,160 @@ dp_do_ins_vxlan(void *md,
 }
 
 static int __always_inline
+dp_do_ins_gtp(void *md,
+              struct xfi *F,
+              __be32 rip,
+              __be32 sip,
+              __be32 tid,
+              __u8 qfi,
+              int skip_md) 
+{
+  void *dend;
+  struct gtp_v1_hdr *gh;
+  struct gtp_v1_ehdr *geh;
+  struct gtp_dl_pdu_sess_hdr *gedh;
+  struct ethhdr *eth;
+  struct iphdr *iph;
+  struct udphdr *udp;
+  int olen;
+  __u64 flags;
+
+  /* We do not pass vlan header inside vxlan */
+  if (F->l2m.vlan[0] != 0) {
+    if (dp_remove_vlan_tag(md, F) < 0) {
+      LLBS_PPLN_DROP(F);
+      return -1;
+    }
+  }
+
+  olen   = sizeof(*iph)  + sizeof(*udp) + sizeof(*gh) + 
+           sizeof(*geh) + sizeof(*gedh); 
+
+  flags = BPF_F_ADJ_ROOM_FIXED_GSO |
+          BPF_F_ADJ_ROOM_ENCAP_L3_IPV4 |
+          BPF_F_ADJ_ROOM_ENCAP_L4_UDP;
+
+  /* add room between mac and network header */
+  if (dp_buf_add_room(md, olen, flags)) {
+    LLBS_PPLN_DROP(F);
+    return -1;
+  }
+
+  eth = DP_TC_PTR(DP_PDATA(md));
+  dend = DP_TC_PTR(DP_PDATA_END(md));
+
+  if (eth + 1 > dend) {
+    LLBS_PPLN_DROP(F);
+    return -1;
+  }
+
+  iph = (void *)(eth + 1);
+  if (iph + 1 > dend) {
+    LLBS_PPLN_DROP(F);
+    return -1;
+  }
+
+  /* Outer IP header */ 
+  iph->version  = 4;
+  iph->ihl      = 5;
+  iph->tot_len  = bpf_htons(F->pm.l3_len +  olen);
+  iph->ttl      = 64; // FIXME - Copy inner
+  iph->protocol = IPPROTO_UDP;
+  iph->saddr    = sip;
+  iph->daddr    = rip;
+
+  dp_ipv4_new_csum((void *)iph);
+
+  udp = (void *)(iph + 1);
+  if (udp + 1 > dend) {
+    LLBS_PPLN_DROP(F);
+    return -1;
+  }
+
+  /* Outer UDP header */
+  udp->source = bpf_htons(GTPU_UDP_SPORT);
+  udp->dest   = bpf_htons(GTPU_UDP_DPORT);
+  udp->check  = 0;
+  udp->len    = bpf_htons(F->pm.l3_len +  olen - sizeof(*iph));
+
+  /* GTP header */
+  gh = (void *)(udp + 1);
+  if (gh + 1 > dend) {
+    LLBS_PPLN_DROP(F);
+    return -1;
+  }
+
+  gh->ver = GTP_VER_1;
+  gh->pt = 1;
+  gh->espn = GTP_EXT_FM; 
+  gh->teid = tid;
+  gh->mt = GTP_MT_TPDU;
+  gh->mlen = bpf_ntohs(F->pm.l3_len + sizeof(*gh) + sizeof(*geh) + sizeof(*gedh));
+
+  /* GTP extension header */
+  geh = (void *)(gh + 1);
+  if (geh + 1 > dend) {
+    LLBS_PPLN_DROP(F);
+    return -1;
+  }
+
+  geh->seq = 0;
+  geh->npdu = 0;
+  geh->next_hdr = GTP_NH_PDU_SESS;
+
+  gedh = (void *)(geh + 1);
+  if (gedh + 1 > dend) {
+    LLBS_PPLN_DROP(F);
+    return -1;
+  }
+
+  gedh->cmn.len = 1;
+  gedh->cmn.pdu_type = GTP_PDU_SESS_DL;
+  gedh->qfi = qfi;
+  gedh->ppp = 0;
+  gedh->rqi = 0;
+  gedh->next_hdr = 0;
+
+  /* Tunnel metadata */
+  F->tm.tun_type  = LLB_TUN_GTP;
+  F->tm.tunnel_id = bpf_ntohl(tid);
+  F->pm.tun_off   = sizeof(*eth) + 
+                    sizeof(*iph) + 
+                    sizeof(*udp);
+  F->tm.tun_encap = 1;
+
+  /* Reset flags essential for L2 header rewrite */
+  F->l2m.vlan[0] = 0;
+  F->l2m.dl_type = bpf_htons(ETH_P_IP);
+
+  if (skip_md) {
+    return 0;
+  }
+
+  /* 
+   * Reset pipeline metadata 
+   * If it is called from deparser, there is no need
+   * to do the following (set skip_md = 1)
+   */
+  memcpy(&F->il3m, &F->l3m, sizeof(F->l3m));
+  F->il2m.vlan[0] = 0;
+
+  /* Outer L2 - MAC addr are invalid as of now */
+  F->pm.lkup_dmac[0] = 0xff;
+
+  /* Outer L3 */
+  F->l3m.ip.saddr = sip;
+  F->l3m.ip.daddr = rip;
+  F->l3m.source = udp->source;
+  F->l3m.dest = udp->dest;
+  F->pm.l3_off = sizeof(*eth);
+  F->pm.l4_off = sizeof(*eth) + sizeof(*iph);
+  
+    return 0;
+}
+
+
+static int __always_inline
 xdp2tc_has_xmd(void *md, struct xfi *F)
 {
   void *data      = DP_TC_PTR(DP_PDATA(md));

@@ -208,11 +208,181 @@ proc_inl3:
 } 
 
 static int __always_inline
+dp_parse_gtp_ehdr(void *nh, void *dend)
+{
+  uint8_t *nhl = DP_TC_PTR(nh);
+  uint8_t *neh;
+  int elen;
+
+  if (nhl + 1 > dend) {
+    return -1;
+  }
+
+  elen = *nhl<<2;
+
+  if (nhl + elen > dend) {
+    return -1;
+  }
+
+  neh = nhl + (elen - 1);
+
+  if (*neh) return elen;
+
+  return 0;
+}
+
+static int __always_inline
+dp_parse_gtp(void *md,
+             void *inp,
+             struct xfi *F)
+{
+  struct gtp_v1_hdr *gh;
+  struct gtp_v1_ehdr *geh;
+  int hlen = GTP_HDR_LEN;
+  void *nh;
+  void *gtp_next;
+  void *dend;
+  uint8_t *nhl;
+  uint8_t *neh;
+  int elen;
+  int depth;
+
+  gh = DP_TC_PTR(inp);
+  dend = DP_TC_PTR(DP_PDATA_END(md));
+
+  if (gh + 1 > dend) {
+    goto drop;
+  }
+
+  if (gh->ver != GTP_VER_1) {
+    return 0;
+  }
+
+  if (gh->espn) hlen += sizeof(*geh);
+
+  F->tm.tunnel_id = bpf_ntohl(gh->teid);
+  F->tm.tun_type = LLB_TUN_GTP;
+
+  if (gh->espn & GTP_EXT_FM) {
+    geh = DP_ADD_PTR(gh, sizeof(*gh));
+
+    if (geh + 1 > dend) {
+      goto drop;
+    }
+
+    nh = DP_ADD_PTR(geh, sizeof(*geh));
+
+    /* PDU session container is always first */
+    if (geh->next_hdr == GTP_NH_PDU_SESS) {
+      struct gtp_pdu_sess_cmn_hdr *pch = DP_TC_PTR(nh);
+
+      if (pch + 1 > dend) {
+        goto drop;
+      }
+
+      if (pch->len != 1) {
+        goto drop;
+      }
+
+      if (pch->pdu_type == GTP_PDU_SESS_UL) {
+        struct gtp_ul_pdu_sess_hdr *pul = DP_TC_PTR(pch);
+
+        if (pul + 1 > dend) {
+          goto drop;
+        }
+
+        hlen += sizeof(*pul);
+        F->qm.qfi = pul->qfi;
+        nh = pul+1;
+
+        bpf_printk("GTP QFI %x %d \n", pul->qfi, sizeof(*pul));
+
+        if (pul->next_hdr == 0) goto done;
+
+      } else if (pch->pdu_type == GTP_PDU_SESS_DL) {
+        struct gtp_dl_pdu_sess_hdr *pdl = DP_TC_PTR(pch);
+
+        if (pdl + 1 > dend) {
+          goto drop;
+        }
+
+        hlen += sizeof(*pdl);
+        F->qm.qfi = pdl->qfi;
+        nh = pdl+1;
+
+        if (pdl->next_hdr == 0) goto done;
+
+      } else {
+        goto drop;
+      }
+    }
+
+    nhl = DP_TC_PTR(nh);
+
+    /* Parse maximum GTP_MAX_EXTH  gtp extension headers */
+#pragma unroll
+    for (depth = 0; depth < GTP_MAX_EXTH; depth++) {
+
+      if (nhl + 1 > dend) {
+        goto drop;
+      }
+
+      elen = *nhl<<2;
+
+      neh = nhl + (elen - 1);
+      if (neh + 1 > dend) {
+        goto drop;
+      }
+
+      hlen += elen;
+      if (*neh == 0) break;
+      nhl = DP_ADD_PTR(nhl, elen);
+    }
+
+    if (depth >= GTP_MAX_EXTH) {
+      goto pass;
+    }
+  }
+
+done:
+  gtp_next = DP_ADD_PTR(gh, hlen);
+  F->pm.tun_off = DP_DIFF_PTR(gtp_next, DP_PDATA(md));
+
+  neh = DP_TC_PTR(gtp_next);
+  if (neh + 1 > dend) {
+    return 0;
+  }
+
+  __u8 nv = ((*neh & 0xf0) >> 4);
+
+  if (nv == 4) {
+    F->il2m.dl_type = bpf_htons(ETH_P_IP);
+  } else if (nv == 6) {
+    F->il2m.dl_type = bpf_htons(ETH_P_IPV6);
+  } else {
+    return 0;
+  }
+
+  dp_parse_inner_packet(md, gtp_next, 1, F);
+
+  return 0;
+
+drop:
+  LLBS_PPLN_DROP(F);
+  return -1;
+
+pass:
+  LLBS_PPLN_PASS(F);
+  return 0;
+}
+
+static int __always_inline
 dp_parse_outer_udp(void *md,
                    void *udp_next,
                    struct xfi *F)
 {
   struct vxlan_hdr *vx;
+  struct gtp_v1_hdr *gh; 
   void *dend = DP_TC_PTR(DP_PDATA_END(md)); 
   void *vx_next;
 
@@ -231,6 +401,16 @@ dp_parse_outer_udp(void *md,
 
     LL_DBG_PRINTK("[PRSR] UDP VXLAN %u\n", F->tm.tunnel_id);
     dp_parse_inner_packet(md, vx_next, 0, F);
+    break;
+  case bpf_htons(GTPU_UDP_DPORT):
+  case bpf_htons(GTPC_UDP_DPORT):
+    gh = DP_TC_PTR(udp_next);
+    if (gh + 1 > dend) {
+      LLBS_PPLN_DROP(F);
+      return -1;
+    }
+
+    dp_parse_gtp(md, gh, F);
     break;
   default:
     return 1;

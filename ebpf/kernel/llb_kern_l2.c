@@ -239,9 +239,9 @@ dp_do_rt_l2_vxlan_nh(void *ctx, struct xfi *F,
 {
   struct dp_rt_l2nh_act *nl2;
 
-  F->tm.tun_rip = nl2vx->rip;
-  F->tm.tun_sip = nl2vx->sip;
-  F->tm.new_tunnel_id = nl2vx->tid;
+  F->tm.tun_rip = nl2vx->l3t.rip;
+  F->tm.tun_sip = nl2vx->l3t.sip;
+  F->tm.new_tunnel_id = nl2vx->l3t.tid;
 
   memcpy(&F->il2m, &F->l2m, sizeof(F->l2m));
   F->il2m.vlan[0] = 0;
