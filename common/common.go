@@ -127,18 +127,14 @@ type LbRuleMod struct {
 	Eps  []LbEndPointArg `json:"endpoints"`
 }
 
-type LbRuleModGet struct {
-	LbRules []LbRuleMod `json:"Lbrules"`
-}
-
 type CtInfo struct {
-    Dip    net.IP
-    Sip    net.IP
-    Dport  uint16
-    Sport  uint16
-    Proto  string
-    CState string
-    CAct   string
+	Dip    net.IP `json:"destinationIP"`
+	Sip    net.IP `json:"sourceIP"`
+	Dport  uint16 `json:"destinationPort"`
+	Sport  uint16 `json:"sourcePort"`
+	Proto  string `json:"protocol"`
+	CState string `json:"conntrackState"`
+	CAct   string `json:"conntrackAct"`
 }
 
 type NetHookInterface interface {
@@ -158,6 +154,6 @@ type NetHookInterface interface {
 	NetRoutev4Del(*Routev4Mod) (int, error)
 	NetLbRuleAdd(*LbRuleMod) (int, error)
 	NetLbRuleDel(*LbRuleMod) (int, error)
-	NetLbRuleGet() (LbRuleModGet, error)
+	NetLbRuleGet() ([]LbRuleMod, error)
 	NetCtInfoGet() ([]CtInfo, error)
 }

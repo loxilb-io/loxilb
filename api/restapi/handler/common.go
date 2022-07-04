@@ -14,7 +14,8 @@ type ResultResponse struct {
 }
 
 type AttrResponse struct {
-	Attr cmn.LbRuleModGet `json:"attr"`
+	Attr   []cmn.LbRuleMod `json:"lbAttr"`
+	CtAttr []cmn.CtInfo    `json:"conntrackAttr"`
 }
 
 func (result *ResultResponse) WriteResponse(w http.ResponseWriter, producer runtime.Producer) {

@@ -509,8 +509,8 @@ func (R *RuleH) Rules2Json() ([]byte, error) {
 	return bret, nil
 }
 
-func (R *RuleH) GetNatLbRule() (cmn.LbRuleModGet, error) {
-	var res cmn.LbRuleModGet
+func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
+	var res []cmn.LbRuleMod
 
 	for _, data := range R.Tables[RT_LB].eMap {
 		var ret cmn.LbRuleMod
@@ -525,7 +525,7 @@ func (R *RuleH) GetNatLbRule() (cmn.LbRuleModGet, error) {
 		} else if data.tuples.l4Prot.val == 132 {
 			ret.Serv.Proto = "sctp"
 		} else {
-			return cmn.LbRuleModGet{}, errors.New("malformed service proto")
+			return []cmn.LbRuleMod{}, errors.New("malformed service proto")
 		}
 		ret.Serv.ServPort = data.tuples.l4Dst.val
 		ret.Serv.Sel = data.act.action.(*ruleNatActs).sel
@@ -541,7 +541,7 @@ func (R *RuleH) GetNatLbRule() (cmn.LbRuleModGet, error) {
 			})
 		}
 		// Make LB rule
-		res.LbRules = append(res.LbRules, ret)
+		res = append(res, ret)
 	}
 
 	return res, nil

@@ -155,10 +155,8 @@ func (*NetApiStruct) NetLbRuleDel(lm *cmn.LbRuleMod) (int, error) {
 	return ret, err
 }
 
-func (*NetApiStruct) NetLbRuleGet() (cmn.LbRuleModGet, error) {
-	mh.mtx.Lock()
+func (*NetApiStruct) NetLbRuleGet() ([]cmn.LbRuleMod, error) {
 	ret, err := mh.zr.Rules.GetNatLbRule()
-	mh.mtx.Unlock()
 	return ret, err
 }
 

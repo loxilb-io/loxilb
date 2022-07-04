@@ -33,8 +33,6 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
 	var lbServ cmn.LbServiceArg
 	var lbRules cmn.LbRuleMod
-	//fmt.Printf("params: %v\n", params)
-	//fmt.Printf("lbServ: %v\n", lbServ)
 	lbServ.ServIP = params.IPAddress
 	lbServ.ServPort = uint16(params.Port)
 	lbServ.Proto = params.Proto
@@ -47,9 +45,16 @@ func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerExternal
 }
 
 func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) middleware.Responder {
+	// Get LB rules
 	res, err := ApiHooks.NetLbRuleGet()
 	if err != nil {
 		return &ResultResponse{Result: err.Error()}
 	}
-	return &AttrResponse{Attr: res}
+
+	// Get Conntrack informations
+	contr, err := ApiHooks.NetCtInfoGet()
+	if err != nil {
+		return &ResultResponse{Result: err.Error()}
+	}
+	return &AttrResponse{Attr: res, CtAttr: contr}
 }
