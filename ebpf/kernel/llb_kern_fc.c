@@ -82,7 +82,7 @@ dp_do_fcv4_lkup(void *ctx, struct xfi *F)
   if (acts->fcta[DP_SET_RM_VXLAN].ca.act_type == DP_SET_RM_VXLAN) {
     LL_FC_PRINTK("[FCH4] strip-vxlan-act\n");
     ta = &acts->fcta[DP_SET_RM_VXLAN];
-    dp_pipe_set_strip_vx_tun(ctx, F, &ta->nh_act);
+    dp_pipe_set_rm_vx_tun(ctx, F, &ta->nh_act);
   }
 
   if (acts->fcta[DP_SET_SNAT].ca.act_type == DP_SET_SNAT) {
@@ -138,7 +138,7 @@ dp_do_fcv4_lkup(void *ctx, struct xfi *F)
 
   F->pm.phit |= LLB_DP_FC_HIT;
   LL_FC_PRINTK("[FCH4] oport %d\n",  F->pm.oport);
-  dp_deparse_packet(ctx, F);
+  dp_unparse_packet(ctx, F);
 
   dp_do_map_stats(ctx, F, LL_DP_ACLV4_STATS_MAP, acts->ca.cidx);
   F->pm.oport = acts->ca.oif;

@@ -497,6 +497,17 @@ llb_xh_init(llb_dp_struct_t *xh)
   xh->maps[LL_DP_PKT_PERF_RING].has_pb   = 0;
   xh->maps[LL_DP_PKT_PERF_RING].max_entries = 128;  /* MAX_CPUS */
 
+  xh->maps[LL_DP_SESS4_MAP].map_name = "sess_v4_map";
+  xh->maps[LL_DP_SESS4_MAP].has_pb   = 1;
+  xh->maps[LL_DP_SESS4_MAP].pb_xtid  = LL_DP_SESS4_STATS_MAP;
+  xh->maps[LL_DP_SESS4_MAP].max_entries  = LLB_SESS_MAP_ENTRIES;
+
+  xh->maps[LL_DP_SESS4_STATS_MAP].map_name = "sess_v4_stats_map";
+  xh->maps[LL_DP_SESS4_STATS_MAP].has_pb   = 1;
+  xh->maps[LL_DP_SESS4_STATS_MAP].max_entries = LLB_SESS_MAP_ENTRIES;
+  xh->maps[LL_DP_SESS4_STATS_MAP].pbs = calloc(LLB_SESS_MAP_ENTRIES,
+                                            sizeof(struct dp_pb_stats));
+
   strcpy(xh->psecs[0].name, LLB_SECTION_PASS);
   strcpy(xh->psecs[1].name, XDP_LL_SEC_DEFAULT);
   xh->psecs[1].setup = llb_dflt_sec_map2fd_all;

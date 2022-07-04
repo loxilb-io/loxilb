@@ -58,10 +58,18 @@ dp_do_rtv4_lkup(void *ctx, struct xfi *F, void *fa_)
   if (F->pm.nf & LLB_NAT_DST) {
     *(__u32 *)&key->v4k[2] = F->l4m.nxip?:F->l3m.ip.saddr;
   } else {
-    if (F->pm.nf & LLB_NAT_SRC && F->l4m.nxip == 0)
+    if (F->pm.nf & LLB_NAT_SRC && F->l4m.nxip == 0) {
       *(__u32 *)&key->v4k[2] = F->l3m.ip.saddr;
-    else
-      *(__u32 *)&key->v4k[2] = F->l3m.ip.daddr;
+    } else {
+      if (F->tm.new_tunnel_id && F->tm.tun_type == LLB_TUN_GTP) {
+        /* In case of GTP, there is no interface created in OS 
+         * which has a specific route through it. So, this hack !!
+         */
+        *(__u32 *)&key->v4k[2] = F->tm.tun_rip;
+      } else {
+        *(__u32 *)&key->v4k[2] = F->l3m.ip.daddr;
+      }
+    }
   }
   
   LL_DBG_PRINTK("[RTFW] --Lookup\n");
@@ -253,18 +261,9 @@ dp_do_ipv4_fwd(void *ctx,  struct xfi *F, void *fa_)
 static int __always_inline
 dp_ing_ipv4(void *ctx,  struct xfi *F, void *fa_)
 {
+  if (F->pm.upp) dp_do_sess4_lkup(ctx, F);
   dp_do_aclv4_lkup(ctx, F, fa_);
   dp_do_ipv4_fwd(ctx, F, fa_);
-
-#ifdef HAVE_LOXIB_5G_UPLANE
-  if (LL_PIPELINE_CONT(F)) {
-    if (F->pm.phit & LLB_DP_ACL_HIT) {
-      if (F->pm.sess_id) {
-        xdp_ing_pdr(ctx, F);
-      }
-    }
-  }
-#endif
 
   return 0;
 }
