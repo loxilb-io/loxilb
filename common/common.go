@@ -131,6 +131,16 @@ type LbRuleModGet struct {
 	LbRules []LbRuleMod `json:"Lbrules"`
 }
 
+type CtInfo struct {
+    Dip    net.IP
+    Sip    net.IP
+    Dport  uint16
+    Sport  uint16
+    Proto  string
+    CState string
+    CAct   string
+}
+
 type NetHookInterface interface {
 	NetPortAdd(*PortMod) (int, error)
 	NetPortDel(*PortMod) (int, error)
@@ -149,4 +159,5 @@ type NetHookInterface interface {
 	NetLbRuleAdd(*LbRuleMod) (int, error)
 	NetLbRuleDel(*LbRuleMod) (int, error)
 	NetLbRuleGet() (LbRuleModGet, error)
+	NetCtInfoGet() ([]CtInfo, error)
 }

@@ -42,11 +42,11 @@ import "C"
 import (
     "fmt"
     "errors"
-    tk "loxilb/loxilib"
     "net"
     "syscall"
     "time"
     "unsafe"
+    tk "loxilb/loxilib"
 )
 
 const (
@@ -404,7 +404,7 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
             if w.NhNum == 0 {
                 dat.act_type = C.DP_SET_RM_VXLAN
                 rtNhAct := (*rtNhAct)(getPtrOffset(unsafe.Pointer(dat),
-                    C.sizeof_struct_dp_cmn_act))
+                                    C.sizeof_struct_dp_cmn_act))
                 C.memset(unsafe.Pointer(rtNhAct), 0, C.sizeof_struct_dp_rt_nh_act)
                 rtNhAct.nh_num = 0
                 rtNhAct.tid = 0
@@ -415,7 +415,7 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
                 key.tun_type = 0
                 dat.act_type = C.DP_SET_RT_TUN_NH
                 rtNhAct := (*rtNhAct)(getPtrOffset(unsafe.Pointer(dat),
-                    C.sizeof_struct_dp_cmn_act))
+                                      C.sizeof_struct_dp_cmn_act))
                 C.memset(unsafe.Pointer(rtNhAct), 0, C.sizeof_struct_dp_rt_nh_act)
 
                 rtNhAct.nh_num = C.ushort(w.NhNum)
@@ -678,19 +678,19 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
     var packets, bytes uint64
     var tbl []int
     switch {
-    case w.Name == "NAT4":
+    case w.Name == MAP_NAME_NAT4:
         tbl = append(tbl, int(C.LL_DP_NAT4_MAP))
         break
-    case w.Name == "BD":
+    case w.Name == MAP_NAME_BD:
         tbl = append(tbl, int(C.LL_DP_BD_STATS_MAP), int(C.LL_DP_TX_BD_STATS_MAP))
         break
-    case w.Name == "RXBD":
+    case w.Name == MAP_NAME_RXBD:
         tbl = append(tbl, int(C.LL_DP_BD_STATS_MAP))
         break
-    case w.Name == "TXBD":
+    case w.Name == MAP_NAME_TXBD:
         tbl = append(tbl, int(C.LL_DP_TX_BD_STATS_MAP))
         break
-    case w.Name == "RT4":
+    case w.Name == MAP_NAME_RT4:
         tbl = append(tbl, int(C.LL_DP_RTV4_MAP))
         break
     default:
@@ -729,23 +729,8 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
     return 0
 }
 
-type DpCT4Ent struct {
-    dip    net.IP
-    sip    net.IP
-    dport  uint16
-    sport  uint16
-    proto  string
-    cState string
-    cAct   string
-}
-
-func (ct *DpCT4Ent) Key() string {
-    str := fmt.Sprintf("%s%s%d%d%s", ct.dip.String(), ct.sip.String(), ct.dport, ct.sport, ct.proto)
-    return str
-}
-
-func convDPCt2GoObj(ctKey *C.struct_dp_ctv4_key, ctDat *C.struct_dp_ctv4_dat) *DpCT4Ent {
-    ct := new(DpCT4Ent)
+func convDPCt2GoObj(ctKey *C.struct_dp_ctv4_key, ctDat *C.struct_dp_ctv4_dat) *DpCtInfo {
+    ct := new(DpCtInfo)
 
     ct.dip = tk.NltoIP(uint32(ctKey.daddr))
     ct.sip = tk.NltoIP(uint32(ctKey.saddr))
@@ -839,14 +824,14 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (error, DpRetT) {
     }
 
     switch {
-    case w.Name == "CT4":
+    case w.Name == MAP_NAME_CT4:
         tbl = C.LL_DP_ACLV4_MAP
     default:
         return errors.New("unknown work type"), EBPF_ERR_WQ_UNK
     }
 
     if tbl == C.LL_DP_ACLV4_MAP {
-        ctMap := make(map[string]*DpCT4Ent)
+        ctMap := make(map[string]*DpCtInfo)
         var n int = 0
         var key *C.struct_dp_ctv4_key = nil
         nextKey := new(C.struct_dp_ctv4_key)
@@ -867,8 +852,6 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (error, DpRetT) {
             if act.dir == C.CT_DIR_IN {
                 goCt4Ent := convDPCt2GoObj(ctKey, act)
                 ctMap[goCt4Ent.Key()] = goCt4Ent
-                fmt.Println(goCt4Ent)
-
             }
             key = nextKey
             n++

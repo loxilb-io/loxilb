@@ -161,3 +161,9 @@ func (*NetApiStruct) NetLbRuleGet() (cmn.LbRuleModGet, error) {
 	mh.mtx.Unlock()
 	return ret, err
 }
+
+func (*NetApiStruct) NetCtInfoGet() ([]cmn.CtInfo, error) {
+	// There is no locking requirement for this operation
+	ret := mh.dp.DpMapGetCt4()
+	return ret, nil
+}

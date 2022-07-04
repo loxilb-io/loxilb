@@ -333,7 +333,7 @@ func (v *Vlan) DP(work DpWorkT) int {
         iStat := new(StatDpWorkQ)
         iStat.Work = work
         iStat.HwMark = uint32(v.VlanID)
-        iStat.Name = "RXBD"
+        iStat.Name = MAP_NAME_RXBD
         iStat.Bytes = &v.Stat.inBytes
         iStat.Packets = &v.Stat.inPackets
         mh.dp.ToDpCh <- iStat
@@ -341,7 +341,7 @@ func (v *Vlan) DP(work DpWorkT) int {
         oStat := new(StatDpWorkQ)
         oStat.Work = work
         oStat.HwMark = uint32(v.VlanID)
-        oStat.Name = "TXBD"
+        oStat.Name = MAP_NAME_TXBD
         oStat.Bytes = &v.Stat.outBytes
         oStat.Packets = &v.Stat.outPackets
         mh.dp.ToDpCh <- oStat
@@ -351,7 +351,7 @@ func (v *Vlan) DP(work DpWorkT) int {
         cStat := new(StatDpWorkQ)
         cStat.Work = work
         cStat.HwMark = uint32(v.VlanID)
-        cStat.Name = "BD"
+        cStat.Name = MAP_NAME_BD
 
         mh.dp.ToDpCh <- cStat
 
