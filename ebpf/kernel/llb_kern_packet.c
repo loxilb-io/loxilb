@@ -214,7 +214,7 @@ dp_trap_packet(void *ctx,  struct xfi *F, void *fa_)
 #endif
 
 static int __always_inline
-dp_deparse_packet(void *ctx,  struct xfi *F)
+dp_unparse_packet(void *ctx,  struct xfi *F)
 {
   if (F->tm.tun_decap) {
     if (F->tm.tun_type == LLB_TUN_VXLAN) {
@@ -318,7 +318,7 @@ dp_pipe_check_res(void *ctx, struct xfi *F, void *fa)
 #endif
 
     if (F->pm.pipe_act & LLB_PIPE_RDR_MASK) {
-      if (dp_deparse_packet(ctx, F) != 0) {
+      if (dp_unparse_packet(ctx, F) != 0) {
         return DP_DROP;
       }
       return dp_redir_packet(ctx, F);

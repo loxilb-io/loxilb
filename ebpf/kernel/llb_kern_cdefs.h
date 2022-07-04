@@ -1180,21 +1180,32 @@ dp_do_out_vlan(void *ctx, struct xfi *F)
 }
 
 static int __always_inline
-dp_pop_outer_metadata(void *md, struct xfi *F)
+dp_pop_outer_l2_metadata(void *md, struct xfi *F)
 {
-  /* Reset pipeline metadata */
-  memcpy(&F->l3m, &F->il3m, sizeof(F->l3m));
   memcpy(&F->l2m.dl_type, &F->il2m.dl_type, 
          sizeof(F->l2m) - sizeof(F->l2m.vlan));
 
   memcpy(F->pm.lkup_dmac, F->il2m.dl_dst, 6);
-  F->pm.tcp_flags = F->pm.itcp_flags;
+  F->il2m.valid = 0;
 
+  return 0;
+}
+
+static int __always_inline
+dp_pop_outer_metadata(void *md, struct xfi *F, int l2tun)
+{
+  /* Reset pipeline metadata */
+  memcpy(&F->l3m, &F->il3m, sizeof(F->l3m));
+
+  F->pm.tcp_flags = F->pm.itcp_flags;
   F->pm.l3_off = F->pm.il3_off;
   F->pm.l4_off = F->pm.il4_off;
   F->il3m.valid = 0;
-  F->il2m.valid = 0;
   F->tm.tun_decap = 1;
+
+  if (l2tun) {
+    return dp_pop_outer_l2_metadata(md, F);  
+  }
 
   return 0;
 }
@@ -1399,6 +1410,54 @@ dp_do_ins_vxlan(void *md,
   F->pm.l4_off = sizeof(*eth) + sizeof(*iph);
   
     return 0;
+}
+
+static int __always_inline
+dp_do_strip_gtp(void *md, struct xfi *F, int olen)
+{
+  struct ethhdr *eth;
+  void *dend;
+
+  if (olen < sizeof(*eth)) {
+    LLBS_PPLN_DROP(F);
+    return -1;
+  }
+
+  if (dp_buf_delete_room(md, olen - sizeof(*eth), BPF_F_ADJ_ROOM_FIXED_GSO)  < 0) {
+    LL_DBG_PRINTK("Failed gtph remove\n");
+    LLBS_PPLN_DROP(F);
+    return -1;
+  }
+
+  eth = DP_TC_PTR(DP_PDATA(md));
+  dend = DP_TC_PTR(DP_PDATA_END(md));
+
+  if (eth + 1 > dend) {
+    LLBS_PPLN_DROP(F);
+    return -1;
+  }
+
+  /* Recreate eth header */
+  memcpy(eth->h_dest, F->l2m.dl_dst, 2*6);
+  eth->h_proto = F->l2m.dl_type;
+
+  /* We do not care about vlan's now
+   * After routing it will be set as per outgoing BD
+   */
+  F->l2m.vlan[0] = 0;
+  F->l2m.vlan[1] = 0;
+
+#if 0
+  /* Reset pipeline metadata */
+  memcpy(&F->l3m, &F->il3m, sizeof(F->l3m));
+  memcpy(F->pm.lkup_dmac, eth->h_dest, 6);
+
+  F->il3m.valid = 0;
+  F->il2m.valid = 0;
+  F->tm.tun_decap = 1;
+#endif
+
+  return 0;
 }
 
 static int __always_inline
