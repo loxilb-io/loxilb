@@ -223,6 +223,21 @@ struct bpf_map_def SEC("maps") ct_v4_map = {
   .max_entries = LLB_CTV4_MAP_ENTRIES
 };
 
+struct bpf_map_def SEC("maps") sess_v4_map = {
+  .type = BPF_MAP_TYPE_HASH,
+  .key_size = sizeof(struct dp_sess4_key),
+  .value_size = sizeof(struct dp_sess_tact),
+  .map_flags = BPF_F_NO_PREALLOC,
+  .max_entries = LLB_SESS_MAP_ENTRIES 
+};
+
+struct bpf_map_def SEC("maps") sess_v4_stats_map = {
+  .type = BPF_MAP_TYPE_PERCPU_ARRAY,
+  .key_size = sizeof(__u32),  /* Counter Index */
+  .value_size = sizeof(struct dp_pb_stats),
+  .max_entries = LLB_SESS_MAP_ENTRIES 
+};
+
 struct bpf_map_def SEC("maps") fc_v4_map = {
   .type = BPF_MAP_TYPE_HASH,
   .key_size = sizeof(struct dp_fcv4_key),
@@ -459,6 +474,20 @@ struct {
 
 struct {
         __uint(type,        BPF_MAP_TYPE_HASH);
+        __type(key,         struct dp_sess4_key);
+        __type(value,       struct dp_sess_tact);
+        __uint(max_entries, LLB_SESS_MAP_ENTRIES);
+} sess_v4_map SEC(".maps");
+
+struct {
+        __uint(type,        BPF_MAP_TYPE_PERCPU_ARRAY);
+        __type(key,         __u32);
+        __type(value,       struct dp_pb_stats);
+        __uint(max_entries, LLB_SESS_MAP_ENTRIES);
+} sess_v4_stats_map SEC(".maps");
+
+struct {
+        __uint(type,        BPF_MAP_TYPE_HASH);
         __type(key,         struct dp_fcv4_key);
         __type(value,       struct dp_fc_tacts);
         __uint(max_entries, LLB_FCV4_MAP_ENTRIES);
@@ -496,9 +525,9 @@ struct {
 
 static void __always_inline
 dp_do_map_stats(struct xdp_md *ctx,  
-                    struct xfi *F,
-                    int xtbl,
-                    int cidx)
+                struct xfi *F,
+                int xtbl,
+                int cidx)
 {
   struct dp_pb_stats *pb;
   struct dp_pb_stats pb_new;
@@ -532,6 +561,9 @@ dp_do_map_stats(struct xdp_md *ctx,
     break;
   case LL_DP_TMAC_STATS_MAP:
     map = &tmac_stats_map;
+    break;
+  case LL_DP_SESS4_STATS_MAP:
+    map = &sess_v4_stats_map;
     break;
   default:
     return;

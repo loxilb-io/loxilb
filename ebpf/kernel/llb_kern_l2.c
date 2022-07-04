@@ -242,6 +242,7 @@ dp_do_rt_l2_vxlan_nh(void *ctx, struct xfi *F,
   F->tm.tun_rip = nl2vx->l3t.rip;
   F->tm.tun_sip = nl2vx->l3t.sip;
   F->tm.new_tunnel_id = nl2vx->l3t.tid;
+  F->tm.tun_type = LLB_TUN_VXLAN;
 
   memcpy(&F->il2m, &F->l2m, sizeof(F->l2m));
   F->il2m.vlan[0] = 0;

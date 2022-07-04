@@ -39,6 +39,7 @@ dp_do_if_lkup(void *ctx, struct xfi *F)
     F->pm.zone  = l2a->set_ifi.zone;
     F->pm.bd    = l2a->set_ifi.bd;
     F->pm.mirr  = l2a->set_ifi.mirr;
+    F->pm.upp   = l2a->set_ifi.upp;
     F->qm.polid = l2a->set_ifi.polid;
   } else {
     LLBS_PPLN_DROP(F);
@@ -220,6 +221,12 @@ dp_unparse_packet(void *ctx,  struct xfi *F)
     if (F->tm.tun_type == LLB_TUN_VXLAN) {
     LL_DBG_PRINTK("[DEPR] LL STRIP-VXLAN\n"); 
       if (dp_do_strip_vxlan(ctx, F, F->pm.tun_off) != 0) {
+        return DP_DROP;
+      }
+    }
+    if (F->tm.tun_type == LLB_TUN_GTP) {
+    LL_DBG_PRINTK("[DEPR] LL STRIP-GTP\n"); 
+      if (dp_do_strip_gtp(ctx, F, F->pm.tun_off) != 0) {
         return DP_DROP;
       }
     }

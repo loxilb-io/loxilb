@@ -70,7 +70,11 @@ struct dp_pi_mdi {
 #define LLB_XDP_PDR_HIT       0x4
 #define LLB_XDP_RT_HIT        0x8
 #define LLB_DP_FC_HIT         0x10
-    __u16            phit;
+#define LLB_DP_SESS_HIT       0x20
+    __u8             phit;
+#define LLB_DP_UPP_ULP        1
+#define LLB_DP_UPP_DLP        2
+    __u8             upp;
     __u8             lkup_dmac[6];
     __u16            iport;
     __u16            oport;
