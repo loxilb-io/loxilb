@@ -61,13 +61,13 @@ dp_pipe_set_l22_tun_nh(void *ctx, struct xfi *F, struct dp_rt_nh_act *rnh)
 }
 
 static int __always_inline
-dp_pipe_set_strip_vx_tun(void *ctx, struct xfi *F, struct dp_rt_nh_act *rnh)
+dp_pipe_set_rm_vx_tun(void *ctx, struct xfi *F, struct dp_rt_nh_act *rnh)
 {
   F->pm.phit &= ~LLB_DP_TMAC_HIT;
   F->pm.bd = rnh->bd;
 
-  LL_DBG_PRINTK("[TMAC] strip-vx newbd %d \n", F->pm.bd);
-  return dp_pop_outer_metadata(ctx, F);
+  LL_DBG_PRINTK("[TMAC] rm-vx newbd %d \n", F->pm.bd);
+  return dp_pop_outer_metadata(ctx, F, 1);
 }
 
 static int __always_inline
@@ -129,7 +129,7 @@ __dp_do_tmac_lkup(void *ctx, struct xfi *F,
     ta->ca.act_type = DP_SET_RM_VXLAN;
     memcpy(&ta->nh_act,  &tma->rt_nh, sizeof(tma->rt_nh));
 #endif
-    return dp_pipe_set_strip_vx_tun(ctx, F, &tma->rt_nh);
+    return dp_pipe_set_rm_vx_tun(ctx, F, &tma->rt_nh);
   }
 
   return 0;
@@ -239,9 +239,10 @@ dp_do_rt_l2_vxlan_nh(void *ctx, struct xfi *F,
 {
   struct dp_rt_l2nh_act *nl2;
 
-  F->tm.tun_rip = nl2vx->rip;
-  F->tm.tun_sip = nl2vx->sip;
-  F->tm.new_tunnel_id = nl2vx->tid;
+  F->tm.tun_rip = nl2vx->l3t.rip;
+  F->tm.tun_sip = nl2vx->l3t.sip;
+  F->tm.new_tunnel_id = nl2vx->l3t.tid;
+  F->tm.tun_type = LLB_TUN_VXLAN;
 
   memcpy(&F->il2m, &F->l2m, sizeof(F->l2m));
   F->il2m.vlan[0] = 0;

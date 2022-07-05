@@ -169,4 +169,87 @@ ipv4_l4_csum(void *data_start, __u32 data_size,
   *csum = csum_fold_helper(*csum);
 }
 
+#define GTPU_UDP_SPORT (2152)
+#define GTPU_UDP_DPORT (2152)
+#define GTPC_UDP_DPORT (2153)
+  
+#define GTP_HDR_LEN    (8)
+#define GTP_VER_1      (0x1)
+#define GTP_EXT_FM     (0x4)
+#define GTP_MT_TPDU    (0xff)
+  
+struct gtp_v1_hdr {
+#if defined(__BIG_ENDIAN_BITFIELD)
+  __u8    ver:3;
+  __u8    pt:1;
+  __u8    res:1;
+  __u8    espn:3;
+#elif defined(__LITTLE_ENDIAN_BITFIELD)
+  __u8    espn:3;
+  __u8    res:1;
+  __u8    pt:1;
+  __u8    ver:3;
+#else
+#error  "Please fix byteorder"
+#endif
+  __u8    mt;
+  __u16   mlen;
+  __u32   teid;
+};
+  
+#define GTP_MAX_EXTH    2
+#define GTP_NH_PDU_SESS 0x85
+
+struct gtp_v1_ehdr {
+  __u16   seq;
+  __u8    npdu;
+  __u8    next_hdr;
+};
+
+#define GTP_PDU_SESS_UL 1
+#define GTP_PDU_SESS_DL 0
+
+struct gtp_pdu_sess_cmn_hdr {
+  __u8    len;
+#if defined(__BIG_ENDIAN_BITFIELD)
+  __u8    pdu_type:4;
+  __u8    res:4;
+#elif defined(__LITTLE_ENDIAN_BITFIELD)
+  __u8    res:4;
+  __u8    pdu_type:4;
+#else
+#error  "Please fix byteorder"
+#endif
+};
+
+struct gtp_dl_pdu_sess_hdr {
+  struct gtp_pdu_sess_cmn_hdr cmn;
+#if defined(__BIG_ENDIAN_BITFIELD)
+  __u8    ppp:1;
+  __u8    rqi:1;
+  __u8    qfi:6;
+#elif defined(__LITTLE_ENDIAN_BITFIELD)
+  __u8    qfi:6;
+  __u8    rqi:1;
+  __u8    ppp:1;
+#else
+#error  "Please fix byteorder"
+#endif
+  __u8    next_hdr;
+};
+
+struct gtp_ul_pdu_sess_hdr {
+  struct gtp_pdu_sess_cmn_hdr cmn;
+#if defined(__BIG_ENDIAN_BITFIELD)
+  __u8    res:2;
+  __u8    qfi:6;
+#elif defined(__LITTLE_ENDIAN_BITFIELD)
+  __u8    qfi:6;
+  __u8    res:2;
+#else
+#error  "Please fix byteorder"
+#endif
+  __u8    next_hdr;
+};
+
 #endif /* __PARSING_HELPERS_H */

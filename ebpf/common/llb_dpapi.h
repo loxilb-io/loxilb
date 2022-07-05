@@ -33,6 +33,7 @@
 #define LLB_PGM_MAP_ENTRIES   (8)
 #define LLB_FCV4_MAP_ACTS     (DP_SET_TOCP)
 #define LLB_POL_MAP_ENTRIES   (8*1024)
+#define LLB_SESS_MAP_ENTRIES  (20*1024)
 #define LLB_PSECS             (8)
 #define LLB_MAX_NXFRMS        (16)
 
@@ -79,6 +80,8 @@ enum llb_dp_tid {
   LL_DP_POL_MAP,
   LL_DP_CTV4_MAP,
   LL_DP_NAT4_MAP,
+  LL_DP_SESS4_MAP,
+  LL_DP_SESS4_STATS_MAP,
   LL_DP_MAX_MAP
 };
 
@@ -104,7 +107,9 @@ enum {
   DP_SET_POLICER         = 18,
   DP_SET_DO_POLICER      = 19,
   DP_SET_FCACT           = 20,
-  DP_SET_DO_CT           = 21
+  DP_SET_DO_CT           = 21,
+  DP_SET_RM_GTP          = 22,
+  DP_SET_ADD_GTP         = 23
 };
 
 struct dp_cmn_act {
@@ -128,11 +133,15 @@ struct dp_rt_nh_act {
   struct dp_rt_l2nh_act l2nh;
 };
 
-struct dp_rt_l2vxnh_act {
+struct dp_rt_l3tun_act {
   __u32 rip;
   __u32 sip;
   __u32 tid;
   __u32 aux;
+};
+
+struct dp_rt_l2vxnh_act {
+  struct dp_rt_l3tun_act l3t;
   struct dp_rt_l2nh_act l2nh;
 };
 
@@ -324,7 +333,8 @@ struct dp_intf_tact_set_ifi {
   __u16 bd;
   __u16 mirr;
   __u16 polid;
-  __u8  r[6];
+  __u8  upp;
+  __u8  r[5];
 };
 
 struct dp_intf_tact {
@@ -563,6 +573,24 @@ struct dp_natv4_tacts {
   uint16_t sel_hint;
   uint16_t sel_type;
   struct mf_xfrm_inf nxfrms[LLB_MAX_NXFRMS];
+};
+
+/* This is currently based on ULCL classification scheme */
+struct dp_sess4_key {
+  __u32 daddr;
+  __u32 saddr;
+  __u32 teid;
+  __u32 r;
+};
+
+struct dp_sess_tact {
+  struct dp_cmn_act ca;
+  uint8_t qfi; 
+  uint8_t r1;
+  uint16_t r2;
+  uint32_t rip;
+  uint32_t sip;
+  uint32_t teid;
 };
 
 struct ll_dp_pmdi {

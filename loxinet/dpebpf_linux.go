@@ -473,12 +473,12 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
                                        C.sizeof_struct_dp_cmn_act))
 
                 ipAddr := tk.IPtonl(w.rIP)
-                vxAct.rip = C.uint(ipAddr)
-                vxAct.sip = C.uint(tk.IPtonl(w.sIP))
+                vxAct.l3t.rip = C.uint(ipAddr)
+                vxAct.l3t.sip = C.uint(tk.IPtonl(w.sIP))
                 tid := ((w.tunID << 8) & 0xffffff00)
-                vxAct.tid = C.uint(tk.Htonl(tid))
+                vxAct.l3t.tid = C.uint(tk.Htonl(tid))
 
-                fmt.Printf("rip 0x%x sip 0x%x 0x%x\n", vxAct.sip, vxAct.rip, vxAct.tid)
+                fmt.Printf("rip 0x%x sip 0x%x 0x%x\n", vxAct.l3t.sip, vxAct.l3t.rip, vxAct.l3t.tid)
 
                 act = (*rtL2NhAct)(&vxAct.l2nh)
                 C.memcpy(unsafe.Pointer(&act.dmac[0]), unsafe.Pointer(&w.dstAddr[0]), 6)
