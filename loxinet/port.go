@@ -36,6 +36,8 @@ const (
     PORT_MAP_ERR
     PORT_ZONE_ERR
     PORT_NOREALDEV_ERR
+    PORT_PROPEXISTS_ERR
+    PORT_PROPNOT_EXISTS_ERR
 )
 
 const (
@@ -89,9 +91,11 @@ type PortLayer3Info struct {
 type PortSwInfo struct {
     OsId       int
     PortType   int
+    PortProp   cmn.PortProp
     PortActive bool
     PortReal   *Port
     PortOvl    *Port
+    BpfLoaded  bool
 }
 
 type PortLayer2Info struct {
@@ -399,7 +403,55 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
     return 0, nil
 }
 
-func (P *PortsH) PortUpdate() {
+func (P *PortsH) PortUpdateProp(name string, prop cmn.PortProp, zone string, updt bool) (int, error) {
+
+    var allDevs []*Port
+
+    if _, err := mh.zn.ZonePortIsValid(name, zone); err != nil {
+        return PORT_ZONE_ERR, errors.New("no such zone")
+    }
+
+    zn, _ := mh.zn.Zonefind(zone)
+    if zn == nil {
+        return PORT_ZONE_ERR, errors.New("no such zone")
+    }
+
+    p := P.portSmap[name]
+
+    if p == nil {
+        return PORT_NOTEXIST_ERR, errors.New("no such port")
+    }
+
+    if updt {
+        if p.SInfo.PortProp & prop == prop {
+            return PORT_PROPEXISTS_ERR, errors.New("port property exists")
+        }
+    } else {
+        if p.SInfo.PortProp & prop != prop {
+            return PORT_PROPNOT_EXISTS_ERR, errors.New("port property doesnt exist")
+        }
+    }
+
+    allDevs = append(allDevs, p)
+    for _, pe := range P.portSmap {
+        if p != pe && pe.SInfo.PortReal == p  &&
+           pe.SInfo.PortType & cmn.PORT_VLANSIF == cmn.PORT_VLANSIF && 
+           pe.SInfo.PortType & cmn.PORT_VXLANBR != cmn.PORT_VXLANBR {
+            allDevs = append(allDevs, pe)
+        }
+    }
+
+    for _, pe := range allDevs {
+        if updt {
+            pe.SInfo.PortProp |= prop
+        } else {
+            pe.SInfo.PortProp ^= prop
+        }
+        fmt.Printf("Dev %s %x\n\n\n\n", pe.Name,pe.SInfo.PortProp )
+        pe.DP(DP_CREATE)
+    }
+
+    return 0, nil
 }
 
 func (P *PortsH) Ports2Json(w io.Writer) error {
@@ -454,6 +506,12 @@ func port2String(e *Port, it IterIntf) {
     }
     if e.SInfo.PortType&cmn.PORT_VXLANSIF == cmn.PORT_VXLANSIF {
         pStr += "vxlan-sif,"
+    }
+    if e.SInfo.PortProp&cmn.PORT_PROP_UPP == cmn.PORT_PROP_UPP {
+        pStr += "upp,"
+    }
+    if e.SInfo.PortProp&cmn.PORT_PROP_UPP == cmn.PORT_PROP_SPAN {
+        pStr += "span,"
     }
     if e.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
         pStr += "vxlan"
@@ -668,6 +726,7 @@ func (p *Port) DP(work DpWorkT) int {
             pWq.IngVlan = 0
             pWq.SetBD = p.L2.Vid
             pWq.SetZoneNum = zoneNum
+            pWq.Prop = p.SInfo.PortProp
 
             mh.dp.ToDpCh <- pWq
         }
@@ -699,6 +758,7 @@ func (p *Port) DP(work DpWorkT) int {
 
     pWq.SetBD = p.L2.Vid
     _, pWq.SetZoneNum = mh.zn.Zonefind(p.Zone)
+    pWq.Prop = p.SInfo.PortProp
 
     if pWq.SetZoneNum < 0 {
         return -1
@@ -707,14 +767,17 @@ func (p *Port) DP(work DpWorkT) int {
     if (work == DP_CREATE || work == DP_REMOVE) &&
         p.SInfo.PortType&cmn.PORT_REAL == cmn.PORT_REAL ||
         p.SInfo.PortType&cmn.PORT_BOND == cmn.PORT_BOND {
-
-        pWq.LoadEbpf = p.Name
+        if p.SInfo.BpfLoaded == false {
+            pWq.LoadEbpf = p.Name
+            p.SInfo.BpfLoaded = true
+        } else {
+            pWq.LoadEbpf = ""
+        }
     } else {
         pWq.LoadEbpf = ""
     }
-
+    
     // TODO - Need to unload eBPF when port properties change
-
     mh.dp.ToDpCh <- pWq
 
     return 0

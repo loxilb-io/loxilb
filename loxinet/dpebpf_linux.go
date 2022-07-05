@@ -47,6 +47,7 @@ import (
     "time"
     "unsafe"
     tk "loxilb/loxilib"
+    cmn "loxilb/common"
 )
 
 const (
@@ -65,6 +66,8 @@ const (
     EBPF_ERR_RT4_DEL
     EBPF_ERR_NAT4_ADD
     EBPF_ERR_NAT4_DEL
+    EBPF_ERR_SESS4_ADD
+    EBPF_ERR_SESS4_DEL
     EBPF_ERR_WQ_UNK
 )
 
@@ -90,6 +93,8 @@ type (
     nat4Key     C.struct_dp_natv4_key
     nat4Acts    C.struct_dp_natv4_tacts
     nxfrmAct    C.struct_mf_xfrm_inf
+    sess4Key    C.struct_dp_sess4_key
+    sessAct	    C.struct_dp_sess_tact
 )
 
 type DpEbpfH struct {
@@ -252,6 +257,10 @@ func DpPortPropMod(w *PortDpWorkQ) int {
         setIfi.mirr = C.ushort(w.SetMirr)
         setIfi.polid = C.ushort(w.SetPol)
 
+        if w.Prop & cmn.PORT_PROP_UPP == cmn.PORT_PROP_UPP {
+            setIfi.pprop = C.LLB_DP_PORT_UPP
+        }
+
         ret := C.llb_add_table_elem(C.LL_DP_INTF_MAP,
                                     unsafe.Pointer(key),
                                     unsafe.Pointer(data))
@@ -263,32 +272,27 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 
         tk.LogIt(tk.LOG_DEBUG, "intf map added idx %d vlan %d\n", w.OsPortNum, w.IngVlan)
         txV = C.uint(w.OsPortNum)
-        ret = C.llb_add_table_elem(C.LL_DP_TX_INTF_MAP,
-            unsafe.Pointer(&txK),
-            unsafe.Pointer(&txV))
+        ret = C.llb_add_table_elem(C.LL_DP_TX_INTF_MAP, unsafe.Pointer(&txK), unsafe.Pointer(&txV))
         if ret != 0 {
-            C.llb_del_table_elem(C.LL_DP_INTF_MAP,
-                unsafe.Pointer(key))
-            tk.LogIt(tk.LOG_ERROR, "[EBPF PORT] Error adding in Intf TX map\n")
+            C.llb_del_table_elem(C.LL_DP_INTF_MAP, unsafe.Pointer(key))
+            tk.LogIt(tk.LOG_ERROR, "error adding in Intf TX map\n")
             return EBPF_ERR_PORTPROP_ADD
         }
-        tk.LogIt(tk.LOG_DEBUG, "[EBPF PORT] TX Intf map added %d\n", w.PortNum)
+        tk.LogIt(tk.LOG_DEBUG, "tx intf map added %d\n", w.PortNum)
         return 0
     } else if w.Work == DP_REMOVE {
 
-        C.llb_del_table_elem(C.LL_DP_TX_INTF_MAP,
-            unsafe.Pointer(&txK))
+        C.llb_del_table_elem(C.LL_DP_TX_INTF_MAP, unsafe.Pointer(&txK))
 
-        C.llb_del_table_elem(C.LL_DP_INTF_MAP,
-            unsafe.Pointer(key))
+        C.llb_del_table_elem(C.LL_DP_INTF_MAP, unsafe.Pointer(key))
 
         if w.LoadEbpf != "" {
             lRet := unLoadEbpfPgm(w.LoadEbpf)
             if lRet != 0 {
-                tk.LogIt(tk.LOG_ERROR, "[EBPF PORT] Error in unloading ebpf prog for IFidx %d\n", w.OsPortNum)
+                tk.LogIt(tk.LOG_ERROR, "error in unloading ebpf prog for ifi %d\n", w.OsPortNum)
                 return EBPF_ERR_EBFP_LOAD
             }
-            tk.LogIt(tk.LOG_DEBUG, "[EBPF PORT] ebpf prog for IFidx %d unloaded\n", w.OsPortNum)
+            tk.LogIt(tk.LOG_DEBUG, "ebpf prog for ifi %d unloaded\n", w.OsPortNum)
         }
 
         return 0
@@ -657,8 +661,8 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 
         return 0
     } else if w.Work == DP_REMOVE {
-
         C.llb_del_table_elem(C.LL_DP_NAT4_MAP, unsafe.Pointer(key))
+        return 0
     }
 
     return EBPF_ERR_WQ_UNK
@@ -851,6 +855,7 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (error, DpRetT) {
 
             if act.dir == C.CT_DIR_IN {
                 goCt4Ent := convDPCt2GoObj(ctKey, act)
+                fmt.Println(goCt4Ent)
                 ctMap[goCt4Ent.Key()] = goCt4Ent
             }
             key = nextKey
@@ -860,4 +865,56 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (error, DpRetT) {
     }
 
     return errors.New("unknown work type"), EBPF_ERR_WQ_UNK
+}
+
+
+func (e *DpEbpfH)DpUlClMod(w *UlClDpWorkQ) int {
+    key := new(sess4Key)
+
+    key.daddr = C.uint(tk.IPtonl(w.mDip))
+    key.saddr = C.uint(tk.IPtonl(w.mSip))
+    key.teid = C.uint(tk.Htonl(w.mTeID))
+    key.r = 0
+
+    if w.Work == DP_CREATE {
+        dat := new(sessAct)
+        C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_sess_tact)
+
+        if key.teid != 0 {
+            dat.ca.act_type = C.DP_SET_ADD_GTP
+            dat.ca.cidx = C.uint(w.HwMark)
+            dat.qfi = C.uchar(w.Qfi)
+        } else {
+            dat.ca.act_type = C.DP_SET_RM_GTP
+            dat.ca.cidx = C.uint(w.HwMark)
+            dat.qfi = C.uchar(w.Qfi)
+            dat.rip = C.uint(tk.IPtonl(w.tDip))
+            dat.sip = C.uint(tk.IPtonl(w.tSip))
+            dat.teid = C.uint(tk.Htonl(w.tTeID))
+        }
+
+        ret := C.llb_add_table_elem(C.LL_DP_SESS4_MAP,
+                                    unsafe.Pointer(key),
+                                    unsafe.Pointer(dat))
+
+        if ret != 0 {
+            return EBPF_ERR_SESS4_ADD
+        }
+
+        return 0
+    } else if w.Work == DP_REMOVE {
+        C.llb_del_table_elem(C.LL_DP_SESS4_MAP, unsafe.Pointer(key))
+        return 0
+    }
+    return EBPF_ERR_WQ_UNK
+}
+
+func (e *DpEbpfH)DpUlClAdd(w *UlClDpWorkQ) int {
+    fmt.Println(*w)
+    return e.DpUlClMod(w)
+}
+
+func (e *DpEbpfH)DpUlClDel(w *UlClDpWorkQ) int {
+    fmt.Println(*w)
+    return e.DpUlClMod(w)
 }

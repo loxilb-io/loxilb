@@ -261,7 +261,9 @@ dp_do_ipv4_fwd(void *ctx,  struct xfi *F, void *fa_)
 static int __always_inline
 dp_ing_ipv4(void *ctx,  struct xfi *F, void *fa_)
 {
-  if (F->pm.upp) dp_do_sess4_lkup(ctx, F);
+  if (F->pm.pprop & LLB_DP_PORT_UPP) {
+    dp_do_sess4_lkup(ctx, F);
+  }
   dp_do_aclv4_lkup(ctx, F, fa_);
   dp_do_ipv4_fwd(ctx, F, fa_);
 

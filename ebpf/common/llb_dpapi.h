@@ -333,7 +333,7 @@ struct dp_intf_tact_set_ifi {
   __u16 bd;
   __u16 mirr;
   __u16 polid;
-  __u8  upp;
+  __u8  pprop;
   __u8  r[5];
 };
 

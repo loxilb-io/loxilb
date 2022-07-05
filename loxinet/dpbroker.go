@@ -71,6 +71,7 @@ type PortDpWorkQ struct {
     IngVlan    int
     SetBD      int
     SetZoneNum int
+    Prop       cmn.PortProp
     SetMirr    int
     SetPol     int
     LoadEbpf   string
@@ -192,6 +193,20 @@ type DpCtInfo struct {
     cAct   string
 }
 
+type UlClDpWorkQ struct {
+    Work   DpWorkT
+    Status *DpStatusT
+    mDip   net.IP
+    mSip   net.IP
+    mTeID  uint32
+    Zone   int
+    Qfi    uint8
+    HwMark int
+    tDip   net.IP
+    tSip   net.IP
+    tTeID  uint32
+}
+
 func (ct *DpCtInfo) Key() string {
     str := fmt.Sprintf("%s%s%d%d%s", ct.dip.String(), ct.sip.String(), ct.dport, ct.sport, ct.proto)
     return str
@@ -214,6 +229,8 @@ type DpHookInterface interface {
     DpNatLbRuleAdd(*NatDpWorkQ) int
     DpNatLbRuleDel(*NatDpWorkQ) int
     DpStat(*StatDpWorkQ) int
+    DpUlClAdd(w *UlClDpWorkQ) int
+    DpUlClDel(w *UlClDpWorkQ) int
     DpTableGet(w *TableDpWorkQ) (error, DpRetT)
 }
 
@@ -279,6 +296,16 @@ func (dp *DpH) DpWorkOnNatLb(nWq *NatDpWorkQ) DpRetT {
         return dp.DpHooks.DpNatLbRuleAdd(nWq)
     } else if nWq.Work == DP_REMOVE {
         return dp.DpHooks.DpNatLbRuleDel(nWq)
+    }
+
+    return DP_WQ_UNK_ERR
+}
+
+func (dp *DpH) DpWorkOnUlCl(nWq *UlClDpWorkQ) DpRetT {
+    if nWq.Work == DP_CREATE {
+        return dp.DpHooks.DpUlClAdd(nWq)
+    } else if nWq.Work == DP_REMOVE {
+        return dp.DpHooks.DpUlClDel(nWq)
     }
 
     return DP_WQ_UNK_ERR
@@ -356,11 +383,11 @@ func DpBrokerInit(dph DpHookInterface) *DpH {
 
 func (dp *DpH)DpMapGetCt4() []cmn.CtInfo {
     var CtInfoArr []cmn.CtInfo
-	nTable := new(TableDpWorkQ)
-	nTable.Work = DP_TABLE_GET
-	nTable.Name = MAP_NAME_CT4
-	
-	err, ret := mh.dp.DpWorkOnTableOp(nTable)
+    nTable := new(TableDpWorkQ)
+    nTable.Work = DP_TABLE_GET
+    nTable.Name = MAP_NAME_CT4
+    
+    err, ret := mh.dp.DpWorkOnTableOp(nTable)
     if err != nil {
         return nil
     }

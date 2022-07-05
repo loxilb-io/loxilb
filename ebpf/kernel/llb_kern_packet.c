@@ -39,7 +39,7 @@ dp_do_if_lkup(void *ctx, struct xfi *F)
     F->pm.zone  = l2a->set_ifi.zone;
     F->pm.bd    = l2a->set_ifi.bd;
     F->pm.mirr  = l2a->set_ifi.mirr;
-    F->pm.upp   = l2a->set_ifi.upp;
+    F->pm.pprop = l2a->set_ifi.pprop;
     F->qm.polid = l2a->set_ifi.polid;
   } else {
     LLBS_PPLN_DROP(F);

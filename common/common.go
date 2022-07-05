@@ -16,144 +16,156 @@
 package common
 
 import (
-	"net"
+    "net"
 )
 
 const (
-	AU_WORKQ_LEN = 1024
-	LU_WORKQ_LEN = 1024
-	NU_WORKQ_LEN = 1024
-	RU_WORKQ_LEN = 40827
+    AU_WORKQ_LEN = 1024
+    LU_WORKQ_LEN = 1024
+    NU_WORKQ_LEN = 1024
+    RU_WORKQ_LEN = 40827
 )
 
 const (
-	PORT_REAL     = 0x1
-	PORT_BONDSIF  = 0x2
-	PORT_BOND     = 0x4
-	PORT_VLANSIF  = 0x8
-	PORT_VLANBR   = 0x10
-	PORT_VXLANSIF = 0x20
-	PORT_VXLANBR  = 0x40
-	PORT_WG       = 0x80
+    PORT_REAL     = 0x1
+    PORT_BONDSIF  = 0x2
+    PORT_BOND     = 0x4
+    PORT_VLANSIF  = 0x8
+    PORT_VLANBR   = 0x10
+    PORT_VXLANSIF = 0x20
+    PORT_VXLANBR  = 0x40
+    PORT_WG       = 0x80
+)
+
+type PortProp uint8
+
+const (
+    PORT_PROP_UPP  PortProp = 1 << iota 
+    PORT_PROP_SPAN
 )
 
 type PortMod struct {
-	Dev       string
-	LinkIndex int
-	Ptype     int
-	MacAddr   [6]byte
-	Link      bool
-	State     bool
-	Mtu       int
-	Master    string
-	Real      string
-	TunId     int
+    Dev       string
+    LinkIndex int
+    Ptype     int
+    MacAddr   [6]byte
+    Link      bool
+    State     bool
+    Mtu       int
+    Master    string
+    Real      string
+    TunId     int
 }
 
 type VlanMod struct {
-	Vid       int
-	Dev       string
-	LinkIndex int
-	MacAddr   [6]byte
-	Link      bool
-	State     bool
-	Mtu       int
-	TunId     uint32
+    Vid       int
+    Dev       string
+    LinkIndex int
+    MacAddr   [6]byte
+    Link      bool
+    State     bool
+    Mtu       int
+    TunId     uint32
 }
 
 type VlanPortMod struct {
-	Vid    int
-	Dev    string
-	Tagged bool
+    Vid    int
+    Dev    string
+    Tagged bool
 }
 
 const (
-	FDB_PHY  = 0
-	FDB_TUN  = 1
-	FDB_VLAN = 2
+    FDB_PHY  = 0
+    FDB_TUN  = 1
+    FDB_VLAN = 2
 )
 
 type FdbMod struct {
-	MacAddr  [6]byte
-	BridgeId int
-	Dev      string
-	Dst      net.IP
-	Type     int
+    MacAddr  [6]byte
+    BridgeId int
+    Dev      string
+    Dst      net.IP
+    Type     int
 }
 
 type Ipv4AddrMod struct {
-	Dev string
-	Ip  string
+    Dev string
+    Ip  string
 }
 
 type Neighv4Mod struct {
-	Ip           net.IP
-	LinkIndex    int
-	State        int
-	HardwareAddr net.HardwareAddr
+    Ip           net.IP
+    LinkIndex    int
+    State        int
+    HardwareAddr net.HardwareAddr
 }
 
 type Routev4Mod struct {
-	Protocol  int
-	Flags     int
-	Gw        net.IP
-	LinkIndex int
-	Dst       net.IPNet
+    Protocol  int
+    Flags     int
+    Gw        net.IP
+    LinkIndex int
+    Dst       net.IPNet
 }
 
 type EpSelect uint
 
 const (
-	LB_SEL_RR EpSelect = iota
-	LB_SEL_HASH
-	LB_SEL_PRIO
+    LB_SEL_RR EpSelect = iota
+    LB_SEL_HASH
+    LB_SEL_PRIO
 )
 
 type LbServiceArg struct {
-	ServIP   string   `json:"externalIP"`
-	ServPort uint16   `json:"port"`
-	Proto    string   `json:"protocol"`
-	Sel      EpSelect `json:"sel"`
+    ServIP   string   `json:"externalIP"`
+    ServPort uint16   `json:"port"`
+    Proto    string   `json:"protocol"`
+    Sel      EpSelect `json:"sel"`
 }
 
 type LbEndPointArg struct {
-	EpIP   string `json:"endpointIP"`
-	EpPort uint16 `json:"targetPort"`
-	Weight uint8  `json:"weight"`
+    EpIP   string `json:"endpointIP"`
+    EpPort uint16 `json:"targetPort"`
+    Weight uint8  `json:"weight"`
 }
 
 type LbRuleMod struct {
-	Serv LbServiceArg    `json:"serviceArguments"`
-	Eps  []LbEndPointArg `json:"endpoints"`
+    Serv LbServiceArg    `json:"serviceArguments"`
+    Eps  []LbEndPointArg `json:"endpoints"`
 }
 
 type CtInfo struct {
-	Dip    net.IP `json:"destinationIP"`
-	Sip    net.IP `json:"sourceIP"`
-	Dport  uint16 `json:"destinationPort"`
-	Sport  uint16 `json:"sourcePort"`
-	Proto  string `json:"protocol"`
-	CState string `json:"conntrackState"`
-	CAct   string `json:"conntrackAct"`
+    Dip    net.IP `json:"destinationIP"`
+    Sip    net.IP `json:"sourceIP"`
+    Dport  uint16 `json:"destinationPort"`
+    Sport  uint16 `json:"sourcePort"`
+    Proto  string `json:"protocol"`
+    CState string `json:"conntrackState"`
+    CAct   string `json:"conntrackAct"`
+}
+
+type UlClArg struct {
+    Addr    net.IP
+    Qfi	    uint8
 }
 
 type NetHookInterface interface {
-	NetPortAdd(*PortMod) (int, error)
-	NetPortDel(*PortMod) (int, error)
-	NetVlanAdd(*VlanMod) (int, error)
-	NetVlanDel(*VlanMod) (int, error)
-	NetVlanPortAdd(*VlanPortMod) (int, error)
-	NetVlanPortDel(*VlanPortMod) (int, error)
-	NetFdbAdd(*FdbMod) (int, error)
-	NetFdbDel(*FdbMod) (int, error)
-	NetIpv4AddrAdd(*Ipv4AddrMod) (int, error)
-	NetIpv4AddrDel(*Ipv4AddrMod) (int, error)
-	NetNeighv4Add(*Neighv4Mod) (int, error)
-	NetNeighv4Del(*Neighv4Mod) (int, error)
-	NetRoutev4Add(*Routev4Mod) (int, error)
-	NetRoutev4Del(*Routev4Mod) (int, error)
-	NetLbRuleAdd(*LbRuleMod) (int, error)
-	NetLbRuleDel(*LbRuleMod) (int, error)
-	NetLbRuleGet() ([]LbRuleMod, error)
-	NetCtInfoGet() ([]CtInfo, error)
+    NetPortAdd(*PortMod) (int, error)
+    NetPortDel(*PortMod) (int, error)
+    NetVlanAdd(*VlanMod) (int, error)
+    NetVlanDel(*VlanMod) (int, error)
+    NetVlanPortAdd(*VlanPortMod) (int, error)
+    NetVlanPortDel(*VlanPortMod) (int, error)
+    NetFdbAdd(*FdbMod) (int, error)
+    NetFdbDel(*FdbMod) (int, error)
+    NetIpv4AddrAdd(*Ipv4AddrMod) (int, error)
+    NetIpv4AddrDel(*Ipv4AddrMod) (int, error)
+    NetNeighv4Add(*Neighv4Mod) (int, error)
+    NetNeighv4Del(*Neighv4Mod) (int, error)
+    NetRoutev4Add(*Routev4Mod) (int, error)
+    NetRoutev4Del(*Routev4Mod) (int, error)
+    NetLbRuleAdd(*LbRuleMod) (int, error)
+    NetLbRuleDel(*LbRuleMod) (int, error)
+    NetLbRuleGet() ([]LbRuleMod, error)
+    NetCtInfoGet() ([]CtInfo, error)
 }
