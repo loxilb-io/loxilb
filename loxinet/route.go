@@ -182,7 +182,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 					return RT_NH_ERR, errors.New("RT Nh Host Err")
 				}
 
-				r.Zone.Nh.NeighAdd(Na[i].NhAddr, Zone, NeighAttr{12, 0, hwmac})
+				r.Zone.Nh.NeighAdd(Na[i].NhAddr, Zone, NeighAttr{Na[i].LinkIndex, 0, hwmac})
 				nh, _ = r.Zone.Nh.NeighFind(Na[i].NhAddr, Zone)
 				if nh == nil {
 					return RT_NH_ERR, errors.New("RT Nh Err")
