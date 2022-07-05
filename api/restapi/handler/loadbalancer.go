@@ -51,10 +51,5 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		return &ResultResponse{Result: err.Error()}
 	}
 
-	// Get Conntrack informations
-	contr, err := ApiHooks.NetCtInfoGet()
-	if err != nil {
-		return &ResultResponse{Result: err.Error()}
-	}
-	return &AttrResponse{Attr: res, CtAttr: contr}
+	return &LbResponse{Attr: res}
 }

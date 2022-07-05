@@ -45,6 +45,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler: DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto has not yet been implemented")
 		}),
+		GetConfigConntrackAllHandler: GetConfigConntrackAllHandlerFunc(func(params GetConfigConntrackAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigConntrackAll has not yet been implemented")
+		}),
 		GetConfigLoadbalancerAllHandler: GetConfigLoadbalancerAllHandlerFunc(func(params GetConfigLoadbalancerAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigLoadbalancerAll has not yet been implemented")
 		}),
@@ -89,6 +92,8 @@ type LoxilbRestAPIAPI struct {
 
 	// DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler sets the operation handler for the delete config loadbalancer externalipaddress IP address port port protocol proto operation
 	DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler
+	// GetConfigConntrackAllHandler sets the operation handler for the get config conntrack all operation
+	GetConfigConntrackAllHandler GetConfigConntrackAllHandler
 	// GetConfigLoadbalancerAllHandler sets the operation handler for the get config loadbalancer all operation
 	GetConfigLoadbalancerAllHandler GetConfigLoadbalancerAllHandler
 	// PostConfigLoadbalancerHandler sets the operation handler for the post config loadbalancer operation
@@ -172,6 +177,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 
 	if o.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler")
+	}
+	if o.GetConfigConntrackAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigConntrackAllHandler")
 	}
 	if o.GetConfigLoadbalancerAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigLoadbalancerAllHandler")
@@ -271,6 +279,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}"] = NewDeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto(o.context, o.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/config/conntrack/all"] = NewGetConfigConntrackAll(o.context, o.GetConfigConntrackAllHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
