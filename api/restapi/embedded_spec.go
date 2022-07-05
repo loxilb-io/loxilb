@@ -37,6 +37,42 @@ func init() {
   "host": "192.168.20.253:8090",
   "basePath": "/netlox/v1",
   "paths": {
+    "/config/conntrack/all": {
+      "get": {
+        "description": "Get all of the conntrack infomation for all of the service.",
+        "summary": "Get all of the conntrack entries.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "properties": {
+                "ctAttr": {
+                  "$ref": "#/definitions/ConntrackEntry"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/loadbalancer": {
       "post": {
         "description": "Create a new load balancer service with .",
@@ -216,6 +252,41 @@ func init() {
     }
   },
   "definitions": {
+    "ConntrackEntry": {
+      "type": "array",
+      "items": {
+        "properties": {
+          "conntrackAct": {
+            "description": "value for Conntrack Act",
+            "type": "string"
+          },
+          "conntrackState": {
+            "description": "value for Conntrack state",
+            "type": "string"
+          },
+          "destinationIP": {
+            "description": "IP address for externel access",
+            "type": "string"
+          },
+          "destinationPort": {
+            "description": "port number for the access",
+            "type": "integer"
+          },
+          "protocol": {
+            "description": "value for access protocol",
+            "type": "string"
+          },
+          "sourceIP": {
+            "description": "IP address for externel access",
+            "type": "string"
+          },
+          "sourcePort": {
+            "description": "port number for the access",
+            "type": "integer"
+          }
+        }
+      }
+    },
     "Error": {
       "type": "object",
       "properties": {
@@ -314,6 +385,42 @@ func init() {
   "host": "192.168.20.253:8090",
   "basePath": "/netlox/v1",
   "paths": {
+    "/config/conntrack/all": {
+      "get": {
+        "description": "Get all of the conntrack infomation for all of the service.",
+        "summary": "Get all of the conntrack entries.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "properties": {
+                "ctAttr": {
+                  "$ref": "#/definitions/ConntrackEntry"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/loadbalancer": {
       "post": {
         "description": "Create a new load balancer service with .",
@@ -493,6 +600,44 @@ func init() {
     }
   },
   "definitions": {
+    "ConntrackEntry": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ConntrackEntryItems0"
+      }
+    },
+    "ConntrackEntryItems0": {
+      "properties": {
+        "conntrackAct": {
+          "description": "value for Conntrack Act",
+          "type": "string"
+        },
+        "conntrackState": {
+          "description": "value for Conntrack state",
+          "type": "string"
+        },
+        "destinationIP": {
+          "description": "IP address for externel access",
+          "type": "string"
+        },
+        "destinationPort": {
+          "description": "port number for the access",
+          "type": "integer"
+        },
+        "protocol": {
+          "description": "value for access protocol",
+          "type": "string"
+        },
+        "sourceIP": {
+          "description": "IP address for externel access",
+          "type": "string"
+        },
+        "sourcePort": {
+          "description": "port number for the access",
+          "type": "integer"
+        }
+      }
+    },
     "Error": {
       "type": "object",
       "properties": {

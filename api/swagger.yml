@@ -229,6 +229,32 @@ paths:
           description: Maintanence mode
           schema:
             $ref: '#/definitions/Error'
+#----------------------------------------------
+# Conntrack
+#----------------------------------------------
+  '/config/conntrack/all':
+    get:
+      summary: Get all of the conntrack entries.
+      description: Get all of the conntrack infomation for all of the service.
+      responses:
+        '200':
+          description: OK
+          schema:
+              properties:
+                ctAttr:
+                  $ref: '#/definitions/ConntrackEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
 
 #----------------------------------------------
 # Schema definitions
@@ -288,3 +314,30 @@ definitions:
             targetPort:
               type: integer
               description:  port number for access service
+
+
+  ConntrackEntry:
+    type: array
+    items:
+      properties:
+        destinationIP:
+          type: string
+          description: IP address for externel access
+        sourceIP:
+          type: string
+          description: IP address for externel access
+        destinationPort:
+          type: integer
+          description:  port number for the access
+        sourcePort:
+          type: integer
+          description:  port number for the access
+        protocol:
+          type: string
+          description:  value for access protocol
+        conntrackState:
+          type: string
+          description:  value for Conntrack state
+        conntrackAct:
+          type: string
+          description:  value for Conntrack Act
