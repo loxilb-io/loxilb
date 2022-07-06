@@ -16,7 +16,9 @@ static int __always_inline
 dp_pipe_set_rm_gtp_tun(void *ctx, struct xfi *F)
 {
   LL_DBG_PRINTK("[SESS] rm-gtp \n");
-  return dp_pop_outer_metadata(ctx, F, 0);
+  dp_pop_outer_metadata(ctx, F, 0);
+  F->tm.tun_type = LLB_TUN_GTP;
+  return 0;
 }
 
 static int __always_inline

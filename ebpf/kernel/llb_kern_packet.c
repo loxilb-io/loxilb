@@ -219,13 +219,12 @@ dp_unparse_packet(void *ctx,  struct xfi *F)
 {
   if (F->tm.tun_decap) {
     if (F->tm.tun_type == LLB_TUN_VXLAN) {
-    LL_DBG_PRINTK("[DEPR] LL STRIP-VXLAN\n"); 
+      LL_DBG_PRINTK("[DEPR] LL STRIP-VXLAN\n");
       if (dp_do_strip_vxlan(ctx, F, F->pm.tun_off) != 0) {
         return DP_DROP;
       }
-    }
-    if (F->tm.tun_type == LLB_TUN_GTP) {
-    LL_DBG_PRINTK("[DEPR] LL STRIP-GTP\n"); 
+    } else if (F->tm.tun_type == LLB_TUN_GTP) {
+      LL_DBG_PRINTK("[DEPR] LL STRIP-GTP\n");
       if (dp_do_strip_gtp(ctx, F, F->pm.tun_off) != 0) {
         return DP_DROP;
       }

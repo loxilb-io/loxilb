@@ -70,29 +70,29 @@ type UserSess struct {
     UlCl	  map[string]*UlClInf
 }
 
-type UserH struct {
+type SessH struct {
     UserMap  map[UserKey]*UserSess
     Zone   *Zone
     HwMark *tk.Counter
 }
 
-func SessInit(zone *Zone) *UserH {
-    var nUh = new(UserH)
+func SessInit(zone *Zone) *SessH {
+    var nUh = new(SessH)
     nUh.UserMap = make(map[UserKey]*UserSess)
     nUh.Zone = zone
     nUh.HwMark = tk.NewCounter(1, MAX_ULCLS)
     return nUh
 }
 
-func (u *UserH) SessAdd(user string, IP net.IP, anTun UserTun, cnTun UserTun) (int, error) {
+func (s *SessH) SessAdd(user string, IP net.IP, anTun UserTun, cnTun UserTun) (int, error) {
 
     key := UserKey{user}
-    us, found := u.UserMap[key]
+    us, found := s.UserMap[key]
 
     if found == true {
 
         if us.AnTun.Equal(&anTun) == false ||  us.CnTun.Equal(&cnTun) {
-            ret, _ := u.SessDelete(user)
+            ret, _ := s.SessDelete(user)
             if ret != 0 {
                 return SESS_MOD_ERR, errors.New("sess mod error")
             }  
@@ -106,19 +106,19 @@ func (u *UserH) SessAdd(user string, IP net.IP, anTun UserTun, cnTun UserTun) (i
     us.Addr = IP
     us.AnTun = anTun
     us.CnTun = cnTun 
-    us.Zone = u.Zone.ZoneNum
+    us.Zone = s.Zone.ZoneNum
 
     us.UlCl = make(map[string]*UlClInf)
 
-    u.UserMap[us.Key] = us
+    s.UserMap[us.Key] = us
 
     return 0, nil
 }
 
-func (u *UserH) SessDelete(user string) (int, error) {
+func (s *SessH) SessDelete(user string) (int, error) {
 
     key := UserKey{user}
-    us, found := u.UserMap[key]
+    us, found := s.UserMap[key]
 
     if found == false {
         return SESS_NOEXIST_ERR, errors.New("user doesnt exists")
@@ -126,19 +126,18 @@ func (u *UserH) SessDelete(user string) (int, error) {
 
     // First remove all ULCL classifiers if any
     for _,ulcl := range(us.UlCl) {
-        ulcl.DP(DP_REMOVE)
-        delete(us.UlCl, ulcl.Addr.String())
+		s.UlClDeleteCls(user, cmn.UlClArg{Addr:ulcl.Addr, Qfi:ulcl.Qfi})
     }
 
-    delete(u.UserMap, key)
+    delete(s.UserMap, key)
 
     return 0, nil
 }
 
-func (u *UserH) UlClAddCls(user string, cls cmn.UlClArg) (int, error) {
+func (s *SessH) UlClAddCls(user string, cls cmn.UlClArg) (int, error) {
 
     key := UserKey{user}
-    us, found := u.UserMap[key]
+    us, found := s.UserMap[key]
 
     if found == false {
         return SESS_NOEXIST_ERR, errors.New("user doesnt exists")
@@ -151,7 +150,7 @@ func (u *UserH) UlClAddCls(user string, cls cmn.UlClArg) (int, error) {
     }
 
     ulcl = new(UlClInf)
-    ulcl.Num, _ = u.HwMark.GetCounter()
+    ulcl.Num, _ = s.HwMark.GetCounter()
     if ulcl.Num < 0 {
         return SESS_ULCLNUM_ERR, errors.New("ulcl num err")
     }
@@ -166,10 +165,10 @@ func (u *UserH) UlClAddCls(user string, cls cmn.UlClArg) (int, error) {
     return 0, nil
 }
 
-func (u *UserH) UlClDeleteCls(user string, cls cmn.UlClArg) (int, error) {
+func (s *SessH) UlClDeleteCls(user string, cls cmn.UlClArg) (int, error) {
 
     key := UserKey{user}
-    us, found := u.UserMap[key]
+    us, found := s.UserMap[key]
 
     if found == false {
         return SESS_NOEXIST_ERR, errors.New("user doesnt exists")
@@ -183,6 +182,7 @@ func (u *UserH) UlClDeleteCls(user string, cls cmn.UlClArg) (int, error) {
 
     ulcl.DP(DP_REMOVE)
 
+	s.HwMark.PutCounter(ulcl.Num)
     delete(us.UlCl, cls.Addr.String())
 
     return 0, nil
@@ -191,19 +191,19 @@ func (u *UserH) UlClDeleteCls(user string, cls cmn.UlClArg) (int, error) {
 func Us2String(us *UserSess) string {
     var tStr string
 
-    tStr += fmt.Sprintf("%s:%s AN(%s:0x%x) CN(%s:0x%x)", 
+    tStr += fmt.Sprintf("%s:%s AN(%s:0x%x) CN(%s:0x%x) ULCLs ##", 
                         us.Key.UserID, us.Addr.String(),
                         us.AnTun.Addr.String(), us.AnTun.TeID,
                         us.CnTun.Addr.String(), us.CnTun.TeID)
     for _, ulcl := range(us.UlCl) {
-        tStr += fmt.Sprintf("\t\t%s,qfi-%d, num-%d\n", ulcl.Addr.String(), ulcl.Qfi, ulcl.Num)
+        tStr += fmt.Sprintf("\n\t%s,qfi-%d,n-%d", ulcl.Addr.String(), ulcl.Qfi, ulcl.Num)
     }
 
     return tStr
 }
 
-func (u *UserH) USess2String(it IterIntf) error {
-	for _, us := range u.UserMap {
+func (s *SessH) USess2String(it IterIntf) error {
+	for _, us := range s.UserMap {
 		uBuf := Us2String(us)
 		it.NodeWalker(uBuf)
 	}

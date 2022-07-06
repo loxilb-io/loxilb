@@ -324,25 +324,20 @@ func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
     switch mq := m.(type) {
     case *PortDpWorkQ:
         ret = dp.DpWorkOnPort(mq)
-        break
     case *L2AddrDpWorkQ:
         ret = dp.DpWorkOnL2Addr(mq)
-        break
     case *RouterMacDpWorkQ:
         ret = dp.DpWorkOnRtMac(mq)
-        break
     case *NextHopDpWorkQ:
         ret = dp.DpWorkOnNextHop(mq)
-        break
     case *RouteDpWorkQ:
         ret = dp.DpWorkOnRoute(mq)
-        break
     case *NatDpWorkQ:
         ret = dp.DpWorkOnNatLb(mq)
-        break
+    case *UlClDpWorkQ:
+        ret = dp.DpWorkOnUlCl(mq)
     case *StatDpWorkQ:
         ret = dp.DpWorkOnStat(mq)
-        break
     case *TableDpWorkQ:
         ret, _ = dp.DpWorkOnTableOp(mq)
     default:

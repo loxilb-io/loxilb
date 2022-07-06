@@ -42,6 +42,7 @@ type Zone struct {
     Rt      *RtH
     L3      *L3H
     Rules   *RuleH
+    Sess    *SessH
     Mtx     sync.RWMutex
 }
 
@@ -84,6 +85,7 @@ func (z *ZoneH) ZoneAdd(name string) (int, error) {
     zone.Rt = RtInit(zone)
     zone.L3 = L3Init(zone)
     zone.Rules = RulesInit(zone)
+    zone.Sess = SessInit(zone)
 
     z.ZoneMap[name] = zone
 
