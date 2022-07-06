@@ -294,6 +294,44 @@ func TestLoxinet(t *testing.T) {
         t.Errorf("failed to delete nat lb rule for 10.10.10.1\n")
     }
 
+	 // Session information 
+	 anTun := UserTun{1, net.IP{172, 17, 1, 231}} // An TeID, gNBIP
+	 cnTun := UserTun{1, net.IP{172, 17, 1, 50}}  // Cn TeID, MyIP
+
+	 _, err = mh.zr.Sess.SessAdd("user1", net.IP{100, 64, 50, 1}, anTun, cnTun)
+	 if err != nil {
+		t.Errorf("Failed to add session for user1\n")
+	 }
+
+	 // Add ULCL classifier
+	 _, err = mh.zr.Sess.UlClAddCls("user1", cmn.UlClArg{Addr:net.IP{8,8,8,8}, Qfi:11})
+	 if err != nil {
+		t.Errorf("Failed to ulcl-cls session for user1 - 8.8.8.8\n")
+	 }
+
+	 _, err = mh.zr.Sess.UlClAddCls("user1", cmn.UlClArg{Addr:net.IP{9,9,9,9}, Qfi:1})
+	 if err != nil {
+		t.Errorf("Failed to ulcl-cls session for user1 - 9.9.9.9\n")
+	 }
+
+	 fmt.Printf("#### User-Session ####\n")
+	 mh.zr.Sess.USess2String(&mh)
+
+	 _, err = mh.zr.Sess.UlClDeleteCls("user1", cmn.UlClArg{Addr:net.IP{9,9,9,9}, Qfi:1})
+	 if err != nil {
+		t.Errorf("Failed to delete ulcl-cls session for user1 - 9.9.9.9\n")
+	 }
+
+	 _, err = mh.zr.Sess.UlClDeleteCls("user1", cmn.UlClArg{Addr:net.IP{8,8,8,8}, Qfi:11})
+	 if err != nil {
+		t.Errorf("Failed to delete ulcl-cls session for user1 - 8.8.8.8\n")
+	 }
+
+	 _, err = mh.zr.Sess.SessDelete("user1")
+	 if err != nil {
+		t.Errorf("Failed to delete session for user1\n")
+	 }
+
     fmt.Printf("#### Route-List ####\n")
     mh.zr.Rt.Rts2String(&mh)
 
