@@ -100,7 +100,7 @@ func loxiNetInit() {
     }
 
     if opts.Opts.Bgp {
-        GoBgpInit()
+		mh.bgp = GoBgpInit()
     }
 
     if opts.Opts.Api {
