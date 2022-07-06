@@ -46,6 +46,7 @@ type loxiNetH struct {
     ticker *time.Ticker
     tDone  chan bool
     wg     sync.WaitGroup
+    bgp    *GoBgpH
 }
 
 func (mh *loxiNetH) NodeWalker(b string) {
