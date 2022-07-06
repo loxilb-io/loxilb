@@ -165,3 +165,31 @@ func (*NetApiStruct) NetCtInfoGet() ([]cmn.CtInfo, error) {
 	ret := mh.dp.DpMapGetCt4()
 	return ret, nil
 }
+
+func (*NetApiStruct) NetSessionAdd(sm *cmn.SessionMod) (int, error) {
+	mh.mtx.Lock()
+	ret, err := mh.zr.Sess.SessAdd(sm.Ident, sm.Ip, sm.AnTun, sm.CnTun)
+	mh.mtx.Unlock()
+	return ret, err
+}
+
+func (*NetApiStruct) NetSessionDel(sm *cmn.SessionMod) (int, error) {
+	mh.mtx.Lock()
+	ret, err := mh.zr.Sess.SessDelete(sm.Ident)
+	mh.mtx.Unlock()
+	return ret, err
+}
+
+func (*NetApiStruct) NetSessionUlClAdd(sr *cmn.SessionUlClMod) (int, error) {
+	mh.mtx.Lock()
+	ret, err := mh.zr.Sess.UlClAddCls(sr.Ident, sr.Args)
+	mh.mtx.Unlock()
+	return ret, err
+}
+
+func (*NetApiStruct) NetSessionUlClDel(sr *cmn.SessionUlClMod) (int, error) {
+	mh.mtx.Lock()
+	ret, err := mh.zr.Sess.UlClDeleteCls(sr.Ident, sr.Args)
+	mh.mtx.Unlock()
+	return ret, err
+}

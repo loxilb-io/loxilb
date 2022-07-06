@@ -295,8 +295,8 @@ func TestLoxinet(t *testing.T) {
     }
 
 	 // Session information 
-	 anTun := UserTun{1, net.IP{172, 17, 1, 231}} // An TeID, gNBIP
-	 cnTun := UserTun{1, net.IP{172, 17, 1, 50}}  // Cn TeID, MyIP
+	 anTun := cmn.SessTun{TeID:1, Addr:net.IP{172, 17, 1, 231}} // An TeID, gNBIP
+	 cnTun := cmn.SessTun{TeID:1, Addr:net.IP{172, 17, 1, 50}}  // Cn TeID, MyIP
 
 	 _, err = mh.zr.Sess.SessAdd("user1", net.IP{100, 64, 50, 1}, anTun, cnTun)
 	 if err != nil {

@@ -46,13 +46,6 @@ type UserTun struct {
     Addr  net.IP
 }
 
-func (ut *UserTun) Equal(ut1 *UserTun) bool {
-    if ut.TeID == ut1.TeID && ut.Addr.Equal(ut1.Addr) {
-        return true
-    }
-    return false
-}
-
 type UlClInf struct {
     Addr    net.IP
     Qfi	    uint8
@@ -65,8 +58,8 @@ type UserSess struct {
     Key       UserKey
     Addr      net.IP
     Zone      int
-    AnTun	  UserTun
-    CnTun     UserTun
+    AnTun	  cmn.SessTun
+    CnTun     cmn.SessTun
     UlCl	  map[string]*UlClInf
 }
 
@@ -84,7 +77,7 @@ func SessInit(zone *Zone) *SessH {
     return nUh
 }
 
-func (s *SessH) SessAdd(user string, IP net.IP, anTun UserTun, cnTun UserTun) (int, error) {
+func (s *SessH) SessAdd(user string, IP net.IP, anTun cmn.SessTun, cnTun cmn.SessTun) (int, error) {
 
     key := UserKey{user}
     us, found := s.UserMap[key]
@@ -126,7 +119,7 @@ func (s *SessH) SessDelete(user string) (int, error) {
 
     // First remove all ULCL classifiers if any
     for _,ulcl := range(us.UlCl) {
-		s.UlClDeleteCls(user, cmn.UlClArg{Addr:ulcl.Addr, Qfi:ulcl.Qfi})
+        s.UlClDeleteCls(user, cmn.UlClArg{Addr:ulcl.Addr, Qfi:ulcl.Qfi})
     }
 
     delete(s.UserMap, key)
@@ -182,7 +175,7 @@ func (s *SessH) UlClDeleteCls(user string, cls cmn.UlClArg) (int, error) {
 
     ulcl.DP(DP_REMOVE)
 
-	s.HwMark.PutCounter(ulcl.Num)
+    s.HwMark.PutCounter(ulcl.Num)
     delete(us.UlCl, cls.Addr.String())
 
     return 0, nil
@@ -203,11 +196,11 @@ func Us2String(us *UserSess) string {
 }
 
 func (s *SessH) USess2String(it IterIntf) error {
-	for _, us := range s.UserMap {
-		uBuf := Us2String(us)
-		it.NodeWalker(uBuf)
-	}
-	return nil
+    for _, us := range s.UserMap {
+        uBuf := Us2String(us)
+        it.NodeWalker(uBuf)
+    }
+    return nil
 }
 
 func (ulcl *UlClInf) DP(work DpWorkT) int {
@@ -216,7 +209,7 @@ func (ulcl *UlClInf) DP(work DpWorkT) int {
         return -1
     }
 
-	// For UL dir
+    // For UL dir
     ucn := new(UlClDpWorkQ)
     ucn.Work = work
     ucn.mDip = ulcl.Addr
@@ -225,7 +218,7 @@ func (ulcl *UlClInf) DP(work DpWorkT) int {
     ucn.Zone = ulcl.uSess.Zone
     ucn.HwMark = ulcl.Num
     ucn.Qfi = ulcl.Qfi
-	ucn.tTeID = 0
+    ucn.tTeID = 0
 
     mh.dp.ToDpCh <- ucn
 
@@ -238,9 +231,9 @@ func (ulcl *UlClInf) DP(work DpWorkT) int {
     ucn.Zone = ulcl.uSess.Zone
     ucn.HwMark = ulcl.Num
     ucn.Qfi = ulcl.Qfi
-	ucn.tDip = ulcl.uSess.AnTun.Addr
-	ucn.tSip = ulcl.uSess.CnTun.Addr
-	ucn.tTeID = ulcl.uSess.AnTun.TeID
+    ucn.tDip = ulcl.uSess.AnTun.Addr
+    ucn.tSip = ulcl.uSess.CnTun.Addr
+    ucn.tTeID = ulcl.uSess.AnTun.TeID
 
     mh.dp.ToDpCh <- ucn
 

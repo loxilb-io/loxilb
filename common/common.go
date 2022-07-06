@@ -149,6 +149,30 @@ type UlClArg struct {
     Qfi	    uint8
 }
 
+type SessTun struct {
+    TeID  uint32
+    Addr  net.IP
+}
+
+func (ut *SessTun) Equal(ut1 *SessTun) bool {
+    if ut.TeID == ut1.TeID && ut.Addr.Equal(ut1.Addr) {
+        return true
+    }
+    return false
+}
+
+type SessionMod struct {
+    Ident	string
+    Ip      net.IP
+    AnTun	SessTun
+    CnTun   SessTun
+}
+
+type SessionUlClMod struct {
+    Ident	string
+    Args	UlClArg
+}
+
 type NetHookInterface interface {
     NetPortAdd(*PortMod) (int, error)
     NetPortDel(*PortMod) (int, error)
@@ -168,4 +192,8 @@ type NetHookInterface interface {
     NetLbRuleDel(*LbRuleMod) (int, error)
     NetLbRuleGet() ([]LbRuleMod, error)
     NetCtInfoGet() ([]CtInfo, error)
+    NetSessionAdd(*SessionMod) (int, error)
+    NetSessionDel(*SessionMod) (int, error)
+    NetSessionUlClAdd(*SessionUlClMod) (int, error)
+    NetSessionUlClDel(*SessionUlClMod) (int, error)
 }
