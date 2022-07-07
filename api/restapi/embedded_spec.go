@@ -249,6 +249,169 @@ func init() {
           }
         }
       }
+    },
+    "/config/port/all": {
+      "get": {
+        "description": "Get all of the port interfaces.",
+        "summary": "Get all of the port interfaces",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "attr": {
+                  "$ref": "#/definitions/PortEntry"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/route": {
+      "post": {
+        "description": "Create a new route config .",
+        "summary": "Create a new route config",
+        "parameters": [
+          {
+            "description": "Attributes for load balance service",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RouteEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/route/destinationIP/{ip_address}": {
+      "delete": {
+        "description": "Create a new load balancer service with .",
+        "summary": "Create a new Load balancer service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -360,6 +523,174 @@ func init() {
               "type": "string"
             }
           }
+        }
+      }
+    },
+    "PortEntry": {
+      "type": "object",
+      "properties": {
+        "DataplaneSync": {
+          "description": "Dataplan Sync check",
+          "type": "integer"
+        },
+        "portHardwareInformation": {
+          "type": "object",
+          "properties": {
+            "link": {
+              "description": "link status",
+              "type": "boolean"
+            },
+            "macAddress": {
+              "description": "MAC address of the port",
+              "type": "string"
+            },
+            "master": {
+              "description": "Port's mater",
+              "type": "string"
+            },
+            "mtu": {
+              "description": "MTU of the port",
+              "type": "integer"
+            },
+            "rawMacAddress": {
+              "description": "MAC address written by byte array",
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "real": {
+              "description": "real port..",
+              "type": "string"
+            },
+            "state": {
+              "description": "state...",
+              "type": "boolean"
+            },
+            "tunnelId": {
+              "description": "Tunnel Id such as VxLAN.",
+              "type": "integer"
+            }
+          }
+        },
+        "portL2Information": {
+          "type": "object",
+          "properties": {
+            "isPvid": {
+              "description": "Is PVID config or not",
+              "type": "boolean"
+            },
+            "vid": {
+              "description": "virtual lan id(VLAN ID)",
+              "type": "integer"
+            }
+          }
+        },
+        "portL3Information": {
+          "type": "object",
+          "properties": {
+            "IPv4Address": {
+              "description": "List of IP address v4",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "IPv6Address": {
+              "description": "List of the IP address v6",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "routed": {
+              "description": "Is routed or not",
+              "type": "boolean"
+            }
+          }
+        },
+        "portName": {
+          "description": "The name of the Port interface",
+          "type": "string"
+        },
+        "portNo": {
+          "description": "Index of the Port",
+          "type": "integer"
+        },
+        "portSoftwareInformation": {
+          "type": "object",
+          "properties": {
+            "bpfLoaded": {
+              "description": "The status of the eBPF loaded",
+              "type": "boolean"
+            },
+            "osId": {
+              "description": "The ID of the Port in the software(OS)",
+              "type": "integer"
+            },
+            "portActive": {
+              "description": "Activation status of the port",
+              "type": "boolean"
+            },
+            "portProp": {
+              "description": "Priority of the port",
+              "type": "integer"
+            },
+            "portType": {
+              "description": "port type",
+              "type": "integer"
+            }
+          }
+        },
+        "portStatisticInformation": {
+          "type": "object",
+          "properties": {
+            "rxBytes": {
+              "description": "Statistic of the ingress port bytes.",
+              "type": "integer"
+            },
+            "rxErrors": {
+              "description": "Statistic of the number of ingress Error packets.",
+              "type": "integer"
+            },
+            "rxPackets": {
+              "description": "Statistic of the number of ingress packets.",
+              "type": "integer"
+            },
+            "txBytes": {
+              "description": "Statistic of the egress port bytes.",
+              "type": "integer"
+            },
+            "txErrors": {
+              "description": "Statistic of the number of egress Error packets.",
+              "type": "integer"
+            },
+            "txPackets": {
+              "description": "Statistic of the number of egress packets.",
+              "type": "integer"
+            }
+          }
+        },
+        "zone": {
+          "description": "network zone",
+          "type": "string"
+        }
+      }
+    },
+    "RouteEntry": {
+      "type": "object",
+      "properties": {
+        "destinationIP": {
+          "description": "IP address for externel access",
+          "type": "string"
+        },
+        "gateway": {
+          "description": "IP address for externel access",
+          "type": "string"
+        },
+        "protocol": {
+          "description": "value for access protocol",
+          "type": "string"
         }
       }
     }
@@ -597,6 +928,169 @@ func init() {
           }
         }
       }
+    },
+    "/config/port/all": {
+      "get": {
+        "description": "Get all of the port interfaces.",
+        "summary": "Get all of the port interfaces",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "attr": {
+                  "$ref": "#/definitions/PortEntry"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/route": {
+      "post": {
+        "description": "Create a new route config .",
+        "summary": "Create a new route config",
+        "parameters": [
+          {
+            "description": "Attributes for load balance service",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RouteEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/route/destinationIP/{ip_address}": {
+      "delete": {
+        "description": "Create a new load balancer service with .",
+        "summary": "Create a new Load balancer service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -756,6 +1250,304 @@ func init() {
         "port": {
           "description": "port number for the access",
           "type": "integer"
+        },
+        "protocol": {
+          "description": "value for access protocol",
+          "type": "string"
+        }
+      }
+    },
+    "PortEntry": {
+      "type": "object",
+      "properties": {
+        "DataplaneSync": {
+          "description": "Dataplan Sync check",
+          "type": "integer"
+        },
+        "portHardwareInformation": {
+          "type": "object",
+          "properties": {
+            "link": {
+              "description": "link status",
+              "type": "boolean"
+            },
+            "macAddress": {
+              "description": "MAC address of the port",
+              "type": "string"
+            },
+            "master": {
+              "description": "Port's mater",
+              "type": "string"
+            },
+            "mtu": {
+              "description": "MTU of the port",
+              "type": "integer"
+            },
+            "rawMacAddress": {
+              "description": "MAC address written by byte array",
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "real": {
+              "description": "real port..",
+              "type": "string"
+            },
+            "state": {
+              "description": "state...",
+              "type": "boolean"
+            },
+            "tunnelId": {
+              "description": "Tunnel Id such as VxLAN.",
+              "type": "integer"
+            }
+          }
+        },
+        "portL2Information": {
+          "type": "object",
+          "properties": {
+            "isPvid": {
+              "description": "Is PVID config or not",
+              "type": "boolean"
+            },
+            "vid": {
+              "description": "virtual lan id(VLAN ID)",
+              "type": "integer"
+            }
+          }
+        },
+        "portL3Information": {
+          "type": "object",
+          "properties": {
+            "IPv4Address": {
+              "description": "List of IP address v4",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "IPv6Address": {
+              "description": "List of the IP address v6",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "routed": {
+              "description": "Is routed or not",
+              "type": "boolean"
+            }
+          }
+        },
+        "portName": {
+          "description": "The name of the Port interface",
+          "type": "string"
+        },
+        "portNo": {
+          "description": "Index of the Port",
+          "type": "integer"
+        },
+        "portSoftwareInformation": {
+          "type": "object",
+          "properties": {
+            "bpfLoaded": {
+              "description": "The status of the eBPF loaded",
+              "type": "boolean"
+            },
+            "osId": {
+              "description": "The ID of the Port in the software(OS)",
+              "type": "integer"
+            },
+            "portActive": {
+              "description": "Activation status of the port",
+              "type": "boolean"
+            },
+            "portProp": {
+              "description": "Priority of the port",
+              "type": "integer"
+            },
+            "portType": {
+              "description": "port type",
+              "type": "integer"
+            }
+          }
+        },
+        "portStatisticInformation": {
+          "type": "object",
+          "properties": {
+            "rxBytes": {
+              "description": "Statistic of the ingress port bytes.",
+              "type": "integer"
+            },
+            "rxErrors": {
+              "description": "Statistic of the number of ingress Error packets.",
+              "type": "integer"
+            },
+            "rxPackets": {
+              "description": "Statistic of the number of ingress packets.",
+              "type": "integer"
+            },
+            "txBytes": {
+              "description": "Statistic of the egress port bytes.",
+              "type": "integer"
+            },
+            "txErrors": {
+              "description": "Statistic of the number of egress Error packets.",
+              "type": "integer"
+            },
+            "txPackets": {
+              "description": "Statistic of the number of egress packets.",
+              "type": "integer"
+            }
+          }
+        },
+        "zone": {
+          "description": "network zone",
+          "type": "string"
+        }
+      }
+    },
+    "PortEntryPortHardwareInformation": {
+      "type": "object",
+      "properties": {
+        "link": {
+          "description": "link status",
+          "type": "boolean"
+        },
+        "macAddress": {
+          "description": "MAC address of the port",
+          "type": "string"
+        },
+        "master": {
+          "description": "Port's mater",
+          "type": "string"
+        },
+        "mtu": {
+          "description": "MTU of the port",
+          "type": "integer"
+        },
+        "rawMacAddress": {
+          "description": "MAC address written by byte array",
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "real": {
+          "description": "real port..",
+          "type": "string"
+        },
+        "state": {
+          "description": "state...",
+          "type": "boolean"
+        },
+        "tunnelId": {
+          "description": "Tunnel Id such as VxLAN.",
+          "type": "integer"
+        }
+      }
+    },
+    "PortEntryPortL2Information": {
+      "type": "object",
+      "properties": {
+        "isPvid": {
+          "description": "Is PVID config or not",
+          "type": "boolean"
+        },
+        "vid": {
+          "description": "virtual lan id(VLAN ID)",
+          "type": "integer"
+        }
+      }
+    },
+    "PortEntryPortL3Information": {
+      "type": "object",
+      "properties": {
+        "IPv4Address": {
+          "description": "List of IP address v4",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "IPv6Address": {
+          "description": "List of the IP address v6",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "routed": {
+          "description": "Is routed or not",
+          "type": "boolean"
+        }
+      }
+    },
+    "PortEntryPortSoftwareInformation": {
+      "type": "object",
+      "properties": {
+        "bpfLoaded": {
+          "description": "The status of the eBPF loaded",
+          "type": "boolean"
+        },
+        "osId": {
+          "description": "The ID of the Port in the software(OS)",
+          "type": "integer"
+        },
+        "portActive": {
+          "description": "Activation status of the port",
+          "type": "boolean"
+        },
+        "portProp": {
+          "description": "Priority of the port",
+          "type": "integer"
+        },
+        "portType": {
+          "description": "port type",
+          "type": "integer"
+        }
+      }
+    },
+    "PortEntryPortStatisticInformation": {
+      "type": "object",
+      "properties": {
+        "rxBytes": {
+          "description": "Statistic of the ingress port bytes.",
+          "type": "integer"
+        },
+        "rxErrors": {
+          "description": "Statistic of the number of ingress Error packets.",
+          "type": "integer"
+        },
+        "rxPackets": {
+          "description": "Statistic of the number of ingress packets.",
+          "type": "integer"
+        },
+        "txBytes": {
+          "description": "Statistic of the egress port bytes.",
+          "type": "integer"
+        },
+        "txErrors": {
+          "description": "Statistic of the number of egress Error packets.",
+          "type": "integer"
+        },
+        "txPackets": {
+          "description": "Statistic of the number of egress packets.",
+          "type": "integer"
+        }
+      }
+    },
+    "RouteEntry": {
+      "type": "object",
+      "properties": {
+        "destinationIP": {
+          "description": "IP address for externel access",
+          "type": "string"
+        },
+        "gateway": {
+          "description": "IP address for externel access",
+          "type": "string"
         },
         "protocol": {
           "description": "value for access protocol",

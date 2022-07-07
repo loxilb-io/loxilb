@@ -256,6 +256,123 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+
+#----------------------------------------------
+# Port Dump
+#----------------------------------------------
+  '/config/port/all':
+    get:
+      summary: Get all of the port interfaces
+      description: Get all of the port interfaces.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              attr:
+                $ref: '#/definitions/PortEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
+#----------------------------------------------
+# Route
+#----------------------------------------------
+  '/config/route':
+    post:
+      summary: Create a new route config
+      description: Create a new route config .
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes for load balance service
+          schema:
+            $ref: '#/definitions/RouteEntry'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+ 
+  '/config/route/destinationIP/{ip_address}':
+    delete:
+      summary: Create a new Load balancer service
+      description: Create a new load balancer service with .
+      parameters:
+        - name: ip_address
+          in: path
+          type: string
+          required: true
+          description: Attributes for load balance service
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
 #----------------------------------------------
 # Schema definitions
 #----------------------------------------------
@@ -314,6 +431,19 @@ definitions:
             targetPort:
               type: integer
               description:  port number for access service
+  
+  RouteEntry:
+    type: object
+    properties:
+      destinationIP:
+        type: string
+        description: IP address for externel access
+      gateway:
+        type: string
+        description: IP address for externel access
+      protocol:
+        type: string
+        description:  value for access protocol
 
 
   ConntrackEntry:
@@ -341,3 +471,113 @@ definitions:
         conntrackAct:
           type: string
           description:  value for Conntrack Act
+
+  PortEntry:
+    type: object
+    properties:
+      portName:
+        type: string
+        description: The name of the Port interface
+      portNo:
+          type: integer
+          description:  Index of the Port
+      zone:
+        type: string
+        description: network zone
+      portSoftwareInformation:
+        type: object
+        properties:
+          osId:
+            type: integer
+            description: The ID of the Port in the software(OS)
+          portType:
+            type: integer
+            description: port type
+          portProp:
+            type: integer
+            description: Priority of the port
+          portActive:
+            type: boolean
+            description: Activation status of the port
+          bpfLoaded:
+            type: boolean
+            description: The status of the eBPF loaded 
+            
+      portHardwareInformation:
+        type: object
+        properties:
+          rawMacAddress:
+            type: array
+            description: MAC address written by byte array
+            items:
+              type: integer
+          macAddress:
+            type: string
+            description: MAC address of the port
+          mtu:
+            type: integer
+            description: MTU of the port
+          link:
+            type: boolean
+            description: link status
+          state:
+            type: boolean
+            description: state...
+          master:
+            type: string
+            description: Port's mater
+          real:
+            type: string
+            description: real port..
+          tunnelId:
+            type: integer
+            description: Tunnel Id such as VxLAN.
+      portStatisticInformation:
+        type: object
+        properties:
+          rxBytes:
+            type: integer
+            description: Statistic of the ingress port bytes.
+          txBytes:
+            type: integer
+            description: Statistic of the egress port bytes.
+          rxPackets:
+            type: integer
+            description: Statistic of the number of ingress packets.
+          txPackets:
+            type: integer
+            description: Statistic of the number of egress packets.
+          rxErrors:
+            type: integer
+            description: Statistic of the number of ingress Error packets.
+          txErrors:
+            type: integer
+            description: Statistic of the number of egress Error packets.
+      portL3Information:
+        type: object
+        properties:
+          routed:
+            type: boolean
+            description: Is routed or not
+          IPv4Address:
+            type: array
+            description: List of IP address v4
+            items:
+              type: string
+          IPv6Address:
+            type: array
+            description: List of the IP address v6
+            items:
+              type: string
+      portL2Information:
+        type: object
+        properties:
+          isPvid:
+            type: boolean
+            description: Is PVID config or not
+          vid:
+            type: integer
+            description: virtual lan id(VLAN ID)
+      DataplaneSync:
+        type: integer
+        description: Dataplan Sync check

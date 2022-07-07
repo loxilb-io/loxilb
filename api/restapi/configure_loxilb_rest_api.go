@@ -53,6 +53,9 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	// Conntrack get
 	api.GetConfigConntrackAllHandler = operations.GetConfigConntrackAllHandlerFunc(handler.ConfigGetConntrack)
 
+	// Port get
+	api.GetConfigPortAllHandler = operations.GetConfigPortAllHandlerFunc(handler.ConfigGetPort)
+
 	api.PreServerShutdown = func() {}
 
 	api.ServerShutdown = func() {

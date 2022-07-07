@@ -45,14 +45,23 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler: DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto has not yet been implemented")
 		}),
+		DeleteConfigRouteDestinationIPIPAddressHandler: DeleteConfigRouteDestinationIPIPAddressHandlerFunc(func(params DeleteConfigRouteDestinationIPIPAddressParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigRouteDestinationIPIPAddress has not yet been implemented")
+		}),
 		GetConfigConntrackAllHandler: GetConfigConntrackAllHandlerFunc(func(params GetConfigConntrackAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigConntrackAll has not yet been implemented")
 		}),
 		GetConfigLoadbalancerAllHandler: GetConfigLoadbalancerAllHandlerFunc(func(params GetConfigLoadbalancerAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigLoadbalancerAll has not yet been implemented")
 		}),
+		GetConfigPortAllHandler: GetConfigPortAllHandlerFunc(func(params GetConfigPortAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigPortAll has not yet been implemented")
+		}),
 		PostConfigLoadbalancerHandler: PostConfigLoadbalancerHandlerFunc(func(params PostConfigLoadbalancerParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigLoadbalancer has not yet been implemented")
+		}),
+		PostConfigRouteHandler: PostConfigRouteHandlerFunc(func(params PostConfigRouteParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigRoute has not yet been implemented")
 		}),
 	}
 }
@@ -92,12 +101,18 @@ type LoxilbRestAPIAPI struct {
 
 	// DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler sets the operation handler for the delete config loadbalancer externalipaddress IP address port port protocol proto operation
 	DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler
+	// DeleteConfigRouteDestinationIPIPAddressHandler sets the operation handler for the delete config route destination IP IP address operation
+	DeleteConfigRouteDestinationIPIPAddressHandler DeleteConfigRouteDestinationIPIPAddressHandler
 	// GetConfigConntrackAllHandler sets the operation handler for the get config conntrack all operation
 	GetConfigConntrackAllHandler GetConfigConntrackAllHandler
 	// GetConfigLoadbalancerAllHandler sets the operation handler for the get config loadbalancer all operation
 	GetConfigLoadbalancerAllHandler GetConfigLoadbalancerAllHandler
+	// GetConfigPortAllHandler sets the operation handler for the get config port all operation
+	GetConfigPortAllHandler GetConfigPortAllHandler
 	// PostConfigLoadbalancerHandler sets the operation handler for the post config loadbalancer operation
 	PostConfigLoadbalancerHandler PostConfigLoadbalancerHandler
+	// PostConfigRouteHandler sets the operation handler for the post config route operation
+	PostConfigRouteHandler PostConfigRouteHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -178,14 +193,23 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler")
 	}
+	if o.DeleteConfigRouteDestinationIPIPAddressHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigRouteDestinationIPIPAddressHandler")
+	}
 	if o.GetConfigConntrackAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigConntrackAllHandler")
 	}
 	if o.GetConfigLoadbalancerAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigLoadbalancerAllHandler")
 	}
+	if o.GetConfigPortAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigPortAllHandler")
+	}
 	if o.PostConfigLoadbalancerHandler == nil {
 		unregistered = append(unregistered, "PostConfigLoadbalancerHandler")
+	}
+	if o.PostConfigRouteHandler == nil {
+		unregistered = append(unregistered, "PostConfigRouteHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -279,6 +303,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}"] = NewDeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto(o.context, o.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/config/route/destinationIP/{ip_address}"] = NewDeleteConfigRouteDestinationIPIPAddress(o.context, o.DeleteConfigRouteDestinationIPIPAddressHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -287,10 +315,18 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/config/loadbalancer/all"] = NewGetConfigLoadbalancerAll(o.context, o.GetConfigLoadbalancerAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/config/port/all"] = NewGetConfigPortAll(o.context, o.GetConfigPortAllHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/config/loadbalancer"] = NewPostConfigLoadbalancer(o.context, o.PostConfigLoadbalancerHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/route"] = NewPostConfigRoute(o.context, o.PostConfigRouteHandler)
 }
 
 // Serve creates a http handler to serve the API over HTTP
