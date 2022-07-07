@@ -1,10 +1,26 @@
 #!/bin/bash
 
+#!/bin/bash
+
+docker=$1
 NSADD="sudo ip netns add "
 LBNSCMD="sudo ip netns exec loxilb "
 NSCMD="sudo ip netns exec "
 
-$NSADD loxilb
+if [ $# -eq 0 ]; then
+  echo "No arguments supplied"
+  docker="none"
+fi
+
+if [[ $docker == "docker" ]]; then
+  id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"`
+  echo $id
+  sudo touch /var/run/netns/loxilb
+  sudo mount -o bind /proc/$id/ns/net /var/run/netns/loxilb
+else
+  $NSADD loxilb
+fi
+
 $NSADD l3h1
 $NSADD l3h2
 $NSADD l2h1
