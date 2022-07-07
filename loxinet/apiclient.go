@@ -144,6 +144,9 @@ func (*NetApiStruct) NetRoutev4Del(rm *cmn.Routev4Mod) (int, error) {
 func (*NetApiStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
 	mh.mtx.Lock()
 	ret, err := mh.zr.Rules.AddNatLbRule(lm.Serv, lm.Eps[:])
+	if err != nil && lm.Serv.Bgp {
+		AddBGPRule(lm.Serv.ServIP)
+	}
 	mh.mtx.Unlock()
 	return ret, err
 }
@@ -151,6 +154,9 @@ func (*NetApiStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
 func (*NetApiStruct) NetLbRuleDel(lm *cmn.LbRuleMod) (int, error) {
 	mh.mtx.Lock()
 	ret, err := mh.zr.Rules.DeleteNatLbRule(lm.Serv)
+	if lm.Serv.Bgp {
+		DelBGPRule(lm.Serv.ServIP)
+	}
 	mh.mtx.Unlock()
 	return ret, err
 }

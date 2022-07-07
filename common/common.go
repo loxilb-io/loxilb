@@ -121,6 +121,7 @@ type LbServiceArg struct {
     ServPort uint16   `json:"port"`
     Proto    string   `json:"protocol"`
     Sel      EpSelect `json:"sel"`
+    Bgp      bool     `json:"bgp"`
 }
 
 type LbEndPointArg struct {
