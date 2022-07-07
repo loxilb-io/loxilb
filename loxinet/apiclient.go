@@ -27,6 +27,14 @@ func NetApiInit() *NetApiStruct {
 	return na
 }
 
+func (*NetApiStruct) NetPortGet() ([]cmn.PortDump, error) {
+	ret, err := mh.zr.Ports.PortsToGet()
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+
 func (*NetApiStruct) NetPortAdd(pm *cmn.PortMod) (int, error) {
 	mh.mtx.Lock()
 	ret, err := mh.zr.Ports.PortAdd(pm.Dev, pm.LinkIndex, pm.Ptype, ROOT_ZONE,
