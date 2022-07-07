@@ -17,16 +17,40 @@ package main
 
 import (
     "fmt"
+    "os"
+    "os/exec"
+    "github.com/jessevdk/go-flags"
     opts "loxilb/options"
     ln "loxilb/loxinet"
-    "os"
-    "github.com/jessevdk/go-flags"
 )
+
+const (
+    MKFS_SCRIPT = "/usr/local/sbin/mkllb_bpffs"
+    RUNNING_FLAG_FILE = "/var/run/loxilb"
+)
+
+func fileExists(fname string) bool {
+    info, err := os.Stat(fname)
+    if os.IsNotExist(err) {
+       return false
+    }
+    return !info.IsDir()
+}
+
+func fileCreate(fname string) int {
+    file, e := os.Create(fname)
+    if e != nil {
+       return -1
+    } 
+    file.Close()
+    return 0
+}
 
 var version string = "0.0.1"
 
 func main() {
     fmt.Printf("Start\n")
+
     _, err := flags.Parse(&opts.Opts)
     if err != nil {
         fmt.Println(err)
@@ -34,10 +58,20 @@ func main() {
     }
 
     if opts.Opts.Version {
-		fmt.Printf("loxilb version: %s\n", version)
-		os.Exit(0)
-	}
+        fmt.Printf("loxilb version: %s\n", version)
+        os.Exit(0)
+    }
 
+    if fileExists(RUNNING_FLAG_FILE) == false {
+        if fileExists(MKFS_SCRIPT) {
+            _, err := exec.Command("/bin/bash", MKFS_SCRIPT).Output()
+            if err != nil {
+                fmt.Println(err)
+                os.Exit(1)
+            }
+            fileCreate(RUNNING_FLAG_FILE)
+        }
+    }
 
     ln.LoxiNetMain()
 }
