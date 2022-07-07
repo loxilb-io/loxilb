@@ -15,8 +15,9 @@ fi
 if [[ $docker == "docker" ]]; then
   id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"`
   echo $id
+  pid=`docker inspect -f '{{.State.Pid}}' $id`
   sudo touch /var/run/netns/loxilb
-  sudo mount -o bind /proc/$id/ns/net /var/run/netns/loxilb
+  sudo mount -o bind /proc/$pid/ns/net /var/run/netns/loxilb
 else
   $NSADD loxilb
 fi
