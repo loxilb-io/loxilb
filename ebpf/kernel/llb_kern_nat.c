@@ -59,7 +59,11 @@ dp_do_nat4_rule_lkup(void *ctx, struct xfi *F)
   __u32 sel;
 
   key->daddr = F->l3m.ip.daddr;
-  key->dport = F->l3m.dest;
+  if (F->l3m.nw_proto != IPPROTO_ICMP) {
+    key->dport = F->l3m.dest;
+  } else {
+    key->dport = 0;
+  }
   key->zone = F->pm.zone;
   key->l4proto = F->l3m.nw_proto;
 
