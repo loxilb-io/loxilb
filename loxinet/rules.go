@@ -668,7 +668,6 @@ func (R *RuleH) RulesSync() {
             rule.ruleNum, ruleKeys, ruleActs,
             rule.stat.packets, rule.stat.bytes)
         rule.DP(DP_STATS_GET)
-        rule.DP(DP_TABLE_GET)
     }
 }
 
