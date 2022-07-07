@@ -52,7 +52,7 @@ dp_do_sess4_lkup(void *ctx, struct xfi *F)
   act = bpf_map_lookup_elem(&sess_v4_map, &key);
   if (!act) {
     LL_DBG_PRINTK("[SESS4] miss");
-    goto drop;
+    return 0;
   }
 
   F->pm.phit |= LLB_DP_SESS_HIT;
