@@ -10,7 +10,7 @@ subsys-clean:
 	cd ebpf && $(MAKE) clean
 
 subsys-test:
-	cd toolkits && go test
+	cd loxilib && go test
 
 build: subsys
 	@go build -o ${bin}
