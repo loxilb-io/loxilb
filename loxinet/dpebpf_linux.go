@@ -36,7 +36,7 @@ package loxinet
 int bpf_map_get_next_key(int fd, const void *key, void *next_key);
 int bpf_map_lookup_elem(int fd, const void *key, void *value);
 #cgo CFLAGS:  -I./../ebpf/libbpf/src/ -I./../ebpf/common
-#cgo LDFLAGS: -L. -L./../ebpf/kernel -L./../ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=./ebpf/libbpf/src/build/usr/lib64/ -lloxilbdp -lbpf -lelf -lz
+#cgo LDFLAGS: -L. -L/lib64 -L./../ebpf/kernel -L./../ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=/lib64/ -lloxilbdp -lbpf -lelf -lz
 */
 import "C"
 import (
