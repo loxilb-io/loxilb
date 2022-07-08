@@ -351,15 +351,22 @@ func init() {
         }
       }
     },
-    "/config/route/destinationIP/{ip_address}": {
+    "/config/route/destinationIPNet/{ip_address}/{mask}": {
       "delete": {
         "description": "Create a new load balancer service with .",
         "summary": "Create a new Load balancer service",
         "parameters": [
           {
             "type": "string",
-            "description": "Attributes for load balance service",
+            "description": "Attributes for destinaion route address",
             "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "Attributes for destination route",
+            "name": "mask",
             "in": "path",
             "required": true
           }
@@ -680,16 +687,12 @@ func init() {
     "RouteEntry": {
       "type": "object",
       "properties": {
-        "destinationIP": {
-          "description": "IP address for externel access",
+        "destinationIPNet": {
+          "description": "IP address and netmask",
           "type": "string"
         },
         "gateway": {
-          "description": "IP address for externel access",
-          "type": "string"
-        },
-        "protocol": {
-          "description": "value for access protocol",
+          "description": "IP address for nexthop",
           "type": "string"
         }
       }
@@ -1030,15 +1033,22 @@ func init() {
         }
       }
     },
-    "/config/route/destinationIP/{ip_address}": {
+    "/config/route/destinationIPNet/{ip_address}/{mask}": {
       "delete": {
         "description": "Create a new load balancer service with .",
         "summary": "Create a new Load balancer service",
         "parameters": [
           {
             "type": "string",
-            "description": "Attributes for load balance service",
+            "description": "Attributes for destinaion route address",
             "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "Attributes for destination route",
+            "name": "mask",
             "in": "path",
             "required": true
           }
@@ -1541,16 +1551,12 @@ func init() {
     "RouteEntry": {
       "type": "object",
       "properties": {
-        "destinationIP": {
-          "description": "IP address for externel access",
+        "destinationIPNet": {
+          "description": "IP address and netmask",
           "type": "string"
         },
         "gateway": {
-          "description": "IP address for externel access",
-          "type": "string"
-        },
-        "protocol": {
-          "description": "value for access protocol",
+          "description": "IP address for nexthop",
           "type": "string"
         }
       }

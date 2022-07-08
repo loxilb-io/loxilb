@@ -331,7 +331,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
  
-  '/config/route/destinationIP/{ip_address}':
+  '/config/route/destinationIPNet/{ip_address}/{mask}':
     delete:
       summary: Create a new Load balancer service
       description: Create a new load balancer service with .
@@ -340,7 +340,12 @@ paths:
           in: path
           type: string
           required: true
-          description: Attributes for load balance service
+          description: Attributes for destinaion route address
+        - name: mask
+          in: path
+          type: integer
+          required: true
+          description: Attributes for destination route
       responses:
         '204':
           description: OK
@@ -435,16 +440,12 @@ definitions:
   RouteEntry:
     type: object
     properties:
-      destinationIP:
+      destinationIPNet:
         type: string
-        description: IP address for externel access
+        description: IP address and netmask
       gateway:
         type: string
-        description: IP address for externel access
-      protocol:
-        type: string
-        description:  value for access protocol
-
+        description: IP address for nexthop
 
   ConntrackEntry:
     type: array

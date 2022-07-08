@@ -45,8 +45,8 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler: DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto has not yet been implemented")
 		}),
-		DeleteConfigRouteDestinationIPIPAddressHandler: DeleteConfigRouteDestinationIPIPAddressHandlerFunc(func(params DeleteConfigRouteDestinationIPIPAddressParams) middleware.Responder {
-			return middleware.NotImplemented("operation DeleteConfigRouteDestinationIPIPAddress has not yet been implemented")
+		DeleteConfigRouteDestinationIPNetIPAddressMaskHandler: DeleteConfigRouteDestinationIPNetIPAddressMaskHandlerFunc(func(params DeleteConfigRouteDestinationIPNetIPAddressMaskParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigRouteDestinationIPNetIPAddressMask has not yet been implemented")
 		}),
 		GetConfigConntrackAllHandler: GetConfigConntrackAllHandlerFunc(func(params GetConfigConntrackAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigConntrackAll has not yet been implemented")
@@ -101,8 +101,8 @@ type LoxilbRestAPIAPI struct {
 
 	// DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler sets the operation handler for the delete config loadbalancer externalipaddress IP address port port protocol proto operation
 	DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler
-	// DeleteConfigRouteDestinationIPIPAddressHandler sets the operation handler for the delete config route destination IP IP address operation
-	DeleteConfigRouteDestinationIPIPAddressHandler DeleteConfigRouteDestinationIPIPAddressHandler
+	// DeleteConfigRouteDestinationIPNetIPAddressMaskHandler sets the operation handler for the delete config route destination IP net IP address mask operation
+	DeleteConfigRouteDestinationIPNetIPAddressMaskHandler DeleteConfigRouteDestinationIPNetIPAddressMaskHandler
 	// GetConfigConntrackAllHandler sets the operation handler for the get config conntrack all operation
 	GetConfigConntrackAllHandler GetConfigConntrackAllHandler
 	// GetConfigLoadbalancerAllHandler sets the operation handler for the get config loadbalancer all operation
@@ -193,8 +193,8 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler")
 	}
-	if o.DeleteConfigRouteDestinationIPIPAddressHandler == nil {
-		unregistered = append(unregistered, "DeleteConfigRouteDestinationIPIPAddressHandler")
+	if o.DeleteConfigRouteDestinationIPNetIPAddressMaskHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigRouteDestinationIPNetIPAddressMaskHandler")
 	}
 	if o.GetConfigConntrackAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigConntrackAllHandler")
@@ -306,7 +306,7 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
-	o.handlers["DELETE"]["/config/route/destinationIP/{ip_address}"] = NewDeleteConfigRouteDestinationIPIPAddress(o.context, o.DeleteConfigRouteDestinationIPIPAddressHandler)
+	o.handlers["DELETE"]["/config/route/destinationIPNet/{ip_address}/{mask}"] = NewDeleteConfigRouteDestinationIPNetIPAddressMask(o.context, o.DeleteConfigRouteDestinationIPNetIPAddressMaskHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
