@@ -17,14 +17,11 @@ import (
 // swagger:model RouteEntry
 type RouteEntry struct {
 
-	// IP address for externel access
-	DestinationIP string `json:"destinationIP,omitempty"`
+	// IP address and netmask
+	DestinationIPNet string `json:"destinationIPNet,omitempty"`
 
-	// IP address for externel access
+	// IP address for nexthop
 	Gateway string `json:"gateway,omitempty"`
-
-	// value for access protocol
-	Protocol string `json:"protocol,omitempty"`
 }
 
 // Validate validates this route entry

@@ -56,6 +56,10 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	// Port get
 	api.GetConfigPortAllHandler = operations.GetConfigPortAllHandlerFunc(handler.ConfigGetPort)
 
+	// route add and delete
+	api.PostConfigRouteHandler = operations.PostConfigRouteHandlerFunc(handler.ConfigPostRoute)
+	api.DeleteConfigRouteDestinationIPNetIPAddressMaskHandler = operations.DeleteConfigRouteDestinationIPNetIPAddressMaskHandlerFunc(handler.ConfigDeleteRoute)
+
 	api.PreServerShutdown = func() {}
 
 	api.ServerShutdown = func() {
