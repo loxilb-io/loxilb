@@ -1,57 +1,70 @@
 #!/bin/bash
 
-sudo ip -n loxilb link set enp1 down
-sudo ip -n l3h1 link set eth0 down
+LBNSLNCMD="sudo ip -n loxilb link "
+IPNSEXE="sudo ip netns exec "
+IPNSDEL="sudo ip netns del "
+IPNSCMD="sudo ip -n "
 
-sudo ip -n loxilb link set enp2 down
-sudo ip -n l3h2 link set eth0 down
+$LBNSLNCMD set enp1 down
+$IPNSCMD l3h1 link set eth0 down
 
-sudo ip -n loxilb link set enp3 down
-sudo ip -n l2h1 link set eth0 down
+$LBNSLNCMD set enp2 down
+$IPNSCMD l3h2 link set eth0 down
 
-sudo ip -n loxilb link set enp4 down
-sudo ip -n l2h2 link set eth0 down
+$LBNSLNCMD set enp3 down
+$IPNSCMD l2h1 link set eth0 down
 
-sudo ip -n loxilb link set enp5 down
-sudo ip -n l2vxh1 link set eth0 down
+$LBNSLNCMD set enp4 down
+$IPNSCMD l2h2 link set eth0 down
 
-sudo ip -n loxilb link set enp6 down
-sudo ip -n l2vxh2 link set eth0 down
+$LBNSLNCMD set enp5 down
+$IPNSCMD l2vxh1 link set eth0 down
 
-sudo ip netns exec l2vxh1 vconfig rem eth0.51
-sudo ip netns exec l2vxh2 vconfig rem eth0.30
+$LBNSLNCMD set enp6 down
+$IPNSCMD l2vxh2 link set eth0 down
 
-sudo ip -n loxilb link del enp1 
-sudo ip -n loxilb link del enp2 
-sudo ip -n loxilb link del enp3 
-sudo ip -n loxilb link del enp4 
-sudo ip -n loxilb link del enp5 
-sudo ip -n loxilb link del enp6 
-sudo ip -n loxilb link del enp7 
-sudo ip -n loxilb link del enp8 
-sudo ip -n loxilb link del enp9 
-sudo ip -n loxilb link del enp10 
-sudo ip -n loxilb link del enp2v15
+$IPNSEXE l2vxh1 vconfig rem eth0.51
+$IPNSEXE l2vxh2 vconfig rem eth0.30
 
-sudo ip -n l3h1 link del eth0
-sudo ip -n l3h2 link del eth0
-sudo ip -n l3h3 link del eth0
-sudo ip -n l2h1 link del eth0
-sudo ip -n l2h2 link del eth0
-sudo ip -n l2vxh1 link del eth0
-sudo ip -n l2vxh2 link del eth0
-sudo ip -n l3vxh1 link del eth0
-sudo ip -n l3vxh2 link del eth1
-sudo ip -n l3vxh2 link del eth2
-sudo ip -n l4vxh2 link del eth0
+$LBNSLNCMD del vxlan50
+$LBNSLNCMD del vxlan51
+$LBNSLNCMD del enp1 
+$LBNSLNCMD del enp2 
+$LBNSLNCMD del enp3 
+$LBNSLNCMD del enp4 
+$LBNSLNCMD del enp5 
+$LBNSLNCMD del enp6 
+$LBNSLNCMD del enp7 
+$LBNSLNCMD del enp8 
+$LBNSLNCMD del enp9 
+$LBNSLNCMD del enp10 
+$LBNSLNCMD del enp2v15
+$LBNSLNCMD del bond1
+$LBNSLNCMD del vlan100
+$LBNSLNCMD del vlan20
+$LBNSLNCMD del vlan30
+$LBNSLNCMD del vlan50
+$LBNSLNCMD del vlan51
+$LBNSLNCMD del vlan8
 
-sudo ip netns del loxilb
-sudo ip netns del l3vxh1
-sudo ip netns del l3vxh2
-sudo ip netns del l2vxh1
-sudo ip netns del l2vxh2
-sudo ip netns del l2h1
-sudo ip netns del l2h2
-sudo ip netns del l3h1
-sudo ip netns del l3h2
-sudo ip netns del l3h3
+$IPNSCMD l3h1 link del eth0
+$IPNSCMD l3h2 link del eth0
+$IPNSCMD l3h3 link del eth0
+$IPNSCMD l2h1 link del eth0
+$IPNSCMD l2h2 link del eth0
+$IPNSCMD l2vxh1 link del eth0
+$IPNSCMD l2vxh2 link del eth0
+$IPNSCMD l3vxh1 link del eth0
+$IPNSCMD l3vxh2 link del eth1
+$IPNSCMD l3vxh2 link del eth2
+
+#$IPNSDEL loxilb
+$IPNSDEL l3vxh1
+$IPNSDEL l3vxh2
+$IPNSDEL l2vxh1
+$IPNSDEL l2vxh2
+$IPNSDEL l2h1
+$IPNSDEL l2h2
+$IPNSDEL l3h1
+$IPNSDEL l3h2
+$IPNSDEL l3h3

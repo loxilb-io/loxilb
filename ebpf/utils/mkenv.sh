@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#!/bin/bash
-
 docker=$1
 NSADD="sudo ip netns add "
 LBNSCMD="sudo ip netns exec loxilb "
@@ -16,8 +14,10 @@ if [[ $docker == "docker" ]]; then
   id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"`
   echo $id
   pid=`docker inspect -f '{{.State.Pid}}' $id`
-  sudo touch /var/run/netns/loxilb
-  sudo mount -o bind /proc/$pid/ns/net /var/run/netns/loxilb
+  if [ ! -f /var/run/netns/loxilb ]; then
+    sudo touch /var/run/netns/loxilb
+    sudo mount -o bind /proc/$pid/ns/net /var/run/netns/loxilb
+  fi
 else
   $NSADD loxilb
 fi
@@ -41,7 +41,6 @@ sudo ip -n l3h1 link set eth0 mtu 7000 up
 $LBNSCMD ifconfig enp1 31.31.31.254/24 up
 $NSCMD l3h1 ifconfig eth0 31.31.31.1/24 up
 $NSCMD l3h1 ip route add default via 31.31.31.254
-$NSCMD l3h1 ethtool -K eth0 rxvlan off txvlan off
 
 sudo ip -n loxilb link add enp2 type veth peer name eth0 netns l3h2
 sudo ip -n loxilb link set enp2 mtu 9000 up
@@ -95,7 +94,6 @@ sudo ip -n loxilb link add enp5 type veth peer name eth0 netns l2vxh1
 sudo ip -n loxilb link set enp5 mtu 9000 up
 sudo ip -n l2vxh1 link set eth0 mtu 7000 up
 $NSCMD l2vxh1 ifconfig eth0 50.50.50.1/24 up
-$NSCMD l2vxh1 ethtool -K eth0 rxvlan off txvlan off
 
 sudo ip -n loxilb link add enp6 type veth peer name eth0 netns l2vxh2
 sudo ip -n loxilb link set enp6 mtu 9000 up
@@ -104,7 +102,6 @@ $NSCMD l2vxh2 ifconfig eth0 2.2.2.2/24 up
 $NSCMD l2vxh2 ip link add vxlan50 type vxlan id 50 local 2.2.2.2 dev eth0 dstport 4789
 $NSCMD l2vxh2 ifconfig vxlan50 50.50.50.2/24 up
 $NSCMD l2vxh2 bridge fdb append 00:00:00:00:00:00 dst 2.2.2.1 dev vxlan50
-$NSCMD l2vxh2 ethtool -K eth0 rxvlan off txvlan off
 
 $LBNSCMD brctl addbr vlan20
 $LBNSCMD brctl addif vlan20 enp6
