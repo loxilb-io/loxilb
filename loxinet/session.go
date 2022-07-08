@@ -46,11 +46,20 @@ type UserTun struct {
     Addr  net.IP
 }
 
+type UlClStats struct {
+    UlPackets uint64
+    UlBytes  uint64
+    DlPackets uint64
+    DlBytes uint64
+}
+
 type UlClInf struct {
     Addr    net.IP
     Qfi	    uint8
-    Num     int
+    NumUl   int
+    NumDl   int
     Status  DpStatusT
+    Stats   UlClStats
     uSess   *UserSess
 }
 
@@ -143,10 +152,17 @@ func (s *SessH) UlClAddCls(user string, cls cmn.UlClArg) (int, error) {
     }
 
     ulcl = new(UlClInf)
-    ulcl.Num, _ = s.HwMark.GetCounter()
-    if ulcl.Num < 0 {
-        return SESS_ULCLNUM_ERR, errors.New("ulcl num err")
+    ulcl.NumUl, _ = s.HwMark.GetCounter()
+    if ulcl.NumUl < 0 {
+        return SESS_ULCLNUM_ERR, errors.New("ulcl - ul num err")
     }
+    ulcl.NumDl, _ = s.HwMark.GetCounter()
+    if ulcl.NumDl < 0 {
+        s.HwMark.PutCounter(ulcl.NumUl)
+        ulcl.NumUl = -1
+        return SESS_ULCLNUM_ERR, errors.New("ulcl - dl num err")
+    }
+
     ulcl.Qfi = cls.Qfi
     ulcl.Addr = cls.Addr
     ulcl.uSess = us
@@ -175,7 +191,7 @@ func (s *SessH) UlClDeleteCls(user string, cls cmn.UlClArg) (int, error) {
 
     ulcl.DP(DP_REMOVE)
 
-    s.HwMark.PutCounter(ulcl.Num)
+    s.HwMark.PutCounter(ulcl.NumUl)
     delete(us.UlCl, cls.Addr.String())
 
     return 0, nil
@@ -189,7 +205,7 @@ func Us2String(us *UserSess) string {
                         us.AnTun.Addr.String(), us.AnTun.TeID,
                         us.CnTun.Addr.String(), us.CnTun.TeID)
     for _, ulcl := range(us.UlCl) {
-        tStr += fmt.Sprintf("\n\t%s,qfi-%d,n-%d", ulcl.Addr.String(), ulcl.Qfi, ulcl.Num)
+        tStr += fmt.Sprintf("\n\t%s,qfi-%d,n-%d", ulcl.Addr.String(), ulcl.Qfi, ulcl.NumUl)
     }
 
     return tStr
@@ -203,10 +219,45 @@ func (s *SessH) USess2String(it IterIntf) error {
     return nil
 }
 
+func (s *SessH) SessionsSync()  {
+    for _, us := range s.UserMap {
+        for _, ulcl := range(us.UlCl) {
+            ulcl.DP(DP_STATS_GET)
+        }
+    }
+    return
+}
+
+func (s *SessH) SessionTicker() {
+    s.SessionsSync()
+}
+
 func (ulcl *UlClInf) DP(work DpWorkT) int {
 
     if ulcl.uSess == nil {
         return -1
+    }
+
+    if work == DP_STATS_GET {
+        uStat := new(StatDpWorkQ)
+        uStat.Work = work
+        uStat.HwMark = uint32(ulcl.NumUl)
+        uStat.Name = MAP_NAME_ULCL
+        uStat.Bytes = &ulcl.Stats.UlBytes
+        uStat.Packets =  &ulcl.Stats.UlBytes
+
+        mh.dp.ToDpCh <- uStat
+
+        dStat := new(StatDpWorkQ)
+        dStat.Work = work
+        dStat.HwMark = uint32(ulcl.NumDl)
+        dStat.Name = MAP_NAME_ULCL
+        dStat.Bytes = &ulcl.Stats.DlBytes
+        dStat.Packets =  &ulcl.Stats.DlBytes
+
+        mh.dp.ToDpCh <- dStat
+
+        return 0
     }
 
     // For UL dir
@@ -216,7 +267,7 @@ func (ulcl *UlClInf) DP(work DpWorkT) int {
     ucn.mSip = ulcl.uSess.Addr
     ucn.mTeID = ulcl.uSess.AnTun.TeID
     ucn.Zone = ulcl.uSess.Zone
-    ucn.HwMark = ulcl.Num
+    ucn.HwMark = ulcl.NumUl
     ucn.Qfi = ulcl.Qfi
     ucn.tTeID = 0
 
@@ -229,7 +280,7 @@ func (ulcl *UlClInf) DP(work DpWorkT) int {
     ucn.mDip = ulcl.uSess.Addr
     ucn.mTeID = 0
     ucn.Zone = ulcl.uSess.Zone
-    ucn.HwMark = ulcl.Num
+    ucn.HwMark = ulcl.NumDl
     ucn.Qfi = ulcl.Qfi
     ucn.tDip = ulcl.uSess.AnTun.Addr
     ucn.tSip = ulcl.uSess.CnTun.Addr

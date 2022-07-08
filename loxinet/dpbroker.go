@@ -31,6 +31,7 @@ const (
     MAP_NAME_RXBD  = "RXBD"
     MAP_NAME_TXBD  = "TXBD"
     MAP_NAME_RT4   = "RT4"
+	MAP_NAME_ULCL  = "ULCL"
  )
 
 const (

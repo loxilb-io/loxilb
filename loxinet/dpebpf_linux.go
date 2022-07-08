@@ -108,7 +108,8 @@ func dpEbpfTicker() {
         int(C.LL_DP_TMAC_STATS_MAP),
         int(C.LL_DP_BD_STATS_MAP),
         int(C.LL_DP_TX_BD_STATS_MAP),
-        int(C.LL_DP_ACLV4_STATS_MAP)}
+        int(C.LL_DP_ACLV4_STATS_MAP),
+        int(C.LL_DP_SESS4_STATS_MAP)}
     tLen := len(tbls)
 
     for {
