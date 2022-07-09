@@ -341,14 +341,13 @@ end:
 
   bpf_spin_unlock(&atdat->lock);
 
-  if (nstate == CT_TCP_EST)
+  if (nstate == CT_TCP_EST) {
     return CT_SMR_EST;
-
-  if (nstate & CT_TCP_CW) {
+  } else if (nstate & CT_TCP_CW) {
     return CT_SMR_CTD;
-  }
-
-  if (nstate & CT_TCP_FIN_MASK) {
+  } else if (nstate & CT_TCP_ERR) {
+    return CT_SMR_ERR;
+  } else if (nstate & CT_TCP_FIN_MASK) {
     return CT_SMR_FIN;
   }
 
@@ -677,6 +676,9 @@ dp_ctv4_in(void *ctx, struct xfi *F)
         atdat->ca.act_type = DP_SET_NOP;
         axtdat->ca.act_type = DP_SET_NOP;
       }
+    } else if (smr == CT_SMR_ERR) {
+      atdat->ca.act_type = DP_SET_DROP;
+      axtdat->ca.act_type = DP_SET_DROP;
     }
   }
 
