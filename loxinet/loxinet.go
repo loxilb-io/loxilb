@@ -120,75 +120,6 @@ func LoxiNetMain() {
 
     // Test stub code -- To be removed
     if false {
-        ifmac := [6]byte{0x26, 0x7f, 0x65, 0x6c, 0x20, 0x4a}
-        mh.zr.Ports.PortAdd("hs1", 2, cmn.PORT_REAL, ROOT_ZONE,
-            PortHwInfo{ifmac, true, true, 1500, "", "", 0},
-            PortLayer2Info{false, 10})
-
-        ifmac = [6]byte{0xde, 0xdc, 0x1f, 0x62, 0x60, 0x55}
-        mh.zr.Ports.PortAdd("hs2", 3, cmn.PORT_REAL, ROOT_ZONE,
-            PortHwInfo{ifmac, true, true, 1500, "", "", 0},
-            PortLayer2Info{false, 10})
-
-        ifmac = [6]byte{0xc6, 0x28, 0xa0, 0xbb, 0xd4, 0xd3}
-        mh.zr.Ports.PortAdd("hs3", 5, cmn.PORT_REAL, ROOT_ZONE,
-                PortHwInfo{ifmac, true, true, 1500, "", "", 0},
-                PortLayer2Info{false, 10})
-        
-        ifmac = [6]byte{0xde, 0xdc, 0x1f, 0x62, 0x60, 0x55}
-        mh.zr.Ports.PortAdd("vxlan100", 15, cmn.PORT_VXLANBR, ROOT_ZONE,
-            PortHwInfo{ifmac, true, true, 1500, "", "hs3", 1000},
-            PortLayer2Info{false, 0})
-
-        ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0xa}
-        _, err := mh.zr.Vlans.VlanAdd(100, "vlan100", ROOT_ZONE, 124,
-            PortHwInfo{ifmac, true, true, 1500, "", "", 0})
-
-        _, err = mh.zr.Vlans.VlanPortAdd(100, "vxlan100", false)
-        if err != nil {
-            fmt.Printf("failed to add port %s to vlan %d\n", "vxlan100", 100)
-        }
-
-        //mh.zr.Ports.Ports2String(&mh)
-        //mh.zr.Vlans.Vlans2String(&mh)
-
-        mh.zr.L3.IfaAdd("hs1", "31.31.31.254/24")
-        mh.zr.L3.IfaAdd("hs2", "32.32.32.254/24")
-
-        hwmac, _ := net.ParseMAC("b6:e9:cd:f8:2a:be")
-        _, err = mh.zr.Nh.NeighAdd(net.IPv4(31, 31, 31, 1), ROOT_ZONE, NeighAttr{2, 1, hwmac})
-        if err != nil {
-            fmt.Printf("NHAdd fail 31.31.31.1\n")
-        }
-
-        hwmac, _ = net.ParseMAC("d6:3d:ef:62:1d:01")
-        _, err = mh.zr.Nh.NeighAdd(net.IPv4(32, 32, 32, 1), ROOT_ZONE, NeighAttr{3, 1, hwmac})
-        if err != nil {
-            fmt.Printf("NHAdd fail 32.32.32.1\n")
-        }
-
-        fdbKey := FdbKey{[6]byte{0xa, 0xb, 0xc, 0xd, 0xe, 0xf}, 100}
-        fdbAttr := FdbAttr{"vxlan100", net.ParseIP("32.32.32.1"), cmn.FDB_TUN}
-
-        _, err = mh.zr.L2.L2FdbAdd(fdbKey, fdbAttr)
-
-        mh.zr.L3.IfaAdd("vlan100", "1.1.1.1/24")
-
-        hwmac1, _ := net.ParseMAC("0a:0b:0c:0d:0e:0f")
-        _, err = mh.zr.Nh.NeighAdd(net.IPv4(1, 1, 1, 2), ROOT_ZONE,
-                                   NeighAttr{124, 1, hwmac1})
-
-        route := net.IPv4(8, 8, 8, 8)
-        mask := net.CIDRMask(24, 32)
-        route = route.Mask(mask)
-        ipnet := net.IPNet{IP: route, Mask: mask}
-        ra := RtAttr{0, 0, false}
-        na := []RtNhAttr{{net.IPv4(32, 32, 32, 1), 3}}
-        _, err = mh.zr.Rt.RtAdd(ipnet, ROOT_ZONE, ra, na)
-        if err != nil {
-            fmt.Printf("Failed to add route")
-        }
-                                
         lbServ := cmn.LbServiceArg{ServIP: "10.10.10.1", ServPort: 2020, Proto: "tcp", Sel: cmn.LB_SEL_RR}
         lbEps := []cmn.LbEndPointArg{
             {
@@ -210,12 +141,6 @@ func LoxiNetMain() {
 
         mh.zr.Rules.AddNatLbRule(lbServ, lbEps[:])
         //mh.zr.Rules.DeleteNatLbRule(lbServ)
-
-        mh.zr.Ports.PortUpdateProp("hs2", cmn.PORT_PROP_UPP, ROOT_ZONE, true)
-        
-        mh.zr.Ports.Ports2String(&mh)
-        mh.zr.Vlans.Vlans2String(&mh)
-        mh.zr.Rt.Rts2String(&mh)
 
         // Session information 
         anTun := cmn.SessTun{TeID:1, Addr:net.IP{172, 17, 1, 231}} // An TeID, gNBIP
