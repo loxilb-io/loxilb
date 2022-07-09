@@ -10,7 +10,7 @@ before_install:
   - sudo apt-get update
   - sudo apt -y install build-essential clang llvm libelf-dev gcc-multilib libpcap-dev
   - sudo apt -y install linux-tools-$(uname -r)
-  - sudo apt -y install elfutils dwarves git
+  - sudo apt -y install elfutils dwarves git libbsd-dev
   - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
 
 install:
