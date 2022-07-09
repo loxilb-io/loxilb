@@ -8,7 +8,7 @@ go:
 
 before_install:
   - sudo apt-get update
-  - sudo apt -y install build-essential clang llvm libelf-dev gcc-multilib libpcap-dev
+  - sudo apt -y install clang llvm libelf-dev gcc-multilib libpcap-dev
   - sudo apt -y install linux-tools-$(uname -r)
   - sudo apt -y install elfutils dwarves git libbsd-dev
   - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
@@ -21,7 +21,7 @@ install:
   - pushd iproute2-main/libbpf/src/ && sudo make install && popd
 
 script:
-  - LD_PRELOAD=`pwd`/ebpf/kernel/libloxilbdp.a
+  - sudo mkdir -p /opt/loxilb
+  - ebpf/utils/mkllb_bpffs.sh 
   - make
-  - ebpf/utils/mkllb_bpffs.sh
   - sudo -E env "PATH=$PATH" make test
