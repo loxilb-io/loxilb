@@ -21,4 +21,4 @@ install:
   - pushd iproute2-main/libbpf/src/ && sudo make install && popd
 
 script:
-  - sudo -E env "PATH=$PATH" make lint test
+  - sudo -E env "PATH=$PATH" make test
