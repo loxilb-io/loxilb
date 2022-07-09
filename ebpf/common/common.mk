@@ -11,7 +11,7 @@
 # as a space-separated list
 #
 LLC = llc
-CLANG = clang
+CLANG = clang-10
 CC ?= gcc
 
 XDP_C = ${XDP_TARGETS:=.c}
