@@ -146,7 +146,7 @@ func LoxiNetMain() {
         anTun := cmn.SessTun{TeID:1, Addr:net.IP{172, 17, 1, 231}} // An TeID, gNBIP
         cnTun := cmn.SessTun{TeID:1, Addr:net.IP{172, 17, 1, 50}}  // Cn TeID, MyIP
 
-        _, err = mh.zr.Sess.SessAdd("user1", net.IP{100, 64, 50, 1}, anTun, cnTun)
+        _, err := mh.zr.Sess.SessAdd("user1", net.IP{100, 64, 50, 1}, anTun, cnTun)
         if err != nil {
             fmt.Printf("Failed to add session\n")
         }
