@@ -23,8 +23,8 @@ $IPNSCMD l2vxh1 link set eth0 down
 $LBNSLNCMD set enp6 down
 $IPNSCMD l2vxh2 link set eth0 down
 
-$IPNSEXE l2vxh1 vconfig rem eth0.51
-$IPNSEXE l2vxh2 vconfig rem eth0.30
+$IPNSEXE l2vxh1 ip link del eth0.51
+$IPNSEXE l2vxh2 ip link del eth0.30
 
 $LBNSLNCMD del vxlan50
 $LBNSLNCMD del vxlan51

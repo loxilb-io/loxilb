@@ -59,14 +59,14 @@ $NSCMD l3h3 ip route add default via 33.33.33.254
 sudo ip -n loxilb link add enp3 type veth peer name eth0 netns l2h1
 sudo ip -n loxilb link set enp3 mtu 9000 up
 sudo ip -n l2h1 link set eth0 mtu 7000 up
-$NSCMD l2h1 vconfig add eth0 100
+$NSCMD l2h1 ip link add link eth0 name eth0.100 type vlan id 100
 $NSCMD l2h1 ifconfig eth0.100 100.100.100.1/24 up
 $NSCMD l2h1 ip route add default via 100.100.100.254
 
 sudo ip -n loxilb link add enp4 type veth peer name eth0 netns l2h2
 sudo ip -n loxilb link set enp4 mtu 9000 up
 sudo ip -n l2h2 link set eth0 mtu 7000 up
-$NSCMD l2h2 vconfig add eth0 100
+$NSCMD l2h2 ip link add link eth0 name eth0.100 type vlan id 100
 $NSCMD l2h2 ifconfig eth0.100 100.100.100.2/24 up
 $NSCMD l2h2 ip route add default via 100.100.100.254
 $NSCMD l2h2 ip addr add 100.100.100.3/24 dev eth0.100
@@ -82,8 +82,8 @@ $NSCMD l2h2 ip addr add 100.100.100.12/24 dev eth0.100
 $NSCMD l2h2 ip addr add 100.100.100.13/24 dev eth0.100
 
 $LBNSCMD brctl addbr vlan100
-$LBNSCMD vconfig add enp3 100
-$LBNSCMD vconfig add enp4 100
+$LBNSCMD ip link add link enp3 name enp3.100 type vlan id 100
+$LBNSCMD ip link add link enp4 name enp4.100 type vlan id 100
 $LBNSCMD brctl addif vlan100 enp3.100
 $LBNSCMD brctl addif vlan100 enp4.100
 $LBNSCMD ifconfig enp3.100 up
@@ -116,11 +116,11 @@ $LBNSCMD brctl addif vlan50 enp5
 $LBNSCMD ip link set vlan50 up
 
 # Setup l2vxh1
-$NSCMD l2vxh1 vconfig add eth0 51
+$NSCMD l2vxh1 ip link add link eth0 name eth0.51 type vlan id 51
 $NSCMD l2vxh1 ifconfig eth0.51 51.51.51.1/24 up
 
 # Setup l2vxh2
-$NSCMD l2vxh2 vconfig add eth0 30
+$NSCMD l2vxh2 ip link add link eth0 name eth0.30 type vlan id 30
 $NSCMD l2vxh2 ifconfig eth0.30 3.3.3.2/24 up
 $NSCMD l2vxh2 ip link add vxlan51 type vxlan id 51 local 3.3.3.2 dev eth0.30 dstport 4789
 $NSCMD l2vxh2 ifconfig vxlan51 51.51.51.2/24 up
@@ -128,7 +128,7 @@ $NSCMD l2vxh2  bridge fdb append 00:00:00:00:00:00 dst 3.3.3.1 dev vxlan51
 
 # Setup loxilb vxlan51
 $LBNSCMD brctl addbr vlan30
-$LBNSCMD vconfig add enp6 30
+$LBNSCMD ip link add link enp6 name enp6.30 type vlan id 30
 $LBNSCMD ip link set enp6.30 up
 $LBNSCMD brctl addif vlan30 enp6.30
 $LBNSCMD ip link set vlan30 up
@@ -137,7 +137,7 @@ $LBNSCMD ip link add vxlan51 type vxlan id 51 local 3.3.3.1 dev vlan30 dstport 4
 $LBNSCMD ip link set vxlan51 up
 $LBNSCMD bridge fdb append 00:00:00:00:00:00 dst 3.3.3.2 dev vxlan51
 $LBNSCMD brctl addbr vlan51
-$LBNSCMD vconfig add enp5 51
+$LBNSCMD ip link add link enp5 name enp5.51 type vlan id 51
 $LBNSCMD ip link set enp5.51 up
 $LBNSCMD brctl addif vlan51 vxlan51
 $LBNSCMD brctl addif vlan51 enp5.51
