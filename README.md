@@ -2,8 +2,8 @@
 
 loxilb is a cloud-native networking/security stack built from grounds up using eBPF at its core. loxilb aims to provide the following :
 
--  Service type external load-balancer for kubernetes (hence the name loxilb)
-   * L4/NAT stateful loadbalancer 
+- Service type external load-balancer for kubernetes (hence the name loxilb)
+- L4/NAT stateful loadbalancer 
    * High-availability support
    * K8s CCM compliance
 -  Optimized SRv6 implementation in eBPF 
@@ -21,28 +21,41 @@ loxilb is a cloud-native networking/security stack built from grounds up using e
 
 ## How to build/run
 
-Step1 - Install package dependencies 
+1. Install package dependencies 
 
-# sudo apt install clang llvm libelf-dev gcc-multilib libpcap-dev
-# sudo apt install linux-tools-$(uname -r)
-# sudo apt install elfutils dwarves
+```
+sudo apt install clang llvm libelf-dev gcc-multilib libpcap-dev
+sudo apt install linux-tools-$(uname -r)
+sudo apt install elfutils dwarves
+```
 
-Step2 - Build libbpf locally
+*loxilb also requires a special version of iproute2 for its operation. The repository can be found [here](https://github.com/loxilb-io/iproute2). Detailed build instructions can be found [here](https://github.com/loxilb-io/iproute2/blob/main/README.loxilb).*
 
+2. Build libbpf locally
+
+```
 #  cd libbpf/src/
 #  mkdir build
 #  DESTDIR=build make install
+```
 
-Step2 - Make 
+3. Make loxilb
 
-# make
+```
+make
+```
 
-Step3 - Run 
+4. Run  loxilb
 
-# sudo go run .
+```
+sudo go run .
+```
 
-or 
+  or 
 
-# sudo ./loxilb 
+```
+sudo ./loxilb 
+```
+
 
 We encourage loxilb users to follow various guides in loxilb docs [repository](https://github.com/loxilb-io/loxilbdocs)
