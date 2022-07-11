@@ -44,3 +44,5 @@ Step3 - Run
 or 
 
 # sudo ./loxilb 
+
+We encourage loxilb users to follow various guides in loxilb docs [repository](https://github.com/loxilb-io/loxilbdocs)
