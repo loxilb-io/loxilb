@@ -17,7 +17,7 @@ Please note we have a code of conduct, please follow it in all your interactions
    do not have permission to do that, you may request the second reviewer to merge it for you.
    
 *  Detailed instructions to help new developers setup the development/test environment can be found [here](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/run.md)
-*  Alternatively, they can email developers at [loxilb-devel@netlox.io@netlox.io]. , checkout existing issues in [github](https://github.com/loxilb-io/loxilb/issues) , visit the loxilb [forum](https://netlox2020.wixsite.com/website/forum) or loxilb [slack channel](https://netlox.slack.com/archives/C03J0JSGBAN)
+*  Alternatively, they can email developers at [loxilb-devel@netlox.io]. , checkout existing issues in [github](https://github.com/loxilb-io/loxilb/issues) , visit the loxilb [forum](https://netlox2020.wixsite.com/website/forum) or loxilb [slack channel](https://netlox.slack.com/archives/C03J0JSGBAN)
 
 ## Sign Your Commits
 
