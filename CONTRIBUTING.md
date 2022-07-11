@@ -23,8 +23,6 @@ Please note we have a code of conduct, please follow it in all your interactions
 
 [Instructions](https://contribute.cncf.io/maintainers/github/templates/required/contributing/sign-your-commits)
 
-⚠️ **Keep either the DCO or CLA section depending on which you use**
-
 ### DCO
 Licensing is important to open source projects. It provides some assurances that
 the software will continue to be available based under the terms that the
@@ -106,8 +104,7 @@ further defined and clarified by project maintainers.
 ### Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting the project team at [loxilb-devel@netlox.io
-@netlox.io]. All
+reported by contacting the project team at [loxilb-devel@netlox.io]. All
 complaints will be reviewed and investigated and will result in a response that
 is deemed necessary and appropriate to the circumstances. The project team is
 obligated to maintain confidentiality with regard to the reporter of an incident.
