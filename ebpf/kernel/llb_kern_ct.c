@@ -615,6 +615,7 @@ dp_ctv4_in(void *ctx, struct xfi *F)
     adat->ca.ftrap = 0;
     adat->ca.oif = 0;
     adat->ca.cidx = F->pm.rule_id;
+    memset(&adat->ctd.pi, 0, sizeof(ct_pinf_t));
     if (xi->nat_flags) {
       adat->ca.act_type = xi->nat_flags & (LLB_NAT_DST|LLB_NAT_HDST) ?
                              DP_SET_DNAT: DP_SET_SNAT;
@@ -624,15 +625,16 @@ dp_ctv4_in(void *ctx, struct xfi *F)
     } else {
       adat->ca.act_type = DP_SET_DO_CT;
     }
-    memset(&adat->ctd.pi, 0, sizeof(ct_pinf_t));
     adat->ctd.dir = cdir;
     adat->ctd.rid = F->pm.rule_id;
+    adat->ctd.aid = F->l4m.sel_aid;
     adat->ctd.smr = CT_SMR_INIT;
     bpf_map_update_elem(&acl_v4_map, &key, adat, BPF_ANY);
 
     axdat->ca.ftrap = 0;
     axdat->ca.oif = 0;
     axdat->ca.cidx = F->pm.rule_id;
+    memset(&axdat->ctd.pi, 0, sizeof(ct_pinf_t));
     if (xxi->nat_flags) { 
       axdat->ca.act_type = xxi->nat_flags & (LLB_NAT_DST|LLB_NAT_HDST) ?
                              DP_SET_DNAT: DP_SET_SNAT;
@@ -642,11 +644,11 @@ dp_ctv4_in(void *ctx, struct xfi *F)
     } else {
       axdat->ca.act_type = DP_SET_DO_CT;
     }
-    memset(&axdat->ctd.pi, 0, sizeof(ct_pinf_t));
     axdat->lts = adat->lts;
     axdat->ctd.dir = CT_DIR_OUT;
     axdat->ctd.smr = CT_SMR_INIT;
     axdat->ctd.rid = adat->ctd.rid;
+    axdat->ctd.aid = adat->ctd.aid;
     bpf_map_update_elem(&acl_v4_map, &xkey, axdat, BPF_ANY);
 
     atdat = bpf_map_lookup_elem(&acl_v4_map, &key);

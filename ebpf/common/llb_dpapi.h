@@ -497,6 +497,7 @@ typedef struct mf_xfrm_inf nxfrm_inf_t;
 
 struct dp_ctv4_dat {
   __u32 rid;
+  __u32 aid;
   ct_pinf_t pi;
   ct_dir_t dir;
   ct_smr_t smr;
