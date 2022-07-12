@@ -180,7 +180,7 @@ struct dp_l4_mdi {
 #define LLB_PIPE_CT_INP   1
 #define LLB_PIPE_CT_EST   2
     __u8            ct_sts;       /* Conntrack state */
-    __u8            sel_rid;
+    __u8            sel_aid;
 };
 
 struct dp_key_mdi {

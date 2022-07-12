@@ -97,7 +97,7 @@ dp_do_nat4_rule_lkup(void *ctx, struct xfi *F)
         F->pm.nf = act->ca.act_type == DP_SET_SNAT ? LLB_NAT_SRC : LLB_NAT_DST;
         F->l4m.nxip = nxfrm_act->nat_xip;
         F->l4m.nxport = nxfrm_act->nat_xport;
-        F->l4m.sel_rid = sel;
+        F->l4m.sel_aid = sel;
         F->pm.rule_id =  act->ca.cidx;
         LL_DBG_PRINTK("[NAT4] ACT %x\n", F->pm.nf);
         /* Special case related to host-dnat */
