@@ -248,12 +248,23 @@ dp_unparse_packet(void *ctx,  struct xfi *F)
   if (F->tm.new_tunnel_id) {
     LL_DBG_PRINTK("[DEPR] LL_NEW-TUN 0x%x\n",
                   bpf_ntohl(F->tm.new_tunnel_id));
-    if (dp_do_ins_vxlan(ctx, F,
+    if (F->tm.tun_type == LLB_TUN_GTP) {
+      if (dp_do_ins_gtp(ctx, F,
+                        F->tm.tun_rip,
+                        F->tm.tun_sip, 
+                        F->tm.new_tunnel_id,
+                        F->qm.qfi,
+                        1)) {
+        return DP_DROP;
+      }
+    } else if (F->tm.tun_type == LLB_TUN_VXLAN) {
+      if (dp_do_ins_vxlan(ctx, F,
                           F->tm.tun_rip,
                           F->tm.tun_sip, 
                           F->tm.new_tunnel_id,
                           1)) {
-      return DP_DROP;
+        return DP_DROP;
+      }
     }
   }
 
