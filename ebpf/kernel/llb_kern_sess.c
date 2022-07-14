@@ -27,24 +27,28 @@ dp_do_sess4_lkup(void *ctx, struct xfi *F)
   struct dp_sess4_key key;
   struct dp_sess_tact *act;
 
-  if (F->tm.tunnel_id && F->tm.tun_type != LLB_TUN_GTP) {
-    return 0;
-  }
-
   key.r = 0;
   if (F->tm.tunnel_id) {
     key.daddr = F->il3m.ip.daddr;
     key.saddr = F->il3m.ip.saddr;
     key.teid = bpf_ntohl(F->tm.tunnel_id);
   } else {
-    key.daddr = F->l3m.ip.daddr;
-    key.saddr = F->l3m.ip.saddr;
+    if (F->pm.nf == LLB_NAT_SRC) {
+      key.saddr = F->l4m.nxip;
+      key.daddr = F->l3m.ip.daddr;
+    } else if (F->pm.nf == LLB_NAT_DST) {
+      key.daddr = F->l4m.nxip;
+      key.saddr = F->l3m.ip.saddr;
+    } else {
+      key.daddr = F->l3m.ip.daddr;
+      key.saddr = F->l3m.ip.saddr;
+    }
     key.teid = 0;
   }
 
   LL_DBG_PRINTK("[SESS4] -- Lookup\n");
   LL_DBG_PRINTK("[SESS4] daddr %x\n", key.daddr);
-  LL_DBG_PRINTK("[SESS4] saddr %d\n", key.saddr);
+  LL_DBG_PRINTK("[SESS4] saddr %x\n", key.saddr);
   LL_DBG_PRINTK("[SESS4] teid 0x%x\n", key.teid);
 
   F->pm.table_id = LL_DP_SESS4_MAP;

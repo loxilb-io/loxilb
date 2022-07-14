@@ -217,19 +217,6 @@ dp_trap_packet(void *ctx,  struct xfi *F, void *fa_)
 static int __always_inline
 dp_unparse_packet(void *ctx,  struct xfi *F)
 {
-  if (F->tm.tun_decap) {
-    if (F->tm.tun_type == LLB_TUN_VXLAN) {
-      LL_DBG_PRINTK("[DEPR] LL STRIP-VXLAN\n");
-      if (dp_do_strip_vxlan(ctx, F, F->pm.tun_off) != 0) {
-        return DP_DROP;
-      }
-    } else if (F->tm.tun_type == LLB_TUN_GTP) {
-      LL_DBG_PRINTK("[DEPR] LL STRIP-GTP\n");
-      if (dp_do_strip_gtp(ctx, F, F->pm.tun_off) != 0) {
-        return DP_DROP;
-      }
-    }
-  }
 
   if (F->pm.nf & LLB_NAT_SRC) {
     LL_DBG_PRINTK("[DEPR] LL_SNAT 0x%lx:%x\n",
@@ -242,6 +229,21 @@ dp_unparse_packet(void *ctx,  struct xfi *F)
                   F->l4m.nxip, F->l4m.nxport);
     if (dp_do_dnat(ctx, F, F->l4m.nxip, F->l4m.nxport) != 0) {
       return DP_DROP;
+    }
+  }
+
+
+  if (F->tm.tun_decap) {
+    if (F->tm.tun_type == LLB_TUN_VXLAN) {
+      LL_DBG_PRINTK("[DEPR] LL STRIP-VXLAN\n");
+      if (dp_do_strip_vxlan(ctx, F, F->pm.tun_off) != 0) {
+        return DP_DROP;
+      }
+    } else if (F->tm.tun_type == LLB_TUN_GTP) {
+      LL_DBG_PRINTK("[DEPR] LL STRIP-GTP\n");
+      if (dp_do_strip_gtp(ctx, F, F->pm.tun_off) != 0) {
+        return DP_DROP;
+      }
     }
   }
 
