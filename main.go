@@ -27,6 +27,7 @@ import (
 const (
     MKFS_SCRIPT = "/usr/local/sbin/mkllb_bpffs"
     RUNNING_FLAG_FILE = "/var/run/loxilb"
+    BPF_FS_CHK_FILE = "/opt/loxilb/dp/bpf/intf_map"
 )
 
 func fileExists(fname string) bool {
@@ -62,14 +63,13 @@ func main() {
         os.Exit(0)
     }
 
-    if fileExists(RUNNING_FLAG_FILE) == false {
+    if fileExists(BPF_FS_CHK_FILE) == false {
         if fileExists(MKFS_SCRIPT) {
             _, err := exec.Command("/bin/bash", MKFS_SCRIPT).Output()
             if err != nil {
                 fmt.Println(err)
                 os.Exit(1)
             }
-            fileCreate(RUNNING_FLAG_FILE)
         }
     }
 
