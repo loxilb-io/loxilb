@@ -280,9 +280,9 @@ pdi_map_run(struct pdi_map *map)
   PDI_MAP_ULOCK(map);
 }
 
-int test(void)
+int
+pdi_unit_test(void)
 {
-
   struct pdi_map *map;
   int r = 0;
 
@@ -375,4 +375,6 @@ int test(void)
   if (pdi_rule_delete(map, &new4->key, 0) != 0) {
      printf("Failed delete--%d\n", __LINE__);
   }
+
+  return 0;
 }
