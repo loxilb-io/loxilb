@@ -247,6 +247,10 @@ ct_trk:
 static void __always_inline
 dp_do_ipv4_fwd(void *ctx,  struct xfi *F, void *fa_)
 {
+  if (F->tm.tunnel_id == 0 ||  F->tm.tun_type != LLB_TUN_GTP) {
+    dp_do_sess4_lkup(ctx, F);
+  }
+
   if (F->pm.phit & LLB_DP_TMAC_HIT) {
 
     /* If some pipeline block already set a redirect before this,
@@ -261,7 +265,7 @@ dp_do_ipv4_fwd(void *ctx,  struct xfi *F, void *fa_)
 static int __always_inline
 dp_ing_ipv4(void *ctx,  struct xfi *F, void *fa_)
 {
-  if (F->pm.pprop & LLB_DP_PORT_UPP) {
+  if (F->tm.tunnel_id && F->tm.tun_type == LLB_TUN_GTP) {
     dp_do_sess4_lkup(ctx, F);
   }
   dp_do_aclv4_lkup(ctx, F, fa_);
