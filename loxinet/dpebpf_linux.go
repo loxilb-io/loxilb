@@ -698,6 +698,8 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
     case w.Name == MAP_NAME_RT4:
         tbl = append(tbl, int(C.LL_DP_RTV4_MAP))
         break
+    case w.Name == MAP_NAME_ULCL:
+        tbl = append(tbl, int(C.LL_DP_SESS4_MAP))
     default:
         return EBPF_ERR_WQ_UNK
     }
