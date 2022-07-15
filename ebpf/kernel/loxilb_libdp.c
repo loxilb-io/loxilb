@@ -1053,7 +1053,7 @@ ll_aclct4_map_ent_has_aged(int tid, void *k, void *ita)
   if (curr_ns < latest_ns) return 0;
 
   if (curr_ns - latest_ns > to) {
-     printf("%s:%d -> %s:%d (%d):%u (Aged:%d:%d)\n",
+    printf("##%s:%d -> %s:%d (%d):%u (Aged:%d:%d)\n",
          sstr, ntohs(key->sport),
          dstr, ntohs(key->dport),  
          key->l4proto, dat->rid, est, has_nat);

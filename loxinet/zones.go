@@ -223,8 +223,8 @@ func (z *ZoneH) ZoneTicker() {
         //zone.Rt.RoutesTicker()
         //mh.mtx.RUnlock()
 
-        //mh.mtx.RLock()
-        //zone.Sess.SessionTicker()
-        //mh.mtx.RUnlock()
+        mh.mtx.RLock()
+        zone.Sess.SessionTicker()
+        mh.mtx.RUnlock()
     }
 }

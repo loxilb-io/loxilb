@@ -223,6 +223,12 @@ func (s *SessH) SessionsSync()  {
     for _, us := range s.UserMap {
         for _, ulcl := range(us.UlCl) {
             ulcl.DP(DP_STATS_GET)
+            if ulcl.Stats.DlPackets != 0 || ulcl.Stats.UlPackets != 0 {
+                fmt.Printf("%s,qfi-%d,n-%d Dl %v:%v Ul %v:%v\n", 
+                       ulcl.Addr.String(), ulcl.Qfi, ulcl.NumUl,
+                       ulcl.Stats.DlPackets, ulcl.Stats.DlBytes,
+                       ulcl.Stats.UlPackets, ulcl.Stats.UlBytes)
+            }
         }
     }
     return
