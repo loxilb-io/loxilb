@@ -215,9 +215,7 @@ dp_do_aclv4_lkup(void *ctx, struct xfi *F, void *fa_)
       na->fr = 1;
     }
 
-    dp_pipe_set_nat(ctx, F, na,
-                    act->ca.act_type == DP_SET_SNAT ? 1: 0);
-
+    dp_pipe_set_nat(ctx, F, na, act->ca.act_type == DP_SET_SNAT ? 1: 0);
 
     if (na->fr == 1 || na->doct) {
       goto ct_trk;
