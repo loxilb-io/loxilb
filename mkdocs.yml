@@ -1,9 +1,11 @@
-site_name: LoxiLB Documentations
+site_name: LoxiLB Documentations 
 site_url: https://loxilb-io.github.io/loxilb 
 theme:
     name: readthedocs
     analytics:
         gtag: G-21G7NBL2BN
+extra:
+    version: Version 0.0.1 (Latest)
 nav:
   - Home: index.md
   - What is eBPF: ebpf.md
