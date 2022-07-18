@@ -7,6 +7,7 @@ package models
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
@@ -16,19 +17,77 @@ import (
 // PortEntry port entry
 //
 // swagger:model PortEntry
-type PortEntry struct {
+type PortEntry []*PortEntryItems0
+
+// Validate validates this port entry
+func (m PortEntry) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	for i := 0; i < len(m); i++ {
+		if swag.IsZero(m[i]) { // not required
+			continue
+		}
+
+		if m[i] != nil {
+			if err := m[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName(strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName(strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+// ContextValidate validate this port entry based on the context it is used
+func (m PortEntry) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	for i := 0; i < len(m); i++ {
+
+		if m[i] != nil {
+			if err := m[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName(strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName(strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+// PortEntryItems0 port entry items0
+//
+// swagger:model PortEntryItems0
+type PortEntryItems0 struct {
 
 	// Dataplan Sync check
 	DataplaneSync int64 `json:"DataplaneSync,omitempty"`
 
 	// port hardware information
-	PortHardwareInformation *PortEntryPortHardwareInformation `json:"portHardwareInformation,omitempty"`
+	PortHardwareInformation *PortEntryItems0PortHardwareInformation `json:"portHardwareInformation,omitempty"`
 
 	// port l2 information
-	PortL2Information *PortEntryPortL2Information `json:"portL2Information,omitempty"`
+	PortL2Information *PortEntryItems0PortL2Information `json:"portL2Information,omitempty"`
 
 	// port l3 information
-	PortL3Information *PortEntryPortL3Information `json:"portL3Information,omitempty"`
+	PortL3Information *PortEntryItems0PortL3Information `json:"portL3Information,omitempty"`
 
 	// The name of the Port interface
 	PortName string `json:"portName,omitempty"`
@@ -37,17 +96,17 @@ type PortEntry struct {
 	PortNo int64 `json:"portNo,omitempty"`
 
 	// port software information
-	PortSoftwareInformation *PortEntryPortSoftwareInformation `json:"portSoftwareInformation,omitempty"`
+	PortSoftwareInformation *PortEntryItems0PortSoftwareInformation `json:"portSoftwareInformation,omitempty"`
 
 	// port statistic information
-	PortStatisticInformation *PortEntryPortStatisticInformation `json:"portStatisticInformation,omitempty"`
+	PortStatisticInformation *PortEntryItems0PortStatisticInformation `json:"portStatisticInformation,omitempty"`
 
 	// network zone
 	Zone string `json:"zone,omitempty"`
 }
 
-// Validate validates this port entry
-func (m *PortEntry) Validate(formats strfmt.Registry) error {
+// Validate validates this port entry items0
+func (m *PortEntryItems0) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validatePortHardwareInformation(formats); err != nil {
@@ -76,7 +135,7 @@ func (m *PortEntry) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *PortEntry) validatePortHardwareInformation(formats strfmt.Registry) error {
+func (m *PortEntryItems0) validatePortHardwareInformation(formats strfmt.Registry) error {
 	if swag.IsZero(m.PortHardwareInformation) { // not required
 		return nil
 	}
@@ -95,7 +154,7 @@ func (m *PortEntry) validatePortHardwareInformation(formats strfmt.Registry) err
 	return nil
 }
 
-func (m *PortEntry) validatePortL2Information(formats strfmt.Registry) error {
+func (m *PortEntryItems0) validatePortL2Information(formats strfmt.Registry) error {
 	if swag.IsZero(m.PortL2Information) { // not required
 		return nil
 	}
@@ -114,7 +173,7 @@ func (m *PortEntry) validatePortL2Information(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *PortEntry) validatePortL3Information(formats strfmt.Registry) error {
+func (m *PortEntryItems0) validatePortL3Information(formats strfmt.Registry) error {
 	if swag.IsZero(m.PortL3Information) { // not required
 		return nil
 	}
@@ -133,7 +192,7 @@ func (m *PortEntry) validatePortL3Information(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *PortEntry) validatePortSoftwareInformation(formats strfmt.Registry) error {
+func (m *PortEntryItems0) validatePortSoftwareInformation(formats strfmt.Registry) error {
 	if swag.IsZero(m.PortSoftwareInformation) { // not required
 		return nil
 	}
@@ -152,7 +211,7 @@ func (m *PortEntry) validatePortSoftwareInformation(formats strfmt.Registry) err
 	return nil
 }
 
-func (m *PortEntry) validatePortStatisticInformation(formats strfmt.Registry) error {
+func (m *PortEntryItems0) validatePortStatisticInformation(formats strfmt.Registry) error {
 	if swag.IsZero(m.PortStatisticInformation) { // not required
 		return nil
 	}
@@ -171,8 +230,8 @@ func (m *PortEntry) validatePortStatisticInformation(formats strfmt.Registry) er
 	return nil
 }
 
-// ContextValidate validate this port entry based on the context it is used
-func (m *PortEntry) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this port entry items0 based on the context it is used
+func (m *PortEntryItems0) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidatePortHardwareInformation(ctx, formats); err != nil {
@@ -201,7 +260,7 @@ func (m *PortEntry) ContextValidate(ctx context.Context, formats strfmt.Registry
 	return nil
 }
 
-func (m *PortEntry) contextValidatePortHardwareInformation(ctx context.Context, formats strfmt.Registry) error {
+func (m *PortEntryItems0) contextValidatePortHardwareInformation(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.PortHardwareInformation != nil {
 		if err := m.PortHardwareInformation.ContextValidate(ctx, formats); err != nil {
@@ -217,7 +276,7 @@ func (m *PortEntry) contextValidatePortHardwareInformation(ctx context.Context, 
 	return nil
 }
 
-func (m *PortEntry) contextValidatePortL2Information(ctx context.Context, formats strfmt.Registry) error {
+func (m *PortEntryItems0) contextValidatePortL2Information(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.PortL2Information != nil {
 		if err := m.PortL2Information.ContextValidate(ctx, formats); err != nil {
@@ -233,7 +292,7 @@ func (m *PortEntry) contextValidatePortL2Information(ctx context.Context, format
 	return nil
 }
 
-func (m *PortEntry) contextValidatePortL3Information(ctx context.Context, formats strfmt.Registry) error {
+func (m *PortEntryItems0) contextValidatePortL3Information(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.PortL3Information != nil {
 		if err := m.PortL3Information.ContextValidate(ctx, formats); err != nil {
@@ -249,7 +308,7 @@ func (m *PortEntry) contextValidatePortL3Information(ctx context.Context, format
 	return nil
 }
 
-func (m *PortEntry) contextValidatePortSoftwareInformation(ctx context.Context, formats strfmt.Registry) error {
+func (m *PortEntryItems0) contextValidatePortSoftwareInformation(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.PortSoftwareInformation != nil {
 		if err := m.PortSoftwareInformation.ContextValidate(ctx, formats); err != nil {
@@ -265,7 +324,7 @@ func (m *PortEntry) contextValidatePortSoftwareInformation(ctx context.Context, 
 	return nil
 }
 
-func (m *PortEntry) contextValidatePortStatisticInformation(ctx context.Context, formats strfmt.Registry) error {
+func (m *PortEntryItems0) contextValidatePortStatisticInformation(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.PortStatisticInformation != nil {
 		if err := m.PortStatisticInformation.ContextValidate(ctx, formats); err != nil {
@@ -282,7 +341,7 @@ func (m *PortEntry) contextValidatePortStatisticInformation(ctx context.Context,
 }
 
 // MarshalBinary interface implementation
-func (m *PortEntry) MarshalBinary() ([]byte, error) {
+func (m *PortEntryItems0) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -290,8 +349,8 @@ func (m *PortEntry) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *PortEntry) UnmarshalBinary(b []byte) error {
-	var res PortEntry
+func (m *PortEntryItems0) UnmarshalBinary(b []byte) error {
+	var res PortEntryItems0
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
@@ -299,10 +358,10 @@ func (m *PortEntry) UnmarshalBinary(b []byte) error {
 	return nil
 }
 
-// PortEntryPortHardwareInformation port entry port hardware information
+// PortEntryItems0PortHardwareInformation port entry items0 port hardware information
 //
-// swagger:model PortEntryPortHardwareInformation
-type PortEntryPortHardwareInformation struct {
+// swagger:model PortEntryItems0PortHardwareInformation
+type PortEntryItems0PortHardwareInformation struct {
 
 	// link status
 	Link bool `json:"link,omitempty"`
@@ -329,18 +388,18 @@ type PortEntryPortHardwareInformation struct {
 	TunnelID int64 `json:"tunnelId,omitempty"`
 }
 
-// Validate validates this port entry port hardware information
-func (m *PortEntryPortHardwareInformation) Validate(formats strfmt.Registry) error {
+// Validate validates this port entry items0 port hardware information
+func (m *PortEntryItems0PortHardwareInformation) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this port entry port hardware information based on context it is used
-func (m *PortEntryPortHardwareInformation) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this port entry items0 port hardware information based on context it is used
+func (m *PortEntryItems0PortHardwareInformation) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *PortEntryPortHardwareInformation) MarshalBinary() ([]byte, error) {
+func (m *PortEntryItems0PortHardwareInformation) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -348,8 +407,8 @@ func (m *PortEntryPortHardwareInformation) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *PortEntryPortHardwareInformation) UnmarshalBinary(b []byte) error {
-	var res PortEntryPortHardwareInformation
+func (m *PortEntryItems0PortHardwareInformation) UnmarshalBinary(b []byte) error {
+	var res PortEntryItems0PortHardwareInformation
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
@@ -357,10 +416,10 @@ func (m *PortEntryPortHardwareInformation) UnmarshalBinary(b []byte) error {
 	return nil
 }
 
-// PortEntryPortL2Information port entry port l2 information
+// PortEntryItems0PortL2Information port entry items0 port l2 information
 //
-// swagger:model PortEntryPortL2Information
-type PortEntryPortL2Information struct {
+// swagger:model PortEntryItems0PortL2Information
+type PortEntryItems0PortL2Information struct {
 
 	// Is PVID config or not
 	IsPvid bool `json:"isPvid,omitempty"`
@@ -369,18 +428,18 @@ type PortEntryPortL2Information struct {
 	Vid int64 `json:"vid,omitempty"`
 }
 
-// Validate validates this port entry port l2 information
-func (m *PortEntryPortL2Information) Validate(formats strfmt.Registry) error {
+// Validate validates this port entry items0 port l2 information
+func (m *PortEntryItems0PortL2Information) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this port entry port l2 information based on context it is used
-func (m *PortEntryPortL2Information) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this port entry items0 port l2 information based on context it is used
+func (m *PortEntryItems0PortL2Information) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *PortEntryPortL2Information) MarshalBinary() ([]byte, error) {
+func (m *PortEntryItems0PortL2Information) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -388,8 +447,8 @@ func (m *PortEntryPortL2Information) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *PortEntryPortL2Information) UnmarshalBinary(b []byte) error {
-	var res PortEntryPortL2Information
+func (m *PortEntryItems0PortL2Information) UnmarshalBinary(b []byte) error {
+	var res PortEntryItems0PortL2Information
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
@@ -397,10 +456,10 @@ func (m *PortEntryPortL2Information) UnmarshalBinary(b []byte) error {
 	return nil
 }
 
-// PortEntryPortL3Information port entry port l3 information
+// PortEntryItems0PortL3Information port entry items0 port l3 information
 //
-// swagger:model PortEntryPortL3Information
-type PortEntryPortL3Information struct {
+// swagger:model PortEntryItems0PortL3Information
+type PortEntryItems0PortL3Information struct {
 
 	// List of IP address v4
 	IPV4Address []string `json:"IPv4Address"`
@@ -412,18 +471,18 @@ type PortEntryPortL3Information struct {
 	Routed bool `json:"routed,omitempty"`
 }
 
-// Validate validates this port entry port l3 information
-func (m *PortEntryPortL3Information) Validate(formats strfmt.Registry) error {
+// Validate validates this port entry items0 port l3 information
+func (m *PortEntryItems0PortL3Information) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this port entry port l3 information based on context it is used
-func (m *PortEntryPortL3Information) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this port entry items0 port l3 information based on context it is used
+func (m *PortEntryItems0PortL3Information) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *PortEntryPortL3Information) MarshalBinary() ([]byte, error) {
+func (m *PortEntryItems0PortL3Information) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -431,8 +490,8 @@ func (m *PortEntryPortL3Information) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *PortEntryPortL3Information) UnmarshalBinary(b []byte) error {
-	var res PortEntryPortL3Information
+func (m *PortEntryItems0PortL3Information) UnmarshalBinary(b []byte) error {
+	var res PortEntryItems0PortL3Information
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
@@ -440,10 +499,10 @@ func (m *PortEntryPortL3Information) UnmarshalBinary(b []byte) error {
 	return nil
 }
 
-// PortEntryPortSoftwareInformation port entry port software information
+// PortEntryItems0PortSoftwareInformation port entry items0 port software information
 //
-// swagger:model PortEntryPortSoftwareInformation
-type PortEntryPortSoftwareInformation struct {
+// swagger:model PortEntryItems0PortSoftwareInformation
+type PortEntryItems0PortSoftwareInformation struct {
 
 	// The status of the eBPF loaded
 	BpfLoaded bool `json:"bpfLoaded,omitempty"`
@@ -461,18 +520,18 @@ type PortEntryPortSoftwareInformation struct {
 	PortType int64 `json:"portType,omitempty"`
 }
 
-// Validate validates this port entry port software information
-func (m *PortEntryPortSoftwareInformation) Validate(formats strfmt.Registry) error {
+// Validate validates this port entry items0 port software information
+func (m *PortEntryItems0PortSoftwareInformation) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this port entry port software information based on context it is used
-func (m *PortEntryPortSoftwareInformation) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this port entry items0 port software information based on context it is used
+func (m *PortEntryItems0PortSoftwareInformation) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *PortEntryPortSoftwareInformation) MarshalBinary() ([]byte, error) {
+func (m *PortEntryItems0PortSoftwareInformation) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -480,8 +539,8 @@ func (m *PortEntryPortSoftwareInformation) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *PortEntryPortSoftwareInformation) UnmarshalBinary(b []byte) error {
-	var res PortEntryPortSoftwareInformation
+func (m *PortEntryItems0PortSoftwareInformation) UnmarshalBinary(b []byte) error {
+	var res PortEntryItems0PortSoftwareInformation
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
@@ -489,10 +548,10 @@ func (m *PortEntryPortSoftwareInformation) UnmarshalBinary(b []byte) error {
 	return nil
 }
 
-// PortEntryPortStatisticInformation port entry port statistic information
+// PortEntryItems0PortStatisticInformation port entry items0 port statistic information
 //
-// swagger:model PortEntryPortStatisticInformation
-type PortEntryPortStatisticInformation struct {
+// swagger:model PortEntryItems0PortStatisticInformation
+type PortEntryItems0PortStatisticInformation struct {
 
 	// Statistic of the ingress port bytes.
 	RxBytes int64 `json:"rxBytes,omitempty"`
@@ -513,18 +572,18 @@ type PortEntryPortStatisticInformation struct {
 	TxPackets int64 `json:"txPackets,omitempty"`
 }
 
-// Validate validates this port entry port statistic information
-func (m *PortEntryPortStatisticInformation) Validate(formats strfmt.Registry) error {
+// Validate validates this port entry items0 port statistic information
+func (m *PortEntryItems0PortStatisticInformation) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this port entry port statistic information based on context it is used
-func (m *PortEntryPortStatisticInformation) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this port entry items0 port statistic information based on context it is used
+func (m *PortEntryItems0PortStatisticInformation) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *PortEntryPortStatisticInformation) MarshalBinary() ([]byte, error) {
+func (m *PortEntryItems0PortStatisticInformation) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -532,8 +591,8 @@ func (m *PortEntryPortStatisticInformation) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *PortEntryPortStatisticInformation) UnmarshalBinary(b []byte) error {
-	var res PortEntryPortStatisticInformation
+func (m *PortEntryItems0PortStatisticInformation) UnmarshalBinary(b []byte) error {
+	var res PortEntryItems0PortStatisticInformation
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

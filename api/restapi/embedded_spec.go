@@ -419,6 +419,265 @@ func init() {
           }
         }
       }
+    },
+    "/config/session": {
+      "post": {
+        "description": "Create a new session config for 5G.",
+        "summary": "Create a new session config",
+        "parameters": [
+          {
+            "description": "Attributes for 5G service session",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SessionEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/session/ident/{ident}": {
+      "delete": {
+        "description": "Create a new load balancer service with .",
+        "summary": "Create a new Load balancer service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes 5G session Ident.",
+            "name": "ident",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/sessionulcl": {
+      "post": {
+        "description": "Create a new session config for 5G.",
+        "summary": "Create a new session config",
+        "parameters": [
+          {
+            "description": "Attributes for 5G service session",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SessionUlClEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/sessionulcl/ident/{ident}/ulclAddress/{ip_address}": {
+      "delete": {
+        "description": "Create a new load balancer service with .",
+        "summary": "Create a new Load balancer service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes 5G session Ident.",
+            "name": "ident",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes for session ulcl address",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -534,153 +793,155 @@ func init() {
       }
     },
     "PortEntry": {
-      "type": "object",
-      "properties": {
-        "DataplaneSync": {
-          "description": "Dataplan Sync check",
-          "type": "integer"
-        },
-        "portHardwareInformation": {
-          "type": "object",
-          "properties": {
-            "link": {
-              "description": "link status",
-              "type": "boolean"
-            },
-            "macAddress": {
-              "description": "MAC address of the port",
-              "type": "string"
-            },
-            "master": {
-              "description": "Port's mater",
-              "type": "string"
-            },
-            "mtu": {
-              "description": "MTU of the port",
-              "type": "integer"
-            },
-            "rawMacAddress": {
-              "description": "MAC address written by byte array",
-              "type": "array",
-              "items": {
+      "type": "array",
+      "items": {
+        "properties": {
+          "DataplaneSync": {
+            "description": "Dataplan Sync check",
+            "type": "integer"
+          },
+          "portHardwareInformation": {
+            "type": "object",
+            "properties": {
+              "link": {
+                "description": "link status",
+                "type": "boolean"
+              },
+              "macAddress": {
+                "description": "MAC address of the port",
+                "type": "string"
+              },
+              "master": {
+                "description": "Port's mater",
+                "type": "string"
+              },
+              "mtu": {
+                "description": "MTU of the port",
+                "type": "integer"
+              },
+              "rawMacAddress": {
+                "description": "MAC address written by byte array",
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "real": {
+                "description": "real port..",
+                "type": "string"
+              },
+              "state": {
+                "description": "state...",
+                "type": "boolean"
+              },
+              "tunnelId": {
+                "description": "Tunnel Id such as VxLAN.",
                 "type": "integer"
               }
-            },
-            "real": {
-              "description": "real port..",
-              "type": "string"
-            },
-            "state": {
-              "description": "state...",
-              "type": "boolean"
-            },
-            "tunnelId": {
-              "description": "Tunnel Id such as VxLAN.",
-              "type": "integer"
             }
-          }
-        },
-        "portL2Information": {
-          "type": "object",
-          "properties": {
-            "isPvid": {
-              "description": "Is PVID config or not",
-              "type": "boolean"
-            },
-            "vid": {
-              "description": "virtual lan id(VLAN ID)",
-              "type": "integer"
-            }
-          }
-        },
-        "portL3Information": {
-          "type": "object",
-          "properties": {
-            "IPv4Address": {
-              "description": "List of IP address v4",
-              "type": "array",
-              "items": {
-                "type": "string"
+          },
+          "portL2Information": {
+            "type": "object",
+            "properties": {
+              "isPvid": {
+                "description": "Is PVID config or not",
+                "type": "boolean"
+              },
+              "vid": {
+                "description": "virtual lan id(VLAN ID)",
+                "type": "integer"
               }
-            },
-            "IPv6Address": {
-              "description": "List of the IP address v6",
-              "type": "array",
-              "items": {
-                "type": "string"
+            }
+          },
+          "portL3Information": {
+            "type": "object",
+            "properties": {
+              "IPv4Address": {
+                "description": "List of IP address v4",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "IPv6Address": {
+                "description": "List of the IP address v6",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "routed": {
+                "description": "Is routed or not",
+                "type": "boolean"
               }
-            },
-            "routed": {
-              "description": "Is routed or not",
-              "type": "boolean"
             }
-          }
-        },
-        "portName": {
-          "description": "The name of the Port interface",
-          "type": "string"
-        },
-        "portNo": {
-          "description": "Index of the Port",
-          "type": "integer"
-        },
-        "portSoftwareInformation": {
-          "type": "object",
-          "properties": {
-            "bpfLoaded": {
-              "description": "The status of the eBPF loaded",
-              "type": "boolean"
-            },
-            "osId": {
-              "description": "The ID of the Port in the software(OS)",
-              "type": "integer"
-            },
-            "portActive": {
-              "description": "Activation status of the port",
-              "type": "boolean"
-            },
-            "portProp": {
-              "description": "Priority of the port",
-              "type": "integer"
-            },
-            "portType": {
-              "description": "port type",
-              "type": "integer"
+          },
+          "portName": {
+            "description": "The name of the Port interface",
+            "type": "string"
+          },
+          "portNo": {
+            "description": "Index of the Port",
+            "type": "integer"
+          },
+          "portSoftwareInformation": {
+            "type": "object",
+            "properties": {
+              "bpfLoaded": {
+                "description": "The status of the eBPF loaded",
+                "type": "boolean"
+              },
+              "osId": {
+                "description": "The ID of the Port in the software(OS)",
+                "type": "integer"
+              },
+              "portActive": {
+                "description": "Activation status of the port",
+                "type": "boolean"
+              },
+              "portProp": {
+                "description": "Priority of the port",
+                "type": "integer"
+              },
+              "portType": {
+                "description": "port type",
+                "type": "integer"
+              }
             }
-          }
-        },
-        "portStatisticInformation": {
-          "type": "object",
-          "properties": {
-            "rxBytes": {
-              "description": "Statistic of the ingress port bytes.",
-              "type": "integer"
-            },
-            "rxErrors": {
-              "description": "Statistic of the number of ingress Error packets.",
-              "type": "integer"
-            },
-            "rxPackets": {
-              "description": "Statistic of the number of ingress packets.",
-              "type": "integer"
-            },
-            "txBytes": {
-              "description": "Statistic of the egress port bytes.",
-              "type": "integer"
-            },
-            "txErrors": {
-              "description": "Statistic of the number of egress Error packets.",
-              "type": "integer"
-            },
-            "txPackets": {
-              "description": "Statistic of the number of egress packets.",
-              "type": "integer"
+          },
+          "portStatisticInformation": {
+            "type": "object",
+            "properties": {
+              "rxBytes": {
+                "description": "Statistic of the ingress port bytes.",
+                "type": "integer"
+              },
+              "rxErrors": {
+                "description": "Statistic of the number of ingress Error packets.",
+                "type": "integer"
+              },
+              "rxPackets": {
+                "description": "Statistic of the number of ingress packets.",
+                "type": "integer"
+              },
+              "txBytes": {
+                "description": "Statistic of the egress port bytes.",
+                "type": "integer"
+              },
+              "txErrors": {
+                "description": "Statistic of the number of egress Error packets.",
+                "type": "integer"
+              },
+              "txPackets": {
+                "description": "Statistic of the number of egress packets.",
+                "type": "integer"
+              }
             }
+          },
+          "zone": {
+            "description": "network zone",
+            "type": "string"
           }
-        },
-        "zone": {
-          "description": "network zone",
-          "type": "string"
         }
       }
     },
@@ -694,6 +955,67 @@ func init() {
         "gateway": {
           "description": "IP address for nexthop",
           "type": "string"
+        }
+      }
+    },
+    "SessionEntry": {
+      "type": "object",
+      "properties": {
+        "accessNetworkTunnel": {
+          "type": "object",
+          "properties": {
+            "Address": {
+              "description": "Access network IP address",
+              "type": "string"
+            },
+            "TeID": {
+              "description": "ID of the tunnel",
+              "type": "number"
+            }
+          }
+        },
+        "connectionNetworkTunnel": {
+          "type": "object",
+          "properties": {
+            "Address": {
+              "description": "Connection network IP address",
+              "type": "string"
+            },
+            "TeID": {
+              "description": "ID of the tunnel",
+              "type": "number"
+            }
+          }
+        },
+        "ident": {
+          "description": "IP address and netmask",
+          "type": "string"
+        },
+        "ipAddress": {
+          "description": "IP address for nexthop",
+          "type": "string"
+        }
+      }
+    },
+    "SessionUlClEntry": {
+      "type": "object",
+      "properties": {
+        "ident": {
+          "description": "IP address and netmask",
+          "type": "string"
+        },
+        "ulclArgument": {
+          "type": "object",
+          "properties": {
+            "Address": {
+              "description": "Access network IP address",
+              "type": "string"
+            },
+            "qfi": {
+              "description": "...?",
+              "type": "number"
+            }
+          }
         }
       }
     }
@@ -1101,6 +1423,265 @@ func init() {
           }
         }
       }
+    },
+    "/config/session": {
+      "post": {
+        "description": "Create a new session config for 5G.",
+        "summary": "Create a new session config",
+        "parameters": [
+          {
+            "description": "Attributes for 5G service session",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SessionEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/session/ident/{ident}": {
+      "delete": {
+        "description": "Create a new load balancer service with .",
+        "summary": "Create a new Load balancer service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes 5G session Ident.",
+            "name": "ident",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/sessionulcl": {
+      "post": {
+        "description": "Create a new session config for 5G.",
+        "summary": "Create a new session config",
+        "parameters": [
+          {
+            "description": "Attributes for 5G service session",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SessionUlClEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/sessionulcl/ident/{ident}/ulclAddress/{ip_address}": {
+      "delete": {
+        "description": "Create a new load balancer service with .",
+        "summary": "Create a new Load balancer service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes 5G session Ident.",
+            "name": "ident",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes for session ulcl address",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -1268,7 +1849,12 @@ func init() {
       }
     },
     "PortEntry": {
-      "type": "object",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PortEntryItems0"
+      }
+    },
+    "PortEntryItems0": {
       "properties": {
         "DataplaneSync": {
           "description": "Dataplan Sync check",
@@ -1418,7 +2004,7 @@ func init() {
         }
       }
     },
-    "PortEntryPortHardwareInformation": {
+    "PortEntryItems0PortHardwareInformation": {
       "type": "object",
       "properties": {
         "link": {
@@ -1458,7 +2044,7 @@ func init() {
         }
       }
     },
-    "PortEntryPortL2Information": {
+    "PortEntryItems0PortL2Information": {
       "type": "object",
       "properties": {
         "isPvid": {
@@ -1471,7 +2057,7 @@ func init() {
         }
       }
     },
-    "PortEntryPortL3Information": {
+    "PortEntryItems0PortL3Information": {
       "type": "object",
       "properties": {
         "IPv4Address": {
@@ -1494,7 +2080,7 @@ func init() {
         }
       }
     },
-    "PortEntryPortSoftwareInformation": {
+    "PortEntryItems0PortSoftwareInformation": {
       "type": "object",
       "properties": {
         "bpfLoaded": {
@@ -1519,7 +2105,7 @@ func init() {
         }
       }
     },
-    "PortEntryPortStatisticInformation": {
+    "PortEntryItems0PortStatisticInformation": {
       "type": "object",
       "properties": {
         "rxBytes": {
@@ -1558,6 +2144,106 @@ func init() {
         "gateway": {
           "description": "IP address for nexthop",
           "type": "string"
+        }
+      }
+    },
+    "SessionEntry": {
+      "type": "object",
+      "properties": {
+        "accessNetworkTunnel": {
+          "type": "object",
+          "properties": {
+            "Address": {
+              "description": "Access network IP address",
+              "type": "string"
+            },
+            "TeID": {
+              "description": "ID of the tunnel",
+              "type": "number"
+            }
+          }
+        },
+        "connectionNetworkTunnel": {
+          "type": "object",
+          "properties": {
+            "Address": {
+              "description": "Connection network IP address",
+              "type": "string"
+            },
+            "TeID": {
+              "description": "ID of the tunnel",
+              "type": "number"
+            }
+          }
+        },
+        "ident": {
+          "description": "IP address and netmask",
+          "type": "string"
+        },
+        "ipAddress": {
+          "description": "IP address for nexthop",
+          "type": "string"
+        }
+      }
+    },
+    "SessionEntryAccessNetworkTunnel": {
+      "type": "object",
+      "properties": {
+        "Address": {
+          "description": "Access network IP address",
+          "type": "string"
+        },
+        "TeID": {
+          "description": "ID of the tunnel",
+          "type": "number"
+        }
+      }
+    },
+    "SessionEntryConnectionNetworkTunnel": {
+      "type": "object",
+      "properties": {
+        "Address": {
+          "description": "Connection network IP address",
+          "type": "string"
+        },
+        "TeID": {
+          "description": "ID of the tunnel",
+          "type": "number"
+        }
+      }
+    },
+    "SessionUlClEntry": {
+      "type": "object",
+      "properties": {
+        "ident": {
+          "description": "IP address and netmask",
+          "type": "string"
+        },
+        "ulclArgument": {
+          "type": "object",
+          "properties": {
+            "Address": {
+              "description": "Access network IP address",
+              "type": "string"
+            },
+            "qfi": {
+              "description": "...?",
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "SessionUlClEntryUlclArgument": {
+      "type": "object",
+      "properties": {
+        "Address": {
+          "description": "Access network IP address",
+          "type": "string"
+        },
+        "qfi": {
+          "description": "...?",
+          "type": "number"
         }
       }
     }

@@ -378,6 +378,185 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+
+#----------------------------------------------
+# Session
+#----------------------------------------------
+  '/config/session':
+    post:
+      summary: Create a new session config
+      description: Create a new session config for 5G.
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes for 5G service session
+          schema:
+            $ref: '#/definitions/SessionEntry'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+ 
+  '/config/session/ident/{ident}':
+    delete:
+      summary: Create a new Load balancer service
+      description: Create a new load balancer service with .
+      parameters:
+        - name: ident
+          in: path
+          type: string
+          required: true
+          description: Attributes 5G session Ident.
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/config/sessionulcl':
+    post:
+      summary: Create a new session config
+      description: Create a new session config for 5G.
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes for 5G service session
+          schema:
+            $ref: '#/definitions/SessionUlClEntry'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+ 
+  '/config/sessionulcl/ident/{ident}/ulclAddress/{ip_address}':
+    delete:
+      summary: Create a new Load balancer service
+      description: Create a new load balancer service with .
+      parameters:
+        - name: ident
+          in: path
+          type: string
+          required: true
+          description: Attributes 5G session Ident.
+        - name: ip_address
+          in: path
+          type: string
+          required: true
+          description: Attributes for session ulcl address
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'            
+
 #----------------------------------------------
 # Schema definitions
 #----------------------------------------------
@@ -474,111 +653,187 @@ definitions:
           description:  value for Conntrack Act
 
   PortEntry:
+    type: array
+    items:
+      properties:
+        portName:
+          type: string
+          description: The name of the Port interface
+        portNo:
+            type: integer
+            description:  Index of the Port
+        zone:
+          type: string
+          description: network zone
+        portSoftwareInformation:
+          type: object
+          properties:
+            osId:
+              type: integer
+              description: The ID of the Port in the software(OS)
+            portType:
+              type: integer
+              description: port type
+            portProp:
+              type: integer
+              description: Priority of the port
+            portActive:
+              type: boolean
+              description: Activation status of the port
+            bpfLoaded:
+              type: boolean
+              description: The status of the eBPF loaded 
+              
+        portHardwareInformation:
+          type: object
+          properties:
+            rawMacAddress:
+              type: array
+              description: MAC address written by byte array
+              items:
+                type: integer
+            macAddress:
+              type: string
+              description: MAC address of the port
+            mtu:
+              type: integer
+              description: MTU of the port
+            link:
+              type: boolean
+              description: link status
+            state:
+              type: boolean
+              description: state...
+            master:
+              type: string
+              description: Port's mater
+            real:
+              type: string
+              description: real port..
+            tunnelId:
+              type: integer
+              description: Tunnel Id such as VxLAN.
+        portStatisticInformation:
+          type: object
+          properties:
+            rxBytes:
+              type: integer
+              description: Statistic of the ingress port bytes.
+            txBytes:
+              type: integer
+              description: Statistic of the egress port bytes.
+            rxPackets:
+              type: integer
+              description: Statistic of the number of ingress packets.
+            txPackets:
+              type: integer
+              description: Statistic of the number of egress packets.
+            rxErrors:
+              type: integer
+              description: Statistic of the number of ingress Error packets.
+            txErrors:
+              type: integer
+              description: Statistic of the number of egress Error packets.
+        portL3Information:
+          type: object
+          properties:
+            routed:
+              type: boolean
+              description: Is routed or not
+            IPv4Address:
+              type: array
+              description: List of IP address v4
+              items:
+                type: string
+            IPv6Address:
+              type: array
+              description: List of the IP address v6
+              items:
+                type: string
+        portL2Information:
+          type: object
+          properties:
+            isPvid:
+              type: boolean
+              description: Is PVID config or not
+            vid:
+              type: integer
+              description: virtual lan id(VLAN ID)
+        DataplaneSync:
+          type: integer
+          description: Dataplan Sync check
+  
+  SessionEntry:
     type: object
     properties:
-      portName:
+      ident:
         type: string
-        description: The name of the Port interface
-      portNo:
-          type: integer
-          description:  Index of the Port
-      zone:
+        description: IP address and netmask
+      ipAddress:
         type: string
-        description: network zone
-      portSoftwareInformation:
+        description: IP address for nexthop
+      accessNetworkTunnel:
         type: object
         properties:
-          osId:
-            type: integer
-            description: The ID of the Port in the software(OS)
-          portType:
-            type: integer
-            description: port type
-          portProp:
-            type: integer
-            description: Priority of the port
-          portActive:
-            type: boolean
-            description: Activation status of the port
-          bpfLoaded:
-            type: boolean
-            description: The status of the eBPF loaded 
-            
-      portHardwareInformation:
-        type: object
-        properties:
-          rawMacAddress:
-            type: array
-            description: MAC address written by byte array
-            items:
-              type: integer
-          macAddress:
+          TeID:
+            type: number
+            description: ID of the tunnel
+          Address:
             type: string
-            description: MAC address of the port
-          mtu:
-            type: integer
-            description: MTU of the port
-          link:
-            type: boolean
-            description: link status
-          state:
-            type: boolean
-            description: state...
-          master:
+            description: Access network IP address
+      connectionNetworkTunnel:
+        type: object
+        properties:
+          TeID:
+            type: number
+            description: ID of the tunnel
+          Address:
             type: string
-            description: Port's mater
-          real:
+            description: Connection network IP address
+        
+  SessionUlClEntry:
+    type: object
+    properties:
+      ident:
+        type: string
+        description: IP address and netmask
+      ulclArgument:
+        type: object
+        properties:
+          qfi:
+            type: number
+            description: ...?
+          Address:
             type: string
-            description: real port..
-          tunnelId:
-            type: integer
-            description: Tunnel Id such as VxLAN.
-      portStatisticInformation:
-        type: object
-        properties:
-          rxBytes:
-            type: integer
-            description: Statistic of the ingress port bytes.
-          txBytes:
-            type: integer
-            description: Statistic of the egress port bytes.
-          rxPackets:
-            type: integer
-            description: Statistic of the number of ingress packets.
-          txPackets:
-            type: integer
-            description: Statistic of the number of egress packets.
-          rxErrors:
-            type: integer
-            description: Statistic of the number of ingress Error packets.
-          txErrors:
-            type: integer
-            description: Statistic of the number of egress Error packets.
-      portL3Information:
-        type: object
-        properties:
-          routed:
-            type: boolean
-            description: Is routed or not
-          IPv4Address:
-            type: array
-            description: List of IP address v4
-            items:
-              type: string
-          IPv6Address:
-            type: array
-            description: List of the IP address v6
-            items:
-              type: string
-      portL2Information:
-        type: object
-        properties:
-          isPvid:
-            type: boolean
-            description: Is PVID config or not
-          vid:
-            type: integer
-            description: virtual lan id(VLAN ID)
-      DataplaneSync:
-        type: integer
-        description: Dataplan Sync check
+            description: Access network IP address
+    
+  VlanPortMod:
+    type: object
+    properties:
+      Vid:
+        type: number
+        description: Vlan ID
+      Dev:
+        type: string
+        description: Interface device name
+      Tagged:
+        type: boolean
+        description: Tagged status added
+    
+  IPv4AddressMod:
+    type: object
+    properties:
+      Dev:
+        type: string
+        description: Name of the interface device to which you want to modify the IP address
+      IpAddress:
+        type: string
+        description: IP address to modify.
+
+  Neighborv4Mod:
+    type: object
+    properties:
+      IpAddress:
+        type: string
+        description: IP address to neighbor
+        
