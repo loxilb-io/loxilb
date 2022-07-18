@@ -60,6 +60,12 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.PostConfigRouteHandler = operations.PostConfigRouteHandlerFunc(handler.ConfigPostRoute)
 	api.DeleteConfigRouteDestinationIPNetIPAddressMaskHandler = operations.DeleteConfigRouteDestinationIPNetIPAddressMaskHandlerFunc(handler.ConfigDeleteRoute)
 
+	// Session, SessionUlCl Add and delete
+	api.PostConfigSessionHandler = operations.PostConfigSessionHandlerFunc(handler.ConfigPostSession)
+	api.PostConfigSessionulclHandler = operations.PostConfigSessionulclHandlerFunc(handler.ConfigPostSessionUlCl)
+	api.DeleteConfigSessionIdentIdentHandler = operations.DeleteConfigSessionIdentIdentHandlerFunc(handler.ConfigDeleteSession)
+	api.DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler = operations.DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandlerFunc(handler.ConfigDeleteSessionUlCl)
+
 	api.PreServerShutdown = func() {}
 
 	api.ServerShutdown = func() {
