@@ -492,74 +492,62 @@ func RUWorkSingle(m nlp.RouteUpdate) int {
 }
 
 func LUWorker(ch chan nlp.LinkUpdate, f chan struct{}) {
-	for {
-		for n := 0; n < cmn.LU_WORKQ_LEN; n++ {
-			select {
-			case m := <-ch:
-				LUWorkSingle(m)
-			case <-f:
-				return
-			default:
-				continue
-			}
+
+	for n := 0; n < cmn.LU_WORKQ_LEN; n++ {
+		select {
+		case m := <-ch:
+			LUWorkSingle(m)
+		default:
+			continue
 		}
-		time.Sleep(1000 * time.Millisecond)
 	}
 }
 
 func AUWorker(ch chan nlp.AddrUpdate, f chan struct{}) {
-	for {
-		for n := 0; n < cmn.AU_WORKQ_LEN; n++ {
-			select {
-			case m := <-ch:
-				AUWorkSingle(m)
-			case <-f:
-				return
-			default:
-				continue
-			}
+
+	for n := 0; n < cmn.AU_WORKQ_LEN; n++ {
+		select {
+		case m := <-ch:
+			AUWorkSingle(m)
+		default:
+			continue
 		}
-		time.Sleep(1000 * time.Millisecond)
 	}
+
 }
 
 func NUWorker(ch chan nlp.NeighUpdate, f chan struct{}) {
-	for {
-		for n := 0; n < cmn.NU_WORKQ_LEN; n++ {
-			select {
-			case m := <-ch:
-				NUWorkSingle(m)
-			case <-f:
-				return
-			default:
-				continue
-			}
+
+	for n := 0; n < cmn.NU_WORKQ_LEN; n++ {
+		select {
+		case m := <-ch:
+			NUWorkSingle(m)
+		default:
+			continue
 		}
-		time.Sleep(1000 * time.Millisecond)
 	}
 }
 
 func RUWorker(ch chan nlp.RouteUpdate, f chan struct{}) {
-	for {
-		for n := 0; n < cmn.RU_WORKQ_LEN; n++ {
-			select {
-			case m := <-ch:
-				RUWorkSingle(m)
-			case <-f:
-				return
-			default:
-				continue
-			}
+
+	for n := 0; n < cmn.RU_WORKQ_LEN; n++ {
+		select {
+		case m := <-ch:
+			RUWorkSingle(m)
+		default:
+			continue
 		}
-		time.Sleep(1000 * time.Millisecond)
 	}
 }
 
 func NLWorker(nNl *NlH) {
-	LUWorker(nNl.FromLUCh, nNl.FromLUDone)
-	AUWorker(nNl.FromAUCh, nNl.FromAUDone)
-	NUWorker(nNl.FromNUCh, nNl.FromNUDone)
-	RUWorker(nNl.FromRUCh, nNl.FromRUDone)
+	for { /* Single thread for reading all NL msgs in below order */
+		LUWorker(nNl.FromLUCh, nNl.FromLUDone)
+		AUWorker(nNl.FromAUCh, nNl.FromAUDone)
+		NUWorker(nNl.FromNUCh, nNl.FromNUDone)
+		RUWorker(nNl.FromRUCh, nNl.FromRUDone)
+		time.Sleep(1000 * time.Millisecond)
+	}
 }
 
 func GetBridges() {
@@ -701,7 +689,7 @@ func NlpInit() *NlH {
 	} else {
 		tk.LogIt(tk.LOG_INFO, "[NLP] Route msgs subscribed\n")
 	}
-	
+
 	go NLWorker(nNl)
 	tk.LogIt(tk.LOG_INFO, "[NLP] NLP Subscription done\n")
 	return nNl
