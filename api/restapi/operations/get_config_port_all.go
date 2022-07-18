@@ -69,7 +69,7 @@ func (o *GetConfigPortAll) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 type GetConfigPortAllOKBody struct {
 
 	// attr
-	Attr *models.PortEntry `json:"attr,omitempty"`
+	Attr models.PortEntry `json:"attr"`
 }
 
 // Validate validates this get config port all o k body
@@ -91,15 +91,13 @@ func (o *GetConfigPortAllOKBody) validateAttr(formats strfmt.Registry) error {
 		return nil
 	}
 
-	if o.Attr != nil {
-		if err := o.Attr.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("getConfigPortAllOK" + "." + "attr")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("getConfigPortAllOK" + "." + "attr")
-			}
-			return err
+	if err := o.Attr.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("getConfigPortAllOK" + "." + "attr")
+		} else if ce, ok := err.(*errors.CompositeError); ok {
+			return ce.ValidateName("getConfigPortAllOK" + "." + "attr")
 		}
+		return err
 	}
 
 	return nil
@@ -121,15 +119,13 @@ func (o *GetConfigPortAllOKBody) ContextValidate(ctx context.Context, formats st
 
 func (o *GetConfigPortAllOKBody) contextValidateAttr(ctx context.Context, formats strfmt.Registry) error {
 
-	if o.Attr != nil {
-		if err := o.Attr.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("getConfigPortAllOK" + "." + "attr")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("getConfigPortAllOK" + "." + "attr")
-			}
-			return err
+	if err := o.Attr.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("getConfigPortAllOK" + "." + "attr")
+		} else if ce, ok := err.(*errors.CompositeError); ok {
+			return ce.ValidateName("getConfigPortAllOK" + "." + "attr")
 		}
+		return err
 	}
 
 	return nil

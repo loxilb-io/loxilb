@@ -48,6 +48,12 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		DeleteConfigRouteDestinationIPNetIPAddressMaskHandler: DeleteConfigRouteDestinationIPNetIPAddressMaskHandlerFunc(func(params DeleteConfigRouteDestinationIPNetIPAddressMaskParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigRouteDestinationIPNetIPAddressMask has not yet been implemented")
 		}),
+		DeleteConfigSessionIdentIdentHandler: DeleteConfigSessionIdentIdentHandlerFunc(func(params DeleteConfigSessionIdentIdentParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigSessionIdentIdent has not yet been implemented")
+		}),
+		DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler: DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandlerFunc(func(params DeleteConfigSessionulclIdentIdentUlclAddressIPAddressParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigSessionulclIdentIdentUlclAddressIPAddress has not yet been implemented")
+		}),
 		GetConfigConntrackAllHandler: GetConfigConntrackAllHandlerFunc(func(params GetConfigConntrackAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigConntrackAll has not yet been implemented")
 		}),
@@ -62,6 +68,12 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		}),
 		PostConfigRouteHandler: PostConfigRouteHandlerFunc(func(params PostConfigRouteParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigRoute has not yet been implemented")
+		}),
+		PostConfigSessionHandler: PostConfigSessionHandlerFunc(func(params PostConfigSessionParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigSession has not yet been implemented")
+		}),
+		PostConfigSessionulclHandler: PostConfigSessionulclHandlerFunc(func(params PostConfigSessionulclParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigSessionulcl has not yet been implemented")
 		}),
 	}
 }
@@ -103,6 +115,10 @@ type LoxilbRestAPIAPI struct {
 	DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler
 	// DeleteConfigRouteDestinationIPNetIPAddressMaskHandler sets the operation handler for the delete config route destination IP net IP address mask operation
 	DeleteConfigRouteDestinationIPNetIPAddressMaskHandler DeleteConfigRouteDestinationIPNetIPAddressMaskHandler
+	// DeleteConfigSessionIdentIdentHandler sets the operation handler for the delete config session ident ident operation
+	DeleteConfigSessionIdentIdentHandler DeleteConfigSessionIdentIdentHandler
+	// DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler sets the operation handler for the delete config sessionulcl ident ident ulcl address IP address operation
+	DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler
 	// GetConfigConntrackAllHandler sets the operation handler for the get config conntrack all operation
 	GetConfigConntrackAllHandler GetConfigConntrackAllHandler
 	// GetConfigLoadbalancerAllHandler sets the operation handler for the get config loadbalancer all operation
@@ -113,6 +129,10 @@ type LoxilbRestAPIAPI struct {
 	PostConfigLoadbalancerHandler PostConfigLoadbalancerHandler
 	// PostConfigRouteHandler sets the operation handler for the post config route operation
 	PostConfigRouteHandler PostConfigRouteHandler
+	// PostConfigSessionHandler sets the operation handler for the post config session operation
+	PostConfigSessionHandler PostConfigSessionHandler
+	// PostConfigSessionulclHandler sets the operation handler for the post config sessionulcl operation
+	PostConfigSessionulclHandler PostConfigSessionulclHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -196,6 +216,12 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.DeleteConfigRouteDestinationIPNetIPAddressMaskHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigRouteDestinationIPNetIPAddressMaskHandler")
 	}
+	if o.DeleteConfigSessionIdentIdentHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigSessionIdentIdentHandler")
+	}
+	if o.DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler")
+	}
 	if o.GetConfigConntrackAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigConntrackAllHandler")
 	}
@@ -210,6 +236,12 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.PostConfigRouteHandler == nil {
 		unregistered = append(unregistered, "PostConfigRouteHandler")
+	}
+	if o.PostConfigSessionHandler == nil {
+		unregistered = append(unregistered, "PostConfigSessionHandler")
+	}
+	if o.PostConfigSessionulclHandler == nil {
+		unregistered = append(unregistered, "PostConfigSessionulclHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -307,6 +339,14 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/config/route/destinationIPNet/{ip_address}/{mask}"] = NewDeleteConfigRouteDestinationIPNetIPAddressMask(o.context, o.DeleteConfigRouteDestinationIPNetIPAddressMaskHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/config/session/ident/{ident}"] = NewDeleteConfigSessionIdentIdent(o.context, o.DeleteConfigSessionIdentIdentHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/config/sessionulcl/ident/{ident}/ulclAddress/{ip_address}"] = NewDeleteConfigSessionulclIdentIdentUlclAddressIPAddress(o.context, o.DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -327,6 +367,14 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/config/route"] = NewPostConfigRoute(o.context, o.PostConfigRouteHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/session"] = NewPostConfigSession(o.context, o.PostConfigSessionHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/sessionulcl"] = NewPostConfigSessionulcl(o.context, o.PostConfigSessionulclHandler)
 }
 
 // Serve creates a http handler to serve the API over HTTP
