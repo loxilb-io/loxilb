@@ -1,3 +1,5 @@
+[![Build Status](https://app.travis-ci.com/loxilb-io/loxilb.svg?branch=main)](https://app.travis-ci.com/loxilb-io/loxilb)
+
 ## What is loxilb
 
 loxilb is a cloud-native networking/security stack built from grounds up using eBPF at its core. loxilb aims to provide the following :
@@ -59,6 +61,3 @@ sudo ./loxilb
 
 
 We encourage loxilb users to follow various guides in loxilb docs [repository](https://github.com/loxilb-io/loxilbdocs)
-
-
-[![Build Status](https://app.travis-ci.com/loxilb-io/loxilb.svg?branch=main)](https://app.travis-ci.com/loxilb-io/loxilb)
