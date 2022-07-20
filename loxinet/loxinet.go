@@ -100,10 +100,10 @@ func loxiNetInit() {
     }
 
     if opts.Opts.Bgp {
-		mh.bgp = GoBgpInit()
+        mh.bgp = GoBgpInit()
     }
 
-    if opts.Opts.Api {
+    if opts.Opts.NoApi == false {
         apiserver.RegisterApiHooks(NetApiInit())
         go apiserver.RunApiServer()
     }
@@ -143,16 +143,16 @@ func LoxiNetMain() {
         //mh.zr.Rules.DeleteNatLbRule(lbServ)
 
         // Session information 
-        anTun := cmn.SessTun{TeID:1, Addr:net.IP{172, 17, 1, 231}} // An TeID, gNBIP
-        cnTun := cmn.SessTun{TeID:1, Addr:net.IP{172, 17, 1, 50}}  // Cn TeID, MyIP
+        anTun := cmn.SessTun{TeID:1, Addr:net.IP{10, 10, 10, 56}} // An TeID, gNBIP
+        cnTun := cmn.SessTun{TeID:1, Addr:net.IP{10, 10, 10, 59}}  // Cn TeID, MyIP
 
-        _, err := mh.zr.Sess.SessAdd("user1", net.IP{100, 64, 50, 1}, anTun, cnTun)
+        _, err := mh.zr.Sess.SessAdd("user1", net.IP{88, 88, 88, 88}, anTun, cnTun)
         if err != nil {
             fmt.Printf("Failed to add session\n")
         }
 
         // Add ULCL classifier
-        _, err = mh.zr.Sess.UlClAddCls("user1", cmn.UlClArg{Addr:net.IP{8,8,8,8}, Qfi:11})
+        _, err = mh.zr.Sess.UlClAddCls("user1", cmn.UlClArg{Addr:net.IP{32,32,32,1}, Qfi:11})
         //_, err = mh.zr.Sess.UlClAddCls("user1", cmn.UlClArg{Addr:net.IP{9,9,9,9}, Qfi:1})
 
         mh.zr.Sess.USess2String(&mh)
