@@ -18,11 +18,11 @@ import (
 // swagger:model SessionUlClEntry
 type SessionUlClEntry struct {
 
-	// IP address and netmask
-	Ident string `json:"ident,omitempty"`
-
 	// ulcl argument
 	UlclArgument *SessionUlClEntryUlclArgument `json:"ulclArgument,omitempty"`
+
+	// IP address and netmask
+	UlclIdent string `json:"ulclIdent,omitempty"`
 }
 
 // Validate validates this session ul cl entry
@@ -111,11 +111,11 @@ func (m *SessionUlClEntry) UnmarshalBinary(b []byte) error {
 // swagger:model SessionUlClEntryUlclArgument
 type SessionUlClEntryUlclArgument struct {
 
-	// Access network IP address
-	Address string `json:"Address,omitempty"`
-
 	// ...?
 	Qfi float64 `json:"qfi,omitempty"`
+
+	// Access network IP address
+	UlclIP string `json:"ulclIP,omitempty"`
 }
 
 // Validate validates this session ul cl entry ulcl argument
