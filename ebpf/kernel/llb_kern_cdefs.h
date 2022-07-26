@@ -37,6 +37,11 @@
 #define SAMPLE_SIZE 64ul
 #define MAX_CPUS    128
 
+#ifndef lock_xadd
+#define lock_xadd(ptr, val)              \
+   ((void)__sync_fetch_and_add(ptr, val))
+#endif
+
 struct ll_xmdpi
 {
   __u16 iport;

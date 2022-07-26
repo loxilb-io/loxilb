@@ -238,7 +238,7 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 
     if w.Work == DP_CREATE {
 
-        if w.LoadEbpf != "" {
+        if w.LoadEbpf != "" && w.LoadEbpf != "lo" {
             lRet := loadEbpfPgm(w.LoadEbpf)
             if lRet != 0 {
                 tk.LogIt(tk.LOG_ERROR, "Error in loading ebpf prog for IFidx %d\n", w.PortNum)
@@ -743,6 +743,8 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ctv4_key, ctDat *C.struct_dp_ctv4_dat) *D
     ct.sip = tk.NltoIP(uint32(ctKey.saddr))
     ct.dport = tk.Ntohs(uint16(ctKey.dport))
     ct.sport = tk.Ntohs(uint16(ctKey.sport))
+    ct.packets = uint64(ctDat.pb.packets)
+    ct.bytes = uint64(ctDat.pb.bytes)
 
     p := uint8(ctKey.l4proto)
     switch {

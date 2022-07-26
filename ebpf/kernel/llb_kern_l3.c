@@ -183,7 +183,6 @@ dp_do_aclv4_lkup(void *ctx, struct xfi *F, void *fa_)
       goto ct_trk;
     }
 
-    return 0;
   } else if (act->ca.act_type == DP_SET_RDR_PORT) {
     struct dp_rdr_act *ar = &act->port_act;
 
@@ -197,7 +196,6 @@ dp_do_aclv4_lkup(void *ctx, struct xfi *F, void *fa_)
 
     LLBS_PPLN_RDR_PRIO(F);
     F->pm.oport = ar->oport;
-    return 0;
   } else if (act->ca.act_type == DP_SET_SNAT || 
              act->ca.act_type == DP_SET_DNAT) {
     struct dp_nat_act *na;
@@ -220,21 +218,24 @@ dp_do_aclv4_lkup(void *ctx, struct xfi *F, void *fa_)
     if (na->fr == 1 || na->doct) {
       goto ct_trk;
     }
-    return 0;
-  }
 
-  if (act->ca.act_type == DP_SET_DROP) {
-    LLBS_PPLN_DROP(F);
   } else if (act->ca.act_type == DP_SET_TOCP) {
     /*LLBS_PPLN_TRAP(F);*/
     LLBS_PPLN_TRAPC(F, LLB_PIPE_RC_ACL_MISS);
   } else if (act->ca.act_type == DP_SET_SESS_FWD_ACT) {
     struct dp_sess_act *pa = &act->pdr_sess_act; 
     F->pm.sess_id = pa->sess_id;
-    return 0;
   } else {
+    /* Same for DP_SET_DROP */
     LLBS_PPLN_DROP(F);
   }
+
+  /* Note that this might result in consistency problems 
+   * between packet and byte counts at times but this should be 
+   * better than holding bpf-spinlock 
+   */
+  lock_xadd(&act->ctd.pb.bytes, F->pm.l3_len);
+  lock_xadd(&act->ctd.pb.packets, 1);
 
   return 0;
 
