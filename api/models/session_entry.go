@@ -28,7 +28,7 @@ type SessionEntry struct {
 	Ident string `json:"ident,omitempty"`
 
 	// IP address for nexthop
-	IPAddress string `json:"ipAddress,omitempty"`
+	SessionIP string `json:"sessionIP,omitempty"`
 }
 
 // Validate validates this session entry
@@ -160,11 +160,11 @@ func (m *SessionEntry) UnmarshalBinary(b []byte) error {
 // swagger:model SessionEntryAccessNetworkTunnel
 type SessionEntryAccessNetworkTunnel struct {
 
-	// Access network IP address
-	Address string `json:"Address,omitempty"`
-
 	// ID of the tunnel
 	TeID float64 `json:"TeID,omitempty"`
+
+	// Access network IP address
+	TunnelIP string `json:"tunnelIP,omitempty"`
 }
 
 // Validate validates this session entry access network tunnel
@@ -200,11 +200,11 @@ func (m *SessionEntryAccessNetworkTunnel) UnmarshalBinary(b []byte) error {
 // swagger:model SessionEntryConnectionNetworkTunnel
 type SessionEntryConnectionNetworkTunnel struct {
 
-	// Connection network IP address
-	Address string `json:"Address,omitempty"`
-
 	// ID of the tunnel
-	TeID float64 `json:"TeID,omitempty"`
+	TeID float64 `json:"teID,omitempty"`
+
+	// Connection network IP address
+	TunnelIP string `json:"tunnelIP,omitempty"`
 }
 
 // Validate validates this session entry connection network tunnel

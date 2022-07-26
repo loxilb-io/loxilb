@@ -215,3 +215,15 @@ func (*NetApiStruct) NetSessionUlClDel(sr *cmn.SessionUlClMod) (int, error) {
     mh.mtx.Unlock()
     return ret, err
 }
+
+func (*NetApiStruct) NetSessionGet() ([]cmn.SessionMod, error) {
+	// There is no locking requirement for this operation
+	ret, err := mh.zr.Sess.SessGet()
+	return ret, err
+}
+
+func (*NetApiStruct) NetSessionUlClGet() ([]cmn.SessionUlClMod, error) {
+	// There is no locking requirement for this operation
+	ret, err := mh.zr.Sess.SessUlclGet()
+	return ret, err
+}
