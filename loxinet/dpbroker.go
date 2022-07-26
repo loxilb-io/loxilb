@@ -31,7 +31,7 @@ const (
     MAP_NAME_RXBD  = "RXBD"
     MAP_NAME_TXBD  = "TXBD"
     MAP_NAME_RT4   = "RT4"
-	MAP_NAME_ULCL  = "ULCL"
+    MAP_NAME_ULCL  = "ULCL"
  )
 
 const (
@@ -192,6 +192,8 @@ type DpCtInfo struct {
     proto  string
     cState string
     cAct   string
+    packets uint64
+    bytes  uint64
 }
 
 type UlClDpWorkQ struct {
@@ -392,7 +394,8 @@ func (dp *DpH)DpMapGetCt4() []cmn.CtInfo {
     case map[string]*DpCtInfo:
         for  _, dCti := range r {
             cti := cmn.CtInfo{Dip:dCti.dip, Sip:dCti.sip,Dport:dCti.dport, Sport: dCti.sport,
-                              Proto: dCti.proto, CState: dCti.cState, CAct: dCti.cAct }
+                              Proto: dCti.proto, CState: dCti.cState, CAct: dCti.cAct,
+                              Pkts: dCti.packets, Bytes: dCti.bytes, }
             CtInfoArr = append(CtInfoArr, cti)
             fmt.Println(CtInfoArr)
         }
