@@ -223,6 +223,32 @@ func (l3 *L3H) Ifas2String(it IterIntf) error {
     return nil
 }
 
+func IfaMkString(ifa *Ifa) string {
+    var str string
+    for _, ifaEnt := range ifa.Ifas {
+        var flagStr string
+        if ifaEnt.Secondary {
+            flagStr = "Secondary"
+        } else {
+            flagStr = "Primary"
+        }
+        plen, _ := ifaEnt.IfaNet.Mask.Size()
+        str = fmt.Sprintf("%s/%d - %s", ifaEnt.IfaAddr.String(), plen, flagStr)
+    }
+
+    return str
+}
+
+func (l3 *L3H) IfObjMkString(obj string) string {
+	key := IfaKey{obj}
+	ifa := l3.IfaMap[key]
+	if ifa != nil {
+		return IfaMkString(ifa)
+	}
+    
+    return ""
+}
+
 func (ifa *Ifa) DP(work DpWorkT) int {
     port := ifa.Zone.Ports.PortFindByName(ifa.Key.Obj)
 
