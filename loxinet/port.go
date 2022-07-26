@@ -475,6 +475,20 @@ func (P *PortsH) PortsToGet() ([]cmn.PortDump, error) {
     var ret []cmn.PortDump
 
     for _, ports := range P.portSmap {
+        zn, _ := mh.zn.Zonefind(ports.Zone)
+        if zn == nil {
+            tk.LogIt(tk.LOG_ERROR, "port-zone is not active")
+            continue
+        }
+        routed := false
+        var addr4 []string
+        addr4 = append(addr4, zn.L3.IfObjMkString(ports.Name))
+        if len(addr4) > 0 {
+            if addr4[0] != "" {
+                routed = true
+            }
+        }
+
         ret = append(ret, cmn.PortDump{
             Name:   ports.Name,
             PortNo: ports.PortNo,
@@ -506,8 +520,10 @@ func (P *PortsH) PortsToGet() ([]cmn.PortDump, error) {
                 TxError:   ports.Stats.TxError,
             },
             L3: cmn.PortLayer3Info{
-                Routed:     ports.L3.Routed,
-                Ipv4_addrs: ports.L3.Ipv4_addrs,
+                //Routed:     ports.L3.Routed,
+                //Ipv4_addrs: ports.L3.Ipv4_addrs,
+                Ipv4_addrs: addr4,
+                Routed:     routed,
                 Ipv6_addrs: ports.L3.Ipv6_addrs,
             },
             L2: cmn.PortLayer2Info{
