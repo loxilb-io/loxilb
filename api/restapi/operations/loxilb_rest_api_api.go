@@ -63,6 +63,12 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		GetConfigPortAllHandler: GetConfigPortAllHandlerFunc(func(params GetConfigPortAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigPortAll has not yet been implemented")
 		}),
+		GetConfigSessionAllHandler: GetConfigSessionAllHandlerFunc(func(params GetConfigSessionAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigSessionAll has not yet been implemented")
+		}),
+		GetConfigSessionulclAllHandler: GetConfigSessionulclAllHandlerFunc(func(params GetConfigSessionulclAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigSessionulclAll has not yet been implemented")
+		}),
 		PostConfigLoadbalancerHandler: PostConfigLoadbalancerHandlerFunc(func(params PostConfigLoadbalancerParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigLoadbalancer has not yet been implemented")
 		}),
@@ -125,6 +131,10 @@ type LoxilbRestAPIAPI struct {
 	GetConfigLoadbalancerAllHandler GetConfigLoadbalancerAllHandler
 	// GetConfigPortAllHandler sets the operation handler for the get config port all operation
 	GetConfigPortAllHandler GetConfigPortAllHandler
+	// GetConfigSessionAllHandler sets the operation handler for the get config session all operation
+	GetConfigSessionAllHandler GetConfigSessionAllHandler
+	// GetConfigSessionulclAllHandler sets the operation handler for the get config sessionulcl all operation
+	GetConfigSessionulclAllHandler GetConfigSessionulclAllHandler
 	// PostConfigLoadbalancerHandler sets the operation handler for the post config loadbalancer operation
 	PostConfigLoadbalancerHandler PostConfigLoadbalancerHandler
 	// PostConfigRouteHandler sets the operation handler for the post config route operation
@@ -230,6 +240,12 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.GetConfigPortAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigPortAllHandler")
+	}
+	if o.GetConfigSessionAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigSessionAllHandler")
+	}
+	if o.GetConfigSessionulclAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigSessionulclAllHandler")
 	}
 	if o.PostConfigLoadbalancerHandler == nil {
 		unregistered = append(unregistered, "PostConfigLoadbalancerHandler")
@@ -359,6 +375,14 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/config/port/all"] = NewGetConfigPortAll(o.context, o.GetConfigPortAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/config/session/all"] = NewGetConfigSessionAll(o.context, o.GetConfigSessionAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/config/sessionulcl/all"] = NewGetConfigSessionulclAll(o.context, o.GetConfigSessionulclAllHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

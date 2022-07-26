@@ -484,6 +484,46 @@ func init() {
         }
       }
     },
+    "/config/session/all": {
+      "get": {
+        "description": "Get all of the port interfaces.",
+        "summary": "Get all of the port interfaces",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "sessionAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/SessionEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/session/ident/{ident}": {
       "delete": {
         "description": "Create a new load balancer service with .",
@@ -591,6 +631,46 @@ func init() {
           },
           "409": {
             "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/sessionulcl/all": {
+      "get": {
+        "description": "Get",
+        "summary": "Get",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ulclAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/SessionUlClEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -750,6 +830,19 @@ func init() {
         }
       }
     },
+    "IPv4AddressMod": {
+      "type": "object",
+      "properties": {
+        "Dev": {
+          "description": "Name of the interface device to which you want to modify the IP address",
+          "type": "string"
+        },
+        "IpAddress": {
+          "description": "IP address to modify.",
+          "type": "string"
+        }
+      }
+    },
     "LoadbalanceEntry": {
       "type": "object",
       "properties": {
@@ -789,6 +882,15 @@ func init() {
               "type": "string"
             }
           }
+        }
+      }
+    },
+    "Neighborv4Mod": {
+      "type": "object",
+      "properties": {
+        "IpAddress": {
+          "description": "IP address to neighbor",
+          "type": "string"
         }
       }
     },
@@ -964,26 +1066,26 @@ func init() {
         "accessNetworkTunnel": {
           "type": "object",
           "properties": {
-            "Address": {
-              "description": "Access network IP address",
-              "type": "string"
-            },
             "TeID": {
               "description": "ID of the tunnel",
               "type": "number"
+            },
+            "tunnelIP": {
+              "description": "Access network IP address",
+              "type": "string"
             }
           }
         },
         "connectionNetworkTunnel": {
           "type": "object",
           "properties": {
-            "Address": {
-              "description": "Connection network IP address",
-              "type": "string"
-            },
-            "TeID": {
+            "teID": {
               "description": "ID of the tunnel",
               "type": "number"
+            },
+            "tunnelIP": {
+              "description": "Connection network IP address",
+              "type": "string"
             }
           }
         },
@@ -991,7 +1093,7 @@ func init() {
           "description": "IP address and netmask",
           "type": "string"
         },
-        "ipAddress": {
+        "sessionIP": {
           "description": "IP address for nexthop",
           "type": "string"
         }
@@ -1000,22 +1102,39 @@ func init() {
     "SessionUlClEntry": {
       "type": "object",
       "properties": {
-        "ident": {
-          "description": "IP address and netmask",
-          "type": "string"
-        },
         "ulclArgument": {
           "type": "object",
           "properties": {
-            "Address": {
-              "description": "Access network IP address",
-              "type": "string"
-            },
             "qfi": {
               "description": "...?",
               "type": "number"
+            },
+            "ulclIP": {
+              "description": "Access network IP address",
+              "type": "string"
             }
           }
+        },
+        "ulclIdent": {
+          "description": "IP address and netmask",
+          "type": "string"
+        }
+      }
+    },
+    "VlanPortMod": {
+      "type": "object",
+      "properties": {
+        "Dev": {
+          "description": "Interface device name",
+          "type": "string"
+        },
+        "Tagged": {
+          "description": "Tagged status added",
+          "type": "boolean"
+        },
+        "Vid": {
+          "description": "Vlan ID",
+          "type": "number"
         }
       }
     }
@@ -1488,6 +1607,46 @@ func init() {
         }
       }
     },
+    "/config/session/all": {
+      "get": {
+        "description": "Get all of the port interfaces.",
+        "summary": "Get all of the port interfaces",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "sessionAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/SessionEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/session/ident/{ident}": {
       "delete": {
         "description": "Create a new load balancer service with .",
@@ -1595,6 +1754,46 @@ func init() {
           },
           "409": {
             "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/sessionulcl/all": {
+      "get": {
+        "description": "Get",
+        "summary": "Get",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ulclAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/SessionUlClEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1786,6 +1985,19 @@ func init() {
         }
       }
     },
+    "IPv4AddressMod": {
+      "type": "object",
+      "properties": {
+        "Dev": {
+          "description": "Name of the interface device to which you want to modify the IP address",
+          "type": "string"
+        },
+        "IpAddress": {
+          "description": "IP address to modify.",
+          "type": "string"
+        }
+      }
+    },
     "LoadbalanceEntry": {
       "type": "object",
       "properties": {
@@ -1844,6 +2056,15 @@ func init() {
         },
         "protocol": {
           "description": "value for access protocol",
+          "type": "string"
+        }
+      }
+    },
+    "Neighborv4Mod": {
+      "type": "object",
+      "properties": {
+        "IpAddress": {
+          "description": "IP address to neighbor",
           "type": "string"
         }
       }
@@ -2153,26 +2374,26 @@ func init() {
         "accessNetworkTunnel": {
           "type": "object",
           "properties": {
-            "Address": {
-              "description": "Access network IP address",
-              "type": "string"
-            },
             "TeID": {
               "description": "ID of the tunnel",
               "type": "number"
+            },
+            "tunnelIP": {
+              "description": "Access network IP address",
+              "type": "string"
             }
           }
         },
         "connectionNetworkTunnel": {
           "type": "object",
           "properties": {
-            "Address": {
-              "description": "Connection network IP address",
-              "type": "string"
-            },
-            "TeID": {
+            "teID": {
               "description": "ID of the tunnel",
               "type": "number"
+            },
+            "tunnelIP": {
+              "description": "Connection network IP address",
+              "type": "string"
             }
           }
         },
@@ -2180,7 +2401,7 @@ func init() {
           "description": "IP address and netmask",
           "type": "string"
         },
-        "ipAddress": {
+        "sessionIP": {
           "description": "IP address for nexthop",
           "type": "string"
         }
@@ -2189,60 +2410,77 @@ func init() {
     "SessionEntryAccessNetworkTunnel": {
       "type": "object",
       "properties": {
-        "Address": {
-          "description": "Access network IP address",
-          "type": "string"
-        },
         "TeID": {
           "description": "ID of the tunnel",
           "type": "number"
+        },
+        "tunnelIP": {
+          "description": "Access network IP address",
+          "type": "string"
         }
       }
     },
     "SessionEntryConnectionNetworkTunnel": {
       "type": "object",
       "properties": {
-        "Address": {
-          "description": "Connection network IP address",
-          "type": "string"
-        },
-        "TeID": {
+        "teID": {
           "description": "ID of the tunnel",
           "type": "number"
+        },
+        "tunnelIP": {
+          "description": "Connection network IP address",
+          "type": "string"
         }
       }
     },
     "SessionUlClEntry": {
       "type": "object",
       "properties": {
-        "ident": {
-          "description": "IP address and netmask",
-          "type": "string"
-        },
         "ulclArgument": {
           "type": "object",
           "properties": {
-            "Address": {
-              "description": "Access network IP address",
-              "type": "string"
-            },
             "qfi": {
               "description": "...?",
               "type": "number"
+            },
+            "ulclIP": {
+              "description": "Access network IP address",
+              "type": "string"
             }
           }
+        },
+        "ulclIdent": {
+          "description": "IP address and netmask",
+          "type": "string"
         }
       }
     },
     "SessionUlClEntryUlclArgument": {
       "type": "object",
       "properties": {
-        "Address": {
-          "description": "Access network IP address",
-          "type": "string"
-        },
         "qfi": {
           "description": "...?",
+          "type": "number"
+        },
+        "ulclIP": {
+          "description": "Access network IP address",
+          "type": "string"
+        }
+      }
+    },
+    "VlanPortMod": {
+      "type": "object",
+      "properties": {
+        "Dev": {
+          "description": "Interface device name",
+          "type": "string"
+        },
+        "Tagged": {
+          "description": "Tagged status added",
+          "type": "boolean"
+        },
+        "Vid": {
+          "description": "Vlan ID",
           "type": "number"
         }
       }

@@ -113,8 +113,8 @@ type PortMod struct {
 }
 
 type VlanMod struct {
-	Vid       int
-	Dev       string
+	Vid       int    `json:"vid"`
+	Dev       string `json:"dev"`
 	LinkIndex int
 	MacAddr   [6]byte
 	Link      bool
@@ -124,9 +124,9 @@ type VlanMod struct {
 }
 
 type VlanPortMod struct {
-	Vid    int
-	Dev    string
-	Tagged bool
+	Vid    int    `json:"vid"`
+	Dev    string `json:"dev"`
+	Tagged bool   `json:"tagged"`
 }
 
 const (
@@ -203,13 +203,13 @@ type CtInfo struct {
 }
 
 type UlClArg struct {
-	Addr net.IP
-	Qfi  uint8
+	Addr net.IP `json:"ulclIP"`
+	Qfi  uint8  `json:"qfi"`
 }
 
 type SessTun struct {
-	TeID uint32
-	Addr net.IP
+	TeID uint32 `json:"TeID"`
+	Addr net.IP `json:"tunnelIP"`
 }
 
 func (ut *SessTun) Equal(ut1 *SessTun) bool {
@@ -220,15 +220,15 @@ func (ut *SessTun) Equal(ut1 *SessTun) bool {
 }
 
 type SessionMod struct {
-	Ident string
-	Ip    net.IP
-	AnTun SessTun
-	CnTun SessTun
+	Ident string  `json:"ident"`
+	Ip    net.IP  `json:"sessionIP"`
+	AnTun SessTun `json:"accessNetworkTunnel"`
+	CnTun SessTun `json:"connectionNetworkTunnel"`
 }
 
 type SessionUlClMod struct {
-	Ident string
-	Args  UlClArg
+	Ident string  `json:"ulclIdent"`
+	Args  UlClArg `json:"ulclArgument"`
 }
 
 type NetHookInterface interface {
@@ -251,6 +251,8 @@ type NetHookInterface interface {
 	NetLbRuleDel(*LbRuleMod) (int, error)
 	NetLbRuleGet() ([]LbRuleMod, error)
 	NetCtInfoGet() ([]CtInfo, error)
+	NetSessionGet() ([]SessionMod, error)
+	NetSessionUlClGet() ([]SessionUlClMod, error)
 	NetSessionAdd(*SessionMod) (int, error)
 	NetSessionDel(*SessionMod) (int, error)
 	NetSessionUlClAdd(*SessionUlClMod) (int, error)
