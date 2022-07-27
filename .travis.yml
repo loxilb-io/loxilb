@@ -6,12 +6,19 @@ language: go
 go:
   - 1.17.x
 
+services:
+  - docker
+
 before_install:
   - sudo apt-get update
   - sudo apt -y install clang llvm libelf-dev gcc-multilib libpcap-dev
   - sudo apt -y install linux-tools-$(uname -r)
   - sudo apt -y install elfutils dwarves git libbsd-dev
   - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
+  - docker pull loxilbio/loxilb:beta
+  - docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --net=llbinet --ip=10.10.10.56 --entrypoint /root/loxilb-io/loxilb/loxilb --name loxilb loxilbio/loxilb:beta --tls-key=/root/loxilb-io/loxilb/api/certification/server.key --tls-certificate=/root/loxilb-io/loxilb/api/certification/server.crt --host=0.0.0.0 --port=11111 --tls-port=8091 -a
+  - docker network connect bridge loxilb
+
 
 install:
   - wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip
@@ -25,3 +32,6 @@ script:
   - ebpf/utils/mkllb_bpffs.sh 
   - make
   - sudo -E env "PATH=$PATH" make test
+  - ebpf/utils/mkenv.sh docker
+  - ping.sh
+
