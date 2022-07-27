@@ -16,8 +16,7 @@ before_install:
   - sudo apt -y install elfutils dwarves git libbsd-dev
   - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
   - docker pull loxilbio/loxilb:beta
-  - docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --net=llbinet --ip=10.10.10.56 --entrypoint /root/loxilb-io/loxilb/loxilb --name loxilb loxilbio/loxilb:beta --tls-key=/root/loxilb-io/loxilb/api/certification/server.key --tls-certificate=/root/loxilb-io/loxilb/api/certification/server.crt --host=0.0.0.0 --port=11111 --tls-port=8091 -a
-  - docker network connect bridge loxilb
+  - docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --entrypoint /root/loxilb-io/loxilb/loxilb --name loxilb loxilbio/loxilb:beta
 
 
 install:
