@@ -13,7 +13,7 @@ before_install:
   - sudo apt-get update
   - sudo apt -y install clang llvm libelf-dev gcc-multilib libpcap-dev
   - sudo apt -y install linux-tools-$(uname -r)
-  - sudo apt -y install elfutils dwarves git libbsd-dev
+  - sudo apt -y install elfutils dwarves git libbsd-dev bridge-utils
   - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
   - docker pull loxilbio/loxilb:beta
   - docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --entrypoint /root/loxilb-io/loxilb/loxilb --name loxilb loxilbio/loxilb:beta
