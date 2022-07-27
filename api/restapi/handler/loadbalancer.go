@@ -28,6 +28,8 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv.ServIP = params.Attr.ServiceArguments.ExternalIP
 	lbRules.Serv.ServPort = uint16(params.Attr.ServiceArguments.Port)
 	lbRules.Serv.Proto = params.Attr.ServiceArguments.Protocol
+	lbRules.Serv.Sel = cmn.EpSelect(params.Attr.ServiceArguments.Sel)
+	lbRules.Serv.Bgp = params.Attr.ServiceArguments.Bgp
 
 	for _, data := range params.Attr.Endpoints {
 		lbRules.Eps = append(lbRules.Eps, cmn.LbEndPointArg{
