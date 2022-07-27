@@ -679,8 +679,8 @@ dp_ctv4_in(void *ctx, struct xfi *F)
         axtdat->ca.act_type = DP_SET_NOP;
       }
     } else if (smr == CT_SMR_ERR) {
-      atdat->ca.act_type = DP_SET_DROP;
-      axtdat->ca.act_type = DP_SET_DROP;
+      atdat->ca.act_type = DP_SET_TOCP;
+      axtdat->ca.act_type = DP_SET_TOCP;
     }
   }
 
