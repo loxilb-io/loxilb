@@ -209,6 +209,9 @@ func (m *LoadbalanceEntryEndpointsItems0) UnmarshalBinary(b []byte) error {
 // swagger:model LoadbalanceEntryServiceArguments
 type LoadbalanceEntryServiceArguments struct {
 
+	// value for BGP enable or not
+	Bgp bool `json:"bgp,omitempty"`
+
 	// IP address for externel access
 	ExternalIP string `json:"externalIP,omitempty"`
 
@@ -217,6 +220,9 @@ type LoadbalanceEntryServiceArguments struct {
 
 	// value for access protocol
 	Protocol string `json:"protocol,omitempty"`
+
+	// value for load balance algorithim
+	Sel int64 `json:"sel,omitempty"`
 }
 
 // Validate validates this loadbalance entry service arguments
