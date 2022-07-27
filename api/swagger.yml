@@ -572,6 +572,13 @@ definitions:
           protocol:
             type: string
             description:  value for access protocol
+          sel:
+            type: integer
+            description: value for load balance algorithim
+          bgp:
+            type: boolean
+            description: value for BGP enable or not
+            
       endpoints:
         type: array
         description: values of End point servers

@@ -869,6 +869,10 @@ func init() {
         "serviceArguments": {
           "type": "object",
           "properties": {
+            "bgp": {
+              "description": "value for BGP enable or not",
+              "type": "boolean"
+            },
             "externalIP": {
               "description": "IP address for externel access",
               "type": "string"
@@ -880,6 +884,10 @@ func init() {
             "protocol": {
               "description": "value for access protocol",
               "type": "string"
+            },
+            "sel": {
+              "description": "value for load balance algorithim",
+              "type": "integer"
             }
           }
         }
@@ -2011,6 +2019,10 @@ func init() {
         "serviceArguments": {
           "type": "object",
           "properties": {
+            "bgp": {
+              "description": "value for BGP enable or not",
+              "type": "boolean"
+            },
             "externalIP": {
               "description": "IP address for externel access",
               "type": "string"
@@ -2022,6 +2034,10 @@ func init() {
             "protocol": {
               "description": "value for access protocol",
               "type": "string"
+            },
+            "sel": {
+              "description": "value for load balance algorithim",
+              "type": "integer"
             }
           }
         }
@@ -2046,6 +2062,10 @@ func init() {
     "LoadbalanceEntryServiceArguments": {
       "type": "object",
       "properties": {
+        "bgp": {
+          "description": "value for BGP enable or not",
+          "type": "boolean"
+        },
         "externalIP": {
           "description": "IP address for externel access",
           "type": "string"
@@ -2057,6 +2077,10 @@ func init() {
         "protocol": {
           "description": "value for access protocol",
           "type": "string"
+        },
+        "sel": {
+          "description": "value for load balance algorithim",
+          "type": "integer"
         }
       }
     },
