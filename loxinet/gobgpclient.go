@@ -379,7 +379,7 @@ func DelBGPRule(ip string) {
     }
 
     if gbh.state == BGPConnected {
-        DelAdvertiseRoute(ip, 32, "0,0,0,0")
+        DelAdvertiseRoute(ip, 32, "0.0.0.0")
     }
     gbh.mtx.Unlock()
 }
