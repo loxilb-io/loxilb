@@ -20,6 +20,7 @@ import (
     "encoding/json"
     "errors"
     "fmt"
+    "sort"
     cmn "loxilb/common"
     tk "loxilb/loxilib"
     "net"
@@ -547,6 +548,7 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
     return res, nil
 }
 
+
 func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPointArg) (int, error) {
     var natActs ruleNatActs
     var ipProto uint8
@@ -590,6 +592,12 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
         ep := ruleNatEp{pNetAddr.IP, k.EpPort, k.Weight, false}
         natActs.endPoints = append(natActs.endPoints, ep)
     }
+
+    sort.SliceStable(natActs.endPoints, func(i, j int) bool {
+        a := tk.IPtonl(natActs.endPoints[i].xIP)
+        b := tk.IPtonl(natActs.endPoints[j].xIP)
+        return a < b
+    })
 
     l4prot := rule8Tuple{ipProto, 0xff}
     l3dst := ruleIPTuple{*sNetAddr}
