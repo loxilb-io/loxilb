@@ -133,7 +133,7 @@ type ruleNatEp struct {
     xPort    uint16
     weight   uint8
     inActive bool
-	Mark  bool
+    Mark  bool
 }
 
 type ruleNatActs struct {
@@ -607,45 +607,56 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
     eRule := R.Tables[RT_LB].eMap[rt.ruleKey()]
 
     if eRule != nil {
+        // If a NAT rule already exists, we try not reschuffle the order of the end-points.
+        // We will try to append the new end-points at the end, while marking any other end-points
+        // not in the new list as inactive
         var ruleChg bool = false
         eEps := eRule.act.action.(*ruleNatActs).endPoints
-        for _, eEp := range(eEps) {
-            for _, nEp := range(natActs.endPoints) {
+        for i, eEp := range(eEps) {
+            for j, nEp := range(natActs.endPoints) {
                 if eEp.xIP.Equal(nEp.xIP) &&
                    eEp.xPort == nEp.xPort &&
                    eEp.weight == nEp.weight {
-					if eEp.inActive {
-						eEp.inActive = false
-					}
-                    eEp.Mark = true
-                    nEp.Mark = true
-					continue
+                    e := &eEps[i]
+                    n := &natActs.endPoints[j]
+                    if eEp.inActive {
+                        e.inActive = false
+                    }
+                    e.Mark = true
+                    n.Mark = true
+                    break
                 }
             }
         }
-        for _, nEp := range(natActs.endPoints) {
+
+        for i, nEp := range(natActs.endPoints) {
+            n := &natActs.endPoints[i]
             if nEp.Mark == false {
                 ruleChg = true
-                eEps = append(natActs.endPoints, nEp)
+                n.Mark = true
+                eEps = append(eEps, *n)
             }
         }
-        for _, eEp := range(natActs.endPoints) {
+
+        for i, eEp := range(eEps) {
+            e := &eEps[i]
             if eEp.Mark == false {
                 ruleChg = true
-                eEp.inActive = true
+                e.inActive = true
             }
+            e.Mark = false
         }
 
         if ruleChg == false {
             return RULE_EXISTS_ERR, errors.New("lb rule exits")
         }
 
-        eRule.act.action = &natActs
-        tk.LogIt(tk.LOG_DEBUG, "Nat LB Rule Updated\n")
+        eRule.act.action.(*ruleNatActs).sel = natActs.sel
+        eRule.act.action.(*ruleNatActs).endPoints = eEps
+        tk.LogIt(tk.LOG_DEBUG, "Nat LB Rule Updated %v\n", eRule)
         eRule.DP(DP_CREATE)
 
         return 0, nil
-
     }
 
     r := new(ruleEnt)
