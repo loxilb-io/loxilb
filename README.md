@@ -11,10 +11,10 @@ loxilb is a cloud-native networking/security stack built from grounds up using e
 -  Optimized SRv6 implementation in eBPF 
 -  Make GTP tunnels first class citizens of the Linux world 
    * Support for QFI and other extension headers
--  eBPF/XDP based kernel forwarding (GPLv2 license)
-   * Complete kernel bypass with built-in advanced features like conntrack, QoS etc
+-  eBPF based kernel forwarding (GPLv2 license)
+   * Complete kernel bypass with home-grown stack for advanced features like [Conntrack](https://thermalcircle.de/doku.php?id=blog:linux:connection_tracking_1_modules_and_hooks), QoS etc
    * Highly scalable with low-latency & high througput 
-   * Hybrid stack utilizing both XDP and TC-eBPF 
+   * Mainly uses TC-eBPF hooks
 -  goLang based control plane components (Apache license)
 -  Seamless integration with goBGP based routing stack
 -  Easily cuztomizable to run in DPU environments
@@ -31,7 +31,7 @@ sudo apt install linux-tools-$(uname -r)
 sudo apt install elfutils dwarves
 ```
 
-*loxilb also requires a special version of iproute2 for its operation. The repository can be found [here](https://github.com/loxilb-io/iproute2). Detailed build instructions can be found [here](https://github.com/loxilb-io/iproute2/blob/main/README.loxilb).*
+*loxilb also requires a special version of [iproute2](https://github.com/shemminger/iproute2) tool for its operation. The customized repository can be found [here](https://github.com/loxilb-io/iproute2). Detailed build instructions can be found [here](https://github.com/loxilb-io/iproute2/blob/main/README.loxilb).*
 
 2. Build libbpf locally
 
