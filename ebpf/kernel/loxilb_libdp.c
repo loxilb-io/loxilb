@@ -753,6 +753,35 @@ llb_tb2fd(int t)
   return xh->maps[t].map_fd;
 }
 
+static void ll_table_aclct4_map_rm_related(uint32_t rid, uint32_t *aids, int naid);
+
+static int
+llb_add_table_elem_nat4_post_proc(void *k, void *v)
+{
+  struct dp_natv4_tacts *na = v;
+  struct mf_xfrm_inf *ep_arm;
+  uint32_t inact_aids[LLB_MAX_NXFRMS];
+  int i = 0;
+  int j = 0;
+
+  memset(inact_aids, 0, sizeof(inact_aids));
+
+  for (i = 0; i < na->nxfrm && i < LLB_MAX_NXFRMS; i++) {
+    ep_arm = &na->nxfrms[i];
+
+    if (ep_arm->inactive) {
+      inact_aids[j++] = i;
+    }
+  }
+
+  if (j > 0) {
+    ll_table_aclct4_map_rm_related(na->ca.cidx, inact_aids, j);
+  }
+
+  return 0;
+
+}
+
 int
 llb_add_table_elem(int tbl, void *k, void *v)
 {
@@ -773,6 +802,11 @@ llb_add_table_elem(int tbl, void *k, void *v)
   ret = bpf_map_update_elem(llb_tb2fd(tbl), k, v, 0);
   if (ret != 0) {
     ret = -EFAULT;
+  } else {
+    /* Need some post-processing for certain maps */
+    if (tbl == LL_DP_NAT4_MAP) {
+      llb_add_table_elem_nat4_post_proc(k, v);
+    }
   }
   XH_UNLOCK();
 
@@ -913,12 +947,14 @@ ll_age_table_fcmap(void)
   if (fc_val) free(fc_val);
 }
 
-typedef struct ct_age_struct 
+typedef struct ct_arg_struct 
 {
   uint64_t curr_ns;
+  uint32_t rid;
+  uint32_t aid[32];
+  int n_aids;
   int n_aged;
-  uint32_t aged_hash[LLB_CTV4_MAP_ENTRIES];
-} ct_age_struct_t;
+} ct_arg_struct_t;
 
 static int
 ctm_proto_xfk_init(struct dp_ctv4_key *key,
@@ -980,7 +1016,7 @@ ll_aclct4_map_ent_has_aged(int tid, void *k, void *ita)
   struct dp_ctv4_dat *dat;
   struct dp_aclv4_tact *adat;
   struct dp_aclv4_tact axdat;
-  ct_age_struct_t *as;
+  ct_arg_struct_t *as;
   uint64_t curr_ns;
   uint64_t latest_ns;
   bool est = false;
@@ -1069,7 +1105,7 @@ ll_age_table_aclct4map(void)
   dp_table_ita_t it;
   struct dp_ctv4_key next_key;
   struct dp_aclv4_tact *adat;
-  ct_age_struct_t *as;
+  ct_arg_struct_t *as;
   uint64_t ns = __get_os_nsecs_now();
 
   adat = calloc(1, sizeof(*adat));
@@ -1110,6 +1146,81 @@ llb_age_table_entries(int tbl)
   }
 
   return;
+}
+
+static int
+ll_aclct4_map_ent_rm_related(int tid, void *k, void *ita)
+{
+  int i = 0;
+  struct dp_ctv4_key *key = k;
+  dp_table_ita_t *it = ita;
+  struct dp_aclv4_tact *adat;
+  ct_arg_struct_t *as;
+  char dstr[INET_ADDRSTRLEN];
+  char sstr[INET_ADDRSTRLEN];
+
+  if (!it|| !it->uarg || !it->val) return 0;
+
+  as = it->uarg;
+  adat = it->val;
+
+  if (adat->ctd.rid != as->rid) {
+    return 0;
+  }
+
+  for (i = 0; i < as->n_aids; i++) {
+    if (adat->ctd.aid == as->aid[i]) {
+      inet_ntop(AF_INET, &key->saddr, sstr, INET_ADDRSTRLEN);
+      inet_ntop(AF_INET, &key->daddr, dstr, INET_ADDRSTRLEN);
+      printf("related ct4 rm %s:%d -> %s:%d (%d)\n",
+         sstr, ntohs(key->sport),
+         dstr, ntohs(key->dport),
+         key->l4proto);
+
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+static void
+ll_table_aclct4_map_rm_related(uint32_t rid, uint32_t *aids, int naid)
+{
+  dp_table_ita_t it;
+  int i = 0;
+  struct dp_ctv4_key next_key;
+  struct dp_aclv4_tact *adat;
+  ct_arg_struct_t *as;
+  uint64_t ns = __get_os_nsecs_now();
+
+  adat = calloc(1, sizeof(*adat));
+  if (!adat) return;
+
+  as = calloc(1, sizeof(*as));
+  if (!as) {
+    free(adat);
+    return;
+  }
+
+  as->curr_ns = ns;
+
+  memset(&it, 0, sizeof(it));
+  it.next_key = &next_key;
+  it.val = adat;
+  it.uarg = as;
+
+  as->rid = rid;
+  for (i = 0; i < naid; i++) {
+    as->aid[i] = aids[i];
+  }
+  as->n_aids = naid;
+
+  llb_table_loop_and_delete(LL_DP_ACLV4_MAP,
+                            ll_aclct4_map_ent_rm_related,
+                            &it);
+  if (adat) free(adat);
+  if (as) free(as);
 }
 
 static void
