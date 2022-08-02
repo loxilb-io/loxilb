@@ -176,6 +176,10 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 
     if P.portSmap[name] != nil {
         p := P.portSmap[name]
+        if bytes.Equal(hwi.MacAddr[:], p.HInfo.MacAddr[:]) == false {
+            p.HInfo.MacAddr = hwi.MacAddr
+            p.DP(DP_CREATE)
+        }
         if p.SInfo.PortType == cmn.PORT_REAL {
             if ptype == cmn.PORT_VLANSIF &&
                 l2i.IsPvid == true {

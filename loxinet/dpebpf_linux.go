@@ -469,7 +469,7 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
         dat := new(nhDat)
         C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_nh_tact)
         if !w.resolved {
-            dat.ca.act_type = C.DP_SET_DROP
+            dat.ca.act_type = C.DP_SET_TOCP
         } else {
             if w.tunNh {
                 fmt.Printf("Setting tunNh %x\n", key.nh_num)
