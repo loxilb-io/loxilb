@@ -228,12 +228,11 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) {
             if has_tun {
                 ne.tFdb = nil
                 ne.Resolved = false
-            } 
+            }
         } else {
             if f.FdbAttr.FdbType == cmn.FDB_TUN {
                 if f.unReach {
                     ne.Resolved = false
-                    
                 } else {
                     ne.tFdb = f
                     ne.Type |= NH_RECURSIVE
@@ -251,6 +250,13 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
     if found == true {
         if bytes.Equal(Attr.HardwareAddr, zeroHwAddr) == true {
             ne.Resolved = false
+        } else {
+            if bytes.Equal(Attr.HardwareAddr, ne.Attr.HardwareAddr) == false {
+                ne.Attr.HardwareAddr = Attr.HardwareAddr
+                ne.Resolved = true
+                n.NeighRecursiveResolve(ne)
+                ne.DP(DP_CREATE)
+            }
         }
         return NEIGH_EXISTS_ERR, errors.New("NH Exists")
     }
