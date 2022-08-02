@@ -224,20 +224,21 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) {
         key := FdbKey{mac, port.L2.Vid}
 
         if f := n.Zone.L2.L2FdbFind(key); f == nil {
-            has_tun, _ := n.Zone.Ports.PortHasTunSlaves(port.Name, cmn.PORT_VXLANBR)
+            has_tun, _ := n.Zone.Ports.PortHasTunSlaves(port.Name, cmn.PORT_VXLANSIF)
             if has_tun {
                 ne.tFdb = nil
                 ne.Resolved = false
-            }
+            } 
         } else {
             if f.FdbAttr.FdbType == cmn.FDB_TUN {
                 if f.unReach {
                     ne.Resolved = false
+                    
                 } else {
                     ne.tFdb = f
                     ne.Type |= NH_RECURSIVE
                 }
-            }
+            } 
         }
     }
     return
