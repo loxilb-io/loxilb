@@ -872,6 +872,7 @@ llb_del_table_elem(int tbl, void *k)
     struct dp_natv4_tacts t = { 0 };
     ret = bpf_map_lookup_elem(llb_tb2fd(tbl), k, &t);
     if (ret != 0) {
+      XH_UNLOCK();
       return -EINVAL;
     }
     cidx = t.ca.cidx;
