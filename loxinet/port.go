@@ -290,6 +290,8 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
     case cmn.PORT_VXLANBR:
         if p.SInfo.PortReal != nil {
             p.SInfo.PortReal.SInfo.PortOvl = p
+            p.SInfo.PortReal.SInfo.PortType |= cmn.PORT_VXLANSIF
+            p.SInfo.PortReal.HInfo.Master = p.Name
         }
         p.L2.IsPvid = true
         p.L2.Vid = int(p.HInfo.TunId)

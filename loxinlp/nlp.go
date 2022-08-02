@@ -585,7 +585,8 @@ func NlpGet() int {
         }
 
         /* Get FDBs */
-        if link.Attrs().MasterIndex > 0 {
+        _, ok := link.(*nlp.Vxlan)
+        if link.Attrs().MasterIndex > 0 || ok {
             neighs, err := nlp.NeighList(link.Attrs().Index, unix.AF_BRIDGE)
             if err != nil {
                 tk.LogIt(tk.LOG_ERROR, "[NLP] Error getting neighbors list %v for intf %s\n",

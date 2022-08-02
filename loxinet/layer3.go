@@ -18,6 +18,7 @@ package loxinet
 import (
     "errors"
     "fmt"
+    cmn "loxilb/common"
     tk "loxilb/loxilib"
     "net"
 )
@@ -240,11 +241,11 @@ func IfaMkString(ifa *Ifa) string {
 }
 
 func (l3 *L3H) IfObjMkString(obj string) string {
-	key := IfaKey{obj}
-	ifa := l3.IfaMap[key]
-	if ifa != nil {
-		return IfaMkString(ifa)
-	}
+    key := IfaKey{obj}
+    ifa := l3.IfaMap[key]
+    if ifa != nil {
+        return IfaMkString(ifa)
+    }
     
     return ""
 }
@@ -277,6 +278,30 @@ func (ifa *Ifa) DP(work DpWorkT) int {
     rmWq.PortNum = port.PortNo
 
     mh.dp.ToDpCh <- rmWq
+
+    if port.SInfo.PortType & cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
+        rmWq := new(RouterMacDpWorkQ)
+        rmWq.Work = work
+        rmWq.Status = &ifa.Sync
+
+        if port.SInfo.PortReal == nil {
+            return 0
+        }
+
+        up := port.SInfo.PortReal
+
+        for i := 0; i < 6; i++ {
+            rmWq.l2Addr[i] = uint8(up.HInfo.MacAddr[i])
+        }
+
+        rmWq.PortNum = up.PortNo
+        rmWq.TunId = port.HInfo.TunId
+        rmWq.TunType = DP_TUN_VXLAN
+        rmWq.BD = port.L2.Vid
+
+        mh.dp.ToDpCh <- rmWq
+
+    }
 
     return 0
 }
