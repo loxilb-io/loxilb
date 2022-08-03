@@ -20,6 +20,7 @@ import (
     "encoding/json"
     "errors"
     "fmt"
+    "time"
     "sort"
     cmn "loxilb/common"
     tk "loxilb/loxilib"
@@ -60,6 +61,8 @@ const (
 
 const (
     MAX_NAT_EPS = 16
+    MAX_LBA_INACT = 3       // Default number of inactive tries before LB arm is turned off
+    LBA_CHK_TIMEO = 20      // Default timeout for checking LB arms
 )
 
 type ruleTType uint
@@ -129,16 +132,17 @@ const (
 )
 
 type ruleNatEp struct {
-    xIP      net.IP
-    xPort    uint16
-    weight   uint8
-    inActive bool
-    Mark  bool
+    xIP        net.IP
+    xPort      uint16
+    weight     uint8
+    inActTries int
+    inActive   bool
+    Mark       bool
 }
 
 type ruleNatActs struct {
-    sel       cmn.EpSelect
-    endPoints []ruleNatEp
+    sel        cmn.EpSelect
+    endPoints  []ruleNatEp
 }
 
 type ruleTAct interface{}
@@ -158,6 +162,7 @@ type ruleEnt struct {
     ruleNum int
     Sync    DpStatusT
     tuples  ruleTuples
+    sT      time.Time
     act     ruleAct
     stat    ruleStat
 }
@@ -183,8 +188,14 @@ const (
     RT_MAX_LB  = (2 * 1024)
 )
 
+type RuleCfg struct {
+    RuleInactTries   int
+    RuleInactChkTime int
+}
+
 type RuleH struct {
     Zone   *Zone
+    Cfg    RuleCfg
     Tables [RT_MAX]ruleTable
 }
 
@@ -192,7 +203,10 @@ func RulesInit(zone *Zone) *RuleH {
     var nRh = new(RuleH)
     nRh.Zone = zone
 
-    nRh.Tables[RT_ACL].tableMatch = RM_MAX - 1 // All match
+    nRh.Cfg.RuleInactChkTime = LBA_CHK_TIMEO
+    nRh.Cfg.RuleInactTries = MAX_LBA_INACT
+
+    nRh.Tables[RT_ACL].tableMatch = RM_MAX - 1
     nRh.Tables[RT_ACL].tableType = RT_MF
     nRh.Tables[RT_ACL].HwMark = tk.NewCounter(1, RT_MAX_ACL)
 
@@ -589,7 +603,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
         if serv.Proto == "icmp" &&  k.EpPort != 0 {
             return RULE_UNK_SERV_ERR, errors.New("malformed service")
         }
-        ep := ruleNatEp{pNetAddr.IP, k.EpPort, k.Weight, false, false}
+        ep := ruleNatEp{pNetAddr.IP, k.EpPort, k.Weight, 0, false, false}
         natActs.endPoints = append(natActs.endPoints, ep)
     }
 
@@ -653,6 +667,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 
         eRule.act.action.(*ruleNatActs).sel = natActs.sel
         eRule.act.action.(*ruleNatActs).endPoints = eEps
+        eRule.sT = time.Now()
         tk.LogIt(tk.LOG_DEBUG, "Nat LB Rule Updated %v\n", eRule)
         eRule.DP(DP_CREATE)
 
@@ -668,6 +683,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
     if err != nil {
         return RULE_ALLOC_ERR, errors.New("rule num allocation fail")
     }
+    r.sT = time.Now()
 
     tk.LogIt(tk.LOG_DEBUG, "Nat LB Rule Added \n")
     R.Tables[RT_LB].eMap[rt.ruleKey()] = r
@@ -720,6 +736,9 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 }
 
 func (R *RuleH) RulesSync() {
+    var sType string
+    var rChg bool
+    now := time.Now()
     for _, rule := range R.Tables[RT_LB].eMap {
         ruleKeys := rule.tuples.String()
         ruleActs := rule.act.String()
@@ -727,6 +746,56 @@ func (R *RuleH) RulesSync() {
             rule.ruleNum, ruleKeys, ruleActs,
             rule.stat.packets, rule.stat.bytes)
         rule.DP(DP_STATS_GET)
+
+        rChg = false
+
+        // Check if we need to check health of LB arms
+        if time.Duration(now.Sub(rule.sT).Seconds()) >= time.Duration(R.Cfg.RuleInactChkTime) {
+            switch na := rule.act.action.(type) {
+            case *ruleNatActs:
+                if rule.tuples.l4Prot.val == 6 {
+                    sType = "tcp"
+                } else if rule.tuples.l4Prot.val == 17 {
+                    sType = "udp"
+                } else if rule.tuples.l4Prot.val == 1 {
+                    sType = "icmp"
+                } else if rule.tuples.l4Prot.val == 132 {
+                    sType = "sctp"
+                } else {
+                    break
+                }
+
+                for idx, n := range na.endPoints {
+                    np := &na.endPoints[idx]
+                    sName := fmt.Sprintf("%s:%d", n.xIP.String(), n.xPort)
+                    sOk := tk.L4ServiceProber(sType, sName)
+                    //fmt.Printf("rule arm probe %s:%s %v\n", sType, sName, sOk)
+                    if sOk == false {
+                        if n.inActTries <= R.Cfg.RuleInactTries {
+                            np.inActTries++
+                            if np.inActTries > R.Cfg.RuleInactTries {
+                                np.inActive = true
+                                rChg = true
+                                tk.LogIt(tk.LOG_DEBUG, "LB Rule Arm Inactive - %s:%s\n", sType, sName)
+                            }
+                        }
+                    } else {
+                        if n.inActive {
+                            np.inActive = false
+                            np.inActTries = 0
+                            rChg = true
+                        }
+                    }
+                }
+            }
+            rule.sT = now
+        }
+
+        if rChg {
+            tk.LogIt(tk.LOG_DEBUG, "LB Rule Updated %d:%s,%s\n", rule.ruleNum, ruleKeys, ruleActs)
+            rule.DP(DP_CREATE)
+        }
+
     }
 }
 
