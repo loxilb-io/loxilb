@@ -162,6 +162,7 @@ type ruleEnt struct {
     ruleNum int
     Sync    DpStatusT
     tuples  ruleTuples
+    ActChk  bool
     sT      time.Time
     act     ruleAct
     stat    ruleStat
@@ -684,6 +685,10 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
         return RULE_ALLOC_ERR, errors.New("rule num allocation fail")
     }
     r.sT = time.Now()
+    // Per LB end-point health-check is supposed to be handled at CCM,
+    // but it certain cases like stand-alone mode, loxilb can do its own
+    // lb end-point health monitoring 
+    r.ActChk = true
 
     tk.LogIt(tk.LOG_DEBUG, "Nat LB Rule Added \n")
     R.Tables[RT_LB].eMap[rt.ruleKey()] = r
@@ -746,6 +751,10 @@ func (R *RuleH) RulesSync() {
             rule.ruleNum, ruleKeys, ruleActs,
             rule.stat.packets, rule.stat.bytes)
         rule.DP(DP_STATS_GET)
+
+        if rule.ActChk == false {
+            continue
+        }
 
         rChg = false
 
