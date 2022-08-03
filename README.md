@@ -9,6 +9,7 @@ loxilb is a cloud-native networking/security stack built from grounds up using e
    * High-availability support
    * K8s CCM compliance
 -  Optimized SRv6 implementation in eBPF 
+-  L7 proxy support
 -  Make GTP tunnels first class citizens of the Linux world 
    * Support for QFI and other extension headers
 -  eBPF based kernel forwarding (GPLv2 license)
