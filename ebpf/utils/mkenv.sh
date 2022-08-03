@@ -24,13 +24,13 @@ fi
 
 $NSADD l3h1
 $NSADD l3h2
+$NSADD l3h3
 $NSADD l2h1
 $NSADD l2h2
 $NSADD l2vxh1
 $NSADD l2vxh2
 $NSADD l3vxh1
 $NSADD l3vxh2
-$NSADD l3h3
 
 $LBNSCMD sysctl net.ipv6.conf.all.disable_ipv6=1
 $LBNSCMD ifconfig lo up
@@ -38,14 +38,14 @@ $LBNSCMD ifconfig lo up
 sudo ip -n loxilb link add enp1 type veth peer name eth0 netns l3h1
 sudo ip -n loxilb link set enp1 mtu 9000 up
 sudo ip -n l3h1 link set eth0 mtu 7000 up
-$LBNSCMD ifconfig enp1 31.31.31.254/24 up
+$LBNSCMD ip addr add 31.31.31.254/24 dev enp1
 $NSCMD l3h1 ifconfig eth0 31.31.31.1/24 up
 $NSCMD l3h1 ip route add default via 31.31.31.254
 
 sudo ip -n loxilb link add enp2 type veth peer name eth0 netns l3h2
 sudo ip -n loxilb link set enp2 mtu 9000 up
 sudo ip -n l3h2 link set eth0 mtu 7000 up
-$LBNSCMD ifconfig enp2 32.32.32.254/24 up
+$LBNSCMD ip addr add 32.32.32.254/24 dev enp2
 $NSCMD l3h2 ifconfig eth0 32.32.32.1/24 up
 $NSCMD l3h2 ip route add default via 32.32.32.254
 
@@ -62,7 +62,7 @@ sudo ip -n l2h1 link set eth0 mtu 7000 up
 $NSCMD l2h1 ip link add link eth0 name eth0.100 type vlan id 100
 $NSCMD l2h1 ifconfig eth0.100 100.100.100.1/24 up
 $NSCMD l2h1 ip route add default via 100.100.100.254
-
+#
 sudo ip -n loxilb link add enp4 type veth peer name eth0 netns l2h2
 sudo ip -n loxilb link set enp4 mtu 9000 up
 sudo ip -n l2h2 link set eth0 mtu 7000 up
@@ -157,27 +157,9 @@ $LBNSCMD ifconfig enp7 17.17.17.254/24 up
 sudo ip -n loxilb link add enp8 type veth peer name eth0 netns l3vxh2
 sudo ip -n loxilb link set enp8 mtu 9000 up
 sudo ip -n l3vxh2 link set eth0 mtu 7000 up
-sudo ip -n loxilb link add enp9 type veth peer name eth1 netns l3vxh2
-sudo ip -n loxilb link set enp9 mtu 9000 up
-sudo ip -n l3vxh2 link set eth1 mtu 7000 up
-sudo ip -n loxilb link add enp10 type veth peer name eth2 netns l3vxh2
-sudo ip -n loxilb link set enp10 mtu 9000 up
-sudo ip -n l3vxh2 link set eth1 mtu 7000 up
-
-$LBNSCMD ip link add bond1 type bond
-$LBNSCMD ip link set bond1 type bond mode 802.3ad
-
-$LBNSCMD ip link set enp9 down
-$LBNSCMD ip link set enp10 down
-$LBNSCMD ip link set enp9 master bond1
-$LBNSCMD ip link set enp10 master bond1
-$LBNSCMD ip link set enp9 mtu 9000 up
-$LBNSCMD ip link set enp10 mtu 9000 up
-$LBNSCMD ip link set bond1 mtu 9000 up
 
 $LBNSCMD brctl addbr vlan8
-#$LBNSCMD brctl addif vlan8 enp8
-$LBNSCMD brctl addif vlan8 bond1
+$LBNSCMD brctl addif vlan8 enp8
 $LBNSCMD ip link set vlan8 up
 $LBNSCMD ip addr add 8.8.8.254/24 dev vlan8
 $LBNSCMD ip link add vxlan78 type vxlan id 78 local 8.8.8.254 dev vlan8 dstport 4789
@@ -186,23 +168,13 @@ $LBNSCMD ifconfig vxlan78 78.78.78.254/24 up
 $LBNSCMD bridge fdb append 00:00:00:00:00:00 dst 8.8.8.1 dev vxlan78
 
 #Setup l3vxh2
-$NSCMD l3vxh2 ip link add bond1 type bond
-$NSCMD l3vxh2 ip link set bond1 type bond mode 802.3ad
-$NSCMD l3vxh2 ip link set eth1 down
-$NSCMD l3vxh2 ip link set eth2 down
-$NSCMD l3vxh2 ip link set eth1 master bond1
-$NSCMD l3vxh2 ip link set eth2 master bond1
-$NSCMD l3vxh2 ip link set eth1 up
-$NSCMD l3vxh2 ip link set eth2 up
-$NSCMD l3vxh2 ip link set bond1 up
-#$NSCMD l3vxh2 ifconfig eth0 8.8.8.1/24 up
-$NSCMD l3vxh2 ifconfig bond1 8.8.8.1/24 up
-$NSCMD l3vxh2 ip link add vxlan78 type vxlan id 78 local 8.8.8.1 dev bond1 dstport 4789
+$NSCMD l3vxh2 ifconfig eth0 8.8.8.1/24 up
+$NSCMD l3vxh2 ip link add vxlan78 type vxlan id 78 local 8.8.8.1 dev eth0 dstport 4789
 $NSCMD l3vxh2 ifconfig vxlan78 78.78.78.1/24 up
 $NSCMD l3vxh2 ip addr add 18.18.18.1/24 dev vxlan78
 $NSCMD l3vxh2  bridge fdb append 00:00:00:00:00:00 dst 8.8.8.254 dev vxlan78
 $NSCMD l3vxh2 ip route add default via 78.78.78.254
-$LBNSCMD ip route add 18.18.18.0/24 via 78.78.78.1
-
-sudo mkdir -p /opt/netlox/loxilb/
-sudo mount -t bpf bpf /opt/netlox/loxilb/
+$LBNSCMD ip route add 18.18.18.0/24 via 78.78.78.1 proto static
+#
+#sudo mkdir -p /opt/netlox/loxilb/
+#sudo mount -t bpf bpf /opt/netlox/loxilb/
