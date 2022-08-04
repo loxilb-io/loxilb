@@ -688,7 +688,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
     // Per LB end-point health-check is supposed to be handled at CCM,
     // but it certain cases like stand-alone mode, loxilb can do its own
     // lb end-point health monitoring 
-    r.ActChk = true
+    r.ActChk = false
 
     tk.LogIt(tk.LOG_DEBUG, "Nat LB Rule Added \n")
     R.Tables[RT_LB].eMap[rt.ruleKey()] = r
