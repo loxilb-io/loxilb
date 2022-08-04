@@ -19,12 +19,15 @@ import (
 	"fmt"
 	"loxilb/api/restapi/operations"
 	cmn "loxilb/common"
+	tk "loxilb/loxilib"
 	"net"
 
 	"github.com/go-openapi/runtime/middleware"
 )
 
 func ConfigPostRoute(params operations.PostConfigRouteParams) middleware.Responder {
+	tk.LogIt(tk.LOG_DEBUG, "[API] Route  %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+
 	var routeMod cmn.Routev4Mod
 	_, Dst, err := net.ParseCIDR(params.Attr.DestinationIPNet)
 	if err != nil {
@@ -33,16 +36,21 @@ func ConfigPostRoute(params operations.PostConfigRouteParams) middleware.Respond
 	routeMod.Dst.IP = Dst.IP
 	routeMod.Dst.Mask = Dst.Mask
 	routeMod.Gw = net.ParseIP(params.Attr.Gateway)
-	//fmt.Printf("routeMod: %v\n", routeMod)
+
+	tk.LogIt(tk.LOG_DEBUG, "[API] routeMod : %v\n", routeMod)
 	_, err = ApiHooks.NetRoutev4Add(&routeMod)
 	if err != nil {
+		tk.LogIt(tk.LOG_DEBUG, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeleteRoute(params operations.DeleteConfigRouteDestinationIPNetIPAddressMaskParams) middleware.Responder {
+	tk.LogIt(tk.LOG_DEBUG, "[API] Route  %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+
 	var routeMod cmn.Routev4Mod
+
 	DstIP := fmt.Sprintf("%s/%d", params.IPAddress, params.Mask)
 	_, Dst, err := net.ParseCIDR(DstIP)
 	if err != nil {
@@ -51,9 +59,12 @@ func ConfigDeleteRoute(params operations.DeleteConfigRouteDestinationIPNetIPAddr
 
 	routeMod.Dst.IP = Dst.IP
 	routeMod.Dst.Mask = Dst.Mask
+	tk.LogIt(tk.LOG_DEBUG, "[API] routeMod : %v\n", routeMod)
+
 	_, err = ApiHooks.NetRoutev4Del(&routeMod)
 
 	if err != nil {
+		tk.LogIt(tk.LOG_DEBUG, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}

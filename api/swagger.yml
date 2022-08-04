@@ -115,6 +115,10 @@ paths:
           type: string
           required: true
           description: Attributes for load balance service
+        - name: bgp
+          in: query
+          type: boolean
+          description: option for BGP enable 
       responses:
         '204':
           description: OK

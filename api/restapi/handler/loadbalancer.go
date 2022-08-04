@@ -18,11 +18,14 @@ package handler
 import (
 	"loxilb/api/restapi/operations"
 	cmn "loxilb/common"
+	tk "loxilb/loxilib"
 
 	"github.com/go-openapi/runtime/middleware"
 )
 
 func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) middleware.Responder {
+	tk.LogIt(tk.LOG_DEBUG, "[API] Load balancer %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+
 	var lbRules cmn.LbRuleMod
 
 	lbRules.Serv.ServIP = params.Attr.ServiceArguments.ExternalIP
@@ -38,24 +41,33 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 			Weight: uint8(data.Weight),
 		})
 	}
-	//fmt.Printf("lbRules: %v\n", lbRules)
 
+	tk.LogIt(tk.LOG_DEBUG, "[API] lbRules : %v\n", lbRules)
 	_, err := ApiHooks.NetLbRuleAdd(&lbRules)
 	if err != nil {
+		tk.LogIt(tk.LOG_DEBUG, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
+	tk.LogIt(tk.LOG_DEBUG, "[API] Load balancer %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+
 	var lbServ cmn.LbServiceArg
 	var lbRules cmn.LbRuleMod
 	lbServ.ServIP = params.IPAddress
 	lbServ.ServPort = uint16(params.Port)
 	lbServ.Proto = params.Proto
+	if params.Bgp != nil {
+		lbServ.Bgp = *params.Bgp
+	}
+
 	lbRules.Serv = lbServ
+	tk.LogIt(tk.LOG_DEBUG, "[API] lbRules : %v\n", lbRules)
 	_, err := ApiHooks.NetLbRuleDel(&lbRules)
 	if err != nil {
+		tk.LogIt(tk.LOG_DEBUG, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
@@ -63,10 +75,12 @@ func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerExternal
 
 func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) middleware.Responder {
 	// Get LB rules
+	tk.LogIt(tk.LOG_DEBUG, "[API] Load balancer %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+
 	res, err := ApiHooks.NetLbRuleGet()
 	if err != nil {
+		tk.LogIt(tk.LOG_DEBUG, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
-
 	return &LbResponse{Attr: res}
 }

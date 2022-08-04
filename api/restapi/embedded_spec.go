@@ -199,6 +199,12 @@ func init() {
             "name": "proto",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "option for BGP enable",
+            "name": "bgp",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1330,6 +1336,12 @@ func init() {
             "name": "proto",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "option for BGP enable",
+            "name": "bgp",
+            "in": "query"
           }
         ],
         "responses": {

@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -31,6 +32,10 @@ type DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoPara
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
+	/*option for BGP enable
+	  In: query
+	*/
+	Bgp *bool
 	/*Attributes for load balance service
 	  Required: true
 	  In: path
@@ -57,6 +62,13 @@ func (o *DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto
 
 	o.HTTPRequest = r
 
+	qs := runtime.Values(r.URL.Query())
+
+	qBgp, qhkBgp, _ := qs.GetOK("bgp")
+	if err := o.bindBgp(qBgp, qhkBgp, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
 	rIPAddress, rhkIPAddress, _ := route.Params.GetOK("ip_address")
 	if err := o.bindIPAddress(rIPAddress, rhkIPAddress, route.Formats); err != nil {
 		res = append(res, err)
@@ -74,6 +86,29 @@ func (o *DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// bindBgp binds and validates parameter Bgp from query.
+func (o *DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) bindBgp(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	value, err := swag.ConvertBool(raw)
+	if err != nil {
+		return errors.InvalidType("bgp", "query", "bool", raw)
+	}
+	o.Bgp = &value
+
 	return nil
 }
 

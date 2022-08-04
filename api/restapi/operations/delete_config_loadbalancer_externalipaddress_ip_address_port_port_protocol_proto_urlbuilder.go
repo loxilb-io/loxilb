@@ -20,6 +20,8 @@ type DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoURL 
 	Port      float64
 	Proto     string
 
+	Bgp *bool
+
 	_basePath string
 	// avoid unkeyed usage
 	_ struct{}
@@ -72,6 +74,18 @@ func (o *DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto
 		_basePath = "/netlox/v1"
 	}
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
+
+	qs := make(url.Values)
+
+	var bgpQ string
+	if o.Bgp != nil {
+		bgpQ = swag.FormatBool(*o.Bgp)
+	}
+	if bgpQ != "" {
+		qs.Set("bgp", bgpQ)
+	}
+
+	_result.RawQuery = qs.Encode()
 
 	return &_result, nil
 }
