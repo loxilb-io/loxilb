@@ -595,6 +595,10 @@ dp_ctv4_in(void *ctx, struct xfi *F)
   xi->nat_xip   = F->l4m.nxip;
   xi->nat_xport = F->l4m.nxport;
 
+  xxi->nat_flags = 0;
+  xxi->nat_xip = 0;
+  xxi->nat_xport = 0;
+
   if (F->pm.nf & (LLB_NAT_DST|LLB_NAT_SRC)) {
     if (xi->nat_xip == 0) {
       if (F->pm.nf == LLB_NAT_DST) {
