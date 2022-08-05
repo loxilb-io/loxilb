@@ -42,12 +42,12 @@ func fileCreate(fname string) int {
     file, e := os.Create(fname)
     if e != nil {
        return -1
-    } 
+    }
     file.Close()
     return 0
 }
 
-var version string = "0.0.1"
+var version string = "0.7.0"
 
 func main() {
     fmt.Printf("Start\n")

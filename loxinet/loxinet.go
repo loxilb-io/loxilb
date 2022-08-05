@@ -31,8 +31,6 @@ const (
     ROOT_ZONE = "root"
 )
 
-var version string = "0.7.0"
-
 type IterIntf interface {
     NodeWalker(b string)
 }
@@ -120,7 +118,7 @@ func LoxiNetMain() {
 
     // Test stub code -- To be removed
     if false {
-        lbServ := cmn.LbServiceArg{ServIP: "10.10.10.1", ServPort: 2020, Proto: "tcp", Sel: cmn.LB_SEL_RR}
+        lbServ := cmn.LbServiceArg{ServIP: "20.20.20.1", ServPort: 2020, Proto: "tcp", Sel: cmn.LB_SEL_RR}
         lbEps := []cmn.LbEndPointArg{
             {
                 EpIP:   "31.31.31.1",
@@ -128,12 +126,12 @@ func LoxiNetMain() {
                 Weight: 1,
             },
             {
-                EpIP:   "31.31.31.1",
+                EpIP:   "32.32.32.1",
                 EpPort: 5001,
                 Weight: 2,
             },
             {
-                EpIP:   "31.31.31.1",
+                EpIP:   "17.17.17.1",
                 EpPort: 5001,
                 Weight: 2,
             },
