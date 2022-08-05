@@ -690,7 +690,11 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
     // lb end-point health monitoring 
     r.ActChk = false
 
-    tk.LogIt(tk.LOG_DEBUG, "Nat LB Rule Added \n")
+    ruleKeys := r.tuples.String()
+    ruleEps := r.act.String()
+    tk.LogIt(tk.LOG_DEBUG, "Nat LB Rule Added %d:%s-%s\n",
+             r.ruleNum, ruleKeys, ruleEps)
+
     R.Tables[RT_LB].eMap[rt.ruleKey()] = r
 
     r.DP(DP_CREATE)
@@ -733,7 +737,9 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 
     delete(R.Tables[RT_LB].eMap, rt.ruleKey())
 
-    tk.LogIt(tk.LOG_DEBUG, "Nat LB Rule Deleted \n")
+    ruleKeys := rule.tuples.String()
+    ruleEps := rule.act.String()
+    tk.LogIt(tk.LOG_DEBUG, "Nat LB Rule Deleted %s-%s\n", ruleKeys, ruleEps)
 
     rule.DP(DP_REMOVE)
 
