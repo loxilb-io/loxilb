@@ -1046,8 +1046,8 @@ ll_aclct4_map_ent_has_aged(int tid, void *k, void *ita)
   t = &xh->maps[LL_DP_ACLV4_MAP];
   if (bpf_map_lookup_elem(t->map_fd, &xkey, &axdat) != 0) {
     printf("rdir ct4 not found %s:%d -> %s:%d (%d)\n",
-         sstr, ntohs(xkey.sport),
-         dstr, ntohs(xkey.dport),  
+         dstr, ntohs(xkey.sport),
+         sstr, ntohs(xkey.dport),  
          xkey.l4proto); 
     return 1;
   }
@@ -1085,6 +1085,16 @@ ll_aclct4_map_ent_has_aged(int tid, void *k, void *ita)
       est = true;
     }
     to = CT_ICMP_FN_CPTO;
+  } else if (key->l4proto == IPPROTO_SCTP) {
+    ct_sctp_pinf_t *ss = &dat->pi.s;
+
+    if (ss->state & CT_SCTP_FIN_MASK ||
+        ss->state & CT_SCTP_ERR ||
+        ss->state == CT_SCTP_CLOSED) {
+      to = CT_SCTP_FN_CPTO;
+    } else if (ss->state == CT_SCTP_EST) {
+      est = true;
+    }
   }
   
   if (curr_ns < latest_ns) return 0;

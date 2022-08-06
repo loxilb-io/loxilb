@@ -51,6 +51,7 @@
 
 /* Hard-timeouts for ct xxx entry */
 #define CT_TCP_FN_CPTO        (60000000000)
+#define CT_SCTP_FN_CPTO       (60000000000)
 #define CT_UDP_FN_CPTO        (60000000000)
 #define CT_ICMP_FN_CPTO       (40000000000)
 
@@ -477,6 +478,7 @@ typedef enum {
   CT_SCTP_INITA   = 0x2,
   CT_SCTP_COOKIE  = 0x4,
   CT_SCTP_COOKIEA = 0x10,
+  CT_SCTP_EST     = 0x10,
   CT_SCTP_SHUT    = 0x20,
   CT_SCTP_SHUTA   = 0x40,
   CT_SCTP_SHUTC   = 0x80,

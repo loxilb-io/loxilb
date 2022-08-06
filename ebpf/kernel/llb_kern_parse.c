@@ -611,7 +611,7 @@ dp_parse_packet(void *md,
            F->l3m.source = icmp->un.echo.id;
            F->l3m.dest = icmp->un.echo.id;
         } 
-      } else if (F->il3m.nw_proto == IPPROTO_SCTP) {
+      } else if (F->l3m.nw_proto == IPPROTO_SCTP) {
         struct sctphdr *sctp = DP_ADD_PTR(iph, iphl);
 
         if (sctp + 1 > dend) {
