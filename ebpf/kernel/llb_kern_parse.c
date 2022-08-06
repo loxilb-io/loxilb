@@ -160,6 +160,16 @@ proc_inl3:
            F->il3m.source = icmp->un.echo.id;
            F->il3m.dest = icmp->un.echo.id;
         }
+      } else if (F->il3m.nw_proto == IPPROTO_SCTP) {
+        struct sctphdr *sctp = DP_ADD_PTR(iph, iphl);
+
+        if (sctp + 1 > dend) {
+          LLBS_PPLN_DROP(F);
+          return -1;
+        }
+  
+        F->il3m.source = sctp->source;
+        F->il3m.dest = sctp->dest;
       }
     } else {
       /* Let Linux stack handle it */
@@ -601,6 +611,16 @@ dp_parse_packet(void *md,
            F->l3m.source = icmp->un.echo.id;
            F->l3m.dest = icmp->un.echo.id;
         } 
+      } else if (F->il3m.nw_proto == IPPROTO_SCTP) {
+        struct sctphdr *sctp = DP_ADD_PTR(iph, iphl);
+
+        if (sctp + 1 > dend) {
+          LLBS_PPLN_DROP(F);
+          return -1;
+        }
+
+        F->l3m.source = sctp->source;
+        F->l3m.dest = sctp->dest;
       }
     } else {
 #ifndef LL_HANDLE_NO_FRAG

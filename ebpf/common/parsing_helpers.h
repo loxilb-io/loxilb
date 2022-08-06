@@ -252,4 +252,12 @@ struct gtp_ul_pdu_sess_hdr {
   __u8    next_hdr;
 };
 
+/* Header as defined in <linux/sctp.h> */
+struct sctphdr {
+	__be16 source;
+	__be16 dest;
+	__be32 vtag;
+	__le32 checksum;
+};
+
 #endif /* __PARSING_HELPERS_H */
