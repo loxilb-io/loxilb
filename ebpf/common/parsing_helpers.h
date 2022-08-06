@@ -260,4 +260,27 @@ struct sctphdr {
 	__le32 checksum;
 };
 
+#define SCTP_INIT_CHUNK     1
+#define SCTP_INIT_CHUNK_ACK 2
+#define SCTP_COOKIE_ECHO   10
+#define SCTP_COOKIE_ACK    11
+ 
+struct sctp_dch {
+	__u8 type;
+	__u8 flags;
+	__be16 len;
+};
+
+struct sctp_init_ch {
+  __be32 tag;
+  __be32 adv_rwc;
+  __be16 n_ostr; 
+  __be16 n_istr; 
+  __be32 init_tsn;
+};
+
+struct sctp_cookie {
+  __be32 cookie;
+};
+
 #endif /* __PARSING_HELPERS_H */
