@@ -142,7 +142,6 @@ dp_do_fcv4_lkup(void *ctx, struct xfi *F)
 
   dp_do_map_stats(ctx, F, LL_DP_ACLV4_STATS_MAP, acts->ca.cidx);
   F->pm.oport = acts->ca.oif;
-  F->pm.qm = acts->ca.cidx & 0x1f;
 
   return ret;
 }
@@ -151,13 +150,11 @@ static int __always_inline
 dp_ing_fc_main(void *ctx, struct xfi *F)
 {
   __u32 idx = 1;
-  struct __sk_buff *md = ctx;
   LL_FC_PRINTK("[FCHM] Main--\n");
   if (F->pm.pipe_act == 0) {
     if (dp_do_fcv4_lkup(ctx, F) == 1) {
       if (F->pm.pipe_act == LLB_PIPE_RDR) {
         int oif = F->pm.oport;
-        md->queue_mapping = F->pm.qm;
         return bpf_redirect(oif, 0);         
       }
     }

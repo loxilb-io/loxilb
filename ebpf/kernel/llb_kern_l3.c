@@ -175,7 +175,7 @@ dp_do_aclv4_lkup(void *ctx, struct xfi *F, void *fa_)
     goto ct_trk;
   } else if (act->ca.act_type == DP_SET_NOP) {
     struct dp_rdr_act *ar = &act->port_act;
-    if (F->pm.tcp_flags & (LLB_TCP_FIN|LLB_TCP_RST)) {
+    if (F->pm.l4fin) {
       ar->fr = 1;
     }
 
@@ -186,7 +186,7 @@ dp_do_aclv4_lkup(void *ctx, struct xfi *F, void *fa_)
   } else if (act->ca.act_type == DP_SET_RDR_PORT) {
     struct dp_rdr_act *ar = &act->port_act;
 
-    if (F->pm.tcp_flags & (LLB_TCP_FIN|LLB_TCP_RST)) {
+    if (F->pm.l4fin) {
       ar->fr = 1;
     }
 
@@ -209,7 +209,7 @@ dp_do_aclv4_lkup(void *ctx, struct xfi *F, void *fa_)
 
     na = &act->nat_act;
 
-    if (F->pm.tcp_flags & (LLB_TCP_FIN|LLB_TCP_RST)) {
+    if (F->pm.l4fin) {
       na->fr = 1;
     }
 

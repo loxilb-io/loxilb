@@ -470,7 +470,7 @@ typedef struct {
   __u16 init_acks;
 } ct_sctp_pinfd_t;
 
-#define CT_SCTP_FIN_MASK (CT_SCTP_SHUT|CT_SCTP_SHUTA|CT_SCTP_SHUTC)
+#define CT_SCTP_FIN_MASK (CT_SCTP_SHUT|CT_SCTP_SHUTA|CT_SCTP_SHUTC|CT_SCTP_ABRT)
 
 typedef enum {
   CT_SCTP_CLOSED  = 0x0,
@@ -482,7 +482,8 @@ typedef enum {
   CT_SCTP_SHUT    = 0x20,
   CT_SCTP_SHUTA   = 0x40,
   CT_SCTP_SHUTC   = 0x80,
-  CT_SCTP_ERR     = 0x100
+  CT_SCTP_ERR     = 0x100,
+  CT_SCTP_ABRT    = 0x200
 } ct_stcp_state_t;
 
 typedef struct {

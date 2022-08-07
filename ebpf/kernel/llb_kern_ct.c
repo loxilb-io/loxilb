@@ -540,11 +540,20 @@ dp_ct_sctp_sm(void *ctx, struct xfi *F,
   }
 
   nstate = ss->state;
-  //bpf_spin_lock(&atdat->lock);
+  bpf_spin_lock(&atdat->lock);
+
+  switch (c->type) {
+  case SCTP_ERROR:
+    nstate = CT_SCTP_ERR;
+    goto end;
+  case SCTP_SHUT:
+    nstate = CT_SCTP_SHUT;
+    goto end;
+  }
 
   switch (ss->state) {
   case CT_SCTP_CLOSED:
-    if (c->type != SCTP_INIT_CHUNK) {
+    if (c->type != SCTP_INIT_CHUNK && dir != CT_DIR_IN) {
       nstate = CT_SCTP_ERR;
       goto end;
     }
@@ -556,12 +565,10 @@ dp_ct_sctp_sm(void *ctx, struct xfi *F,
     }
 
     ss->itag = ic->tag;
-
-    bpf_printk("Ack %u Tag %u", bpf_htonl(s->vtag), bpf_ntohl(ss->itag));
     nstate = CT_SCTP_INIT;
     break;
   case CT_SCTP_INIT:
-    if (c->type != SCTP_INIT_CHUNK_ACK) {
+    if (c->type != SCTP_INIT_CHUNK_ACK && dir != CT_DIR_OUT) {
       nstate = CT_SCTP_ERR;
       goto end;
     }
@@ -579,11 +586,10 @@ dp_ct_sctp_sm(void *ctx, struct xfi *F,
 
     ss->otag = ic->tag;
 
-    bpf_printk("Ack %u Tag %u", bpf_htonl(s->vtag), bpf_ntohl(ss->otag));
     nstate = CT_SCTP_INITA;
     break;
   case CT_SCTP_INITA:
-    if (c->type != SCTP_COOKIE_ECHO) {
+    if (c->type != SCTP_COOKIE_ECHO && dir != CT_DIR_IN) {
       nstate = CT_SCTP_ERR;
       goto end;
     }
@@ -600,11 +606,10 @@ dp_ct_sctp_sm(void *ctx, struct xfi *F,
     }
 
     ss->cookie = ck->cookie;
-    bpf_printk("Ack %u cookie %u", bpf_htonl(s->vtag), bpf_ntohl(ck->cookie));
     nstate = CT_SCTP_COOKIE;
     break;
   case CT_SCTP_COOKIE:
-    if (c->type != SCTP_COOKIE_ACK) {
+    if (c->type != SCTP_COOKIE_ACK && dir != CT_DIR_OUT) {
       nstate = CT_SCTP_ERR;
       goto end;
     }
@@ -614,8 +619,27 @@ dp_ct_sctp_sm(void *ctx, struct xfi *F,
       goto end;
     }
 
-    bpf_printk("cookie ACK %u", bpf_htonl(s->vtag));
     nstate = CT_SCTP_COOKIEA;
+    break;
+  case CT_SCTP_COOKIEA:
+    nstate = CT_SCTP_EST;
+    break;
+  case CT_SCTP_ABRT:
+    nstate = CT_SCTP_ABRT;
+    break;
+  case CT_SCTP_SHUT:
+    if (c->type != SCTP_SHUT_ACK && dir != CT_DIR_OUT) {
+      nstate = CT_SCTP_ERR;
+      goto end;
+    }
+    nstate = CT_SCTP_SHUTA;
+    break;
+  case CT_SCTP_SHUTA:
+    if (c->type != SCTP_SHUT_COMPLETE && dir != CT_DIR_IN) {
+      nstate = CT_SCTP_ERR;
+      goto end;
+    }
+    nstate = CT_SCTP_SHUTC;
     break;
   default:
     break;
@@ -624,7 +648,7 @@ end:
   ss->state = nstate;
   xss->state = nstate;
 
-  //bpf_spin_lock(&atdat->lock);
+  bpf_spin_unlock(&atdat->lock);
 
   if (nstate == CT_SCTP_COOKIEA) {
     return CT_SMR_EST;

@@ -262,8 +262,13 @@ struct sctphdr {
 
 #define SCTP_INIT_CHUNK     1
 #define SCTP_INIT_CHUNK_ACK 2
+#define SCTP_ABORT          6
+#define SCTP_SHUT           7
+#define SCTP_SHUT_ACK       8
+#define SCTP_ERROR          9
 #define SCTP_COOKIE_ECHO   10
 #define SCTP_COOKIE_ACK    11
+#define SCTP_SHUT_COMPLETE 14
  
 struct sctp_dch {
 	__u8 type;

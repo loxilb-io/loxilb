@@ -799,6 +799,31 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ctv4_key, ctDat *C.struct_dp_ctv4_dat) *D
         }
     case p == 132:
         ct.proto = "sctp"
+        s := (*C.ct_sctp_pinf_t)(unsafe.Pointer(&ctDat.pi))
+        switch {
+        case s.state == C.CT_SCTP_EST:
+            ct.cState = "est"
+        case s.state == C.CT_SCTP_CLOSED:
+            ct.cState = "closed"
+        case s.state == C.CT_SCTP_ERR:
+            ct.cState = "err"
+        case s.state == C.CT_SCTP_INIT:
+            ct.cState = "init"
+        case s.state == C.CT_SCTP_INITA:
+            ct.cState = "init-ack"
+        case s.state == C.CT_SCTP_COOKIE:
+            ct.cState = "cookie-echo"
+        case s.state == C.CT_SCTP_COOKIEA:
+            ct.cState = "cookie-echo-resp"
+        case s.state == C.CT_SCTP_SHUT:
+            ct.cState = "shut"
+        case s.state == C.CT_SCTP_SHUTA:
+            ct.cState = "shut-ack"
+        case s.state == C.CT_SCTP_SHUTC:
+            ct.cState = "shut-complete"
+        default:
+            ct.cState = "unk"
+        }
     default:
         ct.proto = fmt.Sprintf("%d", p)
     }
