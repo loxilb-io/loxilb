@@ -752,8 +752,8 @@ dp_set_tcp_src_ip(void *md, struct xfi *F, __be32 xip)
   int ip_src_off = F->pm.l3_off + offsetof(struct iphdr, saddr);
   __be32 old_sip = F->l3m.ip.saddr;  
 
-    bpf_l4_csum_replace(md, tcp_csum_off, old_sip, xip, BPF_F_PSEUDO_HDR |sizeof(xip));
-    bpf_l3_csum_replace(md, ip_csum_off, old_sip, xip, sizeof(xip));
+  bpf_l4_csum_replace(md, tcp_csum_off, old_sip, xip, BPF_F_PSEUDO_HDR |sizeof(xip));
+  bpf_l3_csum_replace(md, ip_csum_off, old_sip, xip, sizeof(xip));
   bpf_skb_store_bytes(md, ip_src_off, &xip, sizeof(xip), 0);
 
   F->l3m.ip.saddr = xip;  
@@ -770,7 +770,7 @@ dp_set_tcp_dst_ip(void *md, struct xfi *F, __be32 xip)
   __be32 old_dip = F->l3m.ip.daddr;  
 
   bpf_l4_csum_replace(md, tcp_csum_off, old_dip, xip, BPF_F_PSEUDO_HDR | sizeof(xip));
-    bpf_l3_csum_replace(md, ip_csum_off, old_dip, xip, sizeof(xip));
+  bpf_l3_csum_replace(md, ip_csum_off, old_dip, xip, sizeof(xip));
   bpf_skb_store_bytes(md, ip_dst_off, &xip, sizeof(xip), 0);
   F->l3m.ip.daddr = xip;  
 
@@ -816,7 +816,7 @@ dp_set_udp_src_ip(void *md, struct xfi *F, __be32 xip)
   
   /* UDP checksum = 0 is valid */
   bpf_skb_store_bytes(md, udp_csum_off, &csum, sizeof(csum), 0);
-    bpf_l3_csum_replace(md, ip_csum_off, old_sip, xip, sizeof(xip));
+  bpf_l3_csum_replace(md, ip_csum_off, old_sip, xip, sizeof(xip));
   bpf_skb_store_bytes(md, ip_src_off, &xip, sizeof(xip), 0);
   F->l3m.ip.saddr = xip;  
 
@@ -878,7 +878,7 @@ dp_set_icmp_src_ip(void *md, struct xfi *F, __be32 xip)
   int ip_src_off = F->pm.l3_off + offsetof(struct iphdr, saddr);
   __be32 old_sip = F->l3m.ip.saddr;  
   
-    bpf_l3_csum_replace(md, ip_csum_off, old_sip, xip, sizeof(xip));
+  bpf_l3_csum_replace(md, ip_csum_off, old_sip, xip, sizeof(xip));
   bpf_skb_store_bytes(md, ip_src_off, &xip, sizeof(xip), 0);
   F->l3m.ip.saddr = xip;  
 
@@ -892,9 +892,59 @@ dp_set_icmp_dst_ip(void *md, struct xfi *F, __be32 xip)
   int ip_dst_off = F->pm.l3_off + offsetof(struct iphdr, daddr);
   __be32 old_dip = F->l3m.ip.daddr;  
   
-    bpf_l3_csum_replace(md, ip_csum_off, old_dip, xip, sizeof(xip));
+  bpf_l3_csum_replace(md, ip_csum_off, old_dip, xip, sizeof(xip));
   bpf_skb_store_bytes(md, ip_dst_off, &xip, sizeof(xip), 0);
   F->l3m.ip.daddr = xip;  
+
+  return 0;
+}
+
+static int __always_inline
+dp_set_sctp_src_ip(void *md, struct xfi *F, __be32 xip)
+{
+  int ip_csum_off  = F->pm.l3_off + offsetof(struct iphdr, check);
+  int ip_src_off = F->pm.l3_off + offsetof(struct iphdr, saddr);
+  __be32 old_sip = F->l3m.ip.saddr;  
+  
+  bpf_l3_csum_replace(md, ip_csum_off, old_sip, xip, sizeof(xip));
+  bpf_skb_store_bytes(md, ip_src_off, &xip, sizeof(xip), 0);
+  F->l3m.ip.saddr = xip;  
+
+  return 0;
+}
+
+static int __always_inline
+dp_set_sctp_dst_ip(void *md, struct xfi *F, __be32 xip)
+{
+  int ip_csum_off  = F->pm.l3_off + offsetof(struct iphdr, check);
+  int ip_dst_off = F->pm.l3_off + offsetof(struct iphdr, daddr);
+  __be32 old_dip = F->l3m.ip.daddr;  
+  
+  bpf_l3_csum_replace(md, ip_csum_off, old_dip, xip, sizeof(xip));
+  bpf_skb_store_bytes(md, ip_dst_off, &xip, sizeof(xip), 0);
+  F->l3m.ip.daddr = xip;  
+
+  return 0;
+}
+
+static int __always_inline
+dp_set_sctp_sport(void *md, struct xfi *F, __be16 xport)
+{
+  int sctp_sport_off = F->pm.l4_off + offsetof(struct sctphdr, source);
+
+  bpf_skb_store_bytes(md, sctp_sport_off, &xport, sizeof(xport), 0);
+  F->l3m.source = xport;
+
+  return 0;
+}
+
+static int __always_inline
+dp_set_sctp_dport(void *md, struct xfi *F, __be16 xport)
+{
+  int sctp_dport_off = F->pm.l4_off + offsetof(struct sctphdr, dest);
+
+  bpf_skb_store_bytes(md, sctp_dport_off, &xport, sizeof(xport), 0);
+  F->l3m.dest = xport;
 
   return 0;
 }
@@ -937,6 +987,23 @@ dp_do_dnat(void *ctx, struct xfi *F, __be32 xip, __be16 xport)
       dp_set_udp_dst_ip(ctx, F, xip);
     }
     dp_set_udp_dport(ctx, F, xport);
+  } else if (F->l3m.nw_proto == IPPROTO_SCTP)  {
+    struct sctphdr *sctp = DP_ADD_PTR(DP_PDATA(ctx), F->pm.l4_off);
+
+    if (sctp + 1 > dend) {
+      LLBS_PPLN_DROP(F);
+      return -1;
+    }
+
+    if (xip == 0) {
+      /* Hairpin nat to host */
+      xip = F->l3m.ip.saddr;
+      dp_set_sctp_src_ip(ctx, F, F->l3m.ip.daddr);
+      dp_set_sctp_dst_ip(ctx, F, xip);
+    } else {
+      dp_set_sctp_dst_ip(ctx, F, xip);
+    }
+    dp_set_sctp_dport(ctx, F, xport);
   } else if (F->l3m.nw_proto == IPPROTO_ICMP)  {
     dp_set_icmp_dst_ip(ctx, F, xip);
   }
@@ -982,6 +1049,23 @@ dp_do_snat(void *ctx, struct xfi *F, __be32 xip, __be16 xport)
       dp_set_udp_src_ip(ctx, F, xip);
     }
     dp_set_udp_sport(ctx, F, xport);
+  } else if (F->l3m.nw_proto == IPPROTO_SCTP)  {
+    struct sctphdr *sctp = DP_ADD_PTR(DP_PDATA(ctx), F->pm.l4_off);
+
+    if (sctp + 1 > dend) {
+      LLBS_PPLN_DROP(F);
+      return -1;
+    }
+
+    if (xip == 0) {
+      /* Hairpin nat to host */
+      xip = F->l3m.ip.saddr;
+      dp_set_sctp_src_ip(ctx, F, F->l3m.ip.daddr);
+      dp_set_sctp_dst_ip(ctx, F, xip);
+    } else {
+      dp_set_sctp_src_ip(ctx, F, xip);
+    }
+    dp_set_sctp_sport(ctx, F, xport);
   } else if (F->l3m.nw_proto == IPPROTO_ICMP)  {
     dp_set_icmp_src_ip(ctx, F, xip);
   }
