@@ -100,7 +100,8 @@ struct dp_pi_mdi {
     __u8             il3_off;
     __u8             il4_off;
     __u8             itcp_flags;
-    __u8             qm;
+    __u8             l4fin:4;
+    __u8             il4fin:4;
     __u16            l3_len;
     __u16            tun_off;
 }__attribute__((packed));

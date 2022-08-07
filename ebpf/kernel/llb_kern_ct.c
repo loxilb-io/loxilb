@@ -508,6 +508,161 @@ end:
   return CT_SMR_INPROG;
 }
 
+static int __always_inline
+dp_ct_sctp_sm(void *ctx, struct xfi *F, 
+              struct dp_aclv4_tact *atdat,
+              struct dp_aclv4_tact *axtdat,
+              ct_dir_t dir)
+{
+  struct dp_ctv4_dat *tdat = &atdat->ctd;
+  struct dp_ctv4_dat *xtdat = &axtdat->ctd;
+  ct_sctp_pinf_t *ss = &tdat->pi.s;
+  ct_sctp_pinf_t *xss = &xtdat->pi.s;
+  uint32_t nstate = 0;
+  void *dend = DP_TC_PTR(DP_PDATA_END(ctx));
+  struct sctphdr *s = DP_ADD_PTR(DP_PDATA(ctx), F->pm.l4_off);
+  struct sctp_dch *c;
+  struct sctp_init_ch *ic;
+  struct sctp_cookie *ck;
+
+  bpf_printk("SCTP conntrack");
+
+  if (s + 1 > dend) {
+    LLBS_PPLN_DROP(F);
+    return -1;
+  }
+
+  c = DP_TC_PTR(DP_ADD_PTR(s, sizeof(*s)));
+  
+  if (c + 1 > dend) {
+    LLBS_PPLN_DROP(F);
+    return -1;
+  }
+
+  nstate = ss->state;
+  bpf_spin_lock(&atdat->lock);
+
+  switch (c->type) {
+  case SCTP_ERROR:
+    nstate = CT_SCTP_ERR;
+    goto end;
+  case SCTP_SHUT:
+    nstate = CT_SCTP_SHUT;
+    goto end;
+  }
+
+  switch (ss->state) {
+  case CT_SCTP_CLOSED:
+    if (c->type != SCTP_INIT_CHUNK && dir != CT_DIR_IN) {
+      nstate = CT_SCTP_ERR;
+      goto end;
+    }
+
+    ic = DP_TC_PTR(DP_ADD_PTR(c, sizeof(*c)));
+    if (ic + 1 > dend) {
+      LLBS_PPLN_DROP(F);
+      goto end;
+    }
+
+    ss->itag = ic->tag;
+    nstate = CT_SCTP_INIT;
+    break;
+  case CT_SCTP_INIT:
+    if (c->type != SCTP_INIT_CHUNK_ACK && dir != CT_DIR_OUT) {
+      nstate = CT_SCTP_ERR;
+      goto end;
+    }
+
+    ic = DP_TC_PTR(DP_ADD_PTR(c, sizeof(*c)));
+    if (ic + 1 > dend) {
+      LLBS_PPLN_DROP(F);
+      goto end;
+    }
+
+    if (s->vtag != ss->itag) {
+      nstate = CT_SCTP_ERR;
+      goto end;
+    }
+
+    ss->otag = ic->tag;
+
+    nstate = CT_SCTP_INITA;
+    break;
+  case CT_SCTP_INITA:
+    if (c->type != SCTP_COOKIE_ECHO && dir != CT_DIR_IN) {
+      nstate = CT_SCTP_ERR;
+      goto end;
+    }
+
+    ck = DP_TC_PTR(DP_ADD_PTR(c, sizeof(*c)));
+    if (ck + 1 > dend) {
+      LLBS_PPLN_DROP(F);
+      goto end;
+    }
+
+    if (ss->otag != s->vtag) {
+      nstate = CT_SCTP_ERR;
+      goto end;
+    }
+
+    ss->cookie = ck->cookie;
+    nstate = CT_SCTP_COOKIE;
+    break;
+  case CT_SCTP_COOKIE:
+    if (c->type != SCTP_COOKIE_ACK && dir != CT_DIR_OUT) {
+      nstate = CT_SCTP_ERR;
+      goto end;
+    }
+
+    if (ss->itag != s->vtag) {
+      nstate = CT_SCTP_ERR;
+      goto end;
+    }
+
+    nstate = CT_SCTP_COOKIEA;
+    break;
+  case CT_SCTP_COOKIEA:
+    nstate = CT_SCTP_EST;
+    break;
+  case CT_SCTP_ABRT:
+    nstate = CT_SCTP_ABRT;
+    break;
+  case CT_SCTP_SHUT:
+    if (c->type != SCTP_SHUT_ACK && dir != CT_DIR_OUT) {
+      nstate = CT_SCTP_ERR;
+      goto end;
+    }
+    nstate = CT_SCTP_SHUTA;
+    break;
+  case CT_SCTP_SHUTA:
+    if (c->type != SCTP_SHUT_COMPLETE && dir != CT_DIR_IN) {
+      nstate = CT_SCTP_ERR;
+      goto end;
+    }
+    nstate = CT_SCTP_SHUTC;
+    break;
+  default:
+    break;
+  }
+end:
+  ss->state = nstate;
+  xss->state = nstate;
+
+  bpf_spin_unlock(&atdat->lock);
+
+  if (nstate == CT_SCTP_COOKIEA) {
+    return CT_SMR_EST;
+  } else if (nstate & CT_SCTP_SHUTC) {
+    return CT_SMR_CTD;
+  } else if (nstate & CT_SCTP_ERR) {
+    return CT_SMR_ERR;
+  } else if (nstate & CT_SCTP_FIN_MASK) {
+    return CT_SMR_FIN;
+  }
+
+  return CT_SMR_INPROG;
+}
+
 static int
 dp_ct_sm(void *ctx, struct xfi *F,
          struct dp_aclv4_tact *atdat,
@@ -532,6 +687,9 @@ dp_ct_sm(void *ctx, struct xfi *F,
     break;
   case IPPROTO_ICMP:
     sm_ret = dp_ct_icmp_sm(ctx, F, atdat, axtdat, dir);
+    break;
+  case IPPROTO_SCTP:
+    sm_ret = dp_ct_sctp_sm(ctx, F, atdat, axtdat, dir);
     break;
   default:
     sm_ret = CT_SMR_UNT;
@@ -587,7 +745,8 @@ dp_ctv4_in(void *ctx, struct xfi *F)
 
   if (key.l4proto != IPPROTO_TCP &&
       key.l4proto != IPPROTO_UDP &&
-      key.l4proto != IPPROTO_ICMP) {
+      key.l4proto != IPPROTO_ICMP &&
+      key.l4proto != IPPROTO_SCTP) {
     return 0;
   }
 

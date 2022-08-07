@@ -51,6 +51,7 @@
 
 /* Hard-timeouts for ct xxx entry */
 #define CT_TCP_FN_CPTO        (60000000000)
+#define CT_SCTP_FN_CPTO       (60000000000)
 #define CT_UDP_FN_CPTO        (60000000000)
 #define CT_ICMP_FN_CPTO       (40000000000)
 
@@ -464,6 +465,37 @@ typedef enum {
 } ct_icmp_state_t;
 
 typedef struct {
+  __u32 hstate;
+  __u32 seq;
+  __u16 init_acks;
+} ct_sctp_pinfd_t;
+
+#define CT_SCTP_FIN_MASK (CT_SCTP_SHUT|CT_SCTP_SHUTA|CT_SCTP_SHUTC|CT_SCTP_ABRT)
+
+typedef enum {
+  CT_SCTP_CLOSED  = 0x0,
+  CT_SCTP_INIT    = 0x1,
+  CT_SCTP_INITA   = 0x2,
+  CT_SCTP_COOKIE  = 0x4,
+  CT_SCTP_COOKIEA = 0x10,
+  CT_SCTP_EST     = 0x10,
+  CT_SCTP_SHUT    = 0x20,
+  CT_SCTP_SHUTA   = 0x40,
+  CT_SCTP_SHUTC   = 0x80,
+  CT_SCTP_ERR     = 0x100,
+  CT_SCTP_ABRT    = 0x200
+} ct_stcp_state_t;
+
+typedef struct {
+  ct_stcp_state_t state;
+  ct_dir_t fndir;
+  uint32_t itag;
+  uint32_t otag;
+  uint32_t cookie;
+  ct_sctp_pinfd_t stcp_cts[CT_DIR_MAX];
+} ct_sctp_pinf_t;
+
+typedef struct {
   uint8_t state;
   uint8_t errs;
   uint16_t lseq;
@@ -478,6 +510,7 @@ typedef struct {
     ct_tcp_pinf_t t;
     ct_udp_pinf_t u;
     ct_icmp_pinf_t i;
+    ct_sctp_pinf_t s;
   };
   __u32 frag;
   ct_l3inf_t l3i;

@@ -252,4 +252,40 @@ struct gtp_ul_pdu_sess_hdr {
   __u8    next_hdr;
 };
 
+/* Header as defined in <linux/sctp.h> */
+struct sctphdr {
+	__be16 source;
+	__be16 dest;
+	__be32 vtag;
+	__le32 checksum;
+};
+
+#define SCTP_INIT_CHUNK     1
+#define SCTP_INIT_CHUNK_ACK 2
+#define SCTP_ABORT          6
+#define SCTP_SHUT           7
+#define SCTP_SHUT_ACK       8
+#define SCTP_ERROR          9
+#define SCTP_COOKIE_ECHO   10
+#define SCTP_COOKIE_ACK    11
+#define SCTP_SHUT_COMPLETE 14
+ 
+struct sctp_dch {
+	__u8 type;
+	__u8 flags;
+	__be16 len;
+};
+
+struct sctp_init_ch {
+  __be32 tag;
+  __be32 adv_rwc;
+  __be16 n_ostr; 
+  __be16 n_istr; 
+  __be32 init_tsn;
+};
+
+struct sctp_cookie {
+  __be32 cookie;
+};
+
 #endif /* __PARSING_HELPERS_H */

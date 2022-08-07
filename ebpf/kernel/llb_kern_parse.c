@@ -135,6 +135,10 @@ proc_inl3:
         if (tcp->urg)
           F->pm.itcp_flags |= LLB_TCP_URG;
 
+        if (F->pm.itcp_flags & (LLB_TCP_FIN|LLB_TCP_RST)) {
+          F->pm.il4fin = 1;
+        }
+
         F->il3m.source = tcp->source;
         F->il3m.dest = tcp->dest;
       } else if (F->il3m.nw_proto == IPPROTO_UDP) {
@@ -160,6 +164,33 @@ proc_inl3:
            F->il3m.source = icmp->un.echo.id;
            F->il3m.dest = icmp->un.echo.id;
         }
+      } else if (F->il3m.nw_proto == IPPROTO_SCTP) {
+        struct sctp_dch *c;
+        struct sctphdr *sctp = DP_ADD_PTR(iph, iphl);
+        
+        if (sctp + 1 > dend) {
+          LLBS_PPLN_DROP(F);
+          return -1;
+        }
+  
+        F->il3m.source = sctp->source;
+        F->il3m.dest = sctp->dest;
+
+        c = DP_TC_PTR(DP_ADD_PTR(sctp, sizeof(*sctp)));
+  
+        if (c + 1 > dend) {
+          LLBS_PPLN_DROP(F);
+          return -1;
+        }
+
+        if (c->type == SCTP_ERROR ||
+            c->type == SCTP_ABORT ||
+            c->type == SCTP_SHUT  ||
+            c->type == SCTP_SHUT_ACK ||
+            c->type == SCTP_SHUT_COMPLETE) {
+          F->pm.il4fin = 1;
+        } 
+
       }
     } else {
       /* Let Linux stack handle it */
@@ -570,6 +601,10 @@ dp_parse_packet(void *md,
         if (tcp->urg)
           F->pm.tcp_flags |= LLB_TCP_URG;
 
+        if (F->pm.tcp_flags & (LLB_TCP_FIN|LLB_TCP_RST)) {
+          F->pm.l4fin = 1;
+        }
+
         F->l3m.source = tcp->source;
         F->l3m.dest = tcp->dest;
       } else if (F->l3m.nw_proto == IPPROTO_UDP) {
@@ -601,6 +636,32 @@ dp_parse_packet(void *md,
            F->l3m.source = icmp->un.echo.id;
            F->l3m.dest = icmp->un.echo.id;
         } 
+      } else if (F->l3m.nw_proto == IPPROTO_SCTP) {
+        struct sctp_dch *c;
+        struct sctphdr *sctp = DP_ADD_PTR(iph, iphl);
+
+        if (sctp + 1 > dend) {
+          LLBS_PPLN_DROP(F);
+          return -1;
+        }
+
+        F->l3m.source = sctp->source;
+        F->l3m.dest = sctp->dest;
+
+        c = DP_TC_PTR(DP_ADD_PTR(sctp, sizeof(*sctp)));
+  
+        if (c + 1 > dend) {
+          LLBS_PPLN_DROP(F);
+          return -1;
+        }
+
+        if (c->type == SCTP_ERROR ||
+            c->type == SCTP_ABORT ||
+            c->type == SCTP_SHUT  ||
+            c->type == SCTP_SHUT_ACK ||
+            c->type == SCTP_SHUT_COMPLETE) {
+          F->pm.l4fin = 1;
+        }
       }
     } else {
 #ifndef LL_HANDLE_NO_FRAG
