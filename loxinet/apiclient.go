@@ -38,99 +38,115 @@ func (*NetApiStruct) NetPortGet() ([]cmn.PortDump, error) {
 
 func (*NetApiStruct) NetPortAdd(pm *cmn.PortMod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.Ports.PortAdd(pm.Dev, pm.LinkIndex, pm.Ptype, ROOT_ZONE,
 		PortHwInfo{pm.MacAddr, pm.Link, pm.State, pm.Mtu, pm.Master, pm.Real,
 			uint32(pm.TunId)}, PortLayer2Info{false, 0})
-	mh.mtx.Unlock()
+
 	return ret, err
 }
 
 func (*NetApiStruct) NetPortDel(pm *cmn.PortMod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.Ports.PortDel(pm.Dev, pm.Ptype)
-	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetVlanAdd(vm *cmn.VlanMod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.Vlans.VlanAdd(vm.Vid, vm.Dev, ROOT_ZONE, vm.LinkIndex,
 		PortHwInfo{vm.MacAddr, vm.Link, vm.State, vm.Mtu, "", "", vm.TunId})
 	if ret == VLAN_EXISTS_ERR {
 		ret = 0
 	}
-	mh.mtx.Unlock()
+
 	return ret, err
 }
 
 func (*NetApiStruct) NetVlanDel(vm *cmn.VlanMod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.Vlans.VlanDelete(vm.Vid)
-	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetVlanPortAdd(vm *cmn.VlanPortMod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.Vlans.VlanPortAdd(vm.Vid, vm.Dev, vm.Tagged)
-	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetVlanPortDel(vm *cmn.VlanPortMod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.Vlans.VlanPortDelete(vm.Vid, vm.Dev, vm.Tagged)
-	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetIpv4AddrAdd(am *cmn.Ipv4AddrMod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.L3.IfaAdd(am.Dev, am.Ip)
-	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetIpv4AddrDel(am *cmn.Ipv4AddrMod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.L3.IfaDelete(am.Dev, am.Ip)
-	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetNeighv4Add(nm *cmn.Neighv4Mod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.Nh.NeighAdd(nm.Ip, ROOT_ZONE, NeighAttr{nm.LinkIndex, nm.State, nm.HardwareAddr})
 	if err != nil {
 		if ret != NEIGH_EXISTS_ERR {
 			return ret, err
 		}
 	}
-	mh.mtx.Unlock()
+
 	return 0, nil
 }
 
 func (*NetApiStruct) NetNeighv4Del(nm *cmn.Neighv4Mod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.Nh.NeighDelete(nm.Ip, ROOT_ZONE)
-	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetFdbAdd(fm *cmn.FdbMod) (int, error) {
 	fdbKey := FdbKey{fm.MacAddr, fm.BridgeId}
 	fdbAttr := FdbAttr{fm.Dev, fm.Dst, fm.Type}
+
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.L2.L2FdbAdd(fdbKey, fdbAttr)
-	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetFdbDel(fm *cmn.FdbMod) (int, error) {
 	fdbKey := FdbKey{fm.MacAddr, fm.BridgeId}
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.L2.L2FdbDel(fdbKey)
-	mh.mtx.Unlock()
 	return ret, err
 }
 
@@ -139,6 +155,8 @@ func (*NetApiStruct) NetRoutev4Add(rm *cmn.Routev4Mod) (int, error) {
 	var err error
 
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ra := RtAttr{rm.Protocol, rm.Flags, false}
 	if rm.Gw != nil {
 		na := []RtNhAttr{{rm.Gw, rm.LinkIndex}}
@@ -147,19 +165,21 @@ func (*NetApiStruct) NetRoutev4Add(rm *cmn.Routev4Mod) (int, error) {
 		ret, err = mh.zr.Rt.RtAdd(rm.Dst, ROOT_ZONE, ra, nil)
 	}
 
-	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetRoutev4Del(rm *cmn.Routev4Mod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.Rt.RtDelete(rm.Dst, ROOT_ZONE)
-	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.Rules.AddNatLbRule(lm.Serv, lm.Eps[:])
 	if err == nil && lm.Serv.Bgp {
 		if mh.bgp != nil {
@@ -168,12 +188,13 @@ func (*NetApiStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
 			tk.LogIt(tk.LOG_DEBUG, "loxilb BGP mode is disable \n")
 		}
 	}
-	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetLbRuleDel(lm *cmn.LbRuleMod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.Rules.DeleteNatLbRule(lm.Serv)
 	if lm.Serv.Bgp {
 		if mh.bgp != nil {
@@ -182,7 +203,6 @@ func (*NetApiStruct) NetLbRuleDel(lm *cmn.LbRuleMod) (int, error) {
 			tk.LogIt(tk.LOG_DEBUG, "loxilb BGP mode is disable \n")
 		}
 	}
-	mh.mtx.Unlock()
 	return ret, err
 }
 
@@ -199,29 +219,33 @@ func (*NetApiStruct) NetCtInfoGet() ([]cmn.CtInfo, error) {
 
 func (*NetApiStruct) NetSessionAdd(sm *cmn.SessionMod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.Sess.SessAdd(sm.Ident, sm.Ip, sm.AnTun, sm.CnTun)
-	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetSessionDel(sm *cmn.SessionMod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.Sess.SessDelete(sm.Ident)
-	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetSessionUlClAdd(sr *cmn.SessionUlClMod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.Sess.UlClAddCls(sr.Ident, sr.Args)
-	mh.mtx.Unlock()
 	return ret, err
 }
 
 func (*NetApiStruct) NetSessionUlClDel(sr *cmn.SessionUlClMod) (int, error) {
 	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	ret, err := mh.zr.Sess.UlClDeleteCls(sr.Ident, sr.Args)
-	mh.mtx.Unlock()
 	return ret, err
 }
 
