@@ -24,7 +24,9 @@ import (
 	"net"
 	"sync"
 	"time"
-
+	"errors"
+	"os"
+	"os/exec"
 	api "github.com/osrg/gobgp/v3/api"
 	"github.com/osrg/gobgp/v3/pkg/apiutil"
 	"github.com/osrg/gobgp/v3/pkg/packet/bgp"
@@ -320,9 +322,25 @@ func GoBgpInit() *GoBgpH {
 	gbh.rules = make(map[string]bool)
 	gbh.state = BGPDisconnected
 	//AddBGPRule("1.1.1.1")
+	go gbh.goBgpSpawn()
 	go gbh.goBgpConnect(gbh.host)
 	go gbh.goBgpMonitor()
 	return gbh
+}
+
+func (gbh *GoBgpH) goBgpSpawn() {
+	if _, err := os.Stat("/opt/loxilb/gobgp_loxilb.yaml"); errors.Is(err, os.ErrNotExist) {
+        return
+    }
+	for {
+		command := "gobgpd -t yaml -f /opt/loxilb/gobgp_loxilb.yaml"
+    	cmd := exec.Command("bash", "-c", command)
+    	err := cmd.Run()
+    	if err != nil {
+        	fmt.Println(err)
+    	}
+		time.Sleep(1000 * time.Millisecond)
+	}
 }
 
 func (gbh *GoBgpH) goBgpConnect(host string) {
@@ -332,7 +350,7 @@ func (gbh *GoBgpH) goBgpConnect(host string) {
 		if err != nil {
 			tk.LogIt(tk.LOG_NOTICE, "BGP session %s not alive. Will Retry!\n", gbh.host)
 			gbh.mtx.Unlock()
-			time.Sleep(1000 * time.Millisecond)
+			time.Sleep(2000 * time.Millisecond)
 		} else {
 			gbh.client = api.NewGobgpApiClient(conn)
 			gbh.mtx.Unlock()
@@ -343,7 +361,7 @@ func (gbh *GoBgpH) goBgpConnect(host string) {
 
 					tk.LogIt(tk.LOG_NOTICE, "BGP session %s not ready. Will Retry!\n", gbh.host)
 					gbh.mtx.Unlock()
-					time.Sleep(1000 * time.Millisecond)
+					time.Sleep(2000 * time.Millisecond)
 					continue
 				}
 				tk.LogIt(tk.LOG_NOTICE, "BGP session %s ready! Attributes[%v]\n", gbh.host, r)
