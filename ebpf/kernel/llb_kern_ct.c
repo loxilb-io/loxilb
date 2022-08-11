@@ -4,36 +4,6 @@
  * 
  * SPDX-License-Identifier: GPL-2.0
  */
-#if 0
-static int
-dp_ct_ins2_acl(struct dp_ctv4_key *key,
-               struct dp_ctv4_key *xkey,
-               struct dp_aclv4_tact *atdat,
-               struct dp_aclv4_tact *axtdat)
-{
-  struct dp_ctv4_dat *xtdat = &axtdat->ctd;
-  //struct dp_nat_act *na;
-  int ret;
-
-  if (xtdat->xi.nat_flags) {
-    atdat->ca.act_type = xtdat->xi.nat_flags & LLB_NAT_DST ?
-                             DP_SET_DNAT: DP_SET_SNAT;
-    atdat->ca.cidx = xtdat->rid;
-
-  } else {
-    atdat->ca.act_type = xtdat->smr != CT_SMR_EST ?
-                            DP_SET_DO_CT:DP_SET_NOP; 
-    atdat->ca.ftrap = 0;  
-    atdat->ca.oif = 0;    
-    atdat->ca.cidx = xtdat->rid;
-  }
-
-  ret = bpf_map_update_elem(&acl_v4_map, xkey, atdat, BPF_ANY);
-  if (ret != 0) return -1;
-
-  return 0;
-}
-#endif
 
 static int 
 dp_ct_proto_xfk_init(struct dp_ctv4_key *key,

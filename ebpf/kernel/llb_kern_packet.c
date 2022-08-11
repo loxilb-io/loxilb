@@ -215,7 +215,7 @@ dp_trap_packet(void *ctx,  struct xfi *F, void *fa_)
 #endif
 
 static int __always_inline
-dp_unparse_packet(void *ctx,  struct xfi *F)
+dp_unparse_packet_always(void *ctx,  struct xfi *F)
 {
 
   if (F->pm.nf & LLB_NAT_SRC) {
@@ -232,7 +232,12 @@ dp_unparse_packet(void *ctx,  struct xfi *F)
     }
   }
 
+  return 0;
+}
 
+static int __always_inline
+dp_unparse_packet(void *ctx,  struct xfi *F)
+{
   if (F->tm.tun_decap) {
     if (F->tm.tun_type == LLB_TUN_VXLAN) {
       LL_DBG_PRINTK("[DEPR] LL STRIP-VXLAN\n");
@@ -307,16 +312,16 @@ static int
 dp_pipe_check_res(void *ctx, struct xfi *F, void *fa)
 {
   LL_DBG_PRINTK("[PIPE] act 0x%x\n", F->pm.pipe_act);
-  
+
   if (F->pm.pipe_act) {
 
     if (F->pm.pipe_act & LLB_PIPE_DROP) {
       return DP_DROP;
     } 
 
-    //if (F->pm.pipe_act & LLB_PIPE_SET_CT) {
-    //  return dp_tail_call(ctx, F, LLB_DP_CT_PGM_ID);
-    //}
+    if (dp_unparse_packet_always(ctx, F) != 0) {
+        return DP_DROP;
+    }
 
 #ifndef HAVE_LLB_DISAGGR
 #ifdef HAVE_OOB_CH
