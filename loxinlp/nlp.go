@@ -28,6 +28,8 @@ import (
     "os"
     "os/exec"
     "errors"
+    "io/ioutil"
+    "encoding/json"
     nlp "github.com/vishvananda/netlink"
     "golang.org/x/sys/unix"
 )
@@ -100,6 +102,70 @@ func applyAllConfig(name string) bool {
     fmt.Printf("%v\n", string(output))
     return true
 }
+
+func applyLoadBalancerConfig() bool {
+    var resp struct {
+        Attr []cmn.LbRuleMod `json:"lbAttr"`
+    }
+    byteBuf, err := ioutil.ReadFile("/opt/loxilb/lbconfig.txt")
+    if err != nil {
+        fmt.Println(err.Error())
+        return false
+    }
+
+    // Unmashal to Json
+    if err := json.Unmarshal(byteBuf, &resp); err != nil {
+        fmt.Printf("Error: Failed to unmarshal File: (%s)\n", err.Error())
+        return false
+    }
+    for _, lb := range resp.Attr {
+        hooks.NetLbRuleAdd(&lb)
+    }
+    return true
+}
+
+func applySessionConfig() bool {
+    var resp struct {
+        Attr []cmn.SessionMod `json:"sessionAttr"`
+    }
+    byteBuf, err := ioutil.ReadFile("/opt/loxilb/sessionconfig.txt")
+    if err != nil {
+        fmt.Println(err.Error())
+        return false
+    }
+
+    // Unmashal to Json
+    if err := json.Unmarshal(byteBuf, &resp); err != nil {
+        fmt.Printf("Error: Failed to unmarshal File: (%s)\n", err.Error())
+        return false
+    }
+    for _, session := range resp.Attr {
+        hooks.NetSessionAdd(&session)
+    }
+    return true
+}
+
+func applyUlClConfig() bool {
+    var resp struct {
+        Attr []cmn.SessionUlClMod `json:"ulclAttr"`
+    }
+    byteBuf, err := ioutil.ReadFile("/opt/loxilb/sessionulclconfig.txt")
+    if err != nil {
+        fmt.Println(err.Error())
+        return false
+    }
+
+    // Unmashal to Json
+    if err := json.Unmarshal(byteBuf, &resp); err != nil {
+        fmt.Printf("Error: Failed to unmarshal File: (%s)\n", err.Error())
+        return false
+    }
+    for _, ulcl := range resp.Attr {
+        hooks.NetSessionUlClAdd(&ulcl)
+    }
+    return true
+}
+
 
 func applyRoutes(name string) {
     tk.LogIt(tk.LOG_DEBUG, "[NLP] Applying Route Config for %s \n", name)
@@ -689,7 +755,7 @@ func GetBridges() {
     }
 }
 
-func NlpGet() int {
+func NlpGet(ch chan bool) int {
     var ret int
     tk.LogIt(tk.LOG_INFO, "[NLP] Getting device info\n")
 
@@ -769,10 +835,49 @@ func NlpGet() int {
         }
     }
     tk.LogIt(tk.LOG_INFO, "[NLP] nlp get done\n")
+    ch <- true
     return ret
 }
 
 var nNl *NlH
+
+func LbSessionGet(done bool) int {
+
+    if done {
+        tk.LogIt(tk.LOG_INFO, "[NLP] LbSessionGet Start\n")
+        if _, err := os.Stat("/opt/loxilb/lbconfig.txt"); errors.Is(err, os.ErrNotExist) {
+            if err != nil {
+                tk.LogIt(tk.LOG_INFO, "[NLP] No load balancer config file : %s \n", err.Error())
+            }
+        } else {
+            applyLoadBalancerConfig()
+        }
+
+        tk.LogIt(tk.LOG_INFO, "[NLP] LoadBalancer done\n")
+        if _, err := os.Stat("/opt/loxilb/sessionconfig.txt"); errors.Is(err, os.ErrNotExist) {
+            if err != nil {
+                tk.LogIt(tk.LOG_INFO, "[NLP] No Session config file : %s \n", err.Error())
+            }
+        } else {
+            applySessionConfig()
+        }
+
+        tk.LogIt(tk.LOG_INFO, "[NLP] Session done\n")
+        if _, err := os.Stat("/opt/loxilb/sessionulclconfig.txt"); errors.Is(err, os.ErrNotExist) {
+            if err != nil {
+                tk.LogIt(tk.LOG_INFO, "[NLP] No UlCl config file : %s \n", err.Error())
+            }
+        } else {
+            applyUlClConfig()
+        }
+
+        tk.LogIt(tk.LOG_INFO, "[NLP] Session UlCl done\n")
+        tk.LogIt(tk.LOG_INFO, "[NLP] LbSessionGet done\n")
+    }
+
+    return 0
+}
+
 func NlpInit() *NlH {
 
     nNl = new(NlH)
@@ -787,7 +892,10 @@ func NlpInit() *NlH {
     nNl.FromRUDone = make(chan struct{})
     nNl.IMap = make(map[string]Intf)
 
-    go NlpGet()
+    checkInit := make(chan bool)
+    go NlpGet(checkInit)
+    done := <-checkInit
+    go LbSessionGet(done)
 
     err := nlp.LinkSubscribe(nNl.FromLUCh, nNl.FromAUDone)
     if err != nil {
