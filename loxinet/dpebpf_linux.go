@@ -778,7 +778,7 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ctv4_key, ctDat *C.struct_dp_ctv4_dat) *D
         case t.state == C.CT_TCP_EST:
             ct.cState = "est"
         case t.state == C.CT_TCP_ERR:
-            ct.cState = "err"
+            ct.cState = "h/e"
         case t.state == C.CT_TCP_CW:
             ct.cState = "closed-wait"
         default:
