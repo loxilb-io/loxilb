@@ -98,14 +98,13 @@ func loxiNetInit() {
 	}
 
 	if opts.Opts.Bgp {
-		mh.bgp = GoBgpInit()
+		mh.bgp = GoBgpInit(opts.Opts.NoNlp)
 	}
 
 	if opts.Opts.NoApi == false {
 		apiserver.RegisterApiHooks(NetApiInit())
 		go apiserver.RunApiServer()
 	}
-
 }
 
 func loxiNetRun() {

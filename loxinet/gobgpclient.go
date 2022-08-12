@@ -31,6 +31,7 @@ import (
 	api "github.com/osrg/gobgp/v3/api"
 	"github.com/osrg/gobgp/v3/pkg/apiutil"
 	"github.com/osrg/gobgp/v3/pkg/packet/bgp"
+	nlp "github.com/vishvananda/netlink"
 	"google.golang.org/grpc"
 	apb "google.golang.org/protobuf/types/known/anypb"
 )
@@ -65,9 +66,8 @@ type GoBgpH struct {
 	mtx     sync.RWMutex
 	state   goBgpState
 	rules   map[string]bool
+	noNlp   bool
 }
-
-//var gbh *GoBgpH
 
 func (gbh *GoBgpH) getPathAttributeString(nlri bgp.AddrPrefixInterface, attrs []bgp.PathAttributeInterface) string {
 	s := make([]string, 0)
@@ -164,6 +164,55 @@ func (gbh *GoBgpH) processRouteSingle(p *api.Path, showIdentifier bgp.BGPAddPath
 	}
 
 	tk.LogIt(tk.LOG_INFO, format, pathStr...)
+
+	if err := gbh.syncRoute(p, showIdentifier); err != nil {
+		tk.LogIt(tk.LOG_ERROR, " failed to"+format, pathStr...)
+	}
+}
+
+func (gbh *GoBgpH) syncRoute(p *api.Path, showIdentifier bgp.BGPAddPathMode) error {
+	if gbh.noNlp {
+		return nil
+	}
+
+	// NLRI have destination CIDR info
+	nlri, err := apiutil.GetNativeNlri(p)
+	if err != nil {
+		return err
+	}
+	_, dstIPN, err := net.ParseCIDR(nlri.String())
+	if err != nil {
+		return err
+	}
+
+	// NextHop
+	attrs, err := apiutil.GetNativePathAttributes(p)
+	if err != nil {
+		return err
+	}
+	nexthop := gbh.getNextHopFromPathAttributes(attrs)
+
+	// Make netlink route and add
+	route := &nlp.Route{
+		Dst: dstIPN,
+		Gw:  nexthop,
+	}
+
+	if p.GetIsWithdraw() {
+		tk.LogIt(tk.LOG_DEBUG, "[GoBGP] ip route delete %s via %s", route.Dst.String(), route.Gw.String())
+		if err := nlp.RouteDel(route); err != nil {
+			tk.LogIt(tk.LOG_ERROR, "[GoBGP] failed to ip route delete. err: %s", err.Error())
+			return err
+		}
+	} else {
+		tk.LogIt(tk.LOG_DEBUG, "[GoBGP] ip route add %s via %s", route.Dst.String(), route.Gw.String())
+		if err := nlp.RouteAdd(route); err != nil {
+			tk.LogIt(tk.LOG_ERROR, "[GoBGP] failed to ip route add. err: %s", err.Error())
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (gbh *GoBgpH) processRoute(pathList []*api.Path) {
@@ -240,16 +289,16 @@ func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 		NextHop: nh,
 	})
 	/*
-	   a3, _ := apb.New(&api.AsPathAttribute{
-	           Segments: []*api.AsSegment{
-	                   {
-	                           Type:    2,
-	                           Numbers: []uint32{6762, 39919, 65000, 35753, 65000},
-	                   },
-	           },
-	   })
+		a3, _ := apb.New(&api.AsPathAttribute{
+				Segments: []*api.AsSegment{
+						{
+								Type:    2,
+								Numbers: []uint32{6762, 39919, 65000, 35753, 65000},
+						},
+				},
+		})
 
-	   attrs := []*apb.Any{a1, a2, a3}
+		attrs := []*apb.Any{a1, a2, a3}
 	*/
 
 	attrs := []*apb.Any{a1, a2}
@@ -285,16 +334,16 @@ func (gbh *GoBgpH) DelAdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 		NextHop: nh,
 	})
 	/*
-	   a3, _ := apb.New(&api.AsPathAttribute{
-	           Segments: []*api.AsSegment{
-	                   {
-	                           Type:    2,
-	                           Numbers: []uint32{6762, 39919, 65000, 35753, 65000},
-	                   },
-	           },
-	   })
+		a3, _ := apb.New(&api.AsPathAttribute{
+				Segments: []*api.AsSegment{
+						{
+								Type:    2,
+								Numbers: []uint32{6762, 39919, 65000, 35753, 65000},
+						},
+				},
+		})
 
-	   attrs := []*apb.Any{a1, a2, a3}
+		attrs := []*apb.Any{a1, a2, a3}
 	*/
 
 	attrs := []*apb.Any{a1, a2}
@@ -314,7 +363,7 @@ func (gbh *GoBgpH) DelAdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 	return 0
 }
 
-func GoBgpInit() *GoBgpH {
+func GoBgpInit(noNlp bool) *GoBgpH {
 	//gbh = new(GoBgpH)
 	gbh := new(GoBgpH)
 
@@ -322,6 +371,7 @@ func GoBgpInit() *GoBgpH {
 	gbh.host = "127.0.0.1:50051"
 	gbh.rules = make(map[string]bool)
 	gbh.state = BGPDisconnected
+	gbh.noNlp = noNlp
 	go gbh.goBgpSpawn()
 	go gbh.goBgpConnect(gbh.host)
 	go gbh.goBgpMonitor()
@@ -403,16 +453,82 @@ func (gbh *GoBgpH) DelBGPRule(ip string) {
 	gbh.mtx.Unlock()
 }
 
+func (gbh *GoBgpH) AddCurrentBgpRoutesToIpRoute() error {
+	ipv4UC := &api.Family{
+		Afi:  api.Family_AFI_IP,
+		Safi: api.Family_SAFI_UNICAST,
+	}
+
+	stream, err := gbh.client.ListPath(context.TODO(), &api.ListPathRequest{
+		TableType: api.TableType_GLOBAL,
+		Family:    ipv4UC,
+	})
+	if err != nil {
+		return err
+	}
+
+	rib := make([]*api.Destination, 0)
+	for {
+		r, err := stream.Recv()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+		rib = append(rib, r.Destination)
+	}
+
+	for _, r := range rib {
+		_, dstIPN, err := net.ParseCIDR(r.GetPrefix())
+		if err != nil {
+			return fmt.Errorf("%s is invalid prefix", r.GetPrefix())
+		}
+
+		var nlpRoute *nlp.Route
+		for _, p := range r.Paths {
+			if !p.Best {
+				continue
+			}
+
+			nexthopIP := net.ParseIP(p.GetNeighborIp())
+			if nexthopIP == nil {
+				tk.LogIt(tk.LOG_DEBUG, "prefix %s neighbor_ip %s is invalid", r.GetPrefix(), p.GetNeighborIp())
+				continue
+			}
+
+			nlpRoute = &nlp.Route{
+				Dst: dstIPN,
+				Gw:  nexthopIP,
+			}
+		}
+
+		if nlpRoute == nil && len(r.Paths) > 0 {
+			nlpRoute = &nlp.Route{
+				Dst: dstIPN,
+				Gw:  net.ParseIP(r.Paths[0].GetNeighborIp()),
+			}
+		}
+		tk.LogIt(tk.LOG_DEBUG, "[GoBGP] ip route add %s via %s", dstIPN.String(), nlpRoute.Gw.String())
+		nlp.RouteAdd(nlpRoute)
+	}
+
+	return nil
+}
+
 func (gbh *GoBgpH) getGoBgpRoutes() {
-	/* Just for testing */
-	//AdvertiseRoute("11.11.11.0", 32, "0.0.0.0")
 	gbh.mtx.Lock()
+
 	for ip, valid := range gbh.rules {
+		tk.LogIt(tk.LOG_DEBUG, "[GoBGP] connected BGP rules ip %s is valied(%v)", ip, valid)
 		if valid {
 			gbh.AdvertiseRoute(ip, 32, "0.0.0.0")
 		}
 	}
+	if err := gbh.AddCurrentBgpRoutesToIpRoute(); err != nil {
+		tk.LogIt(tk.LOG_ERROR, "[GoBGP] AddCurrentBgpRoutesToIpRoute() return err: %s", err.Error())
+	}
 	gbh.mtx.Unlock()
+
 	go gbh.GetRoutes(gbh.client)
 }
 
