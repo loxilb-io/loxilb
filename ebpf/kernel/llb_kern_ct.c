@@ -495,8 +495,6 @@ dp_ct_sctp_sm(void *ctx, struct xfi *F,
   struct sctp_init_ch *ic;
   struct sctp_cookie *ck;
 
-  bpf_printk("SCTP conntrack");
-
   if (s + 1 > dend) {
     LLBS_PPLN_DROP(F);
     return -1;

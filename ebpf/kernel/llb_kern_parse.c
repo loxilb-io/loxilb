@@ -326,8 +326,6 @@ dp_parse_gtp(void *md,
         F->qm.qfi = pul->qfi;
         nh = pul+1;
 
-        bpf_printk("GTP QFI %x %d \n", pul->qfi, sizeof(*pul));
-
         if (pul->next_hdr == 0) goto done;
 
       } else if (pch->pdu_type == GTP_PDU_SESS_DL) {
