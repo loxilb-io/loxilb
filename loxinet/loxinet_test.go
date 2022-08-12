@@ -16,9 +16,9 @@
 package loxinet
 
 import (
-    "testing"
+	"testing"
 )
 
 func TestMain(t *testing.T) {
-    TestLoxinet(t)
+	TestLoxinet(t)
 }
