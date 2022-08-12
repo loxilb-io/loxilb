@@ -98,7 +98,7 @@ func loxiNetInit() {
 	}
 
 	if opts.Opts.Bgp {
-		mh.bgp = GoBgpInit(opts.Opts.NoNlp)
+		mh.bgp = GoBgpInit()
 	}
 
 	if opts.Opts.NoApi == false {

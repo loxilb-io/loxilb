@@ -363,7 +363,7 @@ func (gbh *GoBgpH) DelAdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 	return 0
 }
 
-func GoBgpInit(noNlp bool) *GoBgpH {
+func GoBgpInit() *GoBgpH {
 	//gbh = new(GoBgpH)
 	gbh := new(GoBgpH)
 
@@ -371,7 +371,6 @@ func GoBgpInit(noNlp bool) *GoBgpH {
 	gbh.host = "127.0.0.1:50051"
 	gbh.rules = make(map[string]bool)
 	gbh.state = BGPDisconnected
-	gbh.noNlp = noNlp
 	go gbh.goBgpSpawn()
 	go gbh.goBgpConnect(gbh.host)
 	go gbh.goBgpMonitor()
