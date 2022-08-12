@@ -16,12 +16,12 @@
 package main
 
 import (
-    "fmt"
+	"fmt"
 	ln "loxilb/loxinet"
-    "testing"
+	"testing"
 )
 
 func TestMain(t *testing.T) {
-   fmt.Printf("LoxiLB Unit-Test \n")
-   ln.TestLoxinet(t)
+	fmt.Printf("LoxiLB Unit-Test \n")
+	ln.TestLoxinet(t)
 }
