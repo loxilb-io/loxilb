@@ -105,7 +105,6 @@ func loxiNetInit() {
 		apiserver.RegisterApiHooks(NetApiInit())
 		go apiserver.RunApiServer()
 	}
-
 }
 
 func loxiNetRun() {
