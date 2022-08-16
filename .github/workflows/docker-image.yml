@@ -17,4 +17,4 @@ jobs:
     - name: Build the loxilb Docker image
       run: |
           docker build -t loxilb-io/loxilb .
-          docker push ghcr.io/loxilb-io/loxilb:latest
+          docker push loxilb-io/loxilb:latest
