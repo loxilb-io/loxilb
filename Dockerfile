@@ -42,7 +42,7 @@ RUN mkdir -p /root/loxilb-io/loxilb/
 RUN git clone https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && cd /root/loxilb-io/loxilb/ && go get . && make && cp ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && cp api/certification/* /opt/loxilb/cert/ && cd -
 #RUN /usr/local/sbin/mkllb_bpffs
 
-RUN cd /root/loxilb-io/loxilb/ && make test
+#RUN cd /root/loxilb-io/loxilb/ && make test
  
 ENTRYPOINT ["/root/loxilb-io/loxilb/loxilb"]
 
