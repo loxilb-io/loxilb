@@ -13,7 +13,7 @@ RUN apt update
 # Install loxilb related packages
 RUN apt install -y clang llvm libelf-dev gcc-multilib libpcap-dev vim net-tools \
     linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils wget \
-    unzip build-essential bison flex sudo && \
+    unzip build-essential bison flex sudo iproute2 && \
     rm -rf /var/lib/apt/lists/* && \
     apt clean
 
@@ -41,6 +41,8 @@ RUN mkdir -p /root/loxilb-io/loxilb/
 # Install loxilb
 RUN git clone https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && cd /root/loxilb-io/loxilb/ && go get . && make && cp ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && cp api/certification/* /opt/loxilb/cert/ && cd -
 #RUN /usr/local/sbin/mkllb_bpffs
+
+RUN cd /root/loxilb-io/loxilb/ && make test
  
 ENTRYPOINT ["/root/loxilb-io/loxilb/loxilb"]
 
