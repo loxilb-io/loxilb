@@ -16,13 +16,10 @@
 package loxinet
 
 import (
-	"fmt"
 	apiserver "loxilb/api"
-	cmn "loxilb/common"
 	tk "loxilb/loxilib"
 	nlp "loxilb/loxinlp"
 	opts "loxilb/options"
-	"net"
 	"sync"
 	"time"
 )
@@ -112,49 +109,6 @@ func loxiNetRun() {
 }
 
 func LoxiNetMain() {
-	fmt.Printf("loxilb - start\n")
-
 	loxiNetInit()
-
-	// Test stub code -- To be removed
-	if false {
-		lbServ := cmn.LbServiceArg{ServIP: "20.20.20.1", ServPort: 2020, Proto: "tcp", Sel: cmn.LB_SEL_RR}
-		lbEps := []cmn.LbEndPointArg{
-			{
-				EpIP:   "31.31.31.1",
-				EpPort: 5001,
-				Weight: 1,
-			},
-			{
-				EpIP:   "32.32.32.1",
-				EpPort: 5001,
-				Weight: 2,
-			},
-			{
-				EpIP:   "17.17.17.1",
-				EpPort: 5001,
-				Weight: 2,
-			},
-		}
-
-		mh.zr.Rules.AddNatLbRule(lbServ, lbEps[:])
-		//mh.zr.Rules.DeleteNatLbRule(lbServ)
-
-		// Session information
-		anTun := cmn.SessTun{TeID: 1, Addr: net.IP{10, 10, 10, 56}} // An TeID, gNBIP
-		cnTun := cmn.SessTun{TeID: 1, Addr: net.IP{10, 10, 10, 59}} // Cn TeID, MyIP
-
-		_, err := mh.zr.Sess.SessAdd("user1", net.IP{88, 88, 88, 88}, anTun, cnTun)
-		if err != nil {
-			fmt.Printf("Failed to add session\n")
-		}
-
-		// Add ULCL classifier
-		_, err = mh.zr.Sess.UlClAddCls("user1", cmn.UlClArg{Addr: net.IP{32, 32, 32, 1}, Qfi: 11})
-		//_, err = mh.zr.Sess.UlClAddCls("user1", cmn.UlClArg{Addr:net.IP{9,9,9,9}, Qfi:1})
-
-		mh.zr.Sess.USess2String(&mh)
-	}
-
 	loxiNetRun()
 }
