@@ -1,5 +1,7 @@
 [![Build Status](https://app.travis-ci.com/loxilb-io/loxilb.svg?branch=main)](https://app.travis-ci.com/loxilb-io/loxilb)
 
+[![eBPF Emerging Project](https://raw.githubusercontent.com/loxilb-io/loxilbdocs/main/docs/photos/ebpflogo.png)](https://ebpf.io/projects#loxilb)
+
 ## What is loxilb
 
 loxilb is a cloud-native "edge" load-balancer stack built from grounds up using eBPF at its core. loxilb aims to provide the following :
