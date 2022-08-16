@@ -13,7 +13,7 @@ subsys-test:
 	cd loxilib && go test
 
 build: subsys
-	@go build -o ${bin}
+	@go build -o ${bin} -ldflags="-X 'main.buildInfo=${shell date '+%Y_%m_%d'}-${shell git branch --show-current}'"
 
 clean: subsys-clean
 	go clean

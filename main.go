@@ -48,9 +48,10 @@ func fileCreate(fname string) int {
 }
 
 var version string = "0.7.0"
+var buildInfo string = ""
 
 func main() {
-	fmt.Printf("Start\n")
+	fmt.Printf("loxilb start\n")
 
 	_, err := flags.Parse(&opts.Opts)
 	if err != nil {
@@ -59,7 +60,7 @@ func main() {
 	}
 
 	if opts.Opts.Version {
-		fmt.Printf("loxilb version: %s\n", version)
+		fmt.Printf("loxilb version: %s %s\n", version, buildInfo)
 		os.Exit(0)
 	}
 
