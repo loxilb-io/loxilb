@@ -17,7 +17,7 @@ jobs:
       - run: wget https://go.dev/dl/go1.18.linux-amd64.tar.gz && tar -xzf go1.18.linux-amd64.tar.gz --directory /usr/local/
       - run: export PATH="${PATH}:/usr/local/go/bin"
       - run: make
-      - rin: sudo -E env "PATH=$PATH" make test
+      - run: sudo -E env "PATH=$PATH" make test
       - run: docker pull ghcr.io/loxilb-io/loxilb:latest
       - run: docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
       - run: make docker-cp
