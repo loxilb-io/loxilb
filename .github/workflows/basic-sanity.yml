@@ -35,5 +35,11 @@ jobs:
       - run: id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"` && docker commit $id ghcr.io/loxilb-io/loxilb:latest
       - run: docker stop loxilb && docker rm loxilb
       - run: docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
+      - run: | 
+             id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"`
+             echo $id
+             pid=`docker inspect -f '{{.State.Pid}}' $id`
+             echo $pid
+             docker ps -f name=loxilb 
       - run: ebpf/utils/mkenv.sh docker
       - run: ebpf/utils/basic-sanity-ci.sh
