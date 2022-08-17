@@ -221,7 +221,11 @@ dp_do_dmac_lkup(void *ctx, struct xfi *F, void *fa_)
   return 0;
 }
 
+#ifdef HAVE_DP_FUNCS
 static int
+#else
+static int __always_inline
+#endif
 dp_do_rt_l2_nh(void *ctx, struct xfi *F,
                struct dp_rt_l2nh_act *nl2)
 {
@@ -233,7 +237,11 @@ dp_do_rt_l2_nh(void *ctx, struct xfi *F,
   return nl2->rnh_num;
 }
 
-static int 
+#ifdef HAVE_DP_FUNCS
+static int
+#else
+static int __always_inline
+#endif
 dp_do_rt_l2_vxlan_nh(void *ctx, struct xfi *F,
                      struct dp_rt_l2vxnh_act *nl2vx)
 {

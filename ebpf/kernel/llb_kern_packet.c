@@ -308,7 +308,11 @@ dp_rewire_packet(void *ctx,  struct xfi *F)
   return DP_REDIRECT;
 }
 
+#ifdef HAVE_DP_FUNCS
 static int
+#else
+static int __always_inline
+#endif
 dp_pipe_check_res(void *ctx, struct xfi *F, void *fa)
 {
   LL_DBG_PRINTK("[PIPE] act 0x%x\n", F->pm.pipe_act);
