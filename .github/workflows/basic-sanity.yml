@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 jobs:
   build:
+    name: basic-sanity
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
