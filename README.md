@@ -1,4 +1,4 @@
-[![Build Status](https://app.travis-ci.com/loxilb-io/loxilb.svg?branch=main)](https://app.travis-ci.com/loxilb-io/loxilb) ![build workflow](https://github.com/loxilb-io/loxilb/actions/workflows/docker-image.yml/badge.svg)
+![build workflow](https://github.com/loxilb-io/loxilb/actions/workflows/docker-image.yml/badge.svg) ![sanity workflow](https://github.com/loxilb-io/loxilb/actions/workflows/basic-sanity.yml/badge.svg)
 
 [![eBPF Emerging Project](https://raw.githubusercontent.com/loxilb-io/loxilbdocs/main/docs/photos/ebpflogo.png)](https://ebpf.io/projects#loxilb)
 
