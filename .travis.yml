@@ -32,5 +32,5 @@ script:
   - make
   - sudo -E env "PATH=$PATH" make test
   - ebpf/utils/mkenv.sh docker
-  - ebpf/utils/h2h.sh
+  - ebpf/utils/basic-sanity-ci.sh
 
