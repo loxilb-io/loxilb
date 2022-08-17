@@ -12,10 +12,11 @@ jobs:
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v2
+      - uses: actions/setup-go@v3
+        with:
+             go-version: '>=1.17.0'
       - run: sudo apt-get update
       - run: sudo apt -y install clang llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils
-      - run: wget https://go.dev/dl/go1.18.linux-amd64.tar.gz && tar -xzf go1.18.linux-amd64.tar.gz --directory /usr/local/
-      - run: export PATH="${PATH}:/usr/local/go/bin"
       - run: make
       - run: sudo -E env "PATH=$PATH" make test
       - run: docker pull ghcr.io/loxilb-io/loxilb:latest
