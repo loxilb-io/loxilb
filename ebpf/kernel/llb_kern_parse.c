@@ -178,9 +178,9 @@ proc_inl3:
 
         c = DP_TC_PTR(DP_ADD_PTR(sctp, sizeof(*sctp)));
   
+        /* Chunks need not be present in all sctp packets */
         if (c + 1 > dend) {
-          LLBS_PPLN_DROP(F);
-          return -1;
+          return 0;
         }
 
         if (c->type == SCTP_ERROR ||
@@ -650,10 +650,10 @@ dp_parse_packet(void *md,
   
         /* Chunks need not be present in all sctp packets */
         if (c + 1 > dend) {
-          LLBS_PPLN_PASS(F);
-          return 1;
+          return 0;
         }
 
+        /* Parsing only one-level of chunk */
         if (c->type == SCTP_ERROR ||
             c->type == SCTP_ABORT ||
             c->type == SCTP_SHUT  ||

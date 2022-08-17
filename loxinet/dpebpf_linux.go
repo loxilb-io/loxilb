@@ -821,6 +821,8 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ctv4_key, ctDat *C.struct_dp_ctv4_dat) *D
 			ct.cState = "shut-ack"
 		case s.state == C.CT_SCTP_SHUTC:
 			ct.cState = "shut-complete"
+		case s.state == C.CT_SCTP_ABRT:
+			ct.cState = "abort"
 		default:
 			ct.cState = "unk"
 		}

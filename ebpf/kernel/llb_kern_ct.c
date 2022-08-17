@@ -517,6 +517,9 @@ dp_ct_sctp_sm(void *ctx, struct xfi *F,
   case SCTP_SHUT:
     nstate = CT_SCTP_SHUT;
     goto end;
+  case SCTP_ABORT:
+    nstate = CT_SCTP_ABRT;
+    goto end;
   }
 
   switch (ss->state) {
