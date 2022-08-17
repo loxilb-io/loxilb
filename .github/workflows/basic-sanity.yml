@@ -16,7 +16,7 @@ jobs:
         with:
              go-version: '>=1.17.0'
       - run: sudo apt-get update
-      - run: sudo apt -y install clang llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils
+      - run: sudo apt -y install clang llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iproute2
       - run: wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
             unzip main.zip && cd iproute2-main/libbpf/src/ && mkdir build && \
             DESTDIR=build sudo make install && cd - && \
