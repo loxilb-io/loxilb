@@ -648,9 +648,10 @@ dp_parse_packet(void *md,
 
         c = DP_TC_PTR(DP_ADD_PTR(sctp, sizeof(*sctp)));
   
+        /* Chunks need not be present in all sctp packets */
         if (c + 1 > dend) {
-          LLBS_PPLN_DROP(F);
-          return -1;
+          LLBS_PPLN_PASS(F);
+          return 1;
         }
 
         if (c->type == SCTP_ERROR ||

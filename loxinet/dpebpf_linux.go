@@ -882,7 +882,7 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (error, DpRetT) {
 
 			act = &tact.ctd
 
-			if act.dir == C.CT_DIR_IN {
+			if act.dir == C.CT_DIR_IN || act.dir == C.CT_DIR_OUT {
 				goCt4Ent := convDPCt2GoObj(ctKey, act)
 				fmt.Println(goCt4Ent)
 				ctMap[goCt4Ent.Key()] = goCt4Ent
