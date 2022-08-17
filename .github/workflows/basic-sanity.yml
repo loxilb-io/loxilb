@@ -17,6 +17,10 @@ jobs:
              go-version: '>=1.17.0'
       - run: sudo apt-get update
       - run: sudo apt -y install clang llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils
+      - run: wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
+            unzip main.zip && cd iproute2-main/libbpf/src/ && mkdir build && \
+            DESTDIR=build sudo make install && cd - && \
+            cd iproute2-main/ &&  export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:`pwd`/libbpf/src/ && LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && sudo cp -f tc/tc /usr/local/sbin/ntc && cd - && cd iproute2-main/libbpf/src/ && sudo make install && cd -
       - run: ebpf/utils/mkllb_bpffs.sh
       - run: sudo -E env "PATH=$PATH" make
       - run: sudo -E env "PATH=$PATH" make test
