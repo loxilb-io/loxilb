@@ -574,7 +574,12 @@ dp_parse_packet(void *md,
     F->l3m.ip.saddr = iph->saddr;
     F->l3m.ip.daddr = iph->daddr;
 
-    if (!ip_is_fragment(iph) || ip_is_first_fragment(iph)) {
+    /* Earlier we used to have the following check here :
+     * !ip_is_fragment(iph) || ip_is_first_fragment(iph))
+     * But it seems to be unncessary as proper bound checking
+     * is already taken care by eBPF verifier
+     */
+    if (1) {
 
       F->pm.l4_off = DP_DIFF_PTR(DP_ADD_PTR(iph, iphl), eth);
 
@@ -582,8 +587,8 @@ dp_parse_packet(void *md,
         struct tcphdr *tcp = DP_ADD_PTR(iph, iphl);
 
         if (tcp + 1 > dend) {
-          LLBS_PPLN_DROP(F);
-          return -1;
+          /* In case of fragmented packets */
+          return 0;
         }
 
         if (tcp->fin)
@@ -609,12 +614,13 @@ dp_parse_packet(void *md,
         struct udphdr *udp = DP_ADD_PTR(iph, iphl);
 
         if (udp + 1 > dend) {
-          LLBS_PPLN_DROP(F);
-          return -1;
+          return 0;
         }
+
 
         F->l3m.source = udp->source;
         F->l3m.dest = udp->dest;
+
         if (dp_pkt_is_l2mcbc(F, md) == 1) {
           LL_DBG_PRINTK("[PRSR] bcmc\n");
           LLBS_PPLN_TRAP(F);
@@ -625,12 +631,11 @@ dp_parse_packet(void *md,
         struct icmphdr *icmp = DP_ADD_PTR(iph, iphl);
 
         if (icmp + 1 > dend) {
-          LLBS_PPLN_DROP(F);
-          return -1;
+          return 0;
         }
 
-        if (icmp->type == ICMP_ECHOREPLY ||
-            icmp->type == ICMP_ECHO) {
+        if ((icmp->type == ICMP_ECHOREPLY ||
+            icmp->type == ICMP_ECHO)) {
            F->l3m.source = icmp->un.echo.id;
            F->l3m.dest = icmp->un.echo.id;
         } 
@@ -639,15 +644,14 @@ dp_parse_packet(void *md,
         struct sctphdr *sctp = DP_ADD_PTR(iph, iphl);
 
         if (sctp + 1 > dend) {
-          LLBS_PPLN_DROP(F);
-          return -1;
+          return 0;
         }
 
         F->l3m.source = sctp->source;
         F->l3m.dest = sctp->dest;
-
-        c = DP_TC_PTR(DP_ADD_PTR(sctp, sizeof(*sctp)));
   
+        c = DP_TC_PTR(DP_ADD_PTR(sctp, sizeof(*sctp)));
+
         /* Chunks need not be present in all sctp packets */
         if (c + 1 > dend) {
           return 0;
@@ -661,6 +665,11 @@ dp_parse_packet(void *md,
             c->type == SCTP_SHUT_COMPLETE) {
           F->pm.l4fin = 1;
         }
+      }
+
+      if (ip_is_fragment(iph)) {
+         F->l3m.source = 0;
+         F->l3m.dest = 0;
       }
     } else {
 #ifndef LL_HANDLE_NO_FRAG
