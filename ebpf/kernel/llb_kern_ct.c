@@ -539,7 +539,9 @@ dp_ct_sctp_sm(void *ctx, struct xfi *F,
     nstate = CT_SCTP_INIT;
     break;
   case CT_SCTP_INIT:
-    if (c->type != SCTP_INIT_CHUNK_ACK && dir != CT_DIR_OUT) {
+
+    if ((c->type != SCTP_INIT_CHUNK && dir != CT_DIR_IN) &&
+        (c->type != SCTP_INIT_CHUNK_ACK && dir != CT_DIR_OUT)) {
       nstate = CT_SCTP_ERR;
       goto end;
     }
@@ -550,14 +552,18 @@ dp_ct_sctp_sm(void *ctx, struct xfi *F,
       goto end;
     }
 
-    if (s->vtag != ss->itag) {
-      nstate = CT_SCTP_ERR;
-      goto end;
+    if (c->type == SCTP_INIT_CHUNK) {
+      ss->itag = ic->tag;
+      nstate = CT_SCTP_INIT;
+    } else {
+      if (s->vtag != ss->itag) {
+        nstate = CT_SCTP_ERR;
+        goto end;
+      }
+
+      ss->otag = ic->tag;
+      nstate = CT_SCTP_INITA;
     }
-
-    ss->otag = ic->tag;
-
-    nstate = CT_SCTP_INITA;
     break;
   case CT_SCTP_INITA:
     if (c->type != SCTP_COOKIE_ECHO && dir != CT_DIR_IN) {
