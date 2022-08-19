@@ -16,10 +16,12 @@
 package loxinet
 
 import (
+	"fmt"
 	apiserver "loxilb/api"
 	tk "loxilb/loxilib"
 	nlp "loxilb/loxinlp"
 	opts "loxilb/options"
+	"os"
 	"sync"
 	"time"
 )
@@ -72,7 +74,8 @@ var mh loxiNetH
 
 func loxiNetInit() {
 
-	tk.LogItInit("/var/log/loxilb.log", tk.LOG_DEBUG, true)
+	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
+	tk.LogItInit(logfile, tk.LOG_DEBUG, true)
 
 	mh.tDone = make(chan bool)
 	mh.ticker = time.NewTicker(10 * time.Second)
