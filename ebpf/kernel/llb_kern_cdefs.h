@@ -930,8 +930,11 @@ dp_set_sctp_dst_ip(void *md, struct xfi *F, __be32 xip)
 static int __always_inline
 dp_set_sctp_sport(void *md, struct xfi *F, __be16 xport)
 {
+  uint32_t csum = 0;
+  int sctp_csum_off = F->pm.l4_off + offsetof(struct sctphdr, checksum);
   int sctp_sport_off = F->pm.l4_off + offsetof(struct sctphdr, source);
 
+  bpf_skb_store_bytes(md, sctp_csum_off, &csum , sizeof(csum), 0);
   bpf_skb_store_bytes(md, sctp_sport_off, &xport, sizeof(xport), 0);
   F->l3m.source = xport;
 
@@ -941,8 +944,11 @@ dp_set_sctp_sport(void *md, struct xfi *F, __be16 xport)
 static int __always_inline
 dp_set_sctp_dport(void *md, struct xfi *F, __be16 xport)
 {
+  uint32_t csum = 0;
+  int sctp_csum_off = F->pm.l4_off + offsetof(struct sctphdr, checksum); 
   int sctp_dport_off = F->pm.l4_off + offsetof(struct sctphdr, dest);
 
+  bpf_skb_store_bytes(md, sctp_csum_off, &csum , sizeof(csum), 0);
   bpf_skb_store_bytes(md, sctp_dport_off, &xport, sizeof(xport), 0);
   F->l3m.dest = xport;
 
