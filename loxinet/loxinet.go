@@ -18,7 +18,7 @@ package loxinet
 import (
 	"fmt"
 	apiserver "loxilb/api"
-	tk "loxilb/loxilib"
+	tk "github.com/loxilb-io/loxilib"
 	nlp "loxilb/loxinlp"
 	opts "loxilb/options"
 	"os"

@@ -17,7 +17,7 @@ package handler
 
 import (
 	"loxilb/api/restapi/operations"
-	tk "loxilb/loxilib"
+	tk "github.com/loxilb-io/loxilib"
 
 	"github.com/go-openapi/runtime/middleware"
 )

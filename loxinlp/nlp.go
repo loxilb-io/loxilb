@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	cmn "loxilb/common"
-	tk "loxilb/loxilib"
+	tk "github.com/loxilb-io/loxilib"
 	"net"
 	"os"
 	"os/exec"

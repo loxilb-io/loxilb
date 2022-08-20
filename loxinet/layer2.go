@@ -19,7 +19,7 @@ import (
 	"errors"
 	"fmt"
 	cmn "loxilb/common"
-	tk "loxilb/loxilib"
+	tk "github.com/loxilb-io/loxilib"
 	"net"
 	"time"
 )
@@ -124,8 +124,8 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 
 		tk.LogIt(tk.LOG_DEBUG, "fdb tun rt lookup %s\n", attr.Dst.String())
 		// Check if the end-point is reachable
-		err, pStr, tDat := zone.Rt.Trie4.FindTrie(attr.Dst.String())
-		if err == 0 {
+		err, pDstNet, tDat := zone.Rt.Trie4.FindTrie(attr.Dst.String())
+		if err == 0 && pDstNet != nil {
 			switch rtn := tDat.(type) {
 			case *Neigh:
 				if rtn == nil {
@@ -135,30 +135,24 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 				return true, -1, errors.New("no neigh found")
 			}
 			if nh, ok := tDat.(*Neigh); ok && !nh.Inactive {
-				_, pDstNet, perr := net.ParseCIDR(*pStr)
-				if perr != nil {
-					tk.LogIt(tk.LOG_DEBUG, "fdb tun rtlookup %s parse-err\n", attr.Dst.String())
+				rt := zone.Rt.RtFind(*pDstNet, zone.Name)
+				if rt == nil {
 					unRch = true
+					tk.LogIt(tk.LOG_DEBUG, "fdb tun rtlookup %s no-rt\n", attr.Dst.String())
 				} else {
-					rt := zone.Rt.RtFind(*pDstNet, zone.Name)
-					if rt == nil {
-						unRch = true
-						tk.LogIt(tk.LOG_DEBUG, "fdb tun rtlookup %s nort\n", attr.Dst.String())
-					} else {
-						ret, tep := zone.Nh.NeighAddTunEP(nh, attr.Dst, p.HInfo.TunId, DP_TUN_VXLAN, true)
-						if ret == 0 {
-							rt.RtDepObjs = append(rt.RtDepObjs, f)
-							f.FdbTun.rt = rt
-							f.FdbTun.nh = nh
-							f.FdbTun.ep = tep
-							unRch = false
-						}
+					ret, tep := zone.Nh.NeighAddTunEP(nh, attr.Dst, p.HInfo.TunId, DP_TUN_VXLAN, true)
+					if ret == 0 {
+						rt.RtDepObjs = append(rt.RtDepObjs, f)
+						f.FdbTun.rt = rt
+						f.FdbTun.nh = nh
+						f.FdbTun.ep = tep
+						unRch = false
 					}
 				}
 			}
 		} else {
 			unRch = true
-			tk.LogIt(tk.LOG_DEBUG, "3.fdb tun rtlookup %s notrie\n", attr.Dst.String())
+			tk.LogIt(tk.LOG_DEBUG, "fdb tun rtlookup %s no trie-ent\n", attr.Dst.String())
 		}
 	}
 	if unRch {

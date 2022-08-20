@@ -43,7 +43,7 @@ import (
 	"errors"
 	"fmt"
 	cmn "loxilb/common"
-	tk "loxilb/loxilib"
+	tk "github.com/loxilb-io/loxilib"
 	"net"
 	"syscall"
 	"time"

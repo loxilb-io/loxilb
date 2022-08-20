@@ -3,6 +3,7 @@ module loxilb
 go 1.17
 
 require github.com/vishvananda/netlink v1.1.1-0.20210330154013-f5de75959ad5
+require github.com/loxilb-io/loxilib v0.9.0
 
 require (
 	github.com/go-openapi/errors v0.20.2

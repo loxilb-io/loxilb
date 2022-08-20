@@ -17,7 +17,7 @@ package loxinet
 
 import (
 	"errors"
-	tk "loxilb/loxilib"
+	tk "github.com/loxilb-io/loxilib"
 	"sync"
 )
 

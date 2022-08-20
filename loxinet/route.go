@@ -18,8 +18,8 @@ package loxinet
 import (
 	"errors"
 	"fmt"
-	tk "loxilb/loxilib"
 	"net"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 const (
@@ -93,7 +93,7 @@ type RtH struct {
 func RtInit(zone *Zone) *RtH {
 	var nRt = new(RtH)
 	nRt.RtMap = make(map[RtKey]*Rt)
-	nRt.Trie4 = tk.TrieInit()
+	nRt.Trie4 = tk.TrieInit(false)
 	nRt.Zone = zone
 	nRt.HwMark = tk.NewCounter(1, MAX_ROUTES)
 	return nRt

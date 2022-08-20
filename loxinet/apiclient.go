@@ -17,7 +17,7 @@ package loxinet
 
 import (
 	cmn "loxilb/common"
-	tk "loxilb/loxilib"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 type NetApiStruct struct {
