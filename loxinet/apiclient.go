@@ -20,14 +20,19 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 )
 
+// This file implements interface defined in cmn.NetHookInterface
+// The implementation is thread-safe and can be called by multiple-clients at once
+
 type NetApiStruct struct {
 }
 
+// Initialize a new instance of NetApi
 func NetApiInit() *NetApiStruct {
 	na := new(NetApiStruct)
 	return na
 }
 
+// Get Port Information of loxinet
 func (*NetApiStruct) NetPortGet() ([]cmn.PortDump, error) {
 	ret, err := mh.zr.Ports.PortsToGet()
 	if err != nil {
@@ -36,6 +41,7 @@ func (*NetApiStruct) NetPortGet() ([]cmn.PortDump, error) {
 	return ret, nil
 }
 
+// Add a port in loxinet
 func (*NetApiStruct) NetPortAdd(pm *cmn.PortMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -47,6 +53,7 @@ func (*NetApiStruct) NetPortAdd(pm *cmn.PortMod) (int, error) {
 	return ret, err
 }
 
+// Delete port from loxinet
 func (*NetApiStruct) NetPortDel(pm *cmn.PortMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -55,6 +62,7 @@ func (*NetApiStruct) NetPortDel(pm *cmn.PortMod) (int, error) {
 	return ret, err
 }
 
+// Add vlan info to loxinet
 func (*NetApiStruct) NetVlanAdd(vm *cmn.VlanMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -68,6 +76,7 @@ func (*NetApiStruct) NetVlanAdd(vm *cmn.VlanMod) (int, error) {
 	return ret, err
 }
 
+// Delete vlan info from loxinet
 func (*NetApiStruct) NetVlanDel(vm *cmn.VlanMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -76,6 +85,7 @@ func (*NetApiStruct) NetVlanDel(vm *cmn.VlanMod) (int, error) {
 	return ret, err
 }
 
+// Add a port to vlan in loxinet
 func (*NetApiStruct) NetVlanPortAdd(vm *cmn.VlanPortMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -84,6 +94,7 @@ func (*NetApiStruct) NetVlanPortAdd(vm *cmn.VlanPortMod) (int, error) {
 	return ret, err
 }
 
+// Delete a port from vlan in loxinet
 func (*NetApiStruct) NetVlanPortDel(vm *cmn.VlanPortMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -92,6 +103,7 @@ func (*NetApiStruct) NetVlanPortDel(vm *cmn.VlanPortMod) (int, error) {
 	return ret, err
 }
 
+// Add an ipv4 address in loxinet
 func (*NetApiStruct) NetIpv4AddrAdd(am *cmn.Ipv4AddrMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -100,6 +112,7 @@ func (*NetApiStruct) NetIpv4AddrAdd(am *cmn.Ipv4AddrMod) (int, error) {
 	return ret, err
 }
 
+// Delete an ipv4 address in loxinet
 func (*NetApiStruct) NetIpv4AddrDel(am *cmn.Ipv4AddrMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -108,6 +121,7 @@ func (*NetApiStruct) NetIpv4AddrDel(am *cmn.Ipv4AddrMod) (int, error) {
 	return ret, err
 }
 
+// Add a ipv4 neighbor in loxinet
 func (*NetApiStruct) NetNeighv4Add(nm *cmn.Neighv4Mod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -122,6 +136,7 @@ func (*NetApiStruct) NetNeighv4Add(nm *cmn.Neighv4Mod) (int, error) {
 	return 0, nil
 }
 
+// Delete a ipv4 neighbor in loxinet
 func (*NetApiStruct) NetNeighv4Del(nm *cmn.Neighv4Mod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -130,6 +145,7 @@ func (*NetApiStruct) NetNeighv4Del(nm *cmn.Neighv4Mod) (int, error) {
 	return ret, err
 }
 
+// Add a forwarding database entry in loxinet
 func (*NetApiStruct) NetFdbAdd(fm *cmn.FdbMod) (int, error) {
 	fdbKey := FdbKey{fm.MacAddr, fm.BridgeId}
 	fdbAttr := FdbAttr{fm.Dev, fm.Dst, fm.Type}
@@ -141,6 +157,7 @@ func (*NetApiStruct) NetFdbAdd(fm *cmn.FdbMod) (int, error) {
 	return ret, err
 }
 
+// Delete a forwarding database entry in loxinet
 func (*NetApiStruct) NetFdbDel(fm *cmn.FdbMod) (int, error) {
 	fdbKey := FdbKey{fm.MacAddr, fm.BridgeId}
 	mh.mtx.Lock()
@@ -150,6 +167,7 @@ func (*NetApiStruct) NetFdbDel(fm *cmn.FdbMod) (int, error) {
 	return ret, err
 }
 
+// Add an ipv4 route in loxinet
 func (*NetApiStruct) NetRoutev4Add(rm *cmn.Routev4Mod) (int, error) {
 	var ret int
 	var err error
@@ -168,6 +186,7 @@ func (*NetApiStruct) NetRoutev4Add(rm *cmn.Routev4Mod) (int, error) {
 	return ret, err
 }
 
+// Delete an ipv4 route in loxinet
 func (*NetApiStruct) NetRoutev4Del(rm *cmn.Routev4Mod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -176,6 +195,7 @@ func (*NetApiStruct) NetRoutev4Del(rm *cmn.Routev4Mod) (int, error) {
 	return ret, err
 }
 
+// Add a load-balancer rule in loxinet
 func (*NetApiStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -191,6 +211,7 @@ func (*NetApiStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
 	return ret, err
 }
 
+// Delete a load-balancer rule in loxinet
 func (*NetApiStruct) NetLbRuleDel(lm *cmn.LbRuleMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -206,17 +227,20 @@ func (*NetApiStruct) NetLbRuleDel(lm *cmn.LbRuleMod) (int, error) {
 	return ret, err
 }
 
+// Get a load-balancer rule from loxinet
 func (*NetApiStruct) NetLbRuleGet() ([]cmn.LbRuleMod, error) {
 	ret, err := mh.zr.Rules.GetNatLbRule()
 	return ret, err
 }
 
+// Get connection track info from loxinet
 func (*NetApiStruct) NetCtInfoGet() ([]cmn.CtInfo, error) {
 	// There is no locking requirement for this operation
 	ret := mh.dp.DpMapGetCt4()
 	return ret, nil
 }
 
+// Add a 3gpp user-session info in loxinet
 func (*NetApiStruct) NetSessionAdd(sm *cmn.SessionMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -225,6 +249,7 @@ func (*NetApiStruct) NetSessionAdd(sm *cmn.SessionMod) (int, error) {
 	return ret, err
 }
 
+// Delete a 3gpp user-session info in loxinet
 func (*NetApiStruct) NetSessionDel(sm *cmn.SessionMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -233,6 +258,7 @@ func (*NetApiStruct) NetSessionDel(sm *cmn.SessionMod) (int, error) {
 	return ret, err
 }
 
+// Add a 3gpp ulcl-filter info in loxinet
 func (*NetApiStruct) NetSessionUlClAdd(sr *cmn.SessionUlClMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -241,6 +267,7 @@ func (*NetApiStruct) NetSessionUlClAdd(sr *cmn.SessionUlClMod) (int, error) {
 	return ret, err
 }
 
+// Delete a 3gpp ulcl-filter info in loxinet
 func (*NetApiStruct) NetSessionUlClDel(sr *cmn.SessionUlClMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -249,12 +276,14 @@ func (*NetApiStruct) NetSessionUlClDel(sr *cmn.SessionUlClMod) (int, error) {
 	return ret, err
 }
 
+// Get 3gpp user-session info in loxinet
 func (*NetApiStruct) NetSessionGet() ([]cmn.SessionMod, error) {
 	// There is no locking requirement for this operation
 	ret, err := mh.zr.Sess.SessGet()
 	return ret, err
 }
 
+// Get 3gpp ulcl filter info from loxinet
 func (*NetApiStruct) NetSessionUlClGet() ([]cmn.SessionUlClMod, error) {
 	// There is no locking requirement for this operation
 	ret, err := mh.zr.Sess.SessUlclGet()

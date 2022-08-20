@@ -50,6 +50,9 @@ import (
 	"unsafe"
 )
 
+// This file implements the interface DpHookInterface 
+// The implementation is specific to loxilb ebpf datapath for linux 
+
 const (
 	EBPF_ERR_BASE = iota - 50000
 	EBPF_ERR_PORTPROP_ADD
@@ -69,6 +72,10 @@ const (
 	EBPF_ERR_SESS4_ADD
 	EBPF_ERR_SESS4_DEL
 	EBPF_ERR_WQ_UNK
+)
+
+const (
+	DPEBPF_LINUX_TIVAL = 25
 )
 
 type (
@@ -103,6 +110,7 @@ type DpEbpfH struct {
 	tbN    int
 }
 
+// This ticker routine runs every DPEBPF_LINUX_TIVAL seconds
 func dpEbpfTicker() {
 	tbls := []int{int(C.LL_DP_RTV4_STATS_MAP),
 		int(C.LL_DP_TMAC_STATS_MAP),
@@ -124,7 +132,8 @@ func dpEbpfTicker() {
 			tk.LogIt(-1, "DP Tick at for selector %v:%d\n", t, sel)
 
 			// For every tick collect stats for an eBPF map
-			// This routine caches stats in a local statsDB
+			// This routine caches stats in a local statsDB 
+			// wcich can be collected from a separate thread
 			C.llb_collect_table_stats(C.int(tbls[sel]))
 
 			// Age any entries related to Conntrack
@@ -159,13 +168,14 @@ func DpEbpfInit() *DpEbpfH {
 
 	ne := new(DpEbpfH)
 	ne.tDone = make(chan bool)
-	ne.ticker = time.NewTicker(25 * time.Second)
+	ne.ticker = time.NewTicker(DPEBPF_LINUX_TIVAL * time.Second)
 
 	go dpEbpfTicker()
 
 	return ne
 }
 
+// Load loxilb eBPF program to an interface
 func loadEbpfPgm(name string) int {
 	ifStr := C.CString(name)
 	section := C.CString(string(C.XDP_LL_SEC_DEFAULT))
@@ -175,6 +185,7 @@ func loadEbpfPgm(name string) int {
 	return int(ret)
 }
 
+// Unload loxilb eBPF program from an interface
 func unLoadEbpfPgm(name string) int {
 	ifStr := C.CString(name)
 	section := C.CString(string(C.XDP_LL_SEC_DEFAULT))
