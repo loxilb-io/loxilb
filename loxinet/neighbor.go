@@ -105,9 +105,7 @@ func NeighInit(zone *Zone) *NeighH {
 	return nNh
 }
 
-func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP,
-	tunID uint32, tunType DpTunT,
-	sync bool) (int, *NeighTunEp) {
+func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTunT, sync bool) (int, *NeighTunEp) {
 	// FIXME - Need to be able to support multiple overlays with same entry
 	port := ne.OifPort
 	if port == nil || port.SInfo.PortOvl == nil {
@@ -147,6 +145,8 @@ func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP,
 		tep.DP(DP_CREATE)
 	}
 
+	tk.LogIt(tk.LOG_DEBUG, "neigh tunep added - %s:%s (%d)\n", sIP.String(), rIP.String(), tunID)
+
 	return 0, tep
 }
 
@@ -159,8 +159,7 @@ func (n *NeighH) NeighDelTunEP(ne *Neigh, rIP net.IP,
 	tunID uint32, tunType DpTunT,
 	sync bool) int {
 
-	var i int = 0
-	for _, tep := range ne.TunEps {
+	for i, tep := range ne.TunEps {
 		if tep.rIP.Equal(rIP) &&
 			tep.tunID == tunID &&
 			tep.tunType == tunType {
@@ -168,6 +167,9 @@ func (n *NeighH) NeighDelTunEP(ne *Neigh, rIP net.IP,
 			if sync {
 				tep.DP(DP_REMOVE)
 			}
+
+			tk.LogIt(tk.LOG_DEBUG, "neigh tunep deleted - %s:%s (%d)\n",
+					tep.sIP.String(), tep.rIP.String(), tep.tunID)
 
 			n.NeighTid.PutCounter(tep.HwMark)
 			ne.NeighRemoveTunEP(i)
@@ -191,6 +193,9 @@ func (n *NeighH) NeighDelAllTunEP(ne *Neigh) int {
 	return 0
 }
 
+// Try to resolve recursive neighbors
+// Recursive neighbors are the ones which have the following association :
+// Nh -> tunFdb -> RT -> tunNh
 func (n *NeighH) NeighRecursiveResolve(ne *Neigh) {
 	zeroHwAddr, _ := net.ParseMAC("00:00:00:00:00:00")
 
@@ -243,6 +248,7 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) {
 	return
 }
 
+// Add a neigh entry
 func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error) {
 	key := NeighKey{Addr.String(), Zone}
 	zeroHwAddr, _ := net.ParseMAC("00:00:00:00:00:00")
@@ -258,12 +264,14 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 				ne.DP(DP_CREATE)
 			}
 		}
-		return NEIGH_EXISTS_ERR, errors.New("NH Exists")
+		tk.LogIt(tk.LOG_ERROR, "nh add - %s:%s exists\n", Addr.String(), Zone)
+		return NEIGH_EXISTS_ERR, errors.New("nh exists")
 	}
 
 	port := n.Zone.Ports.PortFindByOSId(Attr.OSLinkIndex)
 	if port == nil {
-		return NEIGH_OIF_ERR, errors.New("NH Oif Error")
+		tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s no oport\n", Addr.String(), Zone)
+		return NEIGH_OIF_ERR, errors.New("nh-oif error")
 	}
 
 	var idx int
@@ -271,12 +279,14 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 	if Addr.To4() == nil {
 		idx, err = n.Neigh6Id.GetCounter()
 		if err != nil {
-			return NEIGH_RANGE_ERR, errors.New("NH6 Range Error")
+			tk.LogIt(tk.LOG_ERROR, "neigh6 add - %s:%s no hwmarks\n", Addr.String(), Zone)
+			return NEIGH_RANGE_ERR, errors.New("nh6-hwm error")
 		}
 	} else {
 		idx, err = n.NeighId.GetCounter()
 		if err != nil {
-			return NEIGH_RANGE_ERR, errors.New("NH Range Error")
+			tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s no hwmarks\n", Addr.String(), Zone)
+			return NEIGH_RANGE_ERR, errors.New("nh-hwm error")
 		}
 	}
 
@@ -301,12 +311,12 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 	na := []RtNhAttr{{Addr, Attr.OSLinkIndex}}
 	_, err = n.Zone.Rt.RtAdd(ipnet, Zone, ra, na)
 	if err != nil {
-		tk.LogIt(tk.LOG_ERROR, "Host RT add failed-%s\n", err)
 		n.NeighDelete(Addr, Zone)
-		return NEIGH_HOSTRT_ERR, errors.New("NH host Rt error")
+		tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s host-rt fail\n", Addr.String(), Zone)
+		return NEIGH_HOSTRT_ERR, errors.New("nh-hostrt error")
 	}
 
-	//Add a FDB entry if needed
+	//Add a related FDB entry if needed
 	if port.HInfo.Master == "" &&
 		port.SInfo.PortType&(cmn.PORT_REAL|cmn.PORT_BOND) != 0 &&
 		ne.Resolved {
@@ -326,24 +336,26 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 
 		_, err = n.Zone.L2.L2FdbAdd(fdbKey, fdbAttr)
 		if err != nil {
-			tk.LogIt(tk.LOG_ERROR, "Neigh MAC add failed-%s\n", err)
 			n.Zone.Rt.RtDelete(ipnet, Zone)
 			n.NeighDelete(Addr, Zone)
-			return NEIGH_MAC_ERR, errors.New("NH mac error")
+			tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s mac fail\n", Addr.String(), Zone)
+			return NEIGH_MAC_ERR, errors.New("nh-mac error")
 		}
 	}
 
-	tk.LogIt(tk.LOG_DEBUG, "neigh added %s\n", Addr.String())
+	tk.LogIt(tk.LOG_DEBUG, "neigh added - %s:%s\n", Addr.String(), Zone)
 
 	return 0, nil
 }
 
-func (n *NeighH) NeighDelete(Addr net.IP, Ns string) (int, error) {
-	key := NeighKey{Addr.String(), Ns}
+// Delete a neigh entry
+func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
+	key := NeighKey{Addr.String(), Zone}
 
 	ne, found := n.NeighMap[key]
 	if found == false {
-		return NEIGH_NOENT_ERR, errors.New("No such NH")
+		tk.LogIt(tk.LOG_ERROR, "neigh delete - %s:%s doesnt exist\n", Addr.String(), Zone)
+		return NEIGH_NOENT_ERR, errors.New("no-nh error")
 	}
 
 	n.NeighDelAllTunEP(ne)
@@ -372,9 +384,10 @@ func (n *NeighH) NeighDelete(Addr net.IP, Ns string) (int, error) {
 	// Delete the host route specific to this NH
 	mask := net.CIDRMask(32, 32)
 	ipnet := net.IPNet{IP: Addr, Mask: mask}
-	_, err := n.Zone.Rt.RtDelete(ipnet, Ns)
+	_, err := n.Zone.Rt.RtDelete(ipnet, Zone)
 	if err != nil {
-		return NEIGH_HOSTRT_ERR, errors.New("NH host Rt delete error:" + err.Error())
+		tk.LogIt(tk.LOG_ERROR, "neigh delete - %s:%s host-rt fail\n", Addr.String(), Zone)
+		return NEIGH_HOSTRT_ERR, errors.New("nh-hostrt error" + err.Error())
 	}
 
 	if len(ne.NhRtm) == 0 {
@@ -393,15 +406,16 @@ func (n *NeighH) NeighDelete(Addr net.IP, Ns string) (int, error) {
 	ne.Inactive = true
 	ne.Resolved = false
 
-	tk.LogIt(tk.LOG_DEBUG, "neigh delete %s\n", Addr.String())
-
 	delete(n.NeighMap, ne.Key)
+
+	tk.LogIt(tk.LOG_DEBUG, "neigh deleted - %s:%s\n", Addr.String(), Zone)
 
 	return 0, nil
 }
 
-func (n *NeighH) NeighFind(Addr net.IP, Ns string) (*Neigh, int) {
-	key := NeighKey{Addr.String(), Ns}
+// Find a neigh entry
+func (n *NeighH) NeighFind(Addr net.IP, Zone string) (*Neigh, int) {
+	key := NeighKey{Addr.String(), Zone}
 
 	ne, found := n.NeighMap[key]
 	if found == false {
@@ -415,6 +429,7 @@ func (n *NeighH) NeighFind(Addr net.IP, Ns string) (*Neigh, int) {
 	return ne, -1
 }
 
+// Associate a route with the given neighbor
 func (n *NeighH) NeighPairRt(ne *Neigh, rt *Rt) int {
 	_, found := ne.NhRtm[rt.Key]
 	if found == true {
@@ -423,11 +438,12 @@ func (n *NeighH) NeighPairRt(ne *Neigh, rt *Rt) int {
 
 	ne.NhRtm[rt.Key] = rt
 
-	fmt.Printf("Pairing RT %s via %s\n", rt.Key.RtCidr, ne.Key.NhString)
+	tk.LogIt(tk.LOG_DEBUG, "neigh rtpair - %s->%s\n", rt.Key.RtCidr, ne.Key.NhString)
 
 	return 0
 }
 
+// De-Associate a route from the given neighbor
 func (n *NeighH) NeighUnPairRt(ne *Neigh, rt *Rt) int {
 
 	_, found := ne.NhRtm[rt.Key]
@@ -438,7 +454,7 @@ func (n *NeighH) NeighUnPairRt(ne *Neigh, rt *Rt) int {
 	delete(ne.NhRtm, rt.Key)
 	if len(ne.NhRtm) == 0 && ne.Inactive == true {
 		// Safely remove
-		tk.LogIt(tk.LOG_DEBUG, "UnPair RT %s via %s\n", rt.Key.RtCidr, ne.Key.NhString)
+		tk.LogIt(tk.LOG_DEBUG, "neigh rt unpair - %s->%s\n", rt.Key.RtCidr, ne.Key.NhString)
 		ne.DP(DP_REMOVE)
 	}
 
@@ -493,6 +509,7 @@ func (n *NeighH) NeighhDestructAll() {
 	return
 }
 
+// Sync state of neighbor entities to data-path
 func (ne *Neigh) DP(work DpWorkT) int {
 
 	//if nh.Resolved == false && work == DP_CREATE {
@@ -533,6 +550,7 @@ func (ne *Neigh) DP(work DpWorkT) int {
 	return 0
 }
 
+// Sync state of neighbor tunnel endpoint entities to data-path
 func (tep *NeighTunEp) DP(work DpWorkT) int {
 
 	ne := tep.Parent

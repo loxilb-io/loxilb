@@ -158,7 +158,7 @@ func DpEbpfInit() *DpEbpfH {
 		if intf.Name == "llb0" {
 			continue
 		}
-		tk.LogIt(tk.LOG_INFO, "unloading ebp :%s\n", intf.Name)
+		tk.LogIt(tk.LOG_INFO, "ebpf unload - %s\n", intf.Name)
 		ifStr := C.CString(intf.Name)
 		section := C.CString(string(C.XDP_LL_SEC_DEFAULT))
 		C.llb_dp_link_attach(ifStr, section, C.LL_BPF_MOUNT_TC, 1)
@@ -252,7 +252,7 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 		if w.LoadEbpf != "" && w.LoadEbpf != "lo" {
 			lRet := loadEbpfPgm(w.LoadEbpf)
 			if lRet != 0 {
-				tk.LogIt(tk.LOG_ERROR, "Error in loading ebpf prog for IFidx %d\n", w.PortNum)
+				tk.LogIt(tk.LOG_ERROR, "ebpf load - %d error\n", w.PortNum,)
 				return EBPF_ERR_EBFP_LOAD
 			}
 		}
@@ -278,19 +278,20 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 			unsafe.Pointer(data))
 
 		if ret != 0 {
-			tk.LogIt(tk.LOG_ERROR, "error adding in intf map %d vlan %d\n", w.OsPortNum, w.IngVlan)
+			tk.LogIt(tk.LOG_ERROR, "ebpf intfmap - %d vlan %d error\n", w.OsPortNum, w.IngVlan)
 			return EBPF_ERR_PORTPROP_ADD
 		}
 
-		tk.LogIt(tk.LOG_DEBUG, "intf map added idx %d vlan %d\n", w.OsPortNum, w.IngVlan)
+		tk.LogIt(tk.LOG_DEBUG, "ebpf intfmap added - %d vlan %d -> %d\n", w.OsPortNum, w.IngVlan, w.PortNum)
+
 		txV = C.uint(w.OsPortNum)
 		ret = C.llb_add_table_elem(C.LL_DP_TX_INTF_MAP, unsafe.Pointer(&txK), unsafe.Pointer(&txV))
 		if ret != 0 {
 			C.llb_del_table_elem(C.LL_DP_INTF_MAP, unsafe.Pointer(key))
-			tk.LogIt(tk.LOG_ERROR, "error adding in Intf TX map\n")
+			tk.LogIt(tk.LOG_ERROR, "ebpf txintfmap - %d error\n", w.OsPortNum)
 			return EBPF_ERR_PORTPROP_ADD
 		}
-		tk.LogIt(tk.LOG_DEBUG, "tx intf map added %d\n", w.PortNum)
+		tk.LogIt(tk.LOG_DEBUG, "ebpf txintfmap added - %d -> %d\n", w.PortNum, w.OsPortNum)
 		return 0
 	} else if w.Work == DP_REMOVE {
 
@@ -301,10 +302,10 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 		if w.LoadEbpf != "" {
 			lRet := unLoadEbpfPgm(w.LoadEbpf)
 			if lRet != 0 {
-				tk.LogIt(tk.LOG_ERROR, "error in unloading ebpf prog for ifi %d\n", w.OsPortNum)
+				tk.LogIt(tk.LOG_ERROR, "ebpf unload - ifi %d error\n", w.OsPortNum)
 				return EBPF_ERR_EBFP_LOAD
 			}
-			tk.LogIt(tk.LOG_DEBUG, "ebpf prog for ifi %d unloaded\n", w.OsPortNum)
+			tk.LogIt(tk.LOG_DEBUG, "ebpf unloaded - ifi %d\n", w.OsPortNum)
 		}
 
 		return 0
@@ -314,12 +315,12 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 }
 
 func (e *DpEbpfH) DpPortPropAdd(w *PortDpWorkQ) int {
-	fmt.Println(*w)
+	//fmt.Println(*w)
 	return DpPortPropMod(w)
 }
 
 func (e *DpEbpfH) DpPortPropDel(w *PortDpWorkQ) int {
-	fmt.Println(*w)
+	//fmt.Println(*w)
 	return DpPortPropMod(w)
 }
 
@@ -388,12 +389,12 @@ func DpL2AddrMod(w *L2AddrDpWorkQ) int {
 }
 
 func (e *DpEbpfH) DpL2AddrAdd(w *L2AddrDpWorkQ) int {
-	fmt.Println(*w)
+	//fmt.Println(*w)
 	return DpL2AddrMod(w)
 }
 
 func (e *DpEbpfH) DpL2AddrDel(w *L2AddrDpWorkQ) int {
-	fmt.Println(*w)
+	//fmt.Println(*w)
 	return DpL2AddrMod(w)
 }
 
@@ -460,12 +461,12 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
 }
 
 func (e *DpEbpfH) DpRouterMacAdd(w *RouterMacDpWorkQ) int {
-	fmt.Println(*w)
+	//fmt.Println(*w)
 	return DpRouterMacMod(w)
 }
 
 func (e *DpEbpfH) DpRouterMacDel(w *RouterMacDpWorkQ) int {
-	fmt.Println(*w)
+	//fmt.Println(*w)
 	return DpRouterMacMod(w)
 }
 
@@ -533,12 +534,12 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 }
 
 func (e *DpEbpfH) DpNextHopAdd(w *NextHopDpWorkQ) int {
-	fmt.Println(*w)
+	//fmt.Println(*w)
 	return DpNextHopMod(w)
 }
 
 func (e *DpEbpfH) DpNextHopDel(w *NextHopDpWorkQ) int {
-	fmt.Println(*w)
+	//fmt.Println(*w)
 	return DpNextHopMod(w)
 }
 
@@ -598,12 +599,12 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 }
 
 func (e *DpEbpfH) DpRouteAdd(w *RouteDpWorkQ) int {
-	fmt.Println(*w)
+	//fmt.Println(*w)
 	return DpRouteMod(w)
 }
 
 func (e *DpEbpfH) DpRouteDel(w *RouteDpWorkQ) int {
-	fmt.Println(*w)
+	//fmt.Println(*w)
 	return DpRouteMod(w)
 }
 
@@ -681,12 +682,12 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 }
 
 func (e *DpEbpfH) DpNatLbRuleAdd(w *NatDpWorkQ) int {
-	fmt.Println(*w)
+	//fmt.Println(*w)
 	return DpNatLbRuleMod(w)
 }
 
 func (e *DpEbpfH) DpNatLbRuleDel(w *NatDpWorkQ) int {
-	fmt.Println(*w)
+	//fmt.Println(*w)
 	return DpNatLbRuleMod(w)
 }
 
@@ -951,11 +952,11 @@ func (e *DpEbpfH) DpUlClMod(w *UlClDpWorkQ) int {
 }
 
 func (e *DpEbpfH) DpUlClAdd(w *UlClDpWorkQ) int {
-	fmt.Println(*w)
+	//fmt.Println(*w)
 	return e.DpUlClMod(w)
 }
 
 func (e *DpEbpfH) DpUlClDel(w *UlClDpWorkQ) int {
-	fmt.Println(*w)
+	//fmt.Println(*w)
 	return e.DpUlClMod(w)
 }

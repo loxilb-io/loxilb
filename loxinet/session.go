@@ -127,10 +127,12 @@ func (s *SessH) SessAdd(user string, IP net.IP, anTun cmn.SessTun, cnTun cmn.Ses
 		if us.AnTun.Equal(&anTun) == false || us.CnTun.Equal(&cnTun) {
 			ret, _ := s.SessDelete(user)
 			if ret != 0 {
-				return SESS_MOD_ERR, errors.New("sess mod error")
+				tk.LogIt(tk.LOG_ERROR, "session add - %s:%s mod error\n", user, IP.String())
+				return SESS_MOD_ERR, errors.New("sess-mod error")
 			}
 		} else {
-			return SESS_EXISTS_ERR, errors.New("sess exists")
+			tk.LogIt(tk.LOG_ERROR, "session add - %s:%s  already exists\n", user, IP.String())
+			return SESS_EXISTS_ERR, errors.New("sess-exists error")
 		}
 	}
 
@@ -145,6 +147,8 @@ func (s *SessH) SessAdd(user string, IP net.IP, anTun cmn.SessTun, cnTun cmn.Ses
 
 	s.UserMap[us.Key] = us
 
+	tk.LogIt(tk.LOG_DEBUG, "session added - %s:%s\n", user, IP.String())
+
 	return 0, nil
 }
 
@@ -154,7 +158,8 @@ func (s *SessH) SessDelete(user string) (int, error) {
 	us, found := s.UserMap[key]
 
 	if found == false {
-		return SESS_NOEXIST_ERR, errors.New("user doesnt exists")
+		tk.LogIt(tk.LOG_ERROR, "session delete - %s no-user\n", user)
+		return SESS_NOEXIST_ERR, errors.New("no-user error")
 	}
 
 	// First remove all ULCL classifiers if any
@@ -163,6 +168,8 @@ func (s *SessH) SessDelete(user string) (int, error) {
 	}
 
 	delete(s.UserMap, key)
+
+	tk.LogIt(tk.LOG_DEBUG, "session deleted - %s\n", user)
 
 	return 0, nil
 }
@@ -173,25 +180,25 @@ func (s *SessH) UlClAddCls(user string, cls cmn.UlClArg) (int, error) {
 	us, found := s.UserMap[key]
 
 	if found == false {
-		return SESS_NOEXIST_ERR, errors.New("user doesnt exists")
+		return SESS_NOEXIST_ERR, errors.New("no-user error")
 	}
 
 	ulcl, _ := us.UlCl[cls.Addr.String()]
 
 	if ulcl != nil {
-		return SESS_ULCLEXIST_ERR, errors.New("ulcl exists")
+		return SESS_ULCLEXIST_ERR, errors.New("ulcl-exists error")
 	}
 
 	ulcl = new(UlClInf)
 	ulcl.NumUl, _ = s.HwMark.GetCounter()
 	if ulcl.NumUl < 0 {
-		return SESS_ULCLNUM_ERR, errors.New("ulcl - ul num err")
+		return SESS_ULCLNUM_ERR, errors.New("ulcl-ulhwm error")
 	}
 	ulcl.NumDl, _ = s.HwMark.GetCounter()
 	if ulcl.NumDl < 0 {
 		s.HwMark.PutCounter(ulcl.NumUl)
 		ulcl.NumUl = -1
-		return SESS_ULCLNUM_ERR, errors.New("ulcl - dl num err")
+		return SESS_ULCLNUM_ERR, errors.New("ulcl-dlhwm error")
 	}
 
 	ulcl.Qfi = cls.Qfi
@@ -202,6 +209,8 @@ func (s *SessH) UlClAddCls(user string, cls cmn.UlClArg) (int, error) {
 
 	us.UlCl[cls.Addr.String()] = ulcl
 
+	tk.LogIt(tk.LOG_DEBUG, "ulcl filter added - %s:%s\n", user, cls.Addr.String())
+
 	return 0, nil
 }
 
@@ -211,14 +220,16 @@ func (s *SessH) UlClDeleteCls(user string, cls cmn.UlClArg) (int, error) {
 	us, found := s.UserMap[key]
 
 	if found == false {
-		return SESS_NOEXIST_ERR, errors.New("user doesnt exists")
+		return SESS_NOEXIST_ERR, errors.New("no-user error")
 	}
 
 	ulcl, _ := us.UlCl[cls.Addr.String()]
 
 	if ulcl == nil {
-		return SESS_ULCLNOEXIST_ERR, errors.New("ulcl doesnt exists")
+		return SESS_ULCLNOEXIST_ERR, errors.New("no-ulcl error")
 	}
+
+	tk.LogIt(tk.LOG_DEBUG, "ulcl filter deleted - %s:%s\n", user, cls.Addr.String())
 
 	ulcl.DP(DP_REMOVE)
 
@@ -269,6 +280,7 @@ func (s *SessH) SessionTicker() {
 	s.SessionsSync()
 }
 
+// Sync state of session and ulcl filter entities to data-path
 func (ulcl *UlClInf) DP(work DpWorkT) int {
 
 	if ulcl.uSess == nil {

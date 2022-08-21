@@ -17,17 +17,21 @@ package loxinet
 
 import (
 	"fmt"
+	"os"
+	"sync"
+	"time"
 	apiserver "loxilb/api"
 	tk "github.com/loxilb-io/loxilib"
 	nlp "loxilb/loxinlp"
 	opts "loxilb/options"
-	"os"
-	"sync"
-	"time"
 )
 
 const (
 	ROOT_ZONE = "root"
+)
+
+const (
+	LOXINET_TIVAL = 10
 )
 
 type IterIntf interface {
@@ -58,6 +62,7 @@ func (mh *loxiNetH) TrieNodeWalker(b string) {
 	tk.LogIt(tk.LOG_DEBUG, "%s", b)
 }
 
+// This ticker routine runs every LOXINET_TIVAL seconds
 func loxiNetTicker() {
 	for {
 		select {
@@ -65,6 +70,7 @@ func loxiNetTicker() {
 			return
 		case t := <-mh.ticker.C:
 			tk.LogIt(-1, "Tick at %v\n", t)
+			// Do any housekeeping activities for security zones
 			mh.zn.ZoneTicker()
 		}
 	}
@@ -74,43 +80,54 @@ var mh loxiNetH
 
 func loxiNetInit() {
 
+	// Initialize logger and specify the log file
 	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
 	tk.LogItInit(logfile, tk.LOG_DEBUG, true)
 
 	mh.tDone = make(chan bool)
-	mh.ticker = time.NewTicker(10 * time.Second)
+	mh.ticker = time.NewTicker(LOXINET_TIVAL * time.Second)
 	mh.wg.Add(1)
 	go loxiNetTicker()
 
+	// Initialize the ebpf datapath subsystem
 	mh.dpEbpf = DpEbpfInit()
 	mh.dp = DpBrokerInit(mh.dpEbpf)
+
+	// Initialize the security zone subsystem
 	mh.zn = ZoneInit()
+
+	// Add a root zone by default 
 	mh.zn.ZoneAdd(ROOT_ZONE)
 	mh.zr, _ = mh.zn.Zonefind(ROOT_ZONE)
 	if mh.zr == nil {
-		tk.LogIt(tk.LOG_ERROR, "Root zone not found\n")
+		tk.LogIt(tk.LOG_ERROR, "root zone not found\n")
 		return
 	}
 
+	// Initialize the nlp subsystem
 	if opts.Opts.NoNlp == false {
 		nlp.NlpRegister(NetApiInit())
 		nlp.NlpInit()
 	}
 
+	// Initialize goBgp client
 	if opts.Opts.Bgp {
 		mh.bgp = GoBgpInit()
 	}
 
+	// Initialize and spawn the api server subsystem
 	if opts.Opts.NoApi == false {
 		apiserver.RegisterApiHooks(NetApiInit())
 		go apiserver.RunApiServer()
 	}
 }
 
+// This routine will not return
 func loxiNetRun() {
 	mh.wg.Wait()
 }
 
+// Main routine of loxinet
 func LoxiNetMain() {
 	loxiNetInit()
 	loxiNetRun()

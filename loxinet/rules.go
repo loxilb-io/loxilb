@@ -571,15 +571,15 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	service := serv.ServIP + "/32"
 	_, sNetAddr, err := net.ParseCIDR(service)
 	if err != nil {
-		return RULE_UNK_SERV_ERR, errors.New("malformed service")
+		return RULE_UNK_SERV_ERR, errors.New("malformed-service error")
 	}
 
 	if len(servEndPoints) <= 0 || len(servEndPoints) > MAX_NAT_EPS {
-		return RULE_EP_COUNT_ERR, errors.New("too many or no endpoints")
+		return RULE_EP_COUNT_ERR, errors.New("endpoints-range error")
 	}
 
 	if serv.Proto == "icmp" && serv.ServPort != 0 {
-		return RULE_UNK_SERV_ERR, errors.New("malformed service")
+		return RULE_UNK_SERV_ERR, errors.New("malformed-service error")
 	}
 
 	if serv.Proto == "tcp" {
@@ -591,7 +591,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	} else if serv.Proto == "sctp" {
 		ipProto = 132
 	} else {
-		return RULE_UNK_SERV_ERR, errors.New("malformed service proto")
+		return RULE_UNK_SERV_ERR, errors.New("malformed-proto error")
 	}
 
 	natActs.sel = serv.Sel
@@ -599,10 +599,10 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		service = k.EpIP + "/32"
 		_, pNetAddr, err := net.ParseCIDR(service)
 		if err != nil {
-			return RULE_UNK_EP_ERR, errors.New("malformed lb end-point")
+			return RULE_UNK_EP_ERR, errors.New("malformed-lbep error")
 		}
 		if serv.Proto == "icmp" && k.EpPort != 0 {
-			return RULE_UNK_SERV_ERR, errors.New("malformed service")
+			return RULE_UNK_SERV_ERR, errors.New("malformed-service error")
 		}
 		ep := ruleNatEp{pNetAddr.IP, k.EpPort, k.Weight, 0, false, false}
 		natActs.endPoints = append(natActs.endPoints, ep)
@@ -663,13 +663,13 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		}
 
 		if ruleChg == false {
-			return RULE_EXISTS_ERR, errors.New("lb rule exits")
+			return RULE_EXISTS_ERR, errors.New("lbrule-exists error")
 		}
 
 		eRule.act.action.(*ruleNatActs).sel = natActs.sel
 		eRule.act.action.(*ruleNatActs).endPoints = eEps
 		eRule.sT = time.Now()
-		tk.LogIt(tk.LOG_DEBUG, "Nat LB Rule Updated %v\n", eRule)
+		tk.LogIt(tk.LOG_DEBUG, "nat lb-rule updated - %s:%s\n", eRule.tuples.String(), eRule.act.String())
 		eRule.DP(DP_CREATE)
 
 		return 0, nil
@@ -682,7 +682,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	r.act.action = &natActs
 	r.ruleNum, err = R.Tables[RT_LB].HwMark.GetCounter()
 	if err != nil {
-		return RULE_ALLOC_ERR, errors.New("rule num allocation fail")
+		tk.LogIt(tk.LOG_ERROR, "nat lb-rule - %s:%s hwm error\n", eRule.tuples.String(), eRule.act.String())
+		return RULE_ALLOC_ERR, errors.New("rule-hwm error")
 	}
 	r.sT = time.Now()
 	// Per LB end-point health-check is supposed to be handled at CCM,
@@ -690,10 +691,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	// lb end-point health monitoring
 	r.ActChk = false
 
-	ruleKeys := r.tuples.String()
-	ruleEps := r.act.String()
-	tk.LogIt(tk.LOG_DEBUG, "Nat LB Rule Added %d:%s-%s\n",
-		r.ruleNum, ruleKeys, ruleEps)
+	tk.LogIt(tk.LOG_DEBUG, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
 	R.Tables[RT_LB].eMap[rt.ruleKey()] = r
 
@@ -708,7 +706,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	service := serv.ServIP + "/32"
 	_, sNetAddr, err := net.ParseCIDR(service)
 	if err != nil {
-		return RULE_UNK_SERV_ERR, errors.New("malformed service")
+		return RULE_UNK_SERV_ERR, errors.New("malformed-service error")
 	}
 
 	if serv.Proto == "tcp" {
@@ -720,7 +718,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	} else if serv.Proto == "sctp" {
 		ipProto = 132
 	} else {
-		return RULE_UNK_SERV_ERR, errors.New("malformed service proto")
+		return RULE_UNK_SERV_ERR, errors.New("malformed-proto error")
 	}
 
 	l4prot := rule8Tuple{ipProto, 0xff}
@@ -730,22 +728,23 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 
 	rule := R.Tables[RT_LB].eMap[rt.ruleKey()]
 	if rule == nil {
-		return RULE_NOT_EXIST_ERR, errors.New("No such rule")
+		return RULE_NOT_EXIST_ERR, errors.New("no-rule error")
 	}
 
 	defer R.Tables[RT_LB].HwMark.PutCounter(rule.ruleNum)
 
 	delete(R.Tables[RT_LB].eMap, rt.ruleKey())
 
-	ruleKeys := rule.tuples.String()
-	ruleEps := rule.act.String()
-	tk.LogIt(tk.LOG_DEBUG, "Nat LB Rule Deleted %s-%s\n", ruleKeys, ruleEps)
+	tk.LogIt(tk.LOG_DEBUG, "nat lb-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
 
 	rule.DP(DP_REMOVE)
 
 	return 0, nil
 }
 
+// This is periodic routine which does two main things :
+// 1. Syncs rule statistics counts
+// 2. Check health of lb-rule end-points
 func (R *RuleH) RulesSync() {
 	var sType string
 	var rChg bool
@@ -764,7 +763,7 @@ func (R *RuleH) RulesSync() {
 
 		rChg = false
 
-		// Check if we need to check health of LB arms
+		// Check if we need to check health of LB endpoints
 		if time.Duration(now.Sub(rule.sT).Seconds()) >= time.Duration(R.Cfg.RuleInactChkTime) {
 			switch na := rule.act.action.(type) {
 			case *ruleNatActs:
@@ -784,14 +783,13 @@ func (R *RuleH) RulesSync() {
 					np := &na.endPoints[idx]
 					sName := fmt.Sprintf("%s:%d", n.xIP.String(), n.xPort)
 					sOk := tk.L4ServiceProber(sType, sName)
-					//fmt.Printf("rule arm probe %s:%s %v\n", sType, sName, sOk)
 					if sOk == false {
 						if n.inActTries <= R.Cfg.RuleInactTries {
 							np.inActTries++
 							if np.inActTries > R.Cfg.RuleInactTries {
 								np.inActive = true
 								rChg = true
-								tk.LogIt(tk.LOG_DEBUG, "LB Rule Arm Inactive - %s:%s\n", sType, sName)
+								tk.LogIt(tk.LOG_DEBUG, "nat lb-rule inactive ep - %s:%s\n", sType, sName)
 							}
 						}
 					} else {
@@ -807,7 +805,7 @@ func (R *RuleH) RulesSync() {
 		}
 
 		if rChg {
-			tk.LogIt(tk.LOG_DEBUG, "LB Rule Updated %d:%s,%s\n", rule.ruleNum, ruleKeys, ruleActs)
+			tk.LogIt(tk.LOG_DEBUG, "nat lb-Rule updated %d:%s,%s\n", rule.ruleNum, ruleKeys, ruleActs)
 			rule.DP(DP_CREATE)
 		}
 
@@ -841,6 +839,7 @@ func (R *RuleH) RuleDestructAll() {
 	return
 }
 
+// Sync state of nat-rule entities to data-path
 func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 
 	nWork := new(NatDpWorkQ)
@@ -891,6 +890,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	return 0
 }
 
+// Sync state of rule entities to data-path
 func (r *ruleEnt) DP(work DpWorkT) int {
 
 	if work == DP_TABLE_GET {

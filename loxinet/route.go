@@ -112,6 +112,7 @@ func (r *RtH) TrieData2String(d tk.TrieData) string {
 	return ""
 }
 
+// Find a route matching given IPNet in a zone
 func (r *RtH) RtFind(Dst net.IPNet, Zone string) *Rt {
 	key := RtKey{Dst.String(), Zone}
 	rt, found := r.RtMap[key]
@@ -122,11 +123,13 @@ func (r *RtH) RtFind(Dst net.IPNet, Zone string) *Rt {
 	return nil
 }
 
+// Add a route to a zone
 func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, error) {
 	key := RtKey{Dst.String(), Zone}
 	nhLen := len(Na)
 
 	if nhLen > 1 {
+		tk.LogIt(tk.LOG_ERROR, "rt add - %s:%s ecmp not supported\n", Dst.String(), Zone)
 		return RT_NH_ERR, errors.New("ecmp-rt error not supported")
 	}
 
@@ -148,12 +151,14 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 		if rtMod == true {
 			ret, _ := r.RtDelete(Dst, Zone)
 			if ret != 0 {
+				tk.LogIt(tk.LOG_ERROR, "rt add - %s:%s del failed on mod\n", Dst.String(), Zone)
 				return RT_MOD_ERR, errors.New("rt mod error")
 			} else {
 				return r.RtAdd(Dst, Zone, Ra, Na)
 			}
 		}
 
+		tk.LogIt(tk.LOG_ERROR, "rt add - %s:%s exists\n", Dst.String(), Zone)
 		return RT_EXISTS_ERR, errors.New("rt exists")
 	}
 
@@ -177,15 +182,18 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 		for i := 0; i < len(Na); i++ {
 			nh, _ := r.Zone.Nh.NeighFind(Na[i].NhAddr, Zone)
 			if nh == nil {
-				// If this is a host route then NH has to exist
+				// If this is a host route then neighbor has to exist
+				// Usually host route addition is triggered by neigh add
 				if Ra.HostRoute == true {
-					return RT_NH_ERR, errors.New("RT Nh Host Err")
+					tk.LogIt(tk.LOG_ERROR, "rt add host - %s:%s no neigh\n", Dst.String(), Zone)
+					return RT_NH_ERR, errors.New("rt-neigh host error")
 				}
 
 				r.Zone.Nh.NeighAdd(Na[i].NhAddr, Zone, NeighAttr{Na[i].LinkIndex, 0, hwmac})
 				nh, _ = r.Zone.Nh.NeighFind(Na[i].NhAddr, Zone)
 				if nh == nil {
-					return RT_NH_ERR, errors.New("RT Nh Err")
+					tk.LogIt(tk.LOG_ERROR, "rt add - %s:%s no neigh\n", Dst.String(), Zone)
+					return RT_NH_ERR, errors.New("rt-neigh error")
 				}
 				newNhs = append(newNhs, nh)
 			}
@@ -203,10 +211,11 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 		tret = r.Trie4.AddTrie(Dst.String(), nil)
 	}
 	if tret != 0 {
-		// Delete any NH created here
+		// Delete any neigbors created here
 		for i := 0; i < len(newNhs); i++ {
 			r.Zone.Nh.NeighDelete(newNhs[i].Addr, Zone)
 		}
+		tk.LogIt(tk.LOG_ERROR, "rt add - %s:%s lpm add fail\n", Dst.String(), Zone)
 		return RT_TRIE_ADD_ERR, errors.New("RT Trie Err")
 	}
 
@@ -215,7 +224,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 
 	r.RtMap[rt.Key] = rt
 
-	// Pair RT with NH
+	// Pair this route with appropriate neighbor
 	//if rt.TFlags & RT_TYPE_HOST != RT_TYPE_HOST {
 	for i := 0; i < len(rt.NextHops); i++ {
 		r.Zone.Nh.NeighPairRt(rt.NextHops[i], rt)
@@ -223,6 +232,8 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 	//}
 
 	rt.DP(DP_CREATE)
+
+	tk.LogIt(tk.LOG_DEBUG, "rt added - %s:%s\n", Dst.String(), Zone)
 
 	return 0, nil
 }
@@ -242,18 +253,20 @@ func (rt *Rt) RtRemoveDepObj(i int) []RtDepObj {
 	return rt.RtDepObjs[:len(rt.RtDepObjs)-1]
 }
 
-func (r *RtH) RtDelete(Dst net.IPNet, Ns string) (int, error) {
-	key := RtKey{Dst.String(), Ns}
+// Delete a route from a zone
+func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
+	key := RtKey{Dst.String(), Zone}
 
 	rt, found := r.RtMap[key]
 	if found == false {
-		return RT_NOENT_ERR, errors.New("No such route")
+		tk.LogIt(tk.LOG_ERROR, "rt delete - %s:%s not found\n", Dst.String(), Zone)
+		return RT_NOENT_ERR, errors.New("no such route")
 	}
 
-	// Take care of any dependcies on this route object
+	// Take care of any dependencies on this route object
 	rt.RtClearDeps()
 
-	// UnPair RT with NH
+	// UnPair route from related neighbor
 	//if rt.TFlags & RT_TYPE_HOST != RT_TYPE_HOST {
 	for _, nh := range rt.NextHops {
 		r.Zone.Nh.NeighUnPairRt(nh, rt)
@@ -262,13 +275,16 @@ func (r *RtH) RtDelete(Dst net.IPNet, Ns string) (int, error) {
 
 	tret := r.Trie4.DelTrie(Dst.String())
 	if tret != 0 {
-		return RT_TRIE_DEL_ERR, errors.New("RT Trie Delete Err")
+		tk.LogIt(tk.LOG_ERROR, "rt delete - %s:%s lpm not found\n", Dst.String(), Zone)
+		return RT_TRIE_DEL_ERR, errors.New("rt-lpm delete error")
 	}
 
 	delete(r.RtMap, rt.Key)
 	defer r.HwMark.PutCounter(rt.HwMark)
 
 	rt.DP(DP_REMOVE)
+
+	tk.LogIt(tk.LOG_DEBUG, "rt deleted - %s:%s\n", Dst.String(), Zone)
 
 	return 0, nil
 }
@@ -297,10 +313,10 @@ func Rt2String(rt *Rt) string {
 
 	var rtBuf string
 	if len(rt.NhAttr) > 0 {
-		rtBuf = fmt.Sprintf("%16s via %12s : %s,%sNS",
-			rt.Key.RtCidr, rt.NhAttr[0].NhAddr.String(), tStr, rt.Key.Zone)
+		rtBuf = fmt.Sprintf("%16s via %12s : %s,%sZn",
+							rt.Key.RtCidr, rt.NhAttr[0].NhAddr.String(), tStr, rt.Key.Zone)
 	} else {
-		rtBuf = fmt.Sprintf("%16s %s,%sNS", rt.Key.RtCidr, tStr, rt.Key.Zone)
+		rtBuf = fmt.Sprintf("%16s %s,%sZn", rt.Key.RtCidr, tStr, rt.Key.Zone)
 	}
 
 	return rtBuf
@@ -346,6 +362,7 @@ func (rt *Rt) RtGetNhHwMark() int {
 	}
 }
 
+// Sync state of route entities to data-path
 func (rt *Rt) DP(work DpWorkT) int {
 
 	_, rtNet, err := net.ParseCIDR(rt.Key.RtCidr)

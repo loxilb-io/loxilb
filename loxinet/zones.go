@@ -22,7 +22,7 @@ import (
 )
 
 // This file implements self-contained network security zones
-// Currently we can have upto MAX_ZONES such zones 
+// Currently we can have upto MAX_ZONES such zones
 
 const (
 	ZONE_BASE_ERR = iota - RT_ERR_BASE - 1000
@@ -205,7 +205,7 @@ func (z *ZoneH) ZonePortDelete(name string) (int, error) {
 }
 
 // This ticker routine takes care of all house-keeping operations
-// for all instances of security zones. This is called from loxiNetTicker 
+// for all instances of security zones. This is called from loxiNetTicker
 func (z *ZoneH) ZoneTicker() {
 	for _, zone := range z.ZoneMap {
 

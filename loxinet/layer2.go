@@ -99,6 +99,7 @@ func l2FdbAttrCopy(dst *FdbAttr, src *FdbAttr) {
 	dst.Dst = src.Dst
 }
 
+// For TunFDB, try to associate with appropriate neighbor 
 func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 	p := f.Port
 	attr := f.FdbAttr
@@ -171,12 +172,13 @@ func (l2 *L2H) L2FdbFind(key FdbKey) *FdbEnt {
 	return nil
 }
 
+// Add a l2 forwarding entry
 func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 
 	p := l2.Zone.Ports.PortFindByName(attr.Oif)
 	if p == nil || !p.SInfo.PortActive {
-		tk.LogIt(tk.LOG_DEBUG, "Fdb port not found %s\n", attr.Oif)
-		return L2_OIF_ERR, errors.New("No such port")
+		tk.LogIt(tk.LOG_DEBUG, "fdb port not found %s\n", attr.Oif)
+		return L2_OIF_ERR, errors.New("no such port")
 	}
 
 	fdb, found := l2.FdbMap[key]
@@ -184,7 +186,8 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 	if found == true {
 		// Check if it is a modify
 		if l2FdbAttrEqual(&attr, &fdb.FdbAttr) {
-			return L2_SAMEFDB_ERR, errors.New("Same FDB")
+			tk.LogIt(tk.LOG_DEBUG, "fdb ent exists, %v", key)
+			return L2_SAMEFDB_ERR, errors.New("same fdb")
 		}
 		// Handle modify by deleting and reinstalling
 		l2.L2FdbDel(key)
@@ -201,6 +204,7 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 	if p.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
 		unRch, ret, err := nfdb.L2FdbResolveNh()
 		if err != nil {
+			tk.LogIt(tk.LOG_DEBUG, "tun-fdb ent resolve error, %v", key)
 			return ret, err
 		}
 		nfdb.unReach = unRch
@@ -210,14 +214,18 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 
 	nfdb.DP(DP_CREATE)
 
+	tk.LogIt(tk.LOG_DEBUG, "added fdb ent, %v", key)
+
 	return 0, nil
 }
 
+// Delete a l2 forwarding entry
 func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 
 	fdb, found := l2.FdbMap[key]
 	if found == false {
-		return L2_NOFDB_ERR, errors.New("No such FDB")
+		tk.LogIt(tk.LOG_DEBUG, "fdb ent not found, %v", key)
+		return L2_NOFDB_ERR, errors.New("no such fdb")
 	}
 
 	if fdb.Port.SInfo.PortType == cmn.PORT_VXLANBR {
@@ -246,6 +254,9 @@ func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 	fdb.inActive = true
 
 	delete(l2.FdbMap, fdb.FdbKey)
+
+	tk.LogIt(tk.LOG_DEBUG, "deleted fdb ent, %v", key)
+
 	return 0, nil
 }
 
@@ -257,7 +268,7 @@ func (l2 *L2H) FdbTicker(f *FdbEnt) {
 		if f.Port.SInfo.PortActive == false {
 			l2.L2FdbDel(f.FdbKey)
 		} else if f.unReach == true {
-			tk.LogIt(tk.LOG_DEBUG, "Unreachable scan %v", f)
+			tk.LogIt(tk.LOG_DEBUG, "unrch scan - %v", f)
 			unRch, _, _ := f.L2FdbResolveNh()
 			if f.unReach != unRch {
 				f.unReach = unRch
@@ -313,6 +324,7 @@ func (l2 *L2H) L2DestructAll() {
 	return
 }
 
+// Sync state of L2 entities to data-path
 func (f *FdbEnt) DP(work DpWorkT) int {
 
 	if work == DP_CREATE && f.unReach == true {

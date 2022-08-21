@@ -162,16 +162,19 @@ func (P *PortsH) PortHasTunSlaves(master string, ptype int) (bool, []*Port) {
 	return false, nil
 }
 
+// Add a port to loxinet realm
 func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 	hwi PortHwInfo, l2i PortLayer2Info) (int, error) {
 
 	if _, err := mh.zn.ZonePortIsValid(name, zone); err != nil {
-		return PORT_ZONE_ERR, errors.New("no such zone")
+		tk.LogIt(tk.LOG_ERROR, "port add - %s no such zone\n", name)
+		return PORT_ZONE_ERR, errors.New("no-zone error")
 	}
 
 	zn, _ := mh.zn.Zonefind(zone)
 	if zn == nil {
-		return PORT_ZONE_ERR, errors.New("no such zone")
+		tk.LogIt(tk.LOG_ERROR, "port add - %s no such zone\n", name)
+		return PORT_ZONE_ERR, errors.New("no-zone error")
 	}
 
 	if P.portSmap[name] != nil {
@@ -190,14 +193,15 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 
 					p.L2 = l2i
 					p.DP(DP_CREATE)
-					tk.LogIt(tk.LOG_DEBUG, "[PORT ADD] Port %v vlan info updated\n", name)
+					tk.LogIt(tk.LOG_DEBUG, "port add - %s vinfo updated\n", name)
 					return 0, nil
 				}
 			}
 			if ptype == cmn.PORT_BONDSIF {
 				master := P.portSmap[hwi.Master]
 				if master == nil {
-					return PORT_NOMASTER_ERR, errors.New("no such master")
+					tk.LogIt(tk.LOG_ERROR, "port add - %s no master(%s)\n", name, hwi.Master)
+					return PORT_NOMASTER_ERR, errors.New("no-master error")
 				}
 				p.DP(DP_REMOVE)
 
@@ -233,10 +237,11 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 				p.DP(DP_REMOVE)
 				p.L2 = l2i
 				p.DP(DP_CREATE)
-				tk.LogIt(tk.LOG_DEBUG, "[PORT ADD] Port %v vlan info updated\n", name)
+				tk.LogIt(tk.LOG_DEBUG, "port add - %s vxinfo updated\n", name)
 				return 0, nil
 			}
 		}
+		tk.LogIt(tk.LOG_ERROR, "port add - %s exists\n", name)
 		return PORT_EXISTS_ERR, errors.New("port exists")
 	}
 
@@ -249,6 +254,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		rid, err = P.portHwMark.GetCounter()
 	}
 	if err != nil {
+		tk.LogIt(tk.LOG_ERROR, "port add - %s hwmark error\n", name)
 		return PORT_COUNTER_ERR, err
 	}
 
@@ -256,10 +262,12 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 	if hwi.Real != "" {
 		rp = P.portSmap[hwi.Real]
 		if rp == nil {
-			return PORT_NOREALDEV_ERR, errors.New("no such real port")
+			tk.LogIt(tk.LOG_ERROR, "port add - %s no real-port(%s)\n", name, hwi.Real)
+			return PORT_NOREALDEV_ERR, errors.New("no-realport error")
 		}
 	} else if ptype == cmn.PORT_VXLANBR {
-		return PORT_NOREALDEV_ERR, errors.New("need real-dev info")
+		tk.LogIt(tk.LOG_ERROR, "port add - %s real-port needed\n", name)
+		return PORT_NOREALDEV_ERR, errors.New("need-realdev error")
 	}
 
 	p := new(Port)
@@ -300,26 +308,27 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		p.L2.IsPvid = true
 		p.L2.Vid = int(p.HInfo.TunId)
 	default:
-		tk.LogIt(tk.LOG_DEBUG, "%s: isPVid %v\n", p.Name, p.L2.IsPvid)
+		tk.LogIt(tk.LOG_DEBUG, "port add - %s isPvid %v\n", name, p.L2.IsPvid)
 		p.L2 = l2i
 	}
-
-	//fmt.Println(p)
 
 	P.portSmap[name] = p
 	P.portImap[rid] = p
 	P.portOmap[osid] = p
 
 	mh.zn.ZonePortAdd(name, zone)
-	tk.LogIt(tk.LOG_DEBUG, "[PORT ADD] Port %s %d\n", p.Name, p.PortNo)
 	p.DP(DP_CREATE)
+
+	tk.LogIt(tk.LOG_DEBUG, "port added - %s:%d\n", name, p.PortNo)
 
 	return 0, nil
 }
 
+// Delete a port from loxinet realm
 func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 	if P.portSmap[name] == nil {
-		return PORT_NOTEXIST_ERR, errors.New("no such port")
+		tk.LogIt(tk.LOG_ERROR, "port delete - %s no such port\n", name)
+		return PORT_NOTEXIST_ERR, errors.New("no-port error")
 	}
 
 	p := P.portSmap[name]
@@ -374,11 +383,13 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 	rid := P.portSmap[name].PortNo
 
 	if P.portImap[rid] == nil {
-		return PORT_MAP_ERR, errors.New("no such port in imap")
+		tk.LogIt(tk.LOG_ERROR, "port delete - %s no such num\n", name)
+		return PORT_MAP_ERR, errors.New("no-portimap error")
 	}
 
 	if P.portOmap[P.portSmap[name].SInfo.OsId] == nil {
-		return PORT_MAP_ERR, errors.New("no such port in omap")
+		tk.LogIt(tk.LOG_ERROR, "port delete - %s no such osid\n", name)
+		return PORT_MAP_ERR, errors.New("no-portomap error")
 	}
 
 	p.DP(DP_REMOVE)
@@ -401,7 +412,9 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 	p.SInfo.PortActive = false
 	mh.zn.ZonePortDelete(name)
 
-	// TODO - Need to clear layer2 and layer3 information
+	tk.LogIt(tk.LOG_DEBUG, "port deleted - %s:%d\n", name, p.PortNo)
+
+	// FIXME - Do we need to care about layer2 and layer3 information related to this port ?
 	delete(P.portOmap, p.SInfo.OsId)
 	delete(P.portSmap, name)
 	P.portImap[rid] = nil
@@ -409,32 +422,36 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 	return 0, nil
 }
 
+// Update port properties given an existing port
 func (P *PortsH) PortUpdateProp(name string, prop cmn.PortProp, zone string, updt bool) (int, error) {
 
 	var allDevs []*Port
 
 	if _, err := mh.zn.ZonePortIsValid(name, zone); err != nil {
-		return PORT_ZONE_ERR, errors.New("no such zone")
+		return PORT_ZONE_ERR, errors.New("no-zone error")
 	}
 
 	zn, _ := mh.zn.Zonefind(zone)
 	if zn == nil {
-		return PORT_ZONE_ERR, errors.New("no such zone")
+		return PORT_ZONE_ERR, errors.New("no-zone error")
 	}
 
 	p := P.portSmap[name]
 
 	if p == nil {
-		return PORT_NOTEXIST_ERR, errors.New("no such port")
+		tk.LogIt(tk.LOG_ERROR, "port updt - %s doesnt exist\n", name)
+		return PORT_NOTEXIST_ERR, errors.New("no-port error")
 	}
 
 	if updt {
 		if p.SInfo.PortProp&prop == prop {
-			return PORT_PROPEXISTS_ERR, errors.New("port property exists")
+			tk.LogIt(tk.LOG_ERROR, "port updt - %s prop exists\n", name)
+			return PORT_PROPEXISTS_ERR, errors.New("prop-exists error")
 		}
 	} else {
 		if p.SInfo.PortProp&prop != prop {
-			return PORT_PROPNOT_EXISTS_ERR, errors.New("port property doesnt exist")
+			tk.LogIt(tk.LOG_ERROR, "port updt - %s prop doesnt exists\n", name)
+			return PORT_PROPNOT_EXISTS_ERR, errors.New("prop-noexist error")
 		}
 	}
 
@@ -453,7 +470,7 @@ func (P *PortsH) PortUpdateProp(name string, prop cmn.PortProp, zone string, upd
 		} else {
 			pe.SInfo.PortProp ^= prop
 		}
-		fmt.Printf("Dev %s %x\n\n\n\n", pe.Name, pe.SInfo.PortProp)
+		tk.LogIt(tk.LOG_DEBUG, "port updt - %s:%v\n", name, prop)
 		pe.DP(DP_CREATE)
 	}
 
@@ -732,6 +749,7 @@ func (P *PortsH) PortDestructAll() {
 	}
 }
 
+// Sync state of port entities in loxinet realm to data-path
 func (p *Port) DP(work DpWorkT) int {
 
 	zn, zoneNum := mh.zn.Zonefind(p.Zone)
