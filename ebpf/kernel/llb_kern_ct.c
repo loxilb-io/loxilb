@@ -767,7 +767,7 @@ dp_ctv4_in(void *ctx, struct xfi *F)
   axtdat = bpf_map_lookup_elem(&acl_v4_map, &xkey);
   if (atdat == NULL || axtdat == NULL) {
 
-    bpf_printk("new-ct4");
+    LL_DBG_PRINTK("[CTRK] new-ct4");
     adat->ca.ftrap = 0;
     adat->ca.oif = 0;
     adat->ca.cidx = F->pm.rule_id;
@@ -816,14 +816,14 @@ dp_ctv4_in(void *ctx, struct xfi *F)
     atdat->lts = bpf_ktime_get_ns();
     axtdat->lts = atdat->lts;
     if (atdat->ctd.dir == CT_DIR_IN) {
-      bpf_printk("in-dir");
+      LL_DBG_PRINTK("[CTRK] in-dir");
       smr = dp_ct_sm(ctx, F, atdat, axtdat, CT_DIR_IN);
     } else {
-      bpf_printk("out-dir");
+      LL_DBG_PRINTK("[CTRK] out-dir");
       smr = dp_ct_sm(ctx, F, axtdat, atdat, CT_DIR_OUT);
     }
 
-    bpf_printk("smr %d", smr);
+    LL_DBG_PRINTK("[CTRK] smr %d", smr);
 
     if (smr == CT_SMR_EST) {
       bpf_printk("est");

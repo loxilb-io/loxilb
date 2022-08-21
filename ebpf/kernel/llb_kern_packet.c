@@ -480,7 +480,6 @@ dp_ing_ct_main(void *ctx,  struct xfi *F)
     dp_do_nat4_rule_lkup(ctx, F);
 
   LL_DBG_PRINTK("[CTRK] start\n");
-  bpf_printk("[CTRK] start\n");
 
   val = dp_ctv4_in(ctx, F);
   if (val < 0) {
