@@ -24,43 +24,6 @@ loxilb is a cloud-native "edge" load-balancer stack built from grounds up using 
    * goLang based easy to use APIs/Interfaces
 
 
-## How to build/run
-
-1. Install package dependencies 
-
-```
-sudo apt install clang llvm libelf-dev gcc-multilib libpcap-dev
-sudo apt install linux-tools-$(uname -r)
-sudo apt install elfutils dwarves
-```
-
-*loxilb also requires a special version of [iproute2](https://github.com/shemminger/iproute2) tool for its operation. The customized repository can be found [here](https://github.com/loxilb-io/iproute2). Detailed build instructions can be found [here](https://github.com/loxilb-io/iproute2/blob/main/README.loxilb).*
-
-2. Build libbpf locally
-
-```
-#  cd libbpf/src/
-#  mkdir build
-#  DESTDIR=build make install
-```
-
-3. Make loxilb
-
-```
-make
-```
-
-4. Run  loxilb
-
-```
-sudo go run .
-```
-
-  or 
-
-```
-sudo ./loxilb 
-```
-
+## How to build/run/use
 
 We encourage loxilb users to follow various guides in loxilb docs [repository](https://github.com/loxilb-io/loxilbdocs)
