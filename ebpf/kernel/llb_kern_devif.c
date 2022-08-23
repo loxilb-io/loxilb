@@ -453,6 +453,7 @@ out:
 #ifdef HAVE_DP_FC
   if (xf->pm.pipe_act == LLB_PIPE_RDR && 
       xf->pm.phit & LLB_DP_ACL_HIT &&
+      !(xf->pm.phit & LLB_DP_SESS_HIT) &&
       xf->qm.polid == 0 &&
       !DP_NEED_MIRR(ctx)) {
     dp_insert_fcv4(ctx, xf, fa);
