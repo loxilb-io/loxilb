@@ -1,5 +1,5 @@
 /*
- *  llb_kern_parse.c: LoxiLB Kernel eBPF Parsing Implementation
+ *  llb_kern_entry.c: LoxiLB Kernel eBPF packet entry handling
  *  Copyright (C) 2022,  NetLOX <www.netlox.io>
  * 
  * SPDX-License-Identifier: GPL-2.0
@@ -16,13 +16,13 @@
 
 #include "llb_kern_cdefs.h"
 #include "llb_kern_policer.c"
-#include "llb_kern_sess.c"
+#include "llb_kern_sessfwd.c"
 #include "llb_kern_ct.c"
-#include "llb_kern_nat.c"
-#include "llb_kern_l3.c"
-#include "llb_kern_l2.c"
-#include "llb_kern_packet.c"
-#include "llb_kern_fc.c"
+#include "llb_kern_natlbfwd.c"
+#include "llb_kern_l3fwd.c"
+#include "llb_kern_l2fwd.c"
+#include "llb_kern_devif.c"
+#include "llb_kern_fcfwd.c"
 
 static int __always_inline
 dp_parse_inner_packet(void *md,

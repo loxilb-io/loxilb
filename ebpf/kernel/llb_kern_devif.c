@@ -1,5 +1,5 @@
 /*
- *  llb_kernel_packet.c: LoxiLB kernel eBPF packet pipeline 
+ *  llb_kernel_devif.c: LoxiLB kernel eBPF dev in/out pipeline
  *  Copyright (C) 2022,  NetLOX <www.netlox.io>
  * 
  * SPDX-License-Identifier: GPL-2.0

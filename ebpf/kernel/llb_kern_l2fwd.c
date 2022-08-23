@@ -1,5 +1,5 @@
 /*
- *  llb_kern_L2.c: LoxiLB kernel eBPF L2 Processing Implementation
+ *  llb_kern_l2fwd.c: LoxiLB kernel eBPF L2 forwarder Implementation
  *  Copyright (C) 2022,  NetLOX <www.netlox.io>
  * 
  * SPDX-License-Identifier: GPL-2.0

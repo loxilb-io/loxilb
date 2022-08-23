@@ -1,5 +1,5 @@
 /*
- *  llb_kern_nat.c: LoxiLB Kernel eBPF Stateful NAT Processing
+ *  llb_kern_nat.c: LoxiLB Kernel eBPF Stateful NAT/LB Processing
  *  Copyright (C) 2022,  NetLOX <www.netlox.io>
  * 
  * SPDX-License-Identifier: GPL-2.0
