@@ -763,7 +763,7 @@ definitions:
           tunnelIP:
             type: string
             description: Access network IP address
-      connectionNetworkTunnel:
+      coreNetworkTunnel:
         type: object
         properties:
           teID:

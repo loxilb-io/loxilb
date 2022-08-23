@@ -18,8 +18,9 @@ package handler
 import (
 	"loxilb/api/restapi/operations"
 	cmn "loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
 	"net"
+
+	tk "github.com/loxilb-io/loxilib"
 
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -35,8 +36,8 @@ func ConfigPostSession(params operations.PostConfigSessionParams) middleware.Res
 	sessionMod.AnTun.TeID = uint32(params.Attr.AccessNetworkTunnel.TeID)
 	sessionMod.AnTun.Addr = net.ParseIP(params.Attr.AccessNetworkTunnel.TunnelIP)
 	// CnTul Setting
-	sessionMod.CnTun.TeID = uint32(params.Attr.ConnectionNetworkTunnel.TeID)
-	sessionMod.CnTun.Addr = net.ParseIP(params.Attr.ConnectionNetworkTunnel.TunnelIP)
+	sessionMod.CnTun.TeID = uint32(params.Attr.CoreNetworkTunnel.TeID)
+	sessionMod.CnTun.Addr = net.ParseIP(params.Attr.CoreNetworkTunnel.TunnelIP)
 
 	tk.LogIt(tk.LOG_DEBUG, "[API] Session sessionMod : %v\n", sessionMod)
 	_, err := ApiHooks.NetSessionAdd(&sessionMod)
