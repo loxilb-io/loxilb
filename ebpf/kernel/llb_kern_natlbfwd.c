@@ -51,35 +51,35 @@ dp_sel_nat_ep(void *ctx, struct dp_natv4_tacts *act)
 }
 
 static int __always_inline
-dp_do_nat4_rule_lkup(void *ctx, struct xfi *F)
+dp_do_nat4_rule_lkup(void *ctx, struct xfi *xf)
 {
-  struct dp_natv4_key *key = (void *)F->km.skey;
+  struct dp_natv4_key *key = (void *)xf->km.skey;
   struct mf_xfrm_inf *nxfrm_act;
   struct dp_natv4_tacts *act;
   __u32 sel;
 
-  key->daddr = F->l3m.ip.daddr;
-  if (F->l3m.nw_proto != IPPROTO_ICMP) {
-    key->dport = F->l3m.dest;
+  key->daddr = xf->l3m.ip.daddr;
+  if (xf->l3m.nw_proto != IPPROTO_ICMP) {
+    key->dport = xf->l3m.dest;
   } else {
     key->dport = 0;
   }
-  key->zone = F->pm.zone;
-  key->l4proto = F->l3m.nw_proto;
+  key->zone = xf->pm.zone;
+  key->l4proto = xf->l3m.nw_proto;
 
   LL_DBG_PRINTK("[NAT4] --Lookup\n");
 
-  F->pm.table_id = LL_DP_NAT4_MAP;
+  xf->pm.table_id = LL_DP_NAT4_MAP;
 
   act = bpf_map_lookup_elem(&nat_v4_map, key);
   if (!act) {
     /* Default action - Nothing to do */
-    F->pm.nf &= ~LLB_NAT_SRC;
+    xf->pm.nf &= ~LLB_NAT_SRC;
     return 0;
   }
 
   LL_DBG_PRINTK("[NAT4] action %d pipe %x\n",
-                 act->ca.act_type, F->pm.pipe_act);
+                 act->ca.act_type, xf->pm.pipe_act);
 
   if (act->ca.act_type == DP_SET_SNAT || 
       act->ca.act_type == DP_SET_DNAT) {
@@ -94,20 +94,20 @@ dp_do_nat4_rule_lkup(void *ctx, struct xfi *F)
       nxfrm_act = &act->nxfrms[sel];
 
       if (nxfrm_act < act + 1) {
-        F->pm.nf = act->ca.act_type == DP_SET_SNAT ? LLB_NAT_SRC : LLB_NAT_DST;
-        F->l4m.nxip = nxfrm_act->nat_xip;
-        F->l4m.nxport = nxfrm_act->nat_xport;
-        F->l4m.sel_aid = sel;
-        F->pm.rule_id =  act->ca.cidx;
-        LL_DBG_PRINTK("[NAT4] ACT %x\n", F->pm.nf);
+        xf->pm.nf = act->ca.act_type == DP_SET_SNAT ? LLB_NAT_SRC : LLB_NAT_DST;
+        xf->l4m.nxip = nxfrm_act->nat_xip;
+        xf->l4m.nxport = nxfrm_act->nat_xport;
+        xf->l4m.sel_aid = sel;
+        xf->pm.rule_id =  act->ca.cidx;
+        LL_DBG_PRINTK("[NAT4] ACT %x\n", xf->pm.nf);
         /* Special case related to host-dnat */
-        if (F->l3m.ip.saddr == F->l4m.nxip && F->pm.nf == LLB_NAT_DST) {
-          F->l4m.nxip = 0;
+        if (xf->l3m.ip.saddr == xf->l4m.nxip && xf->pm.nf == LLB_NAT_DST) {
+          xf->l4m.nxip = 0;
         }
       }
     }
   } else { 
-    LLBS_PPLN_DROP(F);
+    LLBS_PPLN_DROP(xf);
   }
 
   return 0;
