@@ -238,17 +238,18 @@ llb_dflt_sec_map2fd_all(struct bpf_object *bpf_obj)
         bfd = bpf_program__fd(prog);
 
         section = bpf_program__section_name(prog);
-        if (strcmp(section, "tc_packet_parser1") == 0) {
-          key = 1;
-        } else  if (strcmp(section, "tc_packet_parser") == 0) {
+        if (strcmp(section, "tc_packet_parser0") == 0) {
           key = 0;
+        } else if (strcmp(section, "tc_packet_parser1") == 0) {
+          key = 1;
+        } else  if (strcmp(section, "tc_packet_parser2") == 0) {
+          key = 2;
         } else key = -1;
         if (key >= 0) {
           bpf_map_update_elem(fd, &key, &bfd, BPF_ANY);
         }
       }
     }
-
   }
 
   /* Clean previous pins */

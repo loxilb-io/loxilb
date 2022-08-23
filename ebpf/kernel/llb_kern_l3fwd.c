@@ -47,9 +47,6 @@ dp_do_rtv4_lkup(void *ctx, struct xfi *xf, void *fa_)
   //struct dp_rtv4_key key = { 0 };
   struct dp_rtv4_key *key = (void *)xf->km.skey;
   struct dp_rt_tact *act;
-#ifdef HAVE_DP_FC
-  struct dp_fc_tacts *fa = fa_;
-#endif
 
   key->l.prefixlen = 48; /* 16-bit zone + 32-bit prefix */
   key->v4k[0] = xf->pm.zone >> 8 & 0xff;

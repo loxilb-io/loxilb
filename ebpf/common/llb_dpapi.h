@@ -37,11 +37,12 @@
 #define LLB_PSECS             (8)
 #define LLB_MAX_NXFRMS        (16)
 
-#define LLB_DP_CT_PGM_ID      (1)
-#define LLB_DP_PKT_PGM_ID     (0)
+#define LLB_DP_CT_PGM_ID       (2)
+#define LLB_DP_PKT_SLOW_PGM_ID (1)
+#define LLB_DP_PKT_PGM_ID      (0)
 
-/* Hard-timeout of 15m for fc dp entry */
-#define FC_V4_DPTO            (900000000000)
+/* Hard-timeout of 30s for fc dp entry */
+#define FC_V4_DPTO            (30000000000)
 
 /* Hard-timeout of 30m for fc cp entry */
 #define FC_V4_CPTO            (1800000000000)
