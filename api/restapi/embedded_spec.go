@@ -1090,7 +1090,7 @@ func init() {
             }
           }
         },
-        "connectionNetworkTunnel": {
+        "coreNetworkTunnel": {
           "type": "object",
           "properties": {
             "teID": {
@@ -2420,7 +2420,7 @@ func init() {
             }
           }
         },
-        "connectionNetworkTunnel": {
+        "coreNetworkTunnel": {
           "type": "object",
           "properties": {
             "teID": {
@@ -2456,7 +2456,7 @@ func init() {
         }
       }
     },
-    "SessionEntryConnectionNetworkTunnel": {
+    "SessionEntryCoreNetworkTunnel": {
       "type": "object",
       "properties": {
         "teID": {

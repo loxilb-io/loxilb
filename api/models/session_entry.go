@@ -21,8 +21,8 @@ type SessionEntry struct {
 	// access network tunnel
 	AccessNetworkTunnel *SessionEntryAccessNetworkTunnel `json:"accessNetworkTunnel,omitempty"`
 
-	// connection network tunnel
-	ConnectionNetworkTunnel *SessionEntryConnectionNetworkTunnel `json:"connectionNetworkTunnel,omitempty"`
+	// core network tunnel
+	CoreNetworkTunnel *SessionEntryCoreNetworkTunnel `json:"coreNetworkTunnel,omitempty"`
 
 	// IP address and netmask
 	Ident string `json:"ident,omitempty"`
@@ -39,7 +39,7 @@ func (m *SessionEntry) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateConnectionNetworkTunnel(formats); err != nil {
+	if err := m.validateCoreNetworkTunnel(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -68,17 +68,17 @@ func (m *SessionEntry) validateAccessNetworkTunnel(formats strfmt.Registry) erro
 	return nil
 }
 
-func (m *SessionEntry) validateConnectionNetworkTunnel(formats strfmt.Registry) error {
-	if swag.IsZero(m.ConnectionNetworkTunnel) { // not required
+func (m *SessionEntry) validateCoreNetworkTunnel(formats strfmt.Registry) error {
+	if swag.IsZero(m.CoreNetworkTunnel) { // not required
 		return nil
 	}
 
-	if m.ConnectionNetworkTunnel != nil {
-		if err := m.ConnectionNetworkTunnel.Validate(formats); err != nil {
+	if m.CoreNetworkTunnel != nil {
+		if err := m.CoreNetworkTunnel.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("connectionNetworkTunnel")
+				return ve.ValidateName("coreNetworkTunnel")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("connectionNetworkTunnel")
+				return ce.ValidateName("coreNetworkTunnel")
 			}
 			return err
 		}
@@ -95,7 +95,7 @@ func (m *SessionEntry) ContextValidate(ctx context.Context, formats strfmt.Regis
 		res = append(res, err)
 	}
 
-	if err := m.contextValidateConnectionNetworkTunnel(ctx, formats); err != nil {
+	if err := m.contextValidateCoreNetworkTunnel(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -121,14 +121,14 @@ func (m *SessionEntry) contextValidateAccessNetworkTunnel(ctx context.Context, f
 	return nil
 }
 
-func (m *SessionEntry) contextValidateConnectionNetworkTunnel(ctx context.Context, formats strfmt.Registry) error {
+func (m *SessionEntry) contextValidateCoreNetworkTunnel(ctx context.Context, formats strfmt.Registry) error {
 
-	if m.ConnectionNetworkTunnel != nil {
-		if err := m.ConnectionNetworkTunnel.ContextValidate(ctx, formats); err != nil {
+	if m.CoreNetworkTunnel != nil {
+		if err := m.CoreNetworkTunnel.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("connectionNetworkTunnel")
+				return ve.ValidateName("coreNetworkTunnel")
 			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("connectionNetworkTunnel")
+				return ce.ValidateName("coreNetworkTunnel")
 			}
 			return err
 		}
@@ -195,10 +195,10 @@ func (m *SessionEntryAccessNetworkTunnel) UnmarshalBinary(b []byte) error {
 	return nil
 }
 
-// SessionEntryConnectionNetworkTunnel session entry connection network tunnel
+// SessionEntryCoreNetworkTunnel session entry core network tunnel
 //
-// swagger:model SessionEntryConnectionNetworkTunnel
-type SessionEntryConnectionNetworkTunnel struct {
+// swagger:model SessionEntryCoreNetworkTunnel
+type SessionEntryCoreNetworkTunnel struct {
 
 	// ID of the tunnel
 	TeID float64 `json:"teID,omitempty"`
@@ -207,18 +207,18 @@ type SessionEntryConnectionNetworkTunnel struct {
 	TunnelIP string `json:"tunnelIP,omitempty"`
 }
 
-// Validate validates this session entry connection network tunnel
-func (m *SessionEntryConnectionNetworkTunnel) Validate(formats strfmt.Registry) error {
+// Validate validates this session entry core network tunnel
+func (m *SessionEntryCoreNetworkTunnel) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this session entry connection network tunnel based on context it is used
-func (m *SessionEntryConnectionNetworkTunnel) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this session entry core network tunnel based on context it is used
+func (m *SessionEntryCoreNetworkTunnel) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *SessionEntryConnectionNetworkTunnel) MarshalBinary() ([]byte, error) {
+func (m *SessionEntryCoreNetworkTunnel) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -226,8 +226,8 @@ func (m *SessionEntryConnectionNetworkTunnel) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *SessionEntryConnectionNetworkTunnel) UnmarshalBinary(b []byte) error {
-	var res SessionEntryConnectionNetworkTunnel
+func (m *SessionEntryCoreNetworkTunnel) UnmarshalBinary(b []byte) error {
+	var res SessionEntryCoreNetworkTunnel
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
