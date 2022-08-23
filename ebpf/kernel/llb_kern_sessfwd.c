@@ -13,35 +13,35 @@
 #include "../common/parsing_helpers.h"
 
 static int __always_inline
-dp_pipe_set_rm_gtp_tun(void *ctx, struct xfi *F)
+dp_pipe_set_rm_gtp_tun(void *ctx, struct xfi *xf)
 {
   LL_DBG_PRINTK("[SESS] rm-gtp \n");
-  dp_pop_outer_metadata(ctx, F, 0);
-  F->tm.tun_type = LLB_TUN_GTP;
+  dp_pop_outer_metadata(ctx, xf, 0);
+  xf->tm.tun_type = LLB_TUN_GTP;
   return 0;
 }
 
 static int __always_inline
-dp_do_sess4_lkup(void *ctx, struct xfi *F)
+dp_do_sess4_lkup(void *ctx, struct xfi *xf)
 {
   struct dp_sess4_key key;
   struct dp_sess_tact *act;
 
   key.r = 0;
-  if (F->tm.tunnel_id) {
-    key.daddr = F->il3m.ip.daddr;
-    key.saddr = F->il3m.ip.saddr;
-    key.teid = bpf_ntohl(F->tm.tunnel_id);
+  if (xf->tm.tunnel_id) {
+    key.daddr = xf->il3m.ip.daddr;
+    key.saddr = xf->il3m.ip.saddr;
+    key.teid = bpf_ntohl(xf->tm.tunnel_id);
   } else {
-    if (F->pm.nf == LLB_NAT_SRC) {
-      key.saddr = F->l4m.nxip;
-      key.daddr = F->l3m.ip.daddr;
-    } else if (F->pm.nf == LLB_NAT_DST) {
-      key.daddr = F->l4m.nxip;
-      key.saddr = F->l3m.ip.saddr;
+    if (xf->pm.nf == LLB_NAT_SRC) {
+      key.saddr = xf->l4m.nxip;
+      key.daddr = xf->l3m.ip.daddr;
+    } else if (xf->pm.nf == LLB_NAT_DST) {
+      key.daddr = xf->l4m.nxip;
+      key.saddr = xf->l3m.ip.saddr;
     } else {
-      key.daddr = F->l3m.ip.daddr;
-      key.saddr = F->l3m.ip.saddr;
+      key.daddr = xf->l3m.ip.daddr;
+      key.saddr = xf->l3m.ip.saddr;
     }
     key.teid = 0;
   }
@@ -51,7 +51,7 @@ dp_do_sess4_lkup(void *ctx, struct xfi *F)
   LL_DBG_PRINTK("[SESS4] saddr %x\n", key.saddr);
   LL_DBG_PRINTK("[SESS4] teid 0x%x\n", key.teid);
 
-  F->pm.table_id = LL_DP_SESS4_MAP;
+  xf->pm.table_id = LL_DP_SESS4_MAP;
 
   act = bpf_map_lookup_elem(&sess_v4_map, &key);
   if (!act) {
@@ -59,25 +59,25 @@ dp_do_sess4_lkup(void *ctx, struct xfi *F)
     return 0;
   }
 
-  F->pm.phit |= LLB_DP_SESS_HIT;
-  dp_do_map_stats(ctx, F, LL_DP_SESS4_STATS_MAP, act->ca.cidx);
+  xf->pm.phit |= LLB_DP_SESS_HIT;
+  dp_do_map_stats(ctx, xf, LL_DP_SESS4_STATS_MAP, act->ca.cidx);
 
   if (act->ca.act_type == DP_SET_DROP) {
     goto drop;
   } else if (act->ca.act_type == DP_SET_RM_GTP) {
-    dp_pipe_set_rm_gtp_tun(ctx, F);
-    F->qm.qfi = act->qfi;
+    dp_pipe_set_rm_gtp_tun(ctx, xf);
+    xf->qm.qfi = act->qfi;
   } else {
-    F->tm.new_tunnel_id = act->teid;
-    F->tm.tun_type = LLB_TUN_GTP;
-    F->qm.qfi = act->qfi;
-    F->tm.tun_rip = act->rip;
-    F->tm.tun_sip = act->sip;
+    xf->tm.new_tunnel_id = act->teid;
+    xf->tm.tun_type = LLB_TUN_GTP;
+    xf->qm.qfi = act->qfi;
+    xf->tm.tun_rip = act->rip;
+    xf->tm.tun_sip = act->sip;
   }
 
   return 0;
 
 drop:
-  LLBS_PPLN_DROP(F);
+  LLBS_PPLN_DROP(xf);
   return 0;
 }

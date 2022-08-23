@@ -11,7 +11,7 @@
  * to keep code size in check
  */
 static int
-do_dp_policer(void *ctx, struct xfi *F)
+do_dp_policer(void *ctx, struct xfi *xf)
 {
   struct dp_pol_tact *pla;
   int ret = 0;
@@ -24,12 +24,12 @@ do_dp_policer(void *ctx, struct xfi *F)
 
   ts_now = bpf_ktime_get_ns();
 
-  pla = bpf_map_lookup_elem(&polx_map, &F->qm.polid);
+  pla = bpf_map_lookup_elem(&polx_map, &xf->qm.polid);
   if (!pla) { /*|| pla->ca.act_type != DP_SET_DO_POLICER) { */
     return 0;
   }
 
-  inbytes = F->pm.l3_len;
+  inbytes = xf->pm.l3_len;
 
   bpf_spin_lock(&pla->lock);
 
@@ -84,48 +84,48 @@ do_dp_policer(void *ctx, struct xfi *F)
   if (pla->pol.color_aware == 0) {
     /* Color-blind mode */
     if (pla->pol.tok_e < inbytes) {
-      F->qm.ocol = LLB_PIPE_COL_RED;
+      xf->qm.ocol = LLB_PIPE_COL_RED;
     } else if (pla->pol.tok_c < inbytes) {
-      F->qm.ocol = LLB_PIPE_COL_YELLOW;
+      xf->qm.ocol = LLB_PIPE_COL_YELLOW;
       pla->pol.tok_e -= inbytes;
     } else {
       pla->pol.tok_c -= inbytes;
       pla->pol.tok_e -= inbytes;
-      F->qm.ocol = LLB_PIPE_COL_GREEN;
+      xf->qm.ocol = LLB_PIPE_COL_GREEN;
     }
   } else {
     /* Color-aware mode */
-    if (F->qm.icol == LLB_PIPE_COL_NONE) {
+    if (xf->qm.icol == LLB_PIPE_COL_NONE) {
       ret = -1;
       goto out;
     }
 
-    if (F->qm.icol == LLB_PIPE_COL_RED) {
-      F->qm.ocol = LLB_PIPE_COL_RED;
+    if (xf->qm.icol == LLB_PIPE_COL_RED) {
+      xf->qm.ocol = LLB_PIPE_COL_RED;
       goto out;
     }
 
     if (pla->pol.tok_e < inbytes) {
-      F->qm.ocol = LLB_PIPE_COL_RED;
+      xf->qm.ocol = LLB_PIPE_COL_RED;
     } else if (pla->pol.tok_c < inbytes) {
-      if (F->qm.icol == LLB_PIPE_COL_GREEN) {
-        F->qm.ocol = LLB_PIPE_COL_YELLOW;
+      if (xf->qm.icol == LLB_PIPE_COL_GREEN) {
+        xf->qm.ocol = LLB_PIPE_COL_YELLOW;
       } else {
-        F->qm.ocol = F->qm.icol;
+        xf->qm.ocol = xf->qm.icol;
       }
       pla->pol.tok_e -= inbytes;
     } else {
       pla->pol.tok_c -= inbytes;
       pla->pol.tok_e -= inbytes;
-      F->qm.ocol = F->qm.icol;
+      xf->qm.ocol = xf->qm.icol;
     }
   }
 
 out:
-  if (pla->pol.drop_prio < F->qm.ocol) { 
+  if (pla->pol.drop_prio < xf->qm.ocol) { 
     ret = 1;
     pla->pol.ps.drop_packets += 1;
-    LLBS_PPLN_DROP(F);
+    LLBS_PPLN_DROP(xf);
   } else {
     pla->pol.ps.pass_packets += 1;
   }

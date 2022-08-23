@@ -22,7 +22,7 @@ import (
 	"time"
 	apiserver "loxilb/api"
 	tk "github.com/loxilb-io/loxilib"
-	nlp "loxilb/loxinlp"
+	nlp "loxilb/api/loxinlp"
 	opts "loxilb/options"
 )
 

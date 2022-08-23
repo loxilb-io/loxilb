@@ -9,6 +9,6 @@
 #include <linux/if_arp.h>
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_endian.h>
-#include "llb_kern_parse.c"
+#include "llb_kern_entry.c"
 
 char _license[] SEC("license") = "GPL";
