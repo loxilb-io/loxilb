@@ -166,8 +166,6 @@ dp_do_aclv4_lkup(void *ctx, struct xfi *xf, void *fa_)
   fa->ca.cidx = act->ca.cidx;
 #endif
 
-  dp_do_map_stats(ctx, xf, LL_DP_ACLV4_STATS_MAP, act->ca.cidx);
-
   if (act->ca.act_type == DP_SET_DO_CT) {
     goto ct_trk;
   } else if (act->ca.act_type == DP_SET_NOP) {
@@ -227,12 +225,15 @@ dp_do_aclv4_lkup(void *ctx, struct xfi *xf, void *fa_)
     LLBS_PPLN_DROP(xf);
   }
 
+  dp_do_map_stats(ctx, xf, LL_DP_ACLV4_STATS_MAP, act->ca.cidx);
+#if 0
   /* Note that this might result in consistency problems 
    * between packet and byte counts at times but this should be 
    * better than holding bpf-spinlock 
    */
   lock_xadd(&act->ctd.pb.bytes, xf->pm.l3_len);
   lock_xadd(&act->ctd.pb.packets, 1);
+#endif
 
   return 0;
 

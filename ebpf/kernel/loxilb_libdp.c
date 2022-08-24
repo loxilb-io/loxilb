@@ -603,7 +603,7 @@ llb_fetch_table_stats_raw(int tid, dp_ts_cb_t cb, dp_tiv_cb_t vcb)
 }
 
 int
-llb_fetch_table_stats_cached(int tbl, uint32_t e,
+llb_fetch_table_stats_cached(int tbl, uint32_t e, int raw,
                              void *bytes, void *packets)
 {
   llb_dp_map_t *t;
@@ -613,26 +613,35 @@ llb_fetch_table_stats_cached(int tbl, uint32_t e,
     return -1;
 
 
+
   t = &xh->maps[tbl];
   if (t->has_pb && t->pb_xtid <= 0) {
     /* FIXME : Handle non-pcpu */
+
+    pthread_rwlock_wrlock(&t->stat_lock);
+    if (raw) {
+      ll_get_stats_pcpu_arr(t->map_fd, e, &t->pbs[e], NULL);
+    }
     if (e < t->max_entries) {
-      pthread_rwlock_rdlock(&t->stat_lock);
       *(uint64_t *)bytes = t->pbs[e].bytes;
       *(uint64_t *)packets = t->pbs[e].packets;
-      pthread_rwlock_unlock(&t->stat_lock);
     }
+    pthread_rwlock_unlock(&t->stat_lock);
   } else if (t->has_pb && t->pb_xtid > 0) {
     if (t->pb_xtid < 0 || t->pb_xtid >= LL_DP_MAX_MAP)
       return -1;
 
     ut = &xh->maps[t->pb_xtid];
+
+    pthread_rwlock_wrlock(&ut->stat_lock);
+    if (raw)  {
+      ll_get_stats_pcpu_arr(ut->map_fd, e, &ut->pbs[e], NULL);
+    }
     if (e < ut->max_entries) {
-      pthread_rwlock_rdlock(&ut->stat_lock);
       *(uint64_t *)bytes = ut->pbs[e].bytes;
       *(uint64_t *)packets = ut->pbs[e].packets;
-      pthread_rwlock_unlock(&ut->stat_lock);
     }
+    pthread_rwlock_unlock(&ut->stat_lock);
   }
 
   return 0;
@@ -681,7 +690,7 @@ ll_get_pol_table_stats(int tid, dp_pts_cb_t cb, dp_tiv_cb_t vcb)
 
 void 
 llb_table_loop_and_delete(int tid, dp_table_walker_t cb,
-                          dp_table_ita_t *it)
+                          dp_map_ita_t *it)
 {
   void *key = NULL;
   llb_dp_map_t *t;
@@ -817,7 +826,7 @@ llb_add_table_elem(int tbl, void *k, void *v)
 static int
 ll_table_elem_cmp_cidx(int tid, void *k, void *ita)
 {
-  dp_table_ita_t *it = ita;
+  dp_map_ita_t *it = ita;
   uint32_t cidx;
 
   if (!it|| !it->uarg || !it->val) return 0;
@@ -840,7 +849,7 @@ ll_table_elem_cmp_cidx(int tid, void *k, void *ita)
 static void
 llb_del_table_elem_with_cidx(int tbl, uint32_t cidx)
 {
-  dp_table_ita_t it;
+  dp_map_ita_t it;
   uint8_t skey[1024];
   uint8_t sval[1024];
 
@@ -910,7 +919,7 @@ __get_os_nsecs_now(void)
 static int
 ll_fcmap_ent_has_aged(int tid, void *k, void *ita)
 {
-  dp_table_ita_t *it = ita;
+  dp_map_ita_t *it = ita;
   struct dp_fc_tacts *fc_val;
   uint64_t curr_ns;
 
@@ -930,7 +939,7 @@ ll_fcmap_ent_has_aged(int tid, void *k, void *ita)
 static void
 ll_age_table_fcmap(void)
 {
-  dp_table_ita_t it;
+  dp_map_ita_t it;
   struct dp_fcv4_key next_key;
   struct dp_fc_tacts *fc_val;
   uint64_t ns = __get_os_nsecs_now();
@@ -1012,7 +1021,7 @@ ctm_proto_xfk_init(struct dp_ctv4_key *key,
 static int
 ll_aclct4_map_ent_has_aged(int tid, void *k, void *ita)
 {
-  dp_table_ita_t *it = ita;
+  dp_map_ita_t *it = ita;
   struct dp_ctv4_key *key = k;
   struct dp_ctv4_key xkey;
   struct dp_ctv4_dat *dat;
@@ -1114,7 +1123,7 @@ ll_aclct4_map_ent_has_aged(int tid, void *k, void *ita)
 static void
 ll_age_table_aclct4map(void)
 {
-  dp_table_ita_t it;
+  dp_map_ita_t it;
   struct dp_ctv4_key next_key;
   struct dp_aclv4_tact *adat;
   ct_arg_struct_t *as;
@@ -1165,7 +1174,7 @@ ll_aclct4_map_ent_rm_related(int tid, void *k, void *ita)
 {
   int i = 0;
   struct dp_ctv4_key *key = k;
-  dp_table_ita_t *it = ita;
+  dp_map_ita_t *it = ita;
   struct dp_aclv4_tact *adat;
   ct_arg_struct_t *as;
   char dstr[INET_ADDRSTRLEN];
@@ -1199,7 +1208,7 @@ ll_aclct4_map_ent_rm_related(int tid, void *k, void *ita)
 static void
 ll_table_aclct4_map_rm_related(uint32_t rid, uint32_t *aids, int naid)
 {
-  dp_table_ita_t it;
+  dp_map_ita_t it;
   int i = 0;
   struct dp_ctv4_key next_key;
   struct dp_aclv4_tact *adat;

@@ -639,12 +639,12 @@ struct ll_dp_pmdi {
   uint8_t data[];
 }; 
 
-struct dp_table_ita {
+struct dp_map_ita {
   void *next_key;
   void *val;
   void *uarg;
 };
-typedef struct dp_table_ita dp_table_ita_t;
+typedef struct dp_map_ita dp_map_ita_t;
 
 /* Policer Table stats update callback */
 typedef void (*dp_pts_cb_t)(uint32_t idx, struct dp_pol_stats *ps);
@@ -656,14 +656,14 @@ typedef int (*dp_tiv_cb_t)(int tid, uint32_t idx);
 typedef int (*dp_table_walker_t)(int tid, void *key, void *arg);
 
 int llb_tb2fd(int t);
-int llb_fetch_table_stats_cached(int tbl, uint32_t index, void *bc, void *pc);
+int llb_fetch_table_stats_cached(int tbl, uint32_t index, int raw, void *bc, void *pc);
 void llb_age_table_entries(int tbl);
 void llb_collect_table_stats(int tbl);
 void llb_get_pol_table_stats(int tbl, dp_pts_cb_t cb, dp_tiv_cb_t vcb);
 void llb_clear_table_stats(int tbl, __u32 idx);
 int llb_add_table_elem(int tbl, void *k, void *v);
 int llb_del_table_elem(int tbl, void *k);
-void llb_table_loop_and_delete(int tbl, dp_table_walker_t cb, dp_table_ita_t *it);
+void llb_table_loop_and_delete(int tbl, dp_table_walker_t cb, dp_map_ita_t *it);
 int llb_dp_link_attach(const char *ifname, const char *psec, int mp_type, int unload);
 
 #endif /* __LLB_DPAPI_H__ */

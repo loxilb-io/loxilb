@@ -725,7 +725,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 
 		for _, t := range tbl {
 
-			ret := C.llb_fetch_table_stats_cached(C.int(t), C.uint(w.HwMark),
+			ret := C.llb_fetch_table_stats_cached(C.int(t), C.uint(w.HwMark), 0,
 				(unsafe.Pointer(&b)), unsafe.Pointer(&p))
 			if ret != 0 {
 				return EBPF_ERR_TMAC_ADD
@@ -897,7 +897,14 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (error, DpRetT) {
 			act = &tact.ctd
 
 			if act.dir == C.CT_DIR_IN || act.dir == C.CT_DIR_OUT {
+				var b, p uint64
 				goCt4Ent := convDPCt2GoObj(ctKey, act)
+				ret := C.llb_fetch_table_stats_cached(C.int(C.LL_DP_NAT4_MAP), C.uint(tact.ca.cidx), C.int(1),
+								(unsafe.Pointer(&b)), unsafe.Pointer(&p))
+				if ret == 0 {
+					goCt4Ent.bytes += b
+					goCt4Ent.packets += p
+				}
 				fmt.Println(goCt4Ent)
 				ctMap[goCt4Ent.Key()] = goCt4Ent
 			}
