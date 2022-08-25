@@ -87,11 +87,23 @@ dp_do_fcv4_lkup(void *ctx, struct xfi *xf)
   if (acts->fcta[DP_SET_SNAT].ca.act_type == DP_SET_SNAT) {
     LL_FC_PRINTK("[FCH4] snat-act\n");
     ta = &acts->fcta[DP_SET_SNAT];
+
+    if (ta->nat_act.fr == 1 || ta->nat_act.doct) {
+      return 0;
+    }
+
     dp_pipe_set_nat(ctx, xf, &ta->nat_act, 1);
+    dp_do_map_stats(ctx, xf, LL_DP_NAT4_STATS_MAP, ta->nat_act.rid);
   } else if (acts->fcta[DP_SET_DNAT].ca.act_type == DP_SET_DNAT) {
     LL_FC_PRINTK("[FCH4] dnat-act\n");
     ta = &acts->fcta[DP_SET_DNAT];
+
+    if (ta->nat_act.fr == 1 || ta->nat_act.doct) {
+      return 0;
+    }
+
     dp_pipe_set_nat(ctx, xf, &ta->nat_act, 0);
+    dp_do_map_stats(ctx, xf, LL_DP_NAT4_STATS_MAP, ta->nat_act.rid);
   }
 
   if (acts->fcta[DP_SET_RT_TUN_NH].ca.act_type == DP_SET_RT_TUN_NH) {
@@ -108,8 +120,8 @@ dp_do_fcv4_lkup(void *ctx, struct xfi *xf)
     LL_FC_PRINTK("[FCH4] l2-rt-nh-act\n");
     ta = &acts->fcta[DP_SET_NEIGH_L2];
     dp_do_rt_l2_nh(ctx, xf, &ta->nl2);
-  } else if (acts->fcta[DP_SET_NEIGH_VXLAN].ca.act_type 
-                          == DP_SET_NEIGH_VXLAN) {
+  }
+  if (acts->fcta[DP_SET_NEIGH_VXLAN].ca.act_type == DP_SET_NEIGH_VXLAN) {
     LL_FC_PRINTK("[FCH4] rt-l2-nh-vxlan-act\n");
     ta = &acts->fcta[DP_SET_NEIGH_VXLAN];
     dp_do_rt_l2_vxlan_nh(ctx, xf, &ta->nl2vx); 
@@ -119,8 +131,7 @@ dp_do_fcv4_lkup(void *ctx, struct xfi *xf)
     LL_FC_PRINTK("[FCH4] new-l2-vlan-act\n");
     ta = &acts->fcta[DP_SET_ADD_L2VLAN];
     dp_set_egr_vlan(ctx, xf, ta->l2ov.vlan, ta->l2ov.oport);
-  } else if (acts->fcta[DP_SET_RM_L2VLAN].ca.act_type 
-                                == DP_SET_RM_L2VLAN) {
+  } else if (acts->fcta[DP_SET_RM_L2VLAN].ca.act_type == DP_SET_RM_L2VLAN) {
     LL_FC_PRINTK("[FCH4] strip-l2-vlan-act\n");
     ta = &acts->fcta[DP_SET_RM_L2VLAN];
     dp_set_egr_vlan(ctx, xf, 0, ta->l2ov.oport);
@@ -137,6 +148,7 @@ dp_do_fcv4_lkup(void *ctx, struct xfi *xf)
 
   xf->pm.phit |= LLB_DP_FC_HIT;
   LL_FC_PRINTK("[FCH4] oport %d\n",  xf->pm.oport);
+  dp_unparse_packet_always(ctx, xf);
   dp_unparse_packet(ctx, xf);
 
   dp_do_map_stats(ctx, xf, LL_DP_ACLV4_STATS_MAP, acts->ca.cidx);

@@ -116,7 +116,6 @@ func dpEbpfTicker() {
 		int(C.LL_DP_TMAC_STATS_MAP),
 		int(C.LL_DP_BD_STATS_MAP),
 		int(C.LL_DP_TX_BD_STATS_MAP),
-		int(C.LL_DP_ACLV4_STATS_MAP),
 		int(C.LL_DP_SESS4_STATS_MAP)}
 	tLen := len(tbls)
 
@@ -694,9 +693,11 @@ func (e *DpEbpfH) DpNatLbRuleDel(w *NatDpWorkQ) int {
 func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 	var packets, bytes uint64
 	var tbl []int
+	sync := 0
 	switch {
 	case w.Name == MAP_NAME_NAT4:
 		tbl = append(tbl, int(C.LL_DP_NAT4_STATS_MAP))
+		sync = 1
 		break
 	case w.Name == MAP_NAME_BD:
 		tbl = append(tbl, int(C.LL_DP_BD_STATS_MAP), int(C.LL_DP_TX_BD_STATS_MAP))
@@ -725,7 +726,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 
 		for _, t := range tbl {
 
-			ret := C.llb_fetch_map_stats_cached(C.int(t), C.uint(w.HwMark), 0,
+			ret := C.llb_fetch_map_stats_cached(C.int(t), C.uint(w.HwMark), C.int(sync),
 				(unsafe.Pointer(&b)), unsafe.Pointer(&p))
 			if ret != 0 {
 				return EBPF_ERR_TMAC_ADD
