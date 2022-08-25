@@ -63,7 +63,7 @@ typedef struct llb_dp_map {
   uint32_t max_entries;
   int has_pb;
   int pb_xtid;
-  struct dp_pb_stats *pbs;
+  struct dp_pbc_stats *pbs;
   int has_pol;
   struct dp_pol_stats *pls;
   pthread_rwlock_t stat_lock;
@@ -377,13 +377,13 @@ llb_xh_init(llb_dp_struct_t *xh)
   xh->maps[LL_DP_INTF_STATS_MAP].has_pb   = 1;
   xh->maps[LL_DP_INTF_STATS_MAP].max_entries = LLB_INTERFACES; 
   xh->maps[LL_DP_INTF_STATS_MAP].pbs = calloc(LLB_INTERFACES, 
-                                            sizeof(struct dp_pb_stats));
+                                            sizeof(struct dp_pbc_stats));
 
   xh->maps[LL_DP_BD_STATS_MAP].map_name = "bd_stats_map";
   xh->maps[LL_DP_BD_STATS_MAP].has_pb   = 1;
   xh->maps[LL_DP_BD_STATS_MAP].max_entries = LLB_INTF_MAP_ENTRIES;
   xh->maps[LL_DP_BD_STATS_MAP].pbs = calloc(LLB_INTF_MAP_ENTRIES,
-                                            sizeof(struct dp_pb_stats));
+                                            sizeof(struct dp_pbc_stats));
 
   xh->maps[LL_DP_SMAC_MAP].map_name = "smac_map";
   xh->maps[LL_DP_SMAC_MAP].has_pb   = 0;
@@ -398,7 +398,7 @@ llb_xh_init(llb_dp_struct_t *xh)
   xh->maps[LL_DP_TMAC_STATS_MAP].has_pb   = 1;
   xh->maps[LL_DP_TMAC_STATS_MAP].max_entries = LLB_TMAC_MAP_ENTRIES;
   xh->maps[LL_DP_TMAC_STATS_MAP].pbs = calloc(LLB_TMAC_MAP_ENTRIES,
-                                            sizeof(struct dp_pb_stats));
+                                            sizeof(struct dp_pbc_stats));
 
   xh->maps[LL_DP_ACLV4_MAP].map_name = "acl_v4_map";
   xh->maps[LL_DP_ACLV4_MAP].has_pb   = 0;
@@ -408,14 +408,14 @@ llb_xh_init(llb_dp_struct_t *xh)
   xh->maps[LL_DP_ACLV4_STATS_MAP].has_pb   = 1;
   xh->maps[LL_DP_ACLV4_STATS_MAP].max_entries = LLB_ACLV4_MAP_ENTRIES;
   xh->maps[LL_DP_ACLV4_STATS_MAP].pbs = calloc(LLB_ACLV4_MAP_ENTRIES,
-                                            sizeof(struct dp_pb_stats));
+                                            sizeof(struct dp_pbc_stats));
   assert(xh->maps[LL_DP_ACLV4_STATS_MAP].pbs);
 
   xh->maps[LL_DP_ACLV6_STATS_MAP].map_name = "acl_v6_stats_map";
   xh->maps[LL_DP_ACLV6_STATS_MAP].has_pb   = 1;
   xh->maps[LL_DP_ACLV6_STATS_MAP].max_entries = LLB_ACLV6_MAP_ENTRIES;
   xh->maps[LL_DP_ACLV6_STATS_MAP].pbs = calloc(LLB_ACLV6_MAP_ENTRIES,
-                                            sizeof(struct dp_pb_stats));
+                                            sizeof(struct dp_pbc_stats));
 
   xh->maps[LL_DP_RTV4_MAP].map_name = "rt_v4_map";
   xh->maps[LL_DP_RTV4_MAP].has_pb   = 1;
@@ -426,13 +426,13 @@ llb_xh_init(llb_dp_struct_t *xh)
   xh->maps[LL_DP_RTV4_STATS_MAP].has_pb   = 1;
   xh->maps[LL_DP_RTV4_STATS_MAP].max_entries   = LLB_RTV4_MAP_ENTRIES;
   xh->maps[LL_DP_RTV4_STATS_MAP].pbs = calloc(LLB_RTV4_MAP_ENTRIES,
-                                            sizeof(struct dp_pb_stats));
+                                            sizeof(struct dp_pbc_stats));
 
   xh->maps[LL_DP_RTV6_STATS_MAP].map_name = "rt_v6_stats_map";
   xh->maps[LL_DP_RTV6_STATS_MAP].has_pb   = 1;
   xh->maps[LL_DP_RTV6_STATS_MAP].max_entries   = LLB_RTV6_MAP_ENTRIES;
   xh->maps[LL_DP_RTV6_STATS_MAP].pbs = calloc(LLB_RTV6_MAP_ENTRIES,
-                                            sizeof(struct dp_pb_stats));
+                                            sizeof(struct dp_pbc_stats));
 
   xh->maps[LL_DP_NH_MAP].map_name = "nh_map";
   xh->maps[LL_DP_NH_MAP].has_pb   = 0;
@@ -454,13 +454,13 @@ llb_xh_init(llb_dp_struct_t *xh)
   xh->maps[LL_DP_TX_INTF_STATS_MAP].has_pb   = 1;
   xh->maps[LL_DP_TX_INTF_STATS_MAP].max_entries = LLB_INTERFACES; 
   xh->maps[LL_DP_TX_INTF_STATS_MAP].pbs = calloc(LLB_INTERFACES, 
-                                            sizeof(struct dp_pb_stats));
+                                            sizeof(struct dp_pbc_stats));
 
   xh->maps[LL_DP_TX_BD_STATS_MAP].map_name = "tx_bd_stats_map";
   xh->maps[LL_DP_TX_BD_STATS_MAP].has_pb   = 1;
   xh->maps[LL_DP_TX_BD_STATS_MAP].max_entries = LLB_INTF_MAP_ENTRIES;
   xh->maps[LL_DP_TX_BD_STATS_MAP].pbs = calloc(LLB_INTF_MAP_ENTRIES, 
-                                            sizeof(struct dp_pb_stats));
+                                            sizeof(struct dp_pbc_stats));
 
   xh->maps[LL_DP_FCV4_MAP].map_name = "fc_v4_map";
   xh->maps[LL_DP_FCV4_MAP].has_pb   = 0;
@@ -470,7 +470,7 @@ llb_xh_init(llb_dp_struct_t *xh)
   xh->maps[LL_DP_FCV4_STATS_MAP].has_pb   = 1;
   xh->maps[LL_DP_FCV4_STATS_MAP].max_entries = LLB_FCV4_MAP_ENTRIES;
   xh->maps[LL_DP_FCV4_STATS_MAP].pbs = calloc(LLB_FCV4_MAP_ENTRIES,
-                                            sizeof(struct dp_pb_stats));
+                                            sizeof(struct dp_pbc_stats));
 
   xh->maps[LL_DP_PGM_MAP].map_name = "pgm_tbl";
   xh->maps[LL_DP_PGM_MAP].has_pb   = 0;
@@ -498,7 +498,7 @@ llb_xh_init(llb_dp_struct_t *xh)
   xh->maps[LL_DP_NAT4_STATS_MAP].has_pb   = 1;
   xh->maps[LL_DP_NAT4_STATS_MAP].max_entries = LLB_NATV4_STAT_MAP_ENTRIES;
   xh->maps[LL_DP_NAT4_STATS_MAP].pbs = calloc(LLB_NATV4_STAT_MAP_ENTRIES,
-                                            sizeof(struct dp_pb_stats));
+                                            sizeof(struct dp_pbc_stats));
 
   xh->maps[LL_DP_PKT_PERF_RING].map_name = "pkt_ring";
   xh->maps[LL_DP_PKT_PERF_RING].has_pb   = 0;
@@ -513,7 +513,7 @@ llb_xh_init(llb_dp_struct_t *xh)
   xh->maps[LL_DP_SESS4_STATS_MAP].has_pb   = 1;
   xh->maps[LL_DP_SESS4_STATS_MAP].max_entries = LLB_SESS_MAP_ENTRIES;
   xh->maps[LL_DP_SESS4_STATS_MAP].pbs = calloc(LLB_SESS_MAP_ENTRIES,
-                                            sizeof(struct dp_pb_stats));
+                                            sizeof(struct dp_pbc_stats));
 
   strcpy(xh->psecs[0].name, LLB_SECTION_PASS);
   strcpy(xh->psecs[1].name, XDP_LL_SEC_DEFAULT);
@@ -527,8 +527,7 @@ llb_xh_init(llb_dp_struct_t *xh)
 }
 
 static void
-llb_clear_stats_pcpu_arr(int mfd,
-                         __u32 idx) 
+llb_clear_stats_pcpu_arr(int mfd, __u32 idx) 
 {
   unsigned int nr_cpus = bpf_num_possible_cpus();
   struct dp_pb_stats values[nr_cpus];
@@ -542,16 +541,16 @@ llb_clear_stats_pcpu_arr(int mfd,
 }
 
 static void
-ll_get_stats_pcpu_arr(int mfd,
-                       __u32 idx, 
-                       struct dp_pb_stats *s,
-                       dp_ts_cb_t cb)
+ll_get_stats_pcpu_arr(int mfd, __u32 idx, 
+                      struct dp_pbc_stats *s,
+                      dp_ts_cb_t cb)
 {
   /* For percpu maps, userspace gets a value per possible CPU */
   unsigned int nr_cpus = bpf_num_possible_cpus();
   struct dp_pb_stats values[nr_cpus];
   __u64 sum_bytes = 0;
   __u64 sum_pkts = 0;
+  __u64 opc = 0;
   int i;
 
   if ((bpf_map_lookup_elem(mfd, &idx, values)) != 0) {
@@ -559,23 +558,29 @@ ll_get_stats_pcpu_arr(int mfd,
       "ERR: bpf_map_lookup_elem failed idx:0x%X\n", idx);
     return;
   }
+  
+  opc = s->st.packets;
 
   /* Sum values from each CPU */
   for (i = 0; i < nr_cpus; i++) {
     sum_pkts  += values[i].packets;
     sum_bytes += values[i].bytes;
   }
-  s->packets = sum_pkts;
-  s->bytes   = sum_bytes;
 
-  if (s->packets || s->bytes) {
+  s->st.packets = sum_pkts;
+  s->st.bytes   = sum_bytes;
+
+  if (s->st.packets || s->st.bytes) {
 #ifdef LLB_DP_STAT_DEBUG
     printf("IDX %d: %llu:%llu\n",idx, 
-       (unsigned long long)(s->packets),
-       (unsigned long long)(s->bytes));
+       (unsigned long long)(s->st.packets),
+       (unsigned long long)(s->st.bytes));
 #endif
+    if (s->st.packets > opc) {
+      s->used = 1;
+    }
     if (cb) {
-      cb(idx, s->bytes, s->packets);
+      cb(idx, s->st.bytes, s->st.packets);
     }
   }
 }
@@ -610,43 +615,64 @@ llb_fetch_map_stats_raw(int tid, dp_ts_cb_t cb, dp_tiv_cb_t vcb)
 
 int
 llb_fetch_map_stats_cached(int tbl, uint32_t e, int raw,
-                             void *bytes, void *packets)
+                           void *bytes, void *packets)
 {
   llb_dp_map_t *t;
-  llb_dp_map_t *ut;
 
   if (tbl < 0 || tbl >= LL_DP_MAX_MAP) 
     return -1;
 
   t = &xh->maps[tbl];
-  if (t->has_pb && t->pb_xtid <= 0) {
-    /* FIXME : Handle non-pcpu */
+  t = &xh->maps[tbl];
+  if (t->has_pb && t->pb_xtid > 0) { 
+    if (t->pb_xtid < 0 || t->pb_xtid >= LL_DP_MAX_MAP)
+      return -1;
+    
+    t = &xh->maps[t->pb_xtid];
+  }
 
-    pthread_rwlock_wrlock(&t->stat_lock);
-    if (raw) {
-      ll_get_stats_pcpu_arr(t->map_fd, e, &t->pbs[e], NULL);
-    }
-    if (e < t->max_entries) {
-      *(uint64_t *)bytes = t->pbs[e].bytes;
-      *(uint64_t *)packets = t->pbs[e].packets;
-    }
-    pthread_rwlock_unlock(&t->stat_lock);
-  } else if (t->has_pb && t->pb_xtid > 0) {
+  /* FIXME : Handle non-pcpu */
+
+  pthread_rwlock_wrlock(&t->stat_lock);
+  if (raw) {
+    ll_get_stats_pcpu_arr(t->map_fd, e, &t->pbs[e], NULL);
+  }
+  if (e < t->max_entries) {
+    *(uint64_t *)bytes = t->pbs[e].st.bytes;
+    *(uint64_t *)packets = t->pbs[e].st.packets;
+  }
+  pthread_rwlock_unlock(&t->stat_lock);
+
+  return 0;
+}
+
+static int
+llb_fetch_map_stats_used(int tbl, uint32_t e, int clr, int *used)
+{
+  llb_dp_map_t *t;
+
+  if (tbl < 0 || tbl >= LL_DP_MAX_MAP)
+    return -1;
+
+  t = &xh->maps[tbl];
+  if (t->has_pb && t->pb_xtid > 0) {
     if (t->pb_xtid < 0 || t->pb_xtid >= LL_DP_MAX_MAP)
       return -1;
 
-    ut = &xh->maps[t->pb_xtid];
-
-    pthread_rwlock_wrlock(&ut->stat_lock);
-    if (raw)  {
-      ll_get_stats_pcpu_arr(ut->map_fd, e, &ut->pbs[e], NULL);
-    }
-    if (e < ut->max_entries) {
-      *(uint64_t *)bytes = ut->pbs[e].bytes;
-      *(uint64_t *)packets = ut->pbs[e].packets;
-    }
-    pthread_rwlock_unlock(&ut->stat_lock);
+    t = &xh->maps[t->pb_xtid];
   }
+
+  pthread_rwlock_wrlock(&t->stat_lock);
+
+  if (used) {
+    *used = t->pbs[e].used;
+  }
+
+  if (clr) {
+    t->pbs[e].used = 0;
+  }
+  
+  pthread_rwlock_unlock(&t->stat_lock);
 
   return 0;
 }
@@ -911,10 +937,10 @@ llb_del_map_elem(int tbl, void *k)
 static uint64_t
 __get_os_nsecs_now(void)
 {
-    struct timespec ts;
+  struct timespec ts;
 
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_sec * 1000000000UL + ts.tv_nsec;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return ts.tv_sec * 1000000000UL + ts.tv_nsec;
 }
 
 static int
@@ -1029,6 +1055,8 @@ ll_aclct4_map_ent_has_aged(int tid, void *k, void *ita)
   ct_arg_struct_t *as;
   uint64_t curr_ns;
   uint64_t latest_ns;
+  int used1 = 0;
+  int used2 = 0;
   bool est = false;
   bool has_nat = false;
   uint64_t to = CT_V4_CPTO;
@@ -1105,14 +1133,18 @@ ll_aclct4_map_ent_has_aged(int tid, void *k, void *ita)
       est = true;
     }
   }
-  
+
   if (curr_ns < latest_ns) return 0;
 
-  if (curr_ns - latest_ns > to) {
-    printf("##%s:%d -> %s:%d (%d):%u (Aged:%d:%d)\n",
+  /* CT is allocated both for current and reverse direction */
+  llb_fetch_map_stats_used(LL_DP_ACLV4_STATS_MAP, adat->ca.cidx, 1, &used1);
+  llb_fetch_map_stats_used(LL_DP_ACLV4_STATS_MAP, adat->ca.cidx+1, 1, &used2);
+
+  if (curr_ns - latest_ns > to && !used1 && !used2) {
+    printf("##%s:%d -> %s:%d (%d):%u (Aged:%d:%d:%d)\n",
          sstr, ntohs(key->sport),
          dstr, ntohs(key->dport),  
-         key->l4proto, dat->rid, est, has_nat);
+         key->l4proto, dat->rid, est, has_nat, used1 || used2);
     return 1;
   }
 
@@ -1311,10 +1343,11 @@ llb_link_prop_add(const char *ifname,
   l->ifname[IFNAMSIZ-1] = '\0';
   l->nm++;
 
+  XH_UNLOCK();
+
   printf("%s: IF-%s added idx %d type %d\n", 
          __FUNCTION__, ifname, free-1, mp_type);
 
-  XH_UNLOCK();
   return 0;
 }
 

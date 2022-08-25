@@ -56,6 +56,7 @@ dp_ct_get_newctr(void)
   v = ++ctr->counter;
   bpf_spin_unlock(&ctr->lock);
 
+  /* Essentially allocation starts from idx-2,4,8... */
   v <<= 1;
   v = (v + CT_CTR_SID) % CT_CTR_MAX_SID;
   return v;

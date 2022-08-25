@@ -384,6 +384,12 @@ struct dp_pb_stats {
 };
 typedef struct dp_pb_stats dp_pb_stats_t;
 
+struct dp_pbc_stats {
+  dp_pb_stats_t st;
+  int used;
+};
+typedef struct dp_pbc_stats dp_pbc_stats_t;
+
 /* Connection tracking related defines */
 typedef enum {
   CT_DIR_IN = 0,

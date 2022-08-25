@@ -75,7 +75,7 @@ const (
 )
 
 const (
-	DPEBPF_LINUX_TIVAL = 25
+	DPEBPF_LINUX_TIVAL = 20
 )
 
 type (
@@ -132,12 +132,13 @@ func dpEbpfTicker() {
 
 			// For every tick collect stats for an eBPF map
 			// This routine caches stats in a local statsDB 
-			// wcich can be collected from a separate thread
+			// which can be collected from a separate gothread
 			C.llb_collect_map_stats(C.int(tbls[sel]))
 
 			// Age any entries related to Conntrack
 			// Conntrack entries also use ACL entries for fast-forwarding
 			// which might also get aged out in this process
+			C.llb_collect_map_stats(C.int(C.LL_DP_ACLV4_STATS_MAP))
 			C.llb_age_map_entries(C.LL_DP_CTV4_MAP)
 			mh.dpEbpf.tbN++
 		}
