@@ -491,7 +491,7 @@ llb_xh_init(llb_dp_struct_t *xh)
 
   xh->maps[LL_DP_NAT4_MAP].map_name = "nat_v4_map";
   xh->maps[LL_DP_NAT4_MAP].has_pb   = 1;
-  xh->maps[LL_DP_NAT4_MAP].pb_xtid  = 0; //LL_DP_ACLV4_STATS_MAP;
+  xh->maps[LL_DP_NAT4_MAP].pb_xtid  = LL_DP_NAT4_STATS_MAP;
   xh->maps[LL_DP_NAT4_MAP].max_entries = LLB_NATV4_MAP_ENTRIES;
 
   xh->maps[LL_DP_NAT4_STATS_MAP].map_name = "nat_v4_stats_map";
@@ -832,7 +832,8 @@ llb_add_map_elem(int tbl, void *k, void *v)
   XH_LOCK();
 
   /* Any table which has stats pb needs to get stats cleared before use */
-  if (tbl == LL_DP_ACLV4_MAP ||
+  if (tbl == LL_DP_NAT4_MAP ||
+      tbl == LL_DP_TMAC_MAP ||
       tbl == LL_DP_TMAC_MAP ||
       tbl == LL_DP_RTV4_MAP) {
     struct dp_cmn_act *ca = v;
