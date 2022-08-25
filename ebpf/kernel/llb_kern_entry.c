@@ -850,7 +850,7 @@ int xdp_pass_func(struct xdp_md *ctx)
 
 #else
 
-SEC("tc_packet_parser0")
+SEC("tc_packet_hook0")
 int tc_packet_func_fast(struct __sk_buff *md)
 {
   struct xfi xf;
@@ -861,7 +861,7 @@ int tc_packet_func_fast(struct __sk_buff *md)
   return dp_ing_fc_main(md, &xf);
 }
 
-SEC("tc_packet_parser1")
+SEC("tc_packet_hook1")
 int tc_packet_func(struct __sk_buff *md)
 {
   struct xfi xf;
@@ -875,7 +875,7 @@ int tc_packet_func(struct __sk_buff *md)
   return dp_ing_pkt_main(md, &xf);
 }
 
-SEC("tc_packet_parser2")
+SEC("tc_packet_hook2")
 int tc_packet_func_slow(struct __sk_buff *md)
 {
   int val = 0;

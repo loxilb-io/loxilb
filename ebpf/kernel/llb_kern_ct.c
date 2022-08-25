@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: GPL-2.0
  */
 
-#define CT_CTR_SID      (50000)
+#define CT_CTR_SID      (0)
 #define CT_CTR_MAX_SID (250000)
 
 struct dp_ct_ctrtact {
@@ -826,11 +826,7 @@ dp_ctv4_in(void *ctx, struct xfi *xf)
     LL_DBG_PRINTK("[CTRK] new-ct4");
     adat->ca.ftrap = 0;
     adat->ca.oif = 0;
-    if (xf->pm.rule_id == 0) {
-      adat->ca.cidx = dp_ct_get_newctr();
-    } else {
-      adat->ca.cidx = xf->pm.rule_id;
-    }
+    adat->ca.cidx = dp_ct_get_newctr();
     memset(&adat->ctd.pi, 0, sizeof(ct_pinf_t));
     if (xi->nat_flags) {
       adat->ca.act_type = xi->nat_flags & (LLB_NAT_DST|LLB_NAT_HDST) ?
@@ -838,10 +834,14 @@ dp_ctv4_in(void *ctx, struct xfi *xf)
       adat->nat_act.xip = xi->nat_xip;
       adat->nat_act.xport = xi->nat_xport;
       adat->nat_act.doct = 1;
+      adat->nat_act.rid = xf->pm.rule_id;
+      adat->nat_act.aid = xf->l4m.sel_aid;
     } else {
       adat->ca.act_type = DP_SET_DO_CT;
     }
     adat->ctd.dir = cdir;
+
+    /* FIXME This is duplicated data */
     adat->ctd.rid = xf->pm.rule_id;
     adat->ctd.aid = xf->l4m.sel_aid;
     adat->ctd.smr = CT_SMR_INIT;
@@ -849,11 +849,7 @@ dp_ctv4_in(void *ctx, struct xfi *xf)
 
     axdat->ca.ftrap = 0;
     axdat->ca.oif = 0;
-    if (xf->pm.rule_id == 0) {
-      axdat->ca.cidx = adat->ca.cidx + 1;
-    } else {
-      axdat->ca.cidx = xf->pm.rule_id;
-    }
+    axdat->ca.cidx = adat->ca.cidx + 1;
     memset(&axdat->ctd.pi, 0, sizeof(ct_pinf_t));
     if (xxi->nat_flags) { 
       axdat->ca.act_type = xxi->nat_flags & (LLB_NAT_DST|LLB_NAT_HDST) ?
@@ -861,6 +857,8 @@ dp_ctv4_in(void *ctx, struct xfi *xf)
       axdat->nat_act.xip = xxi->nat_xip;
       axdat->nat_act.xport = xxi->nat_xport;
       axdat->nat_act.doct = 1;
+      axdat->nat_act.rid = xf->pm.rule_id;
+      axdat->nat_act.aid = xf->l4m.sel_aid;
     } else {
       axdat->ca.act_type = DP_SET_DO_CT;
     }

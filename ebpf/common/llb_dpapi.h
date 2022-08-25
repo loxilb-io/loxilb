@@ -23,6 +23,7 @@
 #define LLB_TMAC_MAP_ENTRIES  (2*1024)
 #define LLB_DMAC_MAP_ENTRIES  (8*1024)
 #define LLB_NATV4_MAP_ENTRIES (4*1024)
+#define LLB_NATV4_STAT_MAP_ENTRIES (4*16*1024) /* 16 end-points */
 #define LLB_SMAC_MAP_ENTRIES  (LLB_DMAC_MAP_ENTRIES)
 #define LLB_INTERFACES        (512)
 #define LLB_PORT_NO           (LLB_INTERFACES-1)
@@ -82,6 +83,7 @@ enum llb_dp_tid {
   LL_DP_POL_MAP,
   LL_DP_CTV4_MAP,
   LL_DP_NAT4_MAP,
+  LL_DP_NAT4_STATS_MAP,
   LL_DP_SESS4_MAP,
   LL_DP_SESS4_STATS_MAP,
   LL_DP_MAX_MAP
@@ -166,6 +168,8 @@ struct dp_nat_act {
   __u16 xport;
   __u8 fr;
   __u8 doct;
+  __u32 rid;
+  __u32 aid;
 };
 
 #define MIN_DP_POLICER_RATE  (8*1000*1000)  /* 1 MBps = 8 Mbps */
@@ -646,24 +650,24 @@ struct dp_map_ita {
 };
 typedef struct dp_map_ita dp_map_ita_t;
 
-/* Policer Table stats update callback */
+/* Policer map stats update callback */
 typedef void (*dp_pts_cb_t)(uint32_t idx, struct dp_pol_stats *ps);
-/* Table stats update callback */
+/* Map stats update callback */
 typedef void (*dp_ts_cb_t)(uint32_t idx, uint64_t bc, uint64_t pc);
-/* Table stats idx valid check callback */
+/* Map stats idx valid check callback */
 typedef int (*dp_tiv_cb_t)(int tid, uint32_t idx);
-/* Table walker */
-typedef int (*dp_table_walker_t)(int tid, void *key, void *arg);
+/* Map walker */
+typedef int (*dp_map_walker_t)(int tid, void *key, void *arg);
 
-int llb_tb2fd(int t);
-int llb_fetch_table_stats_cached(int tbl, uint32_t index, int raw, void *bc, void *pc);
-void llb_age_table_entries(int tbl);
-void llb_collect_table_stats(int tbl);
-void llb_get_pol_table_stats(int tbl, dp_pts_cb_t cb, dp_tiv_cb_t vcb);
-void llb_clear_table_stats(int tbl, __u32 idx);
-int llb_add_table_elem(int tbl, void *k, void *v);
-int llb_del_table_elem(int tbl, void *k);
-void llb_table_loop_and_delete(int tbl, dp_table_walker_t cb, dp_map_ita_t *it);
+int llb_map2fd(int t);
+int llb_fetch_map_stats_cached(int tbl, uint32_t index, int raw, void *bc, void *pc);
+void llb_age_map_entries(int tbl);
+void llb_collect_map_stats(int tbl);
+void llb_get_pol_map_stats(int tbl, dp_pts_cb_t cb, dp_tiv_cb_t vcb);
+void llb_clear_map_stats(int tbl, __u32 idx);
+int llb_add_map_elem(int tbl, void *k, void *v);
+int llb_del_map_elem(int tbl, void *k);
+void llb_map_loop_and_delete(int tbl, dp_map_walker_t cb, dp_map_ita_t *it);
 int llb_dp_link_attach(const char *ifname, const char *psec, int mp_type, int unload);
 
 #endif /* __LLB_DPAPI_H__ */

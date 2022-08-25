@@ -11,7 +11,7 @@
 #endif
 
 #ifndef TC_LL_SEC_DEFAULT
-#define TC_LL_SEC_DEFAULT        "tc_packet_parser0"
+#define TC_LL_SEC_DEFAULT        "tc_packet_hook0"
 
 enum llb_bpf_mnt_type {
   LL_BPF_MOUNT_NONE = 0,
