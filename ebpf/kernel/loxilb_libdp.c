@@ -1087,6 +1087,7 @@ ll_aclct4_map_ent_has_aged(int tid, void *k, void *ita)
          dstr, ntohs(xkey.sport),
          sstr, ntohs(xkey.dport),  
          xkey.l4proto); 
+    llb_clear_map_stats(LL_DP_ACLV4_STATS_MAP, adat->ca.cidx);
     return 1;
   }
 
@@ -1146,6 +1147,7 @@ ll_aclct4_map_ent_has_aged(int tid, void *k, void *ita)
          sstr, ntohs(key->sport),
          dstr, ntohs(key->dport),  
          key->l4proto, dat->rid, est, has_nat, used1 || used2);
+    llb_clear_map_stats(LL_DP_ACLV4_STATS_MAP, adat->ca.cidx);
     return 1;
   }
 
@@ -1227,6 +1229,8 @@ ll_aclct4_map_ent_rm_related(int tid, void *k, void *ita)
          sstr, ntohs(key->sport),
          dstr, ntohs(key->dport),
          key->l4proto);
+
+      llb_clear_map_stats(LL_DP_ACLV4_STATS_MAP, adat->ca.cidx);
 
       return 1;
     }
