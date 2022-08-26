@@ -15,7 +15,7 @@ get_docker_pid() {
 
 ## Pull all necessary dockers for testbed
 pull_dockers() {
-  ## Host docker
+  ## loxilb docker
   docker pull ghcr.io/loxilb-io/loxilb:latest
   ## Host docker 
   docker pull eyes852/ubuntu-iperf-test:0.5
