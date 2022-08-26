@@ -39,6 +39,6 @@ jobs:
       - run: docker stop loxilb && docker rm loxilb
       - run: |
              cd cicd/scenario1/
-             config.sh
-             validation.sh
+             ./config.sh
+             ./validation.sh
              cd -
