@@ -305,8 +305,9 @@ dp_do_nh_lkup(void *ctx, struct xfi *xf, void *fa_)
       key.nh_num = (__u32)rnh;
       nha = bpf_map_lookup_elem(&nh_map, &key);
       if (!nha) {
-        /* No NH - Drop */
-        LLBS_PPLN_DROP(xf);
+        /* No NH - Trap */
+        // LLBS_PPLN_DROP(xf); //
+        LLBS_PPLN_TRAP(xf)
         return 0;
       }
     }

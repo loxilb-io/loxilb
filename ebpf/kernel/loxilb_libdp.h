@@ -7,7 +7,7 @@
 #define __LOXILB_DP_H__
 
 #ifndef XDP_LL_SEC_DEFAULT
-#define XDP_LL_SEC_DEFAULT       "xdp_packet_parser"
+#define XDP_LL_SEC_DEFAULT       "xdp_packet_hook"
 #endif
 
 #ifndef TC_LL_SEC_DEFAULT

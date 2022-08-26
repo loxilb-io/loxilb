@@ -822,7 +822,7 @@ dp_ing_pkt_main(void *md, struct xfi *xf)
 }
 
 #ifndef LL_TC_EBPF
-SEC("xdp_packet_parser")
+SEC("xdp_packet_hook")
 int  xdp_packet_func(struct xdp_md *ctx)
 {
   int z = 0;

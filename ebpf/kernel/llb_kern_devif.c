@@ -439,6 +439,7 @@ dp_ing_slow_main(void *ctx,  struct xfi *xf)
   fa->fcta[7].ca.act_type = 0;
   fa->fcta[8].ca.act_type = 0;
   fa->fcta[9].ca.act_type = 0; // LLB_FCV4_MAP_ACTS -1 
+  /*memset(fa->fcta, 0, sizeof(fa->fcta));*/
 #endif
 
   LL_DBG_PRINTK("[INGR] START--\n");

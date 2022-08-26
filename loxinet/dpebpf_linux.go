@@ -160,7 +160,7 @@ func DpEbpfInit() *DpEbpfH {
 		}
 		tk.LogIt(tk.LOG_INFO, "ebpf unload - %s\n", intf.Name)
 		ifStr := C.CString(intf.Name)
-		section := C.CString(string(C.XDP_LL_SEC_DEFAULT))
+		section := C.CString(string(C.TC_LL_SEC_DEFAULT))
 		C.llb_dp_link_attach(ifStr, section, C.LL_BPF_MOUNT_TC, 1)
 		C.free(unsafe.Pointer(ifStr))
 		C.free(unsafe.Pointer(section))
@@ -178,7 +178,7 @@ func DpEbpfInit() *DpEbpfH {
 // Load loxilb eBPF program to an interface
 func loadEbpfPgm(name string) int {
 	ifStr := C.CString(name)
-	section := C.CString(string(C.XDP_LL_SEC_DEFAULT))
+	section := C.CString(string(C.TC_LL_SEC_DEFAULT))
 	ret := C.llb_dp_link_attach(ifStr, section, C.LL_BPF_MOUNT_TC, 0)
 	C.free(unsafe.Pointer(ifStr))
 	C.free(unsafe.Pointer(section))
