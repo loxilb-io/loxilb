@@ -13,7 +13,7 @@ RUN apt update
 # Install loxilb related packages
 RUN apt install -y clang llvm libelf-dev gcc-multilib libpcap-dev vim net-tools \
     linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils wget \
-    unzip build-essential bison flex sudo iproute2 pkg-config tcpdump && \
+    unzip build-essential bison flex sudo iproute2 pkg-config tcpdump iputils-ping && \
     rm -rf /var/lib/apt/lists/* && \
     apt clean
 
