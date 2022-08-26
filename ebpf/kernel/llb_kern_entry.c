@@ -813,18 +813,16 @@ dp_ing_pkt_main(void *md, struct xfi *xf)
     return dp_redir_packet(md, xf);
   }
 
-#ifndef HAVE_LLB_DISAGGR
   if (xf->pm.pipe_act & LLB_PIPE_PASS ||
       xf->pm.pipe_act & LLB_PIPE_TRAP) {
     return DP_PASS;
   }
-#endif
 
   return dp_ing_slow_main(md, xf);
 }
 
 #ifndef LL_TC_EBPF
-SEC("xdp_packet_parser")
+SEC("xdp_packet_hook")
 int  xdp_packet_func(struct xdp_md *ctx)
 {
   int z = 0;
@@ -851,35 +849,35 @@ int xdp_pass_func(struct xdp_md *ctx)
 }
 
 #else
-SEC("tc_packet_parser")
+
+SEC("tc_packet_hook0")
+int tc_packet_func_fast(struct __sk_buff *md)
+{
+  struct xfi xf;
+
+  memset(&xf, 0, sizeof xf);
+
+  dp_parse_packet(md, &xf, 1);
+  return dp_ing_fc_main(md, &xf);
+}
+
+SEC("tc_packet_hook1")
 int tc_packet_func(struct __sk_buff *md)
 {
   struct xfi xf;
 
+  // FIXME need to optimize this madness
+  // But we cant use xf metadata from first stage 
+  // pipeline due to the way fc stage works
   memset(&xf, 0, sizeof xf);
-
-#ifdef HAVE_DP_FC_PIPE
-  dp_parse_packet(md, &xf, 1);
-  return dp_ing_fc_main(md, &xf);
-#else
 
   xf.pm.tc = 1;
   return dp_ing_pkt_main(md, &xf);
-#endif
 }
 
-SEC("tc_packet_parser1")
+SEC("tc_packet_hook2")
 int tc_packet_func_slow(struct __sk_buff *md)
 {
-#ifdef HAVE_DP_FC_PIPE
-  struct xfi xf;
-
-  memset(&xf, 0, sizeof xf);
-  xf.pm.tc = 1;
-
-  LL_DBG_PRINTK("[PRSR] pipe %d\n", xf.pm.pipe_act);
-  return dp_ing_pkt_main(md, &xf);
-#else
   int val = 0;
   struct xfi *xf;
 
@@ -889,7 +887,6 @@ int tc_packet_func_slow(struct __sk_buff *md)
   }
 
   return dp_ing_ct_main(md, xf);
-#endif
 }
 
 #endif

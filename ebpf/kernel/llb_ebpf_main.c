@@ -9,6 +9,9 @@
 #include <linux/if_arp.h>
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_endian.h>
+
+#define HAVE_DP_FC 1
+
 #include "llb_kern_entry.c"
 
 char _license[] SEC("license") = "GPL";

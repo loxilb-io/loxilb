@@ -5,6 +5,63 @@
  * SPDX-License-Identifier: GPL-2.0
  */
 
+#define CT_CTR_SID      (0)
+#define CT_CTR_MAX_SID (250000)
+
+struct dp_ct_ctrtact {
+  struct dp_cmn_act ca; /* Possible actions :
+                         * None (just place holder) 
+                         */
+  struct bpf_spin_lock lock;
+  __u32 counter; 
+};
+
+#ifdef HAVE_LEGACY_BPF_MAPS
+
+struct bpf_map_def SEC("maps") ct_ctr = {
+  .type = BPF_MAP_TYPE_ARRAY,
+  .key_size = sizeof(__u32),
+  .value_size = sizeof(dp_ct_ctrtact),
+  .max_entries = 1 
+};
+
+#else
+
+struct {
+  __uint(type,        BPF_MAP_TYPE_ARRAY);
+  __type(key,         __u32);
+  __type(value,       struct dp_ct_ctrtact);
+  __uint(max_entries, 1);
+} ct_ctr SEC(".maps");
+
+#endif
+
+static __u32
+dp_ct_get_newctr(void)
+{
+  __u32 k = 0;
+  __u32 v = 0;
+  struct dp_ct_ctrtact *ctr;
+
+  ctr = bpf_map_lookup_elem(&ct_ctr, &k);
+
+  if (ctr == NULL) {
+    return 0;
+  }
+
+  /* FIXME - We can potentially do a percpu array and do away
+   *         with the locking here
+   */ 
+  bpf_spin_lock(&ctr->lock);
+  v = ++ctr->counter;
+  bpf_spin_unlock(&ctr->lock);
+
+  /* Essentially allocation starts from idx-2,4,8... */
+  v <<= 1;
+  v = (v + CT_CTR_SID) % CT_CTR_MAX_SID;
+  return v;
+}
+
 static int 
 dp_ct_proto_xfk_init(struct dp_ctv4_key *key,
                      nxfrm_inf_t *xi,
@@ -770,7 +827,7 @@ dp_ctv4_in(void *ctx, struct xfi *xf)
     LL_DBG_PRINTK("[CTRK] new-ct4");
     adat->ca.ftrap = 0;
     adat->ca.oif = 0;
-    adat->ca.cidx = xf->pm.rule_id;
+    adat->ca.cidx = dp_ct_get_newctr();
     memset(&adat->ctd.pi, 0, sizeof(ct_pinf_t));
     if (xi->nat_flags) {
       adat->ca.act_type = xi->nat_flags & (LLB_NAT_DST|LLB_NAT_HDST) ?
@@ -778,10 +835,14 @@ dp_ctv4_in(void *ctx, struct xfi *xf)
       adat->nat_act.xip = xi->nat_xip;
       adat->nat_act.xport = xi->nat_xport;
       adat->nat_act.doct = 1;
+      adat->nat_act.rid = xf->pm.rule_id;
+      adat->nat_act.aid = xf->l4m.sel_aid;
     } else {
       adat->ca.act_type = DP_SET_DO_CT;
     }
     adat->ctd.dir = cdir;
+
+    /* FIXME This is duplicated data */
     adat->ctd.rid = xf->pm.rule_id;
     adat->ctd.aid = xf->l4m.sel_aid;
     adat->ctd.smr = CT_SMR_INIT;
@@ -789,7 +850,7 @@ dp_ctv4_in(void *ctx, struct xfi *xf)
 
     axdat->ca.ftrap = 0;
     axdat->ca.oif = 0;
-    axdat->ca.cidx = xf->pm.rule_id;
+    axdat->ca.cidx = adat->ca.cidx + 1;
     memset(&axdat->ctd.pi, 0, sizeof(ct_pinf_t));
     if (xxi->nat_flags) { 
       axdat->ca.act_type = xxi->nat_flags & (LLB_NAT_DST|LLB_NAT_HDST) ?
@@ -797,6 +858,8 @@ dp_ctv4_in(void *ctx, struct xfi *xf)
       axdat->nat_act.xip = xxi->nat_xip;
       axdat->nat_act.xport = xxi->nat_xport;
       axdat->nat_act.doct = 1;
+      axdat->nat_act.rid = xf->pm.rule_id;
+      axdat->nat_act.aid = xf->l4m.sel_aid;
     } else {
       axdat->ca.act_type = DP_SET_DO_CT;
     }

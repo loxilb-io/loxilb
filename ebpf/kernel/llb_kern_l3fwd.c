@@ -47,9 +47,6 @@ dp_do_rtv4_lkup(void *ctx, struct xfi *xf, void *fa_)
   //struct dp_rtv4_key key = { 0 };
   struct dp_rtv4_key *key = (void *)xf->km.skey;
   struct dp_rt_tact *act;
-#ifdef HAVE_DP_FC
-  struct dp_fc_tacts *fa = fa_;
-#endif
 
   key->l.prefixlen = 48; /* 16-bit zone + 32-bit prefix */
   key->v4k[0] = xf->pm.zone >> 8 & 0xff;
@@ -169,8 +166,6 @@ dp_do_aclv4_lkup(void *ctx, struct xfi *xf, void *fa_)
   fa->ca.cidx = act->ca.cidx;
 #endif
 
-  dp_do_map_stats(ctx, xf, LL_DP_ACLV4_STATS_MAP, act->ca.cidx);
-
   if (act->ca.act_type == DP_SET_DO_CT) {
     goto ct_trk;
   } else if (act->ca.act_type == DP_SET_NOP) {
@@ -214,6 +209,7 @@ dp_do_aclv4_lkup(void *ctx, struct xfi *xf, void *fa_)
     }
 
     dp_pipe_set_nat(ctx, xf, na, act->ca.act_type == DP_SET_SNAT ? 1: 0);
+    dp_do_map_stats(ctx, xf, LL_DP_NAT4_STATS_MAP, na->rid);
 
     if (na->fr == 1 || na->doct) {
       goto ct_trk;
@@ -230,12 +226,15 @@ dp_do_aclv4_lkup(void *ctx, struct xfi *xf, void *fa_)
     LLBS_PPLN_DROP(xf);
   }
 
+  dp_do_map_stats(ctx, xf, LL_DP_ACLV4_STATS_MAP, act->ca.cidx);
+#if 0
   /* Note that this might result in consistency problems 
    * between packet and byte counts at times but this should be 
    * better than holding bpf-spinlock 
    */
   lock_xadd(&act->ctd.pb.bytes, xf->pm.l3_len);
   lock_xadd(&act->ctd.pb.packets, 1);
+#endif
 
   return 0;
 

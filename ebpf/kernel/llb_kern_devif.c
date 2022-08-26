@@ -439,13 +439,14 @@ dp_ing_slow_main(void *ctx,  struct xfi *xf)
   fa->fcta[7].ca.act_type = 0;
   fa->fcta[8].ca.act_type = 0;
   fa->fcta[9].ca.act_type = 0; // LLB_FCV4_MAP_ACTS -1 
+  /*memset(fa->fcta, 0, sizeof(fa->fcta));*/
 #endif
 
   LL_DBG_PRINTK("[INGR] START--\n");
   dp_ing(ctx, xf);
 
   if (xf->pm.pipe_act || xf->pm.tc == 0) {
-    LL_DBG_PRINTK("[INGR] Go out--\n");
+    LL_DBG_PRINTK("[INGR] OUT\n");
     goto out;
   }
   dp_ing_l2(ctx, xf, fa);
@@ -453,6 +454,7 @@ out:
 #ifdef HAVE_DP_FC
   if (xf->pm.pipe_act == LLB_PIPE_RDR && 
       xf->pm.phit & LLB_DP_ACL_HIT &&
+      !(xf->pm.phit & LLB_DP_SESS_HIT) &&
       xf->qm.polid == 0 &&
       !DP_NEED_MIRR(ctx)) {
     dp_insert_fcv4(ctx, xf, fa);
@@ -479,7 +481,7 @@ dp_ing_ct_main(void *ctx,  struct xfi *xf)
   if ((xf->pm.phit & LLB_DP_ACL_HIT) == 0)
     dp_do_nat4_rule_lkup(ctx, xf);
 
-  LL_DBG_PRINTK("[CTRK] start\n");
+  bpf_printk("[CTRK] start\n");
 
   val = dp_ctv4_in(ctx, xf);
   if (val < 0) {

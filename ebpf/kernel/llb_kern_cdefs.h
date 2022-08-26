@@ -191,6 +191,13 @@ struct bpf_map_def SEC("maps") nat_v4_map = {
   .max_entries = LLB_NATV4_MAP_ENTRIES
 };
 
+struct bpf_map_def SEC("maps") nat_v4_stats_map = {
+  .type = BPF_MAP_TYPE_PERCPU_ARRAY,
+  .key_size = sizeof(__u32),  /* Counter Index */
+  .value_size = sizeof(struct dp_pb_stats),
+  .max_entries = LLB_NATV4_STAT_MAP_ENTRIES
+};
+
 struct bpf_map_def SEC("maps") rt_v4_map = {
   .type = BPF_MAP_TYPE_LPM_TRIE,
   .key_size = sizeof(struct dp_rtv4_key),
@@ -429,6 +436,13 @@ struct {
         __uint(type,        BPF_MAP_TYPE_PERCPU_ARRAY);
         __type(key,         __u32);
         __type(value,       struct dp_pb_stats);
+        __uint(max_entries, LLB_NATV4_MAP_ENTRIES);
+} nat_v4_stats_map SEC(".maps");
+
+struct {
+        __uint(type,        BPF_MAP_TYPE_PERCPU_ARRAY);
+        __type(key,         __u32);
+        __type(value,       struct dp_pb_stats);
         __uint(max_entries, LLB_ACLV6_MAP_ENTRIES);
 } acl_v6_stats_map SEC(".maps");
 
@@ -570,6 +584,9 @@ dp_do_map_stats(struct xdp_md *ctx,
   case LL_DP_SESS4_STATS_MAP:
     map = &sess_v4_stats_map;
     break;
+  case LL_DP_NAT4_STATS_MAP:
+    map = &nat_v4_stats_map;
+    break;
   default:
     return;
   }
@@ -578,8 +595,7 @@ dp_do_map_stats(struct xdp_md *ctx,
   if (pb) {
     pb->bytes += xf->pm.py_bytes;
     pb->packets += 1;
-    LL_DBG_PRINTK("[STAT] %d %llu %llu\n",
-                   key, pb->bytes, pb->packets);
+    LL_DBG_PRINTK("[STAT] %d %llu %llu\n", key, pb->bytes, pb->packets);
     return;
   }
 

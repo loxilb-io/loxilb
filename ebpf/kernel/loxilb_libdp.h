@@ -7,11 +7,11 @@
 #define __LOXILB_DP_H__
 
 #ifndef XDP_LL_SEC_DEFAULT
-#define XDP_LL_SEC_DEFAULT       "xdp_packet_parser"
+#define XDP_LL_SEC_DEFAULT       "xdp_packet_hook"
 #endif
 
 #ifndef TC_LL_SEC_DEFAULT
-#define TC_LL_SEC_DEFAULT        "tc_packet_parser"
+#define TC_LL_SEC_DEFAULT        "tc_packet_hook0"
 
 enum llb_bpf_mnt_type {
   LL_BPF_MOUNT_NONE = 0,

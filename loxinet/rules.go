@@ -752,10 +752,10 @@ func (R *RuleH) RulesSync() {
 	for _, rule := range R.Tables[RT_LB].eMap {
 		ruleKeys := rule.tuples.String()
 		ruleActs := rule.act.String()
+		rule.DP(DP_STATS_GET)
 		tk.LogIt(tk.LOG_DEBUG, "%d:%s,%s pc %v bc %v \n",
 			rule.ruleNum, ruleKeys, ruleActs,
 			rule.stat.packets, rule.stat.bytes)
-		rule.DP(DP_STATS_GET)
 
 		if rule.ActChk == false {
 			continue
