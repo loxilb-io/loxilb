@@ -17,8 +17,8 @@ package loxinet
 
 import (
 	"fmt"
-	cmn "loxilb/common"
-	opts "loxilb/options"
+	cmn "github.com/loxilb-io/loxilb/common"
+	opts "github.com/loxilb-io/loxilb/options"
 	"net"
 	"testing"
 )

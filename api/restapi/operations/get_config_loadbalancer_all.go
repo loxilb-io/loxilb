@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"loxilb/api/models"
+	"github.com/loxilb-io/loxilb/api/models"
 )
 
 // GetConfigLoadbalancerAllHandlerFunc turns a function with the right signature into a get config loadbalancer all handler

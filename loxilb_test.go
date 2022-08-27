@@ -17,7 +17,7 @@ package main
 
 import (
 	"fmt"
-	ln "loxilb/loxinet"
+	ln "github.com/loxilb-io/loxilb/loxinet"
 	"testing"
 )
 

@@ -20,10 +20,10 @@ import (
 	"os"
 	"sync"
 	"time"
-	apiserver "loxilb/api"
+	apiserver "github.com/loxilb-io/loxilb/api"
 	tk "github.com/loxilb-io/loxilib"
-	nlp "loxilb/api/loxinlp"
-	opts "loxilb/options"
+	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
+	opts "github.com/loxilb-io/loxilb/options"
 )
 
 const (

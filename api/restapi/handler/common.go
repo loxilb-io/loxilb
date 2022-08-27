@@ -16,7 +16,7 @@
 package handler
 
 import (
-	cmn "loxilb/common"
+	cmn "github.com/loxilb-io/loxilb/common"
 	"net/http"
 
 	"github.com/go-openapi/runtime"

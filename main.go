@@ -18,8 +18,8 @@ package main
 import (
 	"fmt"
 	"github.com/jessevdk/go-flags"
-	ln "loxilb/loxinet"
-	opts "loxilb/options"
+	ln "github.com/loxilb-io/loxilb/loxinet"
+	opts "github.com/loxilb-io/loxilb/options"
 	"os"
 	"os/exec"
 )

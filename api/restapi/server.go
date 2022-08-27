@@ -25,7 +25,7 @@ import (
 	flags "github.com/jessevdk/go-flags"
 	"golang.org/x/net/netutil"
 
-	"loxilb/api/restapi/operations"
+	"github.com/loxilb-io/loxilb/api/restapi/operations"
 )
 
 const (

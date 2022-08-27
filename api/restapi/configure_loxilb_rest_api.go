@@ -17,7 +17,7 @@ package restapi
 
 import (
 	"crypto/tls"
-	opts "loxilb/options"
+	opts "github.com/loxilb-io/loxilb/options"
 	"net/http"
 	"os"
 
@@ -25,8 +25,8 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/swag"
 
-	"loxilb/api/restapi/handler"
-	"loxilb/api/restapi/operations"
+	"github.com/loxilb-io/loxilb/api/restapi/handler"
+	"github.com/loxilb-io/loxilb/api/restapi/operations"
 )
 
 //go:generate swagger generate server --target ../../api --name LoxilbRestAPI --spec ../swagger.yml --principal interface{}

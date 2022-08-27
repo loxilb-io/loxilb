@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"loxilb/api/models"
+	"github.com/loxilb-io/loxilb/api/models"
 )
 
 // PostConfigRouteNoContentCode is the HTTP code returned for type PostConfigRouteNoContent

@@ -15,7 +15,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/validate"
 
-	"loxilb/api/models"
+	"github.com/loxilb-io/loxilb/api/models"
 )
 
 // NewPostConfigSessionParams creates a new PostConfigSessionParams object

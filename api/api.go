@@ -4,15 +4,15 @@ import (
 	"log"
 	"os"
 
-	cmn "loxilb/common"
+	cmn "github.com/loxilb-io/loxilb/common"
 
 	"github.com/go-openapi/loads"
 	flags "github.com/jessevdk/go-flags"
 
-	"loxilb/api/restapi"
-	"loxilb/api/restapi/handler"
-	"loxilb/api/restapi/operations"
-	"loxilb/options"
+	"github.com/loxilb-io/loxilb/api/restapi"
+	"github.com/loxilb-io/loxilb/api/restapi/handler"
+	"github.com/loxilb-io/loxilb/api/restapi/operations"
+	"github.com/loxilb-io/loxilb/options"
 )
 
 func RegisterApiHooks(hooks cmn.NetHookInterface) {
