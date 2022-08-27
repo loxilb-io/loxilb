@@ -1,4 +1,4 @@
-module loxilb
+module github.com/loxilb-io/loxilb
 
 go 1.17
 
