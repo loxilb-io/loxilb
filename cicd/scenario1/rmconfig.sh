@@ -1,9 +1,5 @@
 #!/bin/bash
 
-echo "#########################################"
-echo "Removing testbed"
-echo "#########################################"
-
 source ../common.sh
 
 disconnect_docker_hosts l3h1 llb1
@@ -50,8 +46,7 @@ delete_docker_host l2vxh9
 delete_docker_host l3vxh1
 delete_docker_host l3vxh2
 delete_docker_host l3vxh3
-delete_docker_host loxilb 
 
 echo "#########################################"
-echo "Removed testbed"
+echo "Deleted testbed"
 echo "#########################################"

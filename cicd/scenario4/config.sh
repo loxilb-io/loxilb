@@ -65,4 +65,4 @@ $hexec llb1 ip route add 33.33.33.1/32 via 60.60.60.2
 $hexec llb1 ip route add 34.34.34.1/32 via 60.60.60.3
 
 ##Create LB rule
-$dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:5001 --endpoints=33.33.33.1:1,34.34.34.1:1
+$dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=31.31.31.1:1,33.33.33.1:1,34.34.34.1:1
