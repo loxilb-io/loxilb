@@ -5,6 +5,7 @@ if [[ "$1" == "init" ]]; then
 fi
 
 hexec="sudo ip netns exec "
+dexec="sudo docker exec -it "
 pid=""
 
 ## Given a docker name(arg1), return its pid
@@ -70,11 +71,18 @@ connect_docker_hosts() {
 disconnect_docker_hosts() {
   link1=e$1$2
   link2=e$2$1
-#  echo $link1 $link2
-  sudo ip -n $1 link set $link1 down 2>&1 >> /dev/null
-  sudo ip -n $2 link set $link2 down 2>&1 >> /dev/null
-  sudo ip -n $1 link del $link1 2>&1 >> /dev/null
-  sudo ip -n $2 link del $link2 2>&1 >> /dev/null
+  #  echo $link1 $link2
+  ifexist=`sudo ip -n $1 link show $link1 | grep -w $link1`
+  if [ "$ifexist" != "" ]; then 
+    sudo ip -n $1 link set $link1 down 2>&1 >> /dev/null
+    sudo ip -n $1 link del $link1 2>&1 >> /dev/null
+  fi
+
+  ifexist=`sudo ip -n $2 link show $link2 | grep -w $link2`
+  if [ "$ifexist" != "" ]; then 
+    sudo ip -n $2 link set $link2 down 2>&1 >> /dev/null
+    sudo ip -n $2 link del $link2 2>&1 >> /dev/null
+  fi
 }
 
 ## arg1 - hostname1 
@@ -289,4 +297,45 @@ create_docker_host_vxlan() {
   fi
   
 }
+
+## arg1 - hostname1 
+## arg2 - hostname2 
+create_docker_host_cnbridge() {
+  POSITIONAL_ARGS=()
+  while [[ $# -gt 0 ]]; do
+    case $1 in
+        --host1)
+            local h1="$2"
+            shift
+            shift
+            ;;
+        --host2)
+            local h2="$2"
+            shift
+            shift
+            ;;
+        -*|--*)
+            echo "Unknown option $1"
+            exit 1
+            ;;
+        *)
+            POSITIONAL_ARGS+=("$1") # save positional arg
+            shift # past argument
+            ;;
+    esac
+  done
+
+  set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+  link1=e$h1$h2
+  link2=e$h2$h1
+
+  #echo "$h1:$link1->$h2:$link2"
+
+  brport=$link1
+    
+  sudo ip -n $h1 link add br$h1 type bridge 2>&1 | true
+  sudo ip -n $h1 link set $brport master br$h1
+  sudo ip -n $h1 link set br$h1 up
+}
+
 
