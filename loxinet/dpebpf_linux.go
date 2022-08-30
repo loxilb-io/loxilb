@@ -71,6 +71,8 @@ const (
 	EBPF_ERR_NAT4_DEL
 	EBPF_ERR_SESS4_ADD
 	EBPF_ERR_SESS4_DEL
+	EBPF_ERR_POL_ADD
+	EBPF_ERR_POL_DEL
 	EBPF_ERR_WQ_UNK
 )
 
@@ -102,6 +104,8 @@ type (
 	nxfrmAct    C.struct_mf_xfrm_inf
 	sess4Key    C.struct_dp_sess4_key
 	sessAct     C.struct_dp_sess_tact
+	polTact     C.struct_dp_pol_tact
+	polAct      C.struct_dp_policer_act
 )
 
 type DpEbpfH struct {
@@ -968,4 +972,59 @@ func (e *DpEbpfH) DpUlClAdd(w *UlClDpWorkQ) int {
 func (e *DpEbpfH) DpUlClDel(w *UlClDpWorkQ) int {
 	//fmt.Println(*w)
 	return e.DpUlClMod(w)
+}
+
+func (e *DpEbpfH) DpPolMod(w *PolDpWorkQ) int {
+	key := C.uint(w.HwMark)
+
+	if w.Work == DP_CREATE {
+		dat := new(polTact)
+		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_pol_tact)
+		dat.ca.act_type = C.DP_SET_DO_POLICER
+		pa := (*polAct)(getPtrOffset(unsafe.Pointer(dat),
+				C.sizeof_struct_dp_cmn_act + C.sizeof_struct_bpf_spin_lock))
+
+		if w.Srt == false {
+			pa.trtcm = 1
+		} else {
+			pa.trtcm = 0
+		}
+
+		if w.Color == false {
+			pa.color_aware = 0
+		} else {
+			pa.color_aware = 1
+		}
+
+		pa.toksc_pus  = C.ulonglong(w.Cir/(8000000))
+		pa.tokse_pus  = C.ulonglong(w.Pir/(8000000))
+		pa.cbs = C.uint(w.Cbs)
+		pa.ebs = C.uint(w.Ebs)
+		pa.tok_c = pa.cbs
+		pa.tok_e = pa.ebs
+		pa.toksc_pus = C.get_os_usecs()
+		pa.tokse_pus = pa.toksc_pus
+
+		ret := C.llb_add_map_elem(C.LL_DP_POL_MAP,
+			unsafe.Pointer(&key),
+			unsafe.Pointer(dat))
+
+		if ret != 0 {
+			*w.Status = 1
+			return EBPF_ERR_POL_ADD
+		}
+
+	} else if w.Work == DP_REMOVE {
+		C.llb_del_map_elem(C.LL_DP_POL_MAP, unsafe.Pointer(&key))
+		return 0
+	}
+	return 0;
+}
+
+func (e *DpEbpfH) DpPolAdd(w *PolDpWorkQ) int {
+	return e.DpPolMod(w);
+}
+
+func (e *DpEbpfH) DpPolDel(w *PolDpWorkQ) int {
+	return e.DpPolMod(w);
 }

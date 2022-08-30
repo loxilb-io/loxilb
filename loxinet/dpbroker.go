@@ -147,6 +147,19 @@ type TableDpWorkQ struct {
 	Name string
 }
 
+type PolDpWorkQ struct {
+	Work   DpWorkT
+	Name   string
+	HwMark int
+	Cir    uint64
+	Pir    uint64
+	Cbs    uint64
+	Ebs    uint64
+	Color  bool
+	Srt    bool
+	Status *DpStatusT
+}
+
 type NatT uint8
 
 const (
@@ -219,6 +232,8 @@ type DpRetT interface {
 }
 
 type DpHookInterface interface {
+	DpPolAdd(*PolDpWorkQ) int
+	DpPolDel(*PolDpWorkQ) int
 	DpPortPropAdd(*PortDpWorkQ) int
 	DpPortPropDel(*PortDpWorkQ) int
 	DpL2AddrAdd(*L2AddrDpWorkQ) int
@@ -322,9 +337,21 @@ func (dp *DpH) DpWorkOnTableOp(nWq *TableDpWorkQ) (error, DpRetT) {
 	return dp.DpHooks.DpTableGet(nWq)
 }
 
+func (dp *DpH) DpWorkOnPol(pWq *PolDpWorkQ) DpRetT {
+	if pWq.Work == DP_CREATE {
+		return dp.DpHooks.DpPolAdd(pWq)
+	} else if pWq.Work == DP_REMOVE {
+		return dp.DpHooks.DpPolDel(pWq)
+	}
+
+	return DP_WQ_UNK_ERR
+}
+
 func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 	var ret DpRetT
 	switch mq := m.(type) {
+	case *PolDpWorkQ:
+		ret = dp.DpWorkOnPol(mq)
 	case *PortDpWorkQ:
 		ret = dp.DpWorkOnPort(mq)
 	case *L2AddrDpWorkQ:
