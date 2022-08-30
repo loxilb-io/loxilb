@@ -36,7 +36,7 @@ import (
  const (
 	 MIN_ROL_RATE     = 8
 	 MAX_POLS    	  = 8*1024
-	 DFL_POL_BLK_SZ   = 6*1000*1000
+	 DFL_POL_BLK_SZ   = 6*5000*1000
  )
 
  const (
