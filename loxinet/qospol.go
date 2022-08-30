@@ -17,8 +17,6 @@ package loxinet
 
 import (
 	"errors"
-	"fmt"
-
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
@@ -233,7 +231,6 @@ func (P *PolH) PolDestructAll() {
 
 func (P *PolH) PolTicker() {
 	for _, p := range P.PolMap {
-		fmt.Printf("Ticker for %s %d\n", p.Key.PolName, p.Sync)
 		if p.Sync != 0 {
 			p.DP(DP_CREATE)
 			for _, pObj := range p.PObjs {
@@ -242,10 +239,9 @@ func (P *PolH) PolTicker() {
 		} else {
 			for idx, pObj := range p.PObjs {
 				var pP *PolObjInfo
-				fmt.Printf("Ticker for %s %d\n", pObj.Args.PolObjName, pObj.Sync)
 				pP = &p.PObjs[idx]
-				if pObj.Sync != 0 {
-					pObj.PolObj2DP(DP_CREATE)
+				if pP.Sync != 0 {
+					pP.PolObj2DP(DP_CREATE)
 				} else {
 					if pObj.Args.AttachMent == POL_ATTACH_PORT {
 						port := pObj.Parent.Zone.Ports.PortFindByName(pObj.Args.PolObjName)
