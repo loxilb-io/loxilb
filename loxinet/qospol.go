@@ -208,6 +208,23 @@ func (P *PolH) PolDelete(pName string) (int, error) {
 	return 0, nil
 }
 
+func (P *PolH) PolPortDelete(name string) {
+	for _, p := range P.PolMap {
+		for _, pObj := range p.PObjs {
+			if pObj.Args.AttachMent == POL_ATTACH_PORT &&
+				pObj.Args.PolObjName == name {
+				p.Sync = 1
+			}
+		}
+	}
+}
+
+func (P *PolH) PolDestructAll() {
+	for _, p := range P.PolMap {
+		P.PolDelete(p.Key.PolName)
+	}
+}
+
 func (P *PolH) PolTicker() {
 	for _, p := range P.PolMap {
 		if p.Sync != 0 {
@@ -219,6 +236,13 @@ func (P *PolH) PolTicker() {
 			for _, pObj := range p.PObjs {
 				if pObj.Sync != 0 {
 					pObj.PolObj2DP(DP_CREATE)
+				} else {
+					if pObj.Args.AttachMent == POL_ATTACH_PORT {
+						port := pObj.Parent.Zone.Ports.PortFindByName(pObj.Args.PolObjName)
+						if port == nil {
+							pObj.Sync = 1
+						}
+					}
 				}
 			}
 		}

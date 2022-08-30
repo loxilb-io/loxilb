@@ -415,7 +415,6 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 
 	tk.LogIt(tk.LOG_DEBUG, "port deleted - %s:%d\n", name, p.PortNo)
 
-	// FIXME - Do we need to care about layer2 and layer3 information related to this port ?
 	delete(P.portOmap, p.SInfo.OsId)
 	delete(P.portSmap, name)
 	P.portImap[rid] = nil

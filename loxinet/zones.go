@@ -114,6 +114,7 @@ func (z *ZoneH) ZoneDelete(name string) (int, error) {
 	}
 
 	zone.Name = name
+	zone.Pols.PolDestructAll()
 	zone.Rt.RtDestructAll()
 	zone.Nh.NeighhDestructAll()
 	zone.L2.L2DestructAll()
