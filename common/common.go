@@ -42,6 +42,7 @@ type PortProp uint8
 const (
 	PORT_PROP_UPP PortProp = 1 << iota
 	PORT_PROP_SPAN
+	PORT_PROP_POL
 )
 
 type DpStatusT uint8

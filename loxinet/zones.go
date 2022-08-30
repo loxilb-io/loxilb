@@ -46,6 +46,7 @@ type Zone struct {
 	L3      *L3H
 	Rules   *RuleH
 	Sess    *SessH
+	Pols    *PolH
 	Mtx     sync.RWMutex
 }
 
@@ -89,6 +90,7 @@ func (z *ZoneH) ZoneAdd(name string) (int, error) {
 	zone.L3 = L3Init(zone)
 	zone.Rules = RulesInit(zone)
 	zone.Sess = SessInit(zone)
+	zone.Pols = PolInit(zone)
 
 	z.ZoneMap[name] = zone
 
@@ -230,6 +232,10 @@ func (z *ZoneH) ZoneTicker() {
 
 		mh.mtx.RLock()
 		zone.Sess.SessionTicker()
+		mh.mtx.RUnlock()
+
+		mh.mtx.RLock()
+		zone.Pols.PolTicker()
 		mh.mtx.RUnlock()
 	}
 }

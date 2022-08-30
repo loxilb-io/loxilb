@@ -1014,6 +1014,8 @@ func (e *DpEbpfH) DpPolMod(w *PolDpWorkQ) int {
 			return EBPF_ERR_POL_ADD
 		}
 
+		*w.Status = 0
+
 	} else if w.Work == DP_REMOVE {
 		C.llb_del_map_elem(C.LL_DP_POL_MAP, unsafe.Pointer(&key))
 		return 0

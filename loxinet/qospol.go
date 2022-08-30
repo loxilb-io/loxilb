@@ -17,6 +17,7 @@ package loxinet
 
 import (
 	"errors"
+	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
  
@@ -60,7 +61,7 @@ const (
  type PolInfo struct {
 	 PolType	       int
 	 ColorAware		   bool
-	 CommittedInfoRate  uint64
+	 CommittedInfoRate uint64
 	 PeakInfoRate      uint64
 	 CommittedBlkSize  uint64
 	 ExcessBlkSize     uint64
@@ -135,6 +136,7 @@ const (
 	return true
  }
 
+ // Add a policer in loxinet
 func (P *PolH) PolAdd(pName string, pInfo PolInfo, pObjArgs PolObj) (int, error) {
 
 	if PolObjValidate(&pObjArgs) == false {
@@ -181,6 +183,7 @@ func (P *PolH) PolAdd(pName string, pInfo PolInfo, pObjArgs PolObj) (int, error)
 	return 0, nil
 }
 
+ // Delete a policer from loxinet
 func (P *PolH) PolDelete(pName string) (int, error) {
 
 	key := PolKey{pName}
@@ -205,10 +208,46 @@ func (P *PolH) PolDelete(pName string) (int, error) {
 	return 0, nil
 }
 
+func (P *PolH) PolTicker() {
+	for _, p := range P.PolMap {
+		if p.Sync != 0 {
+			p.DP(DP_CREATE)
+			for _, pObj := range p.PObjs {
+				pObj.PolObj2DP(DP_CREATE)
+			}
+		} else {
+			for _, pObj := range p.PObjs {
+				if pObj.Sync != 0 {
+					pObj.PolObj2DP(DP_CREATE)
+				}
+			}
+		}
+	}
+}
+
 // Sync state of policer's attachment point with data-path
 func (pObjInfo *PolObjInfo) PolObj2DP(work DpWorkT) int {
 
-	//port := ifa.Zone.Ports.PortFindByName(ifa.Key.Obj)
+	// Only port attachment is supported currently
+	if pObjInfo.Args.AttachMent != POL_ATTACH_PORT {
+		return -1
+	}
+
+	port := pObjInfo.Parent.Zone.Ports.PortFindByName(pObjInfo.Args.PolObjName)
+	if port == nil {
+		pObjInfo.Sync = 1
+		return -1
+	}
+
+	_, err:= pObjInfo.Parent.Zone.Ports.PortUpdateProp(port.Name, cmn.PORT_PROP_POL,
+		pObjInfo.Parent.Zone.Name, true, pObjInfo.Parent.HwNum)
+	if err != nil {
+		pObjInfo.Sync = 1
+		return -1
+	}
+
+	pObjInfo.Sync = 0
+
 	return 0
 }
 
