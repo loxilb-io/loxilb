@@ -332,6 +332,18 @@ func TestLoxinet(t *testing.T) {
 		t.Errorf("Failed to delete session for user1\n")
 	}
 
+	pInfo := PolInfo { PolType: 0, ColorAware: false, CommittedInfoRate: 100, PeakInfoRate: 100 }
+	polObj := PolObj { PolObjName: "hs0", AttachMent: POL_ATTACH_PORT}
+	_, err = mh.zr.Pols.PolAdd("pol-hs0", pInfo, polObj)
+	if err != nil {
+		t.Errorf("Failed to add policer pol-hs0\n")
+	}
+
+	_, err = mh.zr.Pols.PolDelete("pol-hs0")
+	if err != nil {
+		t.Errorf("Failed to delete policer pol-hs0\n")
+	}
+
 	fmt.Printf("#### Route-List ####\n")
 	mh.zr.Rt.Rts2String(&mh)
 

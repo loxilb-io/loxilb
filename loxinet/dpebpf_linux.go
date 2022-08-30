@@ -981,8 +981,9 @@ func (e *DpEbpfH) DpPolMod(w *PolDpWorkQ) int {
 		dat := new(polTact)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_pol_tact)
 		dat.ca.act_type = C.DP_SET_DO_POLICER
+		// For finding pa, we need to account for padding of 4
 		pa := (*polAct)(getPtrOffset(unsafe.Pointer(dat),
-				C.sizeof_struct_dp_cmn_act + C.sizeof_struct_bpf_spin_lock))
+				C.sizeof_struct_dp_cmn_act + C.sizeof_struct_bpf_spin_lock + 4))
 
 		if w.Srt == false {
 			pa.trtcm = 1
@@ -1002,8 +1003,9 @@ func (e *DpEbpfH) DpPolMod(w *PolDpWorkQ) int {
 		pa.ebs = C.uint(w.Ebs)
 		pa.tok_c = pa.cbs
 		pa.tok_e = pa.ebs
-		pa.toksc_pus = C.get_os_usecs()
-		pa.tokse_pus = pa.toksc_pus
+		pa.lastc_uts = C.get_os_usecs()
+		pa.laste_uts = pa.toksc_pus
+		pa.drop_prio = C.LLB_PIPE_COL_YELLOW
 
 		ret := C.llb_add_map_elem(C.LL_DP_POL_MAP,
 			unsafe.Pointer(&key),

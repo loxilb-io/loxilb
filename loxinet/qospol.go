@@ -17,6 +17,8 @@ package loxinet
 
 import (
 	"errors"
+	"fmt"
+
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
@@ -171,12 +173,13 @@ func (P *PolH) PolAdd(pName string, pInfo PolInfo, pObjArgs PolObj) (int, error)
 
 	pObjInfo := PolObjInfo { Args:pObjArgs }
 	pObjInfo.Parent = p
-	p.PObjs = append(p.PObjs, pObjInfo)
 
 	P.PolMap[key] = p
 
 	p.DP(DP_CREATE)
 	pObjInfo.PolObj2DP(DP_CREATE)
+
+	p.PObjs = append(p.PObjs, pObjInfo)
 
 	tk.LogIt(tk.LOG_INFO, "policer added - %s\n", pName)
 
@@ -194,9 +197,10 @@ func (P *PolH) PolDelete(pName string) (int, error) {
 		return POL_NOEXIST_ERR, errors.New("no such policer error")
 	}
 
-	for _, pObj := range p.PObjs {
+	for idx, pObj := range p.PObjs {
+		var pP *PolObjInfo = &p.PObjs[idx]
 		pObj.PolObj2DP(DP_REMOVE)
-		pObj.Parent = nil
+		pP.Parent = nil
 	}
 
 	p.DP(DP_REMOVE)
@@ -210,10 +214,12 @@ func (P *PolH) PolDelete(pName string) (int, error) {
 
 func (P *PolH) PolPortDelete(name string) {
 	for _, p := range P.PolMap {
-		for _, pObj := range p.PObjs {
+		for idx, pObj := range p.PObjs {
+			var pP *PolObjInfo
 			if pObj.Args.AttachMent == POL_ATTACH_PORT &&
 				pObj.Args.PolObjName == name {
-				p.Sync = 1
+				pP = &p.PObjs[idx]
+				pP.Sync = 1
 			}
 		}
 	}
@@ -227,20 +233,24 @@ func (P *PolH) PolDestructAll() {
 
 func (P *PolH) PolTicker() {
 	for _, p := range P.PolMap {
+		fmt.Printf("Ticker for %s %d\n", p.Key.PolName, p.Sync)
 		if p.Sync != 0 {
 			p.DP(DP_CREATE)
 			for _, pObj := range p.PObjs {
 				pObj.PolObj2DP(DP_CREATE)
 			}
 		} else {
-			for _, pObj := range p.PObjs {
+			for idx, pObj := range p.PObjs {
+				var pP *PolObjInfo
+				fmt.Printf("Ticker for %s %d\n", pObj.Args.PolObjName, pObj.Sync)
+				pP = &p.PObjs[idx]
 				if pObj.Sync != 0 {
 					pObj.PolObj2DP(DP_CREATE)
 				} else {
 					if pObj.Args.AttachMent == POL_ATTACH_PORT {
 						port := pObj.Parent.Zone.Ports.PortFindByName(pObj.Args.PolObjName)
 						if port == nil {
-							pObj.Sync = 1
+							pP.Sync = 1
 						}
 					}
 				}
@@ -263,11 +273,16 @@ func (pObjInfo *PolObjInfo) PolObj2DP(work DpWorkT) int {
 		return -1
 	}
 
-	_, err:= pObjInfo.Parent.Zone.Ports.PortUpdateProp(port.Name, cmn.PORT_PROP_POL,
-		pObjInfo.Parent.Zone.Name, true, pObjInfo.Parent.HwNum)
-	if err != nil {
-		pObjInfo.Sync = 1
-		return -1
+	if work == DP_CREATE {
+		_, err:= pObjInfo.Parent.Zone.Ports.PortUpdateProp(port.Name, cmn.PORT_PROP_POL,
+			pObjInfo.Parent.Zone.Name, true, pObjInfo.Parent.HwNum)
+		if err != nil {
+			pObjInfo.Sync = 1
+			return -1
+		}
+	} else if work == DP_REMOVE {
+		pObjInfo.Parent.Zone.Ports.PortUpdateProp(port.Name, cmn.PORT_PROP_POL,
+			pObjInfo.Parent.Zone.Name, false, 0)
 	}
 
 	pObjInfo.Sync = 0
@@ -280,6 +295,7 @@ func (p *PolEntry) DP(work DpWorkT) int {
 
 	pwq := new(PolDpWorkQ)
 	pwq.Work = work
+	pwq.HwMark = p.HwNum
 	pwq.Color = p.Info.ColorAware
 	pwq.Cir = p.Info.CommittedInfoRate
 	pwq.Pir = p.Info.PeakInfoRate
