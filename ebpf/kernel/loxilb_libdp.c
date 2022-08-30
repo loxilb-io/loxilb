@@ -935,6 +935,14 @@ llb_del_map_elem(int tbl, void *k)
   return ret;
 }
 
+unsigned long long
+get_os_usecs(void)
+{
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return ((unsigned long long)ts.tv_sec * 1000000UL) + ts.tv_nsec/1000;
+}
+
 static uint64_t
 __get_os_nsecs_now(void)
 {

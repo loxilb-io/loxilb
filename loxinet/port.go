@@ -92,6 +92,7 @@ type PortSwInfo struct {
 	OsId       int
 	PortType   int
 	PortProp   cmn.PortProp
+	PortPolNum int
 	PortActive bool
 	PortReal   *Port
 	PortOvl    *Port
@@ -414,7 +415,6 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 
 	tk.LogIt(tk.LOG_DEBUG, "port deleted - %s:%d\n", name, p.PortNo)
 
-	// FIXME - Do we need to care about layer2 and layer3 information related to this port ?
 	delete(P.portOmap, p.SInfo.OsId)
 	delete(P.portSmap, name)
 	P.portImap[rid] = nil
@@ -423,7 +423,7 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 }
 
 // Update port properties given an existing port
-func (P *PortsH) PortUpdateProp(name string, prop cmn.PortProp, zone string, updt bool) (int, error) {
+func (P *PortsH) PortUpdateProp(name string, prop cmn.PortProp, zone string, updt bool, propVal int) (int, error) {
 
 	var allDevs []*Port
 
@@ -467,7 +467,13 @@ func (P *PortsH) PortUpdateProp(name string, prop cmn.PortProp, zone string, upd
 	for _, pe := range allDevs {
 		if updt {
 			pe.SInfo.PortProp |= prop
+			if prop & cmn.PORT_PROP_POL == cmn.PORT_PROP_POL {
+				pe.SInfo.PortPolNum = propVal
+			}
 		} else {
+			if prop & cmn.PORT_PROP_POL == cmn.PORT_PROP_POL {
+				pe.SInfo.PortPolNum = 0
+			}
 			pe.SInfo.PortProp ^= prop
 		}
 		tk.LogIt(tk.LOG_DEBUG, "port updt - %s:%v\n", name, prop)
@@ -599,7 +605,11 @@ func port2String(e *Port, it IterIntf) {
 	if e.SInfo.PortProp&cmn.PORT_PROP_UPP == cmn.PORT_PROP_UPP {
 		pStr += "upp,"
 	}
-	if e.SInfo.PortProp&cmn.PORT_PROP_UPP == cmn.PORT_PROP_SPAN {
+	if e.SInfo.PortProp&cmn.PORT_PROP_POL == cmn.PORT_PROP_POL {
+		pol := fmt.Sprintf("pol%d,", e.SInfo.PortPolNum)
+		pStr += pol
+	}
+	if e.SInfo.PortProp&cmn.PORT_PROP_SPAN == cmn.PORT_PROP_SPAN {
 		pStr += "span,"
 	}
 	if e.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
@@ -817,6 +827,7 @@ func (p *Port) DP(work DpWorkT) int {
 			pWq.SetBD = p.L2.Vid
 			pWq.SetZoneNum = zoneNum
 			pWq.Prop = p.SInfo.PortProp
+			pWq.SetPol = p.SInfo.PortPolNum
 
 			mh.dp.ToDpCh <- pWq
 		}
@@ -849,6 +860,7 @@ func (p *Port) DP(work DpWorkT) int {
 	pWq.SetBD = p.L2.Vid
 	_, pWq.SetZoneNum = mh.zn.Zonefind(p.Zone)
 	pWq.Prop = p.SInfo.PortProp
+	pWq.SetPol = p.SInfo.PortPolNum
 
 	if pWq.SetZoneNum < 0 {
 		return -1
