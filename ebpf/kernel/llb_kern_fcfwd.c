@@ -68,7 +68,7 @@ dp_do_fcv4_lkup(void *ctx, struct xfi *xf)
 
   /* Check timeout */ 
   if (bpf_ktime_get_ns() - acts->its > FC_V4_DPTO) {
-    bpf_printk("hto");
+    LL_FC_PRINTK("[FCH4] hto");
     bpf_map_delete_elem(&fc_v4_map, &key);
     return 0; 
   }

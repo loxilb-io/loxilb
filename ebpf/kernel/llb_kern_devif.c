@@ -481,7 +481,7 @@ dp_ing_ct_main(void *ctx,  struct xfi *xf)
   if ((xf->pm.phit & LLB_DP_ACL_HIT) == 0)
     dp_do_nat4_rule_lkup(ctx, xf);
 
-  bpf_printk("[CTRK] start\n");
+  LL_DBG_PRINTK("[CTRK] start\n");
 
   val = dp_ctv4_in(ctx, xf);
   if (val < 0) {
