@@ -5,7 +5,7 @@ $hexec n1p1 node ./server1.js &
 $hexec n2p1 node ./server2.js &
 $hexec n3p1 node ./server3.js &
 
-sleep 10
+sleep 20
 code=0
 servArr=( "server1" "server2" "server3" ) 
 for i in {1..5}

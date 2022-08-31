@@ -8,7 +8,7 @@ $hexec l3ep2 socat sctp-listen:8080,fork exec:'echo server2' &
 $hexec l3ep3 socat sctp-listen:8080,fork exec:'echo server3' &
 
 $dexec llb1 loxicmd create lb 20.20.20.1 --sctp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1
-sleep 10
+sleep 20
 code=0
 servArr=( "server1" "server2" "server3" )
 ep=( "31.31.31.1" "32.32.32.1" "33.33.33.1" )
