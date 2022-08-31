@@ -45,6 +45,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler: DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto has not yet been implemented")
 		}),
+		DeleteConfigPolicyIdentIdentHandler: DeleteConfigPolicyIdentIdentHandlerFunc(func(params DeleteConfigPolicyIdentIdentParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigPolicyIdentIdent has not yet been implemented")
+		}),
 		DeleteConfigRouteDestinationIPNetIPAddressMaskHandler: DeleteConfigRouteDestinationIPNetIPAddressMaskHandlerFunc(func(params DeleteConfigRouteDestinationIPNetIPAddressMaskParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigRouteDestinationIPNetIPAddressMask has not yet been implemented")
 		}),
@@ -71,6 +74,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		}),
 		PostConfigLoadbalancerHandler: PostConfigLoadbalancerHandlerFunc(func(params PostConfigLoadbalancerParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigLoadbalancer has not yet been implemented")
+		}),
+		PostConfigPolicyHandler: PostConfigPolicyHandlerFunc(func(params PostConfigPolicyParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigPolicy has not yet been implemented")
 		}),
 		PostConfigRouteHandler: PostConfigRouteHandlerFunc(func(params PostConfigRouteParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigRoute has not yet been implemented")
@@ -119,6 +125,8 @@ type LoxilbRestAPIAPI struct {
 
 	// DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler sets the operation handler for the delete config loadbalancer externalipaddress IP address port port protocol proto operation
 	DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler
+	// DeleteConfigPolicyIdentIdentHandler sets the operation handler for the delete config policy ident ident operation
+	DeleteConfigPolicyIdentIdentHandler DeleteConfigPolicyIdentIdentHandler
 	// DeleteConfigRouteDestinationIPNetIPAddressMaskHandler sets the operation handler for the delete config route destination IP net IP address mask operation
 	DeleteConfigRouteDestinationIPNetIPAddressMaskHandler DeleteConfigRouteDestinationIPNetIPAddressMaskHandler
 	// DeleteConfigSessionIdentIdentHandler sets the operation handler for the delete config session ident ident operation
@@ -137,6 +145,8 @@ type LoxilbRestAPIAPI struct {
 	GetConfigSessionulclAllHandler GetConfigSessionulclAllHandler
 	// PostConfigLoadbalancerHandler sets the operation handler for the post config loadbalancer operation
 	PostConfigLoadbalancerHandler PostConfigLoadbalancerHandler
+	// PostConfigPolicyHandler sets the operation handler for the post config policy operation
+	PostConfigPolicyHandler PostConfigPolicyHandler
 	// PostConfigRouteHandler sets the operation handler for the post config route operation
 	PostConfigRouteHandler PostConfigRouteHandler
 	// PostConfigSessionHandler sets the operation handler for the post config session operation
@@ -223,6 +233,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler")
 	}
+	if o.DeleteConfigPolicyIdentIdentHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigPolicyIdentIdentHandler")
+	}
 	if o.DeleteConfigRouteDestinationIPNetIPAddressMaskHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigRouteDestinationIPNetIPAddressMaskHandler")
 	}
@@ -249,6 +262,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.PostConfigLoadbalancerHandler == nil {
 		unregistered = append(unregistered, "PostConfigLoadbalancerHandler")
+	}
+	if o.PostConfigPolicyHandler == nil {
+		unregistered = append(unregistered, "PostConfigPolicyHandler")
 	}
 	if o.PostConfigRouteHandler == nil {
 		unregistered = append(unregistered, "PostConfigRouteHandler")
@@ -354,6 +370,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
+	o.handlers["DELETE"]["/config/policy/ident/{ident}"] = NewDeleteConfigPolicyIdentIdent(o.context, o.DeleteConfigPolicyIdentIdentHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
 	o.handlers["DELETE"]["/config/route/destinationIPNet/{ip_address}/{mask}"] = NewDeleteConfigRouteDestinationIPNetIPAddressMask(o.context, o.DeleteConfigRouteDestinationIPNetIPAddressMaskHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
@@ -387,6 +407,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/config/loadbalancer"] = NewPostConfigLoadbalancer(o.context, o.PostConfigLoadbalancerHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/policy"] = NewPostConfigPolicy(o.context, o.PostConfigPolicyHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

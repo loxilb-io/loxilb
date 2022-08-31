@@ -256,6 +256,132 @@ func init() {
         }
       }
     },
+    "/config/policy": {
+      "post": {
+        "description": "Create a new Policy QoS config.",
+        "summary": "Create a new Policy QoS config",
+        "parameters": [
+          {
+            "description": "Attributes for Policy",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/policy/ident/{ident}": {
+      "delete": {
+        "description": "Delete a new Create a Policy QoS service.",
+        "summary": "Delete a Policy QoS service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes of Policy Ident.",
+            "name": "ident",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/port/all": {
       "get": {
         "description": "Get all of the port interfaces.",
@@ -908,6 +1034,57 @@ func init() {
         }
       }
     },
+    "PolicyEntry": {
+      "type": "object",
+      "properties": {
+        "policyIdent": {
+          "description": "Policy name",
+          "type": "string"
+        },
+        "policyInfo": {
+          "type": "object",
+          "properties": {
+            "colorAware": {
+              "description": "Policy color for QoS",
+              "type": "boolean"
+            },
+            "committedBlkSize": {
+              "description": "policy type",
+              "type": "integer"
+            },
+            "committedInfoRate": {
+              "description": "policy type",
+              "type": "integer"
+            },
+            "excessBlkSize": {
+              "description": "policy type",
+              "type": "integer"
+            },
+            "peakInfoRate": {
+              "description": "policy type",
+              "type": "integer"
+            },
+            "type": {
+              "description": "policy type",
+              "type": "integer"
+            }
+          }
+        },
+        "targetObject": {
+          "type": "object",
+          "properties": {
+            "attachment": {
+              "description": "Target Attachment",
+              "type": "integer"
+            },
+            "polObjName": {
+              "description": "Target Names",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "PortEntry": {
       "type": "array",
       "items": {
@@ -1342,6 +1519,132 @@ func init() {
             "description": "option for BGP enable",
             "name": "bgp",
             "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/policy": {
+      "post": {
+        "description": "Create a new Policy QoS config.",
+        "summary": "Create a new Policy QoS config",
+        "parameters": [
+          {
+            "description": "Attributes for Policy",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/policy/ident/{ident}": {
+      "delete": {
+        "description": "Delete a new Create a Policy QoS service.",
+        "summary": "Delete a Policy QoS service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes of Policy Ident.",
+            "name": "ident",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {
@@ -2101,6 +2404,99 @@ func init() {
       "properties": {
         "IpAddress": {
           "description": "IP address to neighbor",
+          "type": "string"
+        }
+      }
+    },
+    "PolicyEntry": {
+      "type": "object",
+      "properties": {
+        "policyIdent": {
+          "description": "Policy name",
+          "type": "string"
+        },
+        "policyInfo": {
+          "type": "object",
+          "properties": {
+            "colorAware": {
+              "description": "Policy color for QoS",
+              "type": "boolean"
+            },
+            "committedBlkSize": {
+              "description": "policy type",
+              "type": "integer"
+            },
+            "committedInfoRate": {
+              "description": "policy type",
+              "type": "integer"
+            },
+            "excessBlkSize": {
+              "description": "policy type",
+              "type": "integer"
+            },
+            "peakInfoRate": {
+              "description": "policy type",
+              "type": "integer"
+            },
+            "type": {
+              "description": "policy type",
+              "type": "integer"
+            }
+          }
+        },
+        "targetObject": {
+          "type": "object",
+          "properties": {
+            "attachment": {
+              "description": "Target Attachment",
+              "type": "integer"
+            },
+            "polObjName": {
+              "description": "Target Names",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "PolicyEntryPolicyInfo": {
+      "type": "object",
+      "properties": {
+        "colorAware": {
+          "description": "Policy color for QoS",
+          "type": "boolean"
+        },
+        "committedBlkSize": {
+          "description": "policy type",
+          "type": "integer"
+        },
+        "committedInfoRate": {
+          "description": "policy type",
+          "type": "integer"
+        },
+        "excessBlkSize": {
+          "description": "policy type",
+          "type": "integer"
+        },
+        "peakInfoRate": {
+          "description": "policy type",
+          "type": "integer"
+        },
+        "type": {
+          "description": "policy type",
+          "type": "integer"
+        }
+      }
+    },
+    "PolicyEntryTargetObject": {
+      "type": "object",
+      "properties": {
+        "attachment": {
+          "description": "Target Attachment",
+          "type": "integer"
+        },
+        "polObjName": {
+          "description": "Target Names",
           "type": "string"
         }
       }
