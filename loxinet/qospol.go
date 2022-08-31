@@ -37,18 +37,6 @@ import (
 	 DFL_POL_BLK_SZ   = 6*5000*1000
  )
 
- const (
-	ROL_TYPE_TRTCM = 0  // Default
-	POL_TYPE_SRTCM = 1
-)
-
-type PolObjType uint
-
-const (
-	POL_ATTACH_PORT PolObjType = 1 << iota
-	POL_ATTACH_LB_RULE
-)
- 
  type PolKey struct {
 	 PolName string
  }
@@ -58,25 +46,11 @@ const (
 	 PacketsNok uint64
  }
 
- type PolInfo struct {
-	 PolType	       int
-	 ColorAware		   bool
-	 CommittedInfoRate uint64
-	 PeakInfoRate      uint64
-	 CommittedBlkSize  uint64
-	 ExcessBlkSize     uint64
- }
-
  type PolAttachObjT interface {
  }
 
- type PolObj struct {
-	PolObjName   string
-	AttachMent   PolObjType
- }
-
  type PolObjInfo struct {
-	Args		 PolObj
+	Args		 cmn.PolObj
 	AttachObj    PolAttachObjT
 	Parent	     *PolEntry
 	Sync         DpStatusT
@@ -84,7 +58,7 @@ const (
  
  type PolEntry struct {
 	 Key    PolKey
-	 Info   PolInfo
+	 Info   cmn.PolInfo
 	 Zone   *Zone
 	 HwNum  int
 	 Stats  PolStats
@@ -106,7 +80,7 @@ const (
 	 return nPh
  }
 
- func PolInfoXlateValidate(pInfo *PolInfo) (bool) {
+ func PolInfoXlateValidate(pInfo *cmn.PolInfo) (bool) {
 	if pInfo.CommittedInfoRate < MIN_ROL_RATE {
 		return false
 	}
@@ -127,9 +101,9 @@ const (
 	return true
  }
 
- func PolObjValidate(pObj *PolObj) (bool) {
+ func PolObjValidate(pObj *cmn.PolObj) (bool) {
 
-	if pObj.AttachMent != POL_ATTACH_PORT && pObj.AttachMent != POL_ATTACH_LB_RULE {
+	if pObj.AttachMent != cmn.POL_ATTACH_PORT && pObj.AttachMent != cmn.POL_ATTACH_LB_RULE {
 		return false
 	}
 
@@ -137,7 +111,7 @@ const (
  }
 
  // Add a policer in loxinet
-func (P *PolH) PolAdd(pName string, pInfo PolInfo, pObjArgs PolObj) (int, error) {
+func (P *PolH) PolAdd(pName string, pInfo cmn.PolInfo, pObjArgs cmn.PolObj) (int, error) {
 
 	if PolObjValidate(&pObjArgs) == false {
 		tk.LogIt(tk.LOG_ERROR, "policer add - %s: bad attach point\n", pName)
@@ -214,7 +188,7 @@ func (P *PolH) PolPortDelete(name string) {
 	for _, p := range P.PolMap {
 		for idx, pObj := range p.PObjs {
 			var pP *PolObjInfo
-			if pObj.Args.AttachMent == POL_ATTACH_PORT &&
+			if pObj.Args.AttachMent == cmn.POL_ATTACH_PORT &&
 				pObj.Args.PolObjName == name {
 				pP = &p.PObjs[idx]
 				pP.Sync = 1
@@ -243,7 +217,7 @@ func (P *PolH) PolTicker() {
 				if pP.Sync != 0 {
 					pP.PolObj2DP(DP_CREATE)
 				} else {
-					if pObj.Args.AttachMent == POL_ATTACH_PORT {
+					if pObj.Args.AttachMent == cmn.POL_ATTACH_PORT {
 						port := pObj.Parent.Zone.Ports.PortFindByName(pObj.Args.PolObjName)
 						if port == nil {
 							pP.Sync = 1
@@ -259,7 +233,7 @@ func (P *PolH) PolTicker() {
 func (pObjInfo *PolObjInfo) PolObj2DP(work DpWorkT) int {
 
 	// Only port attachment is supported currently
-	if pObjInfo.Args.AttachMent != POL_ATTACH_PORT {
+	if pObjInfo.Args.AttachMent != cmn.POL_ATTACH_PORT {
 		return -1
 	}
 

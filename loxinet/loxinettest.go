@@ -332,8 +332,8 @@ func TestLoxinet(t *testing.T) {
 		t.Errorf("Failed to delete session for user1\n")
 	}
 
-	pInfo := PolInfo { PolType: 0, ColorAware: false, CommittedInfoRate: 100, PeakInfoRate: 100 }
-	polObj := PolObj { PolObjName: "hs0", AttachMent: POL_ATTACH_PORT}
+	pInfo := cmn.PolInfo { PolType: 0, ColorAware: false, CommittedInfoRate: 100, PeakInfoRate: 100 }
+	polObj := cmn.PolObj { PolObjName: "hs0", AttachMent: cmn.POL_ATTACH_PORT}
 	_, err = mh.zr.Pols.PolAdd("pol-hs0", pInfo, polObj)
 	if err != nil {
 		t.Errorf("Failed to add policer pol-hs0\n")

@@ -289,3 +289,21 @@ func (*NetApiStruct) NetSessionUlClGet() ([]cmn.SessionUlClMod, error) {
 	ret, err := mh.zr.Sess.SessUlclGet()
 	return ret, err
 }
+
+// Add a policer in loxinet
+func (*NetApiStruct) NetPolicerAdd(pm *cmn.PolMod) (int, error) {
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	ret, err := mh.zr.Pols.PolAdd(pm.Ident, pm.Info, pm.Target)
+	return ret, err
+}
+
+// Delete a policer in loxinet
+func (*NetApiStruct) NetPolicerDel(pm *cmn.PolMod) (int, error) {
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	ret, err := mh.zr.Pols.PolDelete(pm.Ident)
+	return ret, err
+}

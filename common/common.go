@@ -232,6 +232,38 @@ type SessionUlClMod struct {
 	Args  UlClArg `json:"ulclArgument"`
 }
 
+const (
+	ROL_TYPE_TRTCM = 0  // Default
+	POL_TYPE_SRTCM = 1
+)
+
+type PolInfo struct {
+	PolType	       int
+	ColorAware		   bool
+	CommittedInfoRate uint64
+	PeakInfoRate      uint64
+	CommittedBlkSize  uint64
+	ExcessBlkSize     uint64
+}
+
+type PolObjType uint
+
+const (
+	POL_ATTACH_PORT PolObjType = 1 << iota
+	POL_ATTACH_LB_RULE
+)
+ 
+type PolObj struct {
+	PolObjName   string
+	AttachMent   PolObjType
+ }
+
+type PolMod struct {
+	Ident  string
+	Info   PolInfo
+	Target PolObj 
+}
+
 type NetHookInterface interface {
 	NetPortGet() ([]PortDump, error)
 	NetPortAdd(*PortMod) (int, error)
@@ -258,4 +290,6 @@ type NetHookInterface interface {
 	NetSessionDel(*SessionMod) (int, error)
 	NetSessionUlClAdd(*SessionUlClMod) (int, error)
 	NetSessionUlClDel(*SessionUlClMod) (int, error)
+	NetPolicerAdd(*PolMod) (int, error)
+	NetPolicerDel(*PolMod) (int, error)
 }
