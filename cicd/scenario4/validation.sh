@@ -13,6 +13,7 @@ do
 for j in {0..2}
 do
     res=$($hexec n1p1 curl -s 20.20.20.1:2020)
+    echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
         code=1

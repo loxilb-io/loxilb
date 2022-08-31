@@ -18,7 +18,7 @@ for j in {0..2}
 do
     res=$($hexec l3h1 timeout 1 ./client 20.20.20.1 2020)
     #res=$($hexec l3h1 timeout 1 ./client ${ep[j]} 8080)
-    #echo -e $res
+    echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
         code=1
