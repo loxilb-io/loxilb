@@ -753,9 +753,15 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 		}
 
 		if packets != 0 || bytes != 0 || dropPackets != 0 {
-			*w.Packets = uint64(packets)
-			*w.Bytes = uint64(bytes)
-			*w.DropPackets = uint64(dropPackets)
+			if w.Packets != nil {
+				*w.Packets = uint64(packets)
+			}
+			if w.Bytes != nil {
+				*w.Bytes = uint64(bytes)
+			}
+			if w.DropPackets != nil {
+				*w.DropPackets = uint64(dropPackets)
+			}
 		}
 	} else if w.Work == DP_STATS_CLR {
 		for _, t := range tbl {
