@@ -5,7 +5,7 @@ if [[ "$1" == "init" ]]; then
 fi
 
 hexec="sudo ip netns exec "
-dexec="sudo docker exec -it "
+dexec="sudo docker exec -i "
 pid=""
 
 ## Given a docker name(arg1), return its pid
