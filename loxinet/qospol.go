@@ -44,6 +44,7 @@ import (
  type PolStats struct {
 	 PacketsOk  uint64
 	 PacketsNok uint64
+	 Bytes      uint64
  }
 
  type PolAttachObjT interface {
@@ -211,6 +212,8 @@ func (P *PolH) PolTicker() {
 				pObj.PolObj2DP(DP_CREATE)
 			}
 		} else {
+			p.DP(DP_STATS_GET)
+			//fmt.Printf("Pol %s -- stats %v:%v\n", p.Key.PolName, p.Stats.PacketsOk, p.Stats.PacketsNok)
 			for idx, pObj := range p.PObjs {
 				var pP *PolObjInfo
 				pP = &p.PObjs[idx]
@@ -262,6 +265,19 @@ func (pObjInfo *PolObjInfo) PolObj2DP(work DpWorkT) int {
 
 // Sync state of policer with data-path
 func (p *PolEntry) DP(work DpWorkT) int {
+
+	if work == DP_STATS_GET {
+		nStat := new(StatDpWorkQ)
+		nStat.Work = work
+		nStat.HwMark = uint32(p.HwNum)
+		nStat.Name = MAP_NAME_IPOL
+		nStat.Packets = &p.Stats.PacketsOk
+		nStat.DropPackets = &p.Stats.PacketsNok
+		nStat.Bytes = &p.Stats.Bytes
+
+		mh.dp.ToDpCh <- nStat
+		return 0
+	}
 
 	pwq := new(PolDpWorkQ)
 	pwq.Work = work

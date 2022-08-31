@@ -669,7 +669,7 @@ int llb_map2fd(int t);
 int llb_fetch_map_stats_cached(int tbl, uint32_t index, int raw, void *bc, void *pc);
 void llb_age_map_entries(int tbl);
 void llb_collect_map_stats(int tbl);
-void llb_get_pol_map_stats(int tbl, dp_pts_cb_t cb, dp_tiv_cb_t vcb);
+int llb_fetch_pol_map_stats(int tid, uint32_t e, void *ppass, void *pdrop);
 void llb_clear_map_stats(int tbl, __u32 idx);
 int llb_add_map_elem(int tbl, void *k, void *v);
 int llb_del_map_elem(int tbl, void *k);

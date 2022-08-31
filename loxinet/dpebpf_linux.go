@@ -696,28 +696,26 @@ func (e *DpEbpfH) DpNatLbRuleDel(w *NatDpWorkQ) int {
 }
 
 func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
-	var packets, bytes uint64
+	var packets, bytes, dropPackets uint64
 	var tbl []int
+	var polTbl[] int
 	sync := 0
 	switch {
 	case w.Name == MAP_NAME_NAT4:
 		tbl = append(tbl, int(C.LL_DP_NAT4_STATS_MAP))
 		sync = 1
-		break
 	case w.Name == MAP_NAME_BD:
 		tbl = append(tbl, int(C.LL_DP_BD_STATS_MAP), int(C.LL_DP_TX_BD_STATS_MAP))
-		break
 	case w.Name == MAP_NAME_RXBD:
 		tbl = append(tbl, int(C.LL_DP_BD_STATS_MAP))
-		break
 	case w.Name == MAP_NAME_TXBD:
 		tbl = append(tbl, int(C.LL_DP_TX_BD_STATS_MAP))
-		break
 	case w.Name == MAP_NAME_RT4:
 		tbl = append(tbl, int(C.LL_DP_RTV4_MAP))
-		break
 	case w.Name == MAP_NAME_ULCL:
 		tbl = append(tbl, int(C.LL_DP_SESS4_MAP))
+	case w.Name == MAP_NAME_IPOL:
+		polTbl = append(polTbl, int(C.LL_DP_POL_MAP))
 	default:
 		return EBPF_ERR_WQ_UNK
 	}
@@ -728,6 +726,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 
 		packets = 0
 		bytes = 0
+		dropPackets = 0
 
 		for _, t := range tbl {
 
@@ -741,9 +740,22 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 			bytes += uint64(b)
 		}
 
-		if packets != 0 && bytes != 0 {
+
+		for _, t := range polTbl {
+
+			ret := C.llb_fetch_pol_map_stats(C.int(t), C.uint(w.HwMark), (unsafe.Pointer(&p)), unsafe.Pointer(&b))
+			if ret != 0 {
+				return EBPF_ERR_TMAC_ADD
+			}
+
+			packets += uint64(p)
+			dropPackets += uint64(b)
+		}
+
+		if packets != 0 || bytes != 0 || dropPackets != 0 {
 			*w.Packets = uint64(packets)
 			*w.Bytes = uint64(bytes)
+			*w.DropPackets = uint64(dropPackets)
 		}
 	} else if w.Work == DP_STATS_CLR {
 		for _, t := range tbl {

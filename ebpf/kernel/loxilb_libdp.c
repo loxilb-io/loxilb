@@ -623,7 +623,6 @@ llb_fetch_map_stats_cached(int tbl, uint32_t e, int raw,
     return -1;
 
   t = &xh->maps[tbl];
-  t = &xh->maps[tbl];
   if (t->has_pb && t->pb_xtid > 0) { 
     if (t->pb_xtid < 0 || t->pb_xtid >= LL_DP_MAX_MAP)
       return -1;
@@ -683,39 +682,36 @@ llb_collect_map_stats(int tid)
   return llb_fetch_map_stats_raw(tid, NULL, NULL);
 }
 
-void 
-ll_get_pol_map_stats(int tid, dp_pts_cb_t cb, dp_tiv_cb_t vcb)
+int
+llb_fetch_pol_map_stats(int tid, uint32_t e, void *ppass, void *pdrop)
 {
-  int e = 0;
   llb_dp_map_t *t;
   struct dp_pol_tact pa;
 
-  if (!cb) return;
-
   if (tid < 0 || tid >= LL_DP_MAX_MAP) 
-    return;
+    return -1;
 
   t = &xh->maps[tid];
 
   if (t->has_pol) {
-    /* FIXME : Handle non-pcpu */
-    for (e = 0; e < t->max_entries; e++) {
-      if (vcb && vcb(tid, e) == 0) {
-        continue;
-      }
+    pthread_rwlock_wrlock(&t->stat_lock);
 
-      if ((bpf_map_lookup_elem(t->map_fd, &e, &pa)) != 0) {
-        fprintf(stderr,
-          "ERR: bpf_map_lookup_elem failed idx:0x%X\n", e);
-        continue;
-      }
-
-      if (cb) {
-        cb(e, &pa.pol.ps);
-      }
+    if ((bpf_map_lookup_elem(t->map_fd, &e, &pa)) != 0) {
+      fprintf(stderr,
+        "ERR: bpf_map_lookup_elem failed idx:0x%X\n", e);
+      pthread_rwlock_unlock(&t->stat_lock);
+      return -1;
     }
+
+    *(uint64_t *)ppass = pa.pol.ps.pass_packets;
+    *(uint64_t *)pdrop = pa.pol.ps.drop_packets;
+
+    pthread_rwlock_unlock(&t->stat_lock);
+
+    return 0;
   }
 
+  return -1;
 }
 
 void 

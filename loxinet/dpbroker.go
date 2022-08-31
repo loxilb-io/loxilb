@@ -32,6 +32,7 @@ const (
 	MAP_NAME_TXBD = "TXBD"
 	MAP_NAME_RT4  = "RT4"
 	MAP_NAME_ULCL = "ULCL"
+	MAP_NAME_IPOL = "IPOL"
 )
 
 const (
@@ -135,11 +136,12 @@ type RouteDpWorkQ struct {
 }
 
 type StatDpWorkQ struct {
-	Work    DpWorkT
-	Name    string
-	HwMark  uint32
-	Packets *uint64
-	Bytes   *uint64
+	Work         DpWorkT
+	Name         string
+	HwMark       uint32
+	Packets      *uint64
+	Bytes        *uint64
+	DropPackets  *uint64
 }
 
 type TableDpWorkQ struct {
