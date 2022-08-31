@@ -532,6 +532,96 @@ paths:
           schema:
             $ref: '#/definitions/Error'            
 
+
+
+#----------------------------------------------
+# Policy
+#----------------------------------------------
+  '/config/policy':
+    post:
+      summary: Create a new Policy QoS config
+      description: Create a new Policy QoS config.
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes for Policy
+          schema:
+            $ref: '#/definitions/PolicyEntry'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+ 
+  '/config/policy/ident/{ident}':
+    delete:
+      summary: Delete a Policy QoS service
+      description: Delete a new Create a Policy QoS service.
+      parameters:
+        - name: ident
+          in: path
+          type: string
+          required: true
+          description: Attributes of Policy Ident.
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
 #----------------------------------------------
 # Schema definitions
 #----------------------------------------------
@@ -788,7 +878,44 @@ definitions:
           ulclIP:
             type: string
             description: Access network IP address
-    
+
+  PolicyEntry:
+    type: object
+    properties:
+      policyIdent:
+        type: string
+        description: Policy name
+      policyInfo:
+        type: object
+        properties:
+          type:
+            type: integer
+            description: policy type
+          colorAware:
+            type: boolean
+            description: Policy color for QoS
+          committedInfoRate:
+            type: integer
+            description: policy type
+          peakInfoRate:
+            type: integer
+            description: policy type
+          committedBlkSize:
+            type: integer
+            description: policy type
+          excessBlkSize:
+            type: integer
+            description: policy type
+      targetObject:
+        type: object
+        properties:
+          attachment:
+            type: integer
+            description: Target Attachment
+          polObjName:
+            type: string
+            description: Target Names            
+        
   VlanPortMod:
     type: object
     properties:
