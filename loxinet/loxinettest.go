@@ -344,6 +344,18 @@ func TestLoxinet(t *testing.T) {
 		t.Errorf("Failed to delete policer pol-hs0\n")
 	}
 
+	mInfo := cmn.MirrInfo { MirrType: cmn.MIRR_TYPE_SPAN, MirrPort: "hs0" }
+	mObj := cmn.MirrObj { MirrObjName: "hs1", AttachMent: cmn.MIRR_ATTACH_PORT}
+	_, err = mh.zr.Mirrs.MirrAdd("mirr-1", mInfo, mObj)
+	if err != nil {
+		t.Errorf("Failed to add mirror mirr-1\n")
+	}
+
+	_, err = mh.zr.Mirrs.MirrDelete("mirr-1")
+	if err != nil {
+		t.Errorf("Failed to delete mirror mirr-1\n")
+	}
+
 	fmt.Printf("#### Route-List ####\n")
 	mh.zr.Rt.Rts2String(&mh)
 

@@ -93,6 +93,7 @@ type PortSwInfo struct {
 	PortType   int
 	PortProp   cmn.PortProp
 	PortPolNum int
+	PortMirNum int
 	PortActive bool
 	PortReal   *Port
 	PortOvl    *Port
@@ -469,14 +470,18 @@ func (P *PortsH) PortUpdateProp(name string, prop cmn.PortProp, zone string, upd
 			pe.SInfo.PortProp |= prop
 			if prop & cmn.PORT_PROP_POL == cmn.PORT_PROP_POL {
 				pe.SInfo.PortPolNum = propVal
+			} else if prop & cmn.PORT_PROP_SPAN == cmn.PORT_PROP_SPAN {
+				pe.SInfo.PortMirNum = propVal
 			}
 		} else {
 			if prop & cmn.PORT_PROP_POL == cmn.PORT_PROP_POL {
 				pe.SInfo.PortPolNum = 0
+			} else if prop & cmn.PORT_PROP_SPAN == cmn.PORT_PROP_SPAN {
+				pe.SInfo.PortMirNum = 0
 			}
 			pe.SInfo.PortProp ^= prop
 		}
-		tk.LogIt(tk.LOG_DEBUG, "port updt - %s:%v\n", name, prop)
+		tk.LogIt(tk.LOG_DEBUG, "port updt - %s:%v(%d)\n", name, prop, propVal)
 		pe.DP(DP_CREATE)
 	}
 
@@ -610,7 +615,8 @@ func port2String(e *Port, it IterIntf) {
 		pStr += pol
 	}
 	if e.SInfo.PortProp&cmn.PORT_PROP_SPAN == cmn.PORT_PROP_SPAN {
-		pStr += "span,"
+		pol := fmt.Sprintf("mirr%d,", e.SInfo.PortMirNum)
+		pStr += pol
 	}
 	if e.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
 		pStr += "vxlan"
@@ -828,6 +834,7 @@ func (p *Port) DP(work DpWorkT) int {
 			pWq.SetZoneNum = zoneNum
 			pWq.Prop = p.SInfo.PortProp
 			pWq.SetPol = p.SInfo.PortPolNum
+			pWq.SetMirr = p.SInfo.PortMirNum
 
 			mh.dp.ToDpCh <- pWq
 		}
@@ -861,6 +868,7 @@ func (p *Port) DP(work DpWorkT) int {
 	_, pWq.SetZoneNum = mh.zn.Zonefind(p.Zone)
 	pWq.Prop = p.SInfo.PortProp
 	pWq.SetPol = p.SInfo.PortPolNum
+	pWq.SetMirr = p.SInfo.PortMirNum
 
 	if pWq.SetZoneNum < 0 {
 		return -1
