@@ -16,8 +16,8 @@ j=0
 waitCount=0
 while [ $j -le 2 ]
 do
-    res=$($hexec l3h1 socat - sctp:${ep[j]}:8080,sp=55001)
-    #echo $res
+    res=$($hexec l3h1 socat - sctp:${ep[j]}:8080)
+    echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
         echo "$res UP"
@@ -28,7 +28,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            exit 1
+            exit 0
         fi
 
     fi
