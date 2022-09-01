@@ -38,6 +38,7 @@ dp_do_fcv4_lkup(void *ctx, struct xfi *xf)
   struct dp_fc_tacts *acts;
   struct dp_fc_tact *ta;
   int ret = 1;
+  int z = 0;
 
   dp_mk_fcv4_key(xf, &key);
 
@@ -57,7 +58,6 @@ dp_do_fcv4_lkup(void *ctx, struct xfi *xf)
   xf->pm.table_id = LL_DP_FCV4_MAP;
   acts = bpf_map_lookup_elem(&fc_v4_map, &key);
   if (!acts) {
-    int z = 0;
     /* xfck - fcache key table is maintained so that 
      * there is no need to make fcv4 key again in
      * tail-call sections
@@ -69,6 +69,7 @@ dp_do_fcv4_lkup(void *ctx, struct xfi *xf)
   /* Check timeout */ 
   if (bpf_ktime_get_ns() - acts->its > FC_V4_DPTO) {
     LL_FC_PRINTK("[FCH4] hto");
+    bpf_map_update_elem(&xfck, &z, &key, BPF_ANY);
     bpf_map_delete_elem(&fc_v4_map, &key);
     return 0; 
   }

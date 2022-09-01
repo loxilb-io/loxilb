@@ -64,7 +64,6 @@ dp_do_mark_mirr(void *ctx, struct xfi *xf)
 
   skb->cb[0] = LLB_MIRR_MARK;
   skb->cb[1] = xf->pm.mirr; 
-  xf->pm.mirr = 0;
 
   LL_DBG_PRINTK("[REDR] Mirr port %d OIF %d\n", key, *oif);
   return bpf_clone_redirect(skb, *oif, BPF_F_INGRESS);
@@ -359,11 +358,6 @@ dp_pipe_check_res(void *ctx, struct xfi *xf, void *fa)
 static int __always_inline
 dp_ing(void *ctx,  struct xfi *xf)
 {
-  if (xf->pm.mirr != 0) {
-    dp_do_mirr_lkup(ctx, xf); 
-    return 0;
-  }
-
   dp_do_if_lkup(ctx, xf);
 #ifdef LLB_XDP_IF_STATS
   dp_do_map_stats(ctx, xf, LL_DP_INTF_STATS_MAP, xf->pm.iport);
@@ -443,6 +437,12 @@ dp_ing_slow_main(void *ctx,  struct xfi *xf)
 #endif
 
   LL_DBG_PRINTK("[INGR] START--\n");
+
+  if (xf->pm.mirr != 0) {
+    dp_do_mirr_lkup(ctx, xf);
+    goto out;
+  }
+
   dp_ing(ctx, xf);
 
   if (xf->pm.pipe_act || xf->pm.tc == 0) {
@@ -450,16 +450,17 @@ dp_ing_slow_main(void *ctx,  struct xfi *xf)
     goto out;
   }
   dp_ing_l2(ctx, xf, fa);
-out:
+
 #ifdef HAVE_DP_FC
   if (xf->pm.pipe_act == LLB_PIPE_RDR && 
       xf->pm.phit & LLB_DP_ACL_HIT &&
       !(xf->pm.phit & LLB_DP_SESS_HIT) &&
       xf->qm.polid == 0 &&
-      !DP_NEED_MIRR(ctx)) {
+      xf->pm.mirr == 0) {
     dp_insert_fcv4(ctx, xf, fa);
   }
 #endif
+out:
   return dp_pipe_check_res(ctx, xf, fa);
 }
 
