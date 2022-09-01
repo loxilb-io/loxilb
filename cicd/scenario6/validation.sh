@@ -3,9 +3,9 @@ source ../common.sh
 
 sudo pkill socat
 
-$hexec l3ep1 socat sctp-listen:8080,fork exec:'echo server1' &
-$hexec l3ep2 socat sctp-listen:8080,fork exec:'echo server2' &
-$hexec l3ep3 socat sctp-listen:8080,fork exec:'echo server3' &
+$hexec l3ep1 socat sctp-listen:8080,fork exec:'echo server1',end-close &
+$hexec l3ep2 socat sctp-listen:8080,fork exec:'echo server2',end-close &
+$hexec l3ep3 socat sctp-listen:8080,fork exec:'echo server3',end-close &
 
 $dexec llb1 loxicmd create lb 20.20.20.1 --sctp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1
 sleep 5
@@ -40,7 +40,7 @@ do
 for j in {0..2}
 do
     res=$($hexec l3h1 socat - sctp:20.20.20.1:2020)
-    #res=$($hexec l3h1 socat - sctp:${ep[j]}:8080,sp=55001)
+    #res=$($hexec l3h1 socat - sctp:${ep[j]}:8080)
     echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
