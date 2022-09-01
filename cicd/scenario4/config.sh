@@ -2,10 +2,6 @@
 
 source ../common.sh
 
-./rmconfig.sh
-
-sleep 5
-
 echo "#########################################"
 echo "Spawning all hosts"
 echo "#########################################"
