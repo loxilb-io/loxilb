@@ -21,8 +21,8 @@ do
         j=$(( $j + 1 ))
     else
         echo "Waiting for ${servArr[j]}(${ep[j]})"
-        sleep 1
     fi
+    sleep 1
 done
 
 for i in {1..4}
@@ -35,6 +35,7 @@ do
     then
         code=1
     fi
+    sleep 1
 done
 done
 if [[ $code == 0 ]]
