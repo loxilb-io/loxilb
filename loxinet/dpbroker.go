@@ -65,6 +65,15 @@ const (
 	DP_WORKQ_LEN = 1024
 )
 
+type MirrDpWorkQ struct {
+	Work       DpWorkT
+	Name       string
+	HwMark     int
+	MiPortNum  int
+	MiBD       int
+	Status     *DpStatusT
+}
+
 type PortDpWorkQ struct {
 	Work       DpWorkT
 	Status     *DpStatusT
@@ -234,6 +243,8 @@ type DpRetT interface {
 }
 
 type DpHookInterface interface {
+	DpMirrAdd(*MirrDpWorkQ) int
+	DpMirrDel(*MirrDpWorkQ) int
 	DpPolAdd(*PolDpWorkQ) int
 	DpPolDel(*PolDpWorkQ) int
 	DpPortPropAdd(*PortDpWorkQ) int
@@ -349,9 +360,21 @@ func (dp *DpH) DpWorkOnPol(pWq *PolDpWorkQ) DpRetT {
 	return DP_WQ_UNK_ERR
 }
 
+func (dp *DpH) DpWorkOnMirr(mWq *MirrDpWorkQ) DpRetT {
+	if mWq.Work == DP_CREATE {
+		return dp.DpHooks.DpMirrAdd(mWq)
+	} else if mWq.Work == DP_REMOVE {
+		return dp.DpHooks.DpMirrDel(mWq)
+	}
+
+	return DP_WQ_UNK_ERR
+}
+
 func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 	var ret DpRetT
 	switch mq := m.(type) {
+	case *MirrDpWorkQ:
+		ret = dp.DpWorkOnMirr(mq)
 	case *PolDpWorkQ:
 		ret = dp.DpWorkOnPol(mq)
 	case *PortDpWorkQ:

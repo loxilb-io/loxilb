@@ -264,6 +264,39 @@ type PolMod struct {
 	Target PolObj 
 }
 
+const (
+	MIRR_TYPE_SPAN   = 0  // Default
+	MIRR_TYPE_RSPAN  = 1
+	MIRR_TYPE_ERSPAN = 2
+)
+
+type MirrInfo struct {
+	MirrType   int
+	MirrPort   string
+	MirrVlan   int
+	MirrRip    net.IP
+	MirrSip    net.IP
+	MirrTid    uint32
+}
+
+type MirrObjType uint
+
+const (
+	MIRR_ATTACH_PORT MirrObjType = 1 << iota
+	MIRR_ATTACH_LB_RULE
+)
+ 
+type MirrObj struct {
+	MirrObjName  string
+	AttachMent   MirrObjType
+ }
+
+type MirrMod struct {
+	Ident  string
+	Info   MirrInfo
+	Target MirrObj 
+}
+
 type NetHookInterface interface {
 	NetPortGet() ([]PortDump, error)
 	NetPortAdd(*PortMod) (int, error)

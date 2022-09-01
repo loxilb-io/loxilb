@@ -73,6 +73,8 @@ const (
 	EBPF_ERR_SESS4_DEL
 	EBPF_ERR_POL_ADD
 	EBPF_ERR_POL_DEL
+	EBPF_ERR_MIRR_ADD
+	EBPF_ERR_MIRR_DEL
 	EBPF_ERR_WQ_UNK
 )
 
@@ -106,6 +108,7 @@ type (
 	sessAct     C.struct_dp_sess_tact
 	polTact     C.struct_dp_pol_tact
 	polAct      C.struct_dp_policer_act
+	mirrTact    C.struct_dp_mirr_tact
 )
 
 type DpEbpfH struct {
@@ -245,6 +248,11 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 	var txV C.uint
 	var setIfi *intfSetIfi
 
+	// This is a special case
+	if w.LoadEbpf == "llb0" {
+		w.PortNum = C.LLB_INTERFACES-1
+	}
+
 	key := new(intfMapKey)
 	key.ing_vid = C.ushort(tk.Htons(uint16(w.IngVlan)))
 	key.ifindex = C.uint(w.OsPortNum)
@@ -253,7 +261,7 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 
 	if w.Work == DP_CREATE {
 
-		if w.LoadEbpf != "" && w.LoadEbpf != "lo" {
+		if w.LoadEbpf != "" && w.LoadEbpf != "lo" && w.LoadEbpf != "llb0" {
 			lRet := loadEbpfPgm(w.LoadEbpf)
 			if lRet != 0 {
 				tk.LogIt(tk.LOG_ERROR, "ebpf load - %d error\n", w.PortNum,)
@@ -277,9 +285,7 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 			setIfi.pprop = C.LLB_DP_PORT_UPP
 		}
 
-		ret := C.llb_add_map_elem(C.LL_DP_INTF_MAP,
-			unsafe.Pointer(key),
-			unsafe.Pointer(data))
+		ret := C.llb_add_map_elem(C.LL_DP_INTF_MAP, unsafe.Pointer(key), unsafe.Pointer(data))
 
 		if ret != 0 {
 			tk.LogIt(tk.LOG_ERROR, "ebpf intfmap - %d vlan %d error\n", w.OsPortNum, w.IngVlan)
@@ -299,8 +305,12 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 		return 0
 	} else if w.Work == DP_REMOVE {
 
+		// TX_INTF_MAP is array type so we can't delete it
+		// Rather we need to zero it out first
+		txV = C.uint(0)
+		C.llb_add_map_elem(C.LL_DP_TX_INTF_MAP, unsafe.Pointer(&txK), unsafe.Pointer(&txV))
 		C.llb_del_map_elem(C.LL_DP_TX_INTF_MAP, unsafe.Pointer(&txK))
-
+	
 		C.llb_del_map_elem(C.LL_DP_INTF_MAP, unsafe.Pointer(key))
 
 		if w.LoadEbpf != "" {
@@ -319,12 +329,10 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 }
 
 func (e *DpEbpfH) DpPortPropAdd(w *PortDpWorkQ) int {
-	//fmt.Println(*w)
 	return DpPortPropMod(w)
 }
 
 func (e *DpEbpfH) DpPortPropDel(w *PortDpWorkQ) int {
-	//fmt.Println(*w)
 	return DpPortPropMod(w)
 }
 
@@ -393,12 +401,10 @@ func DpL2AddrMod(w *L2AddrDpWorkQ) int {
 }
 
 func (e *DpEbpfH) DpL2AddrAdd(w *L2AddrDpWorkQ) int {
-	//fmt.Println(*w)
 	return DpL2AddrMod(w)
 }
 
 func (e *DpEbpfH) DpL2AddrDel(w *L2AddrDpWorkQ) int {
-	//fmt.Println(*w)
 	return DpL2AddrMod(w)
 }
 
@@ -465,12 +471,10 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
 }
 
 func (e *DpEbpfH) DpRouterMacAdd(w *RouterMacDpWorkQ) int {
-	//fmt.Println(*w)
 	return DpRouterMacMod(w)
 }
 
 func (e *DpEbpfH) DpRouterMacDel(w *RouterMacDpWorkQ) int {
-	//fmt.Println(*w)
 	return DpRouterMacMod(w)
 }
 
@@ -538,12 +542,10 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 }
 
 func (e *DpEbpfH) DpNextHopAdd(w *NextHopDpWorkQ) int {
-	//fmt.Println(*w)
 	return DpNextHopMod(w)
 }
 
 func (e *DpEbpfH) DpNextHopDel(w *NextHopDpWorkQ) int {
-	//fmt.Println(*w)
 	return DpNextHopMod(w)
 }
 
@@ -603,12 +605,10 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 }
 
 func (e *DpEbpfH) DpRouteAdd(w *RouteDpWorkQ) int {
-	//fmt.Println(*w)
 	return DpRouteMod(w)
 }
 
 func (e *DpEbpfH) DpRouteDel(w *RouteDpWorkQ) int {
-	//fmt.Println(*w)
 	return DpRouteMod(w)
 }
 
@@ -686,12 +686,10 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 }
 
 func (e *DpEbpfH) DpNatLbRuleAdd(w *NatDpWorkQ) int {
-	//fmt.Println(*w)
 	return DpNatLbRuleMod(w)
 }
 
 func (e *DpEbpfH) DpNatLbRuleDel(w *NatDpWorkQ) int {
-	//fmt.Println(*w)
 	return DpNatLbRuleMod(w)
 }
 
@@ -983,12 +981,10 @@ func (e *DpEbpfH) DpUlClMod(w *UlClDpWorkQ) int {
 }
 
 func (e *DpEbpfH) DpUlClAdd(w *UlClDpWorkQ) int {
-	//fmt.Println(*w)
 	return e.DpUlClMod(w)
 }
 
 func (e *DpEbpfH) DpUlClDel(w *UlClDpWorkQ) int {
-	//fmt.Println(*w)
 	return e.DpUlClMod(w)
 }
 
@@ -1037,6 +1033,11 @@ func (e *DpEbpfH) DpPolMod(w *PolDpWorkQ) int {
 		*w.Status = 0
 
 	} else if w.Work == DP_REMOVE {
+		// Array map types need to be zeroed out first
+		dat := new(polTact)
+		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_pol_tact)
+		C.llb_add_map_elem(C.LL_DP_POL_MAP, unsafe.Pointer(&key), unsafe.Pointer(dat))
+		// This operation is unnecessary
 		C.llb_del_map_elem(C.LL_DP_POL_MAP, unsafe.Pointer(&key))
 		return 0
 	}
@@ -1049,4 +1050,50 @@ func (e *DpEbpfH) DpPolAdd(w *PolDpWorkQ) int {
 
 func (e *DpEbpfH) DpPolDel(w *PolDpWorkQ) int {
 	return e.DpPolMod(w);
+}
+
+func (e *DpEbpfH) DpMirrMod(w *MirrDpWorkQ) int {
+	key := C.uint(w.HwMark)
+
+	if w.Work == DP_CREATE {
+		dat := new(mirrTact)
+		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_mirr_tact)
+
+		if w.MiBD != 0 {
+			dat.ca.act_type = C.DP_SET_ADD_L2VLAN
+		} else {
+			dat.ca.act_type = C.DP_SET_RM_L2VLAN
+		}
+
+		la := (*l2VlanAct)(getPtrOffset(unsafe.Pointer(dat), C.sizeof_struct_dp_cmn_act))
+
+		la.oport = C.ushort(w.MiPortNum)
+		la.vlan = C.ushort(w.MiBD)
+
+		ret := C.llb_add_map_elem(C.LL_DP_MIRROR_MAP, unsafe.Pointer(&key), unsafe.Pointer(dat))
+
+		if ret != 0 {
+			*w.Status = 1
+			return EBPF_ERR_MIRR_ADD
+		}
+
+		*w.Status = 0
+
+	} else if w.Work == DP_REMOVE {
+		// Array map types need to be zeroed out first
+		dat := new(mirrTact)
+		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_mirr_tact)
+		C.llb_add_map_elem(C.LL_DP_MIRROR_MAP, unsafe.Pointer(&key), unsafe.Pointer(dat))
+		C.llb_del_map_elem(C.LL_DP_MIRROR_MAP, unsafe.Pointer(&key))
+		return 0
+	}
+	return 0;
+}
+
+func (e *DpEbpfH) DpMirrAdd(w *MirrDpWorkQ) int {
+	return e.DpMirrMod(w);
+}
+
+func (e *DpEbpfH) DpMirrDel(w *MirrDpWorkQ) int {
+	return e.DpMirrMod(w);
 }
