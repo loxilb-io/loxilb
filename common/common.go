@@ -298,6 +298,8 @@ type MirrMod struct {
 }
 
 type NetHookInterface interface {
+	NetMirrorAdd(*MirrMod) (int, error)
+	NetMirrorDel(*MirrMod) (int, error)
 	NetPortGet() ([]PortDump, error)
 	NetPortAdd(*PortMod) (int, error)
 	NetPortDel(*PortMod) (int, error)

@@ -32,6 +32,24 @@ func NetApiInit() *NetApiStruct {
 	return na
 }
 
+// Add a mirror in loxinet
+func (*NetApiStruct) NetMirrorAdd(mm *cmn.MirrMod) (int, error) {
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	ret, err := mh.zr.Mirrs.MirrAdd(mm.Ident, mm.Info, mm.Target)
+	return ret, err
+}
+
+// Delete a mirror in loxinet
+func (*NetApiStruct) NetMirrorDel(mm *cmn.MirrMod) (int, error) {
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	ret, err := mh.zr.Mirrs.MirrDelete(mm.Ident)
+	return ret, err
+}
+
 // Get Port Information of loxinet
 func (*NetApiStruct) NetPortGet() ([]cmn.PortDump, error) {
 	ret, err := mh.zr.Ports.PortsToGet()
