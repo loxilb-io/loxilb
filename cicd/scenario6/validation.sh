@@ -17,7 +17,7 @@ j=0
 waitCount=0
 while [ $j -le 2 ]
 do
-    res=$($hexec l3h1 socat -t 2 - sctp:${ep[j]}:8080)
+    res=$($hexec l3h1 socat -t 5 - sctp:${ep[j]}:8080)
     echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
