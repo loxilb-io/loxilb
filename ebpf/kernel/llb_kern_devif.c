@@ -104,7 +104,6 @@ dp_do_mirr_lkup(void *ctx, struct xfi *xf)
 static int __always_inline
 dp_do_mark_mirr(void *ctx, struct xfi *xf)
 {
-  
   return 0;
 }
 
@@ -173,8 +172,10 @@ dp_trap_packet(void *ctx,  struct xfi *xf, void *fa_)
   ntype = oeth->h_proto;
 
   if (dp_add_l2(ctx, (int)sizeof(*llb))) {
-    /* Note : This func usually fails to push headroom for VxLAN packets but we
-     * can't drop those packets here. We will pass them on to Linux(SLow path)*/
+    /* This can fail to push headroom for tunnelled packets.
+     * It might be better to pass it rather than drop it in case
+     * of failure
+     */
     return DP_PASS;
   }
 
@@ -375,12 +376,6 @@ dp_ing(void *ctx,  struct xfi *xf)
   return 0;
 }
 
-#define dp_ing_mirror(ctx, xf)    \
-do {                              \
-  if (xf->pm.mirr != 0)            \
-    dp_do_mirr_lkup(ctx, xf);  \
-}while(0);
-
 static int __always_inline
 dp_insert_fcv4(void *ctx, struct xfi *xf, struct dp_fc_tacts *acts)
 {
@@ -433,11 +428,17 @@ dp_ing_slow_main(void *ctx,  struct xfi *xf)
   fa->fcta[7].ca.act_type = 0;
   fa->fcta[8].ca.act_type = 0;
   fa->fcta[9].ca.act_type = 0; // LLB_FCV4_MAP_ACTS -1 
+
+  /* memset is too costly */
   /*memset(fa->fcta, 0, sizeof(fa->fcta));*/
 #endif
 
   LL_DBG_PRINTK("[INGR] START--\n");
 
+  /* If there are any packets marked for mirroring, we do
+   * it here and immediately get it out of way without
+   * doing any further processing
+   */
   if (xf->pm.mirr != 0) {
     dp_do_mirr_lkup(ctx, xf);
     goto out;
@@ -445,13 +446,17 @@ dp_ing_slow_main(void *ctx,  struct xfi *xf)
 
   dp_ing(ctx, xf);
 
+  /* If there are pipeline errors at this stage,
+   * we again skip any further processing
+   */
   if (xf->pm.pipe_act || xf->pm.tc == 0) {
-    LL_DBG_PRINTK("[INGR] OUT\n");
     goto out;
   }
+
   dp_ing_l2(ctx, xf, fa);
 
 #ifdef HAVE_DP_FC
+  /* fast-cache is used only when certain conditions are met */
   if (xf->pm.pipe_act == LLB_PIPE_RDR && 
       xf->pm.phit & LLB_DP_ACL_HIT &&
       !(xf->pm.phit & LLB_DP_SESS_HIT) &&

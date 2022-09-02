@@ -2,7 +2,7 @@ Scenario1   -   Sanity
 
 Scenario2   -   Advanced Sanity
 
-Scenario3   -   GTP
+Scenario3   -   3GPP GTP-ULCL LB Scenario
 
 Scenario4   -   Mimics LB scenario in Kubernetes Environment
 
