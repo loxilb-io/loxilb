@@ -17,9 +17,10 @@ package restapi
 
 import (
 	"crypto/tls"
-	opts "github.com/loxilb-io/loxilb/options"
 	"net/http"
 	"os"
+
+	opts "github.com/loxilb-io/loxilb/options"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
@@ -80,6 +81,10 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler = operations.DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandlerFunc(handler.ConfigDeleteSessionUlCl)
 	api.GetConfigSessionAllHandler = operations.GetConfigSessionAllHandlerFunc(handler.ConfigGetSession)
 	api.GetConfigSessionulclAllHandler = operations.GetConfigSessionulclAllHandlerFunc(handler.ConfigGetSessionUlCl)
+
+	// Policy Add and Delete
+	api.PostConfigPolicyHandler = operations.PostConfigPolicyHandlerFunc(handler.ConfigPostPolicy)
+	api.DeleteConfigPolicyIdentIdentHandler = operations.DeleteConfigPolicyIdentIdentHandlerFunc(handler.ConfigDeletePolicy)
 
 	api.PreServerShutdown = func() {}
 
