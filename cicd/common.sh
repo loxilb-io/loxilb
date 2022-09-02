@@ -145,6 +145,8 @@ config_docker_host() {
     sudo ip -n $h1 addr add $addr dev vlan$vid
   elif [[ "$ptype" == "vxlan" ]]; then
     sudo ip -n $h1 addr add $addr dev vxlan$vid
+  else
+    echo "Check port-type"
   fi
 
   if [[ "$gw" != "" ]]; then
