@@ -1,23 +1,20 @@
 #!/bin/bash
 source ../common.sh
 
-sudo pkill socat
-
-$hexec l3ep1 socat sctp-listen:8080,fork exec:'ip netns identify',end-close &
-$hexec l3ep2 socat sctp-listen:8080,fork exec:'ip netns identify',end-close &
-$hexec l3ep3 socat sctp-listen:8080,fork exec:'ip netns identify',end-close &
+$hexec l3ep1 ./server server1 &
+$hexec l3ep2 ./server server2 &
+$hexec l3ep3 ./server server3 &
 
 $dexec llb1 loxicmd create lb 20.20.20.1 --sctp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1
 sleep 5
 code=0
-#servArr=( "server1" "server2" "server3" )
-servArr=( "l3ep1" "l3ep2" "l3ep3" )
+servArr=( "server1" "server2" "server3" )
 ep=( "31.31.31.1" "32.32.32.1" "33.33.33.1" )
 j=0
 waitCount=0
 while [ $j -le 2 ]
 do
-    res=$($hexec l3h1 socat -t 5 - sctp:${ep[j]}:8080)
+    res=$($hexec l3h1 ./client ${ep[j]} 8080)
     echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
@@ -36,12 +33,11 @@ do
     sleep 1
 done
 
-for i in {1..5}
+for i in {1..4}
 do
 for j in {0..2}
 do
-    res=$($hexec l3h1 socat - sctp:20.20.20.1:2020)
-    #res=$($hexec l3h1 socat - sctp:${ep[j]}:8080)
+    res=$($hexec l3h1 ./client 20.20.20.1 2020)
     echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
@@ -56,6 +52,5 @@ then
 else
     echo [FAILED]
 fi
-sudo pkill socat
 exit $code
 
