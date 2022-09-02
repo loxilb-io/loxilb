@@ -19,6 +19,8 @@ import (
 	"testing"
 )
 
+// This file implements loxilb's go unit-test framework
+
 func TestMain(t *testing.T) {
 	TestLoxinet(t)
 }

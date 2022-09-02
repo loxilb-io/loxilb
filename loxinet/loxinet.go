@@ -17,13 +17,14 @@ package loxinet
 
 import (
 	"fmt"
+	apiserver "github.com/loxilb-io/loxilb/api"
+	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
+	cmn "github.com/loxilb-io/loxilb/common"
+	opts "github.com/loxilb-io/loxilb/options"
+	tk "github.com/loxilb-io/loxilib"
 	"os"
 	"sync"
 	"time"
-	apiserver "github.com/loxilb-io/loxilb/api"
-	tk "github.com/loxilb-io/loxilib"
-	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
-	opts "github.com/loxilb-io/loxilb/options"
 )
 
 const (
@@ -96,7 +97,7 @@ func loxiNetInit() {
 	// Initialize the security zone subsystem
 	mh.zn = ZoneInit()
 
-	// Add a root zone by default 
+	// Add a root zone by default
 	mh.zn.ZoneAdd(ROOT_ZONE)
 	mh.zr, _ = mh.zn.Zonefind(ROOT_ZONE)
 	if mh.zr == nil {

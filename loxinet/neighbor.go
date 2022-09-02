@@ -169,7 +169,7 @@ func (n *NeighH) NeighDelTunEP(ne *Neigh, rIP net.IP,
 			}
 
 			tk.LogIt(tk.LOG_DEBUG, "neigh tunep deleted - %s:%s (%d)\n",
-					tep.sIP.String(), tep.rIP.String(), tep.tunID)
+				tep.sIP.String(), tep.rIP.String(), tep.tunID)
 
 			n.NeighTid.PutCounter(tep.HwMark)
 			ne.NeighRemoveTunEP(i)

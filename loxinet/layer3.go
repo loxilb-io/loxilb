@@ -101,7 +101,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 			return L3_ADDR_ERR, errors.New("ip address exists")
 		}
 
-		// if network part of an added ifa is equal to previously 
+		// if network part of an added ifa is equal to previously
 		// existing ifa, then it is considered a secondary ifa
 		if ifaEnt.IfaNet.IP.Equal(network.IP) {
 			pfxSz1, _ := ifaEnt.IfaNet.Mask.Size()

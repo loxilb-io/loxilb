@@ -50,8 +50,8 @@ import (
 	"unsafe"
 )
 
-// This file implements the interface DpHookInterface 
-// The implementation is specific to loxilb ebpf datapath for linux 
+// This file implements the interface DpHookInterface
+// The implementation is specific to loxilb ebpf datapath for linux
 
 const (
 	EBPF_ERR_BASE = iota - 50000
@@ -138,7 +138,7 @@ func dpEbpfTicker() {
 			tk.LogIt(-1, "DP Tick at for selector %v:%d\n", t, sel)
 
 			// For every tick collect stats for an eBPF map
-			// This routine caches stats in a local statsDB 
+			// This routine caches stats in a local statsDB
 			// which can be collected from a separate gothread
 			C.llb_collect_map_stats(C.int(tbls[sel]))
 
@@ -250,7 +250,7 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 
 	// This is a special case
 	if w.LoadEbpf == "llb0" {
-		w.PortNum = C.LLB_INTERFACES-1
+		w.PortNum = C.LLB_INTERFACES - 1
 	}
 
 	key := new(intfMapKey)
@@ -264,7 +264,7 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 		if w.LoadEbpf != "" && w.LoadEbpf != "lo" && w.LoadEbpf != "llb0" {
 			lRet := loadEbpfPgm(w.LoadEbpf)
 			if lRet != 0 {
-				tk.LogIt(tk.LOG_ERROR, "ebpf load - %d error\n", w.PortNum,)
+				tk.LogIt(tk.LOG_ERROR, "ebpf load - %d error\n", w.PortNum)
 				return EBPF_ERR_EBFP_LOAD
 			}
 		}
@@ -310,7 +310,7 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 		txV = C.uint(0)
 		C.llb_add_map_elem(C.LL_DP_TX_INTF_MAP, unsafe.Pointer(&txK), unsafe.Pointer(&txV))
 		C.llb_del_map_elem(C.LL_DP_TX_INTF_MAP, unsafe.Pointer(&txK))
-	
+
 		C.llb_del_map_elem(C.LL_DP_INTF_MAP, unsafe.Pointer(key))
 
 		if w.LoadEbpf != "" {
@@ -696,7 +696,7 @@ func (e *DpEbpfH) DpNatLbRuleDel(w *NatDpWorkQ) int {
 func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 	var packets, bytes, dropPackets uint64
 	var tbl []int
-	var polTbl[] int
+	var polTbl []int
 	sync := 0
 	switch {
 	case w.Name == MAP_NAME_NAT4:
@@ -737,7 +737,6 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 			packets += uint64(p)
 			bytes += uint64(b)
 		}
-
 
 		for _, t := range polTbl {
 
@@ -922,7 +921,7 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (error, DpRetT) {
 				var b, p uint64
 				goCt4Ent := convDPCt2GoObj(ctKey, act)
 				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_ACLV4_STATS_MAP), C.uint(tact.ca.cidx), C.int(1),
-								(unsafe.Pointer(&b)), unsafe.Pointer(&p))
+					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
 				if ret == 0 {
 					goCt4Ent.bytes += b
 					goCt4Ent.packets += p
@@ -997,7 +996,7 @@ func (e *DpEbpfH) DpPolMod(w *PolDpWorkQ) int {
 		dat.ca.act_type = C.DP_SET_DO_POLICER
 		// For finding pa, we need to account for padding of 4
 		pa := (*polAct)(getPtrOffset(unsafe.Pointer(dat),
-				C.sizeof_struct_dp_cmn_act + C.sizeof_struct_bpf_spin_lock + 4))
+			C.sizeof_struct_dp_cmn_act+C.sizeof_struct_bpf_spin_lock+4))
 
 		if w.Srt == false {
 			pa.trtcm = 1
@@ -1011,8 +1010,8 @@ func (e *DpEbpfH) DpPolMod(w *PolDpWorkQ) int {
 			pa.color_aware = 1
 		}
 
-		pa.toksc_pus  = C.ulonglong(w.Cir/(8000000))
-		pa.tokse_pus  = C.ulonglong(w.Pir/(8000000))
+		pa.toksc_pus = C.ulonglong(w.Cir / (8000000))
+		pa.tokse_pus = C.ulonglong(w.Pir / (8000000))
 		pa.cbs = C.uint(w.Cbs)
 		pa.ebs = C.uint(w.Ebs)
 		pa.tok_c = pa.cbs
@@ -1041,15 +1040,15 @@ func (e *DpEbpfH) DpPolMod(w *PolDpWorkQ) int {
 		C.llb_del_map_elem(C.LL_DP_POL_MAP, unsafe.Pointer(&key))
 		return 0
 	}
-	return 0;
+	return 0
 }
 
 func (e *DpEbpfH) DpPolAdd(w *PolDpWorkQ) int {
-	return e.DpPolMod(w);
+	return e.DpPolMod(w)
 }
 
 func (e *DpEbpfH) DpPolDel(w *PolDpWorkQ) int {
-	return e.DpPolMod(w);
+	return e.DpPolMod(w)
 }
 
 func (e *DpEbpfH) DpMirrMod(w *MirrDpWorkQ) int {
@@ -1087,13 +1086,13 @@ func (e *DpEbpfH) DpMirrMod(w *MirrDpWorkQ) int {
 		C.llb_del_map_elem(C.LL_DP_MIRROR_MAP, unsafe.Pointer(&key))
 		return 0
 	}
-	return 0;
+	return 0
 }
 
 func (e *DpEbpfH) DpMirrAdd(w *MirrDpWorkQ) int {
-	return e.DpMirrMod(w);
+	return e.DpMirrMod(w)
 }
 
 func (e *DpEbpfH) DpMirrDel(w *MirrDpWorkQ) int {
-	return e.DpMirrMod(w);
+	return e.DpMirrMod(w)
 }

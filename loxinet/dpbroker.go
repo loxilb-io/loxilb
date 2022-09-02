@@ -66,12 +66,12 @@ const (
 )
 
 type MirrDpWorkQ struct {
-	Work       DpWorkT
-	Name       string
-	HwMark     int
-	MiPortNum  int
-	MiBD       int
-	Status     *DpStatusT
+	Work      DpWorkT
+	Name      string
+	HwMark    int
+	MiPortNum int
+	MiBD      int
+	Status    *DpStatusT
 }
 
 type PortDpWorkQ struct {
@@ -145,12 +145,12 @@ type RouteDpWorkQ struct {
 }
 
 type StatDpWorkQ struct {
-	Work         DpWorkT
-	Name         string
-	HwMark       uint32
-	Packets      *uint64
-	Bytes        *uint64
-	DropPackets  *uint64
+	Work        DpWorkT
+	Name        string
+	HwMark      uint32
+	Packets     *uint64
+	Bytes       *uint64
+	DropPackets *uint64
 }
 
 type TableDpWorkQ struct {

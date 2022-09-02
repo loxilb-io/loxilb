@@ -19,6 +19,8 @@ import (
 	"net"
 )
 
+// This file defines the go interface implementation needed to interact with loxinet go module
+
 const (
 	AU_WORKQ_LEN = 1024
 	LU_WORKQ_LEN = 1024
@@ -233,13 +235,13 @@ type SessionUlClMod struct {
 }
 
 const (
-	ROL_TYPE_TRTCM = 0  // Default
+	ROL_TYPE_TRTCM = 0 // Default
 	POL_TYPE_SRTCM = 1
 )
 
 type PolInfo struct {
-	PolType	       int
-	ColorAware		   bool
+	PolType           int
+	ColorAware        bool
 	CommittedInfoRate uint64
 	PeakInfoRate      uint64
 	CommittedBlkSize  uint64
@@ -252,31 +254,31 @@ const (
 	POL_ATTACH_PORT PolObjType = 1 << iota
 	POL_ATTACH_LB_RULE
 )
- 
+
 type PolObj struct {
-	PolObjName   string
-	AttachMent   PolObjType
- }
+	PolObjName string
+	AttachMent PolObjType
+}
 
 type PolMod struct {
 	Ident  string
 	Info   PolInfo
-	Target PolObj 
+	Target PolObj
 }
 
 const (
-	MIRR_TYPE_SPAN   = 0  // Default
+	MIRR_TYPE_SPAN   = 0 // Default
 	MIRR_TYPE_RSPAN  = 1
 	MIRR_TYPE_ERSPAN = 2
 )
 
 type MirrInfo struct {
-	MirrType   int
-	MirrPort   string
-	MirrVlan   int
-	MirrRip    net.IP
-	MirrSip    net.IP
-	MirrTid    uint32
+	MirrType int
+	MirrPort string
+	MirrVlan int
+	MirrRip  net.IP
+	MirrSip  net.IP
+	MirrTid  uint32
 }
 
 type MirrObjType uint
@@ -285,16 +287,16 @@ const (
 	MIRR_ATTACH_PORT MirrObjType = 1 << iota
 	MIRR_ATTACH_LB_RULE
 )
- 
+
 type MirrObj struct {
-	MirrObjName  string
-	AttachMent   MirrObjType
- }
+	MirrObjName string
+	AttachMent  MirrObjType
+}
 
 type MirrMod struct {
 	Ident  string
 	Info   MirrInfo
-	Target MirrObj 
+	Target MirrObj
 }
 
 type NetHookInterface interface {

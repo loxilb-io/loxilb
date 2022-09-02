@@ -20,68 +20,68 @@ import (
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
- 
- const (
-	 POL_ERR_BASE = iota - 100000
-	 POL_MOD_ERR
-	 POL_INFO_ERR
-	 POL_ATTACH_ERR
-	 POL_NOEXIST_ERR
-	 POL_EXISTS_ERR
-	 POL_ALLOC_ERR
- )
- 
- const (
-	 MIN_ROL_RATE     = 8
-	 MAX_POLS    	  = 8*1024
-	 DFL_POL_BLK_SZ   = 6*5000*1000
- )
 
- type PolKey struct {
-	 PolName string
- }
- 
- type PolStats struct {
-	 PacketsOk  uint64
-	 PacketsNok uint64
-	 Bytes      uint64
- }
+const (
+	POL_ERR_BASE = iota - 100000
+	POL_MOD_ERR
+	POL_INFO_ERR
+	POL_ATTACH_ERR
+	POL_NOEXIST_ERR
+	POL_EXISTS_ERR
+	POL_ALLOC_ERR
+)
 
- type PolAttachObjT interface {
- }
+const (
+	MIN_ROL_RATE   = 8
+	MAX_POLS       = 8 * 1024
+	DFL_POL_BLK_SZ = 6 * 5000 * 1000
+)
 
- type PolObjInfo struct {
-	Args		 cmn.PolObj
-	AttachObj    PolAttachObjT
-	Parent	     *PolEntry
-	Sync         DpStatusT
- }
- 
- type PolEntry struct {
-	 Key    PolKey
-	 Info   cmn.PolInfo
-	 Zone   *Zone
-	 HwNum  int
-	 Stats  PolStats
-	 Sync   DpStatusT
-	 PObjs  []PolObjInfo
- }
- 
- type PolH struct {
-	 PolMap  map[PolKey]*PolEntry
-	 Zone    *Zone
-	 HwMark  *tk.Counter
- }
- 
- func PolInit(zone *Zone) *PolH {
-	 var nPh = new(PolH)
-	 nPh.PolMap = make(map[PolKey]*PolEntry)
-	 nPh.Zone = zone
-	 nPh.HwMark = tk.NewCounter(1, MAX_POLS)
-	 return nPh
- }
+type PolKey struct {
+	PolName string
+}
 
- func PolInfoXlateValidate(pInfo *cmn.PolInfo) (bool) {
+type PolStats struct {
+	PacketsOk  uint64
+	PacketsNok uint64
+	Bytes      uint64
+}
+
+type PolAttachObjT interface {
+}
+
+type PolObjInfo struct {
+	Args      cmn.PolObj
+	AttachObj PolAttachObjT
+	Parent    *PolEntry
+	Sync      DpStatusT
+}
+
+type PolEntry struct {
+	Key   PolKey
+	Info  cmn.PolInfo
+	Zone  *Zone
+	HwNum int
+	Stats PolStats
+	Sync  DpStatusT
+	PObjs []PolObjInfo
+}
+
+type PolH struct {
+	PolMap map[PolKey]*PolEntry
+	Zone   *Zone
+	HwMark *tk.Counter
+}
+
+func PolInit(zone *Zone) *PolH {
+	var nPh = new(PolH)
+	nPh.PolMap = make(map[PolKey]*PolEntry)
+	nPh.Zone = zone
+	nPh.HwMark = tk.NewCounter(1, MAX_POLS)
+	return nPh
+}
+
+func PolInfoXlateValidate(pInfo *cmn.PolInfo) bool {
 	if pInfo.CommittedInfoRate < MIN_ROL_RATE {
 		return false
 	}
@@ -90,28 +90,28 @@ import (
 		return false
 	}
 
-	pInfo.CommittedInfoRate = pInfo.CommittedInfoRate*1000000
-	pInfo.PeakInfoRate = pInfo.PeakInfoRate*1000000
+	pInfo.CommittedInfoRate = pInfo.CommittedInfoRate * 1000000
+	pInfo.PeakInfoRate = pInfo.PeakInfoRate * 1000000
 
 	if pInfo.CommittedBlkSize == 0 {
 		pInfo.CommittedBlkSize = DFL_POL_BLK_SZ
-		pInfo.ExcessBlkSize = 2*DFL_POL_BLK_SZ
+		pInfo.ExcessBlkSize = 2 * DFL_POL_BLK_SZ
 	} else {
-		pInfo.ExcessBlkSize = 2*pInfo.CommittedBlkSize
+		pInfo.ExcessBlkSize = 2 * pInfo.CommittedBlkSize
 	}
 	return true
- }
+}
 
- func PolObjValidate(pObj *cmn.PolObj) (bool) {
+func PolObjValidate(pObj *cmn.PolObj) bool {
 
 	if pObj.AttachMent != cmn.POL_ATTACH_PORT && pObj.AttachMent != cmn.POL_ATTACH_LB_RULE {
 		return false
 	}
 
 	return true
- }
+}
 
- // Add a policer in loxinet
+// Add a policer in loxinet
 func (P *PolH) PolAdd(pName string, pInfo cmn.PolInfo, pObjArgs cmn.PolObj) (int, error) {
 
 	if PolObjValidate(&pObjArgs) == false {
@@ -144,7 +144,7 @@ func (P *PolH) PolAdd(pName string, pInfo cmn.PolInfo, pObjArgs cmn.PolObj) (int
 		return POL_ALLOC_ERR, errors.New("pol-alloc error")
 	}
 
-	pObjInfo := PolObjInfo { Args:pObjArgs }
+	pObjInfo := PolObjInfo{Args: pObjArgs}
 	pObjInfo.Parent = p
 
 	P.PolMap[key] = p
@@ -159,7 +159,7 @@ func (P *PolH) PolAdd(pName string, pInfo cmn.PolInfo, pObjArgs cmn.PolObj) (int
 	return 0, nil
 }
 
- // Delete a policer from loxinet
+// Delete a policer from loxinet
 func (P *PolH) PolDelete(pName string) (int, error) {
 
 	key := PolKey{pName}
@@ -247,7 +247,7 @@ func (pObjInfo *PolObjInfo) PolObj2DP(work DpWorkT) int {
 	}
 
 	if work == DP_CREATE {
-		_, err:= pObjInfo.Parent.Zone.Ports.PortUpdateProp(port.Name, cmn.PORT_PROP_POL,
+		_, err := pObjInfo.Parent.Zone.Ports.PortUpdateProp(port.Name, cmn.PORT_PROP_POL,
 			pObjInfo.Parent.Zone.Name, true, pObjInfo.Parent.HwNum)
 		if err != nil {
 			pObjInfo.Sync = 1

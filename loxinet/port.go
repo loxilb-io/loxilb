@@ -20,9 +20,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
+	"io"
 	"net"
 	"strings"
 )
@@ -468,15 +468,15 @@ func (P *PortsH) PortUpdateProp(name string, prop cmn.PortProp, zone string, upd
 	for _, pe := range allDevs {
 		if updt {
 			pe.SInfo.PortProp |= prop
-			if prop & cmn.PORT_PROP_POL == cmn.PORT_PROP_POL {
+			if prop&cmn.PORT_PROP_POL == cmn.PORT_PROP_POL {
 				pe.SInfo.PortPolNum = propVal
-			} else if prop & cmn.PORT_PROP_SPAN == cmn.PORT_PROP_SPAN {
+			} else if prop&cmn.PORT_PROP_SPAN == cmn.PORT_PROP_SPAN {
 				pe.SInfo.PortMirNum = propVal
 			}
 		} else {
-			if prop & cmn.PORT_PROP_POL == cmn.PORT_PROP_POL {
+			if prop&cmn.PORT_PROP_POL == cmn.PORT_PROP_POL {
 				pe.SInfo.PortPolNum = 0
-			} else if prop & cmn.PORT_PROP_SPAN == cmn.PORT_PROP_SPAN {
+			} else if prop&cmn.PORT_PROP_SPAN == cmn.PORT_PROP_SPAN {
 				pe.SInfo.PortMirNum = 0
 			}
 			pe.SInfo.PortProp ^= prop

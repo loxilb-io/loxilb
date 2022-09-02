@@ -99,7 +99,7 @@ func l2FdbAttrCopy(dst *FdbAttr, src *FdbAttr) {
 	dst.Dst = src.Dst
 }
 
-// For TunFDB, try to associate with appropriate neighbor 
+// For TunFDB, try to associate with appropriate neighbor
 func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 	p := f.Port
 	attr := f.FdbAttr

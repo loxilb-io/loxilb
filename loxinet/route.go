@@ -18,8 +18,8 @@ package loxinet
 import (
 	"errors"
 	"fmt"
-	"net"
 	tk "github.com/loxilb-io/loxilib"
+	"net"
 )
 
 const (
@@ -314,7 +314,7 @@ func Rt2String(rt *Rt) string {
 	var rtBuf string
 	if len(rt.NhAttr) > 0 {
 		rtBuf = fmt.Sprintf("%16s via %12s : %s,%sZn",
-							rt.Key.RtCidr, rt.NhAttr[0].NhAddr.String(), tStr, rt.Key.Zone)
+			rt.Key.RtCidr, rt.NhAttr[0].NhAddr.String(), tStr, rt.Key.Zone)
 	} else {
 		rtBuf = fmt.Sprintf("%16s %s,%sZn", rt.Key.RtCidr, tStr, rt.Key.Zone)
 	}
