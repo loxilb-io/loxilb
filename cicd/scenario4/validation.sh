@@ -41,6 +41,7 @@ do
     then
         code=1
     fi
+    sleep 1
 done
 done
 if [[ $code == 0 ]]
