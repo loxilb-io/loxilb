@@ -19,7 +19,6 @@ import (
 	"fmt"
 	apiserver "github.com/loxilb-io/loxilb/api"
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
-	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
 	"os"
