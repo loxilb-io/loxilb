@@ -33,4 +33,6 @@ jobs:
       run: |
         docker build . --tag ghcr.io/loxilb-io/loxilb:latest
         docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
-        docker push ghcr.io/loxilb-io/loxilb:latest
+    - name: Publish the loxilb Docker image
+      if: github.owner == "loxilb-io"      
+      run: docker push ghcr.io/loxilb-io/loxilb:latest
