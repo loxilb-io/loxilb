@@ -10,6 +10,10 @@ dp_do_smac_lkup(void *ctx, struct xfi *xf, void *fc)
   struct dp_smac_key key;
   struct dp_smac_tact *sma;
 
+  if (xf->l2m.vlan[0] == 0) {
+    return 0;
+  }
+
   memcpy(key.smac, xf->l2m.dl_src, 6);
   key.bd = xf->pm.bd;
 
@@ -282,7 +286,7 @@ dp_do_nh_lkup(void *ctx, struct xfi *xf, void *fa_)
   nha = bpf_map_lookup_elem(&nh_map, &key);
   if (!nha) {
     /* No NH - Drop */
-    LLBS_PPLN_DROP(xf);
+    LLBS_PPLN_TRAP(xf)
     return 0;
   }
 

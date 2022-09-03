@@ -232,6 +232,26 @@ dp_unparse_packet_always(void *ctx,  struct xfi *xf)
     }
   }
 
+  if (xf->tm.tun_decap) {
+    if (xf->tm.tun_type == LLB_TUN_GTP) {
+      LL_DBG_PRINTK("[DEPR] LL STRIP-GTP\n");
+      if (dp_do_strip_gtp(ctx, xf, xf->pm.tun_off) != 0) {
+        return DP_DROP;
+      }
+    }
+  } else if (xf->tm.new_tunnel_id) {
+    if (xf->tm.tun_type == LLB_TUN_GTP) {
+      if (dp_do_ins_gtp(ctx, xf,
+                        xf->tm.tun_rip,
+                        xf->tm.tun_sip,
+                        xf->tm.new_tunnel_id,
+                        xf->qm.qfi,
+                        1)) {
+        return DP_DROP;
+      }
+    }
+  }
+
   return 0;
 }
 
@@ -244,27 +264,11 @@ dp_unparse_packet(void *ctx,  struct xfi *xf)
       if (dp_do_strip_vxlan(ctx, xf, xf->pm.tun_off) != 0) {
         return DP_DROP;
       }
-    } else if (xf->tm.tun_type == LLB_TUN_GTP) {
-      LL_DBG_PRINTK("[DEPR] LL STRIP-GTP\n");
-      if (dp_do_strip_gtp(ctx, xf, xf->pm.tun_off) != 0) {
-        return DP_DROP;
-      }
     }
-  }
-
-  if (xf->tm.new_tunnel_id) {
+  } else if (xf->tm.new_tunnel_id) {
     LL_DBG_PRINTK("[DEPR] LL_NEW-TUN 0x%x\n",
                   bpf_ntohl(xf->tm.new_tunnel_id));
-    if (xf->tm.tun_type == LLB_TUN_GTP) {
-      if (dp_do_ins_gtp(ctx, xf,
-                        xf->tm.tun_rip,
-                        xf->tm.tun_sip, 
-                        xf->tm.new_tunnel_id,
-                        xf->qm.qfi,
-                        1)) {
-        return DP_DROP;
-      }
-    } else if (xf->tm.tun_type == LLB_TUN_VXLAN) {
+    if (xf->tm.tun_type == LLB_TUN_VXLAN) {
       if (dp_do_ins_vxlan(ctx, xf,
                           xf->tm.tun_rip,
                           xf->tm.tun_sip, 

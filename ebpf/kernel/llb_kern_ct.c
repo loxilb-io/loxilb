@@ -265,7 +265,12 @@ dp_ct_tcp_sm(void *ctx, struct xfi *xf,
     break;
   case CT_TCP_SS:
     if (dir != CT_DIR_OUT) {
-      nstate = CT_TCP_ERR;
+      if ((tcp_flags & LLB_TCP_SYN) == LLB_TCP_SYN) {
+        td->seq = seq;
+        nstate = CT_TCP_SS;
+      } else {
+        nstate = CT_TCP_ERR;
+      }
       goto end;
     }
   
@@ -289,6 +294,12 @@ dp_ct_tcp_sm(void *ctx, struct xfi *xf,
       nstate = CT_TCP_ERR;
       goto end;
     } 
+
+    if ((tcp_flags & LLB_TCP_SYN) == LLB_TCP_SYN) {
+      td->seq = seq;
+      nstate = CT_TCP_SS;
+      goto end;
+    }
   
     if ((tcp_flags & LLB_TCP_ACK) != LLB_TCP_ACK) {
       nstate = CT_TCP_ERR;
