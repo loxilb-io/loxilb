@@ -189,6 +189,7 @@ const (
 	RT_MAX_LB  = (2 * 1024)
 )
 
+// Tunable parameters related to inactive rules
 type RuleCfg struct {
 	RuleInactTries   int
 	RuleInactChkTime int
@@ -200,6 +201,7 @@ type RuleH struct {
 	Tables [RT_MAX]ruleTable
 }
 
+// Initialize the Rules subsystem
 func RulesInit(zone *Zone) *RuleH {
 	var nRh = new(RuleH)
 	nRh.Zone = zone
@@ -479,6 +481,7 @@ func (a *ruleAct) String() string {
 	return ks
 }
 
+// Output all rules into json and write to the byte array
 func (R *RuleH) Rules2Json() ([]byte, error) {
 	var t cmn.LbServiceArg
 	var eps []cmn.LbEndPointArg
@@ -526,6 +529,7 @@ func (R *RuleH) Rules2Json() ([]byte, error) {
 	return bret, nil
 }
 
+// Get all rules and pack them into a cmn.LbRuleMod slice
 func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 	var res []cmn.LbRuleMod
 
@@ -564,20 +568,26 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 	return res, nil
 }
 
+// Add a service LB nat rule. The service details are passed in serv argument,
+// and end-point information is passed in the slice servEntdPoints. On success,
+// it will return 0 and nil error, else appropriate return code and error string will be set
 func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPointArg) (int, error) {
 	var natActs ruleNatActs
 	var ipProto uint8
 
+	// Vaildate service args
 	service := serv.ServIP + "/32"
 	_, sNetAddr, err := net.ParseCIDR(service)
 	if err != nil {
 		return RULE_UNK_SERV_ERR, errors.New("malformed-service error")
 	}
 
+	// Currently support a maximum of MAX_NAT_EPS
 	if len(servEndPoints) <= 0 || len(servEndPoints) > MAX_NAT_EPS {
 		return RULE_EP_COUNT_ERR, errors.New("endpoints-range error")
 	}
 
+	// For ICMP service, non-zero port can't be specified
 	if serv.Proto == "icmp" && serv.ServPort != 0 {
 		return RULE_UNK_SERV_ERR, errors.New("malformed-service error")
 	}
@@ -666,6 +676,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 			return RULE_EXISTS_ERR, errors.New("lbrule-exists error")
 		}
 
+		// Update the rule
 		eRule.act.action.(*ruleNatActs).sel = natActs.sel
 		eRule.act.action.(*ruleNatActs).endPoints = eEps
 		eRule.sT = time.Now()
@@ -700,6 +711,9 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	return 0, nil
 }
 
+// Delete a service LB nat rule. The service details are passed in serv argument.
+// On success, it will return 0 and nil error, else appropriate return code and
+// error string will be set
 func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	var ipProto uint8
 
@@ -742,7 +756,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	return 0, nil
 }
 
-// This is periodic routine which does two main things :
+// This is periodic ticker routine which does two main things :
 // 1. Syncs rule statistics counts
 // 2. Check health of lb-rule end-points
 func (R *RuleH) RulesSync() {
@@ -816,6 +830,7 @@ func (R *RuleH) RulesTicker() {
 	R.RulesSync()
 }
 
+// Destructor routine for all rules
 func (R *RuleH) RuleDestructAll() {
 	var lbs cmn.LbServiceArg
 	for _, r := range R.Tables[RT_LB].eMap {
@@ -839,7 +854,7 @@ func (R *RuleH) RuleDestructAll() {
 	return
 }
 
-// Sync state of nat-rule entities to data-path
+// Sync state of nat-rule entity to data-path
 func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 
 	nWork := new(NatDpWorkQ)
@@ -890,7 +905,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	return 0
 }
 
-// Sync state of rule entities to data-path
+// Sync state of rule entity to data-path
 func (r *ruleEnt) DP(work DpWorkT) int {
 
 	if work == DP_TABLE_GET {

@@ -19,61 +19,14 @@ import (
 	"fmt"
 )
 
+// This file implements the interface DpHookInterface
+// The implementation is specific to loxilb ebpf datapath for windows (in-progress)
+
 const (
 	EBPF_ERR_BASE = iota - DP_ERR_BASE - 1000
 )
 
 type DpEbpfH struct {
-}
-
-func (e *DpEbpfH) DpPortPropAdd(w *portDpWorkQ) int {
-	fmt.Println(*w)
-	return 0
-}
-
-func (e *DpEbpfH) DpPortPropDel(w *portDpWorkQ) int {
-	fmt.Println(*w)
-	return 0
-}
-
-func (e *DpEbpfH) DpL2AddrAdd(w *l2AddrDpWorkQ) int {
-	fmt.Println(*w)
-	return 0
-}
-
-func (e *DpEbpfH) DpL2AddrDel(w *l2AddrDpWorkQ) int {
-	fmt.Println(*w)
-	return 0
-}
-
-func (e *DpEbpfH) DpRouterMacAdd(w *routerMacDpWorkQ) int {
-	fmt.Println(*w)
-	return 0
-}
-
-func (e *DpEbpfH) DpRouterMacDel(w *routerMacDpWorkQ) int {
-	fmt.Println(*w)
-	return 0
-}
-
-func (e *DpEbpfH) DpNextHopAdd(w *nextHopDpWorkQ) int {
-	fmt.Println(*w)
-	return 0
-}
-
-func (e *DpEbpfH) DpNextHopDel(w *nextHopDpWorkQ) int {
-	fmt.Println(*w)
-	return 0
-}
-
-func (e *DpEbpfH) DpRouteAdd(w *RouteDpWorkQ) int {
-	fmt.Println(*w)
-	return 0
-}
-
-func (e *DpEbpfH) DpRouteDel(w *RouteDpWorkQ) int {
-	fmt.Println(*w)
-	return 0
 }
 
 func DpEbpfInit() *DpEbpfH {

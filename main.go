@@ -26,7 +26,6 @@ import (
 
 const (
 	MKFS_SCRIPT       = "/usr/local/sbin/mkllb_bpffs"
-	RUNNING_FLAG_FILE = "/var/run/loxilb"
 	BPF_FS_CHK_FILE   = "/opt/loxilb/dp/bpf/intf_map"
 )
 
@@ -53,6 +52,7 @@ var buildInfo string = ""
 func main() {
 	fmt.Printf("loxilb start\n")
 
+	// Parse command-line arguments
 	_, err := flags.Parse(&opts.Opts)
 	if err != nil {
 		fmt.Println(err)
@@ -64,6 +64,8 @@ func main() {
 		os.Exit(0)
 	}
 
+	// It is important to make sure loxilb's eBPF filesystem
+	// is in place and mounted to make sure maps are pinned properly
 	if fileExists(BPF_FS_CHK_FILE) == false {
 		if fileExists(MKFS_SCRIPT) {
 			_, err := exec.Command("/bin/bash", MKFS_SCRIPT).Output()
