@@ -4,9 +4,13 @@ if [[ "$1" == "init" ]]; then
   pull_dockers
 fi
 
+hn="netns"
+pid=""
+vrn="/var/run/"
 hexec="sudo ip netns exec "
 dexec="sudo docker exec -i "
-pid=""
+hns="sudo ip netns "
+hexist="$vrn$hn"
 
 ## Given a docker name(arg1), return its pid
 get_docker_pid() {
@@ -36,23 +40,31 @@ spawn_docker_host() {
   sleep 2
   get_docker_pid $2
   echo $pid
-  if [ ! -f "/var/run/netns/$2" -a "$pid" != "" ]; then
+  if [ ! -f "$hexist/$2" -a "$pid" != "" ]; then
     sudo touch /var/run/netns/$2
-    echo "sudo mount -o bind /proc/$pid/ns/net /var/run/netns/$2"
+    #echo "sudo mount -o bind /proc/$pid/ns/net /var/run/netns/$2"
     sudo mount -o bind /proc/$pid/ns/net /var/run/netns/$2
   fi
 
   $hexec $2 ifconfig lo up
   $hexec $2 ifconfig eth0 0
-  $hexec $2 sysctl net.ipv6.conf.all.disable_ipv6=1
+  $hexec $2 sysctl net.ipv6.conf.all.disable_ipv6=1 2>&1 >> /dev/null
 }
 
 ## arg1 - hostname 
 delete_docker_host() {
-  docker stop $1 2>&1 >> /dev/null
-  sudo ip netns del $1 2>&1 >> /dev/null
-  sudo rm -fr /var/run/$1 2>&1 >> /dev/null
-  docker rm $1 2>&1 >> /dev/null
+  id=`docker ps -f name=$1| grep -w $1 | cut  -d " "  -f 1 | grep -iv  "CONTAINER"`
+  if [ "$id" != "" ]; then
+    docker stop $1 2>&1 >> /dev/null
+    hd="true"
+  fi
+  if [ -f "$hexist/$1" ]; then
+    $hns del $1
+    sudo rm -fr "$hexist/$1" 2>&1 >> /dev/null
+  fi
+  if [ "$id" != "" ]; then
+    docker rm $1 2>&1 >> /dev/null
+  fi
 }
 
 ## arg1 - hostname1 
@@ -72,16 +84,20 @@ disconnect_docker_hosts() {
   link1=e$1$2
   link2=e$2$1
   #  echo $link1 $link2
-  ifexist=`sudo ip -n $1 link show $link1 | grep -w $link1`
-  if [ "$ifexist" != "" ]; then 
-    sudo ip -n $1 link set $link1 down 2>&1 >> /dev/null
-    sudo ip -n $1 link del $link1 2>&1 >> /dev/null
+  if [ -f "$hexist/$1" ]; then
+    ifexist=`sudo ip -n $1 link show $link1 | grep -w $link1`
+    if [ "$ifexist" != "" ]; then 
+      sudo ip -n $1 link set $link1 down 2>&1 >> /dev/null
+      sudo ip -n $1 link del $link1 2>&1 >> /dev/null
+    fi
   fi
 
-  ifexist=`sudo ip -n $2 link show $link2 | grep -w $link2`
-  if [ "$ifexist" != "" ]; then 
-    sudo ip -n $2 link set $link2 down 2>&1 >> /dev/null
-    sudo ip -n $2 link del $link2 2>&1 >> /dev/null
+  if [ -f "$hexist/$1" ]; then
+    ifexist=`sudo ip -n $2 link show $link2 | grep -w $link2`
+    if [ "$ifexist" != "" ]; then 
+      sudo ip -n $2 link set $link2 down 2>&1 >> /dev/null
+      sudo ip -n $2 link del $link2 2>&1 >> /dev/null
+    fi
   fi
 }
 
