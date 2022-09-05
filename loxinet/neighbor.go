@@ -19,9 +19,13 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"net"
+	"os"
+	"os/exec"
+	"time"
+
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
-	"net"
 )
 
 const (
@@ -33,6 +37,10 @@ const (
 	NEIGH_HOSTRT_ERR
 	NEIGH_MAC_ERR
 	NEIGH_TUN_ERR
+)
+
+const (
+	NEIGH_ATS = 10
 )
 
 const (
@@ -83,6 +91,7 @@ type Neigh struct {
 	Type     NhType
 	Sync     DpStatusT
 	OifPort  *Port
+	Ats      time.Time
 	NhRtm    map[RtKey]*Rt
 }
 
@@ -103,6 +112,26 @@ func NeighInit(zone *Zone) *NeighH {
 	nNh.Zone = zone
 
 	return nNh
+}
+
+func (ne *Neigh) Activate() {
+
+	if ne.Resolved {
+		return
+	}
+
+	if time.Now().Sub(ne.Ats) < NEIGH_ATS || ne.OifPort.Name == "lo" {
+		return
+	}
+
+	if _, err := os.Stat("/usr/sbin/arping"); errors.Is(err, os.ErrNotExist) {
+		return
+	}
+
+	command := fmt.Sprintf("arping -i %s -C 1 -w 1 %s 2>&1 >> /dev/null &", ne.OifPort.Name, ne.Key.NhString)
+	cmd := exec.Command("bash", "-c", command)
+	cmd.Run()
+	ne.Ats = time.Now()
 }
 
 func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTunT, sync bool) (int, *NeighTunEp) {
@@ -250,10 +279,25 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) {
 
 // Add a neigh entry
 func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error) {
+	var idx int
+	var err error
 	key := NeighKey{Addr.String(), Zone}
 	zeroHwAddr, _ := net.ParseMAC("00:00:00:00:00:00")
 	ne, found := n.NeighMap[key]
+
+	port := n.Zone.Ports.PortFindByOSId(Attr.OSLinkIndex)
+	if port == nil {
+		tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s no oport\n", Addr.String(), Zone)
+		return NEIGH_OIF_ERR, errors.New("nh-oif error")
+	}
+
+	mask := net.CIDRMask(32, 32)
+	ipnet := net.IPNet{IP: Addr, Mask: mask}
+	ra := RtAttr{0, 0, true}
+	na := []RtNhAttr{{Addr, Attr.OSLinkIndex}}
+
 	if found == true {
+		ne.Inactive = false
 		if bytes.Equal(Attr.HardwareAddr, zeroHwAddr) == true {
 			ne.Resolved = false
 		} else {
@@ -262,20 +306,13 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 				ne.Resolved = true
 				n.NeighRecursiveResolve(ne)
 				ne.DP(DP_CREATE)
+				goto L2Pair
 			}
 		}
 		tk.LogIt(tk.LOG_ERROR, "nh add - %s:%s exists\n", Addr.String(), Zone)
 		return NEIGH_EXISTS_ERR, errors.New("nh exists")
 	}
 
-	port := n.Zone.Ports.PortFindByOSId(Attr.OSLinkIndex)
-	if port == nil {
-		tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s no oport\n", Addr.String(), Zone)
-		return NEIGH_OIF_ERR, errors.New("nh-oif error")
-	}
-
-	var idx int
-	var err error
 	if Addr.To4() == nil {
 		idx, err = n.Neigh6Id.GetCounter()
 		if err != nil {
@@ -293,11 +330,13 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 	ne = new(Neigh)
 
 	ne.Key = key
+	ne.Addr = Addr
 	ne.Attr = Attr
 	ne.OifPort = port
 	ne.HwMark = idx
 	ne.Type |= NH_NORMAL
 	ne.NhRtm = make(map[RtKey]*Rt)
+	ne.Inactive = false
 
 	n.NeighRecursiveResolve(ne)
 
@@ -305,10 +344,6 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 	ne.DP(DP_CREATE)
 
 	// Add a host route specific to this NH
-	mask := net.CIDRMask(32, 32)
-	ipnet := net.IPNet{IP: Addr, Mask: mask}
-	ra := RtAttr{0, 0, true}
-	na := []RtNhAttr{{Addr, Attr.OSLinkIndex}}
 	_, err = n.Zone.Rt.RtAdd(ipnet, Zone, ra, na)
 	if err != nil {
 		n.NeighDelete(Addr, Zone)
@@ -316,7 +351,8 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 		return NEIGH_HOSTRT_ERR, errors.New("nh-hostrt error")
 	}
 
-	//Add a related FDB entry if needed
+	//Add a related L2 Pair entry if needed
+L2Pair:
 	if port.HInfo.Master == "" &&
 		port.SInfo.PortType&(cmn.PORT_REAL|cmn.PORT_BOND) != 0 &&
 		ne.Resolved {
@@ -343,6 +379,8 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 		}
 	}
 
+	ne.Activate()
+
 	tk.LogIt(tk.LOG_DEBUG, "neigh added - %s:%s\n", Addr.String(), Zone)
 
 	return 0, nil
@@ -360,7 +398,15 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 
 	n.NeighDelAllTunEP(ne)
 
-	//Delete related MAC entry if needed
+	if len(ne.NhRtm) > 1 {
+		ne.Resolved = false
+		ne.Inactive = true
+		ne.DP(DP_REMOVE)
+		tk.LogIt(tk.LOG_DEBUG, "neigh deactivated - %s:%s\n", Addr.String(), Zone)
+		return 0, nil
+	}
+
+	//Delete related L2 Pair entry if needed
 	port := ne.OifPort
 	if port != nil &&
 		port.HInfo.Master == "" &&
@@ -390,9 +436,7 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 		return NEIGH_HOSTRT_ERR, errors.New("nh-hostrt error" + err.Error())
 	}
 
-	if len(ne.NhRtm) == 0 {
-		ne.DP(DP_REMOVE)
-	}
+	ne.DP(DP_REMOVE)
 
 	if ne.Addr.To4() == nil {
 		n.Neigh6Id.PutCounter(ne.HwMark)
@@ -452,9 +496,10 @@ func (n *NeighH) NeighUnPairRt(ne *Neigh, rt *Rt) int {
 	}
 
 	delete(ne.NhRtm, rt.Key)
-	if len(ne.NhRtm) == 0 && ne.Inactive == true {
+	if len(ne.NhRtm) <= 1 && ne.Inactive == true {
 		// Safely remove
 		tk.LogIt(tk.LOG_DEBUG, "neigh rt unpair - %s->%s\n", rt.Key.RtCidr, ne.Key.NhString)
+		n.NeighDelete(ne.Addr, ne.Key.Zone)
 		ne.DP(DP_REMOVE)
 	}
 
@@ -489,6 +534,7 @@ func (n *NeighH) PortNotifier(name string, osID int, evType PortEvent) {
 }
 
 func (n *NeighH) NeighTicker(ne *Neigh) {
+	ne.Activate()
 	n.NeighRecursiveResolve(ne)
 }
 
@@ -501,7 +547,7 @@ func (n *NeighH) NeighsTicker() {
 	return
 }
 
-func (n *NeighH) NeighhDestructAll() {
+func (n *NeighH) NeighDestructAll() {
 	for _, ne := range n.NeighMap {
 		addr := net.ParseIP(ne.Key.NhString)
 		n.NeighDelete(addr, ne.Key.NhString)

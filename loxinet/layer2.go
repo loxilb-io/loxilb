@@ -224,7 +224,7 @@ func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 
 	fdb, found := l2.FdbMap[key]
 	if found == false {
-		tk.LogIt(tk.LOG_DEBUG, "fdb ent not found, %v", key)
+		tk.LogIt(tk.LOG_DEBUG, "fdb ent not found, %v\n", key)
 		return L2_NOFDB_ERR, errors.New("no such fdb")
 	}
 
@@ -255,7 +255,7 @@ func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 
 	delete(l2.FdbMap, fdb.FdbKey)
 
-	tk.LogIt(tk.LOG_DEBUG, "deleted fdb ent, %v", key)
+	tk.LogIt(tk.LOG_DEBUG, "deleted fdb ent, %v\n", key)
 
 	return 0, nil
 }

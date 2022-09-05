@@ -17,8 +17,9 @@ package loxinet
 
 import (
 	"errors"
-	tk "github.com/loxilb-io/loxilib"
 	"sync"
+
+	tk "github.com/loxilb-io/loxilib"
 )
 
 // This file implements self-contained network security zones
@@ -118,7 +119,7 @@ func (z *ZoneH) ZoneDelete(name string) (int, error) {
 	zone.Name = name
 	zone.Pols.PolDestructAll()
 	zone.Rt.RtDestructAll()
-	zone.Nh.NeighhDestructAll()
+	zone.Nh.NeighDestructAll()
 	zone.L2.L2DestructAll()
 	zone.Vlans.VlanDestructAll()
 	zone.Ports.PortDestructAll()
