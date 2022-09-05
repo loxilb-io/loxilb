@@ -213,7 +213,6 @@ func (P *PolH) PolTicker() {
 			}
 		} else {
 			p.DP(DP_STATS_GET)
-			//fmt.Printf("Pol %s -- stats %v:%v\n", p.Key.PolName, p.Stats.PacketsOk, p.Stats.PacketsNok)
 			for idx, pObj := range p.PObjs {
 				var pP *PolObjInfo
 				pP = &p.PObjs[idx]

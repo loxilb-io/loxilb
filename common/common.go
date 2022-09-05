@@ -242,10 +242,10 @@ const (
 type PolInfo struct {
 	PolType           int
 	ColorAware        bool
-	CommittedInfoRate uint64  // CIR in Mbps
-	PeakInfoRate      uint64  // PIR in Mbps
-	CommittedBlkSize  uint64  // CBS in bytes
-	ExcessBlkSize     uint64  // EBS in bytes
+	CommittedInfoRate uint64 // CIR in Mbps
+	PeakInfoRate      uint64 // PIR in Mbps
+	CommittedBlkSize  uint64 // CBS in bytes
+	ExcessBlkSize     uint64 // EBS in bytes
 }
 
 type PolObjType uint

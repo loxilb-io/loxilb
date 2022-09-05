@@ -25,8 +25,8 @@ import (
 )
 
 const (
-	MKFS_SCRIPT       = "/usr/local/sbin/mkllb_bpffs"
-	BPF_FS_CHK_FILE   = "/opt/loxilb/dp/bpf/intf_map"
+	MKFS_SCRIPT     = "/usr/local/sbin/mkllb_bpffs"
+	BPF_FS_CHK_FILE = "/opt/loxilb/dp/bpf/intf_map"
 )
 
 func fileExists(fname string) bool {
