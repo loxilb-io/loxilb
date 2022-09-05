@@ -89,16 +89,16 @@ disconnect_docker_hosts() {
   link2=e$2$1
   #  echo $link1 $link2
   if [ -f "$hexist/$1" ]; then
-    ifexist=`sudo ip -n $1 link show $link1 | grep -w $link1`
-    if [ "$ifexist" != "" ]; then 
+    ifexist1=`sudo ip -n $1 link show $link1 | grep -w $link1`
+    if [ "chk$ifexist1" != "chk" ]; then
       sudo ip -n $1 link set $link1 down 2>&1 >> /dev/null
       sudo ip -n $1 link del $link1 2>&1 >> /dev/null
     fi
   fi
 
   if [ -f "$hexist/$2" ]; then
-    ifexist=`sudo ip -n $2 link show $link2 | grep -w $link2`
-    if [ "$ifexist" != "" ]; then 
+    ifexist2=`sudo ip -n $2 link show | grep -w $link2`
+    if [ "chk$ifexist2" != "chk" ]; then
       sudo ip -n $2 link set $link2 down 2>&1 >> /dev/null
       sudo ip -n $2 link del $link2 2>&1 >> /dev/null
     fi
