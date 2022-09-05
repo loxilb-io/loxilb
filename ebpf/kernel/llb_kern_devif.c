@@ -292,7 +292,7 @@ dp_redir_packet(void *ctx,  struct xfi *xf)
     return DP_DROP;
   }
 
-#ifdef LLB_XDP_IF_STATS
+#ifdef LLB_DP_IF_STATS
   dp_do_map_stats(ctx, xf, LL_DP_TX_INTF_STATS_MAP, xf->pm.oport);
 #endif
 
@@ -364,7 +364,7 @@ static int __always_inline
 dp_ing(void *ctx,  struct xfi *xf)
 {
   dp_do_if_lkup(ctx, xf);
-#ifdef LLB_XDP_IF_STATS
+#ifdef LLB_DP_IF_STATS
   dp_do_map_stats(ctx, xf, LL_DP_INTF_STATS_MAP, xf->pm.iport);
 #endif
   dp_do_map_stats(ctx, xf, LL_DP_BD_STATS_MAP, xf->pm.bd);

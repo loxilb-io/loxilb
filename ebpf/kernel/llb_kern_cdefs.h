@@ -1623,14 +1623,6 @@ dp_do_ins_gtp(void *md,
   int olen;
   __u64 flags;
 
-  /* We do not pass vlan header inside vxlan */
-  if (xf->l2m.vlan[0] != 0) {
-    if (dp_remove_vlan_tag(md, xf) < 0) {
-      LLBS_PPLN_DROP(xf);
-      return -1;
-    }
-  }
-
   olen   = sizeof(*iph)  + sizeof(*udp) + sizeof(*gh) + 
            sizeof(*geh) + sizeof(*gedh); 
 
@@ -1727,10 +1719,6 @@ dp_do_ins_gtp(void *md,
                     sizeof(*udp);
   xf->tm.tun_encap = 1;
 
-  /* Reset flags essential for L2 header rewrite */
-  xf->l2m.vlan[0] = 0;
-  xf->l2m.dl_type = bpf_htons(ETH_P_IP);
-
   if (skip_md) {
     return 0;
   }
@@ -1751,10 +1739,9 @@ dp_do_ins_gtp(void *md,
   xf->l3m.ip.daddr = rip;
   xf->l3m.source = udp->source;
   xf->l3m.dest = udp->dest;
-  xf->pm.l3_off = sizeof(*eth);
-  xf->pm.l4_off = sizeof(*eth) + sizeof(*iph);
+  xf->pm.l4_off = xf->pm.l3_off + sizeof(*iph);
   
-    return 0;
+  return 0;
 }
 
 
