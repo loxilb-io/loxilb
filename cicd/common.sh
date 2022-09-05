@@ -26,6 +26,7 @@ pull_dockers() {
   docker pull eyes852/ubuntu-iperf-test:0.5
 }
 
+## Creates a docker host
 ## arg1 - "loxilb"|"host"
 ## arg2 - instance-name
 spawn_docker_host() {
@@ -49,9 +50,10 @@ spawn_docker_host() {
   $hexec $2 ifconfig lo up
   $hexec $2 ifconfig eth0 0
   $hexec $2 sysctl net.ipv6.conf.all.disable_ipv6=1 2>&1 >> /dev/null
-  $hexec $2 sysctl net.ipv4.conf.all.arp_accept=1=1 2>&1 >> /dev/null
+  $hexec $2 sysctl net.ipv4.conf.all.arp_accept=1 2>&1 >> /dev/null
 }
 
+## Deletes a docker host
 ## arg1 - hostname 
 delete_docker_host() {
   id=`docker ps -f name=$1| grep -w $1 | cut  -d " "  -f 1 | grep -iv  "CONTAINER"`
@@ -68,6 +70,7 @@ delete_docker_host() {
   fi
 }
 
+## Connects two docker hosts
 ## arg1 - hostname1 
 ## arg2 - hostname2 
 connect_docker_hosts() {
@@ -93,7 +96,7 @@ disconnect_docker_hosts() {
     fi
   fi
 
-  if [ -f "$hexist/$1" ]; then
+  if [ -f "$hexist/$2" ]; then
     ifexist=`sudo ip -n $2 link show $link2 | grep -w $link2`
     if [ "$ifexist" != "" ]; then 
       sudo ip -n $2 link set $link2 down 2>&1 >> /dev/null
