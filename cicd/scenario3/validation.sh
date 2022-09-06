@@ -5,7 +5,7 @@ $hexec l3e1 node ./server1.js &
 $hexec l3e2 node ./server2.js &
 $hexec l3e3 node ./server3.js &
 
-sleep 5
+sleep 1
 code=0
 servArr=( "server1" "server2" "server3" )
 ep=( "25.25.25.1" "26.26.26.1" "27.27.27.1" )
