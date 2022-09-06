@@ -37,8 +37,9 @@ for i in {1..2}
 do
 for j in {0..2}
 do
-    $hexec ue$k ping ${ep[j]} -f -c 5 -W 1;
-    res=$($hexec ue$k curl -s 88.88.88.88:2020)
+    #$hexec ue$k ping ${ep[j]} -f -c 5 -W 1;
+    #res=$($hexec ue$k curl -s 88.88.88.88:2020)
+    res=$($hexec ue$k curl -s 88.88.88.8:2020)
     echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
@@ -50,7 +51,7 @@ do
         $dexec llb2 ip neigh
         code=1
     fi
-    #sleep 1
+    sleep 1
 done
 done
 done
