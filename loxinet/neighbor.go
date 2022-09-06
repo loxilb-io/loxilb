@@ -332,10 +332,10 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 NhExist:
 
 	// Add a host specific to this neighbor
-	_, err = n.Zone.Rt.RtAdd(ipnet, Zone, ra, na)
-	if err != nil {
+	ec, err := n.Zone.Rt.RtAdd(ipnet, Zone, ra, na)
+	if err != nil && ec != RtExistsErr {
 		n.NeighDelete(Addr, Zone)
-		tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s host-rt fail\n", Addr.String(), Zone)
+		tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s host-rt fail(%s)\n", Addr.String(), Zone, err)
 		return NeighHostRtErr, errors.New("nh-hostrt error")
 	}
 
@@ -383,8 +383,6 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 		return NeighNoEntErr, errors.New("no-nh error")
 	}
 
-	n.NeighDelAllTunEP(ne)
-
 	//Delete related L2 Pair entry if needed
 	port := ne.OifPort
 	if port != nil &&
@@ -427,6 +425,8 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 		tk.LogIt(tk.LOG_DEBUG, "neigh deactivated - %s:%s\n", Addr.String(), Zone)
 		return 0, nil
 	}
+
+	n.NeighDelAllTunEP(ne)
 
 	if ne.Addr.To4() == nil {
 		n.Neigh6ID.PutCounter(ne.HwMark)
