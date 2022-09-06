@@ -37,7 +37,7 @@ for i in {1..2}
 do
 for j in {0..2}
 do
-    $hexec ue$k ping ${ep[j]} -f -c 5 -W 1 2>&1> /dev/null;
+    $hexec ue$k ping ${ep[j]} -f -c 5 -W 1;
     res=$($hexec ue$k curl -s 88.88.88.88:2020)
     echo -e $res
     if [[ $res != "${servArr[j]}" ]]
