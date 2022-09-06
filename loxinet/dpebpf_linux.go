@@ -147,6 +147,7 @@ func dpEbpfTicker() {
 			// which might also get aged out in this process
 			C.llb_collect_map_stats(C.int(C.LL_DP_ACLV4_STATS_MAP))
 			C.llb_age_map_entries(C.LL_DP_CTV4_MAP)
+			C.llb_age_map_entries(C.LL_DP_FCV4_MAP)
 			mh.dpEbpf.tbN++
 		}
 	}

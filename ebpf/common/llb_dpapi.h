@@ -42,11 +42,11 @@
 #define LLB_DP_PKT_SLOW_PGM_ID (1)
 #define LLB_DP_PKT_PGM_ID      (0)
 
-/* Hard-timeout of 30s for fc dp entry */
-#define FC_V4_DPTO            (30000000000)
+/* Hard-timeout of 40s for fc dp entry */
+#define FC_V4_DPTO            (40000000000)
 
-/* Hard-timeout of 30m for fc cp entry */
-#define FC_V4_CPTO            (1800000000000)
+/* Hard-timeout of 2m for fc cp entry */
+#define FC_V4_CPTO            (120000000000)
 
 /* Hard-timeout of 30m for ct entry */
 #define CT_V4_CPTO            (1800000000000)
