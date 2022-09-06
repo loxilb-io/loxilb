@@ -49,7 +49,7 @@ do
         $dexec llb2 ip neigh
         code=1
     fi
-    sleep 1
+    #sleep 1
 done
 done
 done
