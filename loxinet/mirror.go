@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package loxinet
 
 import (
 	"errors"
-
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
 
+// error codes
 const (
 	MirrErrBase = iota - 101000
 	MirrModErr
@@ -32,29 +33,35 @@ const (
 	MirrAllocErr
 )
 
+// constants
 const (
 	MaxMirrors = 32
 )
 
+// MirrKey - key for a mirror entry
 type MirrKey struct {
 	Name string
 }
 
+// MirrStats - stats related to a mirror
 type MirrStats struct {
 	PacketsOk uint64
 	Bytes     uint64
 }
 
-type MirAttachObjT interface {
+// MirrAttachObjT - empty interface to hold mirror attachments
+type MirrAttachObjT interface {
 }
 
+// MirrObjInfo - an object which is attached to a mirror
 type MirrObjInfo struct {
 	Args      cmn.MirrObj
-	AttachObj MirAttachObjT
+	AttachObj MirrAttachObjT
 	Parent    *MirrEntry
 	Sync      DpStatusT
 }
 
+// MirrEntry - a mirror entry
 type MirrEntry struct {
 	Key   MirrKey
 	Info  cmn.MirrInfo
@@ -65,12 +72,14 @@ type MirrEntry struct {
 	MObjs []MirrObjInfo
 }
 
+// MirrH - context container
 type MirrH struct {
 	MirrMap map[MirrKey]*MirrEntry
 	Zone    *Zone
 	HwMark  *tk.Counter
 }
 
+// MirrInit - Initialize the mirror subsytem
 func MirrInit(zone *Zone) *MirrH {
 	var nMh = new(MirrH)
 	nMh.MirrMap = make(map[MirrKey]*MirrEntry)
@@ -79,6 +88,7 @@ func MirrInit(zone *Zone) *MirrH {
 	return nMh
 }
 
+// MirrInfoValidate - validate mirror information
 func MirrInfoValidate(mInfo *cmn.MirrInfo) bool {
 	if mInfo.MirrType != cmn.MirrTypeSpan &&
 		mInfo.MirrType != cmn.MirrTypeRspan &&
@@ -102,6 +112,7 @@ func MirrInfoValidate(mInfo *cmn.MirrInfo) bool {
 	return true
 }
 
+// MirrObjValidate - validate object to be attached
 func MirrObjValidate(mObj *cmn.MirrObj) bool {
 
 	if mObj.AttachMent != cmn.MirrAttachPort && mObj.AttachMent != cmn.MirrAttachRule {
@@ -111,6 +122,8 @@ func MirrObjValidate(mObj *cmn.MirrObj) bool {
 	return true
 }
 
+// MirrInfoCmp - compare mirror information in two MirrInfo variables
+// returns false if there is no match, else returns true
 func MirrInfoCmp(mInfo1, mInfo2 *cmn.MirrInfo) bool {
 	if mInfo1.MirrType == mInfo2.MirrType &&
 		mInfo1.MirrPort == mInfo2.MirrPort &&
@@ -123,7 +136,7 @@ func MirrInfoCmp(mInfo1, mInfo2 *cmn.MirrInfo) bool {
 	return false
 }
 
-// Add a mirror in loxinet
+// MirrAdd - Add a mirror in loxinet
 func (M *MirrH) MirrAdd(name string, mInfo cmn.MirrInfo, mObjArgs cmn.MirrObj) (int, error) {
 
 	if MirrObjValidate(&mObjArgs) == false {
@@ -171,7 +184,7 @@ func (M *MirrH) MirrAdd(name string, mInfo cmn.MirrInfo, mObjArgs cmn.MirrObj) (
 	return 0, nil
 }
 
-// Delete a mirror from loxinet
+// MirrDelete - Delete a mirror from loxinet
 func (M *MirrH) MirrDelete(name string) (int, error) {
 
 	key := MirrKey{name}
@@ -197,6 +210,8 @@ func (M *MirrH) MirrDelete(name string) (int, error) {
 	return 0, nil
 }
 
+// MirrPortDelete - if port related to any mirror is deleted,
+// we need to make sure that mirror is resynced
 func (M *MirrH) MirrPortDelete(name string) {
 	for _, m := range M.MirrMap {
 		for idx, mObj := range m.MObjs {
@@ -210,12 +225,14 @@ func (M *MirrH) MirrPortDelete(name string) {
 	}
 }
 
+// MirrDestructAll - destroy all mirrors
 func (M *MirrH) MirrDestructAll() {
 	for _, m := range M.MirrMap {
 		M.MirrDelete(m.Key.Name)
 	}
 }
 
+// MirrTicker - a ticker routine for mirrors
 func (M *MirrH) MirrTicker() {
 	for _, m := range M.MirrMap {
 		if m.Sync != 0 {
@@ -243,7 +260,7 @@ func (M *MirrH) MirrTicker() {
 	}
 }
 
-// Sync state of mirror's attachment point with data-path
+// MirrObj2DP - Sync state of mirror's attachment point with data-path
 func (mObjInfo *MirrObjInfo) MirrObj2DP(work DpWorkT) int {
 
 	// Only port attachment is supported currently
@@ -274,7 +291,7 @@ func (mObjInfo *MirrObjInfo) MirrObj2DP(work DpWorkT) int {
 	return 0
 }
 
-// Sync state of mirror with data-path
+// DP - Sync state of mirror with data-path
 func (m *MirrEntry) DP(work DpWorkT) int {
 
 	if m.Info.MirrType == cmn.MirrTypeErspan {

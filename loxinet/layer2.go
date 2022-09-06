@@ -187,7 +187,7 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 	if found == true {
 		// Check if it is a modify
 		if l2FdbAttrEqual(&attr, &fdb.FdbAttr) {
-			tk.LogIt(tk.LOG_DEBUG, "fdb ent exists, %v", key)
+			tk.LogIt(tk.LOG_DEBUG, "fdb ent exists, %v\n", key)
 			return L2SameFdbErr, errors.New("same fdb")
 		}
 		// Handle modify by deleting and reinstalling
@@ -215,7 +215,7 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 
 	nfdb.DP(DpCreate)
 
-	tk.LogIt(tk.LOG_DEBUG, "added fdb ent, %v", key)
+	tk.LogIt(tk.LOG_DEBUG, "added fdb ent, %v\n", key)
 
 	return 0, nil
 }
@@ -237,7 +237,7 @@ func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 			for _, obj := range rt.RtDepObjs {
 				if f, ok := obj.(*FdbEnt); ok {
 					if f == fdb {
-						rt.RtDepObjs = rt.RtRemoveDepObj(n)
+						rt.RtDepObjs = rt.rtRemoveDepObj(n)
 						break
 					}
 				}
@@ -269,7 +269,7 @@ func (l2 *L2H) FdbTicker(f *FdbEnt) {
 		if f.Port.SInfo.PortActive == false {
 			l2.L2FdbDel(f.FdbKey)
 		} else if f.unReach == true {
-			tk.LogIt(tk.LOG_DEBUG, "unrch scan - %v", f)
+			tk.LogIt(tk.LOG_DEBUG, "unrch scan - %v\n", f)
 			unRch, _, _ := f.L2FdbResolveNh()
 			if f.unReach != unRch {
 				f.unReach = unRch

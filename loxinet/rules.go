@@ -23,11 +23,11 @@ import (
 	"net"
 	"sort"
 	"time"
-
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
 
+// error codes
 const (
 	RuleErrBase = iota - ZoneBaseErr - 1000
 	RuleUnknownServiceErr
@@ -40,6 +40,7 @@ const (
 
 type ruleTMatch uint
 
+// rm tuples
 const (
 	RmPort ruleTMatch = 1 << iota
 	RmL2Src
@@ -60,6 +61,7 @@ const (
 	RmMax
 )
 
+// constants
 const (
 	MaxNatEndPoints     = 16
 	MaxLbaInactiveTries = 3  // Default number of inactive tries before LB arm is turned off
@@ -68,6 +70,7 @@ const (
 
 type ruleTType uint
 
+// rt types
 const (
 	RtEm ruleTType = iota + 1
 	RtMf
@@ -106,13 +109,13 @@ type ruleTuples struct {
 	port     rule32Tuple
 	l2Src    ruleMacTuple
 	l2Dst    ruleMacTuple
-	vlanId   rule16Tuple
+	vlanID   rule16Tuple
 	l3Src    ruleIPTuple
 	l3Dst    ruleIPTuple
 	l4Prot   rule8Tuple
 	l4Src    rule16Tuple
 	l4Dst    rule16Tuple
-	tunId    rule32Tuple
+	tunID    rule32Tuple
 	inL2Src  ruleMacTuple
 	inL2Dst  ruleMacTuple
 	inL3Src  ruleIPTuple
@@ -124,6 +127,7 @@ type ruleTuples struct {
 
 type ruleTActType uint
 
+// possible actions for a rt-entry
 const (
 	RtActDrop ruleTActType = iota + 1
 	RtActFwd
@@ -179,30 +183,33 @@ type ruleTable struct {
 
 type ruleTableType uint
 
+// rt types
 const (
-	RtAcl ruleTableType = iota + 1
+	RtACL ruleTableType = iota + 1
 	RtLB
 	RtMax
 )
 
+// rule specific loxilb constants
 const (
 	RtMaximumAcls = (8 * 1024)
 	RtMaximumLbs  = (2 * 1024)
 )
 
-// Tunable parameters related to inactive rules
+// RuleCfg - tunable parameters related to inactive rules
 type RuleCfg struct {
 	RuleInactTries   int
 	RuleInactChkTime int
 }
 
+// RuleH - context container
 type RuleH struct {
 	Zone   *Zone
 	Cfg    RuleCfg
 	Tables [RtMax]ruleTable
 }
 
-// Initialize the Rules subsystem
+// RulesInit - initialize the Rules subsystem
 func RulesInit(zone *Zone) *RuleH {
 	var nRh = new(RuleH)
 	nRh.Zone = zone
@@ -210,9 +217,9 @@ func RulesInit(zone *Zone) *RuleH {
 	nRh.Cfg.RuleInactChkTime = LbaCheckTimeout
 	nRh.Cfg.RuleInactTries = MaxLbaInactiveTries
 
-	nRh.Tables[RtAcl].tableMatch = RmMax - 1
-	nRh.Tables[RtAcl].tableType = RtMf
-	nRh.Tables[RtAcl].HwMark = tk.NewCounter(1, RtMaximumAcls)
+	nRh.Tables[RtACL].tableMatch = RmMax - 1
+	nRh.Tables[RtACL].tableType = RtMf
+	nRh.Tables[RtACL].HwMark = tk.NewCounter(1, RtMaximumAcls)
 
 	nRh.Tables[RtLB].tableMatch = RmL3Dst | RmL4Dst | RmL4Prot
 	nRh.Tables[RtLB].tableType = RtEm
@@ -240,8 +247,8 @@ func (r *ruleTuples) ruleMkKeyCompliance(match ruleTMatch) {
 		}
 	}
 	if match&RmVlanID != RmVlanID {
-		r.vlanId.val = 0
-		r.vlanId.valid = 0
+		r.vlanID.val = 0
+		r.vlanID.valid = 0
 	}
 	if match&RmL3Src != RmL3Src {
 		_, dst, _ := net.ParseCIDR("0.0.0.0/0")
@@ -316,7 +323,7 @@ func (r *ruleTuples) ruleKey() string {
 		r.l2Src.addr[3]&r.l2Src.valid[3],
 		r.l2Src.addr[4]&r.l2Src.valid[4],
 		r.l2Src.addr[5]&r.l2Src.valid[5])
-	ks += fmt.Sprintf("%d", r.vlanId.val&r.vlanId.valid)
+	ks += fmt.Sprintf("%d", r.vlanID.val&r.vlanID.valid)
 	ks += fmt.Sprintf("%s", r.l3Dst.addr.String())
 	ks += fmt.Sprintf("%s", r.l3Src.addr.String())
 	ks += fmt.Sprintf("%d", r.l4Prot.val&r.l4Prot.valid)
@@ -385,8 +392,8 @@ func (r *ruleTuples) String() string {
 			r.l2Src.addr[5]&r.l2Src.valid[5])
 	}
 
-	if r.vlanId.valid != 0 {
-		ks += fmt.Sprintf("vid-%d,", r.vlanId.val&r.vlanId.valid)
+	if r.vlanID.valid != 0 {
+		ks += fmt.Sprintf("vid-%d,", r.vlanID.val&r.vlanID.valid)
 	}
 
 	if r.l3Dst.addr.String() != "<nil>" {
@@ -482,7 +489,7 @@ func (a *ruleAct) String() string {
 	return ks
 }
 
-// Output all rules into json and write to the byte array
+// Rules2Json - output all rules into json and write to the byte array
 func (R *RuleH) Rules2Json() ([]byte, error) {
 	var t cmn.LbServiceArg
 	var eps []cmn.LbEndPointArg
@@ -530,7 +537,7 @@ func (R *RuleH) Rules2Json() ([]byte, error) {
 	return bret, nil
 }
 
-// Get all rules and pack them into a cmn.LbRuleMod slice
+// GetNatLbRule - get all rules and pack them into a cmn.LbRuleMod slice
 func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 	var res []cmn.LbRuleMod
 
@@ -569,7 +576,7 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 	return res, nil
 }
 
-// Add a service LB nat rule. The service details are passed in serv argument,
+// AddNatLbRule - Add a service LB nat rule. The service details are passed in serv argument,
 // and end-point information is passed in the slice servEntdPoints. On success,
 // it will return 0 and nil error, else appropriate return code and error string will be set
 func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPointArg) (int, error) {
@@ -712,7 +719,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	return 0, nil
 }
 
-// Delete a service LB nat rule. The service details are passed in serv argument.
+// DeleteNatLbRule - Delete a service LB nat rule. The service details are passed in serv argument.
 // On success, it will return 0 and nil error, else appropriate return code and
 // error string will be set
 func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
@@ -757,7 +764,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	return 0, nil
 }
 
-// This is periodic ticker routine which does two main things :
+// RulesSync - This is periodic ticker routine which does two main things :
 // 1. Syncs rule statistics counts
 // 2. Check health of lb-rule end-points
 func (R *RuleH) RulesSync() {
@@ -827,11 +834,12 @@ func (R *RuleH) RulesSync() {
 	}
 }
 
+// RulesTicker - Ticker for all rules
 func (R *RuleH) RulesTicker() {
 	R.RulesSync()
 }
 
-// Destructor routine for all rules
+// RuleDestructAll - Destructor routine for all rules
 func (R *RuleH) RuleDestructAll() {
 	var lbs cmn.LbServiceArg
 	for _, r := range R.Tables[RtLB].eMap {
@@ -855,7 +863,7 @@ func (R *RuleH) RuleDestructAll() {
 	return
 }
 
-// Sync state of nat-rule entity to data-path
+// Nat2DP - Sync state of nat-rule entity to data-path
 func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 
 	nWork := new(NatDpWorkQ)
@@ -906,7 +914,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	return 0
 }
 
-// Sync state of rule entity to data-path
+// DP - sync state of rule entity to data-path
 func (r *ruleEnt) DP(work DpWorkT) int {
 
 	if work == DpMapGet {

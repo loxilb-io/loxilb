@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package loxinet
 
 import (
 	"errors"
-
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
 
+// error codes
 const (
 	PolErrBase = iota - 100000
 	PolModErr
@@ -32,25 +33,30 @@ const (
 	PolAllocErr
 )
 
+// constants
 const (
 	MinPolRate  = 8
 	MaxPols     = 8 * 1024
 	DflPolBlkSz = 6 * 5000 * 1000
 )
 
+// PolKey - key for a policer entry
 type PolKey struct {
 	PolName string
 }
 
+// PolStats - stats related to policer
 type PolStats struct {
 	PacketsOk  uint64
 	PacketsNok uint64
 	Bytes      uint64
 }
 
+// PolAttachObjT - empty interface to hold policer attachments
 type PolAttachObjT interface {
 }
 
+// PolObjInfo - an object which is attached to a policer
 type PolObjInfo struct {
 	Args      cmn.PolObj
 	AttachObj PolAttachObjT
@@ -58,6 +64,7 @@ type PolObjInfo struct {
 	Sync      DpStatusT
 }
 
+// PolEntry - a policer entry
 type PolEntry struct {
 	Key   PolKey
 	Info  cmn.PolInfo
@@ -68,12 +75,14 @@ type PolEntry struct {
 	PObjs []PolObjInfo
 }
 
+// PolH - context container
 type PolH struct {
 	PolMap map[PolKey]*PolEntry
 	Zone   *Zone
 	HwMark *tk.Counter
 }
 
+// PolInit - initialize the policer subsystem
 func PolInit(zone *Zone) *PolH {
 	var nPh = new(PolH)
 	nPh.PolMap = make(map[PolKey]*PolEntry)
@@ -82,6 +91,8 @@ func PolInit(zone *Zone) *PolH {
 	return nPh
 }
 
+// PolInfoXlateValidate - validates info passed in pInfo and 
+// translates it to internally used units
 func PolInfoXlateValidate(pInfo *cmn.PolInfo) bool {
 	if pInfo.CommittedInfoRate < MinPolRate {
 		return false
@@ -103,6 +114,7 @@ func PolInfoXlateValidate(pInfo *cmn.PolInfo) bool {
 	return true
 }
 
+// PolObjValidate - validate object to be attached
 func PolObjValidate(pObj *cmn.PolObj) bool {
 
 	if pObj.AttachMent != cmn.PolAttachPort && pObj.AttachMent != cmn.PolAttachLbRule {
@@ -112,7 +124,7 @@ func PolObjValidate(pObj *cmn.PolObj) bool {
 	return true
 }
 
-// Add a policer in loxinet
+// PolAdd - Add a policer in loxinet
 func (P *PolH) PolAdd(pName string, pInfo cmn.PolInfo, pObjArgs cmn.PolObj) (int, error) {
 
 	if PolObjValidate(&pObjArgs) == false {
@@ -160,7 +172,7 @@ func (P *PolH) PolAdd(pName string, pInfo cmn.PolInfo, pObjArgs cmn.PolObj) (int
 	return 0, nil
 }
 
-// Delete a policer from loxinet
+// PolDelete - Delete a policer from loxinet
 func (P *PolH) PolDelete(pName string) (int, error) {
 
 	key := PolKey{pName}
@@ -186,6 +198,8 @@ func (P *PolH) PolDelete(pName string) (int, error) {
 	return 0, nil
 }
 
+// PolPortDelete - if port related to any policer is deleted,
+// we need to make sure that policer is resynced
 func (P *PolH) PolPortDelete(name string) {
 	for _, p := range P.PolMap {
 		for idx, pObj := range p.PObjs {
@@ -199,12 +213,14 @@ func (P *PolH) PolPortDelete(name string) {
 	}
 }
 
+// PolDestructAll - destroy all policers
 func (P *PolH) PolDestructAll() {
 	for _, p := range P.PolMap {
 		P.PolDelete(p.Key.PolName)
 	}
 }
 
+// PolTicker - a ticker routine for policers
 func (P *PolH) PolTicker() {
 	for _, p := range P.PolMap {
 		if p.Sync != 0 {
@@ -232,7 +248,7 @@ func (P *PolH) PolTicker() {
 	}
 }
 
-// Sync state of policer's attachment point with data-path
+// PolObj2DP - Sync state of policer's attachment point with data-path
 func (pObjInfo *PolObjInfo) PolObj2DP(work DpWorkT) int {
 
 	// Only port attachment is supported currently
@@ -263,7 +279,7 @@ func (pObjInfo *PolObjInfo) PolObj2DP(work DpWorkT) int {
 	return 0
 }
 
-// Sync state of policer with data-path
+// DP - Sync state of policer with data-path
 func (p *PolEntry) DP(work DpWorkT) int {
 
 	if work == DpStatsGet {
