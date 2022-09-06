@@ -16,10 +16,10 @@ clean: subsys-clean
 	go clean
 
 test:
-	go test
+	go test .
 
 check:
-	go test
+	go test .
 
 run:
 	./$(bin)
