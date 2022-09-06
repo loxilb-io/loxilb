@@ -18,16 +18,16 @@ package loxinet
 import (
 	"errors"
 	"fmt"
+	"net"
+
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
-	"net"
 )
 
 const (
-	L3_ERR_BASE = iota - RT_ERR_BASE - 1000
-	L3_ADDR_ERR
-	L3_OBJ_ERR
-	L3_NOFDB_ERR
+	L3ErrBase = iota - RtErrBase - 1000
+	L3AddrErr
+	L3ObjErr
 )
 
 type IfaKey struct {
@@ -66,7 +66,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 	var sec bool = false
 	addr, network, err := net.ParseCIDR(Cidr)
 	if err != nil {
-		return L3_ADDR_ERR, errors.New("ip address parse error")
+		return L3AddrErr, errors.New("ip address parse error")
 	}
 
 	key := IfaKey{Obj}
@@ -84,13 +84,13 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 
 		// ifa needs related self-routes
 		ra := RtAttr{0, 0, false}
-		_, err = mh.zr.Rt.RtAdd(*network, ROOT_ZONE, ra, nil)
+		_, err = mh.zr.Rt.RtAdd(*network, RootZone, ra, nil)
 		if err != nil {
 			tk.LogIt(tk.LOG_DEBUG, "ifa add - %s:%s self-rt error", addr.String(), Obj)
-			return L3_ADDR_ERR, errors.New("self-route add error")
+			return L3AddrErr, errors.New("self-route add error")
 		}
 
-		ifa.DP(DP_CREATE)
+		ifa.DP(DpCreate)
 
 		return 0, nil
 	}
@@ -98,7 +98,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 	for _, ifaEnt := range ifa.Ifas {
 		if ifaEnt.IfaAddr.Equal(addr) {
 			tk.LogIt(tk.LOG_DEBUG, "ifa add - exists %s:%s", addr.String(), Obj)
-			return L3_ADDR_ERR, errors.New("ip address exists")
+			return L3AddrErr, errors.New("ip address exists")
 		}
 
 		// if network part of an added ifa is equal to previously
@@ -123,13 +123,13 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 	// ifa needs to related self-routes
 	// FIXME - Code duplication with primary address route above
 	ra := RtAttr{0, 0, false}
-	_, err = mh.zr.Rt.RtAdd(*network, ROOT_ZONE, ra, nil)
+	_, err = mh.zr.Rt.RtAdd(*network, RootZone, ra, nil)
 	if err != nil {
 		tk.LogIt(tk.LOG_DEBUG, "ifa add - %s:%s self-rt error", addr.String(), Obj)
-		return L3_ADDR_ERR, errors.New("self-route add error")
+		return L3AddrErr, errors.New("self-route add error")
 	}
 
-	ifa.DP(DP_CREATE)
+	ifa.DP(DpCreate)
 
 	tk.LogIt(tk.LOG_DEBUG, "ifa added %s:%s", addr.String(), Obj)
 
@@ -143,7 +143,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 	addr, network, err := net.ParseCIDR(Cidr)
 	if err != nil {
 		tk.LogIt(tk.LOG_ERROR, "ifa delete - malformed %s:%s", addr.String(), Obj)
-		return L3_ADDR_ERR, errors.New("ip address parse error")
+		return L3AddrErr, errors.New("ip address parse error")
 	}
 
 	key := IfaKey{Obj}
@@ -151,7 +151,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 
 	if ifa == nil {
 		tk.LogIt(tk.LOG_ERROR, "ifa delete - no such %s:%s", addr.String(), Obj)
-		return L3_ADDR_ERR, errors.New("no such ip address")
+		return L3AddrErr, errors.New("no such ip address")
 	}
 
 	for index, ifaEnt := range ifa.Ifas {
@@ -171,7 +171,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 
 	if found == true {
 		// delete self-routes related to this ifa
-		_, err = mh.zr.Rt.RtDelete(*network, ROOT_ZONE)
+		_, err = mh.zr.Rt.RtDelete(*network, RootZone)
 		if err != nil {
 			tk.LogIt(tk.LOG_ERROR, "ifa delete %s:%s self-rt error", addr.String(), Obj)
 			// Continue after logging error because there is noway to fallback
@@ -179,7 +179,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 		if len(ifa.Ifas) == 0 {
 			delete(l3.IfaMap, ifa.Key)
 
-			ifa.DP(DP_REMOVE)
+			ifa.DP(DpRemove)
 
 			tk.LogIt(tk.LOG_DEBUG, "ifa deleted %s:%s", addr.String(), Obj)
 		}
@@ -187,7 +187,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 	}
 
 	tk.LogIt(tk.LOG_DEBUG, "ifa delete - no such %s:%s", addr.String(), Obj)
-	return L3_ADDR_ERR, errors.New("no such ifa")
+	return L3AddrErr, errors.New("no such ifa")
 }
 
 // Given any ip address, select optimal ip address from Obj's ifa list
@@ -199,7 +199,7 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP) (int, net.IP) {
 	ifa := l3.IfaMap[key]
 
 	if ifa == nil {
-		return L3_OBJ_ERR, net.IPv4(0, 0, 0, 0)
+		return L3ObjErr, net.IPv4(0, 0, 0, 0)
 	}
 
 	for _, ifaEnt := range ifa.Ifas {
@@ -217,7 +217,7 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP) (int, net.IP) {
 		return 0, ifa.Ifas[0].IfaAddr
 	}
 
-	return L3_ADDR_ERR, net.IPv4(0, 0, 0, 0)
+	return L3AddrErr, net.IPv4(0, 0, 0, 0)
 }
 
 func Ifa2String(ifa *Ifa, it IterIntf) {
@@ -279,7 +279,7 @@ func (ifa *Ifa) DP(work DpWorkT) int {
 
 	// In case of remove request, we need to make sure
 	// there are no other port IFAs with similar l2 address
-	if work == DP_REMOVE {
+	if work == DpRemove {
 		for _, ent := range ifa.Zone.L3.IfaMap {
 			if ifa.Zone.Ports.PortL2AddrMatch(ent.Key.Obj, port) == true {
 				return 0
@@ -299,7 +299,7 @@ func (ifa *Ifa) DP(work DpWorkT) int {
 
 	mh.dp.ToDpCh <- rmWq
 
-	if port.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
+	if port.SInfo.PortType&cmn.PortVxlanBr == cmn.PortVxlanBr {
 		rmWq := new(RouterMacDpWorkQ)
 		rmWq.Work = work
 		rmWq.Status = &ifa.Sync

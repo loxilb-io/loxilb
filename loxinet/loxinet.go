@@ -17,21 +17,22 @@ package loxinet
 
 import (
 	"fmt"
+	"os"
+	"sync"
+	"time"
+
 	apiserver "github.com/loxilb-io/loxilb/api"
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
-	"os"
-	"sync"
-	"time"
 )
 
 const (
-	ROOT_ZONE = "root"
+	RootZone = "root"
 )
 
 const (
-	LOXINET_TIVAL = 10
+	LoxinetTiVal = 10
 )
 
 type IterIntf interface {
@@ -85,7 +86,7 @@ func loxiNetInit() {
 	tk.LogItInit(logfile, tk.LOG_DEBUG, true)
 
 	mh.tDone = make(chan bool)
-	mh.ticker = time.NewTicker(LOXINET_TIVAL * time.Second)
+	mh.ticker = time.NewTicker(LoxinetTiVal * time.Second)
 	mh.wg.Add(1)
 	go loxiNetTicker()
 
@@ -97,8 +98,8 @@ func loxiNetInit() {
 	mh.zn = ZoneInit()
 
 	// Add a root zone by default
-	mh.zn.ZoneAdd(ROOT_ZONE)
-	mh.zr, _ = mh.zn.Zonefind(ROOT_ZONE)
+	mh.zn.ZoneAdd(RootZone)
+	mh.zr, _ = mh.zn.Zonefind(RootZone)
 	if mh.zr == nil {
 		tk.LogIt(tk.LOG_ERROR, "root zone not found\n")
 		return

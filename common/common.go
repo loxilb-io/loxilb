@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package common
 
 import (
@@ -22,199 +23,339 @@ import (
 // This file defines the go interface implementation needed to interact with loxinet go module
 
 const (
-	AU_WORKQ_LEN = 1024
-	LU_WORKQ_LEN = 1024
-	NU_WORKQ_LEN = 1024
-	RU_WORKQ_LEN = 40827
+	// AuWorkqLen - Address worker channel depth
+	AuWorkqLen = 1024
+	// LuWorkQLen - Link worker channel depth
+	LuWorkQLen = 1024
+	// NuWorkQLen - Neigh worker channel depth
+	NuWorkQLen = 1024
+	// RuWorkQLen - Route worker channel depth
+	RuWorkQLen = 40827
 )
 
 const (
-	PORT_REAL     = 0x1
-	PORT_BONDSIF  = 0x2
-	PORT_BOND     = 0x4
-	PORT_VLANSIF  = 0x8
-	PORT_VLANBR   = 0x10
-	PORT_VXLANSIF = 0x20
-	PORT_VXLANBR  = 0x40
-	PORT_WG       = 0x80
+	// PortReal - Base port type
+	PortReal = 0x1
+	// PortBondSif - Bond slave port type
+	PortBondSif = 0x2
+	// PortBond - Bond port type
+	PortBond = 0x4
+	// PortVlanSif - Vlan slave port type
+	PortVlanSif = 0x8
+	// PortVlanBr - Vlan Br port type
+	PortVlanBr = 0x10
+	// PortVxlanSif - Vxlan slave port type
+	PortVxlanSif = 0x20
+	// PortVxlanBr - Vxlan br port type
+	PortVxlanBr = 0x40
+	// PortWg - Wireguard port type
+	PortWg = 0x80
 )
 
+// PortProp - Defines auxillary port properties
 type PortProp uint8
 
 const (
-	PORT_PROP_UPP PortProp = 1 << iota
-	PORT_PROP_SPAN
-	PORT_PROP_POL
+	// PortPropUpp - User-plane processing enabled
+	PortPropUpp PortProp = 1 << iota
+	// PortPropSpan - SPAN is enabled
+	PortPropSpan
+	// PortPropPol - Policer is active
+	PortPropPol
 )
 
+// DpStatusT - Generic status of operation
 type DpStatusT uint8
 
+// PortDump - Generic dump info of a port
 type PortDump struct {
-	Name   string         `json:"portName"`
-	PortNo int            `json:"portNo"`
-	Zone   string         `json:"zone"`
-	SInfo  PortSwInfo     `json:"portSoftwareInformation"`
-	HInfo  PortHwInfo     `json:"portHardwareInformation"`
-	Stats  PortStatsInfo  `json:"portStatisticInformation"`
-	L3     PortLayer3Info `json:"portL3Information"`
-	L2     PortLayer2Info `json:"portL2Information"`
-	Sync   DpStatusT      `json:"DataplaneSync"`
+	// Name - name of the port
+	Name string `json:"portName"`
+	// PortNo - port number
+	PortNo int `json:"portNo"`
+	// Zone - security zone info
+	Zone string `json:"zone"`
+	// SInfo - software specific port information
+	SInfo PortSwInfo `json:"portSoftwareInformation"`
+	// HInfo - hardware specific port information
+	HInfo PortHwInfo `json:"portHardwareInformation"`
+	// Stats - port statistics related information
+	Stats PortStatsInfo `json:"portStatisticInformation"`
+	// L3 - layer3 info related to port
+	L3 PortLayer3Info `json:"portL3Information"`
+	// L2 - layer2 info related to port
+	L2 PortLayer2Info `json:"portL2Information"`
+	// Sync - sync state
+	Sync DpStatusT `json:"DataplaneSync"`
 }
 
+// PortStatsInfo - stats information of port
 type PortStatsInfo struct {
-	RxBytes   uint64 `json:"rxBytes"`
-	TxBytes   uint64 `json:"txBytes"`
+	// RxBytes - rx Byte count
+	RxBytes uint64 `json:"rxBytes"`
+	// TxBytes - tx Byte count
+	TxBytes uint64 `json:"txBytes"`
+	// RxPackets - tx Packets count
 	RxPackets uint64 `json:"rxPackets"`
+	// TxPackets - tx Packets count
 	TxPackets uint64 `json:"txPackets"`
-	RxError   uint64 `json:"rxErrors"`
-	TxError   uint64 `json:"txErrors"`
+	// RxError - rx error count
+	RxError uint64 `json:"rxErrors"`
+	// TxError - tx error count
+	TxError uint64 `json:"txErrors"`
 }
 
+// PortHwInfo - hw info of a port
 type PortHwInfo struct {
-	MacAddr    [6]byte `json:"rawMacAddress"`
-	MacAddrStr string  `json:"macAddress"`
-	Link       bool    `json:"link"`
-	State      bool    `json:"state"`
-	Mtu        int     `json:"mtu"`
-	Master     string  `json:"master"`
-	Real       string  `json:"real"`
-	TunId      uint32  `json:"tunnelId"`
+	// MacAddr - mac address as byte array
+	MacAddr [6]byte `json:"rawMacAddress"`
+	// MacAddrStr - mac address in string format
+	MacAddrStr string `json:"macAddress"`
+	// Link - lowerlayer state
+	Link bool `json:"link"`
+	// State - administrative state
+	State bool `json:"state"`
+	// Mtu - maximum transfer unit
+	Mtu int `json:"mtu"`
+	// Master - master of this port if any
+	Master string `json:"master"`
+	// Real - underlying real dev info if any
+	Real string `json:"real"`
+	// TunID - tunnel info if any
+	TunID uint32 `json:"tunnelId"`
 }
 
+// PortLayer3Info - layer3 info of a port
 type PortLayer3Info struct {
-	Routed     bool     `json:"routed"`
-	Ipv4_addrs []string `json:"IPv4Address"`
-	Ipv6_addrs []string `json:"IPv6Address"`
+	// Routed - routed mode or not
+	Routed bool `json:"routed"`
+	// Ipv4Addrs - ipv4 address set
+	Ipv4Addrs []string `json:"IPv4Address"`
+	// Ipv6Addrs - ipv6 address set
+	Ipv6Addrs []string `json:"IPv6Address"`
 }
 
+// PortSwInfo - software specific info of a port
 type PortSwInfo struct {
-	OsId       int       `json:"osId"`
-	PortType   int       `json:"portType"`
-	PortProp   PortProp  `json:"portProp"`
-	PortActive bool      `json:"portActive"`
-	PortReal   *PortDump `json:"portReal"`
-	PortOvl    *PortDump `json:"portOvl"`
-	BpfLoaded  bool      `json:"bpfLoaded"`
+	// OsID - interface id of an OS
+	OsID int `json:"osId"`
+	// PortType - type of port
+	PortType int `json:"portType"`
+	// PortProp - port property
+	PortProp PortProp `json:"portProp"`
+	// PortActive - port enabled/disabled
+	PortActive bool `json:"portActive"`
+	// PortReal - pointer to real port if any
+	PortReal *PortDump `json:"portReal"`
+	// PortOvl - pointer to ovl port if any
+	PortOvl *PortDump `json:"portOvl"`
+	// BpfLoaded - eBPF loaded or not flag
+	BpfLoaded bool `json:"bpfLoaded"`
 }
 
+// PortLayer2Info - layer2 info of a port
 type PortLayer2Info struct {
+	// IsPvid - this vid is Pvid or not
 	IsPvid bool `json:"isPvid"`
-	Vid    int  `json:"vid"`
+	// Vid - vid related to prot
+	Vid int `json:"vid"`
 }
 
+// PortMod - port modification info
 type PortMod struct {
-	Dev       string
+	// Dev - name of port
+	Dev string
+	// LinkIndex - OS allocated index
 	LinkIndex int
-	Ptype     int
-	MacAddr   [6]byte
-	Link      bool
-	State     bool
-	Mtu       int
-	Master    string
-	Real      string
-	TunId     int
+	// Ptype - port type
+	Ptype int
+	// MacAddr - mac address
+	MacAddr [6]byte
+	// Link - lowerlayer state
+	Link bool
+	// State - administrative state
+	State bool
+	// Mtu - maximum transfer unit
+	Mtu int
+	// Master - master of this port if any
+	Master string
+	// Real - underlying real dev info if any
+	Real string
+	// TunID - tunnel info if any
+	TunID int
 }
 
+// VlanMod - Info about a vlan
 type VlanMod struct {
-	Vid       int    `json:"vid"`
-	Dev       string `json:"dev"`
+	// Vid - vlan identifier
+	Vid int `json:"vid"`
+	// Dev - name of the related device
+	Dev string `json:"dev"`
+	// LinkIndex - OS allocated index
 	LinkIndex int
-	MacAddr   [6]byte
-	Link      bool
-	State     bool
-	Mtu       int
-	TunId     uint32
+	// MacAddr - mac address
+	MacAddr [6]byte
+	// Link - lowerlayer state
+	Link bool
+	// State - administrative state
+	State bool
+	// Mtu - maximum transfer unit
+	Mtu int
+	// TunID - tunnel info if any
+	TunID uint32
 }
 
+// VlanPortMod - Info about a port attached to a vlan
 type VlanPortMod struct {
-	Vid    int    `json:"vid"`
-	Dev    string `json:"dev"`
-	Tagged bool   `json:"tagged"`
+	// Vid - vlan identifier
+	Vid int `json:"vid"`
+	// Dev - name of the related device
+	Dev string `json:"dev"`
+	// Tagged - tagged or not
+	Tagged bool `json:"tagged"`
 }
 
 const (
-	FDB_PHY  = 0
-	FDB_TUN  = 1
-	FDB_VLAN = 2
+	// FdbPhy - fdb of a real dev
+	FdbPhy = 0
+	// FdbTun - fdb of a tun dev
+	FdbTun = 1
+	// FdbVlan - fdb of a vlan dev
+	FdbVlan = 2
 )
 
+// FdbMod - Info about a forwarding data-base
 type FdbMod struct {
-	MacAddr  [6]byte
-	BridgeId int
-	Dev      string
-	Dst      net.IP
-	Type     int
-}
-
-type Ipv4AddrMod struct {
+	// MacAddr - mac address
+	MacAddr [6]byte
+	// BridgeID - bridge domain-id
+	BridgeID int
+	// Dev - name of the related device
 	Dev string
-	Ip  string
+	// Dst - ip addr related to fdb
+	Dst net.IP
+	// Type - One of FdbPhy/FdbTun/FdbVlan
+	Type int
 }
 
+// Ipv4AddrMod - Info about an ip address
+type Ipv4AddrMod struct {
+	// Dev - name of the related device
+	Dev string
+	// IP - Actual IP address
+	IP string
+}
+
+// Neighv4Mod - Info about an neighbor
 type Neighv4Mod struct {
-	Ip           net.IP
-	LinkIndex    int
-	State        int
+	// IP - The IP address
+	IP net.IP
+	// LinkIndex - OS allocated index
+	LinkIndex int
+	// State - active or inactive
+	State int
+	// HardwareAddr - resolved hardware address if any
 	HardwareAddr net.HardwareAddr
 }
 
+// Routev4Mod - Info about a route
 type Routev4Mod struct {
-	Protocol  int
-	Flags     int
-	Gw        net.IP
+	// Protocol - Protocol type
+	Protocol int
+	// Flags - flag type
+	Flags int
+	// Gw - gateway information if any
+	Gw net.IP
+	// LinkIndex - OS allocated index
 	LinkIndex int
-	Dst       net.IPNet
+	// Dst - ip addr
+	Dst net.IPNet
 }
 
+// EpSelect - Selection method of load-balancer end-point
 type EpSelect uint
 
 const (
-	LB_SEL_RR EpSelect = iota
-	LB_SEL_HASH
-	LB_SEL_PRIO
+	// LbSelRr - select the lb end-points based on round-robin
+	LbSelRr EpSelect = iota
+	// LbSelHash - select the lb end-points based on hashing
+	LbSelHash
+	// LbSelPrio - select the lb based on weighted round-robin
+	LbSelPrio
 )
 
+// LbServiceArg - Information related to load-balancer service
 type LbServiceArg struct {
-	ServIP   string   `json:"externalIP"`
-	ServPort uint16   `json:"port"`
-	Proto    string   `json:"protocol"`
-	Sel      EpSelect `json:"sel"`
-	Bgp      bool     `json:"bgp"`
+	// ServIP - the service ip or vip  of the load-balancer rule
+	ServIP string `json:"externalIP"`
+	// ServPort - the service port of the load-balancer rule
+	ServPort uint16 `json:"port"`
+	// Proto - the service protocol of the load-balancer rule
+	Proto string `json:"protocol"`
+	// Sel - one of LbSelRr,LbSelHash, or LbSelHash
+	Sel EpSelect `json:"sel"`
+	// Bgp - export this rule with goBGP
+	Bgp bool `json:"bgp"`
 }
 
+// LbEndPointArg - Information related to load-balancer end-point
 type LbEndPointArg struct {
-	EpIP   string `json:"endpointIP"`
+	// EpIP - endpoint IP address
+	EpIP string `json:"endpointIP"`
+	// EpPort - endpoint Port
 	EpPort uint16 `json:"targetPort"`
-	Weight uint8  `json:"weight"`
+	// Weight - weight associated with end-point
+	// Only valid for weighted round-robin selection
+	Weight uint8 `json:"weight"`
 }
 
+// LbRuleMod - Info related to a load-balancer entry
 type LbRuleMod struct {
-	Serv LbServiceArg    `json:"serviceArguments"`
-	Eps  []LbEndPointArg `json:"endpoints"`
+	// Serv - service argument of type LbServiceArg
+	Serv LbServiceArg `json:"serviceArguments"`
+	// Eps - slice containing LbEndPointArg
+	Eps []LbEndPointArg `json:"endpoints"`
 }
 
+// CtInfo - Conntrack Information
 type CtInfo struct {
-	Dip    net.IP `json:"destinationIP"`
-	Sip    net.IP `json:"sourceIP"`
-	Dport  uint16 `json:"destinationPort"`
-	Sport  uint16 `json:"sourcePort"`
-	Proto  string `json:"protocol"`
+	// Dip - destination ip address
+	Dip net.IP `json:"destinationIP"`
+	// Sip - source ip address
+	Sip net.IP `json:"sourceIP"`
+	// Dport - destination port information
+	Dport uint16 `json:"destinationPort"`
+	// Sport - source port information
+	Sport uint16 `json:"sourcePort"`
+	// Proto - IP protocol information
+	Proto string `json:"protocol"`
+	// CState - current state of conntrack
 	CState string `json:"conntrackState"`
-	CAct   string `json:"conntrackAct"`
-	Pkts   uint64 `json:"packets"`
-	Bytes  uint64 `json:"bytes"`
+	// CAct - any related action
+	CAct string `json:"conntrackAct"`
+	// Pkts - packets tracked by ct entry
+	Pkts uint64 `json:"packets"`
+	// Bytes - bytes tracked by ct entry
+	Bytes uint64 `json:"bytes"`
 }
 
+// UlClArg - ulcl argument information
 type UlClArg struct {
+	// Addr - filter ip addr
 	Addr net.IP `json:"ulclIP"`
-	Qfi  uint8  `json:"qfi"`
+	// Qfi - qfi id related to this filter
+	Qfi uint8 `json:"qfi"`
 }
 
+// SessTun - session tunnel(l3) information
 type SessTun struct {
+	// TeID - tunnel-id
 	TeID uint32 `json:"TeID"`
+	// Addr - tunnel ip addr of remote-end
 	Addr net.IP `json:"tunnelIP"`
 }
 
+// Equal - check if two session tunnel entries are equal
 func (ut *SessTun) Equal(ut1 *SessTun) bool {
 	if ut.TeID == ut1.TeID && ut.Addr.Equal(ut1.Addr) {
 		return true
@@ -222,83 +363,133 @@ func (ut *SessTun) Equal(ut1 *SessTun) bool {
 	return false
 }
 
+// SessionMod - information related to a user-session
 type SessionMod struct {
-	Ident string  `json:"ident"`
-	Ip    net.IP  `json:"sessionIP"`
+	// Ident - unique identifier for this session
+	Ident string `json:"ident"`
+	// IP - ip address of the end-user of this session
+	IP net.IP `json:"sessionIP"`
+	// AnTun - access tunnel network information
 	AnTun SessTun `json:"accessNetworkTunnel"`
+	// CnTun - core tunnel network information
 	CnTun SessTun `json:"coreNetworkTunnel"`
 }
 
+// SessionUlClMod - information related to a ulcl filter
 type SessionUlClMod struct {
-	Ident string  `json:"ulclIdent"`
-	Args  UlClArg `json:"ulclArgument"`
+	// Ident - identifier of the session for this filter
+	Ident string `json:"ulclIdent"`
+	// Args - ulcl filter information
+	Args UlClArg `json:"ulclArgument"`
 }
 
 const (
-	ROL_TYPE_TRTCM = 0 // Default
-	POL_TYPE_SRTCM = 1
+	// PolTypeTrtcm - Policer type trtcm
+	PolTypeTrtcm = 0 // Default
+	// PolTypeSrtcm - Policer type srtcm
+	PolTypeSrtcm = 1
 )
 
+// PolInfo - information related to a policer
 type PolInfo struct {
-	PolType           int
-	ColorAware        bool
-	CommittedInfoRate uint64 // CIR in Mbps
-	PeakInfoRate      uint64 // PIR in Mbps
-	CommittedBlkSize  uint64 // CBS in bytes
-	ExcessBlkSize     uint64 // EBS in bytes
+	// PolType - one of PolTypeTrtcm or PolTypeSrtcm
+	PolType int
+	// ColorAware - color aware or not
+	ColorAware bool
+	// CommittedInfoRate - CIR in Mbps
+	CommittedInfoRate uint64
+	// PeakInfoRate - PIR in Mbps
+	PeakInfoRate uint64
+	// CommittedBlkSize -  CBS in bytes
+	// 0 for default selection
+	CommittedBlkSize uint64
+	// ExcessBlkSize - EBS in bytes
+	// 0 for default selection
+	ExcessBlkSize uint64
 }
 
+// PolObjType - type  of a policer attachment object
 type PolObjType uint
 
 const (
-	POL_ATTACH_PORT PolObjType = 1 << iota
-	POL_ATTACH_LB_RULE
+	// PolAttachPort - attach policer to port
+	PolAttachPort PolObjType = 1 << iota
+	// PolAttachLbRule - attach policer to a rule
+	PolAttachLbRule
 )
 
+// PolObj - Information related to policer attachment point
 type PolObj struct {
+	// PolObjName - name of the object
 	PolObjName string
+	// AttachMent - attach point type of the object
 	AttachMent PolObjType
 }
 
+// PolMod - Information related to policer entry
 type PolMod struct {
-	Ident  string
-	Info   PolInfo
+	// Ident - identifier
+	Ident string
+	// Info - policer info of type PolInfo
+	Info PolInfo
+	// Target - target object information
 	Target PolObj
 }
 
 const (
-	MIRR_TYPE_SPAN   = 0 // Default
-	MIRR_TYPE_RSPAN  = 1
-	MIRR_TYPE_ERSPAN = 2
+	// MirrTypeSpan - simple SPAN
+	MirrTypeSpan = 0 // Default
+	// MirrTypeRspan - type RSPAN
+	MirrTypeRspan = 1
+	// MirrTypeErspan - type ERSPAN
+	MirrTypeErspan = 2
 )
 
+// MirrInfo - information related to a mirror entry
 type MirrInfo struct {
+	// MirrType - one of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan
 	MirrType int
+	// MirrPort - port where mirrored traffic needs to be sent
 	MirrPort string
+	// MirrVlan - for RSPAN we may need to send tagged mirror traffic
 	MirrVlan int
-	MirrRip  net.IP
-	MirrSip  net.IP
-	MirrTid  uint32
+	// MirrRip - RemoteIP. For ERSPAN we may need to send tunnelled mirror traffic
+	MirrRip net.IP
+	// MirrRip - SourceIP. For ERSPAN we may need to send tunnelled mirror traffic
+	MirrSip net.IP
+	// MirrTid - mirror tunnel-id. For ERSPAN we may need to send tunnelled mirror traffic
+	MirrTid uint32
 }
 
+// MirrObjType - type of mirror attachment
 type MirrObjType uint
 
 const (
-	MIRR_ATTACH_PORT MirrObjType = 1 << iota
-	MIRR_ATTACH_LB_RULE
+	// MirrAttachPort - mirror attachment to a port
+	MirrAttachPort MirrObjType = 1 << iota
+	// MirrAttachRule - mirror attachment to a lb rule
+	MirrAttachRule
 )
 
+// MirrObj - information of object attached to mirror
 type MirrObj struct {
+	// MirrObjName - object name to be attached to mirror
 	MirrObjName string
-	AttachMent  MirrObjType
+	// AttachMent - one of MirrAttachPort or MirrAttachRule
+	AttachMent MirrObjType
 }
 
+// MirrMod - information related to a  mirror entry
 type MirrMod struct {
-	Ident  string
-	Info   MirrInfo
+	// Ident - unique identifier for the mirror
+	Ident string
+	// Info - information about the mirror
+	Info MirrInfo
+	// Target - information about object to which mirror needs to be attached
 	Target MirrObj
 }
 
+// NetHookInterface - Go interface which needs to be implemented to talk to loxinet module
 type NetHookInterface interface {
 	NetMirrorAdd(*MirrMod) (int, error)
 	NetMirrorDel(*MirrMod) (int, error)

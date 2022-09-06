@@ -17,22 +17,23 @@ package loxinet
 
 import (
 	"errors"
+
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
 
 const (
-	MIRR_ERR_BASE = iota - 101000
-	MIRR_MOD_ERR
-	MIRR_INFO_ERR
-	MIRR_ATTACH_ERR
-	MIRR_NOEXIST_ERR
-	MIRR_EXISTS_ERR
-	MIRR_ALLOC_ERR
+	MirrErrBase = iota - 101000
+	MirrModErr
+	MirrInfoErr
+	MirrAttachErr
+	MirrNoExistErr
+	MirrExistsErr
+	MirrAllocErr
 )
 
 const (
-	MAX_MIRRS = 32
+	MaxMirrors = 32
 )
 
 type MirrKey struct {
@@ -74,23 +75,23 @@ func MirrInit(zone *Zone) *MirrH {
 	var nMh = new(MirrH)
 	nMh.MirrMap = make(map[MirrKey]*MirrEntry)
 	nMh.Zone = zone
-	nMh.HwMark = tk.NewCounter(1, MAX_MIRRS)
+	nMh.HwMark = tk.NewCounter(1, MaxMirrors)
 	return nMh
 }
 
 func MirrInfoValidate(mInfo *cmn.MirrInfo) bool {
-	if mInfo.MirrType != cmn.MIRR_TYPE_SPAN &&
-		mInfo.MirrType != cmn.MIRR_TYPE_RSPAN &&
-		mInfo.MirrType != cmn.MIRR_TYPE_ERSPAN {
+	if mInfo.MirrType != cmn.MirrTypeSpan &&
+		mInfo.MirrType != cmn.MirrTypeRspan &&
+		mInfo.MirrType != cmn.MirrTypeErspan {
 		return false
 	}
 
-	if mInfo.MirrType == cmn.MIRR_TYPE_RSPAN &&
+	if mInfo.MirrType == cmn.MirrTypeRspan &&
 		mInfo.MirrVlan != 0 {
 		return false
 	}
 
-	if mInfo.MirrType == cmn.MIRR_TYPE_ERSPAN {
+	if mInfo.MirrType == cmn.MirrTypeErspan {
 		if mInfo.MirrRip.IsUnspecified() ||
 			mInfo.MirrSip.IsUnspecified() ||
 			mInfo.MirrTid == 0 {
@@ -103,7 +104,7 @@ func MirrInfoValidate(mInfo *cmn.MirrInfo) bool {
 
 func MirrObjValidate(mObj *cmn.MirrObj) bool {
 
-	if mObj.AttachMent != cmn.MIRR_ATTACH_PORT && mObj.AttachMent != cmn.MIRR_ATTACH_LB_RULE {
+	if mObj.AttachMent != cmn.MirrAttachPort && mObj.AttachMent != cmn.MirrAttachRule {
 		return false
 	}
 
@@ -127,12 +128,12 @@ func (M *MirrH) MirrAdd(name string, mInfo cmn.MirrInfo, mObjArgs cmn.MirrObj) (
 
 	if MirrObjValidate(&mObjArgs) == false {
 		tk.LogIt(tk.LOG_ERROR, "mirror add - %s: bad attach point\n", name)
-		return MIRR_ATTACH_ERR, errors.New("mirr-attachpoint error")
+		return MirrAttachErr, errors.New("mirr-attachpoint error")
 	}
 
 	if MirrInfoValidate(&mInfo) == false {
 		tk.LogIt(tk.LOG_ERROR, "mirror add - %s: info error\n", name)
-		return MIRR_INFO_ERR, errors.New("mirr-info error")
+		return MirrInfoErr, errors.New("mirr-info error")
 	}
 
 	key := MirrKey{name}
@@ -142,7 +143,7 @@ func (M *MirrH) MirrAdd(name string, mInfo cmn.MirrInfo, mObjArgs cmn.MirrObj) (
 		if MirrInfoCmp(&m.Info, &mInfo) == false {
 			M.MirrDelete(name)
 		} else {
-			return MIRR_EXISTS_ERR, errors.New("mirr-exists error")
+			return MirrExistsErr, errors.New("mirr-exists error")
 		}
 	}
 
@@ -152,7 +153,7 @@ func (M *MirrH) MirrAdd(name string, mInfo cmn.MirrInfo, mObjArgs cmn.MirrObj) (
 	m.Zone = M.Zone
 	m.HwNum, _ = M.HwMark.GetCounter()
 	if m.HwNum < 0 {
-		return MIRR_ALLOC_ERR, errors.New("mirr-alloc error")
+		return MirrAllocErr, errors.New("mirr-alloc error")
 	}
 
 	mObjInfo := MirrObjInfo{Args: mObjArgs}
@@ -160,8 +161,8 @@ func (M *MirrH) MirrAdd(name string, mInfo cmn.MirrInfo, mObjArgs cmn.MirrObj) (
 
 	M.MirrMap[key] = m
 
-	m.DP(DP_CREATE)
-	mObjInfo.MirrObj2DP(DP_CREATE)
+	m.DP(DpCreate)
+	mObjInfo.MirrObj2DP(DpCreate)
 
 	m.MObjs = append(m.MObjs, mObjInfo)
 
@@ -178,16 +179,16 @@ func (M *MirrH) MirrDelete(name string) (int, error) {
 
 	if found == false {
 		tk.LogIt(tk.LOG_ERROR, "mirror delete - %s: not found error\n", name)
-		return MIRR_NOEXIST_ERR, errors.New("no such mirror error")
+		return MirrNoExistErr, errors.New("no such mirror error")
 	}
 
 	for idx, mObj := range m.MObjs {
 		var pM *MirrObjInfo = &m.MObjs[idx]
-		mObj.MirrObj2DP(DP_REMOVE)
+		mObj.MirrObj2DP(DpRemove)
 		pM.Parent = nil
 	}
 
-	m.DP(DP_REMOVE)
+	m.DP(DpRemove)
 
 	delete(M.MirrMap, m.Key)
 
@@ -200,7 +201,7 @@ func (M *MirrH) MirrPortDelete(name string) {
 	for _, m := range M.MirrMap {
 		for idx, mObj := range m.MObjs {
 			var pM *MirrObjInfo
-			if mObj.Args.AttachMent == cmn.MIRR_ATTACH_PORT &&
+			if mObj.Args.AttachMent == cmn.MirrAttachPort &&
 				mObj.Args.MirrObjName == name {
 				pM = &m.MObjs[idx]
 				pM.Sync = 1
@@ -218,9 +219,9 @@ func (M *MirrH) MirrDestructAll() {
 func (M *MirrH) MirrTicker() {
 	for _, m := range M.MirrMap {
 		if m.Sync != 0 {
-			m.DP(DP_CREATE)
+			m.DP(DpCreate)
 			for _, mObj := range m.MObjs {
-				mObj.MirrObj2DP(DP_CREATE)
+				mObj.MirrObj2DP(DpCreate)
 			}
 		} else {
 
@@ -228,9 +229,9 @@ func (M *MirrH) MirrTicker() {
 				var pM *MirrObjInfo
 				pM = &m.MObjs[idx]
 				if pM.Sync != 0 {
-					pM.MirrObj2DP(DP_CREATE)
+					pM.MirrObj2DP(DpCreate)
 				} else {
-					if mObj.Args.AttachMent == cmn.MIRR_ATTACH_PORT {
+					if mObj.Args.AttachMent == cmn.MirrAttachPort {
 						port := mObj.Parent.Zone.Ports.PortFindByName(mObj.Args.MirrObjName)
 						if port == nil {
 							pM.Sync = 1
@@ -246,7 +247,7 @@ func (M *MirrH) MirrTicker() {
 func (mObjInfo *MirrObjInfo) MirrObj2DP(work DpWorkT) int {
 
 	// Only port attachment is supported currently
-	if mObjInfo.Args.AttachMent != cmn.MIRR_ATTACH_PORT {
+	if mObjInfo.Args.AttachMent != cmn.MirrAttachPort {
 		return -1
 	}
 
@@ -256,15 +257,15 @@ func (mObjInfo *MirrObjInfo) MirrObj2DP(work DpWorkT) int {
 		return -1
 	}
 
-	if work == DP_CREATE {
-		_, err := mObjInfo.Parent.Zone.Ports.PortUpdateProp(port.Name, cmn.PORT_PROP_SPAN,
+	if work == DpCreate {
+		_, err := mObjInfo.Parent.Zone.Ports.PortUpdateProp(port.Name, cmn.PortPropSpan,
 			mObjInfo.Parent.Zone.Name, true, mObjInfo.Parent.HwNum)
 		if err != nil {
 			mObjInfo.Sync = 1
 			return -1
 		}
-	} else if work == DP_REMOVE {
-		mObjInfo.Parent.Zone.Ports.PortUpdateProp(port.Name, cmn.PORT_PROP_SPAN,
+	} else if work == DpRemove {
+		mObjInfo.Parent.Zone.Ports.PortUpdateProp(port.Name, cmn.PortPropSpan,
 			mObjInfo.Parent.Zone.Name, false, 0)
 	}
 
@@ -276,7 +277,7 @@ func (mObjInfo *MirrObjInfo) MirrObj2DP(work DpWorkT) int {
 // Sync state of mirror with data-path
 func (m *MirrEntry) DP(work DpWorkT) int {
 
-	if m.Info.MirrType == cmn.MIRR_TYPE_ERSPAN {
+	if m.Info.MirrType == cmn.MirrTypeErspan {
 		// Not supported currently
 		return -1
 	}
@@ -284,7 +285,7 @@ func (m *MirrEntry) DP(work DpWorkT) int {
 	mwq := new(MirrDpWorkQ)
 	mwq.Work = work
 	mwq.HwMark = m.HwNum
-	if work == DP_CREATE {
+	if work == DpCreate {
 		port := m.Zone.Ports.PortFindByName(m.Info.MirrPort)
 		if port == nil {
 			m.Sync = 1

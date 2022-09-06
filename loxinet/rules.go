@@ -20,56 +20,57 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
 	"net"
 	"sort"
 	"time"
+
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 const (
-	RULE_ERR_BASE = iota - ZONE_BASE_ERR - 1000
-	RULE_UNK_SERV_ERR
-	RULE_UNK_EP_ERR
-	RULE_EXISTS_ERR
-	RULE_ALLOC_ERR
-	RULE_NOT_EXIST_ERR
-	RULE_EP_COUNT_ERR
+	RuleErrBase = iota - ZoneBaseErr - 1000
+	RuleUnknownServiceErr
+	RuleUnknownEpErr
+	RuleExistsErr
+	RuleAllocErr
+	RuleNotExistsErr
+	RuleEpCountErr
 )
 
 type ruleTMatch uint
 
 const (
-	RM_PORT ruleTMatch = 1 << iota
-	RM_L2SRC
-	RM_L2DST
-	RM_VLANID
-	RM_L3SRC
-	RM_L3DST
-	RM_L4SRC
-	RM_L4DST
-	RM_L4PROT
-	RM_INL2SRC
-	RM_INL2DST
-	RM_INL3SRC
-	RM_INL3DST
-	RM_INL4SRC
-	RM_INL4DST
-	RM_INL4PROT
-	RM_MAX
+	RmPort ruleTMatch = 1 << iota
+	RmL2Src
+	RmL2Dst
+	RmVlanID
+	RmL3Src
+	RmL3Dst
+	RmL4Src
+	RmL4Dst
+	RmL4Prot
+	RmInL2Src
+	RmInL2Dst
+	RmInL3Src
+	RmInL3Dst
+	RmInL4Src
+	RmInL4Dst
+	RmInL4Port
+	RmMax
 )
 
 const (
-	MAX_NAT_EPS   = 16
-	MAX_LBA_INACT = 3  // Default number of inactive tries before LB arm is turned off
-	LBA_CHK_TIMEO = 20 // Default timeout for checking LB arms
+	MaxNatEndPoints     = 16
+	MaxLbaInactiveTries = 3  // Default number of inactive tries before LB arm is turned off
+	LbaCheckTimeout     = 20 // Default timeout for checking LB arms
 )
 
 type ruleTType uint
 
 const (
-	RT_EM ruleTType = iota + 1
-	RT_MF
+	RtEm ruleTType = iota + 1
+	RtMf
 )
 
 type rule8Tuple struct {
@@ -124,11 +125,11 @@ type ruleTuples struct {
 type ruleTActType uint
 
 const (
-	RT_ACT_DROP ruleTActType = iota + 1
-	RT_ACT_FWD
-	RT_ACT_REDIRECT
-	RT_ACT_DNAT
-	RT_ACT_SNAT
+	RtActDrop ruleTActType = iota + 1
+	RtActFwd
+	RtActRedirect
+	RtActDnat
+	RtActSnat
 )
 
 type ruleNatEp struct {
@@ -179,14 +180,14 @@ type ruleTable struct {
 type ruleTableType uint
 
 const (
-	RT_ACL ruleTableType = iota + 1
-	RT_LB
-	RT_MAX
+	RtAcl ruleTableType = iota + 1
+	RtLB
+	RtMax
 )
 
 const (
-	RT_MAX_ACL = (8 * 1024)
-	RT_MAX_LB  = (2 * 1024)
+	RtMaximumAcls = (8 * 1024)
+	RtMaximumLbs  = (2 * 1024)
 )
 
 // Tunable parameters related to inactive rules
@@ -198,7 +199,7 @@ type RuleCfg struct {
 type RuleH struct {
 	Zone   *Zone
 	Cfg    RuleCfg
-	Tables [RT_MAX]ruleTable
+	Tables [RtMax]ruleTable
 }
 
 // Initialize the Rules subsystem
@@ -206,92 +207,92 @@ func RulesInit(zone *Zone) *RuleH {
 	var nRh = new(RuleH)
 	nRh.Zone = zone
 
-	nRh.Cfg.RuleInactChkTime = LBA_CHK_TIMEO
-	nRh.Cfg.RuleInactTries = MAX_LBA_INACT
+	nRh.Cfg.RuleInactChkTime = LbaCheckTimeout
+	nRh.Cfg.RuleInactTries = MaxLbaInactiveTries
 
-	nRh.Tables[RT_ACL].tableMatch = RM_MAX - 1
-	nRh.Tables[RT_ACL].tableType = RT_MF
-	nRh.Tables[RT_ACL].HwMark = tk.NewCounter(1, RT_MAX_ACL)
+	nRh.Tables[RtAcl].tableMatch = RmMax - 1
+	nRh.Tables[RtAcl].tableType = RtMf
+	nRh.Tables[RtAcl].HwMark = tk.NewCounter(1, RtMaximumAcls)
 
-	nRh.Tables[RT_LB].tableMatch = RM_L3DST | RM_L4DST | RM_L4PROT
-	nRh.Tables[RT_LB].tableType = RT_EM
-	nRh.Tables[RT_LB].eMap = make(map[string]*ruleEnt)
-	nRh.Tables[RT_LB].HwMark = tk.NewCounter(1, RT_MAX_LB)
+	nRh.Tables[RtLB].tableMatch = RmL3Dst | RmL4Dst | RmL4Prot
+	nRh.Tables[RtLB].tableType = RtEm
+	nRh.Tables[RtLB].eMap = make(map[string]*ruleEnt)
+	nRh.Tables[RtLB].HwMark = tk.NewCounter(1, RtMaximumLbs)
 
 	return nRh
 }
 
 func (r *ruleTuples) ruleMkKeyCompliance(match ruleTMatch) {
-	if match&RM_PORT != RM_PORT {
+	if match&RmPort != RmPort {
 		r.port.val = 0
 		r.port.valid = 0
 	}
-	if match&RM_L2SRC != RM_L2SRC {
+	if match&RmL2Src != RmL2Src {
 		for i := 0; i < 6; i++ {
 			r.l2Src.addr[i] = 0
 			r.l2Src.valid[i] = 0
 		}
 	}
-	if match&RM_L2DST != RM_L2DST {
+	if match&RmL2Dst != RmL2Dst {
 		for i := 0; i < 6; i++ {
 			r.l2Dst.addr[i] = 0
 			r.l2Dst.valid[i] = 0
 		}
 	}
-	if match&RM_VLANID != RM_VLANID {
+	if match&RmVlanID != RmVlanID {
 		r.vlanId.val = 0
 		r.vlanId.valid = 0
 	}
-	if match&RM_L3SRC != RM_L3SRC {
+	if match&RmL3Src != RmL3Src {
 		_, dst, _ := net.ParseCIDR("0.0.0.0/0")
 		r.l3Src.addr = *dst
 	}
-	if match&RM_L3DST != RM_L3DST {
+	if match&RmL3Dst != RmL3Dst {
 		_, dst, _ := net.ParseCIDR("0.0.0.0/0")
 		r.l3Dst.addr = *dst
 	}
-	if match&RM_L4PROT != RM_L4PROT {
+	if match&RmL4Prot != RmL4Prot {
 		r.l4Prot.val = 0
 		r.l4Prot.valid = 0
 	}
-	if match&RM_L4SRC != RM_L4SRC {
+	if match&RmL4Src != RmL4Src {
 		r.l4Src.val = 0
 		r.l4Src.valid = 0
 	}
-	if match&RM_L4DST != RM_L4DST {
+	if match&RmL4Dst != RmL4Dst {
 		r.l4Dst.val = 0
 		r.l4Dst.valid = 0
 	}
 
-	if match&RM_INL2SRC != RM_INL2SRC {
+	if match&RmInL2Src != RmInL2Src {
 		for i := 0; i < 6; i++ {
 			r.inL2Src.addr[i] = 0
 			r.inL2Src.valid[i] = 0
 		}
 	}
-	if match&RM_INL2DST != RM_INL2DST {
+	if match&RmInL2Dst != RmInL2Dst {
 		for i := 0; i < 6; i++ {
 			r.inL2Dst.addr[i] = 0
 			r.inL2Dst.valid[i] = 0
 		}
 	}
-	if match&RM_INL3SRC != RM_INL3SRC {
+	if match&RmInL3Src != RmInL3Src {
 		_, dst, _ := net.ParseCIDR("0.0.0.0/0")
 		r.inL3Src.addr = *dst
 	}
-	if match&RM_INL3DST != RM_INL3DST {
+	if match&RmInL3Dst != RmInL3Dst {
 		_, dst, _ := net.ParseCIDR("0.0.0.0/0")
 		r.inL3Dst.addr = *dst
 	}
-	if match&RM_INL4PROT != RM_INL4PROT {
+	if match&RmInL4Port != RmInL4Port {
 		r.inL4Prot.val = 0
 		r.inL4Prot.valid = 0
 	}
-	if match&RM_INL4SRC != RM_INL4SRC {
+	if match&RmInL4Src != RmInL4Src {
 		r.inL4Src.val = 0
 		r.inL4Src.valid = 0
 	}
-	if match&RM_INL4DST != RM_INL4DST {
+	if match&RmInL4Dst != RmInL4Dst {
 		r.inL4Dst.val = 0
 		r.inL4Dst.valid = 0
 	}
@@ -454,11 +455,11 @@ func (r *ruleTuples) String() string {
 func (a *ruleAct) String() string {
 	var ks string
 
-	if a.actType == RT_ACT_DROP {
+	if a.actType == RtActDrop {
 		ks += fmt.Sprintf("%s", "drop")
-	} else if a.actType == RT_ACT_DNAT ||
-		a.actType == RT_ACT_SNAT {
-		if a.actType == RT_ACT_SNAT {
+	} else if a.actType == RtActDnat ||
+		a.actType == RtActSnat {
+		if a.actType == RtActSnat {
 			ks += fmt.Sprintf("%s", "do-snat:")
 		} else {
 			ks += fmt.Sprintf("%s", "do-dnat:")
@@ -487,7 +488,7 @@ func (R *RuleH) Rules2Json() ([]byte, error) {
 	var eps []cmn.LbEndPointArg
 	var ret cmn.LbRuleMod
 	var bret []byte
-	for _, data := range R.Tables[RT_LB].eMap {
+	for _, data := range R.Tables[RtLB].eMap {
 		// Make Service Arguments
 		t.ServIP = data.tuples.l3Dst.addr.IP.String()
 		if data.tuples.l4Prot.val == 6 {
@@ -533,7 +534,7 @@ func (R *RuleH) Rules2Json() ([]byte, error) {
 func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 	var res []cmn.LbRuleMod
 
-	for _, data := range R.Tables[RT_LB].eMap {
+	for _, data := range R.Tables[RtLB].eMap {
 		var ret cmn.LbRuleMod
 		// Make Service Arguments
 		ret.Serv.ServIP = data.tuples.l3Dst.addr.IP.String()
@@ -579,17 +580,17 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	service := serv.ServIP + "/32"
 	_, sNetAddr, err := net.ParseCIDR(service)
 	if err != nil {
-		return RULE_UNK_SERV_ERR, errors.New("malformed-service error")
+		return RuleUnknownServiceErr, errors.New("malformed-service error")
 	}
 
 	// Currently support a maximum of MAX_NAT_EPS
-	if len(servEndPoints) <= 0 || len(servEndPoints) > MAX_NAT_EPS {
-		return RULE_EP_COUNT_ERR, errors.New("endpoints-range error")
+	if len(servEndPoints) <= 0 || len(servEndPoints) > MaxNatEndPoints {
+		return RuleEpCountErr, errors.New("endpoints-range error")
 	}
 
 	// For ICMP service, non-zero port can't be specified
 	if serv.Proto == "icmp" && serv.ServPort != 0 {
-		return RULE_UNK_SERV_ERR, errors.New("malformed-service error")
+		return RuleUnknownServiceErr, errors.New("malformed-service error")
 	}
 
 	if serv.Proto == "tcp" {
@@ -601,7 +602,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	} else if serv.Proto == "sctp" {
 		ipProto = 132
 	} else {
-		return RULE_UNK_SERV_ERR, errors.New("malformed-proto error")
+		return RuleUnknownServiceErr, errors.New("malformed-proto error")
 	}
 
 	natActs.sel = serv.Sel
@@ -609,10 +610,10 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		service = k.EpIP + "/32"
 		_, pNetAddr, err := net.ParseCIDR(service)
 		if err != nil {
-			return RULE_UNK_EP_ERR, errors.New("malformed-lbep error")
+			return RuleUnknownEpErr, errors.New("malformed-lbep error")
 		}
 		if serv.Proto == "icmp" && k.EpPort != 0 {
-			return RULE_UNK_SERV_ERR, errors.New("malformed-service error")
+			return RuleUnknownServiceErr, errors.New("malformed-service error")
 		}
 		ep := ruleNatEp{pNetAddr.IP, k.EpPort, k.Weight, 0, false, false}
 		natActs.endPoints = append(natActs.endPoints, ep)
@@ -629,7 +630,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst}
 
-	eRule := R.Tables[RT_LB].eMap[rt.ruleKey()]
+	eRule := R.Tables[RtLB].eMap[rt.ruleKey()]
 
 	if eRule != nil {
 		// If a NAT rule already exists, we try not reschuffle the order of the end-points.
@@ -673,7 +674,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		}
 
 		if ruleChg == false {
-			return RULE_EXISTS_ERR, errors.New("lbrule-exists error")
+			return RuleExistsErr, errors.New("lbrule-exists error")
 		}
 
 		// Update the rule
@@ -681,7 +682,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		eRule.act.action.(*ruleNatActs).endPoints = eEps
 		eRule.sT = time.Now()
 		tk.LogIt(tk.LOG_DEBUG, "nat lb-rule updated - %s:%s\n", eRule.tuples.String(), eRule.act.String())
-		eRule.DP(DP_CREATE)
+		eRule.DP(DpCreate)
 
 		return 0, nil
 	}
@@ -689,12 +690,12 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	r := new(ruleEnt)
 	r.tuples = rt
 	r.zone = R.Zone
-	r.act.actType = RT_ACT_DNAT
+	r.act.actType = RtActDnat
 	r.act.action = &natActs
-	r.ruleNum, err = R.Tables[RT_LB].HwMark.GetCounter()
+	r.ruleNum, err = R.Tables[RtLB].HwMark.GetCounter()
 	if err != nil {
 		tk.LogIt(tk.LOG_ERROR, "nat lb-rule - %s:%s hwm error\n", eRule.tuples.String(), eRule.act.String())
-		return RULE_ALLOC_ERR, errors.New("rule-hwm error")
+		return RuleAllocErr, errors.New("rule-hwm error")
 	}
 	r.sT = time.Now()
 	// Per LB end-point health-check is supposed to be handled at CCM,
@@ -704,9 +705,9 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 
 	tk.LogIt(tk.LOG_DEBUG, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
-	R.Tables[RT_LB].eMap[rt.ruleKey()] = r
+	R.Tables[RtLB].eMap[rt.ruleKey()] = r
 
-	r.DP(DP_CREATE)
+	r.DP(DpCreate)
 
 	return 0, nil
 }
@@ -720,7 +721,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	service := serv.ServIP + "/32"
 	_, sNetAddr, err := net.ParseCIDR(service)
 	if err != nil {
-		return RULE_UNK_SERV_ERR, errors.New("malformed-service error")
+		return RuleUnknownServiceErr, errors.New("malformed-service error")
 	}
 
 	if serv.Proto == "tcp" {
@@ -732,7 +733,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	} else if serv.Proto == "sctp" {
 		ipProto = 132
 	} else {
-		return RULE_UNK_SERV_ERR, errors.New("malformed-proto error")
+		return RuleUnknownServiceErr, errors.New("malformed-proto error")
 	}
 
 	l4prot := rule8Tuple{ipProto, 0xff}
@@ -740,18 +741,18 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst}
 
-	rule := R.Tables[RT_LB].eMap[rt.ruleKey()]
+	rule := R.Tables[RtLB].eMap[rt.ruleKey()]
 	if rule == nil {
-		return RULE_NOT_EXIST_ERR, errors.New("no-rule error")
+		return RuleNotExistsErr, errors.New("no-rule error")
 	}
 
-	defer R.Tables[RT_LB].HwMark.PutCounter(rule.ruleNum)
+	defer R.Tables[RtLB].HwMark.PutCounter(rule.ruleNum)
 
-	delete(R.Tables[RT_LB].eMap, rt.ruleKey())
+	delete(R.Tables[RtLB].eMap, rt.ruleKey())
 
 	tk.LogIt(tk.LOG_DEBUG, "nat lb-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
 
-	rule.DP(DP_REMOVE)
+	rule.DP(DpRemove)
 
 	return 0, nil
 }
@@ -763,10 +764,10 @@ func (R *RuleH) RulesSync() {
 	var sType string
 	var rChg bool
 	now := time.Now()
-	for _, rule := range R.Tables[RT_LB].eMap {
+	for _, rule := range R.Tables[RtLB].eMap {
 		ruleKeys := rule.tuples.String()
 		ruleActs := rule.act.String()
-		rule.DP(DP_STATS_GET)
+		rule.DP(DpStatsGet)
 		tk.LogIt(tk.LOG_DEBUG, "%d:%s,%s pc %v bc %v \n",
 			rule.ruleNum, ruleKeys, ruleActs,
 			rule.stat.packets, rule.stat.bytes)
@@ -820,7 +821,7 @@ func (R *RuleH) RulesSync() {
 
 		if rChg {
 			tk.LogIt(tk.LOG_DEBUG, "nat lb-Rule updated %d:%s,%s\n", rule.ruleNum, ruleKeys, ruleActs)
-			rule.DP(DP_CREATE)
+			rule.DP(DpCreate)
 		}
 
 	}
@@ -833,7 +834,7 @@ func (R *RuleH) RulesTicker() {
 // Destructor routine for all rules
 func (R *RuleH) RuleDestructAll() {
 	var lbs cmn.LbServiceArg
-	for _, r := range R.Tables[RT_LB].eMap {
+	for _, r := range R.Tables[RtLB].eMap {
 		lbs.ServIP = r.tuples.l3Dst.addr.IP.String()
 		if r.tuples.l4Dst.val == 6 {
 			lbs.Proto = "tcp"
@@ -867,20 +868,20 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.Proto = r.tuples.l4Prot.val
 	nWork.HwMark = r.ruleNum
 
-	if r.act.actType == RT_ACT_DNAT {
+	if r.act.actType == RtActDnat {
 		nWork.NatType = DP_DNAT
-	} else if r.act.actType == RT_ACT_SNAT {
+	} else if r.act.actType == RtActSnat {
 		nWork.NatType = DP_SNAT
 	}
 
 	switch at := r.act.action.(type) {
 	case *ruleNatActs:
 		switch {
-		case at.sel == cmn.LB_SEL_RR:
+		case at.sel == cmn.LbSelRr:
 			nWork.EpSel = EP_RR
-		case at.sel == cmn.LB_SEL_HASH:
+		case at.sel == cmn.LbSelHash:
 			nWork.EpSel = EP_HASH
-		case at.sel == cmn.LB_SEL_PRIO:
+		case at.sel == cmn.LbSelPrio:
 			nWork.EpSel = EP_PRIO
 		default:
 			nWork.EpSel = EP_RR
@@ -908,19 +909,19 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 // Sync state of rule entity to data-path
 func (r *ruleEnt) DP(work DpWorkT) int {
 
-	if work == DP_TABLE_GET {
+	if work == DpMapGet {
 		nTable := new(TableDpWorkQ)
-		nTable.Work = DP_TABLE_GET
-		nTable.Name = MAP_NAME_CT4
+		nTable.Work = DpMapGet
+		nTable.Name = MapNameCt4
 		mh.dp.ToDpCh <- nTable
 		return 0
 	}
 
-	if work == DP_STATS_GET {
+	if work == DpStatsGet {
 		nStat := new(StatDpWorkQ)
 		nStat.Work = work
 		nStat.HwMark = uint32(r.ruleNum)
-		nStat.Name = MAP_NAME_NAT4
+		nStat.Name = MapNameNat4
 		nStat.Bytes = &r.stat.bytes
 		nStat.Packets = &r.stat.packets
 
@@ -928,8 +929,8 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 		return 0
 	}
 
-	if r.act.actType == RT_ACT_DNAT ||
-		r.act.actType == RT_ACT_SNAT {
+	if r.act.actType == RtActDnat ||
+		r.act.actType == RtActSnat {
 		return r.Nat2DP(work)
 	}
 

@@ -24,45 +24,45 @@ import (
 )
 
 const (
-	MAP_NAME_CT4  = "CT4"
-	MAP_NAME_CT6  = "CT6"
-	MAP_NAME_NAT4 = "NAT4"
-	MAP_NAME_BD   = "BD"
-	MAP_NAME_RXBD = "RXBD"
-	MAP_NAME_TXBD = "TXBD"
-	MAP_NAME_RT4  = "RT4"
-	MAP_NAME_ULCL = "ULCL"
-	MAP_NAME_IPOL = "IPOL"
+	MapNameCt4  = "CT4"
+	MapNameCt6  = "CT6"
+	MapNameNat4 = "NAT4"
+	MapNameBD   = "BD"
+	MapNameRxBD = "RXBD"
+	MapNameTxBD = "TXBD"
+	MapNameRt4  = "RT4"
+	MapNameULCL = "ULCL"
+	MapNameIpol = "IPOL"
 )
 
 const (
-	DP_ERR_BASE = iota - L3_ERR_BASE - 1000
-	DP_WQ_UNK_ERR
+	DpErrBase = iota - L3ErrBase - 1000
+	DpWqUnkErr
 )
 
 type DpWorkT uint8
 
 const (
-	DP_CREATE DpWorkT = iota + 1
-	DP_REMOVE
-	DP_CHANGE
-	DP_STATS_GET
-	DP_STATS_CLR
-	DP_TABLE_GET
+	DpCreate DpWorkT = iota + 1
+	DpRemove
+	DpChange
+	DpStatsGet
+	DpStatsClr
+	DpMapGet
 )
 
 type DpStatusT uint8
 
 const (
-	DP_CREATE_ERR DpStatusT = iota + 1
-	DP_REMOVE_ERR
-	DP_CHANGE_ERR
-	DP_UNKNOWN_ERR
-	DP_INPROGRESS_ERR
+	DpCreateErr DpStatusT = iota + 1
+	DpRemoveErr
+	DpChangeErr
+	DpUknownErr
+	DpInProgressErr
 )
 
 const (
-	DP_WORKQ_LEN = 1024
+	DpWorkQLen = 1024
 )
 
 type MirrDpWorkQ struct {
@@ -273,73 +273,73 @@ type DpH struct {
 }
 
 func (dp *DpH) DpWorkOnPort(pWq *PortDpWorkQ) DpRetT {
-	if pWq.Work == DP_CREATE {
+	if pWq.Work == DpCreate {
 		return dp.DpHooks.DpPortPropAdd(pWq)
-	} else if pWq.Work == DP_REMOVE {
+	} else if pWq.Work == DpRemove {
 		return dp.DpHooks.DpPortPropDel(pWq)
 	}
 
-	return DP_WQ_UNK_ERR
+	return DpWqUnkErr
 }
 
 func (dp *DpH) DpWorkOnL2Addr(pWq *L2AddrDpWorkQ) DpRetT {
-	if pWq.Work == DP_CREATE {
+	if pWq.Work == DpCreate {
 		return dp.DpHooks.DpL2AddrAdd(pWq)
-	} else if pWq.Work == DP_REMOVE {
+	} else if pWq.Work == DpRemove {
 		return dp.DpHooks.DpL2AddrDel(pWq)
 	}
 
-	return DP_WQ_UNK_ERR
+	return DpWqUnkErr
 }
 
 func (dp *DpH) DpWorkOnRtMac(rmWq *RouterMacDpWorkQ) DpRetT {
-	if rmWq.Work == DP_CREATE {
+	if rmWq.Work == DpCreate {
 		return dp.DpHooks.DpRouterMacAdd(rmWq)
-	} else if rmWq.Work == DP_REMOVE {
+	} else if rmWq.Work == DpRemove {
 		return dp.DpHooks.DpRouterMacDel(rmWq)
 	}
 
-	return DP_WQ_UNK_ERR
+	return DpWqUnkErr
 }
 
 func (dp *DpH) DpWorkOnNextHop(nhWq *NextHopDpWorkQ) DpRetT {
-	if nhWq.Work == DP_CREATE {
+	if nhWq.Work == DpCreate {
 		return dp.DpHooks.DpNextHopAdd(nhWq)
-	} else if nhWq.Work == DP_REMOVE {
+	} else if nhWq.Work == DpRemove {
 		return dp.DpHooks.DpNextHopDel(nhWq)
 	}
 
-	return DP_WQ_UNK_ERR
+	return DpWqUnkErr
 }
 
 func (dp *DpH) DpWorkOnRoute(rtWq *RouteDpWorkQ) DpRetT {
-	if rtWq.Work == DP_CREATE {
+	if rtWq.Work == DpCreate {
 		return dp.DpHooks.DpRouteAdd(rtWq)
-	} else if rtWq.Work == DP_REMOVE {
+	} else if rtWq.Work == DpRemove {
 		return dp.DpHooks.DpRouteDel(rtWq)
 	}
 
-	return DP_WQ_UNK_ERR
+	return DpWqUnkErr
 }
 
 func (dp *DpH) DpWorkOnNatLb(nWq *NatDpWorkQ) DpRetT {
-	if nWq.Work == DP_CREATE {
+	if nWq.Work == DpCreate {
 		return dp.DpHooks.DpNatLbRuleAdd(nWq)
-	} else if nWq.Work == DP_REMOVE {
+	} else if nWq.Work == DpRemove {
 		return dp.DpHooks.DpNatLbRuleDel(nWq)
 	}
 
-	return DP_WQ_UNK_ERR
+	return DpWqUnkErr
 }
 
 func (dp *DpH) DpWorkOnUlCl(nWq *UlClDpWorkQ) DpRetT {
-	if nWq.Work == DP_CREATE {
+	if nWq.Work == DpCreate {
 		return dp.DpHooks.DpUlClAdd(nWq)
-	} else if nWq.Work == DP_REMOVE {
+	} else if nWq.Work == DpRemove {
 		return dp.DpHooks.DpUlClDel(nWq)
 	}
 
-	return DP_WQ_UNK_ERR
+	return DpWqUnkErr
 }
 
 func (dp *DpH) DpWorkOnStat(nWq *StatDpWorkQ) DpRetT {
@@ -351,23 +351,23 @@ func (dp *DpH) DpWorkOnTableOp(nWq *TableDpWorkQ) (error, DpRetT) {
 }
 
 func (dp *DpH) DpWorkOnPol(pWq *PolDpWorkQ) DpRetT {
-	if pWq.Work == DP_CREATE {
+	if pWq.Work == DpCreate {
 		return dp.DpHooks.DpPolAdd(pWq)
-	} else if pWq.Work == DP_REMOVE {
+	} else if pWq.Work == DpRemove {
 		return dp.DpHooks.DpPolDel(pWq)
 	}
 
-	return DP_WQ_UNK_ERR
+	return DpWqUnkErr
 }
 
 func (dp *DpH) DpWorkOnMirr(mWq *MirrDpWorkQ) DpRetT {
-	if mWq.Work == DP_CREATE {
+	if mWq.Work == DpCreate {
 		return dp.DpHooks.DpMirrAdd(mWq)
-	} else if mWq.Work == DP_REMOVE {
+	} else if mWq.Work == DpRemove {
 		return dp.DpHooks.DpMirrDel(mWq)
 	}
 
-	return DP_WQ_UNK_ERR
+	return DpWqUnkErr
 }
 
 func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
@@ -397,14 +397,14 @@ func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 		ret, _ = dp.DpWorkOnTableOp(mq)
 	default:
 		tk.LogIt(tk.LOG_ERROR, "unexpected type %T\n", mq)
-		ret = DP_WQ_UNK_ERR
+		ret = DpWqUnkErr
 	}
 	return ret
 }
 
 func DpWorker(dp *DpH, f chan int, ch chan interface{}) {
 	for {
-		for n := 0; n < DP_WORKQ_LEN; n++ {
+		for n := 0; n < DpWorkQLen; n++ {
 			select {
 			case m := <-ch:
 				DpWorkSingle(dp, m)
@@ -421,8 +421,8 @@ func DpWorker(dp *DpH, f chan int, ch chan interface{}) {
 func DpBrokerInit(dph DpHookInterface) *DpH {
 	nDp := new(DpH)
 
-	nDp.ToDpCh = make(chan interface{}, DP_WORKQ_LEN)
-	nDp.FromDpCh = make(chan interface{}, DP_WORKQ_LEN)
+	nDp.ToDpCh = make(chan interface{}, DpWorkQLen)
+	nDp.FromDpCh = make(chan interface{}, DpWorkQLen)
 	nDp.ToFinCh = make(chan int)
 	nDp.DpHooks = dph
 
@@ -434,8 +434,8 @@ func DpBrokerInit(dph DpHookInterface) *DpH {
 func (dp *DpH) DpMapGetCt4() []cmn.CtInfo {
 	var CtInfoArr []cmn.CtInfo
 	nTable := new(TableDpWorkQ)
-	nTable.Work = DP_TABLE_GET
-	nTable.Name = MAP_NAME_CT4
+	nTable.Work = DpMapGet
+	nTable.Name = MapNameCt4
 
 	err, ret := mh.dp.DpWorkOnTableOp(nTable)
 	if err != nil {

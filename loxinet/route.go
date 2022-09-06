@@ -18,30 +18,31 @@ package loxinet
 import (
 	"errors"
 	"fmt"
-	tk "github.com/loxilb-io/loxilib"
 	"net"
+
+	tk "github.com/loxilb-io/loxilib"
 )
 
 const (
-	RT_ERR_BASE = iota - 5000
-	RT_EXISTS_ERR
-	RT_NH_ERR
-	RT_NOENT_ERR
-	RT_RANGE_ERR
-	RT_MOD_ERR
-	RT_TRIE_ADD_ERR
-	RT_TRIE_DEL_ERR
+	RtErrBase = iota - 5000
+	RtExistsErr
+	RtNhErr
+	RtNoEntErr
+	RtRangeErr
+	RtModErr
+	RtTrieAddErr
+	RtTrieDelErr
 )
 
 const (
-	RT_TYPE_IND  = 0x1
-	RT_TYPE_DYN  = 0x2
-	RT_TYPE_SELF = 0x4
-	RT_TYPE_HOST = 0x8
+	RtTypeInd  = 0x1
+	RtTypeDyn  = 0x2
+	RtTypeSelf = 0x4
+	RtTypeHost = 0x8
 )
 
 const (
-	MAX_ROUTES = 32 * 1024
+	MaxSysRoutes = 32 * 1024
 )
 
 type RtKey struct {
@@ -95,7 +96,7 @@ func RtInit(zone *Zone) *RtH {
 	nRt.RtMap = make(map[RtKey]*Rt)
 	nRt.Trie4 = tk.TrieInit(false)
 	nRt.Zone = zone
-	nRt.HwMark = tk.NewCounter(1, MAX_ROUTES)
+	nRt.HwMark = tk.NewCounter(1, MaxSysRoutes)
 	return nRt
 }
 
@@ -130,7 +131,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 
 	if nhLen > 1 {
 		tk.LogIt(tk.LOG_ERROR, "rt add - %s:%s ecmp not supported\n", Dst.String(), Zone)
-		return RT_NH_ERR, errors.New("ecmp-rt error not supported")
+		return RtNhErr, errors.New("ecmp-rt error not supported")
 	}
 
 	rt, found := r.RtMap[key]
@@ -152,14 +153,14 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 			ret, _ := r.RtDelete(Dst, Zone)
 			if ret != 0 {
 				tk.LogIt(tk.LOG_ERROR, "rt add - %s:%s del failed on mod\n", Dst.String(), Zone)
-				return RT_MOD_ERR, errors.New("rt mod error")
+				return RtModErr, errors.New("rt mod error")
 			} else {
 				return r.RtAdd(Dst, Zone, Ra, Na)
 			}
 		}
 
 		tk.LogIt(tk.LOG_ERROR, "rt add - %s:%s exists\n", Dst.String(), Zone)
-		return RT_EXISTS_ERR, errors.New("rt exists")
+		return RtExistsErr, errors.New("rt exists")
 	}
 
 	rt = new(Rt)
@@ -171,10 +172,10 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 	newNhs := make([]*Neigh, 0)
 
 	if len(Na) != 0 {
-		rt.TFlags |= RT_TYPE_IND
+		rt.TFlags |= RtTypeInd
 
 		if Ra.HostRoute == true {
-			rt.TFlags |= RT_TYPE_HOST
+			rt.TFlags |= RtTypeHost
 		}
 
 		hwmac, _ := net.ParseMAC("00:00:00:00:00:00")
@@ -186,14 +187,14 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 				// Usually host route addition is triggered by neigh add
 				if Ra.HostRoute == true {
 					tk.LogIt(tk.LOG_ERROR, "rt add host - %s:%s no neigh\n", Dst.String(), Zone)
-					return RT_NH_ERR, errors.New("rt-neigh host error")
+					return RtNhErr, errors.New("rt-neigh host error")
 				}
 
 				r.Zone.Nh.NeighAdd(Na[i].NhAddr, Zone, NeighAttr{Na[i].LinkIndex, 0, hwmac})
 				nh, _ = r.Zone.Nh.NeighFind(Na[i].NhAddr, Zone)
 				if nh == nil {
 					tk.LogIt(tk.LOG_ERROR, "rt add - %s:%s no neigh\n", Dst.String(), Zone)
-					return RT_NH_ERR, errors.New("rt-neigh error")
+					return RtNhErr, errors.New("rt-neigh error")
 				}
 				newNhs = append(newNhs, nh)
 			}
@@ -201,7 +202,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 		}
 
 	} else {
-		rt.TFlags |= RT_TYPE_SELF
+		rt.TFlags |= RtTypeSelf
 	}
 
 	var tret int
@@ -216,7 +217,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 			r.Zone.Nh.NeighDelete(newNhs[i].Addr, Zone)
 		}
 		tk.LogIt(tk.LOG_ERROR, "rt add - %s:%s lpm add fail\n", Dst.String(), Zone)
-		return RT_TRIE_ADD_ERR, errors.New("RT Trie Err")
+		return RtTrieAddErr, errors.New("RT Trie Err")
 	}
 
 	// If we cant allocate HwMark, we don't care
@@ -231,7 +232,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 	}
 	//}
 
-	rt.DP(DP_CREATE)
+	rt.DP(DpCreate)
 
 	tk.LogIt(tk.LOG_DEBUG, "rt added - %s:%s\n", Dst.String(), Zone)
 
@@ -260,7 +261,7 @@ func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 	rt, found := r.RtMap[key]
 	if found == false {
 		tk.LogIt(tk.LOG_ERROR, "rt delete - %s:%s not found\n", Dst.String(), Zone)
-		return RT_NOENT_ERR, errors.New("no such route")
+		return RtNoEntErr, errors.New("no such route")
 	}
 
 	// Take care of any dependencies on this route object
@@ -276,13 +277,13 @@ func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 	tret := r.Trie4.DelTrie(Dst.String())
 	if tret != 0 {
 		tk.LogIt(tk.LOG_ERROR, "rt delete - %s:%s lpm not found\n", Dst.String(), Zone)
-		return RT_TRIE_DEL_ERR, errors.New("rt-lpm delete error")
+		return RtTrieDelErr, errors.New("rt-lpm delete error")
 	}
 
 	delete(r.RtMap, rt.Key)
 	defer r.HwMark.PutCounter(rt.HwMark)
 
-	rt.DP(DP_REMOVE)
+	rt.DP(DpRemove)
 
 	tk.LogIt(tk.LOG_DEBUG, "rt deleted - %s:%s\n", Dst.String(), Zone)
 
@@ -291,20 +292,20 @@ func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 
 func Rt2String(rt *Rt) string {
 	var tStr string
-	if rt.TFlags&RT_TYPE_DYN == RT_TYPE_DYN {
+	if rt.TFlags&RtTypeDyn == RtTypeDyn {
 		tStr += fmt.Sprintf("Dyn")
 	} else {
 		tStr += fmt.Sprintf("Static")
 	}
-	if rt.TFlags&RT_TYPE_IND == RT_TYPE_IND {
+	if rt.TFlags&RtTypeInd == RtTypeInd {
 		tStr += fmt.Sprintf(",In")
 	} else {
 		tStr += fmt.Sprintf(",Dr")
 	}
-	if rt.TFlags&RT_TYPE_SELF == RT_TYPE_SELF {
+	if rt.TFlags&RtTypeSelf == RtTypeSelf {
 		tStr += fmt.Sprintf(",Self")
 	}
-	if rt.TFlags&RT_TYPE_HOST == RT_TYPE_HOST {
+	if rt.TFlags&RtTypeHost == RtTypeHost {
 		tStr += fmt.Sprintf(",Host")
 	}
 	if rt.HwMark > 0 {
@@ -346,7 +347,7 @@ func (r *RtH) RoutesSync() {
 			rts := Rt2String(rt)
 			fmt.Printf("%s: pc %v bc %v\n", rts, rt.Stat.Packets, rt.Stat.Bytes)
 		}
-		rt.DP(DP_STATS_GET)
+		rt.DP(DpStatsGet)
 	}
 }
 
@@ -371,7 +372,7 @@ func (rt *Rt) DP(work DpWorkT) int {
 		return -1
 	}
 
-	if work == DP_STATS_GET {
+	if work == DpStatsGet {
 		nStat := new(StatDpWorkQ)
 		nStat.Work = work
 		nStat.HwMark = uint32(rt.HwMark)

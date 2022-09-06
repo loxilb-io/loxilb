@@ -25,8 +25,8 @@ import (
 )
 
 const (
-	MKFS_SCRIPT     = "/usr/local/sbin/mkllb_bpffs"
-	BPF_FS_CHK_FILE = "/opt/loxilb/dp/bpf/intf_map"
+	MkfsScript     = "/usr/local/sbin/mkllb_bpffs"
+	BpfFsCheckFile = "/opt/loxilb/dp/bpf/intf_map"
 )
 
 func fileExists(fname string) bool {
@@ -66,9 +66,9 @@ func main() {
 
 	// It is important to make sure loxilb's eBPF filesystem
 	// is in place and mounted to make sure maps are pinned properly
-	if fileExists(BPF_FS_CHK_FILE) == false {
-		if fileExists(MKFS_SCRIPT) {
-			_, err := exec.Command("/bin/bash", MKFS_SCRIPT).Output()
+	if fileExists(BpfFsCheckFile) == false {
+		if fileExists(MkfsScript) {
+			_, err := exec.Command("/bin/bash", MkfsScript).Output()
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
