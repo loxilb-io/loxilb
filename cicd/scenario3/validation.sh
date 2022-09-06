@@ -41,6 +41,12 @@ do
     echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
+        echo "llb1 ct"
+        $dexec llb1 loxicmd get ct
+        echo "llb2 ct"
+        $dexec llb2 loxicmd get ct
+        echo "llb2 ip neigh"
+        $dexec llb2 ip neigh
         code=1
     fi
     sleep 1
