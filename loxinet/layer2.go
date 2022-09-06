@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package loxinet
 
 import (
@@ -20,11 +21,11 @@ import (
 	"fmt"
 	"net"
 	"time"
-
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
 
+// error codes
 const (
 	L2ErrBase = iota - 3000
 	L2SameFdbErr
@@ -33,32 +34,38 @@ const (
 	L2VxattrErr
 )
 
+// constants
 const (
 	FdbGts = 10
 )
 
+// FdbKey - key to find a fwd entry
 type FdbKey struct {
 	MacAddr  [6]byte
-	BridgeId int
+	BridgeID int
 }
 
+// FdbAttr - extra attribs for a fwd entry
 type FdbAttr struct {
 	Oif     string
 	Dst     net.IP
 	FdbType int
 }
 
+// FdbTunAttr - attribs for a tun fwd entry
 type FdbTunAttr struct {
 	rt *Rt
 	nh *Neigh
 	ep *NeighTunEp
 }
 
+// FdbStat - statistics for fwd entry
 type FdbStat struct {
 	Packets uint64
 	Bytes   uint64
 }
 
+// FdbEnt - a forwarding database entry
 type FdbEnt struct {
 	FdbKey   FdbKey
 	FdbAttr  FdbAttr
@@ -71,11 +78,13 @@ type FdbEnt struct {
 	Sync     DpStatusT
 }
 
+// L2H - context container
 type L2H struct {
 	FdbMap map[FdbKey]*FdbEnt
 	Zone   *Zone
 }
 
+// L2Init - Initialize the layer2 subsystem
 func L2Init(z *Zone) *L2H {
 	var nL2 = new(L2H)
 	nL2.FdbMap = make(map[FdbKey]*FdbEnt)
@@ -100,7 +109,7 @@ func l2FdbAttrCopy(dst *FdbAttr, src *FdbAttr) {
 	dst.Dst = src.Dst
 }
 
-// For TunFDB, try to associate with appropriate neighbor
+// L2FdbResolveNh - For TunFDB, try to associate with appropriate neighbor
 func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 	p := f.Port
 	attr := f.FdbAttr
@@ -163,6 +172,7 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 	return unRch, 0, nil
 }
 
+// L2FdbFind - Find a fwd entry given the key
 func (l2 *L2H) L2FdbFind(key FdbKey) *FdbEnt {
 	fdb, found := l2.FdbMap[key]
 
@@ -173,7 +183,7 @@ func (l2 *L2H) L2FdbFind(key FdbKey) *FdbEnt {
 	return nil
 }
 
-// Add a l2 forwarding entry
+// L2FdbAdd - Add a l2 forwarding entry
 func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 
 	p := l2.Zone.Ports.PortFindByName(attr.Oif)
@@ -220,7 +230,7 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 	return 0, nil
 }
 
-// Delete a l2 forwarding entry
+// L2FdbDel - Delete a l2 forwarding entry
 func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 
 	fdb, found := l2.FdbMap[key]
@@ -261,6 +271,7 @@ func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 	return 0, nil
 }
 
+// FdbTicker - Ticker routine for a fwd entry
 func (l2 *L2H) FdbTicker(f *FdbEnt) {
 	if time.Now().Sub(f.stime) > FdbGts {
 		// This scans for inconsistencies in a fdb
@@ -280,6 +291,7 @@ func (l2 *L2H) FdbTicker(f *FdbEnt) {
 	}
 }
 
+// FdbsTicker - Ticker for Fdbs
 func (l2 *L2H) FdbsTicker() {
 	n := 1
 	for _, e := range l2.FdbMap {
@@ -289,6 +301,7 @@ func (l2 *L2H) FdbsTicker() {
 	return
 }
 
+// PortNotifier - Implementation of PortEventIntf interface
 func (l2 *L2H) PortNotifier(name string, osID int, evType PortEvent) {
 	if evType&PortEvDown|PortEvDelete|PortEvLowerDown != 0 {
 		for _, f := range l2.FdbMap {
@@ -305,10 +318,11 @@ func fdb2String(f *FdbEnt, it IterIntf, n *int) {
 	s = fmt.Sprintf("FdbEnt%-3d : ether %02x:%02x:%02x:%02x:%02x:%02x,br %d :: Oif %s\n",
 		*n, f.FdbKey.MacAddr[0], f.FdbKey.MacAddr[1], f.FdbKey.MacAddr[2],
 		f.FdbKey.MacAddr[3], f.FdbKey.MacAddr[4], f.FdbKey.MacAddr[5],
-		f.FdbKey.BridgeId, f.FdbAttr.Oif)
+		f.FdbKey.BridgeID, f.FdbAttr.Oif)
 	it.NodeWalker(s)
 }
 
+// Fdbs2String - Format all fwd entries to string
 func (l2 *L2H) Fdbs2String(it IterIntf) error {
 	n := 1
 	for _, e := range l2.FdbMap {
@@ -318,6 +332,7 @@ func (l2 *L2H) Fdbs2String(it IterIntf) error {
 	return nil
 }
 
+// L2DestructAll - Destructor for all layer2 fwd entries
 func (l2 *L2H) L2DestructAll() {
 	for _, f := range l2.FdbMap {
 		l2.L2FdbDel(f.FdbKey)
@@ -325,7 +340,7 @@ func (l2 *L2H) L2DestructAll() {
 	return
 }
 
-// Sync state of L2 entities to data-path
+// DP - Sync state of L2 entities to data-path
 func (f *FdbEnt) DP(work DpWorkT) int {
 
 	if work == DpCreate && f.unReach == true {

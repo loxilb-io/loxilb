@@ -13,33 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package loxinet
 
 import (
 	"errors"
 	"fmt"
 	"net"
-
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
 
+// constants
 const (
 	L3ErrBase = iota - RtErrBase - 1000
 	L3AddrErr
 	L3ObjErr
 )
 
+// IfaKey - key to find a ifa entry
 type IfaKey struct {
 	Obj string
 }
 
+// IfaEnt - the ifa-entry
 type IfaEnt struct {
 	IfaAddr   net.IP
 	IfaNet    net.IPNet
 	Secondary bool
 }
 
+// Ifa  - a singe ifa can contain multiple ifas
 type Ifa struct {
 	Key  IfaKey
 	Zone *Zone
@@ -47,11 +51,13 @@ type Ifa struct {
 	Ifas []*IfaEnt
 }
 
+// L3H - context container
 type L3H struct {
 	IfaMap map[IfaKey]*Ifa
 	Zone   *Zone
 }
 
+// L3Init - Initialize the layer3 subsystem
 func L3Init(zone *Zone) *L3H {
 	var nl3h = new(L3H)
 	nl3h.IfaMap = make(map[IfaKey]*Ifa)
@@ -60,7 +66,7 @@ func L3Init(zone *Zone) *L3H {
 	return nl3h
 }
 
-// Adds an interface IP address (primary or secondary) and associate it with Obj
+// IfaAdd - Adds an interface IP address (primary or secondary) and associate it with Obj
 // Obj can be anything but usually it is the name of a valid interface
 func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 	var sec bool = false
@@ -136,7 +142,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 	return 0, nil
 }
 
-// Deletes an interface IP address (primary or secondary) and de-associate from Obj
+// IfaDelete - Deletes an interface IP address (primary or secondary) and de-associate from Obj
 // Obj can be anything but usually it is the name of a valid interface
 func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 	var found bool = false
@@ -190,7 +196,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 	return L3AddrErr, errors.New("no such ifa")
 }
 
-// Given any ip address, select optimal ip address from Obj's ifa list
+// IfaSelect - Given any ip address, select optimal ip address from Obj's ifa list
 // This is useful to determine source ip address when sending traffic
 // to the given ip address
 func (l3 *L3H) IfaSelect(Obj string, addr net.IP) (int, net.IP) {
@@ -220,6 +226,7 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP) (int, net.IP) {
 	return L3AddrErr, net.IPv4(0, 0, 0, 0)
 }
 
+// Ifa2String - Format an ifa to a string
 func Ifa2String(ifa *Ifa, it IterIntf) {
 	var str string
 	for _, ifaEnt := range ifa.Ifas {
@@ -236,6 +243,7 @@ func Ifa2String(ifa *Ifa, it IterIntf) {
 	it.NodeWalker(str)
 }
 
+// Ifas2String - Format all ifas to string
 func (l3 *L3H) Ifas2String(it IterIntf) error {
 	for _, ifa := range l3.IfaMap {
 		Ifa2String(ifa, it)
@@ -243,6 +251,7 @@ func (l3 *L3H) Ifas2String(it IterIntf) error {
 	return nil
 }
 
+// IfaMkString - Given an ifa return its string representation
 func IfaMkString(ifa *Ifa) string {
 	var str string
 	for _, ifaEnt := range ifa.Ifas {
@@ -259,6 +268,7 @@ func IfaMkString(ifa *Ifa) string {
 	return str
 }
 
+// IfObjMkString - given an ifa object, get all its member ifa's string rep
 func (l3 *L3H) IfObjMkString(obj string) string {
 	key := IfaKey{obj}
 	ifa := l3.IfaMap[key]
@@ -269,7 +279,7 @@ func (l3 *L3H) IfObjMkString(obj string) string {
 	return ""
 }
 
-// Sync state of L3 entities to data-path
+// DP - Sync state of L3 entities to data-path
 func (ifa *Ifa) DP(work DpWorkT) int {
 	port := ifa.Zone.Ports.PortFindByName(ifa.Key.Obj)
 
