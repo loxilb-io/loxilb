@@ -412,7 +412,7 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 	_, err := n.Zone.Rt.RtDelete(ipnet, Zone)
 	if err != nil {
 		tk.LogIt(tk.LOG_ERROR, "neigh delete - %s:%s host-rt fail\n", Addr.String(), Zone)
-		return NeighHostRtErr, errors.New("nh-hostrt error" + err.Error())
+		/*return NeighHostRtErr, errors.New("nh-hostrt error" + err.Error())*/
 	}
 
 	ne.DP(DpRemove)
@@ -486,7 +486,7 @@ func (n *NeighH) NeighUnPairRt(ne *Neigh, rt *Rt) int {
 	}
 
 	delete(ne.NhRtm, rt.Key)
-	if len(ne.NhRtm) <= 1 && ne.Inactive == true {
+	if len(ne.NhRtm) < 1 && ne.Inactive == true {
 		// Safely remove
 		tk.LogIt(tk.LOG_DEBUG, "neigh rt unpair - %s->%s\n", rt.Key.RtCidr, ne.Key.NhString)
 		n.NeighDelete(ne.Addr, ne.Key.Zone)
