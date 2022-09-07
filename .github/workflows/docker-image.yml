@@ -9,8 +9,6 @@ on:
         description: 'Tag Name'     
         required: true
         default: 'latest'
-      tags:
-        description: 'Docker Tag'
 
 jobs:
 
@@ -37,11 +35,15 @@ jobs:
         docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
         
     - name: Publish the latest loxilb Docker image
-      if: github.repository == 'loxilb-io/loxilb' &&  "${{ github.event.inputs.tagName == '' }}"  
+      if: | 
+          github.repository == 'loxilb-io/loxilb' 
+          &&  github.event.inputs.tagName == ''
       run: docker push ghcr.io/loxilb-io/loxilb:latest
       
     - name: Publish the loxilb Docker image with given tag
-      if: github.repository == 'loxilb-io/loxilb' &&  "${{ github.event.inputs.tagName != '' }}"  
+      if: |
+          github.repository == 'loxilb-io/loxilb'
+          &&  github.event.inputs.tagName != ''
       run: docker push ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }} 
       
     # This is currently not supported yet for docker packages
