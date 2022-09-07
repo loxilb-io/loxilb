@@ -30,6 +30,7 @@ type Tk struct {
 func TestLoxinet(t *testing.T) {
 
 	opts.Opts.NoNlp = true
+	opts.Opts.NoApi = true
 
 	fmt.Printf("LoxiLB Net Unit-Test \n")
 	loxiNetInit()
