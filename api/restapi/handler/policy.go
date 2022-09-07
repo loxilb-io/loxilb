@@ -24,7 +24,7 @@ import (
 )
 
 func ConfigPostPolicy(params operations.PostConfigPolicyParams) middleware.Responder {
-	tk.LogIt(tk.LOG_DEBUG, "[API] Policy %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] Policy %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var polMod cmn.PolMod
 
@@ -49,25 +49,25 @@ func ConfigPostPolicy(params operations.PostConfigPolicyParams) middleware.Respo
 		polMod.Target.AttachMent = cmn.PolObjType(params.Attr.TargetObject.Attachment)
 	}
 
-	tk.LogIt(tk.LOG_DEBUG, "[API] polMod : %v\n", polMod)
+	tk.LogIt(tk.LogDebug, "[API] polMod : %v\n", polMod)
 	_, err := ApiHooks.NetPolicerAdd(&polMod)
 	if err != nil {
-		tk.LogIt(tk.LOG_DEBUG, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeletePolicy(params operations.DeleteConfigPolicyIdentIdentParams) middleware.Responder {
-	tk.LogIt(tk.LOG_DEBUG, "[API] Policy %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] Policy %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var polMod cmn.PolMod
 
 	polMod.Ident = params.Ident
 
-	tk.LogIt(tk.LOG_DEBUG, "[API] polMod : %v\n", polMod)
+	tk.LogIt(tk.LogDebug, "[API] polMod : %v\n", polMod)
 	_, err := ApiHooks.NetPolicerDel(&polMod)
 	if err != nil {
-		tk.LogIt(tk.LOG_DEBUG, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}

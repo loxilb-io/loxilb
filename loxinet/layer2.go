@@ -133,7 +133,7 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 			return true, L2VxattrErr, errors.New("fdb v6 dst unsupported")
 		}
 
-		tk.LogIt(tk.LOG_DEBUG, "fdb tun rt lookup %s\n", attr.Dst.String())
+		tk.LogIt(tk.LogDebug, "fdb tun rt lookup %s\n", attr.Dst.String())
 		// Check if the end-point is reachable
 		err, pDstNet, tDat := zone.Rt.Trie4.FindTrie(attr.Dst.String())
 		if err == 0 && pDstNet != nil {
@@ -149,7 +149,7 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 				rt := zone.Rt.RtFind(*pDstNet, zone.Name)
 				if rt == nil {
 					unRch = true
-					tk.LogIt(tk.LOG_DEBUG, "fdb tun rtlookup %s no-rt\n", attr.Dst.String())
+					tk.LogIt(tk.LogDebug, "fdb tun rtlookup %s no-rt\n", attr.Dst.String())
 				} else {
 					ret, tep := zone.Nh.NeighAddTunEP(nh, attr.Dst, p.HInfo.TunId, DP_TUN_VXLAN, true)
 					if ret == 0 {
@@ -163,11 +163,11 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 			}
 		} else {
 			unRch = true
-			tk.LogIt(tk.LOG_DEBUG, "fdb tun rtlookup %s no trie-ent\n", attr.Dst.String())
+			tk.LogIt(tk.LogDebug, "fdb tun rtlookup %s no trie-ent\n", attr.Dst.String())
 		}
 	}
 	if unRch {
-		tk.LogIt(tk.LOG_DEBUG, "fdb tun rtlookup %s unreachable\n", attr.Dst.String())
+		tk.LogIt(tk.LogDebug, "fdb tun rtlookup %s unreachable\n", attr.Dst.String())
 	}
 	return unRch, 0, nil
 }
@@ -188,7 +188,7 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 
 	p := l2.Zone.Ports.PortFindByName(attr.Oif)
 	if p == nil || !p.SInfo.PortActive {
-		tk.LogIt(tk.LOG_DEBUG, "fdb port not found %s\n", attr.Oif)
+		tk.LogIt(tk.LogDebug, "fdb port not found %s\n", attr.Oif)
 		return L2OifErr, errors.New("no such port")
 	}
 
@@ -197,7 +197,7 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 	if found == true {
 		// Check if it is a modify
 		if l2FdbAttrEqual(&attr, &fdb.FdbAttr) {
-			tk.LogIt(tk.LOG_DEBUG, "fdb ent exists, %v\n", key)
+			tk.LogIt(tk.LogDebug, "fdb ent exists, %v\n", key)
 			return L2SameFdbErr, errors.New("same fdb")
 		}
 		// Handle modify by deleting and reinstalling
@@ -215,7 +215,7 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 	if p.SInfo.PortType&cmn.PortVxlanBr == cmn.PortVxlanBr {
 		unRch, ret, err := nfdb.L2FdbResolveNh()
 		if err != nil {
-			tk.LogIt(tk.LOG_DEBUG, "tun-fdb ent resolve error, %v", key)
+			tk.LogIt(tk.LogDebug, "tun-fdb ent resolve error, %v", key)
 			return ret, err
 		}
 		nfdb.unReach = unRch
@@ -225,7 +225,7 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 
 	nfdb.DP(DpCreate)
 
-	tk.LogIt(tk.LOG_DEBUG, "added fdb ent, %v\n", key)
+	tk.LogIt(tk.LogDebug, "added fdb ent, %v\n", key)
 
 	return 0, nil
 }
@@ -235,7 +235,7 @@ func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 
 	fdb, found := l2.FdbMap[key]
 	if found == false {
-		tk.LogIt(tk.LOG_DEBUG, "fdb ent not found, %v\n", key)
+		tk.LogIt(tk.LogDebug, "fdb ent not found, %v\n", key)
 		return L2NoFdbErr, errors.New("no such fdb")
 	}
 
@@ -266,7 +266,7 @@ func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 
 	delete(l2.FdbMap, fdb.FdbKey)
 
-	tk.LogIt(tk.LOG_DEBUG, "deleted fdb ent, %v\n", key)
+	tk.LogIt(tk.LogDebug, "deleted fdb ent, %v\n", key)
 
 	return 0, nil
 }
@@ -280,7 +280,7 @@ func (l2 *L2H) FdbTicker(f *FdbEnt) {
 		if f.Port.SInfo.PortActive == false {
 			l2.L2FdbDel(f.FdbKey)
 		} else if f.unReach == true {
-			tk.LogIt(tk.LOG_DEBUG, "unrch scan - %v\n", f)
+			tk.LogIt(tk.LogDebug, "unrch scan - %v\n", f)
 			unRch, _, _ := f.L2FdbResolveNh()
 			if f.unReach != unRch {
 				f.unReach = unRch

@@ -128,11 +128,11 @@ func (s *SessH) SessAdd(user string, IP net.IP, anTun cmn.SessTun, cnTun cmn.Ses
 		if us.AnTun.Equal(&anTun) == false || us.CnTun.Equal(&cnTun) {
 			ret, _ := s.SessDelete(user)
 			if ret != 0 {
-				tk.LogIt(tk.LOG_ERROR, "session add - %s:%s mod error\n", user, IP.String())
+				tk.LogIt(tk.LogError, "session add - %s:%s mod error\n", user, IP.String())
 				return SessModErr, errors.New("sess-mod error")
 			}
 		} else {
-			tk.LogIt(tk.LOG_ERROR, "session add - %s:%s  already exists\n", user, IP.String())
+			tk.LogIt(tk.LogError, "session add - %s:%s  already exists\n", user, IP.String())
 			return SessExistsErr, errors.New("sess-exists error")
 		}
 	}
@@ -148,7 +148,7 @@ func (s *SessH) SessAdd(user string, IP net.IP, anTun cmn.SessTun, cnTun cmn.Ses
 
 	s.UserMap[us.Key] = us
 
-	tk.LogIt(tk.LOG_DEBUG, "session added - %s:%s\n", user, IP.String())
+	tk.LogIt(tk.LogDebug, "session added - %s:%s\n", user, IP.String())
 
 	return 0, nil
 }
@@ -159,7 +159,7 @@ func (s *SessH) SessDelete(user string) (int, error) {
 	us, found := s.UserMap[key]
 
 	if found == false {
-		tk.LogIt(tk.LOG_ERROR, "session delete - %s no-user\n", user)
+		tk.LogIt(tk.LogError, "session delete - %s no-user\n", user)
 		return SessNoExistErr, errors.New("no-user error")
 	}
 
@@ -170,7 +170,7 @@ func (s *SessH) SessDelete(user string) (int, error) {
 
 	delete(s.UserMap, key)
 
-	tk.LogIt(tk.LOG_DEBUG, "session deleted - %s\n", user)
+	tk.LogIt(tk.LogDebug, "session deleted - %s\n", user)
 
 	return 0, nil
 }
@@ -210,7 +210,7 @@ func (s *SessH) UlClAddCls(user string, cls cmn.UlClArg) (int, error) {
 
 	us.UlCl[cls.Addr.String()] = ulcl
 
-	tk.LogIt(tk.LOG_DEBUG, "ulcl filter added - %s:%s\n", user, cls.Addr.String())
+	tk.LogIt(tk.LogDebug, "ulcl filter added - %s:%s\n", user, cls.Addr.String())
 
 	return 0, nil
 }
@@ -230,7 +230,7 @@ func (s *SessH) UlClDeleteCls(user string, cls cmn.UlClArg) (int, error) {
 		return SessUlClNoExistErr, errors.New("no-ulcl error")
 	}
 
-	tk.LogIt(tk.LOG_DEBUG, "ulcl filter deleted - %s:%s\n", user, cls.Addr.String())
+	tk.LogIt(tk.LogDebug, "ulcl filter deleted - %s:%s\n", user, cls.Addr.String())
 
 	ulcl.DP(DpRemove)
 

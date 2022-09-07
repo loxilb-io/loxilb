@@ -170,13 +170,13 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 	hwi PortHwInfo, l2i PortLayer2Info) (int, error) {
 
 	if _, err := mh.zn.ZonePortIsValid(name, zone); err != nil {
-		tk.LogIt(tk.LOG_ERROR, "port add - %s no such zone\n", name)
+		tk.LogIt(tk.LogError, "port add - %s no such zone\n", name)
 		return PortZoneErr, errors.New("no-zone error")
 	}
 
 	zn, _ := mh.zn.Zonefind(zone)
 	if zn == nil {
-		tk.LogIt(tk.LOG_ERROR, "port add - %s no such zone\n", name)
+		tk.LogIt(tk.LogError, "port add - %s no such zone\n", name)
 		return PortZoneErr, errors.New("no-zone error")
 	}
 
@@ -196,14 +196,14 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 
 					p.L2 = l2i
 					p.DP(DpCreate)
-					tk.LogIt(tk.LOG_DEBUG, "port add - %s vinfo updated\n", name)
+					tk.LogIt(tk.LogDebug, "port add - %s vinfo updated\n", name)
 					return 0, nil
 				}
 			}
 			if ptype == cmn.PortBondSif {
 				master := P.portSmap[hwi.Master]
 				if master == nil {
-					tk.LogIt(tk.LOG_ERROR, "port add - %s no master(%s)\n", name, hwi.Master)
+					tk.LogIt(tk.LogError, "port add - %s no master(%s)\n", name, hwi.Master)
 					return PortNoMasterErr, errors.New("no-master error")
 				}
 				p.DP(DpRemove)
@@ -240,11 +240,11 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 				p.DP(DpRemove)
 				p.L2 = l2i
 				p.DP(DpCreate)
-				tk.LogIt(tk.LOG_DEBUG, "port add - %s vxinfo updated\n", name)
+				tk.LogIt(tk.LogDebug, "port add - %s vxinfo updated\n", name)
 				return 0, nil
 			}
 		}
-		tk.LogIt(tk.LOG_ERROR, "port add - %s exists\n", name)
+		tk.LogIt(tk.LogError, "port add - %s exists\n", name)
 		return PortExistsErr, errors.New("port exists")
 	}
 
@@ -257,7 +257,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		rid, err = P.portHwMark.GetCounter()
 	}
 	if err != nil {
-		tk.LogIt(tk.LOG_ERROR, "port add - %s hwmark error\n", name)
+		tk.LogIt(tk.LogError, "port add - %s hwmark error\n", name)
 		return PortCounterErr, err
 	}
 
@@ -265,11 +265,11 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 	if hwi.Real != "" {
 		rp = P.portSmap[hwi.Real]
 		if rp == nil {
-			tk.LogIt(tk.LOG_ERROR, "port add - %s no real-port(%s)\n", name, hwi.Real)
+			tk.LogIt(tk.LogError, "port add - %s no real-port(%s)\n", name, hwi.Real)
 			return PortNoRealDevErr, errors.New("no-realport error")
 		}
 	} else if ptype == cmn.PortVxlanBr {
-		tk.LogIt(tk.LOG_ERROR, "port add - %s real-port needed\n", name)
+		tk.LogIt(tk.LogError, "port add - %s real-port needed\n", name)
 		return PortNoRealDevErr, errors.New("need-realdev error")
 	}
 
@@ -311,7 +311,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		p.L2.IsPvid = true
 		p.L2.Vid = int(p.HInfo.TunId)
 	default:
-		tk.LogIt(tk.LOG_DEBUG, "port add - %s isPvid %v\n", name, p.L2.IsPvid)
+		tk.LogIt(tk.LogDebug, "port add - %s isPvid %v\n", name, p.L2.IsPvid)
 		p.L2 = l2i
 	}
 
@@ -322,7 +322,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 	mh.zn.ZonePortAdd(name, zone)
 	p.DP(DpCreate)
 
-	tk.LogIt(tk.LOG_DEBUG, "port added - %s:%d\n", name, p.PortNo)
+	tk.LogIt(tk.LogDebug, "port added - %s:%d\n", name, p.PortNo)
 
 	return 0, nil
 }
@@ -330,7 +330,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 // Delete a port from loxinet realm
 func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 	if P.portSmap[name] == nil {
-		tk.LogIt(tk.LOG_ERROR, "port delete - %s no such port\n", name)
+		tk.LogIt(tk.LogError, "port delete - %s no such port\n", name)
 		return PortNotExistErr, errors.New("no-port error")
 	}
 
@@ -386,12 +386,12 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 	rid := P.portSmap[name].PortNo
 
 	if P.portImap[rid] == nil {
-		tk.LogIt(tk.LOG_ERROR, "port delete - %s no such num\n", name)
+		tk.LogIt(tk.LogError, "port delete - %s no such num\n", name)
 		return PortMapErr, errors.New("no-portimap error")
 	}
 
 	if P.portOmap[P.portSmap[name].SInfo.OsId] == nil {
-		tk.LogIt(tk.LOG_ERROR, "port delete - %s no such osid\n", name)
+		tk.LogIt(tk.LogError, "port delete - %s no such osid\n", name)
 		return PortMapErr, errors.New("no-portomap error")
 	}
 
@@ -415,7 +415,7 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 	p.SInfo.PortActive = false
 	mh.zn.ZonePortDelete(name)
 
-	tk.LogIt(tk.LOG_DEBUG, "port deleted - %s:%d\n", name, p.PortNo)
+	tk.LogIt(tk.LogDebug, "port deleted - %s:%d\n", name, p.PortNo)
 
 	delete(P.portOmap, p.SInfo.OsId)
 	delete(P.portSmap, name)
@@ -441,18 +441,18 @@ func (P *PortsH) PortUpdateProp(name string, prop cmn.PortProp, zone string, upd
 	p := P.portSmap[name]
 
 	if p == nil {
-		tk.LogIt(tk.LOG_ERROR, "port updt - %s doesnt exist\n", name)
+		tk.LogIt(tk.LogError, "port updt - %s doesnt exist\n", name)
 		return PortNotExistErr, errors.New("no-port error")
 	}
 
 	if updt {
 		if p.SInfo.PortProp&prop == prop {
-			tk.LogIt(tk.LOG_ERROR, "port updt - %s prop exists\n", name)
+			tk.LogIt(tk.LogError, "port updt - %s prop exists\n", name)
 			return PortPropExistsErr, errors.New("prop-exists error")
 		}
 	} else {
 		if p.SInfo.PortProp&prop != prop {
-			tk.LogIt(tk.LOG_ERROR, "port updt - %s prop doesnt exists\n", name)
+			tk.LogIt(tk.LogError, "port updt - %s prop doesnt exists\n", name)
 			return PortPropNotExistsErr, errors.New("prop-noexist error")
 		}
 	}
@@ -482,7 +482,7 @@ func (P *PortsH) PortUpdateProp(name string, prop cmn.PortProp, zone string, upd
 			}
 			pe.SInfo.PortProp ^= prop
 		}
-		tk.LogIt(tk.LOG_DEBUG, "port updt - %s:%v(%d)\n", name, prop, propVal)
+		tk.LogIt(tk.LogDebug, "port updt - %s:%v(%d)\n", name, prop, propVal)
 		pe.DP(DpCreate)
 	}
 
@@ -512,7 +512,7 @@ func (P *PortsH) PortsToGet() ([]cmn.PortDump, error) {
 	for _, ports := range P.portSmap {
 		zn, _ := mh.zn.Zonefind(ports.Zone)
 		if zn == nil {
-			tk.LogIt(tk.LOG_ERROR, "port-zone is not active")
+			tk.LogIt(tk.LogError, "port-zone is not active")
 			continue
 		}
 		routed := false

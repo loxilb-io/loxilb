@@ -140,12 +140,12 @@ func MirrInfoCmp(mInfo1, mInfo2 *cmn.MirrInfo) bool {
 func (M *MirrH) MirrAdd(name string, mInfo cmn.MirrInfo, mObjArgs cmn.MirrObj) (int, error) {
 
 	if MirrObjValidate(&mObjArgs) == false {
-		tk.LogIt(tk.LOG_ERROR, "mirror add - %s: bad attach point\n", name)
+		tk.LogIt(tk.LogError, "mirror add - %s: bad attach point\n", name)
 		return MirrAttachErr, errors.New("mirr-attachpoint error")
 	}
 
 	if MirrInfoValidate(&mInfo) == false {
-		tk.LogIt(tk.LOG_ERROR, "mirror add - %s: info error\n", name)
+		tk.LogIt(tk.LogError, "mirror add - %s: info error\n", name)
 		return MirrInfoErr, errors.New("mirr-info error")
 	}
 
@@ -179,7 +179,7 @@ func (M *MirrH) MirrAdd(name string, mInfo cmn.MirrInfo, mObjArgs cmn.MirrObj) (
 
 	m.MObjs = append(m.MObjs, mObjInfo)
 
-	tk.LogIt(tk.LOG_INFO, "mirror added - %s\n", name)
+	tk.LogIt(tk.LogInfo, "mirror added - %s\n", name)
 
 	return 0, nil
 }
@@ -191,7 +191,7 @@ func (M *MirrH) MirrDelete(name string) (int, error) {
 	m, found := M.MirrMap[key]
 
 	if found == false {
-		tk.LogIt(tk.LOG_ERROR, "mirror delete - %s: not found error\n", name)
+		tk.LogIt(tk.LogError, "mirror delete - %s: not found error\n", name)
 		return MirrNoExistErr, errors.New("no such mirror error")
 	}
 
@@ -205,7 +205,7 @@ func (M *MirrH) MirrDelete(name string) (int, error) {
 
 	delete(M.MirrMap, m.Key)
 
-	tk.LogIt(tk.LOG_INFO, "mirror deleted - %s\n", name)
+	tk.LogIt(tk.LogInfo, "mirror deleted - %s\n", name)
 
 	return 0, nil
 }

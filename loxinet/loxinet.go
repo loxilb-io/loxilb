@@ -52,7 +52,7 @@ type loxiNetH struct {
 }
 
 func (mh *loxiNetH) NodeWalker(b string) {
-	tk.LogIt(tk.LOG_DEBUG, "%s\n", b)
+	tk.LogIt(tk.LogDebug, "%s\n", b)
 }
 
 func (mh *loxiNetH) NodeDat2Str(d tk.TrieData) string {
@@ -60,7 +60,7 @@ func (mh *loxiNetH) NodeDat2Str(d tk.TrieData) string {
 }
 
 func (mh *loxiNetH) TrieNodeWalker(b string) {
-	tk.LogIt(tk.LOG_DEBUG, "%s", b)
+	tk.LogIt(tk.LogDebug, "%s", b)
 }
 
 // This ticker routine runs every LOXINET_TIVAL seconds
@@ -83,7 +83,7 @@ func loxiNetInit() {
 
 	// Initialize logger and specify the log file
 	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
-	tk.LogItInit(logfile, tk.LOG_DEBUG, true)
+	tk.LogItInit(logfile, tk.LogDebug, true)
 
 	mh.tDone = make(chan bool)
 	mh.ticker = time.NewTicker(LoxinetTiVal * time.Second)
@@ -101,7 +101,7 @@ func loxiNetInit() {
 	mh.zn.ZoneAdd(RootZone)
 	mh.zr, _ = mh.zn.Zonefind(RootZone)
 	if mh.zr == nil {
-		tk.LogIt(tk.LOG_ERROR, "root zone not found\n")
+		tk.LogIt(tk.LogError, "root zone not found\n")
 		return
 	}
 
