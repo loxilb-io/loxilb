@@ -14,7 +14,7 @@ waitCount=0
 while [ $j -le 2 ]
 do
     #res=$($hexec h1 curl ${ep[j]}:8080)
-    res=`$hexec h1 curl -s ${ep[j]}:8080`
+    res=`$hexec h1 curl --max-time 10 -s ${ep[j]}:8080`
     #echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
@@ -39,7 +39,7 @@ do
 for j in {0..2}
 do
     #$hexec h$k ping ${ep[j]} -f -c 5 -W 1;
-    res=`$hexec h$k curl -s 88.88.88.88:2020`
+    res=`$hexec h$k curl --max-time 10 -s 88.88.88.88:2020`
     #echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
@@ -55,7 +55,7 @@ do
         fi
         code=1
     fi
-    #sleep 1
+    sleep 1
 done
 done
 done

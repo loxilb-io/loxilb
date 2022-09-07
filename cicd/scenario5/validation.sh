@@ -14,7 +14,7 @@ j=0
 waitCount=0
 while [ $j -le 2 ]
 do
-    res=$($hexec l3h1 curl -s ${ep[j]}:8080)
+    res=$($hexec l3h1 curl --max-time 10 -s ${ep[j]}:8080)
     #echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
@@ -36,7 +36,7 @@ for i in {1..4}
 do
 for j in {0..2}
 do
-    res=$($hexec l3h1 curl -s 20.20.20.1:2020)
+    res=$($hexec l3h1 curl --max-time 10 -s 20.20.20.1:2020)
     echo $res
     if [[ $res != "${servArr[j]}" ]]
     then
