@@ -46,9 +46,9 @@ jobs:
     - name: Publish the loxilb Docker image with given tag
       if: |
           github.repository == 'loxilb-io/loxilb'
-          &&  "${{ github.event.inputs.tagName != '' }}"  
+          &&  github.event.inputs.tagName != ''
+      run: echo ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }} 
       # run: docker push ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }} 
-      run: echo ${{ github.event.inputs.tagName }} 
       
     # This is currently not supported yet for docker packages
     - name: Cleanup old Docker packages
