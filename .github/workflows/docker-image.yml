@@ -9,8 +9,6 @@ on:
         description: 'Tag Name'     
         required: true
         default: 'latest'
-      tags:
-        description: 'Docker Tag'
 
 jobs:
 
@@ -40,15 +38,13 @@ jobs:
       if: | 
           github.repository == 'loxilb-io/loxilb' 
           &&  github.event.inputs.tagName == ''
-      run : echo "Nothing"
-      # run: docker push ghcr.io/loxilb-io/loxilb:latest
+      run: docker push ghcr.io/loxilb-io/loxilb:latest
       
     - name: Publish the loxilb Docker image with given tag
       if: |
           github.repository == 'loxilb-io/loxilb'
           &&  github.event.inputs.tagName != ''
-      run: echo ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }} 
-      # run: docker push ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }} 
+      run: docker push ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }} 
       
     # This is currently not supported yet for docker packages
     - name: Cleanup old Docker packages
