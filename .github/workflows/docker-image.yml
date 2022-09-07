@@ -39,9 +39,9 @@ jobs:
     - name: Publish the latest loxilb Docker image
       if: | 
           github.repository == 'loxilb-io/loxilb' 
-          &&  "${{ github.event.inputs.tagName == '' }}"  
-      # run: docker push ghcr.io/loxilb-io/loxilb:latest
+          &&  github.event.inputs.tagName == ''
       run : echo "Nothing"
+      # run: docker push ghcr.io/loxilb-io/loxilb:latest
       
     - name: Publish the loxilb Docker image with given tag
       if: |
