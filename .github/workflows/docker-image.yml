@@ -5,12 +5,12 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
     inputs:
-      logLevel:
-        description: 'Log level'     
+      tagName:
+        description: 'Tag Name'     
         required: true
-        default: 'warning'
+        default: 'latest'
       tags:
-        description: 'Docker-Build'
+        description: 'Docker Tag'
 
 jobs:
 
@@ -36,9 +36,13 @@ jobs:
         docker build . --tag ghcr.io/loxilb-io/loxilb:latest
         docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
         
-    - name: Publish the loxilb Docker image
-      if: github.repository == 'loxilb-io/loxilb'     
+    - name: Publish the latest loxilb Docker image
+      if: github.repository == 'loxilb-io/loxilb' &&  "${{ github.event.inputs.tagName == '' }}"  
       run: docker push ghcr.io/loxilb-io/loxilb:latest
+      
+    - name: Publish the loxilb Docker image with given tag
+      if: github.repository == 'loxilb-io/loxilb' &&  "${{ github.event.inputs.tagName != '' }}"  
+      run: docker push ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }} 
       
     # This is currently not supported yet for docker packages
     - name: Cleanup old Docker packages
