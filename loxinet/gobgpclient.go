@@ -19,14 +19,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
 	"io"
 	"net"
 	"os"
 	"os/exec"
 	"sync"
 	"time"
+
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 
 	api "github.com/osrg/gobgp/v3/api"
 	"github.com/osrg/gobgp/v3/pkg/apiutil"
@@ -367,7 +368,7 @@ func GoBgpInit() *GoBgpH {
 	//gbh = new(GoBgpH)
 	gbh := new(GoBgpH)
 
-	gbh.eventCh = make(chan goBgpEvent, cmn.RU_WORKQ_LEN)
+	gbh.eventCh = make(chan goBgpEvent, cmn.RuWorkQLen)
 	gbh.host = "127.0.0.1:50051"
 	gbh.rules = make(map[string]bool)
 	gbh.state = BGPDisconnected
@@ -553,7 +554,7 @@ func (gbh *GoBgpH) processBgpEvent(e goBgpEvent) {
 func (gbh *GoBgpH) goBgpMonitor() {
 	tk.LogIt(tk.LOG_NOTICE, "\n\n\n\nBGP Monitor start *******************\n")
 	for {
-		for n := 0; n < cmn.RU_WORKQ_LEN; n++ {
+		for n := 0; n < cmn.RuWorkQLen; n++ {
 			select {
 			case e := <-gbh.eventCh:
 				gbh.processBgpEvent(e)

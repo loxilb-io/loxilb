@@ -20,43 +20,44 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
 	"io"
 	"net"
 	"strings"
+
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 const (
-	PORT_BASE_ERR = iota - 1000
-	PORT_EXISTS_ERR
-	PORT_NOTEXIST_ERR
-	PORT_NOMASTER_ERR
-	PORT_COUNTER_ERR
-	PORT_MAP_ERR
-	PORT_ZONE_ERR
-	PORT_NOREALDEV_ERR
-	PORT_PROPEXISTS_ERR
-	PORT_PROPNOT_EXISTS_ERR
+	PortBaseErr = iota - 1000
+	PortExistsErr
+	PortNotExistErr
+	PortNoMasterErr
+	PortCounterErr
+	PortMapErr
+	PortZoneErr
+	PortNoRealDevErr
+	PortPropExistsErr
+	PortPropNotExistsErr
 )
 
 const (
-	MAX_BOND_IFS = 8
-	MAX_PHY_IFS  = 128
-	MAX_IFS      = 512
+	MaxBondInterfaces = 8
+	MaxRealInterfaces = 128
+	MaxInterfaces     = 512
 )
 
 const (
-	REAL_PORT_VB = 3800
-	BOND_VB      = 4000
+	RealPortVb = 3800
+	BondVb     = 4000
 )
 
 type PortEvent uint
 
 const (
-	PORT_EV_DOWN PortEvent = 1 << iota
-	PORT_EV_LOWER_DOWN
-	PORT_EV_DELETE
+	PortEvDown PortEvent = 1 << iota
+	PortEvLowerDown
+	PortEvDelete
 )
 
 type PortEventIntf interface {
@@ -83,9 +84,9 @@ type PortHwInfo struct {
 }
 
 type PortLayer3Info struct {
-	Routed     bool
-	Ipv4_addrs []string
-	Ipv6_addrs []string
+	Routed    bool
+	Ipv4Addrs []string
+	Ipv6Addrs []string
 }
 
 type PortSwInfo struct {
@@ -128,11 +129,11 @@ type PortsH struct {
 
 func PortInit() *PortsH {
 	var nllp = new(PortsH)
-	nllp.portImap = make([]*Port, MAX_IFS)
+	nllp.portImap = make([]*Port, MaxInterfaces)
 	nllp.portSmap = make(map[string]*Port)
 	nllp.portOmap = make(map[int]*Port)
-	nllp.portHwMark = tk.NewCounter(1, MAX_IFS)
-	nllp.bondHwMark = tk.NewCounter(1, MAX_BOND_IFS)
+	nllp.portHwMark = tk.NewCounter(1, MaxInterfaces)
+	nllp.bondHwMark = tk.NewCounter(1, MaxBondInterfaces)
 	return nllp
 }
 
@@ -170,94 +171,94 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 
 	if _, err := mh.zn.ZonePortIsValid(name, zone); err != nil {
 		tk.LogIt(tk.LOG_ERROR, "port add - %s no such zone\n", name)
-		return PORT_ZONE_ERR, errors.New("no-zone error")
+		return PortZoneErr, errors.New("no-zone error")
 	}
 
 	zn, _ := mh.zn.Zonefind(zone)
 	if zn == nil {
 		tk.LogIt(tk.LOG_ERROR, "port add - %s no such zone\n", name)
-		return PORT_ZONE_ERR, errors.New("no-zone error")
+		return PortZoneErr, errors.New("no-zone error")
 	}
 
 	if P.portSmap[name] != nil {
 		p := P.portSmap[name]
 		if bytes.Equal(hwi.MacAddr[:], p.HInfo.MacAddr[:]) == false {
 			p.HInfo.MacAddr = hwi.MacAddr
-			p.DP(DP_CREATE)
+			p.DP(DpCreate)
 		}
-		if p.SInfo.PortType == cmn.PORT_REAL {
-			if ptype == cmn.PORT_VLANSIF &&
+		if p.SInfo.PortType == cmn.PortReal {
+			if ptype == cmn.PortVlanSif &&
 				l2i.IsPvid == true {
 				p.HInfo.Master = hwi.Master
 				p.SInfo.PortType |= ptype
 				if p.L2 != l2i {
-					p.DP(DP_REMOVE)
+					p.DP(DpRemove)
 
 					p.L2 = l2i
-					p.DP(DP_CREATE)
+					p.DP(DpCreate)
 					tk.LogIt(tk.LOG_DEBUG, "port add - %s vinfo updated\n", name)
 					return 0, nil
 				}
 			}
-			if ptype == cmn.PORT_BONDSIF {
+			if ptype == cmn.PortBondSif {
 				master := P.portSmap[hwi.Master]
 				if master == nil {
 					tk.LogIt(tk.LOG_ERROR, "port add - %s no master(%s)\n", name, hwi.Master)
-					return PORT_NOMASTER_ERR, errors.New("no-master error")
+					return PortNoMasterErr, errors.New("no-master error")
 				}
-				p.DP(DP_REMOVE)
+				p.DP(DpRemove)
 
 				p.SInfo.PortType |= ptype
 				p.HInfo.Master = hwi.Master
 				p.L2.IsPvid = true
-				p.L2.Vid = master.PortNo + BOND_VB
+				p.L2.Vid = master.PortNo + BondVb
 
-				p.DP(DP_CREATE)
+				p.DP(DpCreate)
 				return 0, nil
 			}
 
-		} else if p.SInfo.PortType == cmn.PORT_BOND {
-			if ptype == cmn.PORT_VLANSIF &&
+		} else if p.SInfo.PortType == cmn.PortBond {
+			if ptype == cmn.PortVlanSif &&
 				l2i.IsPvid == true {
 				if p.L2 != l2i {
 
-					p.DP(DP_REMOVE)
+					p.DP(DpRemove)
 
 					p.L2 = l2i
 
 					p.SInfo.PortType |= ptype
-					p.DP(DP_CREATE)
+					p.DP(DpCreate)
 					return 0, nil
 				}
 			}
 		}
-		if p.SInfo.PortType == cmn.PORT_VXLANBR {
-			if ptype == cmn.PORT_VLANSIF &&
+		if p.SInfo.PortType == cmn.PortVxlanBr {
+			if ptype == cmn.PortVlanSif &&
 				l2i.IsPvid == true {
 				p.HInfo.Master = hwi.Master
 				p.SInfo.PortType |= ptype
-				p.DP(DP_REMOVE)
+				p.DP(DpRemove)
 				p.L2 = l2i
-				p.DP(DP_CREATE)
+				p.DP(DpCreate)
 				tk.LogIt(tk.LOG_DEBUG, "port add - %s vxinfo updated\n", name)
 				return 0, nil
 			}
 		}
 		tk.LogIt(tk.LOG_ERROR, "port add - %s exists\n", name)
-		return PORT_EXISTS_ERR, errors.New("port exists")
+		return PortExistsErr, errors.New("port exists")
 	}
 
 	var rid int
 	var err error
 
-	if ptype == cmn.PORT_BOND {
+	if ptype == cmn.PortBond {
 		rid, err = P.bondHwMark.GetCounter()
 	} else {
 		rid, err = P.portHwMark.GetCounter()
 	}
 	if err != nil {
 		tk.LogIt(tk.LOG_ERROR, "port add - %s hwmark error\n", name)
-		return PORT_COUNTER_ERR, err
+		return PortCounterErr, err
 	}
 
 	var rp *Port = nil
@@ -265,11 +266,11 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		rp = P.portSmap[hwi.Real]
 		if rp == nil {
 			tk.LogIt(tk.LOG_ERROR, "port add - %s no real-port(%s)\n", name, hwi.Real)
-			return PORT_NOREALDEV_ERR, errors.New("no-realport error")
+			return PortNoRealDevErr, errors.New("no-realport error")
 		}
-	} else if ptype == cmn.PORT_VXLANBR {
+	} else if ptype == cmn.PortVxlanBr {
 		tk.LogIt(tk.LOG_ERROR, "port add - %s real-port needed\n", name)
-		return PORT_NOREALDEV_ERR, errors.New("need-realdev error")
+		return PortNoRealDevErr, errors.New("need-realdev error")
 	}
 
 	p := new(Port)
@@ -285,26 +286,26 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 	vMac := [6]byte{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}
 
 	switch ptype {
-	case cmn.PORT_REAL:
+	case cmn.PortReal:
 		p.L2.IsPvid = true
-		p.L2.Vid = rid + REAL_PORT_VB
+		p.L2.Vid = rid + RealPortVb
 
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
 		zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
 			PortHwInfo{vMac, true, true, 9000, "", "", 0})
-	case cmn.PORT_BOND:
+	case cmn.PortBond:
 		p.L2.IsPvid = true
-		p.L2.Vid = rid + BOND_VB
+		p.L2.Vid = rid + BondVb
 
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
 		zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
 			PortHwInfo{vMac, true, true, 9000, "", "", 0})
-	case cmn.PORT_VXLANBR:
+	case cmn.PortVxlanBr:
 		if p.SInfo.PortReal != nil {
 			p.SInfo.PortReal.SInfo.PortOvl = p
-			p.SInfo.PortReal.SInfo.PortType |= cmn.PORT_VXLANSIF
+			p.SInfo.PortReal.SInfo.PortType |= cmn.PortVxlanSif
 			p.SInfo.PortReal.HInfo.Master = p.Name
 		}
 		p.L2.IsPvid = true
@@ -319,7 +320,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 	P.portOmap[osid] = p
 
 	mh.zn.ZonePortAdd(name, zone)
-	p.DP(DP_CREATE)
+	p.DP(DpCreate)
 
 	tk.LogIt(tk.LOG_DEBUG, "port added - %s:%d\n", name, p.PortNo)
 
@@ -330,55 +331,55 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 	if P.portSmap[name] == nil {
 		tk.LogIt(tk.LOG_ERROR, "port delete - %s no such port\n", name)
-		return PORT_NOTEXIST_ERR, errors.New("no-port error")
+		return PortNotExistErr, errors.New("no-port error")
 	}
 
 	p := P.portSmap[name]
 
 	// If phy port was access vlan, it is converted to normal phy port
 	// If it has a trunk vlan association, we will have a subinterface
-	if (p.SInfo.PortType&(cmn.PORT_REAL|cmn.PORT_VLANSIF) == (cmn.PORT_REAL | cmn.PORT_VLANSIF)) &&
-		ptype == cmn.PORT_VLANSIF {
-		p.DP(DP_REMOVE)
+	if (p.SInfo.PortType&(cmn.PortReal|cmn.PortVlanSif) == (cmn.PortReal | cmn.PortVlanSif)) &&
+		ptype == cmn.PortVlanSif {
+		p.DP(DpRemove)
 
-		p.SInfo.PortType = p.SInfo.PortType & ^cmn.PORT_VLANSIF
+		p.SInfo.PortType = p.SInfo.PortType & ^cmn.PortVlanSif
 		p.HInfo.Master = ""
 		p.L2.IsPvid = true
-		p.L2.Vid = p.PortNo + REAL_PORT_VB
-		p.DP(DP_CREATE)
+		p.L2.Vid = p.PortNo + RealPortVb
+		p.DP(DpCreate)
 		return 0, nil
 	}
 
-	if (p.SInfo.PortType&(cmn.PORT_VXLANBR|cmn.PORT_VLANSIF) == (cmn.PORT_VXLANBR | cmn.PORT_VLANSIF)) &&
-		ptype == cmn.PORT_VXLANBR {
-		p.DP(DP_REMOVE)
+	if (p.SInfo.PortType&(cmn.PortVxlanBr|cmn.PortVlanSif) == (cmn.PortVxlanBr | cmn.PortVlanSif)) &&
+		ptype == cmn.PortVxlanBr {
+		p.DP(DpRemove)
 
-		p.SInfo.PortType = p.SInfo.PortType & ^cmn.PORT_VLANSIF
+		p.SInfo.PortType = p.SInfo.PortType & ^cmn.PortVlanSif
 		p.HInfo.Master = ""
 		p.L2.IsPvid = true
 		p.L2.Vid = int(p.HInfo.TunId)
-		p.DP(DP_CREATE)
+		p.DP(DpCreate)
 		return 0, nil
 	}
 
-	if (p.SInfo.PortType&(cmn.PORT_BOND|cmn.PORT_VLANSIF) == (cmn.PORT_BOND | cmn.PORT_VLANSIF)) &&
-		ptype == cmn.PORT_VLANSIF {
-		p.DP(DP_REMOVE)
-		p.SInfo.PortType = p.SInfo.PortType & ^cmn.PORT_VLANSIF
+	if (p.SInfo.PortType&(cmn.PortBond|cmn.PortVlanSif) == (cmn.PortBond | cmn.PortVlanSif)) &&
+		ptype == cmn.PortVlanSif {
+		p.DP(DpRemove)
+		p.SInfo.PortType = p.SInfo.PortType & ^cmn.PortVlanSif
 		p.L2.IsPvid = true
-		p.L2.Vid = p.PortNo + BOND_VB
-		p.DP(DP_CREATE)
+		p.L2.Vid = p.PortNo + BondVb
+		p.DP(DpCreate)
 		return 0, nil
 	}
 
-	if (p.SInfo.PortType&(cmn.PORT_REAL|cmn.PORT_BONDSIF) == (cmn.PORT_REAL | cmn.PORT_BONDSIF)) &&
-		ptype == cmn.PORT_BONDSIF {
-		p.DP(DP_REMOVE)
-		p.SInfo.PortType = p.SInfo.PortType & ^cmn.PORT_BONDSIF
+	if (p.SInfo.PortType&(cmn.PortReal|cmn.PortBondSif) == (cmn.PortReal | cmn.PortBondSif)) &&
+		ptype == cmn.PortBondSif {
+		p.DP(DpRemove)
+		p.SInfo.PortType = p.SInfo.PortType & ^cmn.PortBondSif
 		p.HInfo.Master = ""
 		p.L2.IsPvid = true
-		p.L2.Vid = p.PortNo + REAL_PORT_VB
-		p.DP(DP_CREATE)
+		p.L2.Vid = p.PortNo + RealPortVb
+		p.DP(DpCreate)
 		return 0, nil
 	}
 
@@ -386,23 +387,23 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 
 	if P.portImap[rid] == nil {
 		tk.LogIt(tk.LOG_ERROR, "port delete - %s no such num\n", name)
-		return PORT_MAP_ERR, errors.New("no-portimap error")
+		return PortMapErr, errors.New("no-portimap error")
 	}
 
 	if P.portOmap[P.portSmap[name].SInfo.OsId] == nil {
 		tk.LogIt(tk.LOG_ERROR, "port delete - %s no such osid\n", name)
-		return PORT_MAP_ERR, errors.New("no-portomap error")
+		return PortMapErr, errors.New("no-portomap error")
 	}
 
-	p.DP(DP_REMOVE)
+	p.DP(DpRemove)
 
 	switch p.SInfo.PortType {
-	case cmn.PORT_VXLANBR:
+	case cmn.PortVxlanBr:
 		if p.SInfo.PortReal != nil {
 			p.SInfo.PortReal.SInfo.PortOvl = nil
 		}
-	case cmn.PORT_REAL:
-	case cmn.PORT_BOND:
+	case cmn.PortReal:
+	case cmn.PortBond:
 		zone := mh.zn.GetPortZone(p.Name)
 		if zone != nil {
 			zone.Vlans.VlanDelete(p.L2.Vid)
@@ -429,38 +430,38 @@ func (P *PortsH) PortUpdateProp(name string, prop cmn.PortProp, zone string, upd
 	var allDevs []*Port
 
 	if _, err := mh.zn.ZonePortIsValid(name, zone); err != nil {
-		return PORT_ZONE_ERR, errors.New("no-zone error")
+		return PortZoneErr, errors.New("no-zone error")
 	}
 
 	zn, _ := mh.zn.Zonefind(zone)
 	if zn == nil {
-		return PORT_ZONE_ERR, errors.New("no-zone error")
+		return PortZoneErr, errors.New("no-zone error")
 	}
 
 	p := P.portSmap[name]
 
 	if p == nil {
 		tk.LogIt(tk.LOG_ERROR, "port updt - %s doesnt exist\n", name)
-		return PORT_NOTEXIST_ERR, errors.New("no-port error")
+		return PortNotExistErr, errors.New("no-port error")
 	}
 
 	if updt {
 		if p.SInfo.PortProp&prop == prop {
 			tk.LogIt(tk.LOG_ERROR, "port updt - %s prop exists\n", name)
-			return PORT_PROPEXISTS_ERR, errors.New("prop-exists error")
+			return PortPropExistsErr, errors.New("prop-exists error")
 		}
 	} else {
 		if p.SInfo.PortProp&prop != prop {
 			tk.LogIt(tk.LOG_ERROR, "port updt - %s prop doesnt exists\n", name)
-			return PORT_PROPNOT_EXISTS_ERR, errors.New("prop-noexist error")
+			return PortPropNotExistsErr, errors.New("prop-noexist error")
 		}
 	}
 
 	allDevs = append(allDevs, p)
 	for _, pe := range P.portSmap {
 		if p != pe && pe.SInfo.PortReal == p &&
-			pe.SInfo.PortType&cmn.PORT_VLANSIF == cmn.PORT_VLANSIF &&
-			pe.SInfo.PortType&cmn.PORT_VXLANBR != cmn.PORT_VXLANBR {
+			pe.SInfo.PortType&cmn.PortVlanSif == cmn.PortVlanSif &&
+			pe.SInfo.PortType&cmn.PortVxlanBr != cmn.PortVxlanBr {
 			allDevs = append(allDevs, pe)
 		}
 	}
@@ -468,21 +469,21 @@ func (P *PortsH) PortUpdateProp(name string, prop cmn.PortProp, zone string, upd
 	for _, pe := range allDevs {
 		if updt {
 			pe.SInfo.PortProp |= prop
-			if prop&cmn.PORT_PROP_POL == cmn.PORT_PROP_POL {
+			if prop&cmn.PortPropPol == cmn.PortPropPol {
 				pe.SInfo.PortPolNum = propVal
-			} else if prop&cmn.PORT_PROP_SPAN == cmn.PORT_PROP_SPAN {
+			} else if prop&cmn.PortPropSpan == cmn.PortPropSpan {
 				pe.SInfo.PortMirNum = propVal
 			}
 		} else {
-			if prop&cmn.PORT_PROP_POL == cmn.PORT_PROP_POL {
+			if prop&cmn.PortPropPol == cmn.PortPropPol {
 				pe.SInfo.PortPolNum = 0
-			} else if prop&cmn.PORT_PROP_SPAN == cmn.PORT_PROP_SPAN {
+			} else if prop&cmn.PortPropSpan == cmn.PortPropSpan {
 				pe.SInfo.PortMirNum = 0
 			}
 			pe.SInfo.PortProp ^= prop
 		}
 		tk.LogIt(tk.LOG_DEBUG, "port updt - %s:%v(%d)\n", name, prop, propVal)
-		pe.DP(DP_CREATE)
+		pe.DP(DpCreate)
 	}
 
 	return 0, nil
@@ -528,7 +529,7 @@ func (P *PortsH) PortsToGet() ([]cmn.PortDump, error) {
 			PortNo: ports.PortNo,
 			Zone:   ports.Zone,
 			SInfo: cmn.PortSwInfo{
-				OsId:       ports.SInfo.OsId,
+				OsID:       ports.SInfo.OsId,
 				PortType:   ports.SInfo.PortType,
 				PortActive: ports.SInfo.PortActive,
 				//PortReal:   ports.SInfo.PortReal,
@@ -543,7 +544,7 @@ func (P *PortsH) PortsToGet() ([]cmn.PortDump, error) {
 				Mtu:        ports.HInfo.Mtu,
 				Master:     ports.HInfo.Master,
 				Real:       ports.HInfo.Real,
-				TunId:      ports.HInfo.TunId,
+				TunID:      ports.HInfo.TunId,
 			},
 			Stats: cmn.PortStatsInfo{
 				RxBytes:   ports.Stats.RxBytes,
@@ -556,9 +557,9 @@ func (P *PortsH) PortsToGet() ([]cmn.PortDump, error) {
 			L3: cmn.PortLayer3Info{
 				//Routed:     ports.L3.Routed,
 				//Ipv4_addrs: ports.L3.Ipv4_addrs,
-				Ipv4_addrs: addr4,
-				Routed:     routed,
-				Ipv6_addrs: ports.L3.Ipv6_addrs,
+				Ipv4Addrs: addr4,
+				Routed:    routed,
+				Ipv6Addrs: ports.L3.Ipv6Addrs,
 			},
 			L2: cmn.PortLayer2Info{
 				IsPvid: ports.L2.IsPvid,
@@ -589,36 +590,36 @@ func port2String(e *Port, it IterIntf) {
 		e.Name, pStr, e.HInfo.Mtu, e.Zone)
 
 	pStr = ""
-	if e.SInfo.PortType&cmn.PORT_REAL == cmn.PORT_REAL {
+	if e.SInfo.PortType&cmn.PortReal == cmn.PortReal {
 		pStr += "phy,"
 	}
-	if e.SInfo.PortType&cmn.PORT_VLANSIF == cmn.PORT_VLANSIF {
+	if e.SInfo.PortType&cmn.PortVlanSif == cmn.PortVlanSif {
 		pStr += "vlan-sif,"
 	}
-	if e.SInfo.PortType&cmn.PORT_VLANBR == cmn.PORT_VLANBR {
+	if e.SInfo.PortType&cmn.PortVlanBr == cmn.PortVlanBr {
 		pStr += "vlan,"
 	}
-	if e.SInfo.PortType&cmn.PORT_BONDSIF == cmn.PORT_BONDSIF {
+	if e.SInfo.PortType&cmn.PortBondSif == cmn.PortBondSif {
 		pStr += "bond-sif,"
 	}
-	if e.SInfo.PortType&cmn.PORT_BONDSIF == cmn.PORT_BOND {
+	if e.SInfo.PortType&cmn.PortBondSif == cmn.PortBond {
 		pStr += "bond,"
 	}
-	if e.SInfo.PortType&cmn.PORT_VXLANSIF == cmn.PORT_VXLANSIF {
+	if e.SInfo.PortType&cmn.PortVxlanSif == cmn.PortVxlanSif {
 		pStr += "vxlan-sif,"
 	}
-	if e.SInfo.PortProp&cmn.PORT_PROP_UPP == cmn.PORT_PROP_UPP {
+	if e.SInfo.PortProp&cmn.PortPropUpp == cmn.PortPropUpp {
 		pStr += "upp,"
 	}
-	if e.SInfo.PortProp&cmn.PORT_PROP_POL == cmn.PORT_PROP_POL {
+	if e.SInfo.PortProp&cmn.PortPropPol == cmn.PortPropPol {
 		pol := fmt.Sprintf("pol%d,", e.SInfo.PortPolNum)
 		pStr += pol
 	}
-	if e.SInfo.PortProp&cmn.PORT_PROP_SPAN == cmn.PORT_PROP_SPAN {
+	if e.SInfo.PortProp&cmn.PortPropSpan == cmn.PortPropSpan {
 		pol := fmt.Sprintf("mirr%d,", e.SInfo.PortMirNum)
 		pStr += pol
 	}
-	if e.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
+	if e.SInfo.PortType&cmn.PortVxlanBr == cmn.PortVxlanBr {
 		pStr += "vxlan"
 		if e.SInfo.PortReal != nil {
 			pStr += fmt.Sprintf("(%s)", e.SInfo.PortReal.Name)
@@ -688,7 +689,7 @@ func (P *PortsH) PortTicker() {
 		} else {
 			if osIntf.Flags&net.FlagUp == 0 {
 				port.HInfo.State = false
-				ev = PORT_EV_DOWN
+				ev = PortEvDown
 				portMod = true
 			}
 		}
@@ -713,55 +714,55 @@ func (P *PortsH) PortDestructAll() {
 
 	for _, p := range P.portSmap {
 
-		if p.SInfo.PortType&cmn.PORT_REAL == cmn.PORT_REAL {
+		if p.SInfo.PortType&cmn.PortReal == cmn.PortReal {
 			realDevs = append(realDevs, p)
 		}
-		if p.SInfo.PortType&cmn.PORT_VLANSIF == cmn.PORT_VLANSIF {
+		if p.SInfo.PortType&cmn.PortVlanSif == cmn.PortVlanSif {
 			bSlaves = append(bSlaves, p)
 		}
-		if p.SInfo.PortType&cmn.PORT_VLANBR == cmn.PORT_VLANBR {
+		if p.SInfo.PortType&cmn.PortVlanBr == cmn.PortVlanBr {
 			bridges = append(bridges, p)
 		}
-		if p.SInfo.PortType&cmn.PORT_BONDSIF == cmn.PORT_BONDSIF {
+		if p.SInfo.PortType&cmn.PortBondSif == cmn.PortBondSif {
 			bondSlaves = append(bondSlaves, p)
 		}
-		if p.SInfo.PortType&cmn.PORT_BONDSIF == cmn.PORT_BOND {
+		if p.SInfo.PortType&cmn.PortBondSif == cmn.PortBond {
 			bonds = append(bonds, p)
 		}
-		if p.SInfo.PortType&cmn.PORT_VXLANSIF == cmn.PORT_VXLANSIF {
+		if p.SInfo.PortType&cmn.PortVxlanSif == cmn.PortVxlanSif {
 			tunSlaves = append(tunSlaves, p)
 		}
-		if p.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
+		if p.SInfo.PortType&cmn.PortVxlanBr == cmn.PortVxlanBr {
 			tunnels = append(tunnels, p)
 		}
 	}
 
 	for _, p := range tunSlaves {
-		P.PortDel(p.Name, cmn.PORT_VXLANSIF)
+		P.PortDel(p.Name, cmn.PortVxlanSif)
 	}
 
 	for _, p := range bSlaves {
-		P.PortDel(p.Name, cmn.PORT_VLANSIF)
+		P.PortDel(p.Name, cmn.PortVlanSif)
 	}
 
 	for _, p := range bondSlaves {
-		P.PortDel(p.Name, cmn.PORT_BONDSIF)
+		P.PortDel(p.Name, cmn.PortBondSif)
 	}
 
 	for _, p := range bonds {
-		P.PortDel(p.Name, cmn.PORT_BOND)
+		P.PortDel(p.Name, cmn.PortBond)
 	}
 
 	for _, p := range bridges {
-		P.PortDel(p.Name, cmn.PORT_VLANBR)
+		P.PortDel(p.Name, cmn.PortVlanBr)
 	}
 
 	for _, p := range tunnels {
-		P.PortDel(p.Name, cmn.PORT_VXLANBR)
+		P.PortDel(p.Name, cmn.PortVxlanBr)
 	}
 
 	for _, p := range realDevs {
-		P.PortDel(p.Name, cmn.PORT_REAL)
+		P.PortDel(p.Name, cmn.PortReal)
 	}
 }
 
@@ -774,13 +775,13 @@ func (p *Port) DP(work DpWorkT) int {
 	}
 
 	// When a vxlan interface is created
-	if p.SInfo.PortType == cmn.PORT_VXLANBR {
+	if p.SInfo.PortType == cmn.PortVxlanBr {
 		// Do nothing
 		return 0
 	}
 
 	// When a vxlan interface becomes slave of a bridge
-	if p.SInfo.PortType&(cmn.PORT_VXLANBR|cmn.PORT_VLANSIF) == (cmn.PORT_VXLANBR | cmn.PORT_VLANSIF) {
+	if p.SInfo.PortType&(cmn.PortVxlanBr|cmn.PortVlanSif) == (cmn.PortVxlanBr | cmn.PortVlanSif) {
 		rmWq := new(RouterMacDpWorkQ)
 		rmWq.Work = work
 		rmWq.Status = nil
@@ -805,8 +806,8 @@ func (p *Port) DP(work DpWorkT) int {
 	}
 
 	// When bond subinterface e.g bond1.100 is created
-	if p.SInfo.PortType == cmn.PORT_VLANSIF && p.SInfo.PortReal != nil &&
-		p.SInfo.PortReal.SInfo.PortType&cmn.PORT_BOND == cmn.PORT_BOND {
+	if p.SInfo.PortType == cmn.PortVlanSif && p.SInfo.PortReal != nil &&
+		p.SInfo.PortReal.SInfo.PortType&cmn.PortBond == cmn.PortBond {
 
 		pWq := new(PortDpWorkQ)
 
@@ -822,7 +823,7 @@ func (p *Port) DP(work DpWorkT) int {
 	}
 
 	// When bond becomes a vlan-port e.g bond1 ==> vlan200
-	if p.SInfo.PortType&(cmn.PORT_BOND|cmn.PORT_VLANSIF) == (cmn.PORT_BOND | cmn.PORT_VLANSIF) {
+	if p.SInfo.PortType&(cmn.PortBond|cmn.PortVlanSif) == (cmn.PortBond | cmn.PortVlanSif) {
 		_, slaves := zn.Ports.PortGetSlaves(p.Name)
 		for _, sp := range slaves {
 			pWq := new(PortDpWorkQ)
@@ -841,8 +842,8 @@ func (p *Port) DP(work DpWorkT) int {
 		return 0
 	}
 
-	if (p.SInfo.PortType&cmn.PORT_REAL != cmn.PORT_REAL) &&
-		(p.SInfo.PortReal == nil || p.SInfo.PortReal.SInfo.PortType&cmn.PORT_REAL != cmn.PORT_REAL) {
+	if (p.SInfo.PortType&cmn.PortReal != cmn.PortReal) &&
+		(p.SInfo.PortReal == nil || p.SInfo.PortReal.SInfo.PortType&cmn.PortReal != cmn.PortReal) {
 		return 0
 	}
 
@@ -874,9 +875,9 @@ func (p *Port) DP(work DpWorkT) int {
 		return -1
 	}
 
-	if (work == DP_CREATE || work == DP_REMOVE) &&
-		p.SInfo.PortType&cmn.PORT_REAL == cmn.PORT_REAL ||
-		p.SInfo.PortType&cmn.PORT_BOND == cmn.PORT_BOND {
+	if (work == DpCreate || work == DpRemove) &&
+		p.SInfo.PortType&cmn.PortReal == cmn.PortReal ||
+		p.SInfo.PortType&cmn.PortBond == cmn.PortBond {
 		if p.SInfo.BpfLoaded == false {
 			pWq.LoadEbpf = p.Name
 			p.SInfo.BpfLoaded = true

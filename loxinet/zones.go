@@ -26,14 +26,14 @@ import (
 // Currently we can have upto MAX_ZONES such zones
 
 const (
-	ZONE_BASE_ERR = iota - RT_ERR_BASE - 1000
-	ZONE_EXISTS_ERR
-	ZONE_NOTEXIST_ERR
-	ZONE_NUMBER_ERR
+	ZoneBaseErr = iota - RtErrBase - 1000
+	ZoneExistsErr
+	ZoneNotExistErr
+	ZoneNumberErr
 )
 
 const (
-	MAX_ZONES = 256
+	MaximumZones = 256
 )
 
 type Zone struct {
@@ -64,7 +64,7 @@ func ZoneInit() *ZoneH {
 	zn.ZoneMap = make(map[string]*Zone)
 	zn.ZoneBrs = make(map[string]*Zone)
 	zn.ZonePorts = make(map[string]*Zone)
-	zn.ZoneMark = tk.NewCounter(0, MAX_ZONES)
+	zn.ZoneMark = tk.NewCounter(0, MaximumZones)
 
 	return zn
 }
@@ -73,14 +73,14 @@ func (z *ZoneH) ZoneAdd(name string) (int, error) {
 	var err error
 	zone := z.ZoneMap[name]
 	if zone != nil {
-		return ZONE_EXISTS_ERR, errors.New("existing zone")
+		return ZoneExistsErr, errors.New("existing zone")
 	}
 
 	zone = new(Zone)
 
 	zone.ZoneNum, err = z.ZoneMark.GetCounter()
 	if err != nil {
-		return ZONE_NUMBER_ERR, errors.New("zone number err")
+		return ZoneNumberErr, errors.New("zone number err")
 	}
 
 	zone.Name = name
@@ -113,7 +113,7 @@ func (z *ZoneH) ZoneDelete(name string) (int, error) {
 
 	zone := z.ZoneMap[name]
 	if zone == nil {
-		return ZONE_NOTEXIST_ERR, errors.New("no such zone")
+		return ZoneNotExistErr, errors.New("no such zone")
 	}
 
 	zone.Name = name
@@ -135,12 +135,12 @@ func (z *ZoneH) ZoneBrAdd(name string, zns string) (int, error) {
 		if zone.Name == name {
 			return 0, nil
 		}
-		return ZONE_EXISTS_ERR, errors.New("zone exists")
+		return ZoneExistsErr, errors.New("zone exists")
 	}
 
 	zone, _ = z.Zonefind(zns)
 	if zone == nil {
-		return ZONE_NOTEXIST_ERR, errors.New("zone is not set")
+		return ZoneNotExistErr, errors.New("zone is not set")
 	}
 
 	z.ZoneBrs[name] = zone
@@ -151,7 +151,7 @@ func (z *ZoneH) ZoneBrAdd(name string, zns string) (int, error) {
 func (z *ZoneH) ZoneBrDelete(name string) (int, error) {
 	zone := z.ZoneBrs[name]
 	if zone == nil {
-		return ZONE_NOTEXIST_ERR, errors.New("zone is not set")
+		return ZoneNotExistErr, errors.New("zone is not set")
 	}
 
 	delete(z.ZoneBrs, name)
@@ -169,7 +169,7 @@ func (z *ZoneH) ZonePortIsValid(name string, zns string) (int, error) {
 		return 0, nil
 	}
 
-	return ZONE_EXISTS_ERR, errors.New("zone exists")
+	return ZoneExistsErr, errors.New("zone exists")
 }
 
 func (z *ZoneH) GetPortZone(port string) *Zone {
@@ -187,12 +187,12 @@ func (z *ZoneH) ZonePortAdd(name string, zns string) (int, error) {
 		if zone.Name == name {
 			return 0, nil
 		}
-		return ZONE_EXISTS_ERR, errors.New("zone exists")
+		return ZoneExistsErr, errors.New("zone exists")
 	}
 
 	zone, _ = z.Zonefind(zns)
 	if zone == nil {
-		return ZONE_NOTEXIST_ERR, errors.New("zone is not set")
+		return ZoneNotExistErr, errors.New("zone is not set")
 	}
 
 	z.ZonePorts[name] = zone
@@ -202,7 +202,7 @@ func (z *ZoneH) ZonePortAdd(name string, zns string) (int, error) {
 func (z *ZoneH) ZonePortDelete(name string) (int, error) {
 	zone := z.ZonePorts[name]
 	if zone == nil {
-		return ZONE_NOTEXIST_ERR, errors.New("zone is not set")
+		return ZoneNotExistErr, errors.New("zone is not set")
 	}
 
 	delete(z.ZonePorts, name)

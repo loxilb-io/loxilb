@@ -42,44 +42,45 @@ import "C"
 import (
 	"errors"
 	"fmt"
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
 	"net"
 	"syscall"
 	"time"
 	"unsafe"
+
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 // This file implements the interface DpHookInterface
 // The implementation is specific to loxilb ebpf datapath for linux
 
 const (
-	EBPF_ERR_BASE = iota - 50000
-	EBPF_ERR_PORTPROP_ADD
-	EBPF_ERR_PORTPROP_DEL
-	EBPF_ERR_EBFP_LOAD
-	EBPF_ERR_EBFP_UNLOAD
-	EBPF_ERR_L2ADDR_ADD
-	EBPF_ERR_L2ADDR_DEL
-	EBPF_ERR_TMAC_ADD
-	EBPF_ERR_TMAC_DEL
-	EBPF_ERR_NH_ADD
-	EBPF_ERR_NH_DEL
-	EBPF_ERR_RT4_ADD
-	EBPF_ERR_RT4_DEL
-	EBPF_ERR_NAT4_ADD
-	EBPF_ERR_NAT4_DEL
-	EBPF_ERR_SESS4_ADD
-	EBPF_ERR_SESS4_DEL
-	EBPF_ERR_POL_ADD
-	EBPF_ERR_POL_DEL
-	EBPF_ERR_MIRR_ADD
-	EBPF_ERR_MIRR_DEL
-	EBPF_ERR_WQ_UNK
+	EbpfErrBase = iota - 50000
+	EbpfErrPortPropAdd
+	EbpfErrPortPropDel
+	EbpfErrEbpfLoad
+	EbpfErrEbpfUnload
+	EbpfErrL2AddrAdd
+	EbpfErrL2AddrDel
+	EbpfErrTmacAdd
+	EbpfErrTmacDel
+	EbpfErrNhAdd
+	EbpfErrNhDel
+	EbpfErrRt4Add
+	EbpfErrRt4Del
+	EbpfErrNat4Add
+	EbpfErrNat4Del
+	EbpfErrSess4Add
+	EbpfErrSess4Del
+	EbpfErrPolAdd
+	EbpfErrPolDel
+	EbpfErrMirrAdd
+	EbpfErrMirrDel
+	EbpfErrWqUnk
 )
 
 const (
-	DPEBPF_LINUX_TIVAL = 20
+	DpEbpfLinuxTiVal = 20
 )
 
 type (
@@ -176,7 +177,7 @@ func DpEbpfInit() *DpEbpfH {
 
 	ne := new(DpEbpfH)
 	ne.tDone = make(chan bool)
-	ne.ticker = time.NewTicker(DPEBPF_LINUX_TIVAL * time.Second)
+	ne.ticker = time.NewTicker(DpEbpfLinuxTiVal * time.Second)
 
 	go dpEbpfTicker()
 
@@ -260,13 +261,13 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 
 	txK = C.uint(w.PortNum)
 
-	if w.Work == DP_CREATE {
+	if w.Work == DpCreate {
 
 		if w.LoadEbpf != "" && w.LoadEbpf != "lo" && w.LoadEbpf != "llb0" {
 			lRet := loadEbpfPgm(w.LoadEbpf)
 			if lRet != 0 {
 				tk.LogIt(tk.LOG_ERROR, "ebpf load - %d error\n", w.PortNum)
-				return EBPF_ERR_EBFP_LOAD
+				return EbpfErrEbpfLoad
 			}
 		}
 		data := new(intfMapDat)
@@ -282,7 +283,7 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 		setIfi.mirr = C.ushort(w.SetMirr)
 		setIfi.polid = C.ushort(w.SetPol)
 
-		if w.Prop&cmn.PORT_PROP_UPP == cmn.PORT_PROP_UPP {
+		if w.Prop&cmn.PortPropUpp == cmn.PortPropUpp {
 			setIfi.pprop = C.LLB_DP_PORT_UPP
 		}
 
@@ -290,7 +291,7 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 
 		if ret != 0 {
 			tk.LogIt(tk.LOG_ERROR, "ebpf intfmap - %d vlan %d error\n", w.OsPortNum, w.IngVlan)
-			return EBPF_ERR_PORTPROP_ADD
+			return EbpfErrPortPropAdd
 		}
 
 		tk.LogIt(tk.LOG_DEBUG, "ebpf intfmap added - %d vlan %d -> %d\n", w.OsPortNum, w.IngVlan, w.PortNum)
@@ -300,11 +301,11 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 		if ret != 0 {
 			C.llb_del_map_elem(C.LL_DP_INTF_MAP, unsafe.Pointer(key))
 			tk.LogIt(tk.LOG_ERROR, "ebpf txintfmap - %d error\n", w.OsPortNum)
-			return EBPF_ERR_PORTPROP_ADD
+			return EbpfErrPortPropAdd
 		}
 		tk.LogIt(tk.LOG_DEBUG, "ebpf txintfmap added - %d -> %d\n", w.PortNum, w.OsPortNum)
 		return 0
-	} else if w.Work == DP_REMOVE {
+	} else if w.Work == DpRemove {
 
 		// TX_INTF_MAP is array type so we can't delete it
 		// Rather we need to zero it out first
@@ -318,7 +319,7 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 			lRet := unLoadEbpfPgm(w.LoadEbpf)
 			if lRet != 0 {
 				tk.LogIt(tk.LOG_ERROR, "ebpf unload - ifi %d error\n", w.OsPortNum)
-				return EBPF_ERR_EBFP_LOAD
+				return EbpfErrEbpfLoad
 			}
 			tk.LogIt(tk.LOG_DEBUG, "ebpf unloaded - ifi %d\n", w.OsPortNum)
 		}
@@ -326,7 +327,7 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 		return 0
 	}
 
-	return EBPF_ERR_WQ_UNK
+	return EbpfErrWqUnk
 }
 
 func (e *DpEbpfH) DpPortPropAdd(w *PortDpWorkQ) int {
@@ -348,7 +349,7 @@ func DpL2AddrMod(w *L2AddrDpWorkQ) int {
 	C.memcpy(unsafe.Pointer(&dkey.dmac[0]), unsafe.Pointer(&w.l2Addr[0]), 6)
 	dkey.bd = C.ushort((uint16(w.BD)))
 
-	if w.Work == DP_CREATE {
+	if w.Work == DpCreate {
 		sdat := new(sActValue)
 		sdat.act_type = C.DP_SET_NOP
 
@@ -373,7 +374,7 @@ func DpL2AddrMod(w *L2AddrDpWorkQ) int {
 			unsafe.Pointer(skey),
 			unsafe.Pointer(sdat))
 		if ret != 0 {
-			return EBPF_ERR_L2ADDR_ADD
+			return EbpfErrL2AddrAdd
 		}
 
 		if w.Tun == 0 {
@@ -382,12 +383,12 @@ func DpL2AddrMod(w *L2AddrDpWorkQ) int {
 				unsafe.Pointer(ddat))
 			if ret != 0 {
 				C.llb_del_map_elem(C.LL_DP_SMAC_MAP, unsafe.Pointer(skey))
-				return EBPF_ERR_L2ADDR_ADD
+				return EbpfErrL2AddrAdd
 			}
 		}
 
 		return 0
-	} else if w.Work == DP_REMOVE {
+	} else if w.Work == DpRemove {
 
 		C.llb_del_map_elem(C.LL_DP_SMAC_MAP, unsafe.Pointer(skey))
 
@@ -398,7 +399,7 @@ func DpL2AddrMod(w *L2AddrDpWorkQ) int {
 		return 0
 	}
 
-	return EBPF_ERR_WQ_UNK
+	return EbpfErrWqUnk
 }
 
 func (e *DpEbpfH) DpL2AddrAdd(w *L2AddrDpWorkQ) int {
@@ -426,7 +427,7 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
 
 	key.tunnel_id = C.uint(w.TunId)
 
-	if w.Work == DP_CREATE {
+	if w.Work == DpCreate {
 		dat := new(sActValue)
 		if w.TunId != 0 {
 			if w.NhNum == 0 {
@@ -459,16 +460,16 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
 			unsafe.Pointer(dat))
 
 		if ret != 0 {
-			return EBPF_ERR_TMAC_ADD
+			return EbpfErrTmacAdd
 		}
 
 		return 0
-	} else if w.Work == DP_REMOVE {
+	} else if w.Work == DpRemove {
 
 		C.llb_del_map_elem(C.LL_DP_TMAC_MAP, unsafe.Pointer(key))
 	}
 
-	return EBPF_ERR_WQ_UNK
+	return EbpfErrWqUnk
 }
 
 func (e *DpEbpfH) DpRouterMacAdd(w *RouterMacDpWorkQ) int {
@@ -486,7 +487,7 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 	key := new(nhKey)
 	key.nh_num = C.uint(w.nextHopNum)
 
-	if w.Work == DP_CREATE {
+	if w.Work == DpCreate {
 		dat := new(nhDat)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_nh_tact)
 		if !w.resolved {
@@ -525,10 +526,10 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 			unsafe.Pointer(key),
 			unsafe.Pointer(dat))
 		if ret != 0 {
-			return EBPF_ERR_NH_ADD
+			return EbpfErrNhAdd
 		}
 		return 0
-	} else if w.Work == DP_REMOVE {
+	} else if w.Work == DpRemove {
 		dat := new(nhDat)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_nh_tact)
 		//C.llb_del_table_elem(C.LL_DP_NH_MAP, unsafe.Pointer(key))
@@ -539,7 +540,7 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 		return 0
 	}
 
-	return EBPF_ERR_WQ_UNK
+	return EbpfErrWqUnk
 }
 
 func (e *DpEbpfH) DpNextHopAdd(w *NextHopDpWorkQ) int {
@@ -569,7 +570,7 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 	kPtr[4] = uint8(w.Dst.IP[2])
 	kPtr[5] = uint8(w.Dst.IP[3])
 
-	if w.Work == DP_CREATE {
+	if w.Work == DpCreate {
 		dat := new(rtDat)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_rt_tact)
 
@@ -590,10 +591,10 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 			unsafe.Pointer(key),
 			unsafe.Pointer(dat))
 		if ret != 0 {
-			return EBPF_ERR_RT4_ADD
+			return EbpfErrRt4Add
 		}
 		return 0
-	} else if w.Work == DP_REMOVE {
+	} else if w.Work == DpRemove {
 		C.llb_del_map_elem(C.LL_DP_RTV4_MAP, unsafe.Pointer(key))
 
 		if w.RtHwMark > 0 {
@@ -602,7 +603,7 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 		return 0
 	}
 
-	return EBPF_ERR_WQ_UNK
+	return EbpfErrWqUnk
 }
 
 func (e *DpEbpfH) DpRouteAdd(w *RouteDpWorkQ) int {
@@ -622,7 +623,7 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 	key.l4proto = C.uchar(w.Proto)
 	key.zone = C.ushort(w.ZoneNum)
 
-	if w.Work == DP_CREATE {
+	if w.Work == DpCreate {
 		dat := new(nat4Acts)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_natv4_tacts)
 		if w.NatType == DP_SNAT {
@@ -630,7 +631,7 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		} else if w.NatType == DP_DNAT {
 			dat.ca.act_type = C.DP_SET_DNAT
 		} else {
-			return EBPF_ERR_NAT4_ADD
+			return EbpfErrNat4Add
 		}
 
 		switch {
@@ -674,16 +675,16 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 			unsafe.Pointer(dat))
 
 		if ret != 0 {
-			return EBPF_ERR_TMAC_ADD
+			return EbpfErrTmacAdd
 		}
 
 		return 0
-	} else if w.Work == DP_REMOVE {
+	} else if w.Work == DpRemove {
 		C.llb_del_map_elem(C.LL_DP_NAT4_MAP, unsafe.Pointer(key))
 		return 0
 	}
 
-	return EBPF_ERR_WQ_UNK
+	return EbpfErrWqUnk
 }
 
 func (e *DpEbpfH) DpNatLbRuleAdd(w *NatDpWorkQ) int {
@@ -700,26 +701,26 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 	var polTbl []int
 	sync := 0
 	switch {
-	case w.Name == MAP_NAME_NAT4:
+	case w.Name == MapNameNat4:
 		tbl = append(tbl, int(C.LL_DP_NAT4_STATS_MAP))
 		sync = 1
-	case w.Name == MAP_NAME_BD:
+	case w.Name == MapNameBD:
 		tbl = append(tbl, int(C.LL_DP_BD_STATS_MAP), int(C.LL_DP_TX_BD_STATS_MAP))
-	case w.Name == MAP_NAME_RXBD:
+	case w.Name == MapNameRxBD:
 		tbl = append(tbl, int(C.LL_DP_BD_STATS_MAP))
-	case w.Name == MAP_NAME_TXBD:
+	case w.Name == MapNameTxBD:
 		tbl = append(tbl, int(C.LL_DP_TX_BD_STATS_MAP))
-	case w.Name == MAP_NAME_RT4:
+	case w.Name == MapNameRt4:
 		tbl = append(tbl, int(C.LL_DP_RTV4_MAP))
-	case w.Name == MAP_NAME_ULCL:
+	case w.Name == MapNameULCL:
 		tbl = append(tbl, int(C.LL_DP_SESS4_MAP))
-	case w.Name == MAP_NAME_IPOL:
+	case w.Name == MapNameIpol:
 		polTbl = append(polTbl, int(C.LL_DP_POL_MAP))
 	default:
-		return EBPF_ERR_WQ_UNK
+		return EbpfErrWqUnk
 	}
 
-	if w.Work == DP_STATS_GET {
+	if w.Work == DpStatsGet {
 		var b C.longlong
 		var p C.longlong
 
@@ -732,7 +733,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 			ret := C.llb_fetch_map_stats_cached(C.int(t), C.uint(w.HwMark), C.int(sync),
 				(unsafe.Pointer(&b)), unsafe.Pointer(&p))
 			if ret != 0 {
-				return EBPF_ERR_TMAC_ADD
+				return EbpfErrTmacAdd
 			}
 
 			packets += uint64(p)
@@ -743,7 +744,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 
 			ret := C.llb_fetch_pol_map_stats(C.int(t), C.uint(w.HwMark), (unsafe.Pointer(&p)), unsafe.Pointer(&b))
 			if ret != 0 {
-				return EBPF_ERR_TMAC_ADD
+				return EbpfErrTmacAdd
 			}
 
 			packets += uint64(p)
@@ -761,7 +762,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 				*w.DropPackets = uint64(dropPackets)
 			}
 		}
-	} else if w.Work == DP_STATS_CLR {
+	} else if w.Work == DpStatsClr {
 		for _, t := range tbl {
 			C.llb_clear_map_stats(C.int(t), C.uint(w.HwMark))
 		}
@@ -888,15 +889,15 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ctv4_key, ctDat *C.struct_dp_ctv4_dat) *D
 func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (error, DpRetT) {
 	var tbl int
 
-	if w.Work != DP_TABLE_GET {
-		return errors.New("unknown work type"), EBPF_ERR_WQ_UNK
+	if w.Work != DpMapGet {
+		return errors.New("unknown work type"), EbpfErrWqUnk
 	}
 
 	switch {
-	case w.Name == MAP_NAME_CT4:
+	case w.Name == MapNameCt4:
 		tbl = C.LL_DP_ACLV4_MAP
 	default:
-		return errors.New("unknown work type"), EBPF_ERR_WQ_UNK
+		return errors.New("unknown work type"), EbpfErrWqUnk
 	}
 
 	if tbl == C.LL_DP_ACLV4_MAP {
@@ -936,7 +937,7 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (error, DpRetT) {
 		return nil, ctMap
 	}
 
-	return errors.New("unknown work type"), EBPF_ERR_WQ_UNK
+	return errors.New("unknown work type"), EbpfErrWqUnk
 }
 
 func (e *DpEbpfH) DpUlClMod(w *UlClDpWorkQ) int {
@@ -947,7 +948,7 @@ func (e *DpEbpfH) DpUlClMod(w *UlClDpWorkQ) int {
 	key.teid = C.uint(tk.Htonl(w.mTeID))
 	key.r = 0
 
-	if w.Work == DP_CREATE {
+	if w.Work == DpCreate {
 		dat := new(sessAct)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_sess_tact)
 
@@ -969,15 +970,15 @@ func (e *DpEbpfH) DpUlClMod(w *UlClDpWorkQ) int {
 			unsafe.Pointer(dat))
 
 		if ret != 0 {
-			return EBPF_ERR_SESS4_ADD
+			return EbpfErrSess4Add
 		}
 
 		return 0
-	} else if w.Work == DP_REMOVE {
+	} else if w.Work == DpRemove {
 		C.llb_del_map_elem(C.LL_DP_SESS4_MAP, unsafe.Pointer(key))
 		return 0
 	}
-	return EBPF_ERR_WQ_UNK
+	return EbpfErrWqUnk
 }
 
 func (e *DpEbpfH) DpUlClAdd(w *UlClDpWorkQ) int {
@@ -991,7 +992,7 @@ func (e *DpEbpfH) DpUlClDel(w *UlClDpWorkQ) int {
 func (e *DpEbpfH) DpPolMod(w *PolDpWorkQ) int {
 	key := C.uint(w.HwMark)
 
-	if w.Work == DP_CREATE {
+	if w.Work == DpCreate {
 		dat := new(polTact)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_pol_tact)
 		dat.ca.act_type = C.DP_SET_DO_POLICER
@@ -1027,12 +1028,12 @@ func (e *DpEbpfH) DpPolMod(w *PolDpWorkQ) int {
 
 		if ret != 0 {
 			*w.Status = 1
-			return EBPF_ERR_POL_ADD
+			return EbpfErrPolAdd
 		}
 
 		*w.Status = 0
 
-	} else if w.Work == DP_REMOVE {
+	} else if w.Work == DpRemove {
 		// Array map types need to be zeroed out first
 		dat := new(polTact)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_pol_tact)
@@ -1055,7 +1056,7 @@ func (e *DpEbpfH) DpPolDel(w *PolDpWorkQ) int {
 func (e *DpEbpfH) DpMirrMod(w *MirrDpWorkQ) int {
 	key := C.uint(w.HwMark)
 
-	if w.Work == DP_CREATE {
+	if w.Work == DpCreate {
 		dat := new(mirrTact)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_mirr_tact)
 
@@ -1074,12 +1075,12 @@ func (e *DpEbpfH) DpMirrMod(w *MirrDpWorkQ) int {
 
 		if ret != 0 {
 			*w.Status = 1
-			return EBPF_ERR_MIRR_ADD
+			return EbpfErrMirrAdd
 		}
 
 		*w.Status = 0
 
-	} else if w.Work == DP_REMOVE {
+	} else if w.Work == DpRemove {
 		// Array map types need to be zeroed out first
 		dat := new(mirrTact)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_mirr_tact)

@@ -16,9 +16,10 @@
 package handler
 
 import (
+	"net"
+
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	cmn "github.com/loxilb-io/loxilb/common"
-	"net"
 
 	tk "github.com/loxilb-io/loxilib"
 
@@ -31,7 +32,7 @@ func ConfigPostSession(params operations.PostConfigSessionParams) middleware.Res
 	var sessionMod cmn.SessionMod
 	// Default Setting
 	sessionMod.Ident = params.Attr.Ident
-	sessionMod.Ip = net.ParseIP(params.Attr.SessionIP)
+	sessionMod.IP = net.ParseIP(params.Attr.SessionIP)
 	// AnTun Setting
 	sessionMod.AnTun.TeID = uint32(params.Attr.AccessNetworkTunnel.TeID)
 	sessionMod.AnTun.Addr = net.ParseIP(params.Attr.AccessNetworkTunnel.TunnelIP)

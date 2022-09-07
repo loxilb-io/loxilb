@@ -21,6 +21,8 @@ import (
 	"fmt"
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
+	nlp "github.com/vishvananda/netlink"
+	"golang.org/x/sys/unix"
 	"io/ioutil"
 	"net"
 	"os"
@@ -30,19 +32,16 @@ import (
 	"strings"
 	"syscall"
 	"time"
-
-	nlp "github.com/vishvananda/netlink"
-	"golang.org/x/sys/unix"
 )
 
 const (
-	IF_OPER_UNKNOWN uint8 = iota
-	IF_OPER_NOTPRESENT
-	IF_OPER_DOWN
-	IF_OPER_LOWERLAYERDOWN
-	IF_OPER_TESTING
-	IF_OPER_DORMANT
-	IF_OPER_UP
+	IfOperUnknown uint8 = iota
+	IfOperNotPresent
+	IfOperDown
+	IfOperLowerLayerDown
+	IfOperTesting
+	IfOperDormant
+	IfOperUp
 )
 
 type AddrUpdateCh struct {
@@ -63,11 +62,11 @@ type RouteUpdateCh struct {
 }
 
 const (
-	IF_TYPE_REAL uint8 = iota
-	IF_TYPE_SUBINTF
-	IF_TYPE_BOND
-	IF_TYPE_BRIGDE
-	IF_TYPE_VXLAN
+	IfTypeReal uint8 = iota
+	IfTypeSubIntf
+	IfTypeBond
+	IfTypeBridge
+	IfTypeVxlan
 )
 
 type Intf struct {
@@ -260,7 +259,7 @@ func ModLink(link nlp.Link, add bool) int {
 		vid, _ = strconv.Atoi(strings.Join(re.FindAllString(name, -1), " "))
 		if add {
 			ret, err = hooks.NetVlanAdd(&cmn.VlanMod{Vid: vid, Dev: name, LinkIndex: idx,
-				MacAddr: ifMac, Link: linkState, State: state, Mtu: mtu, TunId: 0})
+				MacAddr: ifMac, Link: linkState, State: state, Mtu: mtu, TunID: 0})
 		} else {
 			ret, err = hooks.NetVlanDel(&cmn.VlanMod{Vid: vid})
 		}
@@ -312,10 +311,10 @@ func ModLink(link nlp.Link, add bool) int {
 	/* Physical port/ Bond/ VxLAN */
 	master := ""
 	real := ""
-	pType := cmn.PORT_REAL
+	pType := cmn.PortReal
 	tunId := 0
 	if vxlan, ok := link.(*nlp.Vxlan); ok {
-		pType = cmn.PORT_VXLANBR
+		pType = cmn.PortVxlanBr
 		tunId = vxlan.VxlanId
 		uif, err := nlp.LinkByIndex(vxlan.VtepDevIndex)
 		if err != nil {
@@ -329,7 +328,7 @@ func ModLink(link nlp.Link, add bool) int {
 	if add {
 		ret, err = hooks.NetPortAdd(&cmn.PortMod{Dev: name, LinkIndex: idx, Ptype: pType, MacAddr: ifMac,
 			Link: linkState, State: state, Mtu: mtu, Master: master, Real: real,
-			TunId: tunId})
+			TunID: tunId})
 		if err != nil {
 			tk.LogIt(tk.LOG_ERROR, "[NLP] Port %v, %v, %v, %v add failed\n", name, ifMac, state, mtu)
 			fmt.Println(err)
@@ -377,7 +376,7 @@ func AddAddr(addr nlp.Addr, link nlp.Link) int {
 	name := attrs.Name
 	ipStr := (addr.IPNet).String()
 
-	ret, err := hooks.NetIpv4AddrAdd(&cmn.Ipv4AddrMod{Dev: name, Ip: ipStr})
+	ret, err := hooks.NetIpv4AddrAdd(&cmn.Ipv4AddrMod{Dev: name, IP: ipStr})
 	if err != nil {
 		tk.LogIt(tk.LOG_ERROR, "[NLP] IPv4 Address %v Port %v failed %v\n", ipStr, name, err)
 		ret = -1
@@ -406,7 +405,7 @@ func AddNeigh(neigh nlp.Neigh, link nlp.Link) int {
 	copy(mac[:], neigh.HardwareAddr[:6])
 
 	if neigh.Family == unix.AF_INET {
-		ret, err = hooks.NetNeighv4Add(&cmn.Neighv4Mod{Ip: neigh.IP, LinkIndex: neigh.LinkIndex,
+		ret, err = hooks.NetNeighv4Add(&cmn.Neighv4Mod{IP: neigh.IP, LinkIndex: neigh.LinkIndex,
 			State:        neigh.State,
 			HardwareAddr: neigh.HardwareAddr})
 		if err != nil {
@@ -453,17 +452,17 @@ func AddNeigh(neigh nlp.Neigh, link nlp.Link) int {
 			if len(neigh.IP) > 0 && (neigh.MasterIndex == 0) {
 				dst = neigh.IP
 				brId = vxlan.VxlanId
-				ftype = cmn.FDB_TUN
+				ftype = cmn.FdbTun
 			} else {
 				tk.LogIt(tk.LOG_ERROR, "[NLP] L2fdb %v brId %v dst %v dev %v IGNORED\n", mac[:], brId, dst, name)
 				return 0
 			}
 		} else {
 			dst = net.ParseIP("0.0.0.0")
-			ftype = cmn.FDB_VLAN
+			ftype = cmn.FdbVlan
 		}
 
-		ret, err = hooks.NetFdbAdd(&cmn.FdbMod{MacAddr: mac, BridgeId: brId, Dev: name, Dst: dst,
+		ret, err = hooks.NetFdbAdd(&cmn.FdbMod{MacAddr: mac, BridgeID: brId, Dev: name, Dst: dst,
 			Type: ftype})
 		if err != nil {
 			tk.LogIt(tk.LOG_ERROR, "[NLP] L2fdb %v brId %v dst %v dev %v add failed\n", mac[:], brId, dst, name)
@@ -489,7 +488,7 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 	name := attrs.Name
 
 	if neigh.Family == unix.AF_INET {
-		ret, err = hooks.NetNeighv4Del(&cmn.Neighv4Mod{Ip: neigh.IP})
+		ret, err = hooks.NetNeighv4Del(&cmn.Neighv4Mod{IP: neigh.IP})
 		if err != nil {
 			tk.LogIt(tk.LOG_ERROR, "[NLP] NH  %v %v del failed\n", neigh.IP.String(), name)
 			ret = -1
@@ -539,7 +538,7 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 			dst = net.ParseIP("0.0.0.0")
 		}
 
-		ret, err = hooks.NetFdbDel(&cmn.FdbMod{MacAddr: mac, BridgeId: brId})
+		ret, err = hooks.NetFdbDel(&cmn.FdbMod{MacAddr: mac, BridgeID: brId})
 		if err != nil {
 			tk.LogIt(tk.LOG_ERROR, "[NLP] L2fdb %v brId %v dst %s dev %v delete failed %v\n", mac[:], brId, dst, name, err)
 			ret = -1
@@ -628,7 +627,7 @@ func AUWorkSingle(m nlp.AddrUpdate) int {
 	attrs := link.Attrs()
 	name := attrs.Name
 	if m.NewAddr {
-		_, err := hooks.NetIpv4AddrAdd(&cmn.Ipv4AddrMod{Dev: name, Ip: m.LinkAddress.String()})
+		_, err := hooks.NetIpv4AddrAdd(&cmn.Ipv4AddrMod{Dev: name, IP: m.LinkAddress.String()})
 		if err != nil {
 			tk.LogIt(tk.LOG_INFO, "[NLP] IPv4 Address %v Port %v add failed\n", m.LinkAddress.String(), name)
 			fmt.Println(err)
@@ -637,7 +636,7 @@ func AUWorkSingle(m nlp.AddrUpdate) int {
 		}
 
 	} else {
-		_, err := hooks.NetIpv4AddrDel(&cmn.Ipv4AddrMod{Dev: name, Ip: m.LinkAddress.String()})
+		_, err := hooks.NetIpv4AddrDel(&cmn.Ipv4AddrMod{Dev: name, IP: m.LinkAddress.String()})
 		if err != nil {
 			tk.LogIt(tk.LOG_INFO, "[NLP] IPv4 Address %v Port %v delete failed\n", m.LinkAddress.String(), name)
 			fmt.Println(err)
@@ -683,7 +682,7 @@ func RUWorkSingle(m nlp.RouteUpdate) int {
 
 func LUWorker(ch chan nlp.LinkUpdate, f chan struct{}) {
 
-	for n := 0; n < cmn.LU_WORKQ_LEN; n++ {
+	for n := 0; n < cmn.LuWorkQLen; n++ {
 		select {
 		case m := <-ch:
 			LUWorkSingle(m)
@@ -695,7 +694,7 @@ func LUWorker(ch chan nlp.LinkUpdate, f chan struct{}) {
 
 func AUWorker(ch chan nlp.AddrUpdate, f chan struct{}) {
 
-	for n := 0; n < cmn.AU_WORKQ_LEN; n++ {
+	for n := 0; n < cmn.AuWorkqLen; n++ {
 		select {
 		case m := <-ch:
 			AUWorkSingle(m)
@@ -708,7 +707,7 @@ func AUWorker(ch chan nlp.AddrUpdate, f chan struct{}) {
 
 func NUWorker(ch chan nlp.NeighUpdate, f chan struct{}) {
 
-	for n := 0; n < cmn.NU_WORKQ_LEN; n++ {
+	for n := 0; n < cmn.NuWorkQLen; n++ {
 		select {
 		case m := <-ch:
 			NUWorkSingle(m)
@@ -720,7 +719,7 @@ func NUWorker(ch chan nlp.NeighUpdate, f chan struct{}) {
 
 func RUWorker(ch chan nlp.RouteUpdate, f chan struct{}) {
 
-	for n := 0; n < cmn.RU_WORKQ_LEN; n++ {
+	for n := 0; n < cmn.RuWorkQLen; n++ {
 		select {
 		case m := <-ch:
 			RUWorkSingle(m)
@@ -882,10 +881,10 @@ func NlpInit() *NlH {
 
 	nNl = new(NlH)
 
-	nNl.FromAUCh = make(chan nlp.AddrUpdate, cmn.AU_WORKQ_LEN)
-	nNl.FromLUCh = make(chan nlp.LinkUpdate, cmn.LU_WORKQ_LEN)
-	nNl.FromNUCh = make(chan nlp.NeighUpdate, cmn.NU_WORKQ_LEN)
-	nNl.FromRUCh = make(chan nlp.RouteUpdate, cmn.RU_WORKQ_LEN)
+	nNl.FromAUCh = make(chan nlp.AddrUpdate, cmn.AuWorkqLen)
+	nNl.FromLUCh = make(chan nlp.LinkUpdate, cmn.LuWorkQLen)
+	nNl.FromNUCh = make(chan nlp.NeighUpdate, cmn.NuWorkQLen)
+	nNl.FromRUCh = make(chan nlp.RouteUpdate, cmn.RuWorkQLen)
 	nNl.FromAUDone = make(chan struct{})
 	nNl.FromLUDone = make(chan struct{})
 	nNl.FromNUDone = make(chan struct{})

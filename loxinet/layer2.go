@@ -13,51 +13,59 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package loxinet
 
 import (
 	"errors"
 	"fmt"
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
 	"net"
 	"time"
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 )
 
+// error codes
 const (
-	L2_ERR_BASE = iota - 3000
-	L2_SAMEFDB_ERR
-	L2_OIF_ERR
-	L2_NOFDB_ERR
-	L2_VXATTR_ERR
+	L2ErrBase = iota - 3000
+	L2SameFdbErr
+	L2OifErr
+	L2NoFdbErr
+	L2VxattrErr
 )
 
+// constants
 const (
-	FDB_GTS = 10
+	FdbGts = 10
 )
 
+// FdbKey - key to find a fwd entry
 type FdbKey struct {
 	MacAddr  [6]byte
-	BridgeId int
+	BridgeID int
 }
 
+// FdbAttr - extra attribs for a fwd entry
 type FdbAttr struct {
 	Oif     string
 	Dst     net.IP
 	FdbType int
 }
 
+// FdbTunAttr - attribs for a tun fwd entry
 type FdbTunAttr struct {
 	rt *Rt
 	nh *Neigh
 	ep *NeighTunEp
 }
 
+// FdbStat - statistics for fwd entry
 type FdbStat struct {
 	Packets uint64
 	Bytes   uint64
 }
 
+// FdbEnt - a forwarding database entry
 type FdbEnt struct {
 	FdbKey   FdbKey
 	FdbAttr  FdbAttr
@@ -70,11 +78,13 @@ type FdbEnt struct {
 	Sync     DpStatusT
 }
 
+// L2H - context container
 type L2H struct {
 	FdbMap map[FdbKey]*FdbEnt
 	Zone   *Zone
 }
 
+// L2Init - Initialize the layer2 subsystem
 func L2Init(z *Zone) *L2H {
 	var nL2 = new(L2H)
 	nL2.FdbMap = make(map[FdbKey]*FdbEnt)
@@ -99,28 +109,28 @@ func l2FdbAttrCopy(dst *FdbAttr, src *FdbAttr) {
 	dst.Dst = src.Dst
 }
 
-// For TunFDB, try to associate with appropriate neighbor
+// L2FdbResolveNh - For TunFDB, try to associate with appropriate neighbor
 func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 	p := f.Port
 	attr := f.FdbAttr
 	unRch := false
 
 	if p == nil {
-		return true, L2_VXATTR_ERR, errors.New("fdb port error")
+		return true, L2VxattrErr, errors.New("fdb port error")
 	}
 
 	zone, _ := mh.zn.Zonefind(p.Zone)
 	if zone == nil {
-		return true, L2_VXATTR_ERR, errors.New("fdb zone error")
+		return true, L2VxattrErr, errors.New("fdb zone error")
 	}
 
-	if p.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
-		if attr.FdbType != cmn.FDB_TUN {
-			return true, L2_VXATTR_ERR, errors.New("fdb attr error")
+	if p.SInfo.PortType&cmn.PortVxlanBr == cmn.PortVxlanBr {
+		if attr.FdbType != cmn.FdbTun {
+			return true, L2VxattrErr, errors.New("fdb attr error")
 		}
 
 		if attr.Dst.To4() == nil {
-			return true, L2_VXATTR_ERR, errors.New("fdb v6 dst unsupported")
+			return true, L2VxattrErr, errors.New("fdb v6 dst unsupported")
 		}
 
 		tk.LogIt(tk.LOG_DEBUG, "fdb tun rt lookup %s\n", attr.Dst.String())
@@ -162,6 +172,7 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 	return unRch, 0, nil
 }
 
+// L2FdbFind - Find a fwd entry given the key
 func (l2 *L2H) L2FdbFind(key FdbKey) *FdbEnt {
 	fdb, found := l2.FdbMap[key]
 
@@ -172,13 +183,13 @@ func (l2 *L2H) L2FdbFind(key FdbKey) *FdbEnt {
 	return nil
 }
 
-// Add a l2 forwarding entry
+// L2FdbAdd - Add a l2 forwarding entry
 func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 
 	p := l2.Zone.Ports.PortFindByName(attr.Oif)
 	if p == nil || !p.SInfo.PortActive {
 		tk.LogIt(tk.LOG_DEBUG, "fdb port not found %s\n", attr.Oif)
-		return L2_OIF_ERR, errors.New("no such port")
+		return L2OifErr, errors.New("no such port")
 	}
 
 	fdb, found := l2.FdbMap[key]
@@ -186,8 +197,8 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 	if found == true {
 		// Check if it is a modify
 		if l2FdbAttrEqual(&attr, &fdb.FdbAttr) {
-			tk.LogIt(tk.LOG_DEBUG, "fdb ent exists, %v", key)
-			return L2_SAMEFDB_ERR, errors.New("same fdb")
+			tk.LogIt(tk.LOG_DEBUG, "fdb ent exists, %v\n", key)
+			return L2SameFdbErr, errors.New("same fdb")
 		}
 		// Handle modify by deleting and reinstalling
 		l2.L2FdbDel(key)
@@ -201,7 +212,7 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 	nfdb.itime = time.Now()
 	nfdb.stime = time.Now()
 
-	if p.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
+	if p.SInfo.PortType&cmn.PortVxlanBr == cmn.PortVxlanBr {
 		unRch, ret, err := nfdb.L2FdbResolveNh()
 		if err != nil {
 			tk.LogIt(tk.LOG_DEBUG, "tun-fdb ent resolve error, %v", key)
@@ -212,23 +223,23 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 
 	l2.FdbMap[nfdb.FdbKey] = nfdb
 
-	nfdb.DP(DP_CREATE)
+	nfdb.DP(DpCreate)
 
-	tk.LogIt(tk.LOG_DEBUG, "added fdb ent, %v", key)
+	tk.LogIt(tk.LOG_DEBUG, "added fdb ent, %v\n", key)
 
 	return 0, nil
 }
 
-// Delete a l2 forwarding entry
+// L2FdbDel - Delete a l2 forwarding entry
 func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 
 	fdb, found := l2.FdbMap[key]
 	if found == false {
 		tk.LogIt(tk.LOG_DEBUG, "fdb ent not found, %v\n", key)
-		return L2_NOFDB_ERR, errors.New("no such fdb")
+		return L2NoFdbErr, errors.New("no such fdb")
 	}
 
-	if fdb.Port.SInfo.PortType == cmn.PORT_VXLANBR {
+	if fdb.Port.SInfo.PortType == cmn.PortVxlanBr {
 		// Remove route dependencies if any
 		n := 0
 		if fdb.FdbTun.rt != nil {
@@ -236,7 +247,7 @@ func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 			for _, obj := range rt.RtDepObjs {
 				if f, ok := obj.(*FdbEnt); ok {
 					if f == fdb {
-						rt.RtDepObjs = rt.RtRemoveDepObj(n)
+						rt.RtDepObjs = rt.rtRemoveDepObj(n)
 						break
 					}
 				}
@@ -249,7 +260,7 @@ func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 		fdb.FdbTun.ep = nil
 	}
 
-	fdb.DP(DP_REMOVE)
+	fdb.DP(DpRemove)
 
 	fdb.inActive = true
 
@@ -260,25 +271,27 @@ func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 	return 0, nil
 }
 
+// FdbTicker - Ticker routine for a fwd entry
 func (l2 *L2H) FdbTicker(f *FdbEnt) {
-	if time.Now().Sub(f.stime) > FDB_GTS {
+	if time.Now().Sub(f.stime) > FdbGts {
 		// This scans for inconsistencies in a fdb
 		// 1. Do garbage cleaning if underlying oif or vlan is not valid anymore
 		// 2. If FDB is a TunFDB, we need to make sure NH is reachable
 		if f.Port.SInfo.PortActive == false {
 			l2.L2FdbDel(f.FdbKey)
 		} else if f.unReach == true {
-			tk.LogIt(tk.LOG_DEBUG, "unrch scan - %v", f)
+			tk.LogIt(tk.LOG_DEBUG, "unrch scan - %v\n", f)
 			unRch, _, _ := f.L2FdbResolveNh()
 			if f.unReach != unRch {
 				f.unReach = unRch
-				f.DP(DP_CREATE)
+				f.DP(DpCreate)
 			}
 		}
 		f.stime = time.Now()
 	}
 }
 
+// FdbsTicker - Ticker for Fdbs
 func (l2 *L2H) FdbsTicker() {
 	n := 1
 	for _, e := range l2.FdbMap {
@@ -288,8 +301,9 @@ func (l2 *L2H) FdbsTicker() {
 	return
 }
 
+// PortNotifier - Implementation of PortEventIntf interface
 func (l2 *L2H) PortNotifier(name string, osID int, evType PortEvent) {
-	if evType&PORT_EV_DOWN|PORT_EV_DELETE|PORT_EV_LOWER_DOWN != 0 {
+	if evType&PortEvDown|PortEvDelete|PortEvLowerDown != 0 {
 		for _, f := range l2.FdbMap {
 			if f.FdbAttr.Oif == name {
 				l2.L2FdbDel(f.FdbKey)
@@ -304,10 +318,11 @@ func fdb2String(f *FdbEnt, it IterIntf, n *int) {
 	s = fmt.Sprintf("FdbEnt%-3d : ether %02x:%02x:%02x:%02x:%02x:%02x,br %d :: Oif %s\n",
 		*n, f.FdbKey.MacAddr[0], f.FdbKey.MacAddr[1], f.FdbKey.MacAddr[2],
 		f.FdbKey.MacAddr[3], f.FdbKey.MacAddr[4], f.FdbKey.MacAddr[5],
-		f.FdbKey.BridgeId, f.FdbAttr.Oif)
+		f.FdbKey.BridgeID, f.FdbAttr.Oif)
 	it.NodeWalker(s)
 }
 
+// Fdbs2String - Format all fwd entries to string
 func (l2 *L2H) Fdbs2String(it IterIntf) error {
 	n := 1
 	for _, e := range l2.FdbMap {
@@ -317,6 +332,7 @@ func (l2 *L2H) Fdbs2String(it IterIntf) error {
 	return nil
 }
 
+// L2DestructAll - Destructor for all layer2 fwd entries
 func (l2 *L2H) L2DestructAll() {
 	for _, f := range l2.FdbMap {
 		l2.L2FdbDel(f.FdbKey)
@@ -324,17 +340,17 @@ func (l2 *L2H) L2DestructAll() {
 	return
 }
 
-// Sync state of L2 entities to data-path
+// DP - Sync state of L2 entities to data-path
 func (f *FdbEnt) DP(work DpWorkT) int {
 
-	if work == DP_CREATE && f.unReach == true {
+	if work == DpCreate && f.unReach == true {
 		return 0
 	}
 
 	l2Wq := new(L2AddrDpWorkQ)
 	l2Wq.Work = work
 	l2Wq.Status = &f.Sync
-	if f.Port.SInfo.PortType&cmn.PORT_VXLANBR == cmn.PORT_VXLANBR {
+	if f.Port.SInfo.PortType&cmn.PortVxlanBr == cmn.PortVxlanBr {
 		l2Wq.Tun = DP_TUN_VXLAN
 	}
 

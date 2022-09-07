@@ -17,10 +17,11 @@ package loxinet
 
 import (
 	"fmt"
-	cmn "github.com/loxilb-io/loxilb/common"
-	opts "github.com/loxilb-io/loxilb/options"
 	"net"
 	"testing"
+
+	cmn "github.com/loxilb-io/loxilb/common"
+	opts "github.com/loxilb-io/loxilb/options"
 )
 
 type Tk struct {
@@ -34,7 +35,7 @@ func TestLoxinet(t *testing.T) {
 	loxiNetInit()
 
 	ifmac := [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x6}
-	_, err := mh.zr.Ports.PortAdd("hs0", 12, cmn.PORT_REAL, ROOT_ZONE,
+	_, err := mh.zr.Ports.PortAdd("hs0", 12, cmn.PortReal, RootZone,
 		PortHwInfo{ifmac, true, true, 1500, "", "", 0},
 		PortLayer2Info{false, 10})
 
@@ -48,7 +49,7 @@ func TestLoxinet(t *testing.T) {
 	}
 
 	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x7}
-	_, err = mh.zr.Ports.PortAdd("bond1", 15, cmn.PORT_BOND, ROOT_ZONE,
+	_, err = mh.zr.Ports.PortAdd("bond1", 15, cmn.PortBond, RootZone,
 		PortHwInfo{ifmac, true, true, 1500, "", "", 0},
 		PortLayer2Info{false, 10})
 
@@ -61,14 +62,14 @@ func TestLoxinet(t *testing.T) {
 		t.Errorf("failed to add port %s", "bond1")
 	}
 
-	_, err = mh.zr.Ports.PortAdd("hs1", 15, cmn.PORT_REAL, ROOT_ZONE,
+	_, err = mh.zr.Ports.PortAdd("hs1", 15, cmn.PortReal, RootZone,
 		PortHwInfo{ifmac, true, true, 1500, "", "", 0},
 		PortLayer2Info{false, 10})
 	if err != nil {
 		t.Errorf("failed to add port hs1")
 	}
 
-	_, err = mh.zr.Ports.PortAdd("hs1", 15, cmn.PORT_BONDSIF, ROOT_ZONE,
+	_, err = mh.zr.Ports.PortAdd("hs1", 15, cmn.PortBondSif, RootZone,
 		PortHwInfo{ifmac, true, true, 1500, "bond1", "", 0},
 		PortLayer2Info{false, 10})
 	if err != nil {
@@ -76,7 +77,7 @@ func TestLoxinet(t *testing.T) {
 	}
 
 	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x8}
-	_, err = mh.zr.Ports.PortAdd("hs2", 100, cmn.PORT_REAL, ROOT_ZONE,
+	_, err = mh.zr.Ports.PortAdd("hs2", 100, cmn.PortReal, RootZone,
 		PortHwInfo{ifmac, true, true, 1500, "", "", 0},
 		PortLayer2Info{false, 10})
 	if err != nil {
@@ -84,7 +85,7 @@ func TestLoxinet(t *testing.T) {
 	}
 
 	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x8}
-	_, err = mh.zr.Ports.PortAdd("hs4", 400, cmn.PORT_REAL, ROOT_ZONE,
+	_, err = mh.zr.Ports.PortAdd("hs4", 400, cmn.PortReal, RootZone,
 		PortHwInfo{ifmac, true, true, 1500, "", "", 0},
 		PortLayer2Info{false, 10})
 	if err != nil {
@@ -92,7 +93,7 @@ func TestLoxinet(t *testing.T) {
 	}
 
 	ifmac = [6]byte{0xde, 0xdc, 0x1f, 0x62, 0x60, 0x55}
-	_, err = mh.zr.Ports.PortAdd("vxlan4", 20, cmn.PORT_VXLANBR, ROOT_ZONE,
+	_, err = mh.zr.Ports.PortAdd("vxlan4", 20, cmn.PortVxlanBr, RootZone,
 		PortHwInfo{ifmac, true, true, 1500, "", "hs4", 4},
 		PortLayer2Info{false, 0})
 	if err != nil {
@@ -100,14 +101,14 @@ func TestLoxinet(t *testing.T) {
 	}
 
 	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0xa}
-	_, err = mh.zr.Vlans.VlanAdd(100, "vlan100", ROOT_ZONE, 124,
+	_, err = mh.zr.Vlans.VlanAdd(100, "vlan100", RootZone, 124,
 		PortHwInfo{ifmac, true, true, 1500, "", "", 0})
 	if err != nil {
 		t.Errorf("failed to add port %s", "vlan100")
 	}
 
 	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0xa}
-	_, err = mh.zr.Vlans.VlanAdd(4, "vlan4", ROOT_ZONE, 126,
+	_, err = mh.zr.Vlans.VlanAdd(4, "vlan4", RootZone, 126,
 		PortHwInfo{ifmac, true, true, 1500, "", "", 0})
 	if err != nil {
 		t.Errorf("failed to add port %s", "vlan4")
@@ -172,14 +173,14 @@ func TestLoxinet(t *testing.T) {
 	}
 
 	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0xa}
-	_, err = mh.zr.Vlans.VlanAdd(100, "vlan100", ROOT_ZONE, 124,
+	_, err = mh.zr.Vlans.VlanAdd(100, "vlan100", RootZone, 124,
 		PortHwInfo{ifmac, true, true, 1500, "", "", 0})
 	if err != nil {
 		t.Errorf("failed to add port %s", "vlan100")
 	}
 
 	fdbKey := FdbKey{[6]byte{0x05, 0x04, 0x03, 0x3, 0x1, 0x0}, 100}
-	fdbAttr := FdbAttr{"hs0", net.ParseIP("0.0.0.0"), cmn.FDB_VLAN}
+	fdbAttr := FdbAttr{"hs0", net.ParseIP("0.0.0.0"), cmn.FdbVlan}
 
 	_, err = mh.zr.L2.L2FdbAdd(fdbKey, fdbAttr)
 	if err != nil {
@@ -191,7 +192,7 @@ func TestLoxinet(t *testing.T) {
 	}
 
 	fdbKey1 := FdbKey{[6]byte{0xb, 0xa, 0x9, 0x8, 0x7, 0x6}, 100}
-	fdbAttr1 := FdbAttr{"hs2", net.ParseIP("0.0.0.0"), cmn.FDB_VLAN}
+	fdbAttr1 := FdbAttr{"hs2", net.ParseIP("0.0.0.0"), cmn.FdbVlan}
 
 	_, err = mh.zr.L2.L2FdbAdd(fdbKey1, fdbAttr1)
 	if err != nil {
@@ -247,13 +248,13 @@ func TestLoxinet(t *testing.T) {
 	}
 
 	hwmac, _ = net.ParseMAC("46:17:8e:50:3c:e5")
-	_, err = mh.zr.Nh.NeighAdd(net.IPv4(4, 4, 4, 1), ROOT_ZONE, NeighAttr{400, 1, hwmac})
+	_, err = mh.zr.Nh.NeighAdd(net.IPv4(4, 4, 4, 1), RootZone, NeighAttr{400, 1, hwmac})
 	if err != nil {
 		t.Errorf("NHAdd fail 4.4.4.1\n")
 	}
 
 	fdbKey = FdbKey{[6]byte{0xa, 0xb, 0xc, 0xd, 0xe, 0xf}, 4}
-	fdbAttr = FdbAttr{"vxlan4", net.ParseIP("4.4.4.1"), cmn.FDB_TUN}
+	fdbAttr = FdbAttr{"vxlan4", net.ParseIP("4.4.4.1"), cmn.FdbTun}
 	_, err = mh.zr.L2.L2FdbAdd(fdbKey, fdbAttr)
 	if err != nil {
 		t.Errorf("tun FDB add fail 4.4.4.1 %s\n", err)
@@ -265,13 +266,13 @@ func TestLoxinet(t *testing.T) {
 	}
 
 	hwmac1, _ = net.ParseMAC("0a:0b:0c:0d:0e:0f")
-	_, err = mh.zr.Nh.NeighAdd(net.IPv4(44, 44, 44, 1), ROOT_ZONE,
+	_, err = mh.zr.Nh.NeighAdd(net.IPv4(44, 44, 44, 1), RootZone,
 		NeighAttr{126, 1, hwmac1})
 	if err != nil {
 		t.Errorf("add neighbor fail 44.44.44.1 to vlan4\n")
 	}
 
-	lbServ := cmn.LbServiceArg{ServIP: "10.10.10.1", ServPort: 2020, Proto: "tcp", Sel: cmn.LB_SEL_RR}
+	lbServ := cmn.LbServiceArg{ServIP: "10.10.10.1", ServPort: 2020, Proto: "tcp", Sel: cmn.LbSelRr}
 	lbEps := []cmn.LbEndPointArg{
 		{
 			EpIP:   "32.32.32.1",
@@ -333,7 +334,7 @@ func TestLoxinet(t *testing.T) {
 	}
 
 	pInfo := cmn.PolInfo{PolType: 0, ColorAware: false, CommittedInfoRate: 100, PeakInfoRate: 100}
-	polObj := cmn.PolObj{PolObjName: "hs0", AttachMent: cmn.POL_ATTACH_PORT}
+	polObj := cmn.PolObj{PolObjName: "hs0", AttachMent: cmn.PolAttachPort}
 	_, err = mh.zr.Pols.PolAdd("pol-hs0", pInfo, polObj)
 	if err != nil {
 		t.Errorf("Failed to add policer pol-hs0\n")
@@ -344,8 +345,8 @@ func TestLoxinet(t *testing.T) {
 		t.Errorf("Failed to delete policer pol-hs0\n")
 	}
 
-	mInfo := cmn.MirrInfo{MirrType: cmn.MIRR_TYPE_SPAN, MirrPort: "hs0"}
-	mObj := cmn.MirrObj{MirrObjName: "hs1", AttachMent: cmn.MIRR_ATTACH_PORT}
+	mInfo := cmn.MirrInfo{MirrType: cmn.MirrTypeSpan, MirrPort: "hs0"}
+	mObj := cmn.MirrObj{MirrObjName: "hs1", AttachMent: cmn.MirrAttachPort}
 	_, err = mh.zr.Mirrs.MirrAdd("mirr-1", mInfo, mObj)
 	if err != nil {
 		t.Errorf("Failed to add mirror mirr-1\n")

@@ -18,23 +18,24 @@ package loxinet
 import (
 	"errors"
 	"fmt"
+	"net"
+
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
-	"net"
 )
 
 const (
-	SESS_ERR_BASE = iota - 90000
-	SESS_MOD_ERR
-	SESS_NOEXIST_ERR
-	SESS_EXISTS_ERR
-	SESS_ULCLEXIST_ERR
-	SESS_ULCLNUM_ERR
-	SESS_ULCLNOEXIST_ERR
+	SessErrBase = iota - 90000
+	SessModErr
+	SessNoExistErr
+	SessExistsErr
+	SessUlClExistErr
+	SessUlClNumErr
+	SessUlClNoExistErr
 )
 
 const (
-	MAX_ULCLS = 20000
+	MaximumUlCls = 20000
 )
 
 type UserKey struct {
@@ -82,7 +83,7 @@ func SessInit(zone *Zone) *SessH {
 	var nUh = new(SessH)
 	nUh.UserMap = make(map[UserKey]*UserSess)
 	nUh.Zone = zone
-	nUh.HwMark = tk.NewCounter(1, MAX_ULCLS)
+	nUh.HwMark = tk.NewCounter(1, MaximumUlCls)
 	return nUh
 }
 
@@ -91,7 +92,7 @@ func (s *SessH) SessGet() ([]cmn.SessionMod, error) {
 	for k, v := range s.UserMap {
 		Sessions = append(Sessions, cmn.SessionMod{
 			Ident: k.UserID,
-			Ip:    v.Addr,
+			IP:    v.Addr,
 			AnTun: v.AnTun,
 			CnTun: v.CnTun,
 		})
@@ -128,11 +129,11 @@ func (s *SessH) SessAdd(user string, IP net.IP, anTun cmn.SessTun, cnTun cmn.Ses
 			ret, _ := s.SessDelete(user)
 			if ret != 0 {
 				tk.LogIt(tk.LOG_ERROR, "session add - %s:%s mod error\n", user, IP.String())
-				return SESS_MOD_ERR, errors.New("sess-mod error")
+				return SessModErr, errors.New("sess-mod error")
 			}
 		} else {
 			tk.LogIt(tk.LOG_ERROR, "session add - %s:%s  already exists\n", user, IP.String())
-			return SESS_EXISTS_ERR, errors.New("sess-exists error")
+			return SessExistsErr, errors.New("sess-exists error")
 		}
 	}
 
@@ -159,7 +160,7 @@ func (s *SessH) SessDelete(user string) (int, error) {
 
 	if found == false {
 		tk.LogIt(tk.LOG_ERROR, "session delete - %s no-user\n", user)
-		return SESS_NOEXIST_ERR, errors.New("no-user error")
+		return SessNoExistErr, errors.New("no-user error")
 	}
 
 	// First remove all ULCL classifiers if any
@@ -180,32 +181,32 @@ func (s *SessH) UlClAddCls(user string, cls cmn.UlClArg) (int, error) {
 	us, found := s.UserMap[key]
 
 	if found == false {
-		return SESS_NOEXIST_ERR, errors.New("no-user error")
+		return SessNoExistErr, errors.New("no-user error")
 	}
 
 	ulcl, _ := us.UlCl[cls.Addr.String()]
 
 	if ulcl != nil {
-		return SESS_ULCLEXIST_ERR, errors.New("ulcl-exists error")
+		return SessUlClExistErr, errors.New("ulcl-exists error")
 	}
 
 	ulcl = new(UlClInf)
 	ulcl.NumUl, _ = s.HwMark.GetCounter()
 	if ulcl.NumUl < 0 {
-		return SESS_ULCLNUM_ERR, errors.New("ulcl-ulhwm error")
+		return SessUlClNumErr, errors.New("ulcl-ulhwm error")
 	}
 	ulcl.NumDl, _ = s.HwMark.GetCounter()
 	if ulcl.NumDl < 0 {
 		s.HwMark.PutCounter(ulcl.NumUl)
 		ulcl.NumUl = -1
-		return SESS_ULCLNUM_ERR, errors.New("ulcl-dlhwm error")
+		return SessUlClNumErr, errors.New("ulcl-dlhwm error")
 	}
 
 	ulcl.Qfi = cls.Qfi
 	ulcl.Addr = cls.Addr
 	ulcl.uSess = us
 
-	defer ulcl.DP(DP_CREATE)
+	defer ulcl.DP(DpCreate)
 
 	us.UlCl[cls.Addr.String()] = ulcl
 
@@ -220,18 +221,18 @@ func (s *SessH) UlClDeleteCls(user string, cls cmn.UlClArg) (int, error) {
 	us, found := s.UserMap[key]
 
 	if found == false {
-		return SESS_NOEXIST_ERR, errors.New("no-user error")
+		return SessNoExistErr, errors.New("no-user error")
 	}
 
 	ulcl, _ := us.UlCl[cls.Addr.String()]
 
 	if ulcl == nil {
-		return SESS_ULCLNOEXIST_ERR, errors.New("no-ulcl error")
+		return SessUlClNoExistErr, errors.New("no-ulcl error")
 	}
 
 	tk.LogIt(tk.LOG_DEBUG, "ulcl filter deleted - %s:%s\n", user, cls.Addr.String())
 
-	ulcl.DP(DP_REMOVE)
+	ulcl.DP(DpRemove)
 
 	s.HwMark.PutCounter(ulcl.NumUl)
 	delete(us.UlCl, cls.Addr.String())
@@ -264,7 +265,7 @@ func (s *SessH) USess2String(it IterIntf) error {
 func (s *SessH) SessionsSync() {
 	for _, us := range s.UserMap {
 		for _, ulcl := range us.UlCl {
-			ulcl.DP(DP_STATS_GET)
+			ulcl.DP(DpStatsGet)
 			if ulcl.Stats.DlPackets != 0 || ulcl.Stats.UlPackets != 0 {
 				fmt.Printf("%s,qfi-%d,n-%d Dl %v:%v Ul %v:%v\n",
 					ulcl.Addr.String(), ulcl.Qfi, ulcl.NumUl,
@@ -287,11 +288,11 @@ func (ulcl *UlClInf) DP(work DpWorkT) int {
 		return -1
 	}
 
-	if work == DP_STATS_GET {
+	if work == DpStatsGet {
 		uStat := new(StatDpWorkQ)
 		uStat.Work = work
 		uStat.HwMark = uint32(ulcl.NumUl)
-		uStat.Name = MAP_NAME_ULCL
+		uStat.Name = MapNameULCL
 		uStat.Bytes = &ulcl.Stats.UlBytes
 		uStat.Packets = &ulcl.Stats.UlBytes
 
@@ -300,7 +301,7 @@ func (ulcl *UlClInf) DP(work DpWorkT) int {
 		dStat := new(StatDpWorkQ)
 		dStat.Work = work
 		dStat.HwMark = uint32(ulcl.NumDl)
-		dStat.Name = MAP_NAME_ULCL
+		dStat.Name = MapNameULCL
 		dStat.Bytes = &ulcl.Stats.DlBytes
 		dStat.Packets = &ulcl.Stats.DlBytes
 

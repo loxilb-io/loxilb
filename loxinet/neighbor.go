@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package loxinet
 
 import (
@@ -23,51 +24,54 @@ import (
 	"os"
 	"os/exec"
 	"time"
-
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
 
+// error codes
 const (
-	NEIGH_ERR_BASE = iota - 4000
-	NEIGH_EXISTS_ERR
-	NEIGH_OIF_ERR
-	NEIGH_NOENT_ERR
-	NEIGH_RANGE_ERR
-	NEIGH_HOSTRT_ERR
-	NEIGH_MAC_ERR
-	NEIGH_TUN_ERR
+	NeighErrBase = iota - 4000
+	NeighExistsErr
+	NeighOifErr
+	NeighNoEntErr
+	NeighRangeErr
+	NeighHostRtErr
+	NeighMacErr
+	NeighTunErr
 )
 
+// constants
 const (
-	NEIGH_ATS = 10
+	NeighAts       = 10
+	MaxV4Neigh     = 2048
+	MaxV6Neigh     = 1024
+	MaxTunnelNeigh = 1024
 )
 
-const (
-	MAX_V4NEIGH  = 2048
-	MAX_V6NEIGH  = 1024
-	MAX_TUNNEIGH = 1024
-)
-
+// NeighKey - key of a neighbor entry
 type NeighKey struct {
 	NhString string
 	Zone     string
 }
 
+// NeighAttr - attributes of a neighbor
 type NeighAttr struct {
 	OSLinkIndex  int
 	OSState      int
 	HardwareAddr net.HardwareAddr
 }
 
+// NhType - type of neighbor
 type NhType uint8
 
+// supported neighbor types
 const (
-	NH_NORMAL NhType = 1 << iota
-	NH_TUN
-	NH_RECURSIVE
+	NhNormal NhType = 1 << iota
+	NhTun
+	NhRecursive
 )
 
+// NeighTunEp - tun-ep related to neighbor
 type NeighTunEp struct {
 	sIP      net.IP
 	rIP      net.IP
@@ -79,6 +83,7 @@ type NeighTunEp struct {
 	Sync     DpStatusT
 }
 
+// Neigh - a neighbor entry
 type Neigh struct {
 	Key      NeighKey
 	Addr     net.IP
@@ -95,32 +100,35 @@ type Neigh struct {
 	NhRtm    map[RtKey]*Rt
 }
 
+// NeighH - the context container
 type NeighH struct {
 	NeighMap map[NeighKey]*Neigh
-	NeighId  *tk.Counter
-	Neigh6Id *tk.Counter
-	NeighTid *tk.Counter
+	NeighID  *tk.Counter
+	Neigh6ID *tk.Counter
+	NeighTID *tk.Counter
 	Zone     *Zone
 }
 
+// NeighInit - Initialize the neighbor subsystem
 func NeighInit(zone *Zone) *NeighH {
 	var nNh = new(NeighH)
 	nNh.NeighMap = make(map[NeighKey]*Neigh)
-	nNh.NeighId = tk.NewCounter(1, MAX_V4NEIGH)
-	nNh.NeighTid = tk.NewCounter(MAX_V4NEIGH+1, MAX_TUNNEIGH)
-	nNh.Neigh6Id = tk.NewCounter(1, MAX_V6NEIGH)
+	nNh.NeighID = tk.NewCounter(1, MaxV4Neigh)
+	nNh.NeighTID = tk.NewCounter(MaxV4Neigh+1, MaxTunnelNeigh)
+	nNh.Neigh6ID = tk.NewCounter(1, MaxV6Neigh)
 	nNh.Zone = zone
 
 	return nNh
 }
 
+// Activate - Try to activate a neighbor
 func (ne *Neigh) Activate() {
 
 	if ne.Resolved {
 		return
 	}
 
-	if time.Now().Sub(ne.Ats) < NEIGH_ATS || ne.OifPort.Name == "lo" {
+	if time.Now().Sub(ne.Ats) < NeighAts || ne.OifPort.Name == "lo" {
 		return
 	}
 
@@ -134,6 +142,8 @@ func (ne *Neigh) Activate() {
 	ne.Ats = time.Now()
 }
 
+
+// NeighAddTunEP - Add tun-ep to a neighbor
 func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTunT, sync bool) (int, *NeighTunEp) {
 	// FIXME - Need to be able to support multiple overlays with same entry
 	port := ne.OifPort
@@ -159,7 +169,7 @@ func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTu
 	tep.tunID = tunID
 	tep.tunType = tunType
 
-	idx, err := n.NeighTid.GetCounter()
+	idx, err := n.NeighTID.GetCounter()
 	if err != nil {
 		return -1, nil
 	}
@@ -168,10 +178,10 @@ func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTu
 
 	ne.TunEps = append(ne.TunEps, tep)
 
-	ne.Type |= NH_TUN
+	ne.Type |= NhTun
 
 	if sync {
-		tep.DP(DP_CREATE)
+		tep.DP(DpCreate)
 	}
 
 	tk.LogIt(tk.LOG_DEBUG, "neigh tunep added - %s:%s (%d)\n", sIP.String(), rIP.String(), tunID)
@@ -179,42 +189,18 @@ func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTu
 	return 0, tep
 }
 
+// NeighRemoveTunEP - remove tun-ep from a neighbor
 func (ne *Neigh) NeighRemoveTunEP(i int) []*NeighTunEp {
 	copy(ne.TunEps[i:], ne.TunEps[i+1:])
 	return ne.TunEps[:len(ne.TunEps)-1]
 }
 
-func (n *NeighH) NeighDelTunEP(ne *Neigh, rIP net.IP,
-	tunID uint32, tunType DpTunT,
-	sync bool) int {
-
-	for i, tep := range ne.TunEps {
-		if tep.rIP.Equal(rIP) &&
-			tep.tunID == tunID &&
-			tep.tunType == tunType {
-
-			if sync {
-				tep.DP(DP_REMOVE)
-			}
-
-			tk.LogIt(tk.LOG_DEBUG, "neigh tunep deleted - %s:%s (%d)\n",
-				tep.sIP.String(), tep.rIP.String(), tep.tunID)
-
-			n.NeighTid.PutCounter(tep.HwMark)
-			ne.NeighRemoveTunEP(i)
-			return 0
-		}
-		i++
-	}
-
-	return -1
-}
-
+// NeighDelAllTunEP - delete all tun-eps from a neighbor
 func (n *NeighH) NeighDelAllTunEP(ne *Neigh) int {
 	var i int = 0
 	for _, tep := range ne.TunEps {
-		tep.DP(DP_REMOVE)
-		n.NeighTid.PutCounter(tep.HwMark)
+		tep.DP(DpRemove)
+		n.NeighTID.PutCounter(tep.HwMark)
 		tep.Inactive = true
 		ne.NeighRemoveTunEP(i)
 		i++
@@ -222,9 +208,9 @@ func (n *NeighH) NeighDelAllTunEP(ne *Neigh) int {
 	return 0
 }
 
-// Try to resolve recursive neighbors
+// NeighRecursiveResolve - try to resolve recursive neighbors
 // Recursive neighbors are the ones which have the following association :
-// Nh -> tunFdb -> RT -> tunNh
+// nh -> tunfdb -> rt -> tun-nh (Wow)
 func (n *NeighH) NeighRecursiveResolve(ne *Neigh) {
 	zeroHwAddr, _ := net.ParseMAC("00:00:00:00:00:00")
 
@@ -244,7 +230,7 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) {
 	if ne.tFdb != nil &&
 		(ne.tFdb.inActive || ne.tFdb.unReach) {
 		ne.Resolved = false
-		ne.Type &= ^NH_RECURSIVE
+		ne.Type &= ^NhRecursive
 		ne.tFdb = nil
 	}
 
@@ -258,18 +244,18 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) {
 		key := FdbKey{mac, port.L2.Vid}
 
 		if f := n.Zone.L2.L2FdbFind(key); f == nil {
-			has_tun, _ := n.Zone.Ports.PortHasTunSlaves(port.Name, cmn.PORT_VXLANSIF)
-			if has_tun {
+			hasTun, _ := n.Zone.Ports.PortHasTunSlaves(port.Name, cmn.PortVxlanSif)
+			if hasTun {
 				ne.tFdb = nil
 				ne.Resolved = false
 			}
 		} else {
-			if f.FdbAttr.FdbType == cmn.FDB_TUN {
+			if f.FdbAttr.FdbType == cmn.FdbTun {
 				if f.unReach {
 					ne.Resolved = false
 				} else {
 					ne.tFdb = f
-					ne.Type |= NH_RECURSIVE
+					ne.Type |= NhRecursive
 				}
 			}
 		}
@@ -277,7 +263,7 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) {
 	return
 }
 
-// Add a neigh entry
+// NeighAdd - add a neigh entry
 func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error) {
 	var idx int
 	var err error
@@ -288,7 +274,7 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 	port := n.Zone.Ports.PortFindByOSId(Attr.OSLinkIndex)
 	if port == nil {
 		tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s no oport\n", Addr.String(), Zone)
-		return NEIGH_OIF_ERR, errors.New("nh-oif error")
+		return NeighOifErr, errors.New("nh-oif error")
 	}
 
 	mask := net.CIDRMask(32, 32)
@@ -301,29 +287,30 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 		if bytes.Equal(Attr.HardwareAddr, zeroHwAddr) == true {
 			ne.Resolved = false
 		} else {
-			if bytes.Equal(Attr.HardwareAddr, ne.Attr.HardwareAddr) == false {
+			if bytes.Equal(Attr.HardwareAddr, ne.Attr.HardwareAddr) == false ||
+				ne.Resolved == false {
 				ne.Attr.HardwareAddr = Attr.HardwareAddr
 				ne.Resolved = true
 				n.NeighRecursiveResolve(ne)
-				ne.DP(DP_CREATE)
-				goto L2Pair
+				ne.DP(DpCreate)
+				goto NhExist
 			}
 		}
 		tk.LogIt(tk.LOG_ERROR, "nh add - %s:%s exists\n", Addr.String(), Zone)
-		return NEIGH_EXISTS_ERR, errors.New("nh exists")
+		return NeighExistsErr, errors.New("nh exists")
 	}
 
 	if Addr.To4() == nil {
-		idx, err = n.Neigh6Id.GetCounter()
+		idx, err = n.Neigh6ID.GetCounter()
 		if err != nil {
 			tk.LogIt(tk.LOG_ERROR, "neigh6 add - %s:%s no hwmarks\n", Addr.String(), Zone)
-			return NEIGH_RANGE_ERR, errors.New("nh6-hwm error")
+			return NeighRangeErr, errors.New("nh6-hwm error")
 		}
 	} else {
-		idx, err = n.NeighId.GetCounter()
+		idx, err = n.NeighID.GetCounter()
 		if err != nil {
 			tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s no hwmarks\n", Addr.String(), Zone)
-			return NEIGH_RANGE_ERR, errors.New("nh-hwm error")
+			return NeighRangeErr, errors.New("nh-hwm error")
 		}
 	}
 
@@ -334,48 +321,48 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 	ne.Attr = Attr
 	ne.OifPort = port
 	ne.HwMark = idx
-	ne.Type |= NH_NORMAL
+	ne.Type |= NhNormal
 	ne.NhRtm = make(map[RtKey]*Rt)
 	ne.Inactive = false
 
 	n.NeighRecursiveResolve(ne)
-
 	n.NeighMap[ne.Key] = ne
-	ne.DP(DP_CREATE)
+	ne.DP(DpCreate)
 
-	// Add a host route specific to this NH
-	_, err = n.Zone.Rt.RtAdd(ipnet, Zone, ra, na)
-	if err != nil {
+NhExist:
+
+	// Add a host specific to this neighbor
+	ec, err := n.Zone.Rt.RtAdd(ipnet, Zone, ra, na)
+	if err != nil && ec != RtExistsErr {
 		n.NeighDelete(Addr, Zone)
-		tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s host-rt fail\n", Addr.String(), Zone)
-		return NEIGH_HOSTRT_ERR, errors.New("nh-hostrt error")
+		tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s host-rt fail(%s)\n", Addr.String(), Zone, err)
+		return NeighHostRtErr, errors.New("nh-hostrt error")
 	}
 
 	//Add a related L2 Pair entry if needed
-L2Pair:
 	if port.HInfo.Master == "" &&
-		port.SInfo.PortType&(cmn.PORT_REAL|cmn.PORT_BOND) != 0 &&
+		port.SInfo.PortType&(cmn.PortReal|cmn.PortBond) != 0 &&
 		ne.Resolved {
 		var fdbAddr [6]byte
 		var vid int
 		for i := 0; i < 6; i++ {
 			fdbAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 		}
-		if port.SInfo.PortType&cmn.PORT_REAL != 0 {
-			vid = port.PortNo + REAL_PORT_VB
+		if port.SInfo.PortType&cmn.PortReal != 0 {
+			vid = port.PortNo + RealPortVb
 		} else {
-			vid = port.PortNo + BOND_VB
+			vid = port.PortNo + BondVb
 		}
 
 		fdbKey := FdbKey{fdbAddr, vid}
-		fdbAttr := FdbAttr{port.Name, net.ParseIP("0.0.0.0"), cmn.FDB_PHY}
+		fdbAttr := FdbAttr{port.Name, net.ParseIP("0.0.0.0"), cmn.FdbPhy}
 
 		_, err = n.Zone.L2.L2FdbAdd(fdbKey, fdbAttr)
 		if err != nil {
 			n.Zone.Rt.RtDelete(ipnet, Zone)
 			n.NeighDelete(Addr, Zone)
 			tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s mac fail\n", Addr.String(), Zone)
-			return NEIGH_MAC_ERR, errors.New("nh-mac error")
+			return NeighMacErr, errors.New("nh-mac error")
 		}
 	}
 
@@ -386,62 +373,65 @@ L2Pair:
 	return 0, nil
 }
 
-// Delete a neigh entry
+// NeighDelete - delete a neigh entry
 func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 	key := NeighKey{Addr.String(), Zone}
 
 	ne, found := n.NeighMap[key]
 	if found == false {
 		tk.LogIt(tk.LOG_ERROR, "neigh delete - %s:%s doesnt exist\n", Addr.String(), Zone)
-		return NEIGH_NOENT_ERR, errors.New("no-nh error")
-	}
-
-	n.NeighDelAllTunEP(ne)
-
-	if len(ne.NhRtm) > 1 {
-		ne.Resolved = false
-		ne.Inactive = true
-		ne.DP(DP_REMOVE)
-		tk.LogIt(tk.LOG_DEBUG, "neigh deactivated - %s:%s\n", Addr.String(), Zone)
-		return 0, nil
+		return NeighNoEntErr, errors.New("no-nh error")
 	}
 
 	//Delete related L2 Pair entry if needed
 	port := ne.OifPort
 	if port != nil &&
 		port.HInfo.Master == "" &&
-		port.SInfo.PortType&(cmn.PORT_REAL|cmn.PORT_BOND) != 0 &&
+		port.SInfo.PortType&(cmn.PortReal|cmn.PortBond) != 0 &&
 		ne.Resolved {
 		var fdbAddr [6]byte
 		var vid int
 		for i := 0; i < 6; i++ {
 			fdbAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 		}
-		if port.SInfo.PortType&cmn.PORT_REAL != 0 {
-			vid = port.PortNo + REAL_PORT_VB
+		if port.SInfo.PortType&cmn.PortReal != 0 {
+			vid = port.PortNo + RealPortVb
 		} else {
-			vid = port.PortNo + BOND_VB
+			vid = port.PortNo + BondVb
 		}
 
 		fdbKey := FdbKey{fdbAddr, vid}
 		n.Zone.L2.L2FdbDel(fdbKey)
 	}
 
-	// Delete the host route specific to this NH
+	// Delete the host specific to this NH
 	mask := net.CIDRMask(32, 32)
 	ipnet := net.IPNet{IP: Addr, Mask: mask}
 	_, err := n.Zone.Rt.RtDelete(ipnet, Zone)
 	if err != nil {
 		tk.LogIt(tk.LOG_ERROR, "neigh delete - %s:%s host-rt fail\n", Addr.String(), Zone)
-		return NEIGH_HOSTRT_ERR, errors.New("nh-hostrt error" + err.Error())
+		/*return NeighHostRtErr, errors.New("nh-hostrt error" + err.Error())*/
 	}
 
-	ne.DP(DP_REMOVE)
+	ne.DP(DpRemove)
+
+	if len(ne.NhRtm) > 0 {
+		ne.Resolved = false
+		ne.Inactive = true
+		zeroHwAddr, _ := net.ParseMAC("00:00:00:00:00:00")
+		ne.Attr.HardwareAddr = zeroHwAddr
+		// This is a potentially non-optimal situation and we try to recover if possible
+		ne.Activate()
+		tk.LogIt(tk.LOG_DEBUG, "neigh deactivated - %s:%s\n", Addr.String(), Zone)
+		return 0, nil
+	}
+
+	n.NeighDelAllTunEP(ne)
 
 	if ne.Addr.To4() == nil {
-		n.Neigh6Id.PutCounter(ne.HwMark)
+		n.Neigh6ID.PutCounter(ne.HwMark)
 	} else {
-		n.Neigh6Id.PutCounter(ne.HwMark)
+		n.Neigh6ID.PutCounter(ne.HwMark)
 	}
 
 	ne.tFdb = nil
@@ -457,7 +447,7 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 	return 0, nil
 }
 
-// Find a neigh entry
+// NeighFind - Find a neighbor entry
 func (n *NeighH) NeighFind(Addr net.IP, Zone string) (*Neigh, int) {
 	key := NeighKey{Addr.String(), Zone}
 
@@ -496,16 +486,17 @@ func (n *NeighH) NeighUnPairRt(ne *Neigh, rt *Rt) int {
 	}
 
 	delete(ne.NhRtm, rt.Key)
-	if len(ne.NhRtm) <= 1 && ne.Inactive == true {
+	if len(ne.NhRtm) < 1 && ne.Inactive == true {
 		// Safely remove
 		tk.LogIt(tk.LOG_DEBUG, "neigh rt unpair - %s->%s\n", rt.Key.RtCidr, ne.Key.NhString)
 		n.NeighDelete(ne.Addr, ne.Key.Zone)
-		ne.DP(DP_REMOVE)
+		ne.DP(DpRemove)
 	}
 
 	return 0
 }
 
+// Neigh2String - format neighbor into a string
 func Neigh2String(ne *Neigh, it IterIntf) {
 
 	nhBuf := fmt.Sprintf("%16s: %s (R:%v) Oif %8s HwMark %d",
@@ -515,6 +506,7 @@ func Neigh2String(ne *Neigh, it IterIntf) {
 	it.NodeWalker(nhBuf)
 }
 
+// Neighs2String - format all neighbors into a string 
 func (n *NeighH) Neighs2String(it IterIntf) error {
 	for _, n := range n.NeighMap {
 		Neigh2String(n, it)
@@ -522,8 +514,9 @@ func (n *NeighH) Neighs2String(it IterIntf) error {
 	return nil
 }
 
+// PortNotifier - implementation of PortEventIntf interface 
 func (n *NeighH) PortNotifier(name string, osID int, evType PortEvent) {
-	if evType&PORT_EV_DOWN|PORT_EV_DELETE|PORT_EV_LOWER_DOWN != 0 {
+	if evType&PortEvDown|PortEvDelete|PortEvLowerDown != 0 {
 		for _, ne := range n.NeighMap {
 			if ne.OifPort.Name == name {
 				n.NeighDelete(net.ParseIP(ne.Key.NhString), ne.Key.Zone)
@@ -533,11 +526,13 @@ func (n *NeighH) PortNotifier(name string, osID int, evType PortEvent) {
 	return
 }
 
+// NeighTicker - a per neighbor ticker sub-routine
 func (n *NeighH) NeighTicker(ne *Neigh) {
 	ne.Activate()
 	n.NeighRecursiveResolve(ne)
 }
 
+// NeighsTicker - neighbor ticker sub-routine
 func (n *NeighH) NeighsTicker() {
 	i := 1
 	for _, ne := range n.NeighMap {
@@ -547,6 +542,7 @@ func (n *NeighH) NeighsTicker() {
 	return
 }
 
+// NeighDestructAll - destroy all neighbors
 func (n *NeighH) NeighDestructAll() {
 	for _, ne := range n.NeighMap {
 		addr := net.ParseIP(ne.Key.NhString)
@@ -555,7 +551,7 @@ func (n *NeighH) NeighDestructAll() {
 	return
 }
 
-// Sync state of neighbor entities to data-path
+// DP - sync state of neighbor entity to data-path
 func (ne *Neigh) DP(work DpWorkT) int {
 
 	//if nh.Resolved == false && work == DP_CREATE {
@@ -567,7 +563,7 @@ func (ne *Neigh) DP(work DpWorkT) int {
 	neighWq.Status = &ne.Sync
 	neighWq.resolved = ne.Resolved
 	neighWq.nNextHopNum = 0
-	if ne.Type&NH_RECURSIVE == NH_RECURSIVE {
+	if ne.Type&NhRecursive == NhRecursive {
 		f := ne.tFdb
 		if f != nil && f.FdbTun.ep != nil {
 			neighWq.nNextHopNum = f.FdbTun.ep.HwMark
@@ -596,7 +592,7 @@ func (ne *Neigh) DP(work DpWorkT) int {
 	return 0
 }
 
-// Sync state of neighbor tunnel endpoint entities to data-path
+// DP - sync state of neighbor tunnel endpoint entity to data-path
 func (tep *NeighTunEp) DP(work DpWorkT) int {
 
 	ne := tep.Parent
