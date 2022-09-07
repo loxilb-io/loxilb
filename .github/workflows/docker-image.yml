@@ -30,9 +30,9 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build the loxilb Docker image
-      run: echo "Hello1"
-      #  docker build . --tag ghcr.io/loxilb-io/loxilb:latest
-      #  docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
+      run: |
+        docker build . --tag ghcr.io/loxilb-io/loxilb:latest
+        docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
         
     - name: Publish the latest loxilb Docker image
       if: | 
