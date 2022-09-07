@@ -29,10 +29,16 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build the loxilb Docker image
-      run: |
-        docker build . --tag ghcr.io/loxilb-io/loxilb:latest
-        docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
+    - name: Build the latest loxilb Docker image
+      if: github.event.inputs.tagName == ''
+      run: docker build . --tag ghcr.io/loxilb-io/loxilb:latest
+      
+    - name: Build the loxilb Docker image with given tag
+      if: github.event.inputs.tagName != ''
+      run: docker build . --tag ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }} 
+      
+    - name: Run the loxilb docker image to check
+      run: docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
         
     - name: Publish the latest loxilb Docker image
       if: | 
