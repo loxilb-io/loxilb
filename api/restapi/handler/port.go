@@ -23,12 +23,12 @@ import (
 )
 
 func ConfigGetPort(params operations.GetConfigPortAllParams) middleware.Responder {
-	tk.LogIt(tk.LOG_DEBUG, "[API] Port %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] Port %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	// Get Port informations
 	ports, err := ApiHooks.NetPortGet()
 	if err != nil {
-		tk.LogIt(tk.LOG_DEBUG, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &PortResponse{PortAttr: ports}

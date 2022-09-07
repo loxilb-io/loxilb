@@ -144,7 +144,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 	nhLen := len(Na)
 
 	if nhLen > 1 {
-		tk.LogIt(tk.LOG_ERROR, "rt add - %s:%s ecmp not supported\n", Dst.String(), Zone)
+		tk.LogIt(tk.LogError, "rt add - %s:%s ecmp not supported\n", Dst.String(), Zone)
 		return RtNhErr, errors.New("ecmp-rt error not supported")
 	}
 
@@ -166,13 +166,13 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 		if rtMod == true {
 			ret, _ := r.RtDelete(Dst, Zone)
 			if ret != 0 {
-				tk.LogIt(tk.LOG_ERROR, "rt add - %s:%s del failed on mod\n", Dst.String(), Zone)
+				tk.LogIt(tk.LogError, "rt add - %s:%s del failed on mod\n", Dst.String(), Zone)
 				return RtModErr, errors.New("rt mod error")
 			}
 			return r.RtAdd(Dst, Zone, Ra, Na)
 		}
 
-		tk.LogIt(tk.LOG_ERROR, "rt add - %s:%s exists\n", Dst.String(), Zone)
+		tk.LogIt(tk.LogError, "rt add - %s:%s exists\n", Dst.String(), Zone)
 		return RtExistsErr, errors.New("rt exists")
 	}
 
@@ -199,14 +199,14 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 				// If this is a host route then neighbor has to exist
 				// Usually host route addition is triggered by neigh add
 				if Ra.HostRoute == true {
-					tk.LogIt(tk.LOG_ERROR, "rt add host - %s:%s no neigh\n", Dst.String(), Zone)
+					tk.LogIt(tk.LogError, "rt add host - %s:%s no neigh\n", Dst.String(), Zone)
 					return RtNhErr, errors.New("rt-neigh host error")
 				}
 
 				r.Zone.Nh.NeighAdd(Na[i].NhAddr, Zone, NeighAttr{Na[i].LinkIndex, 0, hwmac})
 				nh, _ = r.Zone.Nh.NeighFind(Na[i].NhAddr, Zone)
 				if nh == nil {
-					tk.LogIt(tk.LOG_ERROR, "rt add - %s:%s no neigh\n", Dst.String(), Zone)
+					tk.LogIt(tk.LogError, "rt add - %s:%s no neigh\n", Dst.String(), Zone)
 					return RtNhErr, errors.New("rt-neigh error")
 				}
 				newNhs = append(newNhs, nh)
@@ -229,7 +229,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 		for i := 0; i < len(newNhs); i++ {
 			r.Zone.Nh.NeighDelete(newNhs[i].Addr, Zone)
 		}
-		tk.LogIt(tk.LOG_ERROR, "rt add - %s:%s lpm add fail\n", Dst.String(), Zone)
+		tk.LogIt(tk.LogError, "rt add - %s:%s lpm add fail\n", Dst.String(), Zone)
 		return RtTrieAddErr, errors.New("RT Trie Err")
 	}
 
@@ -247,7 +247,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 
 	rt.DP(DpCreate)
 
-	tk.LogIt(tk.LOG_DEBUG, "rt added - %s:%s\n", Dst.String(), Zone)
+	tk.LogIt(tk.LogDebug, "rt added - %s:%s\n", Dst.String(), Zone)
 
 	return 0, nil
 }
@@ -273,7 +273,7 @@ func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 
 	rt, found := r.RtMap[key]
 	if found == false {
-		tk.LogIt(tk.LOG_ERROR, "rt delete - %s:%s not found\n", Dst.String(), Zone)
+		tk.LogIt(tk.LogError, "rt delete - %s:%s not found\n", Dst.String(), Zone)
 		return RtNoEntErr, errors.New("no such route")
 	}
 
@@ -289,7 +289,7 @@ func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 
 	tret := r.Trie4.DelTrie(Dst.String())
 	if tret != 0 {
-		tk.LogIt(tk.LOG_ERROR, "rt delete - %s:%s lpm not found\n", Dst.String(), Zone)
+		tk.LogIt(tk.LogError, "rt delete - %s:%s lpm not found\n", Dst.String(), Zone)
 		return RtTrieDelErr, errors.New("rt-lpm delete error")
 	}
 
@@ -298,7 +298,7 @@ func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 
 	rt.DP(DpRemove)
 
-	tk.LogIt(tk.LOG_DEBUG, "rt deleted - %s:%s\n", Dst.String(), Zone)
+	tk.LogIt(tk.LogDebug, "rt deleted - %s:%s\n", Dst.String(), Zone)
 
 	return 0, nil
 }

@@ -164,10 +164,10 @@ func (gbh *GoBgpH) processRouteSingle(p *api.Path, showIdentifier bgp.BGPAddPath
 		format += " [%s] %d:%s via %s aspath [%s] attrs %s\n"
 	}
 
-	tk.LogIt(tk.LOG_INFO, format, pathStr...)
+	tk.LogIt(tk.LogInfo, format, pathStr...)
 
 	if err := gbh.syncRoute(p, showIdentifier); err != nil {
-		tk.LogIt(tk.LOG_ERROR, " failed to"+format, pathStr...)
+		tk.LogIt(tk.LogError, " failed to"+format, pathStr...)
 	}
 }
 
@@ -200,15 +200,15 @@ func (gbh *GoBgpH) syncRoute(p *api.Path, showIdentifier bgp.BGPAddPathMode) err
 	}
 
 	if p.GetIsWithdraw() {
-		tk.LogIt(tk.LOG_DEBUG, "[GoBGP] ip route delete %s via %s", route.Dst.String(), route.Gw.String())
+		tk.LogIt(tk.LogDebug, "[GoBGP] ip route delete %s via %s", route.Dst.String(), route.Gw.String())
 		if err := nlp.RouteDel(route); err != nil {
-			tk.LogIt(tk.LOG_ERROR, "[GoBGP] failed to ip route delete. err: %s", err.Error())
+			tk.LogIt(tk.LogError, "[GoBGP] failed to ip route delete. err: %s", err.Error())
 			return err
 		}
 	} else {
-		tk.LogIt(tk.LOG_DEBUG, "[GoBGP] ip route add %s via %s", route.Dst.String(), route.Gw.String())
+		tk.LogIt(tk.LogDebug, "[GoBGP] ip route add %s via %s", route.Dst.String(), route.Gw.String())
 		if err := nlp.RouteAdd(route); err != nil {
-			tk.LogIt(tk.LOG_ERROR, "[GoBGP] failed to ip route add. err: %s", err.Error())
+			tk.LogIt(tk.LogError, "[GoBGP] failed to ip route add. err: %s", err.Error())
 			return err
 		}
 	}
@@ -238,7 +238,7 @@ func (gbh *GoBgpH) GetRoutes(client api.GobgpApiClient) int {
 			if err == io.EOF {
 
 			} else if err != nil {
-				tk.LogIt(tk.LOG_CRITICAL, "processRoutes failed : %v\n", err)
+				tk.LogIt(tk.LogCritical, "processRoutes failed : %v\n", err)
 
 				gbh.eventCh <- goBgpEvent{
 					EventType: bgpDisconnected,
@@ -265,7 +265,7 @@ func (gbh *GoBgpH) GetRoutes(client api.GobgpApiClient) int {
 		})
 
 	if err != nil {
-		tk.LogIt(tk.LOG_ERROR, "%v", err)
+		tk.LogIt(tk.LogError, "%v", err)
 		return -1
 
 	}
@@ -276,7 +276,7 @@ func (gbh *GoBgpH) GetRoutes(client api.GobgpApiClient) int {
 func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 
 	// add routes
-	//tk.LogIt(tk.LOG_DEBUG, "\n\n\n Advertising Route : %v via %v\n\n\n", rtPrefix, nh)
+	//tk.LogIt(tk.LogDebug, "\n\n\n Advertising Route : %v via %v\n\n\n", rtPrefix, nh)
 	nlri, _ := apb.New(&api.IPAddressPrefix{
 		Prefix:    rtPrefix,
 		PrefixLen: uint32(pLen),
@@ -313,7 +313,7 @@ func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 	})
 
 	if err != nil {
-		tk.LogIt(tk.LOG_CRITICAL, "Advertised Route add failed: %v\n", err)
+		tk.LogIt(tk.LogCritical, "Advertised Route add failed: %v\n", err)
 		return -1
 	}
 	return 0
@@ -358,7 +358,7 @@ func (gbh *GoBgpH) DelAdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 	})
 
 	if err != nil {
-		tk.LogIt(tk.LOG_CRITICAL, "Advertised Route del failed: %v", err)
+		tk.LogIt(tk.LogCritical, "Advertised Route del failed: %v", err)
 		return -1
 	}
 	return 0
@@ -398,7 +398,7 @@ func (gbh *GoBgpH) goBgpConnect(host string) {
 		gbh.mtx.Lock()
 		conn, err := grpc.DialContext(context.TODO(), host, grpc.WithInsecure())
 		if err != nil {
-			tk.LogIt(tk.LOG_NOTICE, "BGP session %s not alive. Will Retry!\n", gbh.host)
+			tk.LogIt(tk.LogNotice, "BGP session %s not alive. Will Retry!\n", gbh.host)
 			gbh.mtx.Unlock()
 			time.Sleep(2000 * time.Millisecond)
 		} else {
@@ -409,12 +409,12 @@ func (gbh *GoBgpH) goBgpConnect(host string) {
 				r, err := gbh.client.GetBgp(context.TODO(), &api.GetBgpRequest{})
 				if err != nil {
 
-					tk.LogIt(tk.LOG_NOTICE, "BGP session %s not ready. Will Retry!\n", gbh.host)
+					tk.LogIt(tk.LogNotice, "BGP session %s not ready. Will Retry!\n", gbh.host)
 					gbh.mtx.Unlock()
 					time.Sleep(2000 * time.Millisecond)
 					continue
 				}
-				tk.LogIt(tk.LOG_NOTICE, "BGP session %s ready! Attributes[%v]\n", gbh.host, r)
+				tk.LogIt(tk.LogNotice, "BGP session %s ready! Attributes[%v]\n", gbh.host, r)
 
 				gbh.mtx.Unlock()
 				break
@@ -492,7 +492,7 @@ func (gbh *GoBgpH) AddCurrentBgpRoutesToIpRoute() error {
 
 			nexthopIP := net.ParseIP(p.GetNeighborIp())
 			if nexthopIP == nil {
-				tk.LogIt(tk.LOG_DEBUG, "prefix %s neighbor_ip %s is invalid", r.GetPrefix(), p.GetNeighborIp())
+				tk.LogIt(tk.LogDebug, "prefix %s neighbor_ip %s is invalid", r.GetPrefix(), p.GetNeighborIp())
 				continue
 			}
 
@@ -508,7 +508,7 @@ func (gbh *GoBgpH) AddCurrentBgpRoutesToIpRoute() error {
 				Gw:  net.ParseIP(r.Paths[0].GetNeighborIp()),
 			}
 		}
-		tk.LogIt(tk.LOG_DEBUG, "[GoBGP] ip route add %s via %s", dstIPN.String(), nlpRoute.Gw.String())
+		tk.LogIt(tk.LogDebug, "[GoBGP] ip route add %s via %s", dstIPN.String(), nlpRoute.Gw.String())
 		nlp.RouteAdd(nlpRoute)
 	}
 
@@ -519,13 +519,13 @@ func (gbh *GoBgpH) getGoBgpRoutes() {
 	gbh.mtx.Lock()
 
 	for ip, valid := range gbh.rules {
-		tk.LogIt(tk.LOG_DEBUG, "[GoBGP] connected BGP rules ip %s is valied(%v)", ip, valid)
+		tk.LogIt(tk.LogDebug, "[GoBGP] connected BGP rules ip %s is valied(%v)", ip, valid)
 		if valid {
 			gbh.AdvertiseRoute(ip, 32, "0.0.0.0")
 		}
 	}
 	if err := gbh.AddCurrentBgpRoutesToIpRoute(); err != nil {
-		tk.LogIt(tk.LOG_ERROR, "[GoBGP] AddCurrentBgpRoutesToIpRoute() return err: %s", err.Error())
+		tk.LogIt(tk.LogError, "[GoBGP] AddCurrentBgpRoutesToIpRoute() return err: %s", err.Error())
 	}
 	gbh.mtx.Unlock()
 
@@ -536,13 +536,13 @@ func (gbh *GoBgpH) processBgpEvent(e goBgpEvent) {
 
 	switch e.EventType {
 	case bgpDisconnected:
-		tk.LogIt(tk.LOG_NOTICE, "******************* BGP %s disconnected *******************\n", gbh.host)
+		tk.LogIt(tk.LogNotice, "******************* BGP %s disconnected *******************\n", gbh.host)
 		gbh.conn.Close()
 		gbh.conn = nil
 		gbh.state = BGPDisconnected
 		go gbh.goBgpConnect(gbh.host)
 	case bgpConnected:
-		tk.LogIt(tk.LOG_NOTICE, "******************* BGP %s connected *******************\n", gbh.host)
+		tk.LogIt(tk.LogNotice, "******************* BGP %s connected *******************\n", gbh.host)
 		gbh.conn = e.conn
 		gbh.state = BGPConnected
 		gbh.getGoBgpRoutes()
@@ -552,7 +552,7 @@ func (gbh *GoBgpH) processBgpEvent(e goBgpEvent) {
 }
 
 func (gbh *GoBgpH) goBgpMonitor() {
-	tk.LogIt(tk.LOG_NOTICE, "\n\n\n\nBGP Monitor start *******************\n")
+	tk.LogIt(tk.LogNotice, "\n\n\n\nBGP Monitor start *******************\n")
 	for {
 		for n := 0; n < cmn.RuWorkQLen; n++ {
 			select {

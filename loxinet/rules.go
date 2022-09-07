@@ -688,7 +688,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		eRule.act.action.(*ruleNatActs).sel = natActs.sel
 		eRule.act.action.(*ruleNatActs).endPoints = eEps
 		eRule.sT = time.Now()
-		tk.LogIt(tk.LOG_DEBUG, "nat lb-rule updated - %s:%s\n", eRule.tuples.String(), eRule.act.String())
+		tk.LogIt(tk.LogDebug, "nat lb-rule updated - %s:%s\n", eRule.tuples.String(), eRule.act.String())
 		eRule.DP(DpCreate)
 
 		return 0, nil
@@ -701,7 +701,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	r.act.action = &natActs
 	r.ruleNum, err = R.Tables[RtLB].HwMark.GetCounter()
 	if err != nil {
-		tk.LogIt(tk.LOG_ERROR, "nat lb-rule - %s:%s hwm error\n", eRule.tuples.String(), eRule.act.String())
+		tk.LogIt(tk.LogError, "nat lb-rule - %s:%s hwm error\n", eRule.tuples.String(), eRule.act.String())
 		return RuleAllocErr, errors.New("rule-hwm error")
 	}
 	r.sT = time.Now()
@@ -710,7 +710,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	// lb end-point health monitoring
 	r.ActChk = false
 
-	tk.LogIt(tk.LOG_DEBUG, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
+	tk.LogIt(tk.LogDebug, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
 	R.Tables[RtLB].eMap[rt.ruleKey()] = r
 
@@ -757,7 +757,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 
 	delete(R.Tables[RtLB].eMap, rt.ruleKey())
 
-	tk.LogIt(tk.LOG_DEBUG, "nat lb-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
+	tk.LogIt(tk.LogDebug, "nat lb-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
 
 	rule.DP(DpRemove)
 
@@ -775,7 +775,7 @@ func (R *RuleH) RulesSync() {
 		ruleKeys := rule.tuples.String()
 		ruleActs := rule.act.String()
 		rule.DP(DpStatsGet)
-		tk.LogIt(tk.LOG_DEBUG, "%d:%s,%s pc %v bc %v \n",
+		tk.LogIt(tk.LogDebug, "%d:%s,%s pc %v bc %v \n",
 			rule.ruleNum, ruleKeys, ruleActs,
 			rule.stat.packets, rule.stat.bytes)
 
@@ -811,7 +811,7 @@ func (R *RuleH) RulesSync() {
 							if np.inActTries > R.Cfg.RuleInactTries {
 								np.inActive = true
 								rChg = true
-								tk.LogIt(tk.LOG_DEBUG, "nat lb-rule inactive ep - %s:%s\n", sType, sName)
+								tk.LogIt(tk.LogDebug, "nat lb-rule inactive ep - %s:%s\n", sType, sName)
 							}
 						}
 					} else {
@@ -827,7 +827,7 @@ func (R *RuleH) RulesSync() {
 		}
 
 		if rChg {
-			tk.LogIt(tk.LOG_DEBUG, "nat lb-Rule updated %d:%s,%s\n", rule.ruleNum, ruleKeys, ruleActs)
+			tk.LogIt(tk.LogDebug, "nat lb-Rule updated %d:%s,%s\n", rule.ruleNum, ruleKeys, ruleActs)
 			rule.DP(DpCreate)
 		}
 

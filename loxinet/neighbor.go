@@ -21,8 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"os"
-	"os/exec"
 	"time"
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
@@ -122,7 +120,7 @@ func NeighInit(zone *Zone) *NeighH {
 }
 
 // Activate - Try to activate a neighbor
-func (ne *Neigh) Activate() {
+func (n *NeighH) Activate(ne *Neigh) {
 
 	if ne.Resolved {
 		return
@@ -132,16 +130,15 @@ func (ne *Neigh) Activate() {
 		return
 	}
 
-	if _, err := os.Stat("/usr/sbin/arping"); errors.Is(err, os.ErrNotExist) {
-		return
+	ret, Sip := n.Zone.L3.IfaSelect(ne.OifPort.Name, ne.Addr)
+	if ret != 0 {
+		fmt.Printf("Failed to select l3 ifa select")
 	}
 
-	command := fmt.Sprintf("arping -i %s -C 1 -w 1 %s 2>&1 >> /dev/null &", ne.OifPort.Name, ne.Key.NhString)
-	cmd := exec.Command("bash", "-c", command)
-	cmd.Run()
+	tk.ArpPing(ne.Addr, Sip, ne.OifPort.Name)
+
 	ne.Ats = time.Now()
 }
-
 
 // NeighAddTunEP - Add tun-ep to a neighbor
 func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTunT, sync bool) (int, *NeighTunEp) {
@@ -184,7 +181,7 @@ func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTu
 		tep.DP(DpCreate)
 	}
 
-	tk.LogIt(tk.LOG_DEBUG, "neigh tunep added - %s:%s (%d)\n", sIP.String(), rIP.String(), tunID)
+	tk.LogIt(tk.LogDebug, "neigh tunep added - %s:%s (%d)\n", sIP.String(), rIP.String(), tunID)
 
 	return 0, tep
 }
@@ -273,7 +270,7 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 
 	port := n.Zone.Ports.PortFindByOSId(Attr.OSLinkIndex)
 	if port == nil {
-		tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s no oport\n", Addr.String(), Zone)
+		tk.LogIt(tk.LogError, "neigh add - %s:%s no oport\n", Addr.String(), Zone)
 		return NeighOifErr, errors.New("nh-oif error")
 	}
 
@@ -296,20 +293,20 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 				goto NhExist
 			}
 		}
-		tk.LogIt(tk.LOG_ERROR, "nh add - %s:%s exists\n", Addr.String(), Zone)
+		tk.LogIt(tk.LogError, "nh add - %s:%s exists\n", Addr.String(), Zone)
 		return NeighExistsErr, errors.New("nh exists")
 	}
 
 	if Addr.To4() == nil {
 		idx, err = n.Neigh6ID.GetCounter()
 		if err != nil {
-			tk.LogIt(tk.LOG_ERROR, "neigh6 add - %s:%s no hwmarks\n", Addr.String(), Zone)
+			tk.LogIt(tk.LogError, "neigh6 add - %s:%s no hwmarks\n", Addr.String(), Zone)
 			return NeighRangeErr, errors.New("nh6-hwm error")
 		}
 	} else {
 		idx, err = n.NeighID.GetCounter()
 		if err != nil {
-			tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s no hwmarks\n", Addr.String(), Zone)
+			tk.LogIt(tk.LogError, "neigh add - %s:%s no hwmarks\n", Addr.String(), Zone)
 			return NeighRangeErr, errors.New("nh-hwm error")
 		}
 	}
@@ -335,7 +332,7 @@ NhExist:
 	ec, err := n.Zone.Rt.RtAdd(ipnet, Zone, ra, na)
 	if err != nil && ec != RtExistsErr {
 		n.NeighDelete(Addr, Zone)
-		tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s host-rt fail(%s)\n", Addr.String(), Zone, err)
+		tk.LogIt(tk.LogError, "neigh add - %s:%s host-rt fail(%s)\n", Addr.String(), Zone, err)
 		return NeighHostRtErr, errors.New("nh-hostrt error")
 	}
 
@@ -361,14 +358,14 @@ NhExist:
 		if err != nil {
 			n.Zone.Rt.RtDelete(ipnet, Zone)
 			n.NeighDelete(Addr, Zone)
-			tk.LogIt(tk.LOG_ERROR, "neigh add - %s:%s mac fail\n", Addr.String(), Zone)
+			tk.LogIt(tk.LogError, "neigh add - %s:%s mac fail\n", Addr.String(), Zone)
 			return NeighMacErr, errors.New("nh-mac error")
 		}
 	}
 
-	ne.Activate()
+	n.Activate(ne)
 
-	tk.LogIt(tk.LOG_DEBUG, "neigh added - %s:%s\n", Addr.String(), Zone)
+	tk.LogIt(tk.LogDebug, "neigh added - %s:%s\n", Addr.String(), Zone)
 
 	return 0, nil
 }
@@ -379,7 +376,7 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 
 	ne, found := n.NeighMap[key]
 	if found == false {
-		tk.LogIt(tk.LOG_ERROR, "neigh delete - %s:%s doesnt exist\n", Addr.String(), Zone)
+		tk.LogIt(tk.LogError, "neigh delete - %s:%s doesnt exist\n", Addr.String(), Zone)
 		return NeighNoEntErr, errors.New("no-nh error")
 	}
 
@@ -409,7 +406,7 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 	ipnet := net.IPNet{IP: Addr, Mask: mask}
 	_, err := n.Zone.Rt.RtDelete(ipnet, Zone)
 	if err != nil {
-		tk.LogIt(tk.LOG_ERROR, "neigh delete - %s:%s host-rt fail\n", Addr.String(), Zone)
+		tk.LogIt(tk.LogError, "neigh delete - %s:%s host-rt fail\n", Addr.String(), Zone)
 		/*return NeighHostRtErr, errors.New("nh-hostrt error" + err.Error())*/
 	}
 
@@ -421,8 +418,8 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 		zeroHwAddr, _ := net.ParseMAC("00:00:00:00:00:00")
 		ne.Attr.HardwareAddr = zeroHwAddr
 		// This is a potentially non-optimal situation and we try to recover if possible
-		ne.Activate()
-		tk.LogIt(tk.LOG_DEBUG, "neigh deactivated - %s:%s\n", Addr.String(), Zone)
+		n.Activate(ne)
+		tk.LogIt(tk.LogDebug, "neigh deactivated - %s:%s\n", Addr.String(), Zone)
 		return 0, nil
 	}
 
@@ -442,7 +439,7 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 
 	delete(n.NeighMap, ne.Key)
 
-	tk.LogIt(tk.LOG_DEBUG, "neigh deleted - %s:%s\n", Addr.String(), Zone)
+	tk.LogIt(tk.LogDebug, "neigh deleted - %s:%s\n", Addr.String(), Zone)
 
 	return 0, nil
 }
@@ -472,7 +469,7 @@ func (n *NeighH) NeighPairRt(ne *Neigh, rt *Rt) int {
 
 	ne.NhRtm[rt.Key] = rt
 
-	tk.LogIt(tk.LOG_DEBUG, "neigh rtpair - %s->%s\n", rt.Key.RtCidr, ne.Key.NhString)
+	tk.LogIt(tk.LogDebug, "neigh rtpair - %s->%s\n", rt.Key.RtCidr, ne.Key.NhString)
 
 	return 0
 }
@@ -488,7 +485,7 @@ func (n *NeighH) NeighUnPairRt(ne *Neigh, rt *Rt) int {
 	delete(ne.NhRtm, rt.Key)
 	if len(ne.NhRtm) < 1 && ne.Inactive == true {
 		// Safely remove
-		tk.LogIt(tk.LOG_DEBUG, "neigh rt unpair - %s->%s\n", rt.Key.RtCidr, ne.Key.NhString)
+		tk.LogIt(tk.LogDebug, "neigh rt unpair - %s->%s\n", rt.Key.RtCidr, ne.Key.NhString)
 		n.NeighDelete(ne.Addr, ne.Key.Zone)
 		ne.DP(DpRemove)
 	}
@@ -528,7 +525,7 @@ func (n *NeighH) PortNotifier(name string, osID int, evType PortEvent) {
 
 // NeighTicker - a per neighbor ticker sub-routine
 func (n *NeighH) NeighTicker(ne *Neigh) {
-	ne.Activate()
+	n.Activate(ne)
 	n.NeighRecursiveResolve(ne)
 }
 

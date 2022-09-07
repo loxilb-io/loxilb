@@ -396,7 +396,7 @@ func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 	case *TableDpWorkQ:
 		ret, _ = dp.DpWorkOnTableOp(mq)
 	default:
-		tk.LogIt(tk.LOG_ERROR, "unexpected type %T\n", mq)
+		tk.LogIt(tk.LogError, "unexpected type %T\n", mq)
 		ret = DpWqUnkErr
 	}
 	return ret

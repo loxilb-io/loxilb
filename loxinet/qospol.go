@@ -128,12 +128,12 @@ func PolObjValidate(pObj *cmn.PolObj) bool {
 func (P *PolH) PolAdd(pName string, pInfo cmn.PolInfo, pObjArgs cmn.PolObj) (int, error) {
 
 	if PolObjValidate(&pObjArgs) == false {
-		tk.LogIt(tk.LOG_ERROR, "policer add - %s: bad attach point\n", pName)
+		tk.LogIt(tk.LogError, "policer add - %s: bad attach point\n", pName)
 		return PolAttachErr, errors.New("pol-attachpoint error")
 	}
 
 	if PolInfoXlateValidate(&pInfo) == false {
-		tk.LogIt(tk.LOG_ERROR, "policer add - %s: info error\n", pName)
+		tk.LogIt(tk.LogError, "policer add - %s: info error\n", pName)
 		return PolInfoErr, errors.New("pol-info error")
 	}
 
@@ -167,7 +167,7 @@ func (P *PolH) PolAdd(pName string, pInfo cmn.PolInfo, pObjArgs cmn.PolObj) (int
 
 	p.PObjs = append(p.PObjs, pObjInfo)
 
-	tk.LogIt(tk.LOG_INFO, "policer added - %s\n", pName)
+	tk.LogIt(tk.LogInfo, "policer added - %s\n", pName)
 
 	return 0, nil
 }
@@ -179,7 +179,7 @@ func (P *PolH) PolDelete(pName string) (int, error) {
 	p, found := P.PolMap[key]
 
 	if found == false {
-		tk.LogIt(tk.LOG_ERROR, "policer delete - %s: not found error\n", pName)
+		tk.LogIt(tk.LogError, "policer delete - %s: not found error\n", pName)
 		return PolNoExistErr, errors.New("no such policer error")
 	}
 
@@ -193,7 +193,7 @@ func (P *PolH) PolDelete(pName string) (int, error) {
 
 	delete(P.PolMap, p.Key)
 
-	tk.LogIt(tk.LOG_INFO, "policer deleted - %s\n", pName)
+	tk.LogIt(tk.LogInfo, "policer deleted - %s\n", pName)
 
 	return 0, nil
 }

@@ -96,7 +96,7 @@ func (V *VlansH) VlanAdd(vlanID int, name string, zone string, osid int, hwi Por
 
 	ret, err := V.Zone.Ports.PortAdd(name, osid, cmn.PortVlanBr, zone, hwi, PortLayer2Info{false, vlanID})
 	if err != nil || ret != 0 {
-		tk.LogIt(tk.LOG_ERROR, "Vlan bridge interface not created %d\n", ret)
+		tk.LogIt(tk.LogError, "Vlan bridge interface not created %d\n", ret)
 		mh.zn.ZoneBrDelete(name)
 		return VlanAddBrpErr, errors.New("Can't add vlan bridge")
 	}
@@ -107,7 +107,7 @@ func (V *VlansH) VlanAdd(vlanID int, name string, zone string, osid int, hwi Por
 	v.Created = true
 	v.Zone = zone
 
-	tk.LogIt(tk.LOG_INFO, "vlan %d bd created\n", vlanID)
+	tk.LogIt(tk.LogInfo, "vlan %d bd created\n", vlanID)
 
 	return 0, nil
 }
@@ -137,7 +137,7 @@ func (V *VlansH) VlanDelete(vlanID int) (int, error) {
 	v.Created = false
 	v.Zone = ""
 
-	tk.LogIt(tk.LOG_INFO, "vlan %d bd deleted\n", vlanID)
+	tk.LogIt(tk.LogInfo, "vlan %d bd deleted\n", vlanID)
 	return 0, nil
 }
 
@@ -148,14 +148,14 @@ func (V *VlansH) VlanPortAdd(vlanID int, portName string, tagged bool) (int, err
 
 	if V.VlanMap[vlanID].Created == false {
 		// FIXME : Do we create implicitly here
-		tk.LogIt(tk.LOG_ERROR, "Vlan not created\n")
+		tk.LogIt(tk.LogError, "Vlan not created\n")
 		return VlaNotExistErr, errors.New("Vlan not created")
 	}
 
 	v := &V.VlanMap[vlanID]
 	p := V.Zone.Ports.PortFindByName(portName)
 	if p == nil {
-		tk.LogIt(tk.LOG_ERROR, "Phy port not created %s\n", portName)
+		tk.LogIt(tk.LogError, "Phy port not created %s\n", portName)
 		return VlanPortPhyErr, errors.New("Phy port not created")
 	}
 
@@ -279,7 +279,7 @@ func (V *VlansH) Vlans2String(it IterIntf) error {
 			if vp != nil {
 				s += fmt.Sprintf("%-10s: ", vp.Name)
 			} else {
-				tk.LogIt(tk.LOG_ERROR, "VLan %s not found\n", v.Name)
+				tk.LogIt(tk.LogError, "VLan %s not found\n", v.Name)
 				continue
 			}
 

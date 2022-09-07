@@ -167,7 +167,7 @@ func DpEbpfInit() *DpEbpfH {
 		if intf.Name == "llb0" {
 			continue
 		}
-		tk.LogIt(tk.LOG_INFO, "ebpf unload - %s\n", intf.Name)
+		tk.LogIt(tk.LogInfo, "ebpf unload - %s\n", intf.Name)
 		ifStr := C.CString(intf.Name)
 		section := C.CString(string(C.TC_LL_SEC_DEFAULT))
 		C.llb_dp_link_attach(ifStr, section, C.LL_BPF_MOUNT_TC, 1)
@@ -213,7 +213,7 @@ func osPortIsRunning(portName string) bool {
 		syscall.SOCK_DGRAM,
 		syscall.IPPROTO_IP)
 	if err != nil {
-		tk.LogIt(tk.LOG_ERROR, "Error %s", err)
+		tk.LogIt(tk.LogError, "Error %s", err)
 		return false
 	}
 
@@ -228,7 +228,7 @@ func osPortIsRunning(portName string) bool {
 	if r0 != 0 {
 		C.free(unsafe.Pointer(ifstr))
 		syscall.Close(sfd)
-		tk.LogIt(tk.LOG_ERROR, "Error %s", err)
+		tk.LogIt(tk.LogError, "Error %s", err)
 		return false
 	}
 
@@ -266,7 +266,7 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 		if w.LoadEbpf != "" && w.LoadEbpf != "lo" && w.LoadEbpf != "llb0" {
 			lRet := loadEbpfPgm(w.LoadEbpf)
 			if lRet != 0 {
-				tk.LogIt(tk.LOG_ERROR, "ebpf load - %d error\n", w.PortNum)
+				tk.LogIt(tk.LogError, "ebpf load - %d error\n", w.PortNum)
 				return EbpfErrEbpfLoad
 			}
 		}
@@ -290,20 +290,20 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 		ret := C.llb_add_map_elem(C.LL_DP_INTF_MAP, unsafe.Pointer(key), unsafe.Pointer(data))
 
 		if ret != 0 {
-			tk.LogIt(tk.LOG_ERROR, "ebpf intfmap - %d vlan %d error\n", w.OsPortNum, w.IngVlan)
+			tk.LogIt(tk.LogError, "ebpf intfmap - %d vlan %d error\n", w.OsPortNum, w.IngVlan)
 			return EbpfErrPortPropAdd
 		}
 
-		tk.LogIt(tk.LOG_DEBUG, "ebpf intfmap added - %d vlan %d -> %d\n", w.OsPortNum, w.IngVlan, w.PortNum)
+		tk.LogIt(tk.LogDebug, "ebpf intfmap added - %d vlan %d -> %d\n", w.OsPortNum, w.IngVlan, w.PortNum)
 
 		txV = C.uint(w.OsPortNum)
 		ret = C.llb_add_map_elem(C.LL_DP_TX_INTF_MAP, unsafe.Pointer(&txK), unsafe.Pointer(&txV))
 		if ret != 0 {
 			C.llb_del_map_elem(C.LL_DP_INTF_MAP, unsafe.Pointer(key))
-			tk.LogIt(tk.LOG_ERROR, "ebpf txintfmap - %d error\n", w.OsPortNum)
+			tk.LogIt(tk.LogError, "ebpf txintfmap - %d error\n", w.OsPortNum)
 			return EbpfErrPortPropAdd
 		}
-		tk.LogIt(tk.LOG_DEBUG, "ebpf txintfmap added - %d -> %d\n", w.PortNum, w.OsPortNum)
+		tk.LogIt(tk.LogDebug, "ebpf txintfmap added - %d -> %d\n", w.PortNum, w.OsPortNum)
 		return 0
 	} else if w.Work == DpRemove {
 
@@ -318,10 +318,10 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 		if w.LoadEbpf != "" {
 			lRet := unLoadEbpfPgm(w.LoadEbpf)
 			if lRet != 0 {
-				tk.LogIt(tk.LOG_ERROR, "ebpf unload - ifi %d error\n", w.OsPortNum)
+				tk.LogIt(tk.LogError, "ebpf unload - ifi %d error\n", w.OsPortNum)
 				return EbpfErrEbpfLoad
 			}
-			tk.LogIt(tk.LOG_DEBUG, "ebpf unloaded - ifi %d\n", w.OsPortNum)
+			tk.LogIt(tk.LogDebug, "ebpf unloaded - ifi %d\n", w.OsPortNum)
 		}
 
 		return 0
