@@ -1,5 +1,9 @@
 name: Build-CI
-
+permissions:
+  contents: write
+  issues: read
+  packages: write
+  
 on:
   push:
     branches: [ "main" ]
@@ -33,6 +37,7 @@ jobs:
       run: |
         docker build . --tag ghcr.io/loxilb-io/loxilb:latest
         docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
+        docker push ghcr.io/loxilb-io/loxilb:latest
     - name: Publish the loxilb Docker image
       if: github.repository == 'loxilb-io/loxilb'     
-      run: docker push ghcr.io/loxilb-io/loxilb:latest
+      run: echo "Hello docker push ghcr.io/loxilb-io/loxilb:latest"
