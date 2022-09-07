@@ -39,7 +39,7 @@ do
 for j in {0..2}
 do
     res=`$hexec ue$k curl --max-time 10 -s 88.88.88.88:2020`
-    #echo -e $res
+    echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
         echo -e "Expected ${servArr[j]}, Received : $res"
