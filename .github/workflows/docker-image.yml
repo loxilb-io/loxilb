@@ -1,8 +1,4 @@
 name: Build-CI
-permissions:
-  contents: write
-  issues: read
-  packages: write
   
 on:
   push:
@@ -22,6 +18,8 @@ jobs:
     name: build-ci
 
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
 
     steps:
     - uses: actions/checkout@v2
