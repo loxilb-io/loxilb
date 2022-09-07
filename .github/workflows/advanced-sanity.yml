@@ -47,11 +47,6 @@ jobs:
       - run: id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"` && docker commit $id ghcr.io/loxilb-io/loxilb:latest
       - run: docker stop loxilb && docker rm loxilb
       - run: |
-             cd cicd/scenario8/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
              cd cicd/scenario3/
              ./config.sh
              ./validation.sh
@@ -73,6 +68,11 @@ jobs:
              ./rmconfig.sh
              cd -
              cd cicd/scenario7/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+             cd cicd/scenario8/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
