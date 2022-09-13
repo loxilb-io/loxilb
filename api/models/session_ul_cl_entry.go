@@ -111,8 +111,8 @@ func (m *SessionUlClEntry) UnmarshalBinary(b []byte) error {
 // swagger:model SessionUlClEntryUlclArgument
 type SessionUlClEntryUlclArgument struct {
 
-	// ...?
-	Qfi float64 `json:"qfi,omitempty"`
+	// QFI number
+	Qfi int64 `json:"qfi,omitempty"`
 
 	// Access network IP address
 	UlclIP string `json:"ulclIP,omitempty"`

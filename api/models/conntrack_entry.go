@@ -7,9 +7,7 @@ package models
 
 import (
 	"context"
-	"strconv"
 
-	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
@@ -17,65 +15,10 @@ import (
 // ConntrackEntry conntrack entry
 //
 // swagger:model ConntrackEntry
-type ConntrackEntry []*ConntrackEntryItems0
+type ConntrackEntry struct {
 
-// Validate validates this conntrack entry
-func (m ConntrackEntry) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	for i := 0; i < len(m); i++ {
-		if swag.IsZero(m[i]) { // not required
-			continue
-		}
-
-		if m[i] != nil {
-			if err := m[i].Validate(formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName(strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName(strconv.Itoa(i))
-				}
-				return err
-			}
-		}
-
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-// ContextValidate validate this conntrack entry based on the context it is used
-func (m ConntrackEntry) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
-	var res []error
-
-	for i := 0; i < len(m); i++ {
-
-		if m[i] != nil {
-			if err := m[i].ContextValidate(ctx, formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName(strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName(strconv.Itoa(i))
-				}
-				return err
-			}
-		}
-
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-// ConntrackEntryItems0 conntrack entry items0
-//
-// swagger:model ConntrackEntryItems0
-type ConntrackEntryItems0 struct {
+	// Packet bytes of the conntrack
+	Bytes int64 `json:"bytes,omitempty"`
 
 	// value for Conntrack Act
 	ConntrackAct string `json:"conntrackAct,omitempty"`
@@ -89,6 +32,9 @@ type ConntrackEntryItems0 struct {
 	// port number for the access
 	DestinationPort int64 `json:"destinationPort,omitempty"`
 
+	// Packet counts of the conntrack
+	Packets int64 `json:"packets,omitempty"`
+
 	// value for access protocol
 	Protocol string `json:"protocol,omitempty"`
 
@@ -99,18 +45,18 @@ type ConntrackEntryItems0 struct {
 	SourcePort int64 `json:"sourcePort,omitempty"`
 }
 
-// Validate validates this conntrack entry items0
-func (m *ConntrackEntryItems0) Validate(formats strfmt.Registry) error {
+// Validate validates this conntrack entry
+func (m *ConntrackEntry) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this conntrack entry items0 based on context it is used
-func (m *ConntrackEntryItems0) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this conntrack entry based on context it is used
+func (m *ConntrackEntry) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *ConntrackEntryItems0) MarshalBinary() ([]byte, error) {
+func (m *ConntrackEntry) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -118,8 +64,8 @@ func (m *ConntrackEntryItems0) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ConntrackEntryItems0) UnmarshalBinary(b []byte) error {
-	var res ConntrackEntryItems0
+func (m *ConntrackEntry) UnmarshalBinary(b []byte) error {
+	var res ConntrackEntry
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

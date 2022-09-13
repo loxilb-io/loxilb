@@ -81,8 +81,10 @@ paths:
           schema:
             type: object
             properties:
-              attr:
-                $ref: '#/definitions/LoadbalanceEntry'
+              lbAttr:
+                type: array
+                items:
+                  $ref: '#/definitions/LoadbalanceEntry'
         '401':
           description: Invalid authentication credentials
           schema:
@@ -161,8 +163,11 @@ paths:
         '200':
           description: OK
           schema:
-              properties:
-                ctAttr:
+            type: object
+            properties:
+              ctAttr:
+                type: array
+                items:
                   $ref: '#/definitions/ConntrackEntry'
         '401':
           description: Invalid authentication credentials
@@ -191,8 +196,10 @@ paths:
           schema:
             type: object
             properties:
-              attr:
-                $ref: '#/definitions/PortEntry'
+              portAttr:
+                type: array
+                items:
+                 $ref: '#/definitions/PortEntry'
         '401':
           description: Invalid authentication credentials
           schema:
@@ -537,6 +544,33 @@ paths:
 #----------------------------------------------
 # Policy
 #----------------------------------------------
+  '/config/policy/all':
+    get:
+      summary: Get 
+      description: Get 
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              polAttr:
+                type: array
+                items:
+                  $ref: '#/definitions/PolicyEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+            
   '/config/policy':
     post:
       summary: Create a new Policy QoS config
@@ -699,35 +733,39 @@ definitions:
         description: IP address for nexthop
 
   ConntrackEntry:
-    type: array
-    items:
-      properties:
-        destinationIP:
-          type: string
-          description: IP address for externel access
-        sourceIP:
-          type: string
-          description: IP address for externel access
-        destinationPort:
-          type: integer
-          description:  port number for the access
-        sourcePort:
-          type: integer
-          description:  port number for the access
-        protocol:
-          type: string
-          description:  value for access protocol
-        conntrackState:
-          type: string
-          description:  value for Conntrack state
-        conntrackAct:
-          type: string
-          description:  value for Conntrack Act
+    type: object
+    properties:
+      destinationIP:
+        type: string
+        description: IP address for externel access
+      sourceIP:
+        type: string
+        description: IP address for externel access
+      destinationPort:
+        type: integer
+        description:  port number for the access
+      sourcePort:
+        type: integer
+        description:  port number for the access
+      protocol:
+        type: string
+        description:  value for access protocol
+      conntrackState:
+        type: string
+        description:  value for Conntrack state
+      conntrackAct:
+        type: string
+        description:  value for Conntrack Act
+      packets:
+        type: integer
+        description:  Packet counts of the conntrack
+      bytes:
+        type: integer
+        description:  Packet bytes of the conntrack
 
   PortEntry:
-    type: array
-    items:
-      properties:
+    type: object
+    properties:
         portName:
           type: string
           description: The name of the Port interface
@@ -848,7 +886,7 @@ definitions:
         type: object
         properties:
           TeID:
-            type: number
+            type: integer
             description: ID of the tunnel
           tunnelIP:
             type: string
@@ -857,7 +895,7 @@ definitions:
         type: object
         properties:
           teID:
-            type: number
+            type: integer
             description: ID of the tunnel
           tunnelIP:
             type: string
@@ -873,8 +911,8 @@ definitions:
         type: object
         properties:
           qfi:
-            type: number
-            description: ...?
+            type: integer
+            description: QFI number
           ulclIP:
             type: string
             description: Access network IP address

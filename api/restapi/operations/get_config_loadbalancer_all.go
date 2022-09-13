@@ -8,6 +8,7 @@ package operations
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
@@ -68,15 +69,15 @@ func (o *GetConfigLoadbalancerAll) ServeHTTP(rw http.ResponseWriter, r *http.Req
 // swagger:model GetConfigLoadbalancerAllOKBody
 type GetConfigLoadbalancerAllOKBody struct {
 
-	// attr
-	Attr *models.LoadbalanceEntry `json:"attr,omitempty"`
+	// lb attr
+	LbAttr []*models.LoadbalanceEntry `json:"lbAttr"`
 }
 
 // Validate validates this get config loadbalancer all o k body
 func (o *GetConfigLoadbalancerAllOKBody) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := o.validateAttr(formats); err != nil {
+	if err := o.validateLbAttr(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -86,20 +87,27 @@ func (o *GetConfigLoadbalancerAllOKBody) Validate(formats strfmt.Registry) error
 	return nil
 }
 
-func (o *GetConfigLoadbalancerAllOKBody) validateAttr(formats strfmt.Registry) error {
-	if swag.IsZero(o.Attr) { // not required
+func (o *GetConfigLoadbalancerAllOKBody) validateLbAttr(formats strfmt.Registry) error {
+	if swag.IsZero(o.LbAttr) { // not required
 		return nil
 	}
 
-	if o.Attr != nil {
-		if err := o.Attr.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("getConfigLoadbalancerAllOK" + "." + "attr")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("getConfigLoadbalancerAllOK" + "." + "attr")
-			}
-			return err
+	for i := 0; i < len(o.LbAttr); i++ {
+		if swag.IsZero(o.LbAttr[i]) { // not required
+			continue
 		}
+
+		if o.LbAttr[i] != nil {
+			if err := o.LbAttr[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("getConfigLoadbalancerAllOK" + "." + "lbAttr" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("getConfigLoadbalancerAllOK" + "." + "lbAttr" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
 	}
 
 	return nil
@@ -109,7 +117,7 @@ func (o *GetConfigLoadbalancerAllOKBody) validateAttr(formats strfmt.Registry) e
 func (o *GetConfigLoadbalancerAllOKBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
-	if err := o.contextValidateAttr(ctx, formats); err != nil {
+	if err := o.contextValidateLbAttr(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -119,17 +127,21 @@ func (o *GetConfigLoadbalancerAllOKBody) ContextValidate(ctx context.Context, fo
 	return nil
 }
 
-func (o *GetConfigLoadbalancerAllOKBody) contextValidateAttr(ctx context.Context, formats strfmt.Registry) error {
+func (o *GetConfigLoadbalancerAllOKBody) contextValidateLbAttr(ctx context.Context, formats strfmt.Registry) error {
 
-	if o.Attr != nil {
-		if err := o.Attr.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("getConfigLoadbalancerAllOK" + "." + "attr")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("getConfigLoadbalancerAllOK" + "." + "attr")
+	for i := 0; i < len(o.LbAttr); i++ {
+
+		if o.LbAttr[i] != nil {
+			if err := o.LbAttr[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("getConfigLoadbalancerAllOK" + "." + "lbAttr" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("getConfigLoadbalancerAllOK" + "." + "lbAttr" + "." + strconv.Itoa(i))
+				}
+				return err
 			}
-			return err
 		}
+
 	}
 
 	return nil

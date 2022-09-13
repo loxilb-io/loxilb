@@ -85,6 +85,7 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	// Policy Add and Delete
 	api.PostConfigPolicyHandler = operations.PostConfigPolicyHandlerFunc(handler.ConfigPostPolicy)
 	api.DeleteConfigPolicyIdentIdentHandler = operations.DeleteConfigPolicyIdentIdentHandlerFunc(handler.ConfigDeletePolicy)
+	api.GetConfigPolicyAllHandler = operations.GetConfigPolicyAllHandlerFunc(handler.ConfigGetPolicy)
 
 	api.PreServerShutdown = func() {}
 

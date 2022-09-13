@@ -8,6 +8,7 @@ package operations
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
@@ -69,7 +70,7 @@ func (o *GetConfigConntrackAll) ServeHTTP(rw http.ResponseWriter, r *http.Reques
 type GetConfigConntrackAllOKBody struct {
 
 	// ct attr
-	CtAttr models.ConntrackEntry `json:"ctAttr"`
+	CtAttr []*models.ConntrackEntry `json:"ctAttr"`
 }
 
 // Validate validates this get config conntrack all o k body
@@ -91,13 +92,22 @@ func (o *GetConfigConntrackAllOKBody) validateCtAttr(formats strfmt.Registry) er
 		return nil
 	}
 
-	if err := o.CtAttr.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("getConfigConntrackAllOK" + "." + "ctAttr")
-		} else if ce, ok := err.(*errors.CompositeError); ok {
-			return ce.ValidateName("getConfigConntrackAllOK" + "." + "ctAttr")
+	for i := 0; i < len(o.CtAttr); i++ {
+		if swag.IsZero(o.CtAttr[i]) { // not required
+			continue
 		}
-		return err
+
+		if o.CtAttr[i] != nil {
+			if err := o.CtAttr[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("getConfigConntrackAllOK" + "." + "ctAttr" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("getConfigConntrackAllOK" + "." + "ctAttr" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
 	}
 
 	return nil
@@ -119,13 +129,19 @@ func (o *GetConfigConntrackAllOKBody) ContextValidate(ctx context.Context, forma
 
 func (o *GetConfigConntrackAllOKBody) contextValidateCtAttr(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := o.CtAttr.ContextValidate(ctx, formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("getConfigConntrackAllOK" + "." + "ctAttr")
-		} else if ce, ok := err.(*errors.CompositeError); ok {
-			return ce.ValidateName("getConfigConntrackAllOK" + "." + "ctAttr")
+	for i := 0; i < len(o.CtAttr); i++ {
+
+		if o.CtAttr[i] != nil {
+			if err := o.CtAttr[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("getConfigConntrackAllOK" + "." + "ctAttr" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("getConfigConntrackAllOK" + "." + "ctAttr" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
 		}
-		return err
+
 	}
 
 	return nil

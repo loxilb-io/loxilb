@@ -45,9 +45,13 @@ func init() {
           "200": {
             "description": "OK",
             "schema": {
+              "type": "object",
               "properties": {
                 "ctAttr": {
-                  "$ref": "#/definitions/ConntrackEntry"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/ConntrackEntry"
+                  }
                 }
               }
             }
@@ -147,8 +151,11 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
-                "attr": {
-                  "$ref": "#/definitions/LoadbalanceEntry"
+                "lbAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/LoadbalanceEntry"
+                  }
                 }
               }
             }
@@ -320,6 +327,46 @@ func init() {
         }
       }
     },
+    "/config/policy/all": {
+      "get": {
+        "description": "Get",
+        "summary": "Get",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "polAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/PolicyEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/policy/ident/{ident}": {
       "delete": {
         "description": "Delete a new Create a Policy QoS service.",
@@ -392,8 +439,11 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
-                "attr": {
-                  "$ref": "#/definitions/PortEntry"
+                "portAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/PortEntry"
+                  }
                 }
               }
             }
@@ -894,37 +944,43 @@ func init() {
   },
   "definitions": {
     "ConntrackEntry": {
-      "type": "array",
-      "items": {
-        "properties": {
-          "conntrackAct": {
-            "description": "value for Conntrack Act",
-            "type": "string"
-          },
-          "conntrackState": {
-            "description": "value for Conntrack state",
-            "type": "string"
-          },
-          "destinationIP": {
-            "description": "IP address for externel access",
-            "type": "string"
-          },
-          "destinationPort": {
-            "description": "port number for the access",
-            "type": "integer"
-          },
-          "protocol": {
-            "description": "value for access protocol",
-            "type": "string"
-          },
-          "sourceIP": {
-            "description": "IP address for externel access",
-            "type": "string"
-          },
-          "sourcePort": {
-            "description": "port number for the access",
-            "type": "integer"
-          }
+      "type": "object",
+      "properties": {
+        "bytes": {
+          "description": "Packet bytes of the conntrack",
+          "type": "integer"
+        },
+        "conntrackAct": {
+          "description": "value for Conntrack Act",
+          "type": "string"
+        },
+        "conntrackState": {
+          "description": "value for Conntrack state",
+          "type": "string"
+        },
+        "destinationIP": {
+          "description": "IP address for externel access",
+          "type": "string"
+        },
+        "destinationPort": {
+          "description": "port number for the access",
+          "type": "integer"
+        },
+        "packets": {
+          "description": "Packet counts of the conntrack",
+          "type": "integer"
+        },
+        "protocol": {
+          "description": "value for access protocol",
+          "type": "string"
+        },
+        "sourceIP": {
+          "description": "IP address for externel access",
+          "type": "string"
+        },
+        "sourcePort": {
+          "description": "port number for the access",
+          "type": "integer"
         }
       }
     },
@@ -1086,155 +1142,153 @@ func init() {
       }
     },
     "PortEntry": {
-      "type": "array",
-      "items": {
-        "properties": {
-          "DataplaneSync": {
-            "description": "Dataplan Sync check",
-            "type": "integer"
-          },
-          "portHardwareInformation": {
-            "type": "object",
-            "properties": {
-              "link": {
-                "description": "link status",
-                "type": "boolean"
-              },
-              "macAddress": {
-                "description": "MAC address of the port",
-                "type": "string"
-              },
-              "master": {
-                "description": "Port's mater",
-                "type": "string"
-              },
-              "mtu": {
-                "description": "MTU of the port",
-                "type": "integer"
-              },
-              "rawMacAddress": {
-                "description": "MAC address written by byte array",
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                }
-              },
-              "real": {
-                "description": "real port..",
-                "type": "string"
-              },
-              "state": {
-                "description": "state...",
-                "type": "boolean"
-              },
-              "tunnelId": {
-                "description": "Tunnel Id such as VxLAN.",
+      "type": "object",
+      "properties": {
+        "DataplaneSync": {
+          "description": "Dataplan Sync check",
+          "type": "integer"
+        },
+        "portHardwareInformation": {
+          "type": "object",
+          "properties": {
+            "link": {
+              "description": "link status",
+              "type": "boolean"
+            },
+            "macAddress": {
+              "description": "MAC address of the port",
+              "type": "string"
+            },
+            "master": {
+              "description": "Port's mater",
+              "type": "string"
+            },
+            "mtu": {
+              "description": "MTU of the port",
+              "type": "integer"
+            },
+            "rawMacAddress": {
+              "description": "MAC address written by byte array",
+              "type": "array",
+              "items": {
                 "type": "integer"
               }
+            },
+            "real": {
+              "description": "real port..",
+              "type": "string"
+            },
+            "state": {
+              "description": "state...",
+              "type": "boolean"
+            },
+            "tunnelId": {
+              "description": "Tunnel Id such as VxLAN.",
+              "type": "integer"
             }
-          },
-          "portL2Information": {
-            "type": "object",
-            "properties": {
-              "isPvid": {
-                "description": "Is PVID config or not",
-                "type": "boolean"
-              },
-              "vid": {
-                "description": "virtual lan id(VLAN ID)",
-                "type": "integer"
-              }
-            }
-          },
-          "portL3Information": {
-            "type": "object",
-            "properties": {
-              "IPv4Address": {
-                "description": "List of IP address v4",
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "IPv6Address": {
-                "description": "List of the IP address v6",
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "routed": {
-                "description": "Is routed or not",
-                "type": "boolean"
-              }
-            }
-          },
-          "portName": {
-            "description": "The name of the Port interface",
-            "type": "string"
-          },
-          "portNo": {
-            "description": "Index of the Port",
-            "type": "integer"
-          },
-          "portSoftwareInformation": {
-            "type": "object",
-            "properties": {
-              "bpfLoaded": {
-                "description": "The status of the eBPF loaded",
-                "type": "boolean"
-              },
-              "osId": {
-                "description": "The ID of the Port in the software(OS)",
-                "type": "integer"
-              },
-              "portActive": {
-                "description": "Activation status of the port",
-                "type": "boolean"
-              },
-              "portProp": {
-                "description": "Priority of the port",
-                "type": "integer"
-              },
-              "portType": {
-                "description": "port type",
-                "type": "integer"
-              }
-            }
-          },
-          "portStatisticInformation": {
-            "type": "object",
-            "properties": {
-              "rxBytes": {
-                "description": "Statistic of the ingress port bytes.",
-                "type": "integer"
-              },
-              "rxErrors": {
-                "description": "Statistic of the number of ingress Error packets.",
-                "type": "integer"
-              },
-              "rxPackets": {
-                "description": "Statistic of the number of ingress packets.",
-                "type": "integer"
-              },
-              "txBytes": {
-                "description": "Statistic of the egress port bytes.",
-                "type": "integer"
-              },
-              "txErrors": {
-                "description": "Statistic of the number of egress Error packets.",
-                "type": "integer"
-              },
-              "txPackets": {
-                "description": "Statistic of the number of egress packets.",
-                "type": "integer"
-              }
-            }
-          },
-          "zone": {
-            "description": "network zone",
-            "type": "string"
           }
+        },
+        "portL2Information": {
+          "type": "object",
+          "properties": {
+            "isPvid": {
+              "description": "Is PVID config or not",
+              "type": "boolean"
+            },
+            "vid": {
+              "description": "virtual lan id(VLAN ID)",
+              "type": "integer"
+            }
+          }
+        },
+        "portL3Information": {
+          "type": "object",
+          "properties": {
+            "IPv4Address": {
+              "description": "List of IP address v4",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "IPv6Address": {
+              "description": "List of the IP address v6",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "routed": {
+              "description": "Is routed or not",
+              "type": "boolean"
+            }
+          }
+        },
+        "portName": {
+          "description": "The name of the Port interface",
+          "type": "string"
+        },
+        "portNo": {
+          "description": "Index of the Port",
+          "type": "integer"
+        },
+        "portSoftwareInformation": {
+          "type": "object",
+          "properties": {
+            "bpfLoaded": {
+              "description": "The status of the eBPF loaded",
+              "type": "boolean"
+            },
+            "osId": {
+              "description": "The ID of the Port in the software(OS)",
+              "type": "integer"
+            },
+            "portActive": {
+              "description": "Activation status of the port",
+              "type": "boolean"
+            },
+            "portProp": {
+              "description": "Priority of the port",
+              "type": "integer"
+            },
+            "portType": {
+              "description": "port type",
+              "type": "integer"
+            }
+          }
+        },
+        "portStatisticInformation": {
+          "type": "object",
+          "properties": {
+            "rxBytes": {
+              "description": "Statistic of the ingress port bytes.",
+              "type": "integer"
+            },
+            "rxErrors": {
+              "description": "Statistic of the number of ingress Error packets.",
+              "type": "integer"
+            },
+            "rxPackets": {
+              "description": "Statistic of the number of ingress packets.",
+              "type": "integer"
+            },
+            "txBytes": {
+              "description": "Statistic of the egress port bytes.",
+              "type": "integer"
+            },
+            "txErrors": {
+              "description": "Statistic of the number of egress Error packets.",
+              "type": "integer"
+            },
+            "txPackets": {
+              "description": "Statistic of the number of egress packets.",
+              "type": "integer"
+            }
+          }
+        },
+        "zone": {
+          "description": "network zone",
+          "type": "string"
         }
       }
     },
@@ -1259,7 +1313,7 @@ func init() {
           "properties": {
             "TeID": {
               "description": "ID of the tunnel",
-              "type": "number"
+              "type": "integer"
             },
             "tunnelIP": {
               "description": "Access network IP address",
@@ -1272,7 +1326,7 @@ func init() {
           "properties": {
             "teID": {
               "description": "ID of the tunnel",
-              "type": "number"
+              "type": "integer"
             },
             "tunnelIP": {
               "description": "Connection network IP address",
@@ -1297,8 +1351,8 @@ func init() {
           "type": "object",
           "properties": {
             "qfi": {
-              "description": "...?",
-              "type": "number"
+              "description": "QFI number",
+              "type": "integer"
             },
             "ulclIP": {
               "description": "Access network IP address",
@@ -1359,9 +1413,13 @@ func init() {
           "200": {
             "description": "OK",
             "schema": {
+              "type": "object",
               "properties": {
                 "ctAttr": {
-                  "$ref": "#/definitions/ConntrackEntry"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/ConntrackEntry"
+                  }
                 }
               }
             }
@@ -1461,8 +1519,11 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
-                "attr": {
-                  "$ref": "#/definitions/LoadbalanceEntry"
+                "lbAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/LoadbalanceEntry"
+                  }
                 }
               }
             }
@@ -1634,6 +1695,46 @@ func init() {
         }
       }
     },
+    "/config/policy/all": {
+      "get": {
+        "description": "Get",
+        "summary": "Get",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "polAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/PolicyEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/policy/ident/{ident}": {
       "delete": {
         "description": "Delete a new Create a Policy QoS service.",
@@ -1706,8 +1807,11 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
-                "attr": {
-                  "$ref": "#/definitions/PortEntry"
+                "portAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/PortEntry"
+                  }
                 }
               }
             }
@@ -2208,13 +2312,12 @@ func init() {
   },
   "definitions": {
     "ConntrackEntry": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/ConntrackEntryItems0"
-      }
-    },
-    "ConntrackEntryItems0": {
+      "type": "object",
       "properties": {
+        "bytes": {
+          "description": "Packet bytes of the conntrack",
+          "type": "integer"
+        },
         "conntrackAct": {
           "description": "value for Conntrack Act",
           "type": "string"
@@ -2229,6 +2332,10 @@ func init() {
         },
         "destinationPort": {
           "description": "port number for the access",
+          "type": "integer"
+        },
+        "packets": {
+          "description": "Packet counts of the conntrack",
           "type": "integer"
         },
         "protocol": {
@@ -2502,12 +2609,7 @@ func init() {
       }
     },
     "PortEntry": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/PortEntryItems0"
-      }
-    },
-    "PortEntryItems0": {
+      "type": "object",
       "properties": {
         "DataplaneSync": {
           "description": "Dataplan Sync check",
@@ -2657,7 +2759,7 @@ func init() {
         }
       }
     },
-    "PortEntryItems0PortHardwareInformation": {
+    "PortEntryPortHardwareInformation": {
       "type": "object",
       "properties": {
         "link": {
@@ -2697,7 +2799,7 @@ func init() {
         }
       }
     },
-    "PortEntryItems0PortL2Information": {
+    "PortEntryPortL2Information": {
       "type": "object",
       "properties": {
         "isPvid": {
@@ -2710,7 +2812,7 @@ func init() {
         }
       }
     },
-    "PortEntryItems0PortL3Information": {
+    "PortEntryPortL3Information": {
       "type": "object",
       "properties": {
         "IPv4Address": {
@@ -2733,7 +2835,7 @@ func init() {
         }
       }
     },
-    "PortEntryItems0PortSoftwareInformation": {
+    "PortEntryPortSoftwareInformation": {
       "type": "object",
       "properties": {
         "bpfLoaded": {
@@ -2758,7 +2860,7 @@ func init() {
         }
       }
     },
-    "PortEntryItems0PortStatisticInformation": {
+    "PortEntryPortStatisticInformation": {
       "type": "object",
       "properties": {
         "rxBytes": {
@@ -2808,7 +2910,7 @@ func init() {
           "properties": {
             "TeID": {
               "description": "ID of the tunnel",
-              "type": "number"
+              "type": "integer"
             },
             "tunnelIP": {
               "description": "Access network IP address",
@@ -2821,7 +2923,7 @@ func init() {
           "properties": {
             "teID": {
               "description": "ID of the tunnel",
-              "type": "number"
+              "type": "integer"
             },
             "tunnelIP": {
               "description": "Connection network IP address",
@@ -2844,7 +2946,7 @@ func init() {
       "properties": {
         "TeID": {
           "description": "ID of the tunnel",
-          "type": "number"
+          "type": "integer"
         },
         "tunnelIP": {
           "description": "Access network IP address",
@@ -2857,7 +2959,7 @@ func init() {
       "properties": {
         "teID": {
           "description": "ID of the tunnel",
-          "type": "number"
+          "type": "integer"
         },
         "tunnelIP": {
           "description": "Connection network IP address",
@@ -2872,8 +2974,8 @@ func init() {
           "type": "object",
           "properties": {
             "qfi": {
-              "description": "...?",
-              "type": "number"
+              "description": "QFI number",
+              "type": "integer"
             },
             "ulclIP": {
               "description": "Access network IP address",
@@ -2891,8 +2993,8 @@ func init() {
       "type": "object",
       "properties": {
         "qfi": {
-          "description": "...?",
-          "type": "number"
+          "description": "QFI number",
+          "type": "integer"
         },
         "ulclIP": {
           "description": "Access network IP address",
