@@ -18,6 +18,7 @@ package handler
 import (
 	"net"
 
+	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	cmn "github.com/loxilb-io/loxilb/common"
 
@@ -111,7 +112,32 @@ func ConfigGetSession(params operations.GetConfigSessionAllParams) middleware.Re
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
-	return &SessionResponse{Attr: res}
+	var result []*models.SessionEntry
+	result = make([]*models.SessionEntry, 0)
+	for _, session := range res {
+		var tmpSes models.SessionEntry
+		var tmpAnTun models.SessionEntryAccessNetworkTunnel
+		var tmpCnTun models.SessionEntryCoreNetworkTunnel
+
+		// Session Common match
+		tmpSes.Ident = session.Ident
+		tmpSes.SessionIP = session.IP.String()
+
+		// Session ANtunnel match
+
+		tmpAnTun.TeID = int64(session.AnTun.TeID)
+		tmpAnTun.TunnelIP = session.AnTun.Addr.String()
+
+		// Session CNtunnel match
+		tmpCnTun.TeID = int64(session.CnTun.TeID)
+		tmpCnTun.TunnelIP = session.CnTun.Addr.String()
+
+		tmpSes.AccessNetworkTunnel = &tmpAnTun
+		tmpSes.CoreNetworkTunnel = &tmpCnTun
+
+		result = append(result, &tmpSes)
+	}
+	return operations.NewGetConfigSessionAllOK().WithPayload(&operations.GetConfigSessionAllOKBody{SessionAttr: result})
 }
 
 func ConfigGetSessionUlCl(params operations.GetConfigSessionulclAllParams) middleware.Responder {
@@ -123,5 +149,22 @@ func ConfigGetSessionUlCl(params operations.GetConfigSessionulclAllParams) middl
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
-	return &SessionUlClResponse{Attr: res}
+	var result []*models.SessionUlClEntry
+	result = make([]*models.SessionUlClEntry, 0)
+	for _, ulcl := range res {
+		var tmpulcl models.SessionUlClEntry
+		var tmpulclArg models.SessionUlClEntryUlclArgument
+
+		// UlCl ID match
+		tmpulcl.UlclIdent = ulcl.Ident
+
+		// UlCl Args match
+		tmpulclArg.UlclIP = ulcl.Args.Addr.String()
+		tmpulclArg.Qfi = int64(ulcl.Args.Qfi)
+
+		tmpulcl.UlclArgument = &tmpulclArg
+
+		result = append(result, &tmpulcl)
+	}
+	return operations.NewGetConfigSessionulclAllOK().WithPayload(&operations.GetConfigSessionulclAllOKBody{UlclAttr: result})
 }

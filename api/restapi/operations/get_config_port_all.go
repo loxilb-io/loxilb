@@ -8,6 +8,7 @@ package operations
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
@@ -68,15 +69,15 @@ func (o *GetConfigPortAll) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 // swagger:model GetConfigPortAllOKBody
 type GetConfigPortAllOKBody struct {
 
-	// attr
-	Attr models.PortEntry `json:"attr"`
+	// port attr
+	PortAttr []*models.PortEntry `json:"portAttr"`
 }
 
 // Validate validates this get config port all o k body
 func (o *GetConfigPortAllOKBody) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := o.validateAttr(formats); err != nil {
+	if err := o.validatePortAttr(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -86,18 +87,27 @@ func (o *GetConfigPortAllOKBody) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (o *GetConfigPortAllOKBody) validateAttr(formats strfmt.Registry) error {
-	if swag.IsZero(o.Attr) { // not required
+func (o *GetConfigPortAllOKBody) validatePortAttr(formats strfmt.Registry) error {
+	if swag.IsZero(o.PortAttr) { // not required
 		return nil
 	}
 
-	if err := o.Attr.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("getConfigPortAllOK" + "." + "attr")
-		} else if ce, ok := err.(*errors.CompositeError); ok {
-			return ce.ValidateName("getConfigPortAllOK" + "." + "attr")
+	for i := 0; i < len(o.PortAttr); i++ {
+		if swag.IsZero(o.PortAttr[i]) { // not required
+			continue
 		}
-		return err
+
+		if o.PortAttr[i] != nil {
+			if err := o.PortAttr[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("getConfigPortAllOK" + "." + "portAttr" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("getConfigPortAllOK" + "." + "portAttr" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
 	}
 
 	return nil
@@ -107,7 +117,7 @@ func (o *GetConfigPortAllOKBody) validateAttr(formats strfmt.Registry) error {
 func (o *GetConfigPortAllOKBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
-	if err := o.contextValidateAttr(ctx, formats); err != nil {
+	if err := o.contextValidatePortAttr(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -117,15 +127,21 @@ func (o *GetConfigPortAllOKBody) ContextValidate(ctx context.Context, formats st
 	return nil
 }
 
-func (o *GetConfigPortAllOKBody) contextValidateAttr(ctx context.Context, formats strfmt.Registry) error {
+func (o *GetConfigPortAllOKBody) contextValidatePortAttr(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := o.Attr.ContextValidate(ctx, formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("getConfigPortAllOK" + "." + "attr")
-		} else if ce, ok := err.(*errors.CompositeError); ok {
-			return ce.ValidateName("getConfigPortAllOK" + "." + "attr")
+	for i := 0; i < len(o.PortAttr); i++ {
+
+		if o.PortAttr[i] != nil {
+			if err := o.PortAttr[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("getConfigPortAllOK" + "." + "portAttr" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("getConfigPortAllOK" + "." + "portAttr" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
 		}
-		return err
+
 	}
 
 	return nil
