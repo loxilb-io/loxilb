@@ -16,6 +16,7 @@
 package handler
 
 import (
+	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	tk "github.com/loxilb-io/loxilib"
 
@@ -24,12 +25,27 @@ import (
 
 func ConfigGetConntrack(params operations.GetConfigConntrackAllParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] Conntrack %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-
 	// Get Conntrack informations
-	contr, err := ApiHooks.NetCtInfoGet()
+	res, err := ApiHooks.NetCtInfoGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
-	return &CtResponse{CtAttr: contr}
+	var result []*models.ConntrackEntry
+	result = make([]*models.ConntrackEntry, 0)
+	for _, conntrack := range res {
+		var tmpResult models.ConntrackEntry
+		tmpResult.Bytes = int64(conntrack.Bytes)
+		tmpResult.ConntrackAct = conntrack.CAct
+		tmpResult.ConntrackState = conntrack.CState
+		tmpResult.DestinationIP = conntrack.Dip.String()
+		tmpResult.DestinationPort = int64(conntrack.Dport)
+		tmpResult.Packets = int64(conntrack.Pkts)
+		tmpResult.Protocol = conntrack.Proto
+		tmpResult.SourceIP = conntrack.Sip.String()
+		tmpResult.SourcePort = int64(conntrack.Sport)
+
+		result = append(result, &tmpResult)
+	}
+	return operations.NewGetConfigConntrackAllOK().WithPayload(&operations.GetConfigConntrackAllOKBody{CtAttr: result})
 }

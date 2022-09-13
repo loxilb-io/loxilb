@@ -63,6 +63,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		GetConfigLoadbalancerAllHandler: GetConfigLoadbalancerAllHandlerFunc(func(params GetConfigLoadbalancerAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigLoadbalancerAll has not yet been implemented")
 		}),
+		GetConfigPolicyAllHandler: GetConfigPolicyAllHandlerFunc(func(params GetConfigPolicyAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigPolicyAll has not yet been implemented")
+		}),
 		GetConfigPortAllHandler: GetConfigPortAllHandlerFunc(func(params GetConfigPortAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigPortAll has not yet been implemented")
 		}),
@@ -137,6 +140,8 @@ type LoxilbRestAPIAPI struct {
 	GetConfigConntrackAllHandler GetConfigConntrackAllHandler
 	// GetConfigLoadbalancerAllHandler sets the operation handler for the get config loadbalancer all operation
 	GetConfigLoadbalancerAllHandler GetConfigLoadbalancerAllHandler
+	// GetConfigPolicyAllHandler sets the operation handler for the get config policy all operation
+	GetConfigPolicyAllHandler GetConfigPolicyAllHandler
 	// GetConfigPortAllHandler sets the operation handler for the get config port all operation
 	GetConfigPortAllHandler GetConfigPortAllHandler
 	// GetConfigSessionAllHandler sets the operation handler for the get config session all operation
@@ -250,6 +255,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.GetConfigLoadbalancerAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigLoadbalancerAllHandler")
+	}
+	if o.GetConfigPolicyAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigPolicyAllHandler")
 	}
 	if o.GetConfigPortAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigPortAllHandler")
@@ -391,6 +399,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/config/loadbalancer/all"] = NewGetConfigLoadbalancerAll(o.context, o.GetConfigLoadbalancerAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/config/policy/all"] = NewGetConfigPolicyAll(o.context, o.GetConfigPolicyAllHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

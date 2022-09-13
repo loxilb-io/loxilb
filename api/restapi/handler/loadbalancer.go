@@ -16,6 +16,7 @@
 package handler
 
 import (
+	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
@@ -82,5 +83,31 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
-	return &LbResponse{Attr: res}
+	var result []*models.LoadbalanceEntry
+	result = make([]*models.LoadbalanceEntry, 0)
+	for _, lb := range res {
+		var tmpLB models.LoadbalanceEntry
+		var tmpSvc models.LoadbalanceEntryServiceArguments
+		var tmpEp models.LoadbalanceEntryEndpointsItems0
+
+		// Service Arg match
+		tmpSvc.ExternalIP = lb.Serv.ServIP
+		tmpSvc.Bgp = lb.Serv.Bgp
+		tmpSvc.Port = int64(lb.Serv.ServPort)
+		tmpSvc.Protocol = lb.Serv.Proto
+		tmpSvc.Sel = int64(lb.Serv.Sel)
+		tmpLB.ServiceArguments = &tmpSvc
+
+		// Endpoints match
+		for _, ep := range lb.Eps {
+			tmpEp.EndpointIP = ep.EpIP
+			tmpEp.TargetPort = int64(ep.EpPort)
+			tmpEp.Weight = int64(ep.Weight)
+
+			tmpLB.Endpoints = append(tmpLB.Endpoints, &tmpEp)
+		}
+
+		result = append(result, &tmpLB)
+	}
+	return operations.NewGetConfigLoadbalancerAllOK().WithPayload(&operations.GetConfigLoadbalancerAllOKBody{LbAttr: result})
 }

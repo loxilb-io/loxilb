@@ -308,6 +308,13 @@ func (*NetApiStruct) NetSessionUlClGet() ([]cmn.SessionUlClMod, error) {
 	return ret, err
 }
 
+// NetPolicerGet - Get a policer in loxinet
+func (*NetApiStruct) NetPolicerGet() ([]cmn.PolMod, error) {
+	// There is no locking requirement for this operation
+	ret, err := mh.zr.Pols.PolGetAll()
+	return ret, err
+}
+
 // NetPolicerAdd - Add a policer in loxinet
 func (*NetApiStruct) NetPolicerAdd(pm *cmn.PolMod) (int, error) {
 	mh.mtx.Lock()

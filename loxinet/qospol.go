@@ -18,6 +18,7 @@ package loxinet
 
 import (
 	"errors"
+
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
@@ -91,7 +92,7 @@ func PolInit(zone *Zone) *PolH {
 	return nPh
 }
 
-// PolInfoXlateValidate - validates info passed in pInfo and 
+// PolInfoXlateValidate - validates info passed in pInfo and
 // translates it to internally used units
 func PolInfoXlateValidate(pInfo *cmn.PolInfo) bool {
 	if pInfo.CommittedInfoRate < MinPolRate {
@@ -122,6 +123,33 @@ func PolObjValidate(pObj *cmn.PolObj) bool {
 	}
 
 	return true
+}
+
+// PolGetAll - Get all of the policer in loxinet
+func (P *PolH) PolGetAll() ([]cmn.PolMod, error) {
+	var getPols []cmn.PolMod
+	for pk, pe := range P.PolMap {
+		var pol cmn.PolMod
+		// Policy name getting
+		pol.Ident = pk.PolName
+
+		// Policy Info getting
+		pol.Info.ColorAware = pe.Info.ColorAware
+		pol.Info.PeakInfoRate = pe.Info.PeakInfoRate / 1000000
+		pol.Info.CommittedInfoRate = pe.Info.CommittedInfoRate / 1000000
+		pol.Info.CommittedBlkSize = pe.Info.CommittedBlkSize
+		pol.Info.ExcessBlkSize = pe.Info.ExcessBlkSize
+		pol.Info.PolType = pe.Info.PolType
+
+		// Policy Target
+		for _, target := range pe.PObjs {
+			pol.Target = target.Args
+		}
+
+		// Append Policy
+		getPols = append(getPols, pol)
+	}
+	return getPols, nil
 }
 
 // PolAdd - Add a policer in loxinet

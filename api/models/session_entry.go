@@ -161,7 +161,7 @@ func (m *SessionEntry) UnmarshalBinary(b []byte) error {
 type SessionEntryAccessNetworkTunnel struct {
 
 	// ID of the tunnel
-	TeID float64 `json:"TeID,omitempty"`
+	TeID int64 `json:"TeID,omitempty"`
 
 	// Access network IP address
 	TunnelIP string `json:"tunnelIP,omitempty"`
@@ -201,7 +201,7 @@ func (m *SessionEntryAccessNetworkTunnel) UnmarshalBinary(b []byte) error {
 type SessionEntryCoreNetworkTunnel struct {
 
 	// ID of the tunnel
-	TeID float64 `json:"teID,omitempty"`
+	TeID int64 `json:"teID,omitempty"`
 
 	// Connection network IP address
 	TunnelIP string `json:"tunnelIP,omitempty"`
