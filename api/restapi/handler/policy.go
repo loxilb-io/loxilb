@@ -16,6 +16,7 @@
 package handler
 
 import (
+	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
@@ -71,4 +72,40 @@ func ConfigDeletePolicy(params operations.DeleteConfigPolicyIdentIdentParams) mi
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
+}
+
+func ConfigGetPolicy(params operations.GetConfigPolicyAllParams) middleware.Responder {
+	tk.LogIt(tk.LogDebug, "[API] Policy %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	res, err := ApiHooks.NetPolicerGet()
+	if err != nil {
+		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		return &ResultResponse{Result: err.Error()}
+	}
+
+	var result []*models.PolicyEntry
+	result = make([]*models.PolicyEntry, 0)
+	for _, policy := range res {
+		var tmpPol models.PolicyEntry
+		var tmpInfo models.PolicyEntryPolicyInfo
+		var tmpTarget models.PolicyEntryTargetObject
+		// ID match
+		tmpPol.PolicyIdent = policy.Ident
+		// Info match
+		tmpInfo.ColorAware = policy.Info.ColorAware
+		tmpInfo.CommittedBlkSize = int64(policy.Info.CommittedBlkSize)
+		tmpInfo.CommittedInfoRate = int64(policy.Info.CommittedInfoRate)
+		tmpInfo.ExcessBlkSize = int64(policy.Info.ExcessBlkSize)
+		tmpInfo.PeakInfoRate = int64(policy.Info.PeakInfoRate)
+		tmpInfo.Type = int64(policy.Info.PolType)
+		// Target match
+		tmpTarget.Attachment = int64(policy.Target.AttachMent)
+		tmpTarget.PolObjName = policy.Target.PolObjName
+
+		// Assign policy info and target
+		tmpPol.PolicyInfo = &tmpInfo
+		tmpPol.TargetObject = &tmpTarget
+		result = append(result, &tmpPol)
+	}
+
+	return operations.NewGetConfigPolicyAllOK().WithPayload(&operations.GetConfigPolicyAllOKBody{PolAttr: result})
 }

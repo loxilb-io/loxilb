@@ -518,6 +518,7 @@ type NetHookInterface interface {
 	NetSessionDel(*SessionMod) (int, error)
 	NetSessionUlClAdd(*SessionUlClMod) (int, error)
 	NetSessionUlClDel(*SessionUlClMod) (int, error)
+	NetPolicerGet() ([]PolMod, error)
 	NetPolicerAdd(*PolMod) (int, error)
 	NetPolicerDel(*PolMod) (int, error)
 }
