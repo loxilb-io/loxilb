@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package loxinet
 
 /*
@@ -54,6 +55,7 @@ import (
 // This file implements the interface DpHookInterface
 // The implementation is specific to loxilb ebpf datapath for linux
 
+// error codes
 const (
 	EbpfErrBase = iota - 50000
 	EbpfErrPortPropAdd
@@ -79,10 +81,12 @@ const (
 	EbpfErrWqUnk
 )
 
+// constants
 const (
 	DpEbpfLinuxTiVal = 20
 )
 
+// ebpf table related defines in go
 type (
 	sActValue   C.struct_dp_cmn_act
 	intfMapKey  C.struct_intf_key
@@ -112,13 +116,14 @@ type (
 	mirrTact    C.struct_dp_mirr_tact
 )
 
+// DpEbpfH - context container
 type DpEbpfH struct {
 	ticker *time.Ticker
 	tDone  chan bool
 	tbN    int
 }
 
-// This ticker routine runs every DPEBPF_LINUX_TIVAL seconds
+// dpEbpfTicker - this ticker routine runs every DPEBPF_LINUX_TIVAL seconds
 func dpEbpfTicker() {
 	tbls := []int{int(C.LL_DP_RTV4_STATS_MAP),
 		int(C.LL_DP_TMAC_STATS_MAP),
@@ -154,6 +159,7 @@ func dpEbpfTicker() {
 	}
 }
 
+// DpEbpfInit - initialize the ebpf dp subsystem
 func DpEbpfInit() *DpEbpfH {
 	C.loxilb_main()
 
@@ -184,7 +190,7 @@ func DpEbpfInit() *DpEbpfH {
 	return ne
 }
 
-// Load loxilb eBPF program to an interface
+// loadEbpfPgm - load loxilb eBPF program to an interface
 func loadEbpfPgm(name string) int {
 	ifStr := C.CString(name)
 	section := C.CString(string(C.TC_LL_SEC_DEFAULT))
@@ -194,7 +200,7 @@ func loadEbpfPgm(name string) int {
 	return int(ret)
 }
 
-// Unload loxilb eBPF program from an interface
+// unLoadEbpfPgm - unload loxilb eBPF program from an interface
 func unLoadEbpfPgm(name string) int {
 	ifStr := C.CString(name)
 	section := C.CString(string(C.XDP_LL_SEC_DEFAULT))
@@ -218,13 +224,13 @@ func osPortIsRunning(portName string) bool {
 	}
 
 	ifstr := C.CString(portName)
-	ifr_struct := make([]byte, 32)
-	C.memcpy(unsafe.Pointer(&ifr_struct[0]), unsafe.Pointer(ifstr), 16)
+	ifrStruct := make([]byte, 32)
+	C.memcpy(unsafe.Pointer(&ifrStruct[0]), unsafe.Pointer(ifstr), 16)
 
 	r0, _, err := syscall.Syscall(syscall.SYS_IOCTL,
 		uintptr(sfd),
 		syscall.SIOCGIFFLAGS,
-		uintptr(unsafe.Pointer(&ifr_struct[0])))
+		uintptr(unsafe.Pointer(&ifrStruct[0])))
 	if r0 != 0 {
 		C.free(unsafe.Pointer(ifstr))
 		syscall.Close(sfd)
@@ -236,7 +242,7 @@ func osPortIsRunning(portName string) bool {
 	syscall.Close(sfd)
 
 	var flags uint16
-	C.memcpy(unsafe.Pointer(&flags), unsafe.Pointer(&ifr_struct[16]), 2)
+	C.memcpy(unsafe.Pointer(&flags), unsafe.Pointer(&ifrStruct[16]), 2)
 
 	if flags&syscall.IFF_RUNNING != 0 {
 		return true
@@ -245,6 +251,7 @@ func osPortIsRunning(portName string) bool {
 	return false
 }
 
+// DpPortPropMod - routine to work on a ebpf port property request
 func DpPortPropMod(w *PortDpWorkQ) int {
 	var txK C.uint
 	var txV C.uint
@@ -330,23 +337,26 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 	return EbpfErrWqUnk
 }
 
+// DpPortPropAdd - routine to work on a ebpf port property add
 func (e *DpEbpfH) DpPortPropAdd(w *PortDpWorkQ) int {
 	return DpPortPropMod(w)
 }
 
+// DpPortPropDel - routine to work on a ebpf port property delete
 func (e *DpEbpfH) DpPortPropDel(w *PortDpWorkQ) int {
 	return DpPortPropMod(w)
 }
 
+// DpL2AddrMod - routine to work on a ebpf l2 addr request
 func DpL2AddrMod(w *L2AddrDpWorkQ) int {
 	var l2va *l2VlanAct
 
 	skey := new(sMacKey)
-	C.memcpy(unsafe.Pointer(&skey.smac[0]), unsafe.Pointer(&w.l2Addr[0]), 6)
+	C.memcpy(unsafe.Pointer(&skey.smac[0]), unsafe.Pointer(&w.L2Addr[0]), 6)
 	skey.bd = C.ushort((uint16(w.BD)))
 
 	dkey := new(dMacKey)
-	C.memcpy(unsafe.Pointer(&dkey.dmac[0]), unsafe.Pointer(&w.l2Addr[0]), 6)
+	C.memcpy(unsafe.Pointer(&dkey.dmac[0]), unsafe.Pointer(&w.L2Addr[0]), 6)
 	dkey.bd = C.ushort((uint16(w.BD)))
 
 	if w.Work == DpCreate {
@@ -402,34 +412,37 @@ func DpL2AddrMod(w *L2AddrDpWorkQ) int {
 	return EbpfErrWqUnk
 }
 
+// DpL2AddrAdd - routine to work on a ebpf l2 addr add
 func (e *DpEbpfH) DpL2AddrAdd(w *L2AddrDpWorkQ) int {
 	return DpL2AddrMod(w)
 }
 
+// DpL2AddrDel - routine to work on a ebpf l2 addr delete
 func (e *DpEbpfH) DpL2AddrDel(w *L2AddrDpWorkQ) int {
 	return DpL2AddrMod(w)
 }
 
+// DpRouterMacMod - routine to work on a ebpf rt-mac change request
 func DpRouterMacMod(w *RouterMacDpWorkQ) int {
 
 	key := new(tMacKey)
-	C.memcpy(unsafe.Pointer(&key.mac[0]), unsafe.Pointer(&w.l2Addr[0]), 6)
+	C.memcpy(unsafe.Pointer(&key.mac[0]), unsafe.Pointer(&w.L2Addr[0]), 6)
 	switch {
-	case w.TunType == DP_TUN_VXLAN:
+	case w.TunType == DpTunVxlan:
 		key.tun_type = C.LLB_TUN_VXLAN
-	case w.TunType == DP_TUN_GRE:
+	case w.TunType == DpTunGre:
 		key.tun_type = C.LLB_TUN_GRE
-	case w.TunType == DP_TUN_GTP:
+	case w.TunType == DpTunGtp:
 		key.tun_type = C.LLB_TUN_GTP
-	case w.TunType == DP_TUN_STT:
+	case w.TunType == DpTunStt:
 		key.tun_type = C.LLB_TUN_STT
 	}
 
-	key.tunnel_id = C.uint(w.TunId)
+	key.tunnel_id = C.uint(w.TunID)
 
 	if w.Work == DpCreate {
 		dat := new(sActValue)
-		if w.TunId != 0 {
+		if w.TunID != 0 {
 			if w.NhNum == 0 {
 				dat.act_type = C.DP_SET_RM_VXLAN
 				rtNhAct := (*rtNhAct)(getPtrOffset(unsafe.Pointer(dat),
@@ -448,7 +461,7 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
 				C.memset(unsafe.Pointer(rtNhAct), 0, C.sizeof_struct_dp_rt_nh_act)
 
 				rtNhAct.nh_num = C.ushort(w.NhNum)
-				tid := ((w.TunId << 8) & 0xffffff00)
+				tid := ((w.TunID << 8) & 0xffffff00)
 				rtNhAct.tid = C.uint(tk.Htonl(tid))
 			}
 		} else {
@@ -472,53 +485,56 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
 	return EbpfErrWqUnk
 }
 
+// DpRouterMacAdd - routine to work on a ebpf rt-mac add request
 func (e *DpEbpfH) DpRouterMacAdd(w *RouterMacDpWorkQ) int {
 	return DpRouterMacMod(w)
 }
 
+// DpRouterMacDel - routine to work on a ebpf rt-mac delete request
 func (e *DpEbpfH) DpRouterMacDel(w *RouterMacDpWorkQ) int {
 	return DpRouterMacMod(w)
 }
 
+// DpNextHopMod - routine to work on a ebpf next-hop change request
 func DpNextHopMod(w *NextHopDpWorkQ) int {
 	var act *rtL2NhAct
 	var vxAct *rtVxL2NhAct
 
 	key := new(nhKey)
-	key.nh_num = C.uint(w.nextHopNum)
+	key.nh_num = C.uint(w.NextHopNum)
 
 	if w.Work == DpCreate {
 		dat := new(nhDat)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_nh_tact)
-		if !w.resolved {
+		if !w.Resolved {
 			dat.ca.act_type = C.DP_SET_TOCP
 		} else {
-			if w.tunNh {
+			if w.TunNh {
 				fmt.Printf("Setting tunNh %x\n", key.nh_num)
 				dat.ca.act_type = C.DP_SET_NEIGH_VXLAN
 				vxAct = (*rtVxL2NhAct)(getPtrOffset(unsafe.Pointer(dat),
 					C.sizeof_struct_dp_cmn_act))
 
-				ipAddr := tk.IPtonl(w.rIP)
+				ipAddr := tk.IPtonl(w.RIP)
 				vxAct.l3t.rip = C.uint(ipAddr)
-				vxAct.l3t.sip = C.uint(tk.IPtonl(w.sIP))
-				tid := ((w.tunID << 8) & 0xffffff00)
+				vxAct.l3t.sip = C.uint(tk.IPtonl(w.SIP))
+				tid := ((w.TunID << 8) & 0xffffff00)
 				vxAct.l3t.tid = C.uint(tk.Htonl(tid))
 
 				fmt.Printf("rip 0x%x sip 0x%x 0x%x\n", vxAct.l3t.sip, vxAct.l3t.rip, vxAct.l3t.tid)
 
 				act = (*rtL2NhAct)(&vxAct.l2nh)
-				C.memcpy(unsafe.Pointer(&act.dmac[0]), unsafe.Pointer(&w.dstAddr[0]), 6)
-				C.memcpy(unsafe.Pointer(&act.smac[0]), unsafe.Pointer(&w.srcAddr[0]), 6)
+				C.memcpy(unsafe.Pointer(&act.dmac[0]), unsafe.Pointer(&w.DstAddr[0]), 6)
+				C.memcpy(unsafe.Pointer(&act.smac[0]), unsafe.Pointer(&w.SrcAddr[0]), 6)
 				act.bd = C.ushort(w.BD)
 			} else {
 				dat.ca.act_type = C.DP_SET_NEIGH_L2
 				act = (*rtL2NhAct)(getPtrOffset(unsafe.Pointer(dat),
 					C.sizeof_struct_dp_cmn_act))
-				C.memcpy(unsafe.Pointer(&act.dmac[0]), unsafe.Pointer(&w.dstAddr[0]), 6)
-				C.memcpy(unsafe.Pointer(&act.smac[0]), unsafe.Pointer(&w.srcAddr[0]), 6)
+				C.memcpy(unsafe.Pointer(&act.dmac[0]), unsafe.Pointer(&w.DstAddr[0]), 6)
+				C.memcpy(unsafe.Pointer(&act.smac[0]), unsafe.Pointer(&w.SrcAddr[0]), 6)
 				act.bd = C.ushort(w.BD)
-				act.rnh_num = C.ushort(w.nNextHopNum)
+				act.rnh_num = C.ushort(w.NNextHopNum)
 			}
 		}
 
@@ -543,14 +559,17 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 	return EbpfErrWqUnk
 }
 
+// DpNextHopAdd - routine to work on a ebpf next-hop add request
 func (e *DpEbpfH) DpNextHopAdd(w *NextHopDpWorkQ) int {
 	return DpNextHopMod(w)
 }
 
+// DpNextHopDel - routine to work on a ebpf next-hop delete request
 func (e *DpEbpfH) DpNextHopDel(w *NextHopDpWorkQ) int {
 	return DpNextHopMod(w)
 }
 
+// DpRouteMod - routine to work on a ebpf route change request
 func DpRouteMod(w *RouteDpWorkQ) int {
 	var act *rtL3NhAct
 	var kPtr *[6]uint8
@@ -606,14 +625,17 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 	return EbpfErrWqUnk
 }
 
+// DpRouteAdd - routine to work on a ebpf route add request
 func (e *DpEbpfH) DpRouteAdd(w *RouteDpWorkQ) int {
 	return DpRouteMod(w)
 }
 
+// DpRouteDel - routine to work on a ebpf route delete request
 func (e *DpEbpfH) DpRouteDel(w *RouteDpWorkQ) int {
 	return DpRouteMod(w)
 }
 
+// DpNatLbRuleMod - routine to work on a ebpf nat-lb change request
 func DpNatLbRuleMod(w *NatDpWorkQ) int {
 
 	key := new(nat4Key)
@@ -626,18 +648,18 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 	if w.Work == DpCreate {
 		dat := new(nat4Acts)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_natv4_tacts)
-		if w.NatType == DP_SNAT {
+		if w.NatType == DpSnat {
 			dat.ca.act_type = C.DP_SET_SNAT
-		} else if w.NatType == DP_DNAT {
+		} else if w.NatType == DpDnat {
 			dat.ca.act_type = C.DP_SET_DNAT
 		} else {
 			return EbpfErrNat4Add
 		}
 
 		switch {
-		case w.EpSel == EP_RR:
+		case w.EpSel == EpRR:
 			dat.sel_type = C.NAT_LB_SEL_RR
-		case w.EpSel == EP_HASH:
+		case w.EpSel == EpHash:
 			dat.sel_type = C.NAT_LB_SEL_HASH
 		/* Currently not implemented in DP */
 		/*case w.EpSel == EP_PRIO:
@@ -650,11 +672,11 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[0]))
 
 		for _, k := range w.endPoints {
-			nxfa.wprio = C.ushort(k.weight)
-			nxfa.nat_xport = C.ushort(tk.Htons(k.xPort))
-			nxfa.nat_xip = C.uint(tk.IPtonl(k.xIP))
+			nxfa.wprio = C.ushort(k.Weight)
+			nxfa.nat_xport = C.ushort(tk.Htons(k.XPort))
+			nxfa.nat_xip = C.uint(tk.IPtonl(k.XIP))
 
-			if k.inActive {
+			if k.InActive {
 				nxfa.inactive = 1
 			}
 
@@ -687,14 +709,17 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 	return EbpfErrWqUnk
 }
 
+// DpNatLbRuleAdd - routine to work on a ebpf nat-lb add request
 func (e *DpEbpfH) DpNatLbRuleAdd(w *NatDpWorkQ) int {
 	return DpNatLbRuleMod(w)
 }
 
+// DpNatLbRuleDel - routine to work on a ebpf nat-lb delete request
 func (e *DpEbpfH) DpNatLbRuleDel(w *NatDpWorkQ) int {
 	return DpNatLbRuleMod(w)
 }
 
+// DpStat - routine to work on a ebpf map statistics request
 func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 	var packets, bytes, dropPackets uint64
 	var tbl []int
@@ -774,95 +799,95 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 func convDPCt2GoObj(ctKey *C.struct_dp_ctv4_key, ctDat *C.struct_dp_ctv4_dat) *DpCtInfo {
 	ct := new(DpCtInfo)
 
-	ct.dip = tk.NltoIP(uint32(ctKey.daddr))
-	ct.sip = tk.NltoIP(uint32(ctKey.saddr))
-	ct.dport = tk.Ntohs(uint16(ctKey.dport))
-	ct.sport = tk.Ntohs(uint16(ctKey.sport))
-	ct.packets = uint64(ctDat.pb.packets)
-	ct.bytes = uint64(ctDat.pb.bytes)
+	ct.DIP = tk.NltoIP(uint32(ctKey.daddr))
+	ct.SIP = tk.NltoIP(uint32(ctKey.saddr))
+	ct.Dport = tk.Ntohs(uint16(ctKey.dport))
+	ct.Sport = tk.Ntohs(uint16(ctKey.sport))
+	ct.Packets = uint64(ctDat.pb.packets)
+	ct.Bytes = uint64(ctDat.pb.bytes)
 
 	p := uint8(ctKey.l4proto)
 	switch {
 	case p == 1:
-		ct.proto = "icmp"
+		ct.Proto = "icmp"
 		i := (*C.ct_icmp_pinf_t)(unsafe.Pointer(&ctDat.pi))
 		switch {
 		case i.state&C.CT_ICMP_DUNR != 0:
-			ct.cState = "dest-unr"
+			ct.CState = "dest-unr"
 		case i.state&C.CT_ICMP_TTL != 0:
-			ct.cState = "ttl-exp"
+			ct.CState = "ttl-exp"
 		case i.state&C.CT_ICMP_RDR != 0:
-			ct.cState = "icmp-redir"
+			ct.CState = "icmp-redir"
 		case i.state == C.CT_ICMP_CLOSED:
-			ct.cState = "closed"
+			ct.CState = "closed"
 		case i.state == C.CT_ICMP_REQS:
-			ct.cState = "req-sent"
+			ct.CState = "req-sent"
 		case i.state == C.CT_ICMP_REPS:
-			ct.cState = "bidir"
+			ct.CState = "bidir"
 		}
 	case p == 6:
-		ct.proto = "tcp"
+		ct.Proto = "tcp"
 		t := (*C.ct_tcp_pinf_t)(unsafe.Pointer(&ctDat.pi))
 		switch {
 		case t.state == C.CT_TCP_CLOSED:
-			ct.cState = "closed"
+			ct.CState = "closed"
 		case t.state == C.CT_TCP_SS:
-			ct.cState = "sync-sent"
+			ct.CState = "sync-sent"
 		case t.state == C.CT_TCP_SA:
-			ct.cState = "sync-ack"
+			ct.CState = "sync-ack"
 		case t.state == C.CT_TCP_EST:
-			ct.cState = "est"
+			ct.CState = "est"
 		case t.state == C.CT_TCP_ERR:
-			ct.cState = "h/e"
+			ct.CState = "h/e"
 		case t.state == C.CT_TCP_CW:
-			ct.cState = "closed-wait"
+			ct.CState = "closed-wait"
 		default:
-			ct.cState = "fini"
+			ct.CState = "fini"
 		}
 	case p == 17:
-		ct.proto = "udp"
+		ct.Proto = "udp"
 		u := (*C.ct_udp_pinf_t)(unsafe.Pointer(&ctDat.pi))
 		switch {
 		case u.state == C.CT_UDP_CNI:
-			ct.cState = "closed"
+			ct.CState = "closed"
 		case u.state == C.CT_UDP_UEST:
-			ct.cState = "udp-uni"
+			ct.CState = "udp-uni"
 		case u.state == C.CT_UDP_EST:
-			ct.cState = "udp-est"
+			ct.CState = "udp-est"
 		default:
-			ct.cState = "unk"
+			ct.CState = "unk"
 		}
 	case p == 132:
-		ct.proto = "sctp"
+		ct.Proto = "sctp"
 		s := (*C.ct_sctp_pinf_t)(unsafe.Pointer(&ctDat.pi))
 		switch {
 		case s.state == C.CT_SCTP_EST:
-			ct.cState = "est"
+			ct.CState = "est"
 		case s.state == C.CT_SCTP_CLOSED:
-			ct.cState = "closed"
+			ct.CState = "closed"
 		case s.state == C.CT_SCTP_ERR:
-			ct.cState = "err"
+			ct.CState = "err"
 		case s.state == C.CT_SCTP_INIT:
-			ct.cState = "init"
+			ct.CState = "init"
 		case s.state == C.CT_SCTP_INITA:
-			ct.cState = "init-ack"
+			ct.CState = "init-ack"
 		case s.state == C.CT_SCTP_COOKIE:
-			ct.cState = "cookie-echo"
+			ct.CState = "cookie-echo"
 		case s.state == C.CT_SCTP_COOKIEA:
-			ct.cState = "cookie-echo-resp"
+			ct.CState = "cookie-echo-resp"
 		case s.state == C.CT_SCTP_SHUT:
-			ct.cState = "shut"
+			ct.CState = "shut"
 		case s.state == C.CT_SCTP_SHUTA:
-			ct.cState = "shut-ack"
+			ct.CState = "shut-ack"
 		case s.state == C.CT_SCTP_SHUTC:
-			ct.cState = "shut-complete"
+			ct.CState = "shut-complete"
 		case s.state == C.CT_SCTP_ABRT:
-			ct.cState = "abort"
+			ct.CState = "abort"
 		default:
-			ct.cState = "unk"
+			ct.CState = "unk"
 		}
 	default:
-		ct.proto = fmt.Sprintf("%d", p)
+		ct.Proto = fmt.Sprintf("%d", p)
 	}
 
 	if ctDat.xi.nat_flags == C.LLB_NAT_DST ||
@@ -877,27 +902,28 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ctv4_key, ctDat *C.struct_dp_ctv4_dat) *D
 		port := tk.Ntohs(uint16(ctDat.xi.nat_xport))
 
 		if ctDat.xi.nat_flags == C.LLB_NAT_DST {
-			ct.cAct = fmt.Sprintf("dnat-%s:%d:w%d", xip.String(), port, ctDat.xi.wprio)
+			ct.CAct = fmt.Sprintf("dnat-%s:%d:w%d", xip.String(), port, ctDat.xi.wprio)
 		} else if ctDat.xi.nat_flags == C.LLB_NAT_SRC {
-			ct.cAct = fmt.Sprintf("snat-%s:%d:w%d", xip.String(), port, ctDat.xi.wprio)
+			ct.CAct = fmt.Sprintf("snat-%s:%d:w%d", xip.String(), port, ctDat.xi.wprio)
 		}
 	}
 
 	return ct
 }
 
-func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (error, DpRetT) {
+// DpTableGet - routine to work on a ebpf map get request
+func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 	var tbl int
 
 	if w.Work != DpMapGet {
-		return errors.New("unknown work type"), EbpfErrWqUnk
+		return EbpfErrWqUnk, errors.New("unknown work type")
 	}
 
 	switch {
 	case w.Name == MapNameCt4:
 		tbl = C.LL_DP_ACLV4_MAP
 	default:
-		return errors.New("unknown work type"), EbpfErrWqUnk
+		return EbpfErrWqUnk, errors.New("unknown work type")
 	}
 
 	if tbl == C.LL_DP_ACLV4_MAP {
@@ -925,8 +951,8 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (error, DpRetT) {
 				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_ACLV4_STATS_MAP), C.uint(tact.ca.cidx), C.int(1),
 					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
 				if ret == 0 {
-					goCt4Ent.bytes += b
-					goCt4Ent.packets += p
+					goCt4Ent.Bytes += b
+					goCt4Ent.Packets += p
 				}
 				fmt.Println(goCt4Ent)
 				ctMap[goCt4Ent.Key()] = goCt4Ent
@@ -934,17 +960,18 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (error, DpRetT) {
 			key = nextKey
 			n++
 		}
-		return nil, ctMap
+		return ctMap, nil
 	}
 
-	return errors.New("unknown work type"), EbpfErrWqUnk
+	return EbpfErrWqUnk, errors.New("unknown work type")
 }
 
+// DpUlClMod - routine to work on a ebpf ul-cl filter change request
 func (e *DpEbpfH) DpUlClMod(w *UlClDpWorkQ) int {
 	key := new(sess4Key)
 
-	key.daddr = C.uint(tk.IPtonl(w.mDip))
-	key.saddr = C.uint(tk.IPtonl(w.mSip))
+	key.daddr = C.uint(tk.IPtonl(w.MDip))
+	key.saddr = C.uint(tk.IPtonl(w.MSip))
 	key.teid = C.uint(tk.Htonl(w.mTeID))
 	key.r = 0
 
@@ -960,9 +987,9 @@ func (e *DpEbpfH) DpUlClMod(w *UlClDpWorkQ) int {
 			dat.ca.act_type = C.DP_SET_ADD_GTP
 			dat.ca.cidx = C.uint(w.HwMark)
 			dat.qfi = C.uchar(w.Qfi)
-			dat.rip = C.uint(tk.IPtonl(w.tDip))
-			dat.sip = C.uint(tk.IPtonl(w.tSip))
-			dat.teid = C.uint(tk.Htonl(w.tTeID))
+			dat.rip = C.uint(tk.IPtonl(w.TDip))
+			dat.sip = C.uint(tk.IPtonl(w.TSip))
+			dat.teid = C.uint(tk.Htonl(w.TTeID))
 		}
 
 		ret := C.llb_add_map_elem(C.LL_DP_SESS4_MAP,
@@ -981,14 +1008,17 @@ func (e *DpEbpfH) DpUlClMod(w *UlClDpWorkQ) int {
 	return EbpfErrWqUnk
 }
 
+// DpUlClAdd - routine to work on a ebpf ul-cl filter add request
 func (e *DpEbpfH) DpUlClAdd(w *UlClDpWorkQ) int {
 	return e.DpUlClMod(w)
 }
 
+// DpUlClDel - routine to work on a ebpf ul-cl filter delete request
 func (e *DpEbpfH) DpUlClDel(w *UlClDpWorkQ) int {
 	return e.DpUlClMod(w)
 }
 
+// DpPolMod - routine to work on a ebpf policer change request
 func (e *DpEbpfH) DpPolMod(w *PolDpWorkQ) int {
 	key := C.uint(w.HwMark)
 
@@ -1045,14 +1075,17 @@ func (e *DpEbpfH) DpPolMod(w *PolDpWorkQ) int {
 	return 0
 }
 
+// DpPolAdd - routine to work on a ebpf policer add request
 func (e *DpEbpfH) DpPolAdd(w *PolDpWorkQ) int {
 	return e.DpPolMod(w)
 }
 
+// DpPolDel - routine to work on a ebpf policer delete request
 func (e *DpEbpfH) DpPolDel(w *PolDpWorkQ) int {
 	return e.DpPolMod(w)
 }
 
+// DpMirrMod - routine to work on a ebpf mirror modify request
 func (e *DpEbpfH) DpMirrMod(w *MirrDpWorkQ) int {
 	key := C.uint(w.HwMark)
 
@@ -1091,10 +1124,12 @@ func (e *DpEbpfH) DpMirrMod(w *MirrDpWorkQ) int {
 	return 0
 }
 
+// DpMirrAdd - routine to work on a ebpf mirror add request
 func (e *DpEbpfH) DpMirrAdd(w *MirrDpWorkQ) int {
 	return e.DpMirrMod(w)
 }
 
+// DpMirrDel - routine to work on a ebpf mirror delete request
 func (e *DpEbpfH) DpMirrDel(w *MirrDpWorkQ) int {
 	return e.DpMirrMod(w)
 }

@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
@@ -302,7 +303,7 @@ func (ifa *Ifa) DP(work DpWorkT) int {
 	rmWq.Status = &ifa.Sync
 
 	for i := 0; i < 6; i++ {
-		rmWq.l2Addr[i] = uint8(port.HInfo.MacAddr[i])
+		rmWq.L2Addr[i] = uint8(port.HInfo.MacAddr[i])
 	}
 
 	rmWq.PortNum = port.PortNo
@@ -321,12 +322,12 @@ func (ifa *Ifa) DP(work DpWorkT) int {
 		up := port.SInfo.PortReal
 
 		for i := 0; i < 6; i++ {
-			rmWq.l2Addr[i] = uint8(up.HInfo.MacAddr[i])
+			rmWq.L2Addr[i] = uint8(up.HInfo.MacAddr[i])
 		}
 
 		rmWq.PortNum = up.PortNo
-		rmWq.TunId = port.HInfo.TunId
-		rmWq.TunType = DP_TUN_VXLAN
+		rmWq.TunID = port.HInfo.TunID
+		rmWq.TunType = DpTunVxlan
 		rmWq.BD = port.L2.Vid
 
 		mh.dp.ToDpCh <- rmWq

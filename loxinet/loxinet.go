@@ -107,7 +107,7 @@ func loxiNetInit() {
 
 	// Initialize the nlp subsystem
 	if opts.Opts.NoNlp == false {
-		nlp.NlpRegister(NetApiInit())
+		nlp.NlpRegister(NetAPIInit())
 		nlp.NlpInit()
 	}
 
@@ -118,7 +118,7 @@ func loxiNetInit() {
 
 	// Initialize and spawn the api server subsystem
 	if opts.Opts.NoApi == false {
-		apiserver.RegisterApiHooks(NetApiInit())
+		apiserver.RegisterApiHooks(NetAPIInit())
 		go apiserver.RunApiServer()
 	}
 }

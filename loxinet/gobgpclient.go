@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package loxinet
 
 import (
@@ -54,11 +55,13 @@ type goBgpEvent struct {
 	conn      *grpc.ClientConn
 }
 
+// goBGP connected status
 const (
 	BGPConnected goBgpState = iota
 	BGPDisconnected
 )
 
+// GoBgpH - context container
 type GoBgpH struct {
 	eventCh chan goBgpEvent
 	host    string
@@ -228,6 +231,7 @@ func (gbh *GoBgpH) processRoute(pathList []*api.Path) {
 	}
 }
 
+// GetRoutes - get routes in goBGP
 func (gbh *GoBgpH) GetRoutes(client api.GobgpApiClient) int {
 
 	processRoutes := func(recver interface {
@@ -273,6 +277,7 @@ func (gbh *GoBgpH) GetRoutes(client api.GobgpApiClient) int {
 	return 0
 }
 
+// AdvertiseRoute - advertise a new route using goBGP
 func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 
 	// add routes
@@ -319,6 +324,7 @@ func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 	return 0
 }
 
+// DelAdvertiseRoute - delete previously advertised route in goBGP
 func (gbh *GoBgpH) DelAdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 
 	// del routes
@@ -364,6 +370,7 @@ func (gbh *GoBgpH) DelAdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 	return 0
 }
 
+// GoBgpInit - initialize goBGP client subsystem
 func GoBgpInit() *GoBgpH {
 	//gbh = new(GoBgpH)
 	gbh := new(GoBgpH)
@@ -429,31 +436,34 @@ func (gbh *GoBgpH) goBgpConnect(host string) {
 	}
 }
 
-func (gbh *GoBgpH) AddBGPRule(Ip string) {
+// AddBGPRule - add a bgp rule in goBGP
+func (gbh *GoBgpH) AddBGPRule(IP string) {
 	gbh.mtx.Lock()
-	if !gbh.rules[Ip] {
-		gbh.rules[Ip] = true
+	if !gbh.rules[IP] {
+		gbh.rules[IP] = true
 	}
 	if gbh.state == BGPConnected {
-		gbh.AdvertiseRoute(Ip, 32, "0.0.0.0")
+		gbh.AdvertiseRoute(IP, 32, "0.0.0.0")
 	}
 
 	gbh.mtx.Unlock()
 }
 
-func (gbh *GoBgpH) DelBGPRule(ip string) {
+// DelBGPRule - delete a bgp rule in goBGP
+func (gbh *GoBgpH) DelBGPRule(IP string) {
 	gbh.mtx.Lock()
-	if gbh.rules[ip] {
-		gbh.rules[ip] = false
+	if gbh.rules[IP] {
+		gbh.rules[IP] = false
 	}
 
 	if gbh.state == BGPConnected {
-		gbh.DelAdvertiseRoute(ip, 32, "0.0.0.0")
+		gbh.DelAdvertiseRoute(IP, 32, "0.0.0.0")
 	}
 	gbh.mtx.Unlock()
 }
 
-func (gbh *GoBgpH) AddCurrentBgpRoutesToIpRoute() error {
+// AddCurrentBgpRoutesToIpRoute - add bgp routes to OS fib
+func (gbh *GoBgpH) AddCurrentBgpRoutesToIPRoute() error {
 	ipv4UC := &api.Family{
 		Afi:  api.Family_AFI_IP,
 		Safi: api.Family_SAFI_UNICAST,
@@ -524,7 +534,7 @@ func (gbh *GoBgpH) getGoBgpRoutes() {
 			gbh.AdvertiseRoute(ip, 32, "0.0.0.0")
 		}
 	}
-	if err := gbh.AddCurrentBgpRoutesToIpRoute(); err != nil {
+	if err := gbh.AddCurrentBgpRoutesToIPRoute(); err != nil {
 		tk.LogIt(tk.LogError, "[GoBGP] AddCurrentBgpRoutesToIpRoute() return err: %s", err.Error())
 	}
 	gbh.mtx.Unlock()

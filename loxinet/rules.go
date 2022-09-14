@@ -23,6 +23,7 @@ import (
 	"net"
 	"sort"
 	"time"
+
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
@@ -877,30 +878,30 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.HwMark = r.ruleNum
 
 	if r.act.actType == RtActDnat {
-		nWork.NatType = DP_DNAT
+		nWork.NatType = DpDnat
 	} else if r.act.actType == RtActSnat {
-		nWork.NatType = DP_SNAT
+		nWork.NatType = DpSnat
 	}
 
 	switch at := r.act.action.(type) {
 	case *ruleNatActs:
 		switch {
 		case at.sel == cmn.LbSelRr:
-			nWork.EpSel = EP_RR
+			nWork.EpSel = EpRR
 		case at.sel == cmn.LbSelHash:
-			nWork.EpSel = EP_HASH
+			nWork.EpSel = EpHash
 		case at.sel == cmn.LbSelPrio:
-			nWork.EpSel = EP_PRIO
+			nWork.EpSel = EpPrio
 		default:
-			nWork.EpSel = EP_RR
+			nWork.EpSel = EpRR
 		}
 		for _, k := range at.endPoints {
 			var ep NatEP
 
-			ep.xIP = k.xIP
-			ep.xPort = k.xPort
-			ep.weight = k.weight
-			ep.inActive = k.inActive
+			ep.XIP = k.xIP
+			ep.XPort = k.xPort
+			ep.Weight = k.weight
+			ep.InActive = k.inActive
 
 			nWork.endPoints = append(nWork.endPoints, ep)
 		}
