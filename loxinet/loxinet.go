@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package loxinet
 
 import (
@@ -20,21 +21,24 @@ import (
 	"os"
 	"sync"
 	"time"
-
 	apiserver "github.com/loxilb-io/loxilb/api"
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
 )
 
+// string constant representing root security zone
 const (
 	RootZone = "root"
 )
 
+// constants
 const (
 	LoxinetTiVal = 10
 )
 
+// IterIntf - interface implementation to iterate various loxinet
+// subsystems entitities
 type IterIntf interface {
 	NodeWalker(b string)
 }
@@ -51,19 +55,12 @@ type loxiNetH struct {
 	bgp    *GoBgpH
 }
 
+// NodeWalker - an implementation of node walker interface
 func (mh *loxiNetH) NodeWalker(b string) {
 	tk.LogIt(tk.LogDebug, "%s\n", b)
 }
 
-func (mh *loxiNetH) NodeDat2Str(d tk.TrieData) string {
-	return ""
-}
-
-func (mh *loxiNetH) TrieNodeWalker(b string) {
-	tk.LogIt(tk.LogDebug, "%s", b)
-}
-
-// This ticker routine runs every LOXINET_TIVAL seconds
+// loxiNetTicker - this ticker routine runs every LOXINET_TIVAL seconds
 func loxiNetTicker() {
 	for {
 		select {
@@ -123,13 +120,13 @@ func loxiNetInit() {
 	}
 }
 
-// This routine will not return
+// loxiNetRun - This routine will not return
 func loxiNetRun() {
 	mh.wg.Wait()
 }
 
-// Main routine of loxinet
-func LoxiNetMain() {
+// LoxiNetMain -  main routine of loxinet
+func Main() {
 	loxiNetInit()
 	loxiNetRun()
 }

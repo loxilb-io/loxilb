@@ -76,5 +76,5 @@ func main() {
 		}
 	}
 
-	ln.LoxiNetMain()
+	ln.Main()
 }
