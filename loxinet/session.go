@@ -313,28 +313,28 @@ func (ulcl *UlClInf) DP(work DpWorkT) int {
 	// For UL dir
 	ucn := new(UlClDpWorkQ)
 	ucn.Work = work
-	ucn.mDip = ulcl.Addr
-	ucn.mSip = ulcl.uSess.Addr
+	ucn.MDip = ulcl.Addr
+	ucn.MSip = ulcl.uSess.Addr
 	ucn.mTeID = ulcl.uSess.AnTun.TeID
 	ucn.Zone = ulcl.uSess.Zone
 	ucn.HwMark = ulcl.NumUl
 	ucn.Qfi = ulcl.Qfi
-	ucn.tTeID = 0
+	ucn.TTeID = 0
 
 	mh.dp.ToDpCh <- ucn
 
 	// For DL dir
 	ucn = new(UlClDpWorkQ)
 	ucn.Work = work
-	ucn.mSip = ulcl.Addr
-	ucn.mDip = ulcl.uSess.Addr
+	ucn.MSip = ulcl.Addr
+	ucn.MDip = ulcl.uSess.Addr
 	ucn.mTeID = 0
 	ucn.Zone = ulcl.uSess.Zone
 	ucn.HwMark = ulcl.NumDl
 	ucn.Qfi = ulcl.Qfi
-	ucn.tDip = ulcl.uSess.AnTun.Addr
-	ucn.tSip = ulcl.uSess.CnTun.Addr
-	ucn.tTeID = ulcl.uSess.AnTun.TeID
+	ucn.TDip = ulcl.uSess.AnTun.Addr
+	ucn.TSip = ulcl.uSess.CnTun.Addr
+	ucn.TTeID = ulcl.uSess.AnTun.TeID
 
 	mh.dp.ToDpCh <- ucn
 

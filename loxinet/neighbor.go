@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net"
 	"time"
+
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
@@ -268,7 +269,7 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 	zeroHwAddr, _ := net.ParseMAC("00:00:00:00:00:00")
 	ne, found := n.NeighMap[key]
 
-	port := n.Zone.Ports.PortFindByOSId(Attr.OSLinkIndex)
+	port := n.Zone.Ports.PortFindByOSID(Attr.OSLinkIndex)
 	if port == nil {
 		tk.LogIt(tk.LogError, "neigh add - %s:%s no oport\n", Addr.String(), Zone)
 		return NeighOifErr, errors.New("nh-oif error")
@@ -460,7 +461,7 @@ func (n *NeighH) NeighFind(Addr net.IP, Zone string) (*Neigh, int) {
 	return ne, -1
 }
 
-// Associate a route with the given neighbor
+// NeighPairRt - Associate a route with the given neighbor
 func (n *NeighH) NeighPairRt(ne *Neigh, rt *Rt) int {
 	_, found := ne.NhRtm[rt.Key]
 	if found == true {
@@ -474,7 +475,7 @@ func (n *NeighH) NeighPairRt(ne *Neigh, rt *Rt) int {
 	return 0
 }
 
-// De-Associate a route from the given neighbor
+// NeighUnPairRt - De-Associate a route from the given neighbor
 func (n *NeighH) NeighUnPairRt(ne *Neigh, rt *Rt) int {
 
 	_, found := ne.NhRtm[rt.Key]
@@ -503,7 +504,7 @@ func Neigh2String(ne *Neigh, it IterIntf) {
 	it.NodeWalker(nhBuf)
 }
 
-// Neighs2String - format all neighbors into a string 
+// Neighs2String - format all neighbors into a string
 func (n *NeighH) Neighs2String(it IterIntf) error {
 	for _, n := range n.NeighMap {
 		Neigh2String(n, it)
@@ -511,7 +512,7 @@ func (n *NeighH) Neighs2String(it IterIntf) error {
 	return nil
 }
 
-// PortNotifier - implementation of PortEventIntf interface 
+// PortNotifier - implementation of PortEventIntf interface
 func (n *NeighH) PortNotifier(name string, osID int, evType PortEvent) {
 	if evType&PortEvDown|PortEvDelete|PortEvLowerDown != 0 {
 		for _, ne := range n.NeighMap {
@@ -558,27 +559,27 @@ func (ne *Neigh) DP(work DpWorkT) int {
 	neighWq := new(NextHopDpWorkQ)
 	neighWq.Work = work
 	neighWq.Status = &ne.Sync
-	neighWq.resolved = ne.Resolved
-	neighWq.nNextHopNum = 0
+	neighWq.Resolved = ne.Resolved
+	neighWq.NNextHopNum = 0
 	if ne.Type&NhRecursive == NhRecursive {
 		f := ne.tFdb
 		if f != nil && f.FdbTun.ep != nil {
-			neighWq.nNextHopNum = f.FdbTun.ep.HwMark
+			neighWq.NNextHopNum = f.FdbTun.ep.HwMark
 		} else {
-			neighWq.resolved = false
+			neighWq.Resolved = false
 		}
-		neighWq.nextHopNum = ne.HwMark
+		neighWq.NextHopNum = ne.HwMark
 	} else {
-		neighWq.nextHopNum = ne.HwMark
+		neighWq.NextHopNum = ne.HwMark
 	}
 
 	for i := 0; i < 6; i++ {
-		neighWq.dstAddr[i] = uint8(ne.Attr.HardwareAddr[i])
+		neighWq.DstAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 	}
 
 	if ne.OifPort != nil {
 		for i := 0; i < 6; i++ {
-			neighWq.srcAddr[i] = uint8(ne.OifPort.HInfo.MacAddr[i])
+			neighWq.SrcAddr[i] = uint8(ne.OifPort.HInfo.MacAddr[i])
 		}
 		neighWq.BD = ne.OifPort.L2.Vid
 
@@ -601,20 +602,20 @@ func (tep *NeighTunEp) DP(work DpWorkT) int {
 	neighWq := new(NextHopDpWorkQ)
 	neighWq.Work = work
 	neighWq.Status = &tep.Sync
-	neighWq.nextHopNum = tep.HwMark
-	neighWq.resolved = ne.Resolved
-	neighWq.rIP = tep.rIP
-	neighWq.sIP = tep.sIP
-	neighWq.tunNh = true
-	neighWq.tunID = tep.tunID
+	neighWq.NextHopNum = tep.HwMark
+	neighWq.Resolved = ne.Resolved
+	neighWq.RIP = tep.rIP
+	neighWq.SIP = tep.sIP
+	neighWq.TunNh = true
+	neighWq.TunID = tep.tunID
 
 	for i := 0; i < 6; i++ {
-		neighWq.dstAddr[i] = uint8(ne.Attr.HardwareAddr[i])
+		neighWq.DstAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 	}
 
 	if ne.OifPort != nil {
 		for i := 0; i < 6; i++ {
-			neighWq.srcAddr[i] = uint8(ne.OifPort.HInfo.MacAddr[i])
+			neighWq.SrcAddr[i] = uint8(ne.OifPort.HInfo.MacAddr[i])
 		}
 		neighWq.BD = ne.OifPort.L2.Vid
 

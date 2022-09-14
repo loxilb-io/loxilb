@@ -13,16 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package loxinet
 
 import (
 	"fmt"
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
 	"net"
 	"time"
+
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 )
 
+// man names constants
 const (
 	MapNameCt4  = "CT4"
 	MapNameCt6  = "CT6"
@@ -35,13 +38,16 @@ const (
 	MapNameIpol = "IPOL"
 )
 
+// error codes
 const (
 	DpErrBase = iota - L3ErrBase - 1000
 	DpWqUnkErr
 )
 
+// DpWorkT - type of requested work
 type DpWorkT uint8
 
+// dp work codes
 const (
 	DpCreate DpWorkT = iota + 1
 	DpRemove
@@ -51,8 +57,10 @@ const (
 	DpMapGet
 )
 
+// DpStatusT - status of a dp work
 type DpStatusT uint8
 
+// dp work status codes
 const (
 	DpCreateErr DpStatusT = iota + 1
 	DpRemoveErr
@@ -61,10 +69,12 @@ const (
 	DpInProgressErr
 )
 
+// maximum dp work queue lengths
 const (
 	DpWorkQLen = 1024
 )
 
+// MirrDpWorkQ - work queue entry for mirror operation
 type MirrDpWorkQ struct {
 	Work      DpWorkT
 	Name      string
@@ -74,6 +84,7 @@ type MirrDpWorkQ struct {
 	Status    *DpStatusT
 }
 
+// PortDpWorkQ - work queue entry for port operation
 type PortDpWorkQ struct {
 	Work       DpWorkT
 	Status     *DpStatusT
@@ -88,10 +99,11 @@ type PortDpWorkQ struct {
 	LoadEbpf   string
 }
 
+// L2AddrDpWorkQ - work queue entry for l2 address operation
 type L2AddrDpWorkQ struct {
 	Work    DpWorkT
 	Status  *DpStatusT
-	l2Addr  [6]uint8
+	L2Addr  [6]uint8
 	Tun     DpTunT
 	NhNum   int
 	PortNum int
@@ -99,41 +111,46 @@ type L2AddrDpWorkQ struct {
 	Tagged  int
 }
 
+// DpTunT - type of a dp tunnel
 type DpTunT uint8
 
+// tunnel type constants
 const (
-	DP_TUN_VXLAN DpTunT = iota + 1
-	DP_TUN_GRE
-	DP_TUN_GTP
-	DP_TUN_STT
+	DpTunVxlan DpTunT = iota + 1
+	DpTunGre
+	DpTunGtp
+	DpTunStt
 )
 
+// RouterMacDpWorkQ - work queue entry for rt-mac operation
 type RouterMacDpWorkQ struct {
 	Work    DpWorkT
 	Status  *DpStatusT
-	l2Addr  [6]uint8
+	L2Addr  [6]uint8
 	PortNum int
 	BD      int
-	TunId   uint32
+	TunID   uint32
 	TunType DpTunT
 	NhNum   int
 }
 
+// NextHopDpWorkQ - work queue entry for nexthop operation
 type NextHopDpWorkQ struct {
 	Work        DpWorkT
 	Status      *DpStatusT
-	tunNh       bool
-	tunID       uint32
-	rIP         net.IP
-	sIP         net.IP
-	nNextHopNum int
-	nextHopNum  int
-	resolved    bool
-	dstAddr     [6]uint8
-	srcAddr     [6]uint8
+	TunNh       bool
+	TunID       uint32
+	RIP         net.IP
+	SIP         net.IP
+	NNextHopNum int
+	NextHopNum  int
+	Resolved    bool
+	DstAddr     [6]uint8
+	SrcAddr     [6]uint8
 	BD          int
 }
 
+// RouteDpWorkQ - work queue entry for rt operation
 type RouteDpWorkQ struct {
 	Work     DpWorkT
 	Status   *DpStatusT
@@ -144,6 +161,7 @@ type RouteDpWorkQ struct {
 	NHwMark  int
 }
 
+// StatDpWorkQ - work queue entry for stat operation
 type StatDpWorkQ struct {
 	Work        DpWorkT
 	Name        string
@@ -153,11 +171,13 @@ type StatDpWorkQ struct {
 	DropPackets *uint64
 }
 
+// TableDpWorkQ - work queue entry for map related operation
 type TableDpWorkQ struct {
 	Work DpWorkT
 	Name string
 }
 
+// PolDpWorkQ - work queue entry for policer related operation
 type PolDpWorkQ struct {
 	Work   DpWorkT
 	Name   string
@@ -171,30 +191,36 @@ type PolDpWorkQ struct {
 	Status *DpStatusT
 }
 
+// NatT - type of NAT
 type NatT uint8
 
+// nat type constants
 const (
-	DP_SNAT NatT = iota + 1
-	DP_DNAT
-	DP_HSNAT
-	DP_HDNAT
+	DpSnat NatT = iota + 1
+	DpDnat
+	DpHsnat
+	DpHdnat
 )
 
+// NatSel - type of nat end-point selection algorithm
 type NatSel uint8
 
+// nat selection algorithm constants
 const (
-	EP_RR NatSel = iota + 1
-	EP_HASH
-	EP_PRIO
+	EpRR NatSel = iota + 1
+	EpHash
+	EpPrio
 )
 
+// NatEP - a nat end-point
 type NatEP struct {
-	xIP      net.IP
-	xPort    uint16
-	weight   uint8
-	inActive bool
+	XIP      net.IP
+	XPort    uint16
+	Weight   uint8
+	InActive bool
 }
 
+// NatDpWorkQ - work queue entry for nat related operation
 type NatDpWorkQ struct {
 	Work      DpWorkT
 	Status    *DpStatusT
@@ -208,40 +234,46 @@ type NatDpWorkQ struct {
 	endPoints []NatEP
 }
 
+// DpCtInfo - representation of a datapath conntrack information
 type DpCtInfo struct {
-	dip     net.IP
-	sip     net.IP
-	dport   uint16
-	sport   uint16
-	proto   string
-	cState  string
-	cAct    string
-	packets uint64
-	bytes   uint64
+	DIP     net.IP
+	SIP     net.IP
+	Dport   uint16
+	Sport   uint16
+	Proto   string
+	CState  string
+	CAct    string
+	Packets uint64
+	Bytes   uint64
 }
 
+// UlClDpWorkQ - work queue entry for ul-cl filter related operation
 type UlClDpWorkQ struct {
 	Work   DpWorkT
 	Status *DpStatusT
-	mDip   net.IP
-	mSip   net.IP
+	MDip   net.IP
+	MSip   net.IP
 	mTeID  uint32
 	Zone   int
 	Qfi    uint8
 	HwMark int
-	tDip   net.IP
-	tSip   net.IP
-	tTeID  uint32
+	TDip   net.IP
+	TSip   net.IP
+	TTeID  uint32
 }
 
+// Key - outputs a key string for given DpCtInfo pointer
 func (ct *DpCtInfo) Key() string {
-	str := fmt.Sprintf("%s%s%d%d%s", ct.dip.String(), ct.sip.String(), ct.dport, ct.sport, ct.proto)
+	str := fmt.Sprintf("%s%s%d%d%s", ct.DIP.String(), ct.SIP.String(), ct.Dport, ct.Sport, ct.Proto)
 	return str
 }
 
+// DpRetT - an empty interface to represent immediate operation result
 type DpRetT interface {
 }
 
+// DpHookInterface - represents a go interface which should be implemented to
+// integrate with loxinet realm
 type DpHookInterface interface {
 	DpMirrAdd(*MirrDpWorkQ) int
 	DpMirrDel(*MirrDpWorkQ) int
@@ -262,9 +294,10 @@ type DpHookInterface interface {
 	DpStat(*StatDpWorkQ) int
 	DpUlClAdd(w *UlClDpWorkQ) int
 	DpUlClDel(w *UlClDpWorkQ) int
-	DpTableGet(w *TableDpWorkQ) (error, DpRetT)
+	DpTableGet(w *TableDpWorkQ) (DpRetT, error)
 }
 
+// DpH - datapath context container
 type DpH struct {
 	ToDpCh   chan interface{}
 	FromDpCh chan interface{}
@@ -272,6 +305,7 @@ type DpH struct {
 	DpHooks  DpHookInterface
 }
 
+// DpWorkOnPort - routine to work on a port work queue request
 func (dp *DpH) DpWorkOnPort(pWq *PortDpWorkQ) DpRetT {
 	if pWq.Work == DpCreate {
 		return dp.DpHooks.DpPortPropAdd(pWq)
@@ -282,6 +316,7 @@ func (dp *DpH) DpWorkOnPort(pWq *PortDpWorkQ) DpRetT {
 	return DpWqUnkErr
 }
 
+// DpWorkOnL2Addr - routine to work on a l2 addr work queue request
 func (dp *DpH) DpWorkOnL2Addr(pWq *L2AddrDpWorkQ) DpRetT {
 	if pWq.Work == DpCreate {
 		return dp.DpHooks.DpL2AddrAdd(pWq)
@@ -292,6 +327,7 @@ func (dp *DpH) DpWorkOnL2Addr(pWq *L2AddrDpWorkQ) DpRetT {
 	return DpWqUnkErr
 }
 
+// DpWorkOnRtMac - routine to work on a rt-mac work queue request
 func (dp *DpH) DpWorkOnRtMac(rmWq *RouterMacDpWorkQ) DpRetT {
 	if rmWq.Work == DpCreate {
 		return dp.DpHooks.DpRouterMacAdd(rmWq)
@@ -302,6 +338,7 @@ func (dp *DpH) DpWorkOnRtMac(rmWq *RouterMacDpWorkQ) DpRetT {
 	return DpWqUnkErr
 }
 
+// DpWorkOnNextHop - routine to work on a nexthop work queue request
 func (dp *DpH) DpWorkOnNextHop(nhWq *NextHopDpWorkQ) DpRetT {
 	if nhWq.Work == DpCreate {
 		return dp.DpHooks.DpNextHopAdd(nhWq)
@@ -312,6 +349,7 @@ func (dp *DpH) DpWorkOnNextHop(nhWq *NextHopDpWorkQ) DpRetT {
 	return DpWqUnkErr
 }
 
+// DpWorkOnRoute - routine to work on a route work queue request
 func (dp *DpH) DpWorkOnRoute(rtWq *RouteDpWorkQ) DpRetT {
 	if rtWq.Work == DpCreate {
 		return dp.DpHooks.DpRouteAdd(rtWq)
@@ -322,6 +360,7 @@ func (dp *DpH) DpWorkOnRoute(rtWq *RouteDpWorkQ) DpRetT {
 	return DpWqUnkErr
 }
 
+// DpWorkOnNatLb - routine  to work on a NAT lb work queue request
 func (dp *DpH) DpWorkOnNatLb(nWq *NatDpWorkQ) DpRetT {
 	if nWq.Work == DpCreate {
 		return dp.DpHooks.DpNatLbRuleAdd(nWq)
@@ -332,6 +371,7 @@ func (dp *DpH) DpWorkOnNatLb(nWq *NatDpWorkQ) DpRetT {
 	return DpWqUnkErr
 }
 
+// DpWorkOnUlCl - routine to work on a ulcl work queue request
 func (dp *DpH) DpWorkOnUlCl(nWq *UlClDpWorkQ) DpRetT {
 	if nWq.Work == DpCreate {
 		return dp.DpHooks.DpUlClAdd(nWq)
@@ -342,14 +382,17 @@ func (dp *DpH) DpWorkOnUlCl(nWq *UlClDpWorkQ) DpRetT {
 	return DpWqUnkErr
 }
 
+// DpWorkOnStat - routine to work on a stat work queue request
 func (dp *DpH) DpWorkOnStat(nWq *StatDpWorkQ) DpRetT {
 	return dp.DpHooks.DpStat(nWq)
 }
 
-func (dp *DpH) DpWorkOnTableOp(nWq *TableDpWorkQ) (error, DpRetT) {
+// DpWorkOnTableOp - routine to work on a table work queue request
+func (dp *DpH) DpWorkOnTableOp(nWq *TableDpWorkQ) (DpRetT, error) {
 	return dp.DpHooks.DpTableGet(nWq)
 }
 
+// DpWorkOnPol - routine to work on a policer work queue request
 func (dp *DpH) DpWorkOnPol(pWq *PolDpWorkQ) DpRetT {
 	if pWq.Work == DpCreate {
 		return dp.DpHooks.DpPolAdd(pWq)
@@ -360,6 +403,7 @@ func (dp *DpH) DpWorkOnPol(pWq *PolDpWorkQ) DpRetT {
 	return DpWqUnkErr
 }
 
+// DpWorkOnMirr - routine to work on a mirror work queue request
 func (dp *DpH) DpWorkOnMirr(mWq *MirrDpWorkQ) DpRetT {
 	if mWq.Work == DpCreate {
 		return dp.DpHooks.DpMirrAdd(mWq)
@@ -370,6 +414,7 @@ func (dp *DpH) DpWorkOnMirr(mWq *MirrDpWorkQ) DpRetT {
 	return DpWqUnkErr
 }
 
+// DpWorkSingle - routine to work on a single dp work queue request
 func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 	var ret DpRetT
 	switch mq := m.(type) {
@@ -402,6 +447,7 @@ func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 	return ret
 }
 
+// DpWorker - DP worker routine listening on a channel
 func DpWorker(dp *DpH, f chan int, ch chan interface{}) {
 	for {
 		for n := 0; n < DpWorkQLen; n++ {
@@ -418,6 +464,7 @@ func DpWorker(dp *DpH, f chan int, ch chan interface{}) {
 	}
 }
 
+// DpBrokerInit - initialize the DP broker subsystem
 func DpBrokerInit(dph DpHookInterface) *DpH {
 	nDp := new(DpH)
 
@@ -431,13 +478,14 @@ func DpBrokerInit(dph DpHookInterface) *DpH {
 	return nDp
 }
 
+// DpMapGetCt4 - get DP conntrack information as a map
 func (dp *DpH) DpMapGetCt4() []cmn.CtInfo {
 	var CtInfoArr []cmn.CtInfo
 	nTable := new(TableDpWorkQ)
 	nTable.Work = DpMapGet
 	nTable.Name = MapNameCt4
 
-	err, ret := mh.dp.DpWorkOnTableOp(nTable)
+	ret, err := mh.dp.DpWorkOnTableOp(nTable)
 	if err != nil {
 		return nil
 	}
@@ -445,9 +493,9 @@ func (dp *DpH) DpMapGetCt4() []cmn.CtInfo {
 	switch r := ret.(type) {
 	case map[string]*DpCtInfo:
 		for _, dCti := range r {
-			cti := cmn.CtInfo{Dip: dCti.dip, Sip: dCti.sip, Dport: dCti.dport, Sport: dCti.sport,
-				Proto: dCti.proto, CState: dCti.cState, CAct: dCti.cAct,
-				Pkts: dCti.packets, Bytes: dCti.bytes}
+			cti := cmn.CtInfo{Dip: dCti.DIP, Sip: dCti.SIP, Dport: dCti.Dport, Sport: dCti.Sport,
+				Proto: dCti.Proto, CState: dCti.CState, CAct: dCti.CAct,
+				Pkts: dCti.Packets, Bytes: dCti.Bytes}
 			CtInfoArr = append(CtInfoArr, cti)
 			fmt.Println(CtInfoArr)
 		}

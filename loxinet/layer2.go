@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net"
 	"time"
+
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
@@ -151,7 +152,7 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 					unRch = true
 					tk.LogIt(tk.LogDebug, "fdb tun rtlookup %s no-rt\n", attr.Dst.String())
 				} else {
-					ret, tep := zone.Nh.NeighAddTunEP(nh, attr.Dst, p.HInfo.TunId, DP_TUN_VXLAN, true)
+					ret, tep := zone.Nh.NeighAddTunEP(nh, attr.Dst, p.HInfo.TunID, DpTunVxlan, true)
 					if ret == 0 {
 						rt.RtDepObjs = append(rt.RtDepObjs, f)
 						f.FdbTun.rt = rt
@@ -351,7 +352,7 @@ func (f *FdbEnt) DP(work DpWorkT) int {
 	l2Wq.Work = work
 	l2Wq.Status = &f.Sync
 	if f.Port.SInfo.PortType&cmn.PortVxlanBr == cmn.PortVxlanBr {
-		l2Wq.Tun = DP_TUN_VXLAN
+		l2Wq.Tun = DpTunVxlan
 	}
 
 	if f.FdbTun.nh != nil {
@@ -359,7 +360,7 @@ func (f *FdbEnt) DP(work DpWorkT) int {
 	}
 
 	for i := 0; i < 6; i++ {
-		l2Wq.l2Addr[i] = uint8(f.FdbKey.MacAddr[i])
+		l2Wq.L2Addr[i] = uint8(f.FdbKey.MacAddr[i])
 	}
 	l2Wq.PortNum = f.Port.PortNo
 	l2Wq.BD = f.Port.L2.Vid
@@ -371,7 +372,7 @@ func (f *FdbEnt) DP(work DpWorkT) int {
 	}
 	mh.dp.ToDpCh <- l2Wq
 
-	if l2Wq.Tun == DP_TUN_VXLAN {
+	if l2Wq.Tun == DpTunVxlan {
 		rmWq := new(RouterMacDpWorkQ)
 		rmWq.Work = work
 		rmWq.Status = nil
@@ -384,11 +385,11 @@ func (f *FdbEnt) DP(work DpWorkT) int {
 		up := f.Port.SInfo.PortReal
 
 		for i := 0; i < 6; i++ {
-			rmWq.l2Addr[i] = uint8(f.FdbKey.MacAddr[i])
+			rmWq.L2Addr[i] = uint8(f.FdbKey.MacAddr[i])
 		}
 		rmWq.PortNum = up.PortNo
-		rmWq.TunId = f.Port.HInfo.TunId
-		rmWq.TunType = DP_TUN_VXLAN
+		rmWq.TunID = f.Port.HInfo.TunID
+		rmWq.TunType = DpTunVxlan
 		rmWq.BD = f.Port.L2.Vid
 		rmWq.NhNum = f.FdbTun.ep.HwMark
 		mh.dp.ToDpCh <- rmWq

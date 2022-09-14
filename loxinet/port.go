@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package loxinet
 
 import (
@@ -28,6 +29,7 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 )
 
+// error codes
 const (
 	PortBaseErr = iota - 1000
 	PortExistsErr
@@ -41,29 +43,32 @@ const (
 	PortPropNotExistsErr
 )
 
+// constants
 const (
 	MaxBondInterfaces = 8
 	MaxRealInterfaces = 128
 	MaxInterfaces     = 512
+	RealPortVb        = 3800
+	BondVb            = 4000
 )
 
-const (
-	RealPortVb = 3800
-	BondVb     = 4000
-)
-
+// PortEvent - port event type
 type PortEvent uint
 
+// port events bitmask
 const (
 	PortEvDown PortEvent = 1 << iota
 	PortEvLowerDown
 	PortEvDelete
 )
 
+// PortEventIntf - interface for getting notifications
 type PortEventIntf interface {
-	PortNotifier(name string, osId int, evType PortEvent)
+	PortNotifier(name string, osID int, evType PortEvent)
 }
 
+// PortStatsInfo - per interface statistics information
+// Note that this is not snmp compliant stats
 type PortStatsInfo struct {
 	RxBytes   uint64
 	TxBytes   uint64
@@ -73,6 +78,7 @@ type PortStatsInfo struct {
 	TxError   uint64
 }
 
+// PortHwInfo - hardware specific information of an interface
 type PortHwInfo struct {
 	MacAddr [6]byte
 	Link    bool
@@ -80,17 +86,19 @@ type PortHwInfo struct {
 	Mtu     int
 	Master  string
 	Real    string
-	TunId   uint32
+	TunID   uint32
 }
 
+// PortLayer3Info - layer3 information related to an interface
 type PortLayer3Info struct {
 	Routed    bool
 	Ipv4Addrs []string
 	Ipv6Addrs []string
 }
 
+// PortSwInfo - software specific information for interface maintenance
 type PortSwInfo struct {
-	OsId       int
+	OsID       int
 	PortType   int
 	PortProp   cmn.PortProp
 	PortPolNum int
@@ -101,11 +109,13 @@ type PortSwInfo struct {
 	BpfLoaded  bool
 }
 
+// PortLayer2Info - layer2 information related to an interface
 type PortLayer2Info struct {
 	IsPvid bool
 	Vid    int
 }
 
+// Port - holds all information related to an interface
 type Port struct {
 	Name   string
 	PortNo int
@@ -118,6 +128,7 @@ type Port struct {
 	Sync   DpStatusT
 }
 
+// PortsH - the port context container
 type PortsH struct {
 	portImap   []*Port
 	portSmap   map[string]*Port
@@ -127,6 +138,7 @@ type PortsH struct {
 	bondHwMark *tk.Counter
 }
 
+// PortInit - Initialize the port subsystem
 func PortInit() *PortsH {
 	var nllp = new(PortsH)
 	nllp.portImap = make([]*Port, MaxInterfaces)
@@ -137,6 +149,7 @@ func PortInit() *PortsH {
 	return nllp
 }
 
+// PortGetSlaves - get any slaves related to the given master interface
 func (P *PortsH) PortGetSlaves(master string) (int, []*Port) {
 	var slaves []*Port
 
@@ -149,6 +162,7 @@ func (P *PortsH) PortGetSlaves(master string) (int, []*Port) {
 	return 0, slaves
 }
 
+// PortHasTunSlaves - get any tunnel slaves related to the given master interface
 func (P *PortsH) PortHasTunSlaves(master string, ptype int) (bool, []*Port) {
 	var slaves []*Port
 
@@ -165,7 +179,7 @@ func (P *PortsH) PortHasTunSlaves(master string, ptype int) (bool, []*Port) {
 	return false, nil
 }
 
-// Add a port to loxinet realm
+// PortAdd - add a port to loxinet realm
 func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 	hwi PortHwInfo, l2i PortLayer2Info) (int, error) {
 
@@ -279,7 +293,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 	p.HInfo = hwi
 	p.PortNo = rid
 	p.SInfo.PortActive = true
-	p.SInfo.OsId = osid
+	p.SInfo.OsID = osid
 	p.SInfo.PortType = ptype
 	p.SInfo.PortReal = rp
 
@@ -309,7 +323,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 			p.SInfo.PortReal.HInfo.Master = p.Name
 		}
 		p.L2.IsPvid = true
-		p.L2.Vid = int(p.HInfo.TunId)
+		p.L2.Vid = int(p.HInfo.TunID)
 	default:
 		tk.LogIt(tk.LogDebug, "port add - %s isPvid %v\n", name, p.L2.IsPvid)
 		p.L2 = l2i
@@ -327,7 +341,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 	return 0, nil
 }
 
-// Delete a port from loxinet realm
+// PortDel - delete a port from loxinet realm
 func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 	if P.portSmap[name] == nil {
 		tk.LogIt(tk.LogError, "port delete - %s no such port\n", name)
@@ -357,7 +371,7 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 		p.SInfo.PortType = p.SInfo.PortType & ^cmn.PortVlanSif
 		p.HInfo.Master = ""
 		p.L2.IsPvid = true
-		p.L2.Vid = int(p.HInfo.TunId)
+		p.L2.Vid = int(p.HInfo.TunID)
 		p.DP(DpCreate)
 		return 0, nil
 	}
@@ -390,7 +404,7 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 		return PortMapErr, errors.New("no-portimap error")
 	}
 
-	if P.portOmap[P.portSmap[name].SInfo.OsId] == nil {
+	if P.portOmap[P.portSmap[name].SInfo.OsID] == nil {
 		tk.LogIt(tk.LogError, "port delete - %s no such osid\n", name)
 		return PortMapErr, errors.New("no-portomap error")
 	}
@@ -417,14 +431,14 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 
 	tk.LogIt(tk.LogDebug, "port deleted - %s:%d\n", name, p.PortNo)
 
-	delete(P.portOmap, p.SInfo.OsId)
+	delete(P.portOmap, p.SInfo.OsID)
 	delete(P.portSmap, name)
 	P.portImap[rid] = nil
 
 	return 0, nil
 }
 
-// Update port properties given an existing port
+// PortUpdateProp - update port properties given an existing port
 func (P *PortsH) PortUpdateProp(name string, prop cmn.PortProp, zone string, updt bool, propVal int) (int, error) {
 
 	var allDevs []*Port
@@ -489,6 +503,7 @@ func (P *PortsH) PortUpdateProp(name string, prop cmn.PortProp, zone string, upd
 	return 0, nil
 }
 
+// Ports2Json - dump ports in loxinet realm to json format
 func (P *PortsH) Ports2Json(w io.Writer) error {
 
 	for _, e := range P.portSmap {
@@ -506,6 +521,7 @@ func (P *PortsH) Ports2Json(w io.Writer) error {
 	return nil
 }
 
+// PortsToGet - dump ports in loxinet realm to api format
 func (P *PortsH) PortsToGet() ([]cmn.PortDump, error) {
 	var ret []cmn.PortDump
 
@@ -529,7 +545,7 @@ func (P *PortsH) PortsToGet() ([]cmn.PortDump, error) {
 			PortNo: ports.PortNo,
 			Zone:   ports.Zone,
 			SInfo: cmn.PortSwInfo{
-				OsID:       ports.SInfo.OsId,
+				OsID:       ports.SInfo.OsID,
 				PortType:   ports.SInfo.PortType,
 				PortActive: ports.SInfo.PortActive,
 				//PortReal:   ports.SInfo.PortReal,
@@ -544,7 +560,7 @@ func (P *PortsH) PortsToGet() ([]cmn.PortDump, error) {
 				Mtu:        ports.HInfo.Mtu,
 				Master:     ports.HInfo.Master,
 				Real:       ports.HInfo.Real,
-				TunID:      ports.HInfo.TunId,
+				TunID:      ports.HInfo.TunID,
 			},
 			Stats: cmn.PortStatsInfo{
 				RxBytes:   ports.Stats.RxBytes,
@@ -633,6 +649,7 @@ func port2String(e *Port, it IterIntf) {
 	it.NodeWalker(s)
 }
 
+// Ports2String - dump ports in loxinet realm to string format
 func (P *PortsH) Ports2String(it IterIntf) error {
 	for _, e := range P.portSmap {
 		port2String(e, it)
@@ -640,16 +657,20 @@ func (P *PortsH) Ports2String(it IterIntf) error {
 	return nil
 }
 
+// PortFindByName - find a port in loxinet realm given port name
 func (P *PortsH) PortFindByName(name string) (p *Port) {
 	p, _ = P.portSmap[name]
 	return p
 }
 
-func (P *PortsH) PortFindByOSId(osId int) (p *Port) {
-	p, _ = P.portOmap[osId]
+// PortFindByOSID - find a port in loxinet realm given os identifier
+func (P *PortsH) PortFindByOSID(osID int) (p *Port) {
+	p, _ = P.portOmap[osID]
 	return p
 }
 
+// PortL2AddrMatch - check if port of given name has the same hw-mac address
+// as the port contained in the given pointer
 func (P *PortsH) PortL2AddrMatch(name string, mp *Port) bool {
 	p := P.PortFindByName(name)
 	if p != nil {
@@ -660,10 +681,12 @@ func (P *PortsH) PortL2AddrMatch(name string, mp *Port) bool {
 	return false
 }
 
+// PortNotifierRegister - register an interface implementation of type PortEventIntf
 func (P *PortsH) PortNotifierRegister(notifier PortEventIntf) {
 	P.portNotifs = append(P.portNotifs, notifier)
 }
 
+// PortTicker - a ticker routine for ports
 func (P *PortsH) PortTicker() {
 	var ev PortEvent
 	var portMod = false
@@ -696,13 +719,14 @@ func (P *PortsH) PortTicker() {
 
 		if portMod {
 			for _, notif := range P.portNotifs {
-				notif.PortNotifier(port.Name, port.SInfo.OsId, ev)
+				notif.PortNotifier(port.Name, port.SInfo.OsID, ev)
 			}
 		}
 
 	}
 }
 
+// PortDestructAll - destroy all ports in loxinet realm
 func (P *PortsH) PortDestructAll() {
 	var realDevs []*Port
 	var bSlaves []*Port
@@ -766,7 +790,7 @@ func (P *PortsH) PortDestructAll() {
 	}
 }
 
-// Sync state of port entities in loxinet realm to data-path
+// DP - sync state of port entities in loxinet realm to data-path
 func (p *Port) DP(work DpWorkT) int {
 
 	zn, zoneNum := mh.zn.Zonefind(p.Zone)
@@ -793,11 +817,11 @@ func (p *Port) DP(work DpWorkT) int {
 		up := p.SInfo.PortReal
 
 		for i := 0; i < 6; i++ {
-			rmWq.l2Addr[i] = uint8(up.HInfo.MacAddr[i])
+			rmWq.L2Addr[i] = uint8(up.HInfo.MacAddr[i])
 		}
 		rmWq.PortNum = up.PortNo
-		rmWq.TunId = p.HInfo.TunId
-		rmWq.TunType = DP_TUN_VXLAN
+		rmWq.TunID = p.HInfo.TunID
+		rmWq.TunType = DpTunVxlan
 		rmWq.BD = p.L2.Vid
 
 		mh.dp.ToDpCh <- rmWq
@@ -813,7 +837,7 @@ func (p *Port) DP(work DpWorkT) int {
 
 		pWq.Work = work
 		pWq.PortNum = p.SInfo.PortReal.PortNo
-		pWq.OsPortNum = p.SInfo.PortReal.SInfo.OsId
+		pWq.OsPortNum = p.SInfo.PortReal.SInfo.OsID
 		pWq.IngVlan = p.L2.Vid
 		pWq.SetBD = p.L2.Vid
 		pWq.SetZoneNum = zoneNum
@@ -828,7 +852,7 @@ func (p *Port) DP(work DpWorkT) int {
 		for _, sp := range slaves {
 			pWq := new(PortDpWorkQ)
 			pWq.Work = work
-			pWq.OsPortNum = sp.SInfo.OsId
+			pWq.OsPortNum = sp.SInfo.OsID
 			pWq.PortNum = sp.PortNo
 			pWq.IngVlan = 0
 			pWq.SetBD = p.L2.Vid
@@ -852,10 +876,10 @@ func (p *Port) DP(work DpWorkT) int {
 	pWq.Work = work
 
 	if p.SInfo.PortReal != nil {
-		pWq.OsPortNum = p.SInfo.PortReal.SInfo.OsId
+		pWq.OsPortNum = p.SInfo.PortReal.SInfo.OsID
 		pWq.PortNum = p.SInfo.PortReal.PortNo
 	} else {
-		pWq.OsPortNum = p.SInfo.OsId
+		pWq.OsPortNum = p.SInfo.OsID
 		pWq.PortNum = p.PortNo
 	}
 

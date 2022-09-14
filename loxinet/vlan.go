@@ -192,7 +192,7 @@ func (V *VlansH) VlanPortAdd(vlanID int, portName string, tagged bool) (int, err
 		}
 		hInfo := p.HInfo
 		hInfo.Master = v.Name
-		if e, _ := V.Zone.Ports.PortAdd(portName, p.SInfo.OsId, cmn.PortVlanSif, v.Zone,
+		if e, _ := V.Zone.Ports.PortAdd(portName, p.SInfo.OsID, cmn.PortVlanSif, v.Zone,
 			hInfo, PortLayer2Info{true, vlanID}); e == 0 {
 			v.UnTaggedPorts[p.PortNo] = p
 			v.NumUnTagPorts++
