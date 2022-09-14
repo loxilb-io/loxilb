@@ -303,7 +303,7 @@ func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 	return 0, nil
 }
 
-// Rt2String - Format rt entry to a string
+// Rt2String - stringify the rt entry
 func Rt2String(rt *Rt) string {
 	var tStr string
 	if rt.TFlags&RtTypeDyn == RtTypeDyn {

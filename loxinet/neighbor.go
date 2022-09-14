@@ -209,14 +209,15 @@ func (n *NeighH) NeighDelAllTunEP(ne *Neigh) int {
 // NeighRecursiveResolve - try to resolve recursive neighbors
 // Recursive neighbors are the ones which have the following association :
 // nh -> tunfdb -> rt -> tun-nh (Wow)
-func (n *NeighH) NeighRecursiveResolve(ne *Neigh) {
+func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
+	chg := false
 	zeroHwAddr, _ := net.ParseMAC("00:00:00:00:00:00")
 
 	attr := ne.Attr
 	port := ne.OifPort
 
 	if port == nil {
-		return
+		return chg
 	}
 
 	if bytes.Equal(attr.HardwareAddr, zeroHwAddr) == true {
@@ -252,13 +253,16 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) {
 				if f.unReach {
 					ne.Resolved = false
 				} else {
-					ne.tFdb = f
+					if ne.tFdb != f {
+						ne.tFdb = f
+						chg = true
+					}
 					ne.Type |= NhRecursive
 				}
 			}
 		}
 	}
-	return
+	return chg
 }
 
 // NeighAdd - add a neigh entry
@@ -338,7 +342,7 @@ NhExist:
 	}
 
 	//Add a related L2 Pair entry if needed
-	if port.HInfo.Master == "" &&
+	if port.SInfo.PortType&(cmn.PortVlanSif|cmn.PortBondSif) == 0 &&
 		port.SInfo.PortType&(cmn.PortReal|cmn.PortBond) != 0 &&
 		ne.Resolved {
 		var fdbAddr [6]byte
@@ -366,7 +370,7 @@ NhExist:
 
 	n.Activate(ne)
 
-	tk.LogIt(tk.LogDebug, "neigh added - %s:%s\n", Addr.String(), Zone)
+	tk.LogIt(tk.LogDebug, "neigh added - %s:%s (%v)\n", Addr.String(), Zone, ne.HwMark)
 
 	return 0, nil
 }
@@ -381,10 +385,10 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 		return NeighNoEntErr, errors.New("no-nh error")
 	}
 
-	//Delete related L2 Pair entry if needed
+	// Delete related L2 Pair entry if needed
 	port := ne.OifPort
 	if port != nil &&
-		port.HInfo.Master == "" &&
+		port.SInfo.PortType&(cmn.PortVlanSif|cmn.PortBondSif) == 0 &&
 		port.SInfo.PortType&(cmn.PortReal|cmn.PortBond) != 0 &&
 		ne.Resolved {
 		var fdbAddr [6]byte
@@ -494,7 +498,7 @@ func (n *NeighH) NeighUnPairRt(ne *Neigh, rt *Rt) int {
 	return 0
 }
 
-// Neigh2String - format neighbor into a string
+// Neigh2String - stringify a neighbor
 func Neigh2String(ne *Neigh, it IterIntf) {
 
 	nhBuf := fmt.Sprintf("%16s: %s (R:%v) Oif %8s HwMark %d",
@@ -504,7 +508,7 @@ func Neigh2String(ne *Neigh, it IterIntf) {
 	it.NodeWalker(nhBuf)
 }
 
-// Neighs2String - format all neighbors into a string
+// Neighs2String - stringify all neighbors
 func (n *NeighH) Neighs2String(it IterIntf) error {
 	for _, n := range n.NeighMap {
 		Neigh2String(n, it)
@@ -527,10 +531,12 @@ func (n *NeighH) PortNotifier(name string, osID int, evType PortEvent) {
 // NeighTicker - a per neighbor ticker sub-routine
 func (n *NeighH) NeighTicker(ne *Neigh) {
 	n.Activate(ne)
-	n.NeighRecursiveResolve(ne)
+	if n.NeighRecursiveResolve(ne) {
+		ne.DP(DpCreate)
+	}
 }
 
-// NeighsTicker - neighbor ticker sub-routine
+// NeighsTicker - neighbor subsystem ticker sub-routine
 func (n *NeighH) NeighsTicker() {
 	i := 1
 	for _, ne := range n.NeighMap {
