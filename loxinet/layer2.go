@@ -159,6 +159,8 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 						f.FdbTun.nh = nh
 						f.FdbTun.ep = tep
 						unRch = false
+					} else {
+						unRch = true
 					}
 				}
 			}
@@ -257,7 +259,10 @@ func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 		}
 
 		fdb.FdbTun.rt = nil
-		fdb.FdbTun.nh = nil
+		if fdb.FdbTun.nh != nil {
+			fdb.FdbTun.nh.Resolved = false
+			fdb.FdbTun.nh = nil
+		}
 		fdb.FdbTun.ep = nil
 	}
 

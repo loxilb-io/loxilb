@@ -90,6 +90,7 @@ type Neigh struct {
 	Inactive bool
 	Resolved bool
 	HwMark   int
+	RHwMark  int
 	tFdb     *FdbEnt
 	TunEps   []*NeighTunEp
 	Type     NhType
@@ -153,7 +154,7 @@ func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTu
 		if tep.rIP.Equal(rIP) &&
 			tep.tunID == tunID &&
 			tep.tunType == tunType {
-			return -1, nil
+			return 0, tep
 		}
 	}
 	e, sIP := n.Zone.L3.IfaSelect(port.Name, rIP)
@@ -231,6 +232,7 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 		ne.Resolved = false
 		ne.Type &= ^NhRecursive
 		ne.tFdb = nil
+		ne.RHwMark = 0
 	}
 
 	if ne.Resolved == true {
@@ -247,14 +249,20 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 			if hasTun {
 				ne.tFdb = nil
 				ne.Resolved = false
+				ne.RHwMark = 0
 			}
 		} else {
 			if f.FdbAttr.FdbType == cmn.FdbTun {
-				if f.unReach {
+				if f.unReach  || f.FdbTun.ep == nil {
 					ne.Resolved = false
+					ne.RHwMark = 0
 				} else {
 					if ne.tFdb != f {
 						ne.tFdb = f
+						ne.RHwMark = f.FdbTun.ep.HwMark
+						chg = true
+					} else if ne.RHwMark != f.FdbTun.ep.HwMark {
+						ne.RHwMark = f.FdbTun.ep.HwMark
 						chg = true
 					}
 					ne.Type |= NhRecursive
@@ -294,6 +302,7 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 				ne.Attr.HardwareAddr = Attr.HardwareAddr
 				ne.Resolved = true
 				n.NeighRecursiveResolve(ne)
+				tk.LogIt(tk.LogDebug, "nh update - %s:%s (%v)\n", Addr.String(), Zone, ne.Resolved)
 				ne.DP(DpCreate)
 				goto NhExist
 			}
@@ -570,7 +579,7 @@ func (ne *Neigh) DP(work DpWorkT) int {
 	if ne.Type&NhRecursive == NhRecursive {
 		f := ne.tFdb
 		if f != nil && f.FdbTun.ep != nil {
-			neighWq.NNextHopNum = f.FdbTun.ep.HwMark
+			neighWq.NNextHopNum = ne.RHwMark
 		} else {
 			neighWq.Resolved = false
 		}
