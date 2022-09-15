@@ -13,20 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package loxinet
 
 import (
 	"fmt"
 	"net"
 	"testing"
-
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
 )
 
-type Tk struct {
-}
-
+// TestLoxinet - Go unit test entry point
 func TestLoxinet(t *testing.T) {
 
 	opts.Opts.NoNlp = true
