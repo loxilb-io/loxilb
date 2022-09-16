@@ -50,13 +50,13 @@ config_docker_host --host1 llb2 --host2 l3e2 --ptype phy --addr 26.26.26.254/24
 config_docker_host --host1 l3e3 --host2 llb2 --ptype phy --addr 27.27.27.1/24 --gw 27.27.27.254
 config_docker_host --host1 llb2 --host2 l3e3 --ptype phy --addr 27.27.27.254/24
 
-#$hexec llb1 ip route add 25.25.25.0/24 via 10.10.10.56 dev ellb1llb2
-#$hexec llb1 ip route add 26.26.26.0/24 via 10.10.10.56 dev ellb1llb2
-#$hexec llb1 ip route add 27.27.27.0/24 via 10.10.10.56 dev ellb1llb2
-#$hexec llb1 ip route add 88.88.88.8/32 via 10.10.10.56 dev ellb1llb2
+$dexec llb1 ip route add 25.25.25.0/24 via 10.10.10.56 dev ellb1llb2
+$dexec llb1 ip route add 26.26.26.0/24 via 10.10.10.56 dev ellb1llb2
+$dexec llb1 ip route add 27.27.27.0/24 via 10.10.10.56 dev ellb1llb2
+$dexec llb1 ip route add 88.88.88.88/32 via 10.10.10.56 dev ellb1llb2
 
-#$hexec llb2 ip route add 31.31.31.0/24 via 10.10.10.59 dev ellb2llb1
-#$hexec llb2 ip route add 32.32.32.0/24 via 10.10.10.59 dev ellb2llb1
+$dexec llb2 ip route add 31.31.31.0/24 via 10.10.10.59 dev ellb2llb1
+$dexec llb2 ip route add 32.32.32.0/24 via 10.10.10.59 dev ellb2llb1
 
 ##Create LB rule
 $dexec llb2 loxicmd create lb 88.88.88.88 --tcp=2020:8080 --endpoints=25.25.25.1:1,26.26.26.1:1,27.27.27.1:1
