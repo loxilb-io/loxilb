@@ -462,7 +462,7 @@ func (gbh *GoBgpH) DelBGPRule(IP string) {
 	gbh.mtx.Unlock()
 }
 
-// AddCurrentBgpRoutesToIpRoute - add bgp routes to OS fib
+// AddCurrentBgpRoutesToIPRoute - add bgp routes to OS
 func (gbh *GoBgpH) AddCurrentBgpRoutesToIPRoute() error {
 	ipv4UC := &api.Family{
 		Afi:  api.Family_AFI_IP,

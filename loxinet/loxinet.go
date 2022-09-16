@@ -125,7 +125,7 @@ func loxiNetRun() {
 	mh.wg.Wait()
 }
 
-// LoxiNetMain -  main routine of loxinet
+// Main -  main routine of loxinet
 func Main() {
 	loxiNetInit()
 	loxiNetRun()
