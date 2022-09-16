@@ -11,3 +11,5 @@ Scenario5   -   TCP Load Balancing
 Scenario6   -   SCTP Load Balancing
 
 Scenario7   -   UDP Load Balancing
+
+Scenario8   -   Load Balancing after VxLAN Decap

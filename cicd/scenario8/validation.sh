@@ -13,8 +13,8 @@ j=0
 waitCount=0
 while [ $j -le 2 ]
 do
-    #res=$($hexec ue1 curl ${ep[j]}:8080)
-    res=`$hexec ue1 curl --max-time 10 -s ${ep[j]}:8080`
+    #res=$($hexec h1 curl ${ep[j]}:8080)
+    res=`$hexec h1 curl --max-time 10 -s ${ep[j]}:8080`
     #echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
@@ -29,7 +29,7 @@ do
             exit 1
         fi
     fi
-    sleep 1
+    #sleep 1
 done
 
 for k in {1..2}
@@ -38,8 +38,9 @@ for i in {1..2}
 do
 for j in {0..2}
 do
-    res=`$hexec ue$k curl --max-time 10 -s 88.88.88.88:2020`
-    echo -e $res
+    #$hexec h$k ping ${ep[j]} -f -c 5 -W 1;
+    res=`$hexec h$k curl --max-time 10 -s 88.88.88.88:2020`
+    #echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
         echo -e "Expected ${servArr[j]}, Received : $res"
