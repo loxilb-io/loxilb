@@ -20,7 +20,6 @@ import (
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
-
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -88,7 +87,6 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 	for _, lb := range res {
 		var tmpLB models.LoadbalanceEntry
 		var tmpSvc models.LoadbalanceEntryServiceArguments
-		var tmpEp models.LoadbalanceEntryEndpointsItems0
 
 		// Service Arg match
 		tmpSvc.ExternalIP = lb.Serv.ServIP
@@ -100,11 +98,11 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 
 		// Endpoints match
 		for _, ep := range lb.Eps {
+			tmpEp := new(models.LoadbalanceEntryEndpointsItems0)
 			tmpEp.EndpointIP = ep.EpIP
 			tmpEp.TargetPort = int64(ep.EpPort)
 			tmpEp.Weight = int64(ep.Weight)
-
-			tmpLB.Endpoints = append(tmpLB.Endpoints, &tmpEp)
+			tmpLB.Endpoints = append(tmpLB.Endpoints, tmpEp)
 		}
 
 		result = append(result, &tmpLB)
