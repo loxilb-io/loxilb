@@ -577,8 +577,28 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 	return res, nil
 }
 
+// validateXlateEPWeights - validate and adjust weights if necessary
+func validateXlateEPWeights(servEndPoints []cmn.LbEndPointArg) (int, error) {
+	sum := 0
+	for _, se := range servEndPoints {
+		sum += int(se.Weight)
+	}
+
+	if sum > 100 {
+		return -1, errors.New("malformed-weight error")
+	} else if sum < 100 {
+		rem := (100-sum)/len(servEndPoints)
+		for idx := range servEndPoints {
+			pSe := &servEndPoints[idx]
+			pSe.Weight += uint8(rem)
+		}
+	}
+
+	return 0, nil
+}
+
 // AddNatLbRule - Add a service LB nat rule. The service details are passed in serv argument,
-// and end-point information is passed in the slice servEntdPoints. On success,
+// and end-point information is passed in the slice servEndPoints. On success,
 // it will return 0 and nil error, else appropriate return code and error string will be set
 func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPointArg) (int, error) {
 	var natActs ruleNatActs
@@ -891,19 +911,71 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 		case at.sel == cmn.LbSelHash:
 			nWork.EpSel = EpHash
 		case at.sel == cmn.LbSelPrio:
-			nWork.EpSel = EpPrio
+			// Note that internally we use RR to achieve wRR
+			nWork.EpSel = EpRR
 		default:
 			nWork.EpSel = EpRR
 		}
-		for _, k := range at.endPoints {
-			var ep NatEP
+		if at.sel == cmn.LbSelPrio {
+			j := 0
+			k := 0
+			var small [MaxNatEndPoints]int
+			var neps  [MaxNatEndPoints]ruleNatEp
+			for i, ep := range at.endPoints {
+				if ep.inActive {
+					continue
+				}
+				oEp := &at.endPoints[i]
+				sw := (int(ep.weight)*MaxNatEndPoints)/100;
+				if sw == 0 {
+					small[k] = i
+					k++
+				}
+				for x := 0; x < sw && j < MaxNatEndPoints; x++ {
+					neps[j].xIP = oEp.xIP
+					neps[j].xPort = oEp.xPort
+					neps[j].inActive = oEp.inActive
+					neps[j].weight = oEp.weight
+					if (sw == 1) {
+					  small[k] = i
+					  k++
+					}
+					j++
+				}
+			}
+			if (j < MaxNatEndPoints) {
+				v := 0
+				for j < MaxNatEndPoints {
+					idx := small[v%k]
+					oEp := &at.endPoints[idx]
+					neps[j].xIP = oEp.xIP
+					neps[j].xPort = oEp.xPort
+					neps[j].inActive = oEp.inActive
+					neps[j].weight = oEp.weight
+					j++
+					v++
+				}
+			}
+			for _, e := range neps {
+				var ep NatEP
 
-			ep.XIP = k.xIP
-			ep.XPort = k.xPort
-			ep.Weight = k.weight
-			ep.InActive = k.inActive
+				ep.XIP = e.xIP
+				ep.XPort = e.xPort
+				ep.Weight = e.weight
+				ep.InActive = e.inActive
+				nWork.endPoints = append(nWork.endPoints, ep)
+			}
+		} else {
+			for _, k := range at.endPoints {
+				var ep NatEP
 
-			nWork.endPoints = append(nWork.endPoints, ep)
+				ep.XIP = k.xIP
+				ep.XPort = k.xPort
+				ep.Weight = k.weight
+				ep.InActive = k.inActive
+
+				nWork.endPoints = append(nWork.endPoints, ep)
+			}
 		}
 		break
 	default:
