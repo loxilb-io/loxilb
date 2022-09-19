@@ -115,8 +115,8 @@ func loxiNetInit() {
 
 	// Initialize and spawn the api server subsystem
 	if opts.Opts.NoApi == false {
-		apiserver.RegisterApiHooks(NetAPIInit())
-		go apiserver.RunApiServer()
+		apiserver.RegisterAPIHooks(NetAPIInit())
+		go apiserver.RunAPIServer()
 	}
 }
 

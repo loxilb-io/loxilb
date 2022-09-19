@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package loxinet
 
 import (
@@ -24,6 +25,7 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 )
 
+// error codes for session api
 const (
 	SessErrBase = iota - 90000
 	SessModErr
@@ -34,19 +36,23 @@ const (
 	SessUlClNoExistErr
 )
 
+// constant to declare maximum number of Uplink Classifiers
 const (
 	MaximumUlCls = 20000
 )
 
+// UserKey - key to identify user
 type UserKey struct {
 	UserID string
 }
 
+// UserTun - user tunnel information
 type UserTun struct {
 	TeID uint32
 	Addr net.IP
 }
 
+// UlClStats - uplink classifier statistics
 type UlClStats struct {
 	UlPackets uint64
 	UlBytes   uint64
@@ -54,6 +60,7 @@ type UlClStats struct {
 	DlBytes   uint64
 }
 
+// UlClInf - uplink classifier info
 type UlClInf struct {
 	Addr   net.IP
 	Qfi    uint8
@@ -64,6 +71,7 @@ type UlClInf struct {
 	uSess  *UserSess
 }
 
+// UserSess - user session info
 type UserSess struct {
 	Key   UserKey
 	Addr  net.IP
@@ -73,12 +81,14 @@ type UserSess struct {
 	UlCl  map[string]*UlClInf
 }
 
+// SessH - session context handler
 type SessH struct {
 	UserMap map[UserKey]*UserSess
 	Zone    *Zone
 	HwMark  *tk.Counter
 }
 
+// SessInit - routine to initialize session context
 func SessInit(zone *Zone) *SessH {
 	var nUh = new(SessH)
 	nUh.UserMap = make(map[UserKey]*UserSess)
@@ -87,6 +97,7 @@ func SessInit(zone *Zone) *SessH {
 	return nUh
 }
 
+// SessGet - routine to get session list
 func (s *SessH) SessGet() ([]cmn.SessionMod, error) {
 	var Sessions []cmn.SessionMod
 	for k, v := range s.UserMap {
@@ -100,6 +111,7 @@ func (s *SessH) SessGet() ([]cmn.SessionMod, error) {
 	return Sessions, nil
 }
 
+// SessUlclGet - routine to get uplink classifier list
 func (s *SessH) SessUlclGet() ([]cmn.SessionUlClMod, error) {
 	var Ulcls []cmn.SessionUlClMod
 	for sk, sv := range s.UserMap {
@@ -118,6 +130,7 @@ func (s *SessH) SessUlclGet() ([]cmn.SessionUlClMod, error) {
 	return Ulcls, nil
 }
 
+// SessAdd - routine to add a user session
 func (s *SessH) SessAdd(user string, IP net.IP, anTun cmn.SessTun, cnTun cmn.SessTun) (int, error) {
 
 	key := UserKey{user}
@@ -153,6 +166,7 @@ func (s *SessH) SessAdd(user string, IP net.IP, anTun cmn.SessTun, cnTun cmn.Ses
 	return 0, nil
 }
 
+// SessDelete - routine to delete a user session
 func (s *SessH) SessDelete(user string) (int, error) {
 
 	key := UserKey{user}
@@ -175,6 +189,7 @@ func (s *SessH) SessDelete(user string) (int, error) {
 	return 0, nil
 }
 
+// UlClAddCls - routine to add an uplink classifier to user session
 func (s *SessH) UlClAddCls(user string, cls cmn.UlClArg) (int, error) {
 
 	key := UserKey{user}
@@ -215,6 +230,7 @@ func (s *SessH) UlClAddCls(user string, cls cmn.UlClArg) (int, error) {
 	return 0, nil
 }
 
+// UlClDeleteCls - routine to delete an uplink classifier from user session
 func (s *SessH) UlClDeleteCls(user string, cls cmn.UlClArg) (int, error) {
 
 	key := UserKey{user}
@@ -240,6 +256,7 @@ func (s *SessH) UlClDeleteCls(user string, cls cmn.UlClArg) (int, error) {
 	return 0, nil
 }
 
+// Us2String - converts single user session information to string format
 func Us2String(us *UserSess) string {
 	var tStr string
 
@@ -254,6 +271,7 @@ func Us2String(us *UserSess) string {
 	return tStr
 }
 
+// USess2String - converts all user session information to string format
 func (s *SessH) USess2String(it IterIntf) error {
 	for _, us := range s.UserMap {
 		uBuf := Us2String(us)
@@ -262,6 +280,7 @@ func (s *SessH) USess2String(it IterIntf) error {
 	return nil
 }
 
+// SessionsSync - routine to sync session information with DP
 func (s *SessH) SessionsSync() {
 	for _, us := range s.UserMap {
 		for _, ulcl := range us.UlCl {
@@ -277,11 +296,12 @@ func (s *SessH) SessionsSync() {
 	return
 }
 
+// SessionTicker - ticker routine to sync session information with DP
 func (s *SessH) SessionTicker() {
 	s.SessionsSync()
 }
 
-// Sync state of session and ulcl filter entities to data-path
+// DP - Sync state of session and ulcl filter entities to data-path
 func (ulcl *UlClInf) DP(work DpWorkT) int {
 
 	if ulcl.uSess == nil {

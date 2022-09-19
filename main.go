@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package main
 
 import (
@@ -24,6 +25,7 @@ import (
 	"os/exec"
 )
 
+// utility variables
 const (
 	MkfsScript     = "/usr/local/sbin/mkllb_bpffs"
 	BpfFsCheckFile = "/opt/loxilb/dp/bpf/intf_map"
