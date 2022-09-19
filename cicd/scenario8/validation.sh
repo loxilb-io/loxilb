@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-
+echo SCENARIO-8
 $hexec l3e1 node ./server1.js &
 $hexec l3e2 node ./server2.js &
 $hexec l3e3 node ./server3.js &
@@ -26,10 +26,11 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
+            echo SCENARIO-8 [FAILED]
             exit 1
         fi
     fi
-    #sleep 1
+    sleep 1
 done
 
 for k in {1..2}
@@ -61,9 +62,9 @@ done
 done
 if [[ $code == 0 ]]
 then
-    echo [OK]
+    echo SCENARIO-8 [OK]
 else
-    echo [FAILED]
+    echo SCENARIO-8 [FAILED]
 fi
 exit $code
 

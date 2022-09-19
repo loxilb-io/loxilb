@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-
+echo SCENARIO-4
 $hexec n1p1 node ./server1.js &
 $hexec n2p1 node ./server2.js &
 $hexec n3p1 node ./server3.js &
@@ -25,6 +25,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
+            echo SCENARIO-4 [FAILED]
             exit 1
         fi
     fi
@@ -46,9 +47,9 @@ done
 done
 if [[ $code == 0 ]]
 then
-    echo [OK]
+    echo SCENARIO-4 [OK]
 else
-    echo [FAILED]
+    echo SCENARIO-4 [FAILED]
 fi
 exit $code
 
