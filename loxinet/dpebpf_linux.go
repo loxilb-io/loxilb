@@ -521,7 +521,7 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 				tid := ((w.TunID << 8) & 0xffffff00)
 				vxAct.l3t.tid = C.uint(tk.Htonl(tid))
 
-				tk.LogIt(tk.LogDebug,"rip 0x%x sip 0x%x 0x%x\n", vxAct.l3t.sip, vxAct.l3t.rip, vxAct.l3t.tid)
+				tk.LogIt(tk.LogDebug, "rip 0x%x sip 0x%x 0x%x\n", vxAct.l3t.sip, vxAct.l3t.rip, vxAct.l3t.tid)
 
 				act = (*rtL2NhAct)(&vxAct.l2nh)
 				C.memcpy(unsafe.Pointer(&act.dmac[0]), unsafe.Pointer(&w.DstAddr[0]), 6)

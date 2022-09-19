@@ -16,11 +16,11 @@
 package handler
 
 import (
+	"github.com/go-openapi/runtime/middleware"
 	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
-	"github.com/go-openapi/runtime/middleware"
 )
 
 func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) middleware.Responder {

@@ -52,7 +52,7 @@ const (
 	PortWg = 0x80
 )
 
-// PortProp - Defines auxillary port properties
+// PortProp - Defines auxiliary port properties
 type PortProp uint8
 
 const (

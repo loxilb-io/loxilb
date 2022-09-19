@@ -373,7 +373,7 @@ func (r *RtH) RoutesTicker() {
 	r.RoutesSync()
 }
 
-// RtGetNhHwMark - get the rt-entry's neighbor identifier 
+// RtGetNhHwMark - get the rt-entry's neighbor identifier
 func (rt *Rt) RtGetNhHwMark() int {
 	if len(rt.NextHops) > 0 {
 		return rt.NextHops[0].HwMark

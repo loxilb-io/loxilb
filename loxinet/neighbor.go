@@ -253,7 +253,7 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 			}
 		} else {
 			if f.FdbAttr.FdbType == cmn.FdbTun {
-				if f.unReach  || f.FdbTun.ep == nil {
+				if f.unReach || f.FdbTun.ep == nil {
 					ne.Resolved = false
 					ne.RHwMark = 0
 				} else {
