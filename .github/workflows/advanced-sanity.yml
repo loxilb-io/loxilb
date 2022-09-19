@@ -72,3 +72,13 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+             cd cicd/scenario9/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+             cd cicd/scenario10/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
