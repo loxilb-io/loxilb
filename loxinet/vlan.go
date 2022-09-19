@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package loxinet
 
 import (
@@ -24,6 +25,7 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 )
 
+// error codes for vlan mod api
 const (
 	VlanBaseErr = iota - 2000
 	VlanExistsErr
@@ -39,10 +41,12 @@ const (
 	VlanZoneErr
 )
 
+// constant to declare maximum number of vlans
 const (
 	MaximumVlans = 4094
 )
 
+// vlanStat - statistics for vlan interface
 type vlanStat struct {
 	inBytes    uint64
 	inPackets  uint64
@@ -50,6 +54,7 @@ type vlanStat struct {
 	outPackets uint64
 }
 
+// Vlan - vlan interface info
 type Vlan struct {
 	VlanID        int
 	Created       bool
@@ -62,24 +67,28 @@ type Vlan struct {
 	Stat          vlanStat
 }
 
+// VlansH - vlan context handler
 type VlansH struct {
 	VlanMap [MaximumVlans]Vlan
 	Zone    *Zone
 }
 
+// VlanInit - routine to initialize vlan context handler
 func VlanInit(zone *Zone) *VlansH {
 	var nV = new(VlansH)
 	nV.Zone = zone
 	return nV
 }
 
-func VlanValid(vlanId int) bool {
-	if vlanId > 0 && vlanId < MaximumVlans-1 {
+// VlanValid - routine to validate vlanId
+func VlanValid(vlanID int) bool {
+	if vlanID > 0 && vlanID < MaximumVlans-1 {
 		return true
 	}
 	return false
 }
 
+// VlanAdd - routine to add vlan interface
 func (V *VlansH) VlanAdd(vlanID int, name string, zone string, osid int, hwi PortHwInfo) (int, error) {
 	if VlanValid(vlanID) == false {
 		return VlanRangeErr, errors.New("Invalid VlanID")
@@ -112,6 +121,7 @@ func (V *VlansH) VlanAdd(vlanID int, name string, zone string, osid int, hwi Por
 	return 0, nil
 }
 
+// VlanDelete - routine to delete vlan interface
 func (V *VlansH) VlanDelete(vlanID int) (int, error) {
 	if VlanValid(vlanID) == false {
 		return VlanRangeErr, errors.New("Invalid VlanID")
@@ -141,6 +151,7 @@ func (V *VlansH) VlanDelete(vlanID int) (int, error) {
 	return 0, nil
 }
 
+// VlanPortAdd - routine to add a port membership to vlan
 func (V *VlansH) VlanPortAdd(vlanID int, portName string, tagged bool) (int, error) {
 	if VlanValid(vlanID) == false {
 		return VlanRangeErr, errors.New("Invalid VlanID")
@@ -204,6 +215,7 @@ func (V *VlansH) VlanPortAdd(vlanID int, portName string, tagged bool) (int, err
 	return 0, nil
 }
 
+// VlanPortDelete - routine to delete a port membership from vlan
 func (V *VlansH) VlanPortDelete(vlanID int, portName string, tagged bool) (int, error) {
 	if VlanValid(vlanID) == false {
 		return VlanRangeErr, errors.New("Invalid VlanID")
@@ -239,6 +251,7 @@ func (V *VlansH) VlanPortDelete(vlanID int, portName string, tagged bool) (int, 
 	return 0, nil
 }
 
+// VlanDestructAll - routine to delete all vlan interfaces
 func (V *VlansH) VlanDestructAll() {
 
 	for i := 0; i < MaximumVlans; i++ {
@@ -269,6 +282,7 @@ func (V *VlansH) VlanDestructAll() {
 	return
 }
 
+// Vlans2String - routine to convert vlan information to string
 func (V *VlansH) Vlans2String(it IterIntf) error {
 	var s string
 	for i := 0; i < MaximumVlans; i++ {
@@ -310,6 +324,7 @@ func (V *VlansH) Vlans2String(it IterIntf) error {
 	return nil
 }
 
+// VlansSync - routine to sync vlan information with DP
 func (V *VlansH) VlansSync() {
 	for i := 0; i < MaximumVlans; i++ {
 		v := &V.VlanMap[i]
@@ -324,10 +339,12 @@ func (V *VlansH) VlansSync() {
 	}
 }
 
+// VlansTicker - ticker routine to sync all vlan information with datapath
 func (V *VlansH) VlansTicker() {
 	V.VlansSync()
 }
 
+// DP - routine to sync vlan information with datapath
 func (v *Vlan) DP(work DpWorkT) int {
 
 	if work == DpStatsGet {

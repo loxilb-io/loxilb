@@ -587,7 +587,7 @@ func validateXlateEPWeights(servEndPoints []cmn.LbEndPointArg) (int, error) {
 	if sum > 100 {
 		return -1, errors.New("malformed-weight error")
 	} else if sum < 100 {
-		rem := (100-sum)/len(servEndPoints)
+		rem := (100 - sum) / len(servEndPoints)
 		for idx := range servEndPoints {
 			pSe := &servEndPoints[idx]
 			pSe.Weight += uint8(rem)
@@ -920,13 +920,13 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 			j := 0
 			k := 0
 			var small [MaxNatEndPoints]int
-			var neps  [MaxNatEndPoints]ruleNatEp
+			var neps [MaxNatEndPoints]ruleNatEp
 			for i, ep := range at.endPoints {
 				if ep.inActive {
 					continue
 				}
 				oEp := &at.endPoints[i]
-				sw := (int(ep.weight)*MaxNatEndPoints)/100;
+				sw := (int(ep.weight) * MaxNatEndPoints) / 100
 				if sw == 0 {
 					small[k] = i
 					k++
@@ -936,14 +936,14 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 					neps[j].xPort = oEp.xPort
 					neps[j].inActive = oEp.inActive
 					neps[j].weight = oEp.weight
-					if (sw == 1) {
-					  small[k] = i
-					  k++
+					if sw == 1 {
+						small[k] = i
+						k++
 					}
 					j++
 				}
 			}
-			if (j < MaxNatEndPoints) {
+			if j < MaxNatEndPoints {
 				v := 0
 				for j < MaxNatEndPoints {
 					idx := small[v%k]

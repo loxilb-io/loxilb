@@ -18,13 +18,13 @@ package loxinet
 
 import (
 	"fmt"
-	"os"
-	"sync"
-	"time"
 	apiserver "github.com/loxilb-io/loxilb/api"
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
+	"os"
+	"sync"
+	"time"
 )
 
 // string constant representing root security zone
@@ -115,8 +115,8 @@ func loxiNetInit() {
 
 	// Initialize and spawn the api server subsystem
 	if opts.Opts.NoApi == false {
-		apiserver.RegisterApiHooks(NetAPIInit())
-		go apiserver.RunApiServer()
+		apiserver.RegisterAPIHooks(NetAPIInit())
+		go apiserver.RunAPIServer()
 	}
 }
 

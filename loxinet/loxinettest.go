@@ -18,10 +18,10 @@ package loxinet
 
 import (
 	"fmt"
-	"net"
-	"testing"
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
+	"net"
+	"testing"
 )
 
 // TestLoxinet - Go unit test entry point
