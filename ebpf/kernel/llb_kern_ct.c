@@ -291,7 +291,18 @@ dp_ct_tcp_sm(void *ctx, struct xfi *xf,
 
   case CT_TCP_SA:
     if (dir != CT_DIR_IN) {
-      nstate = CT_TCP_ERR;
+      if ((tcp_flags & (LLB_TCP_SYN|LLB_TCP_ACK)) !=
+         (LLB_TCP_SYN|LLB_TCP_ACK)) {
+        nstate = CT_TCP_ERR;
+        goto end;
+      }
+
+      if (ack  != rtd->seq + 1) {
+        nstate = CT_TCP_ERR;
+        goto end;
+      }
+
+      nstate = CT_TCP_SA;
       goto end;
     } 
 
