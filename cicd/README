@@ -2,7 +2,7 @@ Scenario1   -   Sanity
 
 Scenario2   -   Advanced Sanity
 
-Scenario3   -   3GPP GTP-ULCL LB Scenario
+Scenario3   -   3GPP GTP-ULCL TCP LB Scenario
 
 Scenario4   -   Mimics LB scenario in Kubernetes Environment
 
@@ -12,4 +12,8 @@ Scenario6   -   SCTP Load Balancing
 
 Scenario7   -   UDP Load Balancing
 
-Scenario8   -   Load Balancing after VxLAN Decap
+Scenario8   -   TCP Load Balancing after VxLAN Decap
+
+Scenario9   -   3GPP GTP-ULCL SCTP LB Scenario
+
+Scenario10  -   SCTP Load Balancing after VxLAN Decap

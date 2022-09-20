@@ -1,6 +1,7 @@
 #!/bin/bash
 code=0
 sizes=( 64 100 500 1000 1500 2000 5000 )
+echo "SCENARIO 1"
 if [[ $# -gt 0 ]]; then
     nslist=( "$@" )
 else
@@ -140,4 +141,11 @@ for ns1 in "${nslist[@]}"; do
 	done
 done
 echo -e "********************************************************************"
+if [[ $code == 0 ]]
+then
+    echo SCENARIO-1 [OK]
+else
+    echo SCENARIO-1 [FAILED]
+fi
+
 exit $code

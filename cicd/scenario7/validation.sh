@@ -1,13 +1,11 @@
 #!/bin/bash
 source ../common.sh
 
-sudo pkill socat
+echo SCENARIO-7
+$hexec l3ep1 ./server 8080 server1 &
+$hexec l3ep2 ./server 8080 server2 &
+$hexec l3ep3 ./server 8080 server3 &
 
-$hexec l3ep1 socat udp-listen:8080,fork exec:'echo server1' &
-$hexec l3ep2 socat udp-listen:8080,fork exec:'echo server2' &
-$hexec l3ep3 socat udp-listen:8080,fork exec:'echo server3' &
-
-$dexec llb1 loxicmd create lb 20.20.20.1 --udp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1
 sleep 5
 code=0
 servArr=( "server1" "server2" "server3" )
@@ -28,6 +26,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
+            echo SCENARIO-7 [FAILED]
             exit 1
         fi
 
@@ -35,7 +34,7 @@ do
     sleep 1
 done
 
-for i in {1..5}
+for i in {1..4}
 do
 for j in {0..2}
 do
@@ -44,6 +43,14 @@ do
     echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
+        echo -e "Expected ${servArr[j]}, Received : $res"
+        if [[ "$res" != *"server"* ]];
+        then
+            echo "llb1 ct"
+            $dexec llb1 loxicmd get ct
+            echo "llb1 ip neigh"
+            $dexec llb1 ip neigh
+        fi
         code=1
     fi
     sleep 1
@@ -51,10 +58,9 @@ done
 done
 if [[ $code == 0 ]]
 then
-    echo [OK]
+    echo SCENARIO-7 [OK]
 else
-    echo [FAILED]
+    echo SCENARIO-7 [FAILED]
 fi
-sudo pkill socat
 exit $code
 

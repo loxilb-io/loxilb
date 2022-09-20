@@ -1,11 +1,10 @@
 #!/bin/bash
 source ../common.sh
-
+echo SCENARIO-5
 $hexec l3ep1 node ./server1.js &
 $hexec l3ep2 node ./server2.js &
 $hexec l3ep3 node ./server3.js &
 
-$dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1
 sleep 5
 code=0
 servArr=( "server1" "server2" "server3" )
@@ -26,6 +25,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
+            echo SCENARIO-5 [FAILED]
             exit 1
         fi
     fi
@@ -47,9 +47,9 @@ done
 done
 if [[ $code == 0 ]]
 then
-    echo [OK]
+    echo SCENARIO-5 [OK]
 else
-    echo [FAILED]
+    echo SCENARIO-5 [FAILED]
 fi
 exit $code
 
