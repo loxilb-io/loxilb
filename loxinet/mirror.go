@@ -18,6 +18,7 @@ package loxinet
 
 import (
 	"errors"
+
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
@@ -134,6 +135,21 @@ func MirrInfoCmp(mInfo1, mInfo2 *cmn.MirrInfo) bool {
 		return true
 	}
 	return false
+}
+
+func (M *MirrH) MirrGet() ([]cmn.MirrGetMod, error) {
+	var ret []cmn.MirrGetMod
+	for mk, me := range M.MirrMap {
+		var tmpMirrMod cmn.MirrGetMod
+		tmpMirrMod.Ident = mk.Name
+		tmpMirrMod.Info = me.Info
+		tmpMirrMod.Sync = cmn.DpStatusT(me.Sync)
+		// TODO: MObj Static
+		tmpMirrMod.Target = me.MObjs[0].Args
+		ret = append(ret, tmpMirrMod)
+	}
+
+	return ret, nil
 }
 
 // MirrAdd - Add a mirror in loxinet

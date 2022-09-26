@@ -13,28 +13,48 @@ import (
 	"github.com/loxilb-io/loxilb/api/models"
 )
 
-// PostConfigLoadbalancerNoContentCode is the HTTP code returned for type PostConfigLoadbalancerNoContent
-const PostConfigLoadbalancerNoContentCode int = 204
+// PostConfigLoadbalancerOKCode is the HTTP code returned for type PostConfigLoadbalancerOK
+const PostConfigLoadbalancerOKCode int = 200
 
-/*PostConfigLoadbalancerNoContent OK
+/*PostConfigLoadbalancerOK OK
 
-swagger:response postConfigLoadbalancerNoContent
+swagger:response postConfigLoadbalancerOK
 */
-type PostConfigLoadbalancerNoContent struct {
+type PostConfigLoadbalancerOK struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.PostSuccess `json:"body,omitempty"`
 }
 
-// NewPostConfigLoadbalancerNoContent creates PostConfigLoadbalancerNoContent with default headers values
-func NewPostConfigLoadbalancerNoContent() *PostConfigLoadbalancerNoContent {
+// NewPostConfigLoadbalancerOK creates PostConfigLoadbalancerOK with default headers values
+func NewPostConfigLoadbalancerOK() *PostConfigLoadbalancerOK {
 
-	return &PostConfigLoadbalancerNoContent{}
+	return &PostConfigLoadbalancerOK{}
+}
+
+// WithPayload adds the payload to the post config loadbalancer o k response
+func (o *PostConfigLoadbalancerOK) WithPayload(payload *models.PostSuccess) *PostConfigLoadbalancerOK {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the post config loadbalancer o k response
+func (o *PostConfigLoadbalancerOK) SetPayload(payload *models.PostSuccess) {
+	o.Payload = payload
 }
 
 // WriteResponse to the client
-func (o *PostConfigLoadbalancerNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+func (o *PostConfigLoadbalancerOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
-
-	rw.WriteHeader(204)
+	rw.WriteHeader(200)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
 }
 
 // PostConfigLoadbalancerBadRequestCode is the HTTP code returned for type PostConfigLoadbalancerBadRequest

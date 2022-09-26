@@ -63,6 +63,7 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.PostConfigLoadbalancerHandler = operations.PostConfigLoadbalancerHandlerFunc(handler.ConfigPostLoadbalancer)
 	api.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler = operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(handler.ConfigDeleteLoadbalancer)
 	api.GetConfigLoadbalancerAllHandler = operations.GetConfigLoadbalancerAllHandlerFunc(handler.ConfigGetLoadbalancer)
+	api.DeleteConfigLoadbalancerAllHandler = operations.DeleteConfigLoadbalancerAllHandlerFunc(handler.ConfigDeleteAllLoadbalancer)
 
 	// Conntrack get
 	api.GetConfigConntrackAllHandler = operations.GetConfigConntrackAllHandlerFunc(handler.ConfigGetConntrack)
@@ -73,6 +74,7 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	// route add and delete
 	api.PostConfigRouteHandler = operations.PostConfigRouteHandlerFunc(handler.ConfigPostRoute)
 	api.DeleteConfigRouteDestinationIPNetIPAddressMaskHandler = operations.DeleteConfigRouteDestinationIPNetIPAddressMaskHandlerFunc(handler.ConfigDeleteRoute)
+	api.GetConfigRouteAllHandler = operations.GetConfigRouteAllHandlerFunc(handler.ConfigGetRoute)
 
 	// Session, SessionUlCl Add and delete
 	api.PostConfigSessionHandler = operations.PostConfigSessionHandlerFunc(handler.ConfigPostSession)
@@ -82,10 +84,20 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.GetConfigSessionAllHandler = operations.GetConfigSessionAllHandlerFunc(handler.ConfigGetSession)
 	api.GetConfigSessionulclAllHandler = operations.GetConfigSessionulclAllHandlerFunc(handler.ConfigGetSessionUlCl)
 
-	// Policy Add and Delete
+	// Policy Add, Delete and Get
 	api.PostConfigPolicyHandler = operations.PostConfigPolicyHandlerFunc(handler.ConfigPostPolicy)
 	api.DeleteConfigPolicyIdentIdentHandler = operations.DeleteConfigPolicyIdentIdentHandlerFunc(handler.ConfigDeletePolicy)
 	api.GetConfigPolicyAllHandler = operations.GetConfigPolicyAllHandlerFunc(handler.ConfigGetPolicy)
+
+	// IPv4 add And Delete
+	api.PostConfigIpv4addressHandler = operations.PostConfigIpv4addressHandlerFunc(handler.ConfigPostIPv4Address)
+	api.DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler = operations.DeleteConfigIpv4addressIPAddressMaskDevIfNameHandlerFunc(handler.ConfigDeleteIPv4Address)
+	api.GetConfigIpv4addressAllHandler = operations.GetConfigIpv4addressAllHandlerFunc(handler.ConfigGetIPv4Address)
+
+	// Mirror Add and Delete
+	api.PostConfigMirrorHandler = operations.PostConfigMirrorHandlerFunc(handler.ConfigPostMirror)
+	api.DeleteConfigMirrorIdentIdentHandler = operations.DeleteConfigMirrorIdentIdentHandlerFunc(handler.ConfigDeleteMirror)
+	api.GetConfigMirrorAllHandler = operations.GetConfigMirrorAllHandlerFunc(handler.ConfigGetMirror)
 
 	api.PreServerShutdown = func() {}
 

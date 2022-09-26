@@ -34,6 +34,14 @@ func NetAPIInit() *NetAPIStruct {
 	return na
 }
 
+// NetMirrorGet - Get a mirror in loxinet
+func (*NetAPIStruct) NetMirrorGet() ([]cmn.MirrGetMod, error) {
+	// There is no locking requirement for this operation
+	ret, _ := mh.zr.Mirrs.MirrGet()
+	return ret, nil
+
+}
+
 // NetMirrorAdd - Add a mirror in loxinet
 func (*NetAPIStruct) NetMirrorAdd(mm *cmn.MirrMod) (int, error) {
 	mh.mtx.Lock()
@@ -123,6 +131,13 @@ func (*NetAPIStruct) NetVlanPortDel(vm *cmn.VlanPortMod) (int, error) {
 	return ret, err
 }
 
+// NetIpv4AddrGet - Get an IPv4 Address info from loxinet
+func (*NetAPIStruct) NetIpv4AddrGet() ([]cmn.Ipv4AddrGet, error) {
+	// There is no locking requirement for this operation
+	ret := mh.zr.L3.IfaGet()
+	return ret, nil
+}
+
 // NetIpv4AddrAdd - Add an ipv4 address in loxinet
 func (*NetAPIStruct) NetIpv4AddrAdd(am *cmn.Ipv4AddrMod) (int, error) {
 	mh.mtx.Lock()
@@ -185,6 +200,13 @@ func (*NetAPIStruct) NetFdbDel(fm *cmn.FdbMod) (int, error) {
 
 	ret, err := mh.zr.L2.L2FdbDel(fdbKey)
 	return ret, err
+}
+
+// NetRoutev4Get - Get Route info from loxinet
+func (*NetAPIStruct) NetRoutev4Get() ([]cmn.Routev4Get, error) {
+	// There is no locking requirement for this operation
+	ret, _ := mh.zr.Rt.RouteGet()
+	return ret, nil
 }
 
 // NetRoutev4Add - Add an ipv4 route in loxinet

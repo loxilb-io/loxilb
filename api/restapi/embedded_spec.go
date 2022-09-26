@@ -34,7 +34,7 @@ func init() {
     "title": "Loxilb Rest API",
     "version": "0.0.1"
   },
-  "host": "192.168.20.253:8090",
+  "host": "0.0.0.0:8090",
   "basePath": "/netlox/v1",
   "paths": {
     "/config/conntrack/all": {
@@ -77,6 +77,186 @@ func init() {
         }
       }
     },
+    "/config/ipv4address": {
+      "post": {
+        "description": "Assign IPv4 addresses in the device",
+        "summary": "Assign IPv4 addresses in the device",
+        "parameters": [
+          {
+            "description": "Attributes for IPv4 address",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/IPv4AddressEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/ipv4address/all": {
+      "get": {
+        "description": "Get IPv4 addresses in the device(interface)",
+        "summary": "Get IPv4 addresses in the device(interface)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ipAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/IPv4AddressGetEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/ipv4address/{ip_address}/{mask}/dev/{if_name}": {
+      "delete": {
+        "description": "Delete IPv4 addresses in the device",
+        "summary": "Delete IPv4 addresses in the device",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes IPv4 Address in the device",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes IPv4 mask in the device",
+            "name": "mask",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes of the target device",
+            "name": "if_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/loadbalancer": {
       "post": {
         "description": "Create a new load balancer service with .",
@@ -93,8 +273,11 @@ func init() {
           }
         ],
         "responses": {
-          "204": {
-            "description": "OK"
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/PostSuccess"
+            }
           },
           "400": {
             "description": "Malformed arguments for API call",
@@ -179,6 +362,57 @@ func init() {
             }
           }
         }
+      },
+      "delete": {
+        "description": "Delete all load balancer services.",
+        "summary": "Delete all Load balancer services",
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
       }
     },
     "/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}": {
@@ -212,6 +446,172 @@ func init() {
             "description": "option for BGP enable",
             "name": "bgp",
             "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/mirror": {
+      "post": {
+        "description": "Create a new Mirror config.",
+        "summary": "Create a new Mirror config",
+        "parameters": [
+          {
+            "description": "Attributes for Mirror",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MirrorEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/mirror/all": {
+      "get": {
+        "description": "Get",
+        "summary": "Get",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mirrAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/MirrorGetEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/mirror/ident/{ident}": {
+      "delete": {
+        "description": "Delete a new Create a Mirror service.",
+        "summary": "Delete a Mirror service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes of Mirror Ident.",
+            "name": "ident",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {
@@ -487,6 +887,70 @@ func init() {
         "responses": {
           "204": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/route/all": {
+      "get": {
+        "description": "Get all route table",
+        "summary": "Get all route table",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "routeAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/RouteGetEntry"
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Malformed arguments for API call",
@@ -987,47 +1451,60 @@ func init() {
     "Error": {
       "type": "object",
       "properties": {
-        "error": {
-          "type": "object",
-          "required": [
-            "code",
-            "message"
-          ],
-          "properties": {
-            "code": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "details": {
-              "type": "string"
-            },
-            "fields": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "message": {
-              "type": "string"
-            },
-            "sub-code": {
-              "type": "integer",
-              "format": "int32"
-            }
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "details": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
+        },
+        "message": {
+          "type": "string"
+        },
+        "sub-code": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
-    "IPv4AddressMod": {
+    "IPv4AddressEntry": {
       "type": "object",
       "properties": {
-        "Dev": {
+        "dev": {
           "description": "Name of the interface device to which you want to modify the IP address",
           "type": "string"
         },
-        "IpAddress": {
+        "ipAddress": {
           "description": "IP address to modify.",
           "type": "string"
+        }
+      }
+    },
+    "IPv4AddressGetEntry": {
+      "type": "object",
+      "required": [
+        "sync"
+      ],
+      "properties": {
+        "dev": {
+          "description": "Name of the interface device to which you want to modify the IP address",
+          "type": "string"
+        },
+        "ipAddress": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sync": {
+          "description": "Sync - sync state",
+          "type": "integer"
         }
       }
     },
@@ -1076,6 +1553,115 @@ func init() {
             "sel": {
               "description": "value for load balance algorithim",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "MirrorEntry": {
+      "type": "object",
+      "properties": {
+        "mirrorIdent": {
+          "description": "Mirror name",
+          "type": "string"
+        },
+        "mirrorInfo": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "description": "Port where mirrored traffic needs to be sent",
+              "type": "string"
+            },
+            "remoteIP": {
+              "description": "For ERSPAN we may need to send tunnelled mirror traffic",
+              "type": "string"
+            },
+            "sourceIP": {
+              "description": "For ERSPAN we may need to send tunnelled mirror traffic",
+              "type": "string"
+            },
+            "tunnelID": {
+              "description": "mirror tunnel-id. For ERSPAN we may need to send tunnelled mirror traffic",
+              "type": "integer"
+            },
+            "type": {
+              "description": "One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan",
+              "type": "integer"
+            },
+            "vlan": {
+              "description": "For RSPAN we may need to send tagged mirror traffic",
+              "type": "integer"
+            }
+          }
+        },
+        "targetObject": {
+          "type": "object",
+          "properties": {
+            "attachment": {
+              "description": "Target Attachment",
+              "type": "integer"
+            },
+            "mirrObjName": {
+              "description": "Target Names",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "MirrorGetEntry": {
+      "type": "object",
+      "required": [
+        "sync"
+      ],
+      "properties": {
+        "mirrorIdent": {
+          "description": "Mirror name",
+          "type": "string"
+        },
+        "mirrorInfo": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "description": "Port where mirrored traffic needs to be sent",
+              "type": "string"
+            },
+            "remoteIP": {
+              "description": "For ERSPAN we may need to send tunnelled mirror traffic",
+              "type": "string"
+            },
+            "sourceIP": {
+              "description": "For ERSPAN we may need to send tunnelled mirror traffic",
+              "type": "string"
+            },
+            "tunnelID": {
+              "description": "mirror tunnel-id. For ERSPAN we may need to send tunnelled mirror traffic",
+              "type": "integer"
+            },
+            "type": {
+              "description": "One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan",
+              "type": "integer"
+            },
+            "vlan": {
+              "description": "For RSPAN we may need to send tagged mirror traffic",
+              "type": "integer"
+            }
+          }
+        },
+        "sync": {
+          "description": "Sync - sync state",
+          "type": "integer"
+        },
+        "targetObject": {
+          "type": "object",
+          "properties": {
+            "attachment": {
+              "description": "Target Attachment",
+              "type": "integer"
+            },
+            "mirrObjName": {
+              "description": "Target Names",
+              "type": "string"
             }
           }
         }
@@ -1292,6 +1878,17 @@ func init() {
         }
       }
     },
+    "PostSuccess": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
     "RouteEntry": {
       "type": "object",
       "properties": {
@@ -1302,6 +1899,51 @@ func init() {
         "gateway": {
           "description": "IP address for nexthop",
           "type": "string"
+        }
+      }
+    },
+    "RouteGetEntry": {
+      "type": "object",
+      "properties": {
+        "destinationIPNet": {
+          "description": "IP address and netmask",
+          "type": "string"
+        },
+        "flags": {
+          "description": "Route flags",
+          "type": "string"
+        },
+        "gateway": {
+          "description": "IP address for nexthop",
+          "type": "string"
+        },
+        "hardwareMark": {
+          "description": "index of the route",
+          "type": "integer"
+        },
+        "protocol": {
+          "description": "Route protocol",
+          "type": "integer"
+        },
+        "statistic": {
+          "type": "object",
+          "required": [
+            "bytes",
+            "packets"
+          ],
+          "properties": {
+            "bytes": {
+              "description": "Statistic of the ingress port bytes.",
+              "type": "integer"
+            },
+            "packets": {
+              "description": "Statistic of the egress port bytes.",
+              "type": "integer"
+            }
+          }
+        },
+        "sync": {
+          "type": "integer"
         }
       }
     },
@@ -1402,7 +2044,7 @@ func init() {
     "title": "Loxilb Rest API",
     "version": "0.0.1"
   },
-  "host": "192.168.20.253:8090",
+  "host": "0.0.0.0:8090",
   "basePath": "/netlox/v1",
   "paths": {
     "/config/conntrack/all": {
@@ -1445,6 +2087,186 @@ func init() {
         }
       }
     },
+    "/config/ipv4address": {
+      "post": {
+        "description": "Assign IPv4 addresses in the device",
+        "summary": "Assign IPv4 addresses in the device",
+        "parameters": [
+          {
+            "description": "Attributes for IPv4 address",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/IPv4AddressEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/ipv4address/all": {
+      "get": {
+        "description": "Get IPv4 addresses in the device(interface)",
+        "summary": "Get IPv4 addresses in the device(interface)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ipAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/IPv4AddressGetEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/ipv4address/{ip_address}/{mask}/dev/{if_name}": {
+      "delete": {
+        "description": "Delete IPv4 addresses in the device",
+        "summary": "Delete IPv4 addresses in the device",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes IPv4 Address in the device",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes IPv4 mask in the device",
+            "name": "mask",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes of the target device",
+            "name": "if_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/loadbalancer": {
       "post": {
         "description": "Create a new load balancer service with .",
@@ -1461,8 +2283,11 @@ func init() {
           }
         ],
         "responses": {
-          "204": {
-            "description": "OK"
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/PostSuccess"
+            }
           },
           "400": {
             "description": "Malformed arguments for API call",
@@ -1547,6 +2372,57 @@ func init() {
             }
           }
         }
+      },
+      "delete": {
+        "description": "Delete all load balancer services.",
+        "summary": "Delete all Load balancer services",
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
       }
     },
     "/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}": {
@@ -1580,6 +2456,172 @@ func init() {
             "description": "option for BGP enable",
             "name": "bgp",
             "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/mirror": {
+      "post": {
+        "description": "Create a new Mirror config.",
+        "summary": "Create a new Mirror config",
+        "parameters": [
+          {
+            "description": "Attributes for Mirror",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MirrorEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/mirror/all": {
+      "get": {
+        "description": "Get",
+        "summary": "Get",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mirrAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/MirrorGetEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/mirror/ident/{ident}": {
+      "delete": {
+        "description": "Delete a new Create a Mirror service.",
+        "summary": "Delete a Mirror service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes of Mirror Ident.",
+            "name": "ident",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {
@@ -1855,6 +2897,70 @@ func init() {
         "responses": {
           "204": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/route/all": {
+      "get": {
+        "description": "Get all route table",
+        "summary": "Get all route table",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "routeAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/RouteGetEntry"
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Malformed arguments for API call",
@@ -2355,44 +3461,6 @@ func init() {
     "Error": {
       "type": "object",
       "properties": {
-        "error": {
-          "type": "object",
-          "required": [
-            "code",
-            "message"
-          ],
-          "properties": {
-            "code": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "details": {
-              "type": "string"
-            },
-            "fields": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "message": {
-              "type": "string"
-            },
-            "sub-code": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        }
-      }
-    },
-    "ErrorError": {
-      "type": "object",
-      "required": [
-        "code",
-        "message"
-      ],
-      "properties": {
         "code": {
           "type": "integer",
           "format": "int32"
@@ -2415,16 +3483,38 @@ func init() {
         }
       }
     },
-    "IPv4AddressMod": {
+    "IPv4AddressEntry": {
       "type": "object",
       "properties": {
-        "Dev": {
+        "dev": {
           "description": "Name of the interface device to which you want to modify the IP address",
           "type": "string"
         },
-        "IpAddress": {
+        "ipAddress": {
           "description": "IP address to modify.",
           "type": "string"
+        }
+      }
+    },
+    "IPv4AddressGetEntry": {
+      "type": "object",
+      "required": [
+        "sync"
+      ],
+      "properties": {
+        "dev": {
+          "description": "Name of the interface device to which you want to modify the IP address",
+          "type": "string"
+        },
+        "ipAddress": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sync": {
+          "description": "Sync - sync state",
+          "type": "integer"
         }
       }
     },
@@ -2503,6 +3593,199 @@ func init() {
         "sel": {
           "description": "value for load balance algorithim",
           "type": "integer"
+        }
+      }
+    },
+    "MirrorEntry": {
+      "type": "object",
+      "properties": {
+        "mirrorIdent": {
+          "description": "Mirror name",
+          "type": "string"
+        },
+        "mirrorInfo": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "description": "Port where mirrored traffic needs to be sent",
+              "type": "string"
+            },
+            "remoteIP": {
+              "description": "For ERSPAN we may need to send tunnelled mirror traffic",
+              "type": "string"
+            },
+            "sourceIP": {
+              "description": "For ERSPAN we may need to send tunnelled mirror traffic",
+              "type": "string"
+            },
+            "tunnelID": {
+              "description": "mirror tunnel-id. For ERSPAN we may need to send tunnelled mirror traffic",
+              "type": "integer"
+            },
+            "type": {
+              "description": "One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan",
+              "type": "integer"
+            },
+            "vlan": {
+              "description": "For RSPAN we may need to send tagged mirror traffic",
+              "type": "integer"
+            }
+          }
+        },
+        "targetObject": {
+          "type": "object",
+          "properties": {
+            "attachment": {
+              "description": "Target Attachment",
+              "type": "integer"
+            },
+            "mirrObjName": {
+              "description": "Target Names",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "MirrorEntryMirrorInfo": {
+      "type": "object",
+      "properties": {
+        "port": {
+          "description": "Port where mirrored traffic needs to be sent",
+          "type": "string"
+        },
+        "remoteIP": {
+          "description": "For ERSPAN we may need to send tunnelled mirror traffic",
+          "type": "string"
+        },
+        "sourceIP": {
+          "description": "For ERSPAN we may need to send tunnelled mirror traffic",
+          "type": "string"
+        },
+        "tunnelID": {
+          "description": "mirror tunnel-id. For ERSPAN we may need to send tunnelled mirror traffic",
+          "type": "integer"
+        },
+        "type": {
+          "description": "One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan",
+          "type": "integer"
+        },
+        "vlan": {
+          "description": "For RSPAN we may need to send tagged mirror traffic",
+          "type": "integer"
+        }
+      }
+    },
+    "MirrorEntryTargetObject": {
+      "type": "object",
+      "properties": {
+        "attachment": {
+          "description": "Target Attachment",
+          "type": "integer"
+        },
+        "mirrObjName": {
+          "description": "Target Names",
+          "type": "string"
+        }
+      }
+    },
+    "MirrorGetEntry": {
+      "type": "object",
+      "required": [
+        "sync"
+      ],
+      "properties": {
+        "mirrorIdent": {
+          "description": "Mirror name",
+          "type": "string"
+        },
+        "mirrorInfo": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "description": "Port where mirrored traffic needs to be sent",
+              "type": "string"
+            },
+            "remoteIP": {
+              "description": "For ERSPAN we may need to send tunnelled mirror traffic",
+              "type": "string"
+            },
+            "sourceIP": {
+              "description": "For ERSPAN we may need to send tunnelled mirror traffic",
+              "type": "string"
+            },
+            "tunnelID": {
+              "description": "mirror tunnel-id. For ERSPAN we may need to send tunnelled mirror traffic",
+              "type": "integer"
+            },
+            "type": {
+              "description": "One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan",
+              "type": "integer"
+            },
+            "vlan": {
+              "description": "For RSPAN we may need to send tagged mirror traffic",
+              "type": "integer"
+            }
+          }
+        },
+        "sync": {
+          "description": "Sync - sync state",
+          "type": "integer"
+        },
+        "targetObject": {
+          "type": "object",
+          "properties": {
+            "attachment": {
+              "description": "Target Attachment",
+              "type": "integer"
+            },
+            "mirrObjName": {
+              "description": "Target Names",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "MirrorGetEntryMirrorInfo": {
+      "type": "object",
+      "properties": {
+        "port": {
+          "description": "Port where mirrored traffic needs to be sent",
+          "type": "string"
+        },
+        "remoteIP": {
+          "description": "For ERSPAN we may need to send tunnelled mirror traffic",
+          "type": "string"
+        },
+        "sourceIP": {
+          "description": "For ERSPAN we may need to send tunnelled mirror traffic",
+          "type": "string"
+        },
+        "tunnelID": {
+          "description": "mirror tunnel-id. For ERSPAN we may need to send tunnelled mirror traffic",
+          "type": "integer"
+        },
+        "type": {
+          "description": "One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan",
+          "type": "integer"
+        },
+        "vlan": {
+          "description": "For RSPAN we may need to send tagged mirror traffic",
+          "type": "integer"
+        }
+      }
+    },
+    "MirrorGetEntryTargetObject": {
+      "type": "object",
+      "properties": {
+        "attachment": {
+          "description": "Target Attachment",
+          "type": "integer"
+        },
+        "mirrObjName": {
+          "description": "Target Names",
+          "type": "string"
         }
       }
     },
@@ -2889,6 +4172,17 @@ func init() {
         }
       }
     },
+    "PostSuccess": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
     "RouteEntry": {
       "type": "object",
       "properties": {
@@ -2899,6 +4193,68 @@ func init() {
         "gateway": {
           "description": "IP address for nexthop",
           "type": "string"
+        }
+      }
+    },
+    "RouteGetEntry": {
+      "type": "object",
+      "properties": {
+        "destinationIPNet": {
+          "description": "IP address and netmask",
+          "type": "string"
+        },
+        "flags": {
+          "description": "Route flags",
+          "type": "string"
+        },
+        "gateway": {
+          "description": "IP address for nexthop",
+          "type": "string"
+        },
+        "hardwareMark": {
+          "description": "index of the route",
+          "type": "integer"
+        },
+        "protocol": {
+          "description": "Route protocol",
+          "type": "integer"
+        },
+        "statistic": {
+          "type": "object",
+          "required": [
+            "bytes",
+            "packets"
+          ],
+          "properties": {
+            "bytes": {
+              "description": "Statistic of the ingress port bytes.",
+              "type": "integer"
+            },
+            "packets": {
+              "description": "Statistic of the egress port bytes.",
+              "type": "integer"
+            }
+          }
+        },
+        "sync": {
+          "type": "integer"
+        }
+      }
+    },
+    "RouteGetEntryStatistic": {
+      "type": "object",
+      "required": [
+        "bytes",
+        "packets"
+      ],
+      "properties": {
+        "bytes": {
+          "description": "Statistic of the ingress port bytes.",
+          "type": "integer"
+        },
+        "packets": {
+          "description": "Statistic of the egress port bytes.",
+          "type": "integer"
         }
       }
     },

@@ -12,39 +12,30 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// Error error
+// PostSuccess post success
 //
-// swagger:model Error
-type Error struct {
+// swagger:model PostSuccess
+type PostSuccess struct {
 
 	// code
-	Code int32 `json:"code,omitempty"`
-
-	// details
-	Details string `json:"details,omitempty"`
-
-	// fields
-	Fields []string `json:"fields"`
+	Code int64 `json:"code,omitempty"`
 
 	// message
 	Message string `json:"message,omitempty"`
-
-	// sub code
-	SubCode int32 `json:"sub-code,omitempty"`
 }
 
-// Validate validates this error
-func (m *Error) Validate(formats strfmt.Registry) error {
+// Validate validates this post success
+func (m *PostSuccess) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this error based on context it is used
-func (m *Error) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this post success based on context it is used
+func (m *PostSuccess) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *Error) MarshalBinary() ([]byte, error) {
+func (m *PostSuccess) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -52,8 +43,8 @@ func (m *Error) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *Error) UnmarshalBinary(b []byte) error {
-	var res Error
+func (m *PostSuccess) UnmarshalBinary(b []byte) error {
+	var res PostSuccess
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
