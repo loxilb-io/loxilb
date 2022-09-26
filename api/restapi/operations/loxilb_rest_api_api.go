@@ -42,8 +42,17 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
+		DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler: DeleteConfigIpv4addressIPAddressMaskDevIfNameHandlerFunc(func(params DeleteConfigIpv4addressIPAddressMaskDevIfNameParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigIpv4addressIPAddressMaskDevIfName has not yet been implemented")
+		}),
+		DeleteConfigLoadbalancerAllHandler: DeleteConfigLoadbalancerAllHandlerFunc(func(params DeleteConfigLoadbalancerAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigLoadbalancerAll has not yet been implemented")
+		}),
 		DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler: DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto has not yet been implemented")
+		}),
+		DeleteConfigMirrorIdentIdentHandler: DeleteConfigMirrorIdentIdentHandlerFunc(func(params DeleteConfigMirrorIdentIdentParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigMirrorIdentIdent has not yet been implemented")
 		}),
 		DeleteConfigPolicyIdentIdentHandler: DeleteConfigPolicyIdentIdentHandlerFunc(func(params DeleteConfigPolicyIdentIdentParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigPolicyIdentIdent has not yet been implemented")
@@ -60,8 +69,14 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		GetConfigConntrackAllHandler: GetConfigConntrackAllHandlerFunc(func(params GetConfigConntrackAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigConntrackAll has not yet been implemented")
 		}),
+		GetConfigIpv4addressAllHandler: GetConfigIpv4addressAllHandlerFunc(func(params GetConfigIpv4addressAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigIpv4addressAll has not yet been implemented")
+		}),
 		GetConfigLoadbalancerAllHandler: GetConfigLoadbalancerAllHandlerFunc(func(params GetConfigLoadbalancerAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigLoadbalancerAll has not yet been implemented")
+		}),
+		GetConfigMirrorAllHandler: GetConfigMirrorAllHandlerFunc(func(params GetConfigMirrorAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigMirrorAll has not yet been implemented")
 		}),
 		GetConfigPolicyAllHandler: GetConfigPolicyAllHandlerFunc(func(params GetConfigPolicyAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigPolicyAll has not yet been implemented")
@@ -69,14 +84,23 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		GetConfigPortAllHandler: GetConfigPortAllHandlerFunc(func(params GetConfigPortAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigPortAll has not yet been implemented")
 		}),
+		GetConfigRouteAllHandler: GetConfigRouteAllHandlerFunc(func(params GetConfigRouteAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigRouteAll has not yet been implemented")
+		}),
 		GetConfigSessionAllHandler: GetConfigSessionAllHandlerFunc(func(params GetConfigSessionAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigSessionAll has not yet been implemented")
 		}),
 		GetConfigSessionulclAllHandler: GetConfigSessionulclAllHandlerFunc(func(params GetConfigSessionulclAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigSessionulclAll has not yet been implemented")
 		}),
+		PostConfigIpv4addressHandler: PostConfigIpv4addressHandlerFunc(func(params PostConfigIpv4addressParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigIpv4address has not yet been implemented")
+		}),
 		PostConfigLoadbalancerHandler: PostConfigLoadbalancerHandlerFunc(func(params PostConfigLoadbalancerParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigLoadbalancer has not yet been implemented")
+		}),
+		PostConfigMirrorHandler: PostConfigMirrorHandlerFunc(func(params PostConfigMirrorParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigMirror has not yet been implemented")
 		}),
 		PostConfigPolicyHandler: PostConfigPolicyHandlerFunc(func(params PostConfigPolicyParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigPolicy has not yet been implemented")
@@ -126,8 +150,14 @@ type LoxilbRestAPIAPI struct {
 	//   - application/json
 	JSONProducer runtime.Producer
 
+	// DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler sets the operation handler for the delete config ipv4address IP address mask dev if name operation
+	DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler
+	// DeleteConfigLoadbalancerAllHandler sets the operation handler for the delete config loadbalancer all operation
+	DeleteConfigLoadbalancerAllHandler DeleteConfigLoadbalancerAllHandler
 	// DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler sets the operation handler for the delete config loadbalancer externalipaddress IP address port port protocol proto operation
 	DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler
+	// DeleteConfigMirrorIdentIdentHandler sets the operation handler for the delete config mirror ident ident operation
+	DeleteConfigMirrorIdentIdentHandler DeleteConfigMirrorIdentIdentHandler
 	// DeleteConfigPolicyIdentIdentHandler sets the operation handler for the delete config policy ident ident operation
 	DeleteConfigPolicyIdentIdentHandler DeleteConfigPolicyIdentIdentHandler
 	// DeleteConfigRouteDestinationIPNetIPAddressMaskHandler sets the operation handler for the delete config route destination IP net IP address mask operation
@@ -138,18 +168,28 @@ type LoxilbRestAPIAPI struct {
 	DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler
 	// GetConfigConntrackAllHandler sets the operation handler for the get config conntrack all operation
 	GetConfigConntrackAllHandler GetConfigConntrackAllHandler
+	// GetConfigIpv4addressAllHandler sets the operation handler for the get config ipv4address all operation
+	GetConfigIpv4addressAllHandler GetConfigIpv4addressAllHandler
 	// GetConfigLoadbalancerAllHandler sets the operation handler for the get config loadbalancer all operation
 	GetConfigLoadbalancerAllHandler GetConfigLoadbalancerAllHandler
+	// GetConfigMirrorAllHandler sets the operation handler for the get config mirror all operation
+	GetConfigMirrorAllHandler GetConfigMirrorAllHandler
 	// GetConfigPolicyAllHandler sets the operation handler for the get config policy all operation
 	GetConfigPolicyAllHandler GetConfigPolicyAllHandler
 	// GetConfigPortAllHandler sets the operation handler for the get config port all operation
 	GetConfigPortAllHandler GetConfigPortAllHandler
+	// GetConfigRouteAllHandler sets the operation handler for the get config route all operation
+	GetConfigRouteAllHandler GetConfigRouteAllHandler
 	// GetConfigSessionAllHandler sets the operation handler for the get config session all operation
 	GetConfigSessionAllHandler GetConfigSessionAllHandler
 	// GetConfigSessionulclAllHandler sets the operation handler for the get config sessionulcl all operation
 	GetConfigSessionulclAllHandler GetConfigSessionulclAllHandler
+	// PostConfigIpv4addressHandler sets the operation handler for the post config ipv4address operation
+	PostConfigIpv4addressHandler PostConfigIpv4addressHandler
 	// PostConfigLoadbalancerHandler sets the operation handler for the post config loadbalancer operation
 	PostConfigLoadbalancerHandler PostConfigLoadbalancerHandler
+	// PostConfigMirrorHandler sets the operation handler for the post config mirror operation
+	PostConfigMirrorHandler PostConfigMirrorHandler
 	// PostConfigPolicyHandler sets the operation handler for the post config policy operation
 	PostConfigPolicyHandler PostConfigPolicyHandler
 	// PostConfigRouteHandler sets the operation handler for the post config route operation
@@ -235,8 +275,17 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler")
+	}
+	if o.DeleteConfigLoadbalancerAllHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigLoadbalancerAllHandler")
+	}
 	if o.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler")
+	}
+	if o.DeleteConfigMirrorIdentIdentHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigMirrorIdentIdentHandler")
 	}
 	if o.DeleteConfigPolicyIdentIdentHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigPolicyIdentIdentHandler")
@@ -253,8 +302,14 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.GetConfigConntrackAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigConntrackAllHandler")
 	}
+	if o.GetConfigIpv4addressAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigIpv4addressAllHandler")
+	}
 	if o.GetConfigLoadbalancerAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigLoadbalancerAllHandler")
+	}
+	if o.GetConfigMirrorAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigMirrorAllHandler")
 	}
 	if o.GetConfigPolicyAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigPolicyAllHandler")
@@ -262,14 +317,23 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.GetConfigPortAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigPortAllHandler")
 	}
+	if o.GetConfigRouteAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigRouteAllHandler")
+	}
 	if o.GetConfigSessionAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigSessionAllHandler")
 	}
 	if o.GetConfigSessionulclAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigSessionulclAllHandler")
 	}
+	if o.PostConfigIpv4addressHandler == nil {
+		unregistered = append(unregistered, "PostConfigIpv4addressHandler")
+	}
 	if o.PostConfigLoadbalancerHandler == nil {
 		unregistered = append(unregistered, "PostConfigLoadbalancerHandler")
+	}
+	if o.PostConfigMirrorHandler == nil {
+		unregistered = append(unregistered, "PostConfigMirrorHandler")
 	}
 	if o.PostConfigPolicyHandler == nil {
 		unregistered = append(unregistered, "PostConfigPolicyHandler")
@@ -374,7 +438,19 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
+	o.handlers["DELETE"]["/config/ipv4address/{ip_address}/{mask}/dev/{if_name}"] = NewDeleteConfigIpv4addressIPAddressMaskDevIfName(o.context, o.DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/config/loadbalancer/all"] = NewDeleteConfigLoadbalancerAll(o.context, o.DeleteConfigLoadbalancerAllHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
 	o.handlers["DELETE"]["/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}"] = NewDeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto(o.context, o.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/config/mirror/ident/{ident}"] = NewDeleteConfigMirrorIdentIdent(o.context, o.DeleteConfigMirrorIdentIdentHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
@@ -398,7 +474,15 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
+	o.handlers["GET"]["/config/ipv4address/all"] = NewGetConfigIpv4addressAll(o.context, o.GetConfigIpv4addressAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
 	o.handlers["GET"]["/config/loadbalancer/all"] = NewGetConfigLoadbalancerAll(o.context, o.GetConfigLoadbalancerAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/config/mirror/all"] = NewGetConfigMirrorAll(o.context, o.GetConfigMirrorAllHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -410,6 +494,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
+	o.handlers["GET"]["/config/route/all"] = NewGetConfigRouteAll(o.context, o.GetConfigRouteAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
 	o.handlers["GET"]["/config/session/all"] = NewGetConfigSessionAll(o.context, o.GetConfigSessionAllHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
@@ -418,7 +506,15 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
+	o.handlers["POST"]["/config/ipv4address"] = NewPostConfigIpv4address(o.context, o.PostConfigIpv4addressHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
 	o.handlers["POST"]["/config/loadbalancer"] = NewPostConfigLoadbalancer(o.context, o.PostConfigLoadbalancerHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/mirror"] = NewPostConfigMirror(o.context, o.PostConfigMirrorHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

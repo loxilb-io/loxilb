@@ -6,7 +6,7 @@
 //  Schemes:
 //    http
 //    https
-//  Host: 192.168.20.253:8090
+//  Host: 0.0.0.0:8090
 //  BasePath: /netlox/v1
 //  Version: 0.0.1
 //
