@@ -258,6 +258,44 @@ type Neighv4Mod struct {
 	HardwareAddr net.HardwareAddr
 }
 
+// Ipv4AddrGet - Info about an ip addresses
+type Ipv4AddrGet struct {
+	// Dev - name of the related device
+	Dev string
+	// IP - Actual IP address
+	IP []string
+	// Sync - sync state
+	Sync DpStatusT
+}
+
+// RouteGetEntryStatistic - Info about an route statistic
+type RouteGetEntryStatistic struct {
+	// Statistic of the ingress port bytes.
+	Bytes int
+	// Statistic of the egress port bytes.
+	Packets int
+}
+
+// Routev4Get - Info about an route
+type Routev4Get struct {
+	// Protocol - Protocol type
+	Protocol int
+	// Flags - flag type
+	Flags string
+	// Gw - gateway information if any
+	Gw string
+	// LinkIndex - OS allocated index
+	LinkIndex int
+	// Dst - ip addr
+	Dst string
+	// index of the route
+	HardwareMark int
+	// statistic
+	Statistic RouteGetEntryStatistic
+	// sync
+	Sync DpStatusT
+}
+
 // Routev4Mod - Info about a route
 type Routev4Mod struct {
 	// Protocol - Protocol type
@@ -489,8 +527,21 @@ type MirrMod struct {
 	Target MirrObj
 }
 
+// MirrGetMod - information related to Get a mirror entry
+type MirrGetMod struct {
+	// Ident - unique identifier for the mirror
+	Ident string
+	// Info - information about the mirror
+	Info MirrInfo
+	// Target - information about object to which mirror needs to be attached
+	Target MirrObj
+	// Sync - sync state
+	Sync DpStatusT
+}
+
 // NetHookInterface - Go interface which needs to be implemented to talk to loxinet module
 type NetHookInterface interface {
+	NetMirrorGet() ([]MirrGetMod, error)
 	NetMirrorAdd(*MirrMod) (int, error)
 	NetMirrorDel(*MirrMod) (int, error)
 	NetPortGet() ([]PortDump, error)
@@ -502,10 +553,12 @@ type NetHookInterface interface {
 	NetVlanPortDel(*VlanPortMod) (int, error)
 	NetFdbAdd(*FdbMod) (int, error)
 	NetFdbDel(*FdbMod) (int, error)
+	NetIpv4AddrGet() ([]Ipv4AddrGet, error)
 	NetIpv4AddrAdd(*Ipv4AddrMod) (int, error)
 	NetIpv4AddrDel(*Ipv4AddrMod) (int, error)
 	NetNeighv4Add(*Neighv4Mod) (int, error)
 	NetNeighv4Del(*Neighv4Mod) (int, error)
+	NetRoutev4Get() ([]Routev4Get, error)
 	NetRoutev4Add(*Routev4Mod) (int, error)
 	NetRoutev4Del(*Routev4Mod) (int, error)
 	NetLbRuleAdd(*LbRuleMod) (int, error)

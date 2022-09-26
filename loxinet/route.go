@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net"
 
+	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
 
@@ -136,6 +137,45 @@ func (r *RtH) RtFind(Dst net.IPNet, Zone string) *Rt {
 		return rt
 	}
 	return nil
+}
+
+// RouteGet - tlpm package interface implementation
+func (r *RtH) RouteGet() ([]cmn.Routev4Get, error) {
+	var ret []cmn.Routev4Get
+	for rk, r2 := range r.RtMap {
+		var tmpRt cmn.Routev4Get
+		tmpRt.Dst = rk.RtCidr
+		tmpRt.Flags = GetFlagToString(r2.TFlags)
+		if len(r2.NhAttr) != 0 {
+			// TODO : Current multiple gw not showing. So I added as a static code
+			tmpRt.Gw = r2.NhAttr[0].NhAddr.String()
+		}
+		tmpRt.HardwareMark = r2.HwMark
+		tmpRt.Protocol = r2.Attr.Protocol
+		tmpRt.Statistic.Bytes = int(r2.Stat.Bytes)
+		tmpRt.Statistic.Packets = int(r2.Stat.Packets)
+		tmpRt.Sync = cmn.DpStatusT(r2.Sync)
+		ret = append(ret, tmpRt)
+	}
+	return ret, nil
+}
+
+func GetFlagToString(flag int) string {
+	var ret string
+	if flag&RtTypeInd != 0 {
+		ret += "Ind "
+	}
+	if flag&RtTypeDyn != 0 {
+		ret += "Dyn "
+	}
+	if flag&RtTypeSelf != 0 {
+		ret += "Self "
+	}
+	if flag&RtTypeHost != 0 {
+		ret += "Host "
+	}
+
+	return ret
 }
 
 // RtAdd - Add a route

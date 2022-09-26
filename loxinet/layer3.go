@@ -280,6 +280,22 @@ func (l3 *L3H) IfObjMkString(obj string) string {
 	return ""
 }
 
+// IfaGet - Get All of the IPv4Address in the Ifa
+func (l3 *L3H) IfaGet() []cmn.Ipv4AddrGet {
+	var ret []cmn.Ipv4AddrGet
+	for ifName, ifa := range l3.IfaMap {
+		var tmpIPa cmn.Ipv4AddrGet
+		tmpIPa.Dev = ifName.Obj
+		tmpIPa.Sync = cmn.DpStatusT(ifa.Sync)
+		for _, ip := range ifa.Ifas {
+			o, _ := ip.IfaNet.Mask.Size()
+			tmpIPa.IP = append(tmpIPa.IP, fmt.Sprintf("%s/%d", ip.IfaAddr.String(), o))
+			ret = append(ret, tmpIPa)
+		}
+	}
+	return ret
+}
+
 // DP - Sync state of L3 entities to data-path
 func (ifa *Ifa) DP(work DpWorkT) int {
 	port := ifa.Zone.Ports.PortFindByName(ifa.Key.Obj)
