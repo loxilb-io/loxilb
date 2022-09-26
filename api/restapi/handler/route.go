@@ -17,54 +17,59 @@ package handler
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/loxilb-io/loxilb/api/loxinlp"
+	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
-	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
-	"net"
 )
 
 func ConfigPostRoute(params operations.PostConfigRouteParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] Route  %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-
-	var routeMod cmn.Routev4Mod
-	_, Dst, err := net.ParseCIDR(params.Attr.DestinationIPNet)
-	if err != nil {
-		return &ResultResponse{Result: err.Error()}
-	}
-	routeMod.Dst.IP = Dst.IP
-	routeMod.Dst.Mask = Dst.Mask
-	routeMod.Gw = net.ParseIP(params.Attr.Gateway)
-
-	tk.LogIt(tk.LogDebug, "[API] routeMod : %v\n", routeMod)
-	_, err = ApiHooks.NetRoutev4Add(&routeMod)
-	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+	ret := loxinlp.AddRouteNoHook(params.Attr.DestinationIPNet, params.Attr.Gateway)
+	if ret != 0 {
+		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", ret)
+		return &ResultResponse{Result: "fail"}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeleteRoute(params operations.DeleteConfigRouteDestinationIPNetIPAddressMaskParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] Route  %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-
-	var routeMod cmn.Routev4Mod
-
 	DstIP := fmt.Sprintf("%s/%d", params.IPAddress, params.Mask)
-	_, Dst, err := net.ParseCIDR(DstIP)
-	if err != nil {
-		return &ResultResponse{Result: err.Error()}
-	}
-
-	routeMod.Dst.IP = Dst.IP
-	routeMod.Dst.Mask = Dst.Mask
-	tk.LogIt(tk.LogDebug, "[API] routeMod : %v\n", routeMod)
-
-	_, err = ApiHooks.NetRoutev4Del(&routeMod)
-
-	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+	ret := loxinlp.DelRouteNoHook(DstIP)
+	if ret != 0 {
+		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", ret)
+		return &ResultResponse{Result: "fail"}
 	}
 	return &ResultResponse{Result: "Success"}
+}
+
+func ConfigGetRoute(params operations.GetConfigRouteAllParams) middleware.Responder {
+	tk.LogIt(tk.LogDebug, "[API] Route  %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	res, _ := ApiHooks.NetRoutev4Get()
+	var result []*models.RouteGetEntry
+	result = make([]*models.RouteGetEntry, 0)
+	for _, route := range res {
+		var tmpResult models.RouteGetEntry
+		tmpResult.DestinationIPNet = route.Dst
+		tmpResult.Flags = strings.TrimSpace(route.Flags)
+		tmpResult.Gateway = route.Gw
+		tmpResult.HardwareMark = int64(route.HardwareMark)
+		tmpResult.Protocol = int64(route.Protocol)
+		tmpResult.Sync = int64(route.Sync)
+
+		tmpStats := new(models.RouteGetEntryStatistic)
+
+		tmpBytes := int64(route.Statistic.Bytes)
+		tmpStats.Bytes = &tmpBytes
+		tmpPackets := int64(route.Statistic.Packets)
+		tmpStats.Packets = &tmpPackets
+		tmpResult.Statistic = tmpStats
+
+		result = append(result, &tmpResult)
+	}
+	return operations.NewGetConfigRouteAllOK().WithPayload(&operations.GetConfigRouteAllOKBody{RouteAttr: result})
 }

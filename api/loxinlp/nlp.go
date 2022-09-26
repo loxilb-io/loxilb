@@ -19,10 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
-	nlp "github.com/vishvananda/netlink"
-	"golang.org/x/sys/unix"
 	"io/ioutil"
 	"net"
 	"os"
@@ -32,6 +28,11 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
+	nlp "github.com/vishvananda/netlink"
+	"golang.org/x/sys/unix"
 )
 
 const (
@@ -386,6 +387,46 @@ func AddAddr(addr nlp.Addr, link nlp.Link) int {
 	return ret
 }
 
+func AddAddrNoHook(address, ifName string) int {
+	var ret int
+	IfName, err := nlp.LinkByName(ifName)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] Port %s find Fail\n", ifName)
+		return -1
+	}
+	Address, err := nlp.ParseAddr(address)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] IPv4 Address %s Parse Fail\n", address)
+		return -1
+	}
+	err = nlp.AddrAdd(IfName, Address)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] IPv4 Address %v Port %v added Fail\n", address, ifName)
+		return -1
+	}
+	return ret
+}
+
+func DelAddrNoHook(address, ifName string) int {
+	var ret int
+	IfName, err := nlp.LinkByName(ifName)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] Port %s find Fail\n", ifName)
+		return -1
+	}
+	Address, err := nlp.ParseAddr(address)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] IPv4 Address %s Parse Fail\n", address)
+		return -1
+	}
+	err = nlp.AddrDel(IfName, Address)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] IPv4 Address %v Port %v delete Fail\n", address, ifName)
+		return -1
+	}
+	return ret
+}
+
 func AddNeigh(neigh nlp.Neigh, link nlp.Link) int {
 	var ret int
 	var brId int
@@ -577,6 +618,38 @@ func AddRoute(route nlp.Route) int {
 		}
 	}
 
+	return ret
+}
+
+func AddRouteNoHook(DestinationIPNet, gateway string) int {
+	var ret int
+	var route nlp.Route
+	_, Ipnet, err := net.ParseCIDR(DestinationIPNet)
+	if err != nil {
+		return -1
+	}
+	Gw := net.ParseIP(gateway)
+	route.Dst = Ipnet
+	route.Gw = Gw
+	err = nlp.RouteAdd(&route)
+	if err != nil {
+		return -1
+	}
+	return ret
+}
+
+func DelRouteNoHook(DestinationIPNet string) int {
+	var ret int
+	var route nlp.Route
+	_, Ipnet, err := net.ParseCIDR(DestinationIPNet)
+	if err != nil {
+		return -1
+	}
+	route.Dst = Ipnet
+	err = nlp.RouteDel(&route)
+	if err != nil {
+		return -1
+	}
 	return ret
 }
 
