@@ -18,9 +18,7 @@ loxilb is a cloud-native "edge" load-balancer stack built from grounds up using 
    * Mainly uses TC-eBPF hooks
 -  goLang based control plane components (Apache license)
 -  Seamless integration with goBGP based routing stack
--  Easily cuztomizable to run in DPU environments
-   * goLang based easy to use APIs/Interfaces
-
+-  GoLang based easy to use APIs/Interfaces for developers
 
 ## How to build/run/use
 
