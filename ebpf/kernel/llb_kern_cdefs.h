@@ -1622,9 +1622,18 @@ dp_do_ins_gtp(void *md,
   struct udphdr *udp;
   int olen;
   __u64 flags;
+  int ghlen;
+  __u8 espn;
 
-  olen   = sizeof(*iph)  + sizeof(*udp) + sizeof(*gh) + 
-           sizeof(*geh) + sizeof(*gedh); 
+  if (qfi) {
+    ghlen = sizeof(*gh) + sizeof(*geh) + sizeof(*gedh);
+    espn = GTP_EXT_FM;
+  } else {
+    ghlen = sizeof(*gh);
+    espn = 0;
+  }
+
+  olen   = sizeof(*iph)  + sizeof(*udp) + ghlen;
 
   flags = BPF_F_ADJ_ROOM_FIXED_GSO |
           BPF_F_ADJ_ROOM_ENCAP_L3_IPV4 |
@@ -1682,35 +1691,36 @@ dp_do_ins_gtp(void *md,
 
   gh->ver = GTP_VER_1;
   gh->pt = 1;
-  gh->espn = GTP_EXT_FM; 
+  gh->espn = espn;
   gh->teid = tid;
   gh->mt = GTP_MT_TPDU;
-  gh->mlen = bpf_ntohs(xf->pm.l3_len + sizeof(*gh) + sizeof(*geh) + sizeof(*gedh));
+  gh->mlen = bpf_ntohs(xf->pm.l3_len + ghlen);
+  
+  if (qfi) {
+    /* GTP extension header */
+    geh = (void *)(gh + 1);
+    if (geh + 1 > dend) {
+      LLBS_PPLN_DROP(xf);
+      return -1;
+    }
 
-  /* GTP extension header */
-  geh = (void *)(gh + 1);
-  if (geh + 1 > dend) {
-    LLBS_PPLN_DROP(xf);
-    return -1;
+    geh->seq = 0;
+    geh->npdu = 0;
+    geh->next_hdr = GTP_NH_PDU_SESS;
+
+    gedh = (void *)(geh + 1);
+    if (gedh + 1 > dend) {
+      LLBS_PPLN_DROP(xf);
+      return -1;
+    }
+
+    gedh->cmn.len = 1;
+    gedh->cmn.pdu_type = GTP_PDU_SESS_DL;
+    gedh->qfi = qfi;
+    gedh->ppp = 0;
+    gedh->rqi = 0;
+    gedh->next_hdr = 0;
   }
-
-  geh->seq = 0;
-  geh->npdu = 0;
-  geh->next_hdr = GTP_NH_PDU_SESS;
-
-  gedh = (void *)(geh + 1);
-  if (gedh + 1 > dend) {
-    LLBS_PPLN_DROP(xf);
-    return -1;
-  }
-
-  gedh->cmn.len = 1;
-  gedh->cmn.pdu_type = GTP_PDU_SESS_DL;
-  gedh->qfi = qfi;
-  gedh->ppp = 0;
-  gedh->rqi = 0;
-  gedh->next_hdr = 0;
-
   /* Tunnel metadata */
   xf->tm.tun_type  = LLB_TUN_GTP;
   xf->tm.tunnel_id = bpf_ntohl(tid);
