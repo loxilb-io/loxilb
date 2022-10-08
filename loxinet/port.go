@@ -196,6 +196,9 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 
 	if P.portSmap[name] != nil {
 		p := P.portSmap[name]
+		p.HInfo.Link = hwi.Link
+		p.HInfo.State = hwi.State
+		p.HInfo.Mtu = hwi.Mtu
 		if bytes.Equal(hwi.MacAddr[:], p.HInfo.MacAddr[:]) == false {
 			p.HInfo.MacAddr = hwi.MacAddr
 			p.DP(DpCreate)

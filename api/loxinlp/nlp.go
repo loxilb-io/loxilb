@@ -258,6 +258,10 @@ func ModLink(link nlp.Link, add bool) int {
 	if _, ok := link.(*nlp.Bridge); ok {
 
 		vid, _ = strconv.Atoi(strings.Join(re.FindAllString(name, -1), " "))
+		// Dirty hack to support docker0 bridge
+		if vid == 0 && name == "docker0" {
+			vid = 4090
+		}
 		if add {
 			ret, err = hooks.NetVlanAdd(&cmn.VlanMod{Vid: vid, Dev: name, LinkIndex: idx,
 				MacAddr: ifMac, Link: linkState, State: state, Mtu: mtu, TunID: 0})
@@ -285,6 +289,10 @@ func ModLink(link nlp.Link, add bool) int {
 			return -1
 		}
 		vid, _ = strconv.Atoi(strings.Join(re.FindAllString(brLink.Attrs().Name, -1), " "))
+		// Dirty hack to support docker bridge
+		if vid == 0 && brLink.Attrs().Name == "docker0" {
+			vid = 4090
+		}
 	}
 
 	/* Tagged Vlan port */
@@ -529,6 +537,7 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 	name := attrs.Name
 
 	if neigh.Family == unix.AF_INET {
+
 		ret, err = hooks.NetNeighv4Del(&cmn.Neighv4Mod{IP: neigh.IP})
 		if err != nil {
 			tk.LogIt(tk.LogError, "[NLP] NH  %v %v del failed\n", neigh.IP.String(), name)
@@ -536,6 +545,7 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 		} else {
 			tk.LogIt(tk.LogError, "[NLP] NH %v %v deleted\n", neigh.IP.String(), name)
 		}
+
 	} else {
 
 		if neigh.Vlan == 1 {
@@ -559,7 +569,12 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 				return -1
 			}
 
-			copy(brMac[:], brLink.Attrs().HardwareAddr[:6])
+			if len(brLink.Attrs().HardwareAddr) != 6 {
+				brMac = [6]byte{ 0, 0, 0, 0, 0, 0}
+			} else {
+				copy(brMac[:], brLink.Attrs().HardwareAddr[:6])
+			}
+
 			if mac == brMac {
 				/*Same as bridge mac --- IGNORED */
 				return 0
