@@ -67,6 +67,7 @@ dp_do_sess4_lkup(void *ctx, struct xfi *xf)
   } else if (act->ca.act_type == DP_SET_RM_GTP) {
     dp_pipe_set_rm_gtp_tun(ctx, xf);
     xf->qm.qfi = act->qfi;
+    xf->pm.phit |= LLB_DP_TMAC_HIT;
   } else {
     xf->tm.new_tunnel_id = act->teid;
     xf->tm.tun_type = LLB_TUN_GTP;
