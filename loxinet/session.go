@@ -335,7 +335,7 @@ func (ulcl *UlClInf) DP(work DpWorkT) int {
 	ucn.Work = work
 	ucn.MDip = ulcl.Addr
 	ucn.MSip = ulcl.uSess.Addr
-	ucn.mTeID = ulcl.uSess.AnTun.TeID
+	ucn.mTeID = ulcl.uSess.CnTun.TeID
 	ucn.Zone = ulcl.uSess.Zone
 	ucn.HwMark = ulcl.NumUl
 	ucn.Qfi = ulcl.Qfi

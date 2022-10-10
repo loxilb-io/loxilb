@@ -989,6 +989,9 @@ dp_do_dnat(void *ctx, struct xfi *xf, __be32 xip, __be16 xport)
       dp_set_tcp_src_ip(ctx, xf, xf->l3m.ip.daddr);
       dp_set_tcp_dst_ip(ctx, xf, xip);
     } else {
+      if (xf->l4m.nrip) {
+        dp_set_tcp_src_ip(ctx, xf, xf->l4m.nrip);
+      }
       dp_set_tcp_dst_ip(ctx, xf, xip);
     }
     dp_set_tcp_dport(ctx, xf, xport);
@@ -1006,6 +1009,9 @@ dp_do_dnat(void *ctx, struct xfi *xf, __be32 xip, __be16 xport)
       dp_set_udp_src_ip(ctx, xf, xf->l3m.ip.daddr);
       dp_set_udp_dst_ip(ctx, xf, xip);
     } else {
+      if (xf->l4m.nrip) {
+        dp_set_udp_src_ip(ctx, xf, xf->l4m.nrip);
+      }
       dp_set_udp_dst_ip(ctx, xf, xip);
     }
     dp_set_udp_dport(ctx, xf, xport);
@@ -1023,10 +1029,16 @@ dp_do_dnat(void *ctx, struct xfi *xf, __be32 xip, __be16 xport)
       dp_set_sctp_src_ip(ctx, xf, xf->l3m.ip.daddr);
       dp_set_sctp_dst_ip(ctx, xf, xip);
     } else {
+      if (xf->l4m.nrip) {
+        dp_set_sctp_src_ip(ctx, xf, xf->l4m.nrip);
+      }
       dp_set_sctp_dst_ip(ctx, xf, xip);
     }
     dp_set_sctp_dport(ctx, xf, xport);
   } else if (xf->l3m.nw_proto == IPPROTO_ICMP)  {
+    if (xf->l4m.nrip) {
+      dp_set_icmp_src_ip(ctx, xf, xf->l4m.nrip);
+    }
     dp_set_icmp_dst_ip(ctx, xf, xip);
   }
 
@@ -1052,6 +1064,9 @@ dp_do_snat(void *ctx, struct xfi *xf, __be32 xip, __be16 xport)
       dp_set_tcp_dst_ip(ctx, xf, xip);
     } else {
       dp_set_tcp_src_ip(ctx, xf, xip);
+      if (xf->l4m.nrip) {
+        dp_set_tcp_dst_ip(ctx, xf, xf->l4m.nrip);
+      }
     }
     dp_set_tcp_sport(ctx, xf, xport);
   } else if (xf->l3m.nw_proto == IPPROTO_UDP)  {
@@ -1069,6 +1084,9 @@ dp_do_snat(void *ctx, struct xfi *xf, __be32 xip, __be16 xport)
       dp_set_udp_dst_ip(ctx, xf, xip);
     } else {
       dp_set_udp_src_ip(ctx, xf, xip);
+      if (xf->l4m.nrip) {
+        dp_set_udp_dst_ip(ctx, xf, xf->l4m.nrip);
+      }
     }
     dp_set_udp_sport(ctx, xf, xport);
   } else if (xf->l3m.nw_proto == IPPROTO_SCTP)  {
@@ -1086,10 +1104,16 @@ dp_do_snat(void *ctx, struct xfi *xf, __be32 xip, __be16 xport)
       dp_set_sctp_dst_ip(ctx, xf, xip);
     } else {
       dp_set_sctp_src_ip(ctx, xf, xip);
+      if (xf->l4m.nrip) {
+        dp_set_sctp_dst_ip(ctx, xf, xf->l4m.nrip);
+      }
     }
     dp_set_sctp_sport(ctx, xf, xport);
   } else if (xf->l3m.nw_proto == IPPROTO_ICMP)  {
     dp_set_icmp_src_ip(ctx, xf, xip);
+    if (xf->l4m.nrip) {
+      dp_set_sctp_dst_ip(ctx, xf, xf->l4m.nrip);
+    }
   }
 
   return 0;
@@ -1622,18 +1646,9 @@ dp_do_ins_gtp(void *md,
   struct udphdr *udp;
   int olen;
   __u64 flags;
-  int ghlen;
-  __u8 espn;
 
-  if (qfi) {
-    ghlen = sizeof(*gh) + sizeof(*geh) + sizeof(*gedh);
-    espn = GTP_EXT_FM;
-  } else {
-    ghlen = sizeof(*gh);
-    espn = 0;
-  }
-
-  olen   = sizeof(*iph)  + sizeof(*udp) + ghlen;
+  olen   = sizeof(*iph)  + sizeof(*udp) + sizeof(*gh) + 
+           sizeof(*geh) + sizeof(*gedh); 
 
   flags = BPF_F_ADJ_ROOM_FIXED_GSO |
           BPF_F_ADJ_ROOM_ENCAP_L3_IPV4 |
@@ -1691,36 +1706,35 @@ dp_do_ins_gtp(void *md,
 
   gh->ver = GTP_VER_1;
   gh->pt = 1;
-  gh->espn = espn;
+  gh->espn = GTP_EXT_FM; 
   gh->teid = tid;
   gh->mt = GTP_MT_TPDU;
-  gh->mlen = bpf_ntohs(xf->pm.l3_len + ghlen);
-  
-  if (qfi) {
-    /* GTP extension header */
-    geh = (void *)(gh + 1);
-    if (geh + 1 > dend) {
-      LLBS_PPLN_DROP(xf);
-      return -1;
-    }
+  gh->mlen = bpf_ntohs(xf->pm.l3_len + sizeof(*gh) + sizeof(*geh) + sizeof(*gedh));
 
-    geh->seq = 0;
-    geh->npdu = 0;
-    geh->next_hdr = GTP_NH_PDU_SESS;
-
-    gedh = (void *)(geh + 1);
-    if (gedh + 1 > dend) {
-      LLBS_PPLN_DROP(xf);
-      return -1;
-    }
-
-    gedh->cmn.len = 1;
-    gedh->cmn.pdu_type = GTP_PDU_SESS_DL;
-    gedh->qfi = qfi;
-    gedh->ppp = 0;
-    gedh->rqi = 0;
-    gedh->next_hdr = 0;
+  /* GTP extension header */
+  geh = (void *)(gh + 1);
+  if (geh + 1 > dend) {
+    LLBS_PPLN_DROP(xf);
+    return -1;
   }
+
+  geh->seq = 0;
+  geh->npdu = 0;
+  geh->next_hdr = GTP_NH_PDU_SESS;
+
+  gedh = (void *)(geh + 1);
+  if (gedh + 1 > dend) {
+    LLBS_PPLN_DROP(xf);
+    return -1;
+  }
+
+  gedh->cmn.len = 1;
+  gedh->cmn.pdu_type = GTP_PDU_SESS_DL;
+  gedh->qfi = qfi;
+  gedh->ppp = 0;
+  gedh->rqi = 0;
+  gedh->next_hdr = 0;
+
   /* Tunnel metadata */
   xf->tm.tun_type  = LLB_TUN_GTP;
   xf->tm.tunnel_id = bpf_ntohl(tid);
