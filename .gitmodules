@@ -1,0 +1,3 @@
+[submodule "loxilb-ebpf"]
+	path = loxilb-ebpf
+	url = https://github.com/loxilb-io/loxilb-ebpf.git
