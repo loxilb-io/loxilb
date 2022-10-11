@@ -4,10 +4,10 @@ bin=loxilb
 loxilbid=$(shell docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER")
 
 subsys:
-	cd ebpf && $(MAKE) 
+	cd loxilb-ebpf && $(MAKE) 
 
 subsys-clean:
-	cd ebpf && $(MAKE) clean
+	cd loxilb-ebpf && $(MAKE) clean
 
 build: subsys
 	@go build -o ${bin} -ldflags="-X 'main.buildInfo=${shell date '+%Y_%m_%d'}-${shell git branch --show-current}'"
