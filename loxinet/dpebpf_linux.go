@@ -33,7 +33,7 @@ package loxinet
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <pthread.h>
-#include "../ebpf/kernel/loxilb_libdp.h"
+#include "../loxilb-ebpf/kernel/loxilb_libdp.h"
 int bpf_map_get_next_key(int fd, const void *key, void *next_key);
 int bpf_map_lookup_elem(int fd, const void *key, void *value);
 #cgo CFLAGS:  -I./../loxilb-ebpf/libbpf/src/ -I./../loxilb-ebpf/common
