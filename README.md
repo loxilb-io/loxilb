@@ -20,4 +20,4 @@ loxilb is a cloud-native "edge" load-balancer stack built from grounds up using 
 
 ## How to build/run/use
 
-We encourage loxilb users to follow various guides in loxilb docs [repository](https://github.com/loxilb-io/loxilbdocs)
+We encourage loxilb users to follow various guides in loxilb docs [repository](https://github.com/loxilb-io/loxilbdocs).
