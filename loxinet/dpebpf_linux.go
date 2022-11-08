@@ -549,7 +549,7 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 		dat := new(nhDat)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_nh_tact)
 		//C.llb_del_table_elem(C.LL_DP_NH_MAP, unsafe.Pointer(key))
-		// eBPF array elements cant be delete. Instead we just reset it
+		// eBPF array elements cant be deleted. Instead we just reset it
 		C.llb_add_map_elem(C.LL_DP_NH_MAP,
 			unsafe.Pointer(key),
 			unsafe.Pointer(dat))
@@ -650,7 +650,7 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_natv4_tacts)
 		if w.NatType == DpSnat {
 			dat.ca.act_type = C.DP_SET_SNAT
-		} else if w.NatType == DpDnat {
+		} else if w.NatType == DpDnat || w.NatType == DpFullNat {
 			dat.ca.act_type = C.DP_SET_DNAT
 		} else {
 			return EbpfErrNat4Add
@@ -675,6 +675,7 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 			nxfa.wprio = C.ushort(k.Weight)
 			nxfa.nat_xport = C.ushort(tk.Htons(k.XPort))
 			nxfa.nat_xip = C.uint(tk.IPtonl(k.XIP))
+			nxfa.nat_rip = C.uint(tk.IPtonl(k.RIP))
 
 			if k.InActive {
 				nxfa.inactive = 1
@@ -711,7 +712,13 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 
 // DpNatLbRuleAdd - routine to work on a ebpf nat-lb add request
 func (e *DpEbpfH) DpNatLbRuleAdd(w *NatDpWorkQ) int {
-	return DpNatLbRuleMod(w)
+	ec := DpNatLbRuleMod(w)
+	if ec != 0 {
+		*w.Status = DpCreateErr
+	} else {
+		*w.Status = 0
+	}
+	return ec
 }
 
 // DpNatLbRuleDel - routine to work on a ebpf nat-lb delete request
@@ -902,9 +909,29 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ctv4_key, ctDat *C.struct_dp_ctv4_dat) *D
 		port := tk.Ntohs(uint16(ctDat.xi.nat_xport))
 
 		if ctDat.xi.nat_flags == C.LLB_NAT_DST {
-			ct.CAct = fmt.Sprintf("dnat-%s:%d:w%d", xip.String(), port, ctDat.xi.wprio)
+			if ctDat.xi.nat_rip == 0 {
+				ct.CAct = fmt.Sprintf("dnat-%s:%d:w%d", xip.String(), port, ctDat.xi.wprio)
+			} else {
+				var rip net.IP
+
+				rip = append(rip, uint8(ctDat.xi.nat_rip&0xff))
+				rip = append(rip, uint8(ctDat.xi.nat_rip>>8&0xff))
+				rip = append(rip, uint8(ctDat.xi.nat_rip>>16&0xff))
+				rip = append(rip, uint8(ctDat.xi.nat_rip>>24&0xff))
+				ct.CAct = fmt.Sprintf("fdnat-%s,%s:%d:w%d", rip.String(), xip.String(), port, ctDat.xi.wprio)
+			}
 		} else if ctDat.xi.nat_flags == C.LLB_NAT_SRC {
-			ct.CAct = fmt.Sprintf("snat-%s:%d:w%d", xip.String(), port, ctDat.xi.wprio)
+			if ctDat.xi.nat_rip == 0 {
+				ct.CAct = fmt.Sprintf("snat-%s:%d:w%d", xip.String(), port, ctDat.xi.wprio)
+			} else {
+				var rip net.IP
+
+				rip = append(rip, uint8(ctDat.xi.nat_rip&0xff))
+				rip = append(rip, uint8(ctDat.xi.nat_rip>>8&0xff))
+				rip = append(rip, uint8(ctDat.xi.nat_rip>>16&0xff))
+				rip = append(rip, uint8(ctDat.xi.nat_rip>>24&0xff))
+				ct.CAct = fmt.Sprintf("fsnat-%s,%s:%d:w%d", xip.String(), rip.String(), port, ctDat.xi.wprio)
+			}
 		}
 	}
 

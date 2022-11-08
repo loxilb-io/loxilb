@@ -227,6 +227,34 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP) (int, net.IP) {
 	return L3AddrErr, net.IPv4(0, 0, 0, 0)
 }
 
+// IfaSelectAny - Given any dest ip address, select optimal interface source ip address
+// This is useful to determine source ip address when sending traffic to the given ip address
+func (l3 *L3H) IfaSelectAny(addr net.IP) (int, net.IP) {
+
+	for _, ifa := range l3.IfaMap {
+
+		for _, ifaEnt := range ifa.Ifas {
+			if ifaEnt.Secondary == true {
+				continue
+			}
+
+			if ifaEnt.IfaNet.Contains(addr) {
+				return 0, ifaEnt.IfaAddr
+			}
+		}
+	}
+
+	for _, ifa := range l3.IfaMap {
+		// Select first IP from any list
+		if len(ifa.Ifas) > 0 {
+			return 0, ifa.Ifas[0].IfaAddr
+		}
+	}
+
+	return L3AddrErr, net.IPv4(0, 0, 0, 0)
+}
+
+
 // Ifa2String - Format an ifa to a string
 func Ifa2String(ifa *Ifa, it IterIntf) {
 	var str string

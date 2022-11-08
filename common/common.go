@@ -334,6 +334,8 @@ type LbServiceArg struct {
 	Sel EpSelect `json:"sel"`
 	// Bgp - export this rule with goBGP
 	Bgp bool `json:"bgp"`
+	// FullNat - Enable one-arm NAT
+	FullNat bool `json:"fullNat"`
 }
 
 // LbEndPointArg - Information related to load-balancer end-point
