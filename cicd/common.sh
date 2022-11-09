@@ -180,6 +180,7 @@ config_docker_host() {
 ## arg3 - vlan
 ## arg4 - tagged/untagged
 create_docker_host_vlan() {
+  local addr=""
   POSITIONAL_ARGS=()
   while [[ $# -gt 0 ]]; do
     case $1 in
@@ -200,6 +201,11 @@ create_docker_host_vlan() {
             ;;
         --id)
             local vid="$2"
+            shift
+            shift
+            ;;
+        --addr)
+            addr="$2"
             shift
             shift
             ;;
@@ -231,6 +237,9 @@ create_docker_host_vlan() {
   sudo ip -n $h1 link add vlan$vid type bridge 2>&1 | true
   sudo ip -n $h1 link set $brport master vlan$vid
   sudo ip -n $h1 link set vlan$vid up
+  if [[ "$addr" != "" ]]; then
+    sudo ip -n $h1 addr add $addr dev vlan$vid
+  fi
 }
 
 ## arg1 - hostname1 

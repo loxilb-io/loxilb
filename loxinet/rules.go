@@ -135,6 +135,7 @@ const (
 	RtActRedirect
 	RtActDnat
 	RtActSnat
+	RtActFullNat
 )
 
 type ruleNatEp struct {
@@ -466,11 +467,14 @@ func (a *ruleAct) String() string {
 	if a.actType == RtActDrop {
 		ks += fmt.Sprintf("%s", "drop")
 	} else if a.actType == RtActDnat ||
-		a.actType == RtActSnat {
+		a.actType == RtActSnat || 
+		a.actType == RtActFullNat {
 		if a.actType == RtActSnat {
 			ks += fmt.Sprintf("%s", "do-snat:")
-		} else {
+		} else if a.actType == RtActDnat {
 			ks += fmt.Sprintf("%s", "do-dnat:")
+		} else {
+			ks += fmt.Sprintf("%s", "do-fullnat:")
 		}
 
 		switch na := a.action.(type) {
@@ -718,7 +722,11 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	r := new(ruleEnt)
 	r.tuples = rt
 	r.zone = R.Zone
-	r.act.actType = RtActDnat
+	if serv.FullNat {
+		r.act.actType = RtActFullNat
+	} else {
+		r.act.actType = RtActDnat
+	}
 	r.act.action = &natActs
 	r.ruleNum, err = R.Tables[RtLB].HwMark.GetCounter()
 	if err != nil {
@@ -795,6 +803,9 @@ func (R *RuleH) RulesSync() {
 	for _, rule := range R.Tables[RtLB].eMap {
 		ruleKeys := rule.tuples.String()
 		ruleActs := rule.act.String()
+		if rule.Sync != 0 {
+			rule.DP(DpCreate)
+		}
 		rule.DP(DpStatsGet)
 		tk.LogIt(tk.LogDebug, "%d:%s,%s pc %v bc %v \n",
 			rule.ruleNum, ruleKeys, ruleActs,
@@ -901,6 +912,10 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 		nWork.NatType = DpDnat
 	} else if r.act.actType == RtActSnat {
 		nWork.NatType = DpSnat
+	} else if r.act.actType == RtActFullNat {
+		nWork.NatType = DpFullNat
+	} else {
+		return -1
 	}
 
 	switch at := r.act.action.(type) {
@@ -982,6 +997,24 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 		return -1
 	}
 
+	if nWork.NatType == DpFullNat {
+		for idx := range nWork.endPoints {
+			ep := &nWork.endPoints[idx]
+
+			e, sip := r.zone.L3.IfaSelectAny(ep.XIP)
+			if e != 0 {
+				r.Sync = DpCreateErr
+				return -1
+			}
+			ep.RIP = sip
+		}
+	} else {
+		for idx := range nWork.endPoints {
+			ep := &nWork.endPoints[idx]
+			ep.RIP = net.IPv4(0, 0, 0, 0)
+		}
+	}
+
 	mh.dp.ToDpCh <- nWork
 
 	return 0
@@ -1011,7 +1044,8 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 	}
 
 	if r.act.actType == RtActDnat ||
-		r.act.actType == RtActSnat {
+		r.act.actType == RtActSnat ||
+		r.act.actType == RtActFullNat {
 		return r.Nat2DP(work)
 	}
 

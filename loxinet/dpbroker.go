@@ -200,6 +200,7 @@ const (
 	DpDnat
 	DpHsnat
 	DpHdnat
+	DpFullNat
 )
 
 // NatSel - type of nat end-point selection algorithm
@@ -215,6 +216,7 @@ const (
 // NatEP - a nat end-point
 type NatEP struct {
 	XIP      net.IP
+	RIP      net.IP
 	XPort    uint16
 	Weight   uint8
 	InActive bool
