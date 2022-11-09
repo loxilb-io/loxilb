@@ -254,7 +254,6 @@ func (l3 *L3H) IfaSelectAny(addr net.IP) (int, net.IP) {
 	return L3AddrErr, net.IPv4(0, 0, 0, 0)
 }
 
-
 // Ifa2String - Format an ifa to a string
 func Ifa2String(ifa *Ifa, it IterIntf) {
 	var str string

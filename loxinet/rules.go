@@ -467,7 +467,7 @@ func (a *ruleAct) String() string {
 	if a.actType == RtActDrop {
 		ks += fmt.Sprintf("%s", "drop")
 	} else if a.actType == RtActDnat ||
-		a.actType == RtActSnat || 
+		a.actType == RtActSnat ||
 		a.actType == RtActFullNat {
 		if a.actType == RtActSnat {
 			ks += fmt.Sprintf("%s", "do-snat:")

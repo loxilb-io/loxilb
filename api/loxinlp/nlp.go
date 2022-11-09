@@ -570,7 +570,7 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 			}
 
 			if len(brLink.Attrs().HardwareAddr) != 6 {
-				brMac = [6]byte{ 0, 0, 0, 0, 0, 0}
+				brMac = [6]byte{0, 0, 0, 0, 0, 0}
 			} else {
 				copy(brMac[:], brLink.Attrs().HardwareAddr[:6])
 			}
