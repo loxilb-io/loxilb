@@ -224,13 +224,12 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 					return PortNoMasterErr, errors.New("no-master error")
 				}
 				p.DP(DpRemove)
-
 				p.SInfo.PortType |= ptype
 				p.HInfo.Master = hwi.Master
 				p.L2.IsPvid = true
 				p.L2.Vid = master.PortNo + BondVb
 
-				p.DP(DpCreate)
+				//p.DP(DpCreate)
 				return 0, nil
 			}
 
@@ -258,6 +257,16 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 				p.L2 = l2i
 				p.DP(DpCreate)
 				tk.LogIt(tk.LogDebug, "port add - %s vxinfo updated\n", name)
+				return 0, nil
+			}
+		}
+		if p.SInfo.PortType & (cmn.PortReal|cmn.PortBondSif) == (cmn.PortReal|cmn.PortBondSif) {
+			if ptype == cmn.PortReal {
+				p.L2.IsPvid = true
+				p.L2.Vid = p.PortNo + RealPortVb
+				p.SInfo.PortType &= ^cmn.PortBondSif
+				p.HInfo.Master = ""
+				p.DP(DpCreate)
 				return 0, nil
 			}
 		}
@@ -869,7 +878,7 @@ func (p *Port) DP(work DpWorkT) int {
 		return 0
 	}
 
-	if (p.SInfo.PortType&cmn.PortReal != cmn.PortReal) &&
+	if (p.SInfo.PortType&(cmn.PortReal|cmn.PortBond) == 0) &&
 		(p.SInfo.PortReal == nil || p.SInfo.PortReal.SInfo.PortType&cmn.PortReal != cmn.PortReal) {
 		return 0
 	}
@@ -905,11 +914,16 @@ func (p *Port) DP(work DpWorkT) int {
 	if (work == DpCreate || work == DpRemove) &&
 		p.SInfo.PortType&cmn.PortReal == cmn.PortReal ||
 		p.SInfo.PortType&cmn.PortBond == cmn.PortBond {
-		if p.SInfo.BpfLoaded == false {
+		if work == DpCreate {
+			if p.SInfo.BpfLoaded == false {
+				pWq.LoadEbpf = p.Name
+				p.SInfo.BpfLoaded = true
+			} else {
+				pWq.LoadEbpf = ""
+			}
+		} else if work == DpRemove {
 			pWq.LoadEbpf = p.Name
-			p.SInfo.BpfLoaded = true
-		} else {
-			pWq.LoadEbpf = ""
+			p.SInfo.BpfLoaded = false
 		}
 	} else {
 		pWq.LoadEbpf = ""
