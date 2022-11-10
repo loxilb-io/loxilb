@@ -232,6 +232,9 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP) (int, net.IP) {
 func (l3 *L3H) IfaSelectAny(addr net.IP) (int, net.IP) {
 
 	for _, ifa := range l3.IfaMap {
+		if ifa.Key.Obj == "lo" {
+			continue
+		}
 
 		for _, ifaEnt := range ifa.Ifas {
 			if ifaEnt.Secondary == true {
@@ -245,6 +248,10 @@ func (l3 *L3H) IfaSelectAny(addr net.IP) (int, net.IP) {
 	}
 
 	for _, ifa := range l3.IfaMap {
+		if ifa.Key.Obj == "lo" {
+			continue
+		}
+
 		// Select first IP from any list
 		if len(ifa.Ifas) > 0 {
 			return 0, ifa.Ifas[0].IfaAddr
