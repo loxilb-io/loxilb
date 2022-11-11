@@ -48,8 +48,12 @@ const (
 	MaxBondInterfaces = 8
 	MaxRealInterfaces = 128
 	MaxInterfaces     = 512
+	MaxWgInterfaces   = 8
+	MaxVtiInterfaces  = 8
 	RealPortVb        = 3800
 	BondVb            = 4000
+	WgVb              = 4010
+	VtiVb             = 4020
 )
 
 // PortEvent - port event type
@@ -136,6 +140,8 @@ type PortsH struct {
 	portNotifs []PortEventIntf
 	portHwMark *tk.Counter
 	bondHwMark *tk.Counter
+	wGHwMark   *tk.Counter
+	vtiHwMark  *tk.Counter
 }
 
 // PortInit - Initialize the port subsystem
@@ -146,6 +152,8 @@ func PortInit() *PortsH {
 	nllp.portOmap = make(map[int]*Port)
 	nllp.portHwMark = tk.NewCounter(1, MaxInterfaces)
 	nllp.bondHwMark = tk.NewCounter(1, MaxBondInterfaces)
+	nllp.wGHwMark = tk.NewCounter(1, MaxWgInterfaces)
+	nllp.vtiHwMark = tk.NewCounter(1, MaxVtiInterfaces)
 	return nllp
 }
 
@@ -279,6 +287,10 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 
 	if ptype == cmn.PortBond {
 		rid, err = P.bondHwMark.GetCounter()
+	} else if ptype == cmn.PortWg {
+		rid, err = P.wGHwMark.GetCounter()
+	} else if ptype == cmn.PortVti {
+		rid, err = P.vtiHwMark.GetCounter()
 	} else {
 		rid, err = P.portHwMark.GetCounter()
 	}
@@ -328,6 +340,22 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
 		zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
 			PortHwInfo{vMac, true, true, 9000, "", "", 0})
+	case cmn.PortWg:
+		p.L2.IsPvid = true
+		p.L2.Vid = rid + WgVb
+
+		/* We create an vlan BD to keep things in sync */
+		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
+		zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
+			PortHwInfo{vMac, true, true, 9000, "", "", 0})
+	case cmn.PortVti:
+		p.L2.IsPvid = true
+		p.L2.Vid = rid + VtiVb
+
+		/* We create an vlan BD to keep things in sync */
+		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
+		zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
+				PortHwInfo{vMac, true, true, 9000, "", "", 0})
 	case cmn.PortVxlanBr:
 		if p.SInfo.PortReal != nil {
 			p.SInfo.PortReal.SInfo.PortOvl = p
@@ -430,6 +458,8 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 		}
 	case cmn.PortReal:
 	case cmn.PortBond:
+	case cmn.PortWg:
+	case cmn.PortVti:
 		zone := mh.zn.GetPortZone(p.Name)
 		if zone != nil {
 			zone.Vlans.VlanDelete(p.L2.Vid)
