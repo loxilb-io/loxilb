@@ -228,6 +228,361 @@ func applyConfigMap(name string, state bool, add bool) {
 	}
 }
 
+func AddFDBNoHook(macAddress, ifName string) int {
+	var ret int
+	MacAddress, err := net.ParseMAC(macAddress)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] MacAddress Parse %s Fail\n", macAddress)
+		return -1
+	}
+	IfName, err := nlp.LinkByName(ifName)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] Port %s find Fail\n", ifName)
+		return -1
+	}
+
+	// Make Neigh
+	neigh := nlp.Neigh{
+		Family:       syscall.AF_BRIDGE,
+		HardwareAddr: MacAddress,
+		LinkIndex:    IfName.Attrs().Index,
+		State:        unix.NUD_PERMANENT,
+		Flags:        unix.NTF_SELF,
+	}
+	err = nlp.NeighAppend(&neigh)
+	if err != nil {
+		fmt.Printf("err.Error(): %v\n", err.Error())
+		tk.LogIt(tk.LogWarning, "[NLP] FDB added Fail\n")
+		return -1
+	}
+	return ret
+}
+
+func DelFDBNoHook(macAddress, ifName string) int {
+	var ret int
+	MacAddress, err := net.ParseMAC(macAddress)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] Port %s find Fail\n", ifName)
+		return -1
+	}
+	IfName, err := nlp.LinkByName(ifName)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] Port %s find Fail\n", ifName)
+		return -1
+	}
+
+	// Make Neigh
+	neigh := nlp.Neigh{
+		Family:       syscall.AF_BRIDGE,
+		HardwareAddr: MacAddress,
+		LinkIndex:    IfName.Attrs().Index,
+		State:        unix.NUD_PERMANENT,
+		Flags:        unix.NTF_SELF,
+	}
+	err = nlp.NeighDel(&neigh)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] FDB delete Fail\n")
+		return -1
+	}
+	return ret
+}
+
+func AddNeighNoHook(address, ifName, macAddress string) int {
+	var ret int
+	Address := net.ParseIP(address)
+
+	IfName, err := nlp.LinkByName(ifName)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] Port %s find Fail\n", ifName)
+		return -1
+	}
+	MacAddress, err := net.ParseMAC(macAddress)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] Port %s find Fail\n", ifName)
+		return -1
+	}
+	// Make Neigh
+	neigh := nlp.Neigh{
+		IP:           Address,
+		HardwareAddr: MacAddress,
+		LinkIndex:    IfName.Attrs().Index,
+		State:        unix.NUD_PERMANENT,
+	}
+
+	err = nlp.NeighAdd(&neigh)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] Neighbor added Fail\n")
+		return -1
+	}
+	return ret
+}
+
+func DelNeighNoHook(address, ifName string) int {
+	var ret int
+	IfName, err := nlp.LinkByName(ifName)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] Port %s find Fail\n", ifName)
+		return -1
+	}
+	Address := net.ParseIP(address)
+
+	// Make Neigh
+	neigh := nlp.Neigh{
+		IP:        Address,
+		LinkIndex: IfName.Attrs().Index,
+	}
+	err = nlp.NeighDel(&neigh)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] Neighbor delete Fail\n")
+		return -1
+	}
+	return ret
+}
+
+func AddVLANNoHook(vlanid int) int {
+	var ret int
+	// Check Vlan interface has been added.
+	// Vlan Name : vlan$vlanid (vlan10, vlan100...)
+	VlanName := fmt.Sprintf("vlan%d", vlanid)
+	_, err := nlp.LinkByName(VlanName)
+	if err != nil {
+		newBr := &nlp.Bridge{
+			LinkAttrs: nlp.LinkAttrs{
+				Name: VlanName,
+				MTU:  9000, // Static value for VxLAN
+			},
+		}
+		if err := nlp.LinkAdd(newBr); err != nil {
+			tk.LogIt(tk.LogWarning, "[NLP] Vlan Bridge added Fail\n")
+			ret = -1
+		}
+		nlp.LinkSetUp(newBr)
+	}
+	return ret
+}
+
+func DelVLANNoHook(vlanid int) int {
+	var ret int
+	VlanName := fmt.Sprintf("vlan%d", vlanid)
+	vlanLink, err := nlp.LinkByName(VlanName)
+	if err != nil {
+		ret = -1
+		tk.LogIt(tk.LogWarning, "[NLP] Vlan Bridge get Fail\n", err.Error())
+	}
+	err = nlp.LinkSetDown(vlanLink)
+	if err != nil {
+		ret = -1
+		tk.LogIt(tk.LogWarning, "[NLP] Vlan Bridge Link Down Fail\n", err.Error())
+	}
+	err = nlp.LinkDel(vlanLink)
+	if err != nil {
+		ret = -1
+		tk.LogIt(tk.LogWarning, "[NLP] Vlan Bridge delete Fail\n", err.Error())
+	}
+
+	return ret
+}
+
+func AddVLANMemberNoHook(vlanid int, intfName string, tagged bool) int {
+	var ret int
+	var VlanDevName string
+	// Check Vlan interface has been added.
+	VlanBridgeName := fmt.Sprintf("vlan%d", vlanid)
+	VlanLink, err := nlp.LinkByName(VlanBridgeName)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] Vlan Bridge added Fail\n")
+		return 404
+	}
+	ParentInterface, err := nlp.LinkByName(intfName)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] Parent interface finding Fail\n")
+		return 404
+	}
+	if tagged {
+		VlanDevName = fmt.Sprintf("%s.%d", intfName, vlanid)
+		VlanDev := &nlp.Vlan{
+			LinkAttrs: nlp.LinkAttrs{
+				Name:        VlanDevName,
+				ParentIndex: ParentInterface.Attrs().Index,
+			},
+			VlanId: vlanid,
+		}
+		if err := nlp.LinkAdd(VlanDev); err != nil {
+			tk.LogIt(tk.LogWarning, "failed to create VlanDev: [ %v ] with the error: %s", VlanDev, err)
+			ret = -1
+		}
+	} else {
+		VlanDevName = intfName
+	}
+
+	VlanDevNonPointer, _ := nlp.LinkByName(VlanDevName)
+	nlp.LinkSetUp(VlanDevNonPointer)
+	err = nlp.LinkSetMaster(VlanDevNonPointer, VlanLink)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "failed to master: [ %v ] with the error: %s", VlanDevNonPointer, err)
+		ret = -1
+	}
+
+	return ret
+}
+
+func DelVLANMemberNoHook(vlanid int, intfName string, tagged bool) int {
+	var ret int
+	var VlanDevName string
+	VlanName := fmt.Sprintf("vlan%d", vlanid)
+	_, err := nlp.LinkByName(VlanName)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] Vlan Bridge finding Fail\n")
+		return 404
+	}
+	_, err = nlp.LinkByName(intfName)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] Parent interface finding Fail\n")
+		return 404
+	}
+	if tagged {
+		VlanDevName = fmt.Sprintf("%s.%d", intfName, vlanid)
+	} else {
+		VlanDevName = intfName
+	}
+	VlanDevNonPointer, err := nlp.LinkByName(VlanDevName)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] Vlan interface finding Fail\n")
+		return 404
+	}
+	err = nlp.LinkSetNoMaster(VlanDevNonPointer)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] No master fail \n")
+	}
+	if tagged {
+		nlp.LinkDel(VlanDevNonPointer)
+	}
+	return ret
+}
+
+func AddVxLANBridgeNoHook(vxlanid int, epIntfName string) int {
+	var ret int
+	// Check Vlan interface has been added.
+	VxlanBridgeName := fmt.Sprintf("vxlan%d", vxlanid)
+	_, err := nlp.LinkByName(VxlanBridgeName)
+	if err != nil {
+
+		EndpointInterface, err := nlp.LinkByName(epIntfName)
+		if err != nil {
+			tk.LogIt(tk.LogWarning, "[NLP] Endpoint interface finding Fail\n")
+			return 404
+		}
+		LocalIPs, err := nlp.AddrList(EndpointInterface, nlp.FAMILY_V4)
+		if err != nil || len(LocalIPs) == 0 {
+			tk.LogIt(tk.LogWarning, "[NLP] Endpoint interface dosen't have Local IP address\n")
+			return 403
+		}
+		VxlanDev := &nlp.Vxlan{
+			LinkAttrs: nlp.LinkAttrs{
+				Name: VxlanBridgeName,
+				MTU:  9000, // Static Value for Vxlan in loxiLB
+			},
+			SrcAddr:      LocalIPs[0].IP,
+			VtepDevIndex: EndpointInterface.Attrs().Index,
+			VxlanId:      vxlanid,
+			Port:         4789, // VxLAN default port
+		}
+		if err := nlp.LinkAdd(VxlanDev); err != nil {
+			tk.LogIt(tk.LogWarning, "failed to create VxlanDev: [ %v ] with the error: %s", VxlanDev, err)
+			ret = -1
+		}
+		time.Sleep(1 * time.Second)
+		VxlanDevNonPointer, err := nlp.LinkByName(VxlanBridgeName)
+		if err != nil {
+			tk.LogIt(tk.LogWarning, "[NLP] Vxlan Interface create fail\n", err.Error())
+			return -1
+		}
+		nlp.LinkSetUp(VxlanDevNonPointer)
+
+	} else {
+		tk.LogIt(tk.LogWarning, "[NLP] Vxlan Bridge Already exists\n")
+		return 409
+	}
+
+	return ret
+}
+
+func DelVxLANNoHook(vxlanid int) int {
+	var ret int
+	VxlanName := fmt.Sprintf("vxlan%d", vxlanid)
+	vxlanLink, err := nlp.LinkByName(VxlanName)
+	if err != nil {
+		ret = -1
+		tk.LogIt(tk.LogWarning, "[NLP] Vxlan Bridge get Fail\n", err.Error())
+	}
+	err = nlp.LinkSetDown(vxlanLink)
+	if err != nil {
+		ret = -1
+		tk.LogIt(tk.LogWarning, "[NLP] Vxlan Bridge Link Down Fail\n", err.Error())
+	}
+	err = nlp.LinkDel(vxlanLink)
+	if err != nil {
+		ret = -1
+		tk.LogIt(tk.LogWarning, "[NLP] Vxlan Bridge delete Fail\n", err.Error())
+	}
+
+	return ret
+}
+func AddVxLANPeerNoHook(vxlanid int, PeerIP string) int {
+	var ret int
+	MacAddress, _ := net.ParseMAC("00:00:00:00:00:00")
+	ifName := fmt.Sprintf("vxlan%d", vxlanid)
+	IfName, err := nlp.LinkByName(ifName)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] VxLAN %s find Fail\n", ifName)
+		return -1
+	}
+	peerIP := net.ParseIP(PeerIP)
+	// Make Peer
+	Peer := nlp.Neigh{
+		IP:           peerIP,
+		Family:       syscall.AF_BRIDGE,
+		HardwareAddr: MacAddress,
+		LinkIndex:    IfName.Attrs().Index,
+		State:        unix.NUD_PERMANENT,
+		Flags:        unix.NTF_SELF,
+	}
+	err = nlp.NeighAppend(&Peer)
+	if err != nil {
+		fmt.Printf("err.Error(): %v\n", err.Error())
+		tk.LogIt(tk.LogWarning, "[NLP] VxLAN Peer added Fail\n")
+		return -1
+	}
+	return ret
+}
+
+func DelVxLANPeerNoHook(vxlanid int, PeerIP string) int {
+	var ret int
+	MacAddress, _ := net.ParseMAC("00:00:00:00:00:00")
+	ifName := fmt.Sprintf("vxlan%d", vxlanid)
+	IfName, err := nlp.LinkByName(ifName)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] VxLAN %s find Fail\n", ifName)
+		return -1
+	}
+	peerIP := net.ParseIP(PeerIP)
+	// Make Peer
+	Peer := nlp.Neigh{
+		IP:           peerIP,
+		Family:       syscall.AF_BRIDGE,
+		HardwareAddr: MacAddress,
+		LinkIndex:    IfName.Attrs().Index,
+		State:        unix.NUD_PERMANENT,
+		Flags:        unix.NTF_SELF,
+	}
+
+	err = nlp.NeighDel(&Peer)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[NLP] VxLAN Peer delete Fail\n")
+		return -1
+	}
+	return ret
+}
 func ModLink(link nlp.Link, add bool) int {
 	var ifMac [6]byte
 	var ret int
@@ -433,6 +788,14 @@ func DelAddrNoHook(address, ifName string) int {
 		return -1
 	}
 	return ret
+}
+
+func GetLinkNameByIndex(index int) (string, error) {
+	brLink, err := nlp.LinkByIndex(index)
+	if err != nil {
+		return "", err
+	}
+	return brLink.Attrs().Name, nil
 }
 
 func AddNeigh(neigh nlp.Neigh, link nlp.Link) int {

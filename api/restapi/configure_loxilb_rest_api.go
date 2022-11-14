@@ -99,6 +99,36 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.DeleteConfigMirrorIdentIdentHandler = operations.DeleteConfigMirrorIdentIdentHandlerFunc(handler.ConfigDeleteMirror)
 	api.GetConfigMirrorAllHandler = operations.GetConfigMirrorAllHandlerFunc(handler.ConfigGetMirror)
 
+	// Status
+	api.GetStatusProcessHandler = operations.GetStatusProcessHandlerFunc(handler.ConfigGetProcess)
+	api.GetStatusDeviceHandler = operations.GetStatusDeviceHandlerFunc(handler.ConfigGetDevice)
+	api.GetStatusFilesystemHandler = operations.GetStatusFilesystemHandlerFunc(handler.ConfigGetFileSystem)
+
+	// VLAN
+	api.PostConfigVlanHandler = operations.PostConfigVlanHandlerFunc(handler.ConfigPostVLAN)
+	api.DeleteConfigVlanVlanIDHandler = operations.DeleteConfigVlanVlanIDHandlerFunc(handler.ConfigDeleteVLAN)
+
+	// VLAN MEMBER
+	api.PostConfigVlanVlanIDMemberHandler = operations.PostConfigVlanVlanIDMemberHandlerFunc(handler.ConfigPostVLANMember)
+	api.DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler = operations.DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandlerFunc(handler.ConfigDeleteVLANMember)
+
+	// VxLAN
+	api.PostConfigTunnelVxlanHandler = operations.PostConfigTunnelVxlanHandlerFunc(handler.ConfigPostVxLAN)
+	api.DeleteConfigTunnelVxlanVxlanIDHandler = operations.DeleteConfigTunnelVxlanVxlanIDHandlerFunc(handler.ConfigDeleteVxLAN)
+
+	//VxLAN Peer
+	api.PostConfigTunnelVxlanVxlanIDPeerHandler = operations.PostConfigTunnelVxlanVxlanIDPeerHandlerFunc(handler.ConfigPostVxLANPeer)
+	api.DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandler = operations.DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandlerFunc(handler.ConfigDeleteVxLANPeer)
+
+	// Neighbor
+	api.PostConfigNeighborHandler = operations.PostConfigNeighborHandlerFunc(handler.ConfigPostNeighbor)
+	api.DeleteConfigNeighborIPAddressDevIfNameHandler = operations.DeleteConfigNeighborIPAddressDevIfNameHandlerFunc(handler.ConfigDeleteNeighbor)
+	api.GetConfigNeighborAllHandler = operations.GetConfigNeighborAllHandlerFunc(handler.ConfigGetNeighbor)
+
+	// FDB
+	api.PostConfigFdbHandler = operations.PostConfigFdbHandlerFunc(handler.ConfigPostFDB)
+	api.DeleteConfigFdbMacAddressDevIfNameHandler = operations.DeleteConfigFdbMacAddressDevIfNameHandlerFunc(handler.ConfigDeleteFDB)
+
 	api.PreServerShutdown = func() {}
 
 	api.ServerShutdown = func() {
