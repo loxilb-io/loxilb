@@ -42,6 +42,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
+		DeleteConfigFdbMacAddressDevIfNameHandler: DeleteConfigFdbMacAddressDevIfNameHandlerFunc(func(params DeleteConfigFdbMacAddressDevIfNameParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigFdbMacAddressDevIfName has not yet been implemented")
+		}),
 		DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler: DeleteConfigIpv4addressIPAddressMaskDevIfNameHandlerFunc(func(params DeleteConfigIpv4addressIPAddressMaskDevIfNameParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigIpv4addressIPAddressMaskDevIfName has not yet been implemented")
 		}),
@@ -53,6 +56,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		}),
 		DeleteConfigMirrorIdentIdentHandler: DeleteConfigMirrorIdentIdentHandlerFunc(func(params DeleteConfigMirrorIdentIdentParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigMirrorIdentIdent has not yet been implemented")
+		}),
+		DeleteConfigNeighborIPAddressDevIfNameHandler: DeleteConfigNeighborIPAddressDevIfNameHandlerFunc(func(params DeleteConfigNeighborIPAddressDevIfNameParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigNeighborIPAddressDevIfName has not yet been implemented")
 		}),
 		DeleteConfigPolicyIdentIdentHandler: DeleteConfigPolicyIdentIdentHandlerFunc(func(params DeleteConfigPolicyIdentIdentParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigPolicyIdentIdent has not yet been implemented")
@@ -66,6 +72,18 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler: DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandlerFunc(func(params DeleteConfigSessionulclIdentIdentUlclAddressIPAddressParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigSessionulclIdentIdentUlclAddressIPAddress has not yet been implemented")
 		}),
+		DeleteConfigTunnelVxlanVxlanIDHandler: DeleteConfigTunnelVxlanVxlanIDHandlerFunc(func(params DeleteConfigTunnelVxlanVxlanIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigTunnelVxlanVxlanID has not yet been implemented")
+		}),
+		DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandler: DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandlerFunc(func(params DeleteConfigTunnelVxlanVxlanIDPeerPeerIPParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigTunnelVxlanVxlanIDPeerPeerIP has not yet been implemented")
+		}),
+		DeleteConfigVlanVlanIDHandler: DeleteConfigVlanVlanIDHandlerFunc(func(params DeleteConfigVlanVlanIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigVlanVlanID has not yet been implemented")
+		}),
+		DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler: DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandlerFunc(func(params DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigVlanVlanIDMemberIfNameTaggedTagged has not yet been implemented")
+		}),
 		GetConfigConntrackAllHandler: GetConfigConntrackAllHandlerFunc(func(params GetConfigConntrackAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigConntrackAll has not yet been implemented")
 		}),
@@ -77,6 +95,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		}),
 		GetConfigMirrorAllHandler: GetConfigMirrorAllHandlerFunc(func(params GetConfigMirrorAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigMirrorAll has not yet been implemented")
+		}),
+		GetConfigNeighborAllHandler: GetConfigNeighborAllHandlerFunc(func(params GetConfigNeighborAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigNeighborAll has not yet been implemented")
 		}),
 		GetConfigPolicyAllHandler: GetConfigPolicyAllHandlerFunc(func(params GetConfigPolicyAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigPolicyAll has not yet been implemented")
@@ -93,6 +114,24 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		GetConfigSessionulclAllHandler: GetConfigSessionulclAllHandlerFunc(func(params GetConfigSessionulclAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigSessionulclAll has not yet been implemented")
 		}),
+		GetConfigTunnelVxlanAllHandler: GetConfigTunnelVxlanAllHandlerFunc(func(params GetConfigTunnelVxlanAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigTunnelVxlanAll has not yet been implemented")
+		}),
+		GetConfigVlanAllHandler: GetConfigVlanAllHandlerFunc(func(params GetConfigVlanAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigVlanAll has not yet been implemented")
+		}),
+		GetStatusDeviceHandler: GetStatusDeviceHandlerFunc(func(params GetStatusDeviceParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetStatusDevice has not yet been implemented")
+		}),
+		GetStatusFilesystemHandler: GetStatusFilesystemHandlerFunc(func(params GetStatusFilesystemParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetStatusFilesystem has not yet been implemented")
+		}),
+		GetStatusProcessHandler: GetStatusProcessHandlerFunc(func(params GetStatusProcessParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetStatusProcess has not yet been implemented")
+		}),
+		PostConfigFdbHandler: PostConfigFdbHandlerFunc(func(params PostConfigFdbParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigFdb has not yet been implemented")
+		}),
 		PostConfigIpv4addressHandler: PostConfigIpv4addressHandlerFunc(func(params PostConfigIpv4addressParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigIpv4address has not yet been implemented")
 		}),
@@ -101,6 +140,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		}),
 		PostConfigMirrorHandler: PostConfigMirrorHandlerFunc(func(params PostConfigMirrorParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigMirror has not yet been implemented")
+		}),
+		PostConfigNeighborHandler: PostConfigNeighborHandlerFunc(func(params PostConfigNeighborParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigNeighbor has not yet been implemented")
 		}),
 		PostConfigPolicyHandler: PostConfigPolicyHandlerFunc(func(params PostConfigPolicyParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigPolicy has not yet been implemented")
@@ -113,6 +155,18 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		}),
 		PostConfigSessionulclHandler: PostConfigSessionulclHandlerFunc(func(params PostConfigSessionulclParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigSessionulcl has not yet been implemented")
+		}),
+		PostConfigTunnelVxlanHandler: PostConfigTunnelVxlanHandlerFunc(func(params PostConfigTunnelVxlanParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigTunnelVxlan has not yet been implemented")
+		}),
+		PostConfigTunnelVxlanVxlanIDPeerHandler: PostConfigTunnelVxlanVxlanIDPeerHandlerFunc(func(params PostConfigTunnelVxlanVxlanIDPeerParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigTunnelVxlanVxlanIDPeer has not yet been implemented")
+		}),
+		PostConfigVlanHandler: PostConfigVlanHandlerFunc(func(params PostConfigVlanParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigVlan has not yet been implemented")
+		}),
+		PostConfigVlanVlanIDMemberHandler: PostConfigVlanVlanIDMemberHandlerFunc(func(params PostConfigVlanVlanIDMemberParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigVlanVlanIDMember has not yet been implemented")
 		}),
 	}
 }
@@ -150,6 +204,8 @@ type LoxilbRestAPIAPI struct {
 	//   - application/json
 	JSONProducer runtime.Producer
 
+	// DeleteConfigFdbMacAddressDevIfNameHandler sets the operation handler for the delete config fdb mac address dev if name operation
+	DeleteConfigFdbMacAddressDevIfNameHandler DeleteConfigFdbMacAddressDevIfNameHandler
 	// DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler sets the operation handler for the delete config ipv4address IP address mask dev if name operation
 	DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler
 	// DeleteConfigLoadbalancerAllHandler sets the operation handler for the delete config loadbalancer all operation
@@ -158,6 +214,8 @@ type LoxilbRestAPIAPI struct {
 	DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler
 	// DeleteConfigMirrorIdentIdentHandler sets the operation handler for the delete config mirror ident ident operation
 	DeleteConfigMirrorIdentIdentHandler DeleteConfigMirrorIdentIdentHandler
+	// DeleteConfigNeighborIPAddressDevIfNameHandler sets the operation handler for the delete config neighbor IP address dev if name operation
+	DeleteConfigNeighborIPAddressDevIfNameHandler DeleteConfigNeighborIPAddressDevIfNameHandler
 	// DeleteConfigPolicyIdentIdentHandler sets the operation handler for the delete config policy ident ident operation
 	DeleteConfigPolicyIdentIdentHandler DeleteConfigPolicyIdentIdentHandler
 	// DeleteConfigRouteDestinationIPNetIPAddressMaskHandler sets the operation handler for the delete config route destination IP net IP address mask operation
@@ -166,6 +224,14 @@ type LoxilbRestAPIAPI struct {
 	DeleteConfigSessionIdentIdentHandler DeleteConfigSessionIdentIdentHandler
 	// DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler sets the operation handler for the delete config sessionulcl ident ident ulcl address IP address operation
 	DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler
+	// DeleteConfigTunnelVxlanVxlanIDHandler sets the operation handler for the delete config tunnel vxlan vxlan ID operation
+	DeleteConfigTunnelVxlanVxlanIDHandler DeleteConfigTunnelVxlanVxlanIDHandler
+	// DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandler sets the operation handler for the delete config tunnel vxlan vxlan ID peer peer IP operation
+	DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandler DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandler
+	// DeleteConfigVlanVlanIDHandler sets the operation handler for the delete config vlan vlan ID operation
+	DeleteConfigVlanVlanIDHandler DeleteConfigVlanVlanIDHandler
+	// DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler sets the operation handler for the delete config vlan vlan ID member if name tagged tagged operation
+	DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler
 	// GetConfigConntrackAllHandler sets the operation handler for the get config conntrack all operation
 	GetConfigConntrackAllHandler GetConfigConntrackAllHandler
 	// GetConfigIpv4addressAllHandler sets the operation handler for the get config ipv4address all operation
@@ -174,6 +240,8 @@ type LoxilbRestAPIAPI struct {
 	GetConfigLoadbalancerAllHandler GetConfigLoadbalancerAllHandler
 	// GetConfigMirrorAllHandler sets the operation handler for the get config mirror all operation
 	GetConfigMirrorAllHandler GetConfigMirrorAllHandler
+	// GetConfigNeighborAllHandler sets the operation handler for the get config neighbor all operation
+	GetConfigNeighborAllHandler GetConfigNeighborAllHandler
 	// GetConfigPolicyAllHandler sets the operation handler for the get config policy all operation
 	GetConfigPolicyAllHandler GetConfigPolicyAllHandler
 	// GetConfigPortAllHandler sets the operation handler for the get config port all operation
@@ -184,12 +252,26 @@ type LoxilbRestAPIAPI struct {
 	GetConfigSessionAllHandler GetConfigSessionAllHandler
 	// GetConfigSessionulclAllHandler sets the operation handler for the get config sessionulcl all operation
 	GetConfigSessionulclAllHandler GetConfigSessionulclAllHandler
+	// GetConfigTunnelVxlanAllHandler sets the operation handler for the get config tunnel vxlan all operation
+	GetConfigTunnelVxlanAllHandler GetConfigTunnelVxlanAllHandler
+	// GetConfigVlanAllHandler sets the operation handler for the get config vlan all operation
+	GetConfigVlanAllHandler GetConfigVlanAllHandler
+	// GetStatusDeviceHandler sets the operation handler for the get status device operation
+	GetStatusDeviceHandler GetStatusDeviceHandler
+	// GetStatusFilesystemHandler sets the operation handler for the get status filesystem operation
+	GetStatusFilesystemHandler GetStatusFilesystemHandler
+	// GetStatusProcessHandler sets the operation handler for the get status process operation
+	GetStatusProcessHandler GetStatusProcessHandler
+	// PostConfigFdbHandler sets the operation handler for the post config fdb operation
+	PostConfigFdbHandler PostConfigFdbHandler
 	// PostConfigIpv4addressHandler sets the operation handler for the post config ipv4address operation
 	PostConfigIpv4addressHandler PostConfigIpv4addressHandler
 	// PostConfigLoadbalancerHandler sets the operation handler for the post config loadbalancer operation
 	PostConfigLoadbalancerHandler PostConfigLoadbalancerHandler
 	// PostConfigMirrorHandler sets the operation handler for the post config mirror operation
 	PostConfigMirrorHandler PostConfigMirrorHandler
+	// PostConfigNeighborHandler sets the operation handler for the post config neighbor operation
+	PostConfigNeighborHandler PostConfigNeighborHandler
 	// PostConfigPolicyHandler sets the operation handler for the post config policy operation
 	PostConfigPolicyHandler PostConfigPolicyHandler
 	// PostConfigRouteHandler sets the operation handler for the post config route operation
@@ -198,6 +280,14 @@ type LoxilbRestAPIAPI struct {
 	PostConfigSessionHandler PostConfigSessionHandler
 	// PostConfigSessionulclHandler sets the operation handler for the post config sessionulcl operation
 	PostConfigSessionulclHandler PostConfigSessionulclHandler
+	// PostConfigTunnelVxlanHandler sets the operation handler for the post config tunnel vxlan operation
+	PostConfigTunnelVxlanHandler PostConfigTunnelVxlanHandler
+	// PostConfigTunnelVxlanVxlanIDPeerHandler sets the operation handler for the post config tunnel vxlan vxlan ID peer operation
+	PostConfigTunnelVxlanVxlanIDPeerHandler PostConfigTunnelVxlanVxlanIDPeerHandler
+	// PostConfigVlanHandler sets the operation handler for the post config vlan operation
+	PostConfigVlanHandler PostConfigVlanHandler
+	// PostConfigVlanVlanIDMemberHandler sets the operation handler for the post config vlan vlan ID member operation
+	PostConfigVlanVlanIDMemberHandler PostConfigVlanVlanIDMemberHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -275,6 +365,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.DeleteConfigFdbMacAddressDevIfNameHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigFdbMacAddressDevIfNameHandler")
+	}
 	if o.DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler")
 	}
@@ -286,6 +379,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.DeleteConfigMirrorIdentIdentHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigMirrorIdentIdentHandler")
+	}
+	if o.DeleteConfigNeighborIPAddressDevIfNameHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigNeighborIPAddressDevIfNameHandler")
 	}
 	if o.DeleteConfigPolicyIdentIdentHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigPolicyIdentIdentHandler")
@@ -299,6 +395,18 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler")
 	}
+	if o.DeleteConfigTunnelVxlanVxlanIDHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigTunnelVxlanVxlanIDHandler")
+	}
+	if o.DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandler")
+	}
+	if o.DeleteConfigVlanVlanIDHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigVlanVlanIDHandler")
+	}
+	if o.DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler")
+	}
 	if o.GetConfigConntrackAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigConntrackAllHandler")
 	}
@@ -310,6 +418,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.GetConfigMirrorAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigMirrorAllHandler")
+	}
+	if o.GetConfigNeighborAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigNeighborAllHandler")
 	}
 	if o.GetConfigPolicyAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigPolicyAllHandler")
@@ -326,6 +437,24 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.GetConfigSessionulclAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigSessionulclAllHandler")
 	}
+	if o.GetConfigTunnelVxlanAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigTunnelVxlanAllHandler")
+	}
+	if o.GetConfigVlanAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigVlanAllHandler")
+	}
+	if o.GetStatusDeviceHandler == nil {
+		unregistered = append(unregistered, "GetStatusDeviceHandler")
+	}
+	if o.GetStatusFilesystemHandler == nil {
+		unregistered = append(unregistered, "GetStatusFilesystemHandler")
+	}
+	if o.GetStatusProcessHandler == nil {
+		unregistered = append(unregistered, "GetStatusProcessHandler")
+	}
+	if o.PostConfigFdbHandler == nil {
+		unregistered = append(unregistered, "PostConfigFdbHandler")
+	}
 	if o.PostConfigIpv4addressHandler == nil {
 		unregistered = append(unregistered, "PostConfigIpv4addressHandler")
 	}
@@ -334,6 +463,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.PostConfigMirrorHandler == nil {
 		unregistered = append(unregistered, "PostConfigMirrorHandler")
+	}
+	if o.PostConfigNeighborHandler == nil {
+		unregistered = append(unregistered, "PostConfigNeighborHandler")
 	}
 	if o.PostConfigPolicyHandler == nil {
 		unregistered = append(unregistered, "PostConfigPolicyHandler")
@@ -346,6 +478,18 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.PostConfigSessionulclHandler == nil {
 		unregistered = append(unregistered, "PostConfigSessionulclHandler")
+	}
+	if o.PostConfigTunnelVxlanHandler == nil {
+		unregistered = append(unregistered, "PostConfigTunnelVxlanHandler")
+	}
+	if o.PostConfigTunnelVxlanVxlanIDPeerHandler == nil {
+		unregistered = append(unregistered, "PostConfigTunnelVxlanVxlanIDPeerHandler")
+	}
+	if o.PostConfigVlanHandler == nil {
+		unregistered = append(unregistered, "PostConfigVlanHandler")
+	}
+	if o.PostConfigVlanVlanIDMemberHandler == nil {
+		unregistered = append(unregistered, "PostConfigVlanVlanIDMemberHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -438,6 +582,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
+	o.handlers["DELETE"]["/config/fdb/{mac_address}/dev/{if_name}"] = NewDeleteConfigFdbMacAddressDevIfName(o.context, o.DeleteConfigFdbMacAddressDevIfNameHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
 	o.handlers["DELETE"]["/config/ipv4address/{ip_address}/{mask}/dev/{if_name}"] = NewDeleteConfigIpv4addressIPAddressMaskDevIfName(o.context, o.DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
@@ -454,6 +602,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
+	o.handlers["DELETE"]["/config/neighbor/{ip_address}/dev/{if_name}"] = NewDeleteConfigNeighborIPAddressDevIfName(o.context, o.DeleteConfigNeighborIPAddressDevIfNameHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
 	o.handlers["DELETE"]["/config/policy/ident/{ident}"] = NewDeleteConfigPolicyIdentIdent(o.context, o.DeleteConfigPolicyIdentIdentHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
@@ -467,6 +619,22 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/config/sessionulcl/ident/{ident}/ulclAddress/{ip_address}"] = NewDeleteConfigSessionulclIdentIdentUlclAddressIPAddress(o.context, o.DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/config/tunnel/vxlan/{vxlanID}"] = NewDeleteConfigTunnelVxlanVxlanID(o.context, o.DeleteConfigTunnelVxlanVxlanIDHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/config/tunnel/vxlan/{vxlanID}/peer/{PeerIP}"] = NewDeleteConfigTunnelVxlanVxlanIDPeerPeerIP(o.context, o.DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/config/vlan/{vlan_id}"] = NewDeleteConfigVlanVlanID(o.context, o.DeleteConfigVlanVlanIDHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/config/vlan/{vlan_id}/member/{if_name}/tagged/{tagged}"] = NewDeleteConfigVlanVlanIDMemberIfNameTaggedTagged(o.context, o.DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -483,6 +651,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/config/mirror/all"] = NewGetConfigMirrorAll(o.context, o.GetConfigMirrorAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/config/neighbor/all"] = NewGetConfigNeighborAll(o.context, o.GetConfigNeighborAllHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -503,6 +675,30 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/config/sessionulcl/all"] = NewGetConfigSessionulclAll(o.context, o.GetConfigSessionulclAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/config/tunnel/vxlan/all"] = NewGetConfigTunnelVxlanAll(o.context, o.GetConfigTunnelVxlanAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/config/vlan/all"] = NewGetConfigVlanAll(o.context, o.GetConfigVlanAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/status/device"] = NewGetStatusDevice(o.context, o.GetStatusDeviceHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/status/filesystem"] = NewGetStatusFilesystem(o.context, o.GetStatusFilesystemHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/status/process"] = NewGetStatusProcess(o.context, o.GetStatusProcessHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/fdb"] = NewPostConfigFdb(o.context, o.PostConfigFdbHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
@@ -515,6 +711,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/config/mirror"] = NewPostConfigMirror(o.context, o.PostConfigMirrorHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/neighbor"] = NewPostConfigNeighbor(o.context, o.PostConfigNeighborHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
@@ -531,6 +731,22 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/config/sessionulcl"] = NewPostConfigSessionulcl(o.context, o.PostConfigSessionulclHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/tunnel/vxlan"] = NewPostConfigTunnelVxlan(o.context, o.PostConfigTunnelVxlanHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/tunnel/vxlan/{vxlanID}/peer"] = NewPostConfigTunnelVxlanVxlanIDPeer(o.context, o.PostConfigTunnelVxlanVxlanIDPeerHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/vlan"] = NewPostConfigVlan(o.context, o.PostConfigVlanHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/vlan/{vlan_id}/member"] = NewPostConfigVlanVlanIDMember(o.context, o.PostConfigVlanVlanIDMemberHandler)
 }
 
 // Serve creates a http handler to serve the API over HTTP

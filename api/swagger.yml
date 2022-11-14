@@ -978,6 +978,669 @@ paths:
 
 
 #----------------------------------------------
+# IP Neighbor
+#----------------------------------------------
+  '/config/neighbor/all':
+    get:
+      summary: Get IPv4 neighbor in the device(interface)
+      description: Get IPv4 neighbor in the device(interface)
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              neighborAttr:
+                type: array
+                items:
+                  $ref: '#/definitions/NeighborEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+            
+  '/config/neighbor':
+    post:
+      summary: Assign IPv4 neighbor in the device
+      description: Assign IPv4 neighbor in the device
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes for IPv4 address
+          schema:
+            $ref: '#/definitions/NeighborEntry'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+ 
+  '/config/neighbor/{ip_address}/dev/{if_name}':
+    delete:
+      summary: Delete IPv4 neighbor in the device
+      description: Delete IPv4 neighbor in the device
+      parameters:
+        - name: ip_address
+          in: path
+          type: string
+          required: true
+          description: Attributes IPv4 Address in the device
+        - name: if_name
+          in: path
+          type: string
+          required: true
+          description: Attributes of the target device
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+            
+            
+#----------------------------------------------
+# FDB
+#----------------------------------------------
+  '/config/fdb':
+    post:
+      summary: Assign FDB in the device
+      description: Assign FDB in the device
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes for IPv4 address
+          schema:
+            $ref: '#/definitions/FDBEntry'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+ 
+  '/config/fdb/{mac_address}/dev/{if_name}':
+    delete:
+      summary: Delete FDB in the device
+      description: Delete FDB in the device
+      parameters:
+        - name: mac_address
+          in: path
+          type: string
+          required: true
+          description: Attributes IPv4 Address in the device
+        - name: if_name
+          in: path
+          type: string
+          required: true
+          description: Attributes of the target device
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
+#----------------------------------------------
+# Vlan Interface
+#----------------------------------------------
+  '/config/vlan/all':
+    get:
+      summary: Get vlan in the device
+      description: Get vlan in the device
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              ipAttr:
+                type: array
+                items:
+                  $ref: '#/definitions/VlanBridgeEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+            
+  '/config/vlan':
+    post:
+      summary: Create vlan interface in the device
+      description: Create vlan interface in the device
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes for Vlan Interface
+          schema:
+            $ref: '#/definitions/VlanBridgeEntry'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+ 
+  '/config/vlan/{vlan_id}':
+    delete:
+      summary: Delete vlan in the device
+      description: Delete vlan in the device
+      parameters:
+        - name: vlan_id
+          in: path
+          type: integer
+          required: true
+          description: Attributes IPv4 Address in the device
+        
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+            
+  '/config/vlan/{vlan_id}/member':
+    post:
+      summary: Add a physical port to a vlan interface
+      description: Add a member to interface Vlan{vlan_id}. If the vlan interface does not exist on LoxiLB it returns a '404' error. If such a member is already present on this Vlan interface the API returns '409' sub-code 0. If the vlan_id passed is less than 2 or greater than 4094 the API will respond with error '400'. If attr with tagging mode is provided it will be honored in config, if not, the default tagging mode will be set to 'untagged'. Vlan members may be tagged or untagged, but, the Vlan member port may be untagged in only one Vlan interface, deviations from this will cause the API to return '409' sub-code 0. 
+      parameters:
+        - name: vlan_id
+          in: path
+          required: true
+          type: integer
+          format: int32
+          description: 12 bit vlan_id
+        - name: attr
+          in: body
+          required: true
+          description: Attributes for Vlan Interface
+          schema:
+            $ref: '#/definitions/VlanMemberEntry'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Vlan interface is not defined
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN member already exists on this VLAN interface OR Vlan member is being added to 2nd Vlan inteface as an untagged member.
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+  '/config/vlan/{vlan_id}/member/{if_name}/tagged/{tagged}':
+    delete:
+      summary: Remove a vlan member from a vlan interface
+      description: Remove a vlan member from a vlan interface which is defined by vlan_id. If the Vlan interface does not exist on LoxiLB OR a vlan member 'if_name' is not present on the interface the API will return '404'. If the vlan_id passed is less than 2 or greater than 4094 the API will respond with error '400'.
+      parameters:
+        - name: vlan_id
+          in: path
+          required: true
+          type: integer
+          format: int32
+          description: 12 bit vlan_id
+        - name: if_name
+          in: path
+          required: true
+          type: string
+          description: Physical port name
+        - name: tagged
+          in: path
+          required: true
+          type: boolean
+          description: Tagged status
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Vlan interface is not defined/Vlan member is not found on this Vlan interface
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
+#----------------------------------------------
+# All configured Vxlan configration
+#----------------------------------------------
+  '/config/tunnel/vxlan/all':
+    get:
+      summary: Get a list of vxlan configurations
+      description: Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              Attr:
+                type: array
+                items:
+                  $ref: '#/definitions/VxlanFDBreturnEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'          
+  '/config/tunnel/vxlan':
+    post:
+      summary: Add a one of vxlan configuration
+      description: Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: attributes for vxlan member interface
+          schema:
+            $ref: '#/definitions/VxlanBridgeEntry'    
+      responses:
+        '204':
+          description: OK
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VxLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'   
+  '/config/tunnel/vxlan/{vxlanID}':
+    delete:
+      summary: Delete a one of vxlan configuration
+      description: Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.
+      parameters:
+        - name: vxlanID
+          in: path
+          required: true
+          type: integer
+          format: int32
+          description: vxlan id (24-bit). Allows to remove routes with defined vnid only. Applicable for routes with nexthop_type 'vxlan-tunnel'. Otherwise '400' error will be returned
+         
+      responses:
+        '204':
+          description: OK
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'        
+            
+  '/config/tunnel/vxlan/{vxlanID}/peer':
+    post:
+      summary: Add a one of vxlan remote(peer) ip address configuration
+      description: Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.
+      parameters:
+        - name: vxlanID
+          in: path
+          required: true
+          type: integer
+          format: int32
+          description: vxlan id (24-bit). Allows to remove routes with defined vnid only. Applicable for routes with nexthop_type 'vxlan-tunnel'. Otherwise '400' error will be returned
+        - name: attr
+          in: body
+          required: true
+          description: attributes for vxlan Peer interface
+          schema:
+            $ref: '#/definitions/VxlanPeerEntry'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/VxlanPeerEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'       
+            
+  '/config/tunnel/vxlan/{vxlanID}/peer/{PeerIP}':
+    delete:
+      summary: Remove a one of vxlan remote(peer) ip address configuration
+      description: Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.
+      parameters:
+        - name: vxlanID
+          in: path
+          required: true
+          type: integer
+          format: int32
+          description: vxlan id (24-bit). Allows to remove routes with defined vnid only. Applicable for routes with nexthop_type 'vxlan-tunnel'. Otherwise '400' error will be returned
+        - name: PeerIP
+          in: path
+          required: true
+          type: string
+          description: attributes for vxlan Peer IP address
+        
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/VxlanEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'     
+
+
+
+#----------------------------------------------
+# System Status
+#----------------------------------------------
+  '/status/process':
+    get:
+      summary: Get a process based on CPU usage info in the device
+      description: Get a process based on high usage CPU(linux command "top") in the device or system.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              processAttr:
+                type: array
+                items:
+                  $ref: '#/definitions/ProcessInfoEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+            
+          
+  '/status/device':
+    get:
+      summary: Get a basic info in the device
+      description: Get a basic info (linux command "uptime, hostnamectl") in the device or system.
+      responses:
+        '200':
+          description: Device unique informations
+          schema:
+            $ref: '#/definitions/DeviceInfoEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+            
+  '/status/filesystem':
+    get:
+      summary: Get a File System info in the device
+      description: Get a File system infomation (linux command "df") in the device or system.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              filesystemAttr:
+                type: array
+                items:
+                  $ref: '#/definitions/FileSystemInfoEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+            
+
+#----------------------------------------------
 # Schema definitions
 #----------------------------------------------
 definitions:
@@ -1028,6 +1691,9 @@ definitions:
           bgp:
             type: boolean
             description: value for BGP enable or not
+          fullNat:
+            type: boolean
+            description: value for enable one-arm NAT
             
       endpoints:
         type: array
@@ -1387,16 +2053,18 @@ definitions:
       sync:
         type: integer
         description: Sync - sync state
-    
-      
-            
         
-  VlanPortMod:
+  VlanBridgeEntry:
     type: object
     properties:
       Vid:
-        type: number
+        type: integer
         description: Vlan ID
+            
+      
+  VlanMemberEntry:
+    type: object
+    properties:
       Dev:
         type: string
         description: Interface device name
@@ -1433,10 +2101,166 @@ definitions:
         description: Sync - sync state
         
 
-  Neighborv4Mod:
+  NeighborEntry:
     type: object
     properties:
-      IpAddress:
+      ipAddress:
         type: string
         description: IP address to neighbor
+      dev:
+        type: string
+        description: Name of the interface device to which you want to add neighbor
+      macAddress:
+        type: string
+        description: MAC address to neighbor
         
+  FDBEntry:
+    type: object
+    properties:
+      dev:
+        type: string
+        description: Name of the interface device to which you want to modify FDB
+      macAddress:
+        type: string
+        description: MAC address to FDB
+        
+  ProcessInfoEntry:
+    type: object
+    properties:
+      pid:
+        type: string
+        description: process ID
+      user:
+        type: string
+        description: User name that start the process
+      priority:
+        type: string
+        description: process priority
+      nice:
+        type: string
+        description: process nice value
+      virtMemory:
+        type: string
+        description: virtual memory usage
+      residentSize:
+        type: string
+        description: Physical memory usage
+      sharedMemory:
+        type: string
+        description: Shared memory usage
+      status:
+        type: string
+        description: process status
+      CPUUsage:
+        type: string
+        description: CPU usage of the process
+      MemoryUsage:
+        type: string
+        description: Memory usage of the process
+      time:
+        type: string
+        description: Executation time
+      command:
+        type: string
+        description: process command 
+
+  DeviceInfoEntry:
+    type: object
+    properties:
+      hostName:
+        type: string
+        description: Device host name
+      machineID:
+        type: string
+        description: Device machine ID
+      bootID:
+        type: string
+        description: Boot ID in the linux
+      OS:
+        type: string
+        description: Operation System of the device
+      kernel:
+        type: string
+        description: Kernel version of the device
+      architecture:
+        type: string
+        description: CPU architecture of the device
+      uptime:
+        type: string
+        description: system uptime
+        
+  FileSystemInfoEntry:
+    type: object
+    properties:
+      fileSystem:
+        type: string
+        description: File system name mounted on this device
+      type:
+        type: string
+        description: File type (ex. nfs, ext4..)
+      size:
+        type: string
+        description: Boot ID in the linux
+      used:
+        type: string
+        description: size of used the disk
+      avail:
+        type: string
+        description: size of remain the disk 
+      usePercent:
+        type: string
+        description: usage per total size
+      mountedOn:
+        type: string
+        description: path of the mounted on
+  
+  VxlanFDBreturnEntry:
+    type: object
+    properties:
+      mac_addr:
+        type: string
+      vxlan_id:
+        type: string
+      vrf:
+        type: string
+      destination_ip:
+        type: string
+        format: ipv4
+      vtep_id:
+        type: string
+      status:
+        type: string
+        
+  VxlanEntry:
+    type: object
+    properties:
+      vxlan_name:
+        type: string
+      vxlan_id:
+        type: string
+        description: vxlan id (24-bit)
+      vrf:
+        type: string
+      multicast_group:
+        type: string
+      udp:
+        type: string
+      uif:
+        type: string
+      mac_addr:
+        type: string
+        
+  VxlanBridgeEntry:
+    type: object
+    properties:
+      epIntf:
+        type: string
+      vxlanID:
+        type: integer
+        
+  VxlanPeerEntry:
+    type: object
+    properties:
+      peerIP:
+        type: string
+ 

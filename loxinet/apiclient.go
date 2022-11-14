@@ -156,6 +156,12 @@ func (*NetAPIStruct) NetIpv4AddrDel(am *cmn.Ipv4AddrMod) (int, error) {
 	return ret, err
 }
 
+// NetNeighGet - Get a ipv4 neighbor in loxinet
+func (*NetAPIStruct) NetNeighv4Get() ([]cmn.Neighv4Mod, error) {
+	ret, err := mh.zr.Nh.NeighGet()
+	return ret, err
+}
+
 // NetNeighv4Add - Add a ipv4 neighbor in loxinet
 func (*NetAPIStruct) NetNeighv4Add(nm *cmn.Neighv4Mod) (int, error) {
 	mh.mtx.Lock()
@@ -182,12 +188,10 @@ func (*NetAPIStruct) NetNeighv4Del(nm *cmn.Neighv4Mod) (int, error) {
 
 // NetFdbAdd - Add a forwarding database entry in loxinet
 func (*NetAPIStruct) NetFdbAdd(fm *cmn.FdbMod) (int, error) {
-	fdbKey := FdbKey{fm.MacAddr, fm.BridgeID}
-	fdbAttr := FdbAttr{fm.Dev, fm.Dst, fm.Type}
-
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
-
+	fdbKey := FdbKey{fm.MacAddr, fm.BridgeID}
+	fdbAttr := FdbAttr{fm.Dev, fm.Dst, fm.Type}
 	ret, err := mh.zr.L2.L2FdbAdd(fdbKey, fdbAttr)
 	return ret, err
 }

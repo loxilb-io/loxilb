@@ -558,6 +558,7 @@ type NetHookInterface interface {
 	NetIpv4AddrGet() ([]Ipv4AddrGet, error)
 	NetIpv4AddrAdd(*Ipv4AddrMod) (int, error)
 	NetIpv4AddrDel(*Ipv4AddrMod) (int, error)
+	NetNeighv4Get() ([]Neighv4Mod, error)
 	NetNeighv4Add(*Neighv4Mod) (int, error)
 	NetNeighv4Del(*Neighv4Mod) (int, error)
 	NetRoutev4Get() ([]Routev4Get, error)

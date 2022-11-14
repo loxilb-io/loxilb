@@ -215,6 +215,9 @@ type LoadbalanceEntryServiceArguments struct {
 	// IP address for externel access
 	ExternalIP string `json:"externalIP,omitempty"`
 
+	// value for enable one-arm NAT
+	FullNat bool `json:"fullNat,omitempty"`
+
 	// port number for the access
 	Port int64 `json:"port,omitempty"`
 
