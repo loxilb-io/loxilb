@@ -273,6 +273,19 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 	return chg
 }
 
+func (n *NeighH) NeighGet() ([]cmn.Neighv4Mod, error) {
+	var ret []cmn.Neighv4Mod
+	for _, n2 := range n.NeighMap {
+		var tmpNeigh cmn.Neighv4Mod
+		tmpNeigh.HardwareAddr = n2.Attr.HardwareAddr
+		tmpNeigh.IP = n2.Addr
+		tmpNeigh.State = int(n2.Sync)
+		tmpNeigh.LinkIndex = n2.OifPort.PortNo
+		ret = append(ret, tmpNeigh)
+	}
+	return ret, nil
+}
+
 // NeighAdd - add a neigh entry
 func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error) {
 	var idx int
