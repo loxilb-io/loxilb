@@ -77,6 +77,139 @@ func init() {
         }
       }
     },
+    "/config/fdb": {
+      "post": {
+        "description": "Assign FDB in the device",
+        "summary": "Assign FDB in the device",
+        "parameters": [
+          {
+            "description": "Attributes for IPv4 address",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FDBEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/fdb/{mac_address}/dev/{if_name}": {
+      "delete": {
+        "description": "Delete FDB in the device",
+        "summary": "Delete FDB in the device",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes IPv4 Address in the device",
+            "name": "mac_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes of the target device",
+            "name": "if_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/ipv4address": {
       "post": {
         "description": "Assign IPv4 addresses in the device",
@@ -610,6 +743,179 @@ func init() {
             "type": "string",
             "description": "Attributes of Mirror Ident.",
             "name": "ident",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/neighbor": {
+      "post": {
+        "description": "Assign IPv4 neighbor in the device",
+        "summary": "Assign IPv4 neighbor in the device",
+        "parameters": [
+          {
+            "description": "Attributes for IPv4 address",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NeighborEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/neighbor/all": {
+      "get": {
+        "description": "Get IPv4 neighbor in the device(interface)",
+        "summary": "Get IPv4 neighbor in the device(interface)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "neighborAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/NeighborEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/neighbor/{ip_address}/dev/{if_name}": {
+      "delete": {
+        "description": "Delete IPv4 neighbor in the device",
+        "summary": "Delete IPv4 neighbor in the device",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes IPv4 Address in the device",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes of the target device",
+            "name": "if_name",
             "in": "path",
             "required": true
           }
@@ -1404,6 +1710,646 @@ func init() {
           }
         }
       }
+    },
+    "/config/tunnel/vxlan": {
+      "post": {
+        "description": "Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.",
+        "summary": "Add a one of vxlan configuration",
+        "parameters": [
+          {
+            "description": "attributes for vxlan member interface",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VxlanBridgeEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VxLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/tunnel/vxlan/all": {
+      "get": {
+        "description": "Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.",
+        "summary": "Get a list of vxlan configurations",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "Attr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/VxlanFDBreturnEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/tunnel/vxlan/{vxlanID}": {
+      "delete": {
+        "description": "Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.",
+        "summary": "Delete a one of vxlan configuration",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "vxlan id (24-bit). Allows to remove routes with defined vnid only. Applicable for routes with nexthop_type 'vxlan-tunnel'. Otherwise '400' error will be returned",
+            "name": "vxlanID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/tunnel/vxlan/{vxlanID}/peer": {
+      "post": {
+        "description": "Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.",
+        "summary": "Add a one of vxlan remote(peer) ip address configuration",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "vxlan id (24-bit). Allows to remove routes with defined vnid only. Applicable for routes with nexthop_type 'vxlan-tunnel'. Otherwise '400' error will be returned",
+            "name": "vxlanID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "attributes for vxlan Peer interface",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VxlanPeerEntry"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/VxlanPeerEntry"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/tunnel/vxlan/{vxlanID}/peer/{PeerIP}": {
+      "delete": {
+        "description": "Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.",
+        "summary": "Remove a one of vxlan remote(peer) ip address configuration",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "vxlan id (24-bit). Allows to remove routes with defined vnid only. Applicable for routes with nexthop_type 'vxlan-tunnel'. Otherwise '400' error will be returned",
+            "name": "vxlanID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "attributes for vxlan Peer IP address",
+            "name": "PeerIP",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/VxlanEntry"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/vlan": {
+      "post": {
+        "description": "Create vlan interface in the device",
+        "summary": "Create vlan interface in the device",
+        "parameters": [
+          {
+            "description": "Attributes for Vlan Interface",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VlanBridgeEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/vlan/all": {
+      "get": {
+        "description": "Get vlan in the device",
+        "summary": "Get vlan in the device",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ipAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/VlanBridgeEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/vlan/{vlan_id}": {
+      "delete": {
+        "description": "Delete vlan in the device",
+        "summary": "Delete vlan in the device",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "Attributes IPv4 Address in the device",
+            "name": "vlan_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/vlan/{vlan_id}/member": {
+      "post": {
+        "description": "Add a member to interface Vlan{vlan_id}. If the vlan interface does not exist on LoxiLB it returns a '404' error. If such a member is already present on this Vlan interface the API returns '409' sub-code 0. If the vlan_id passed is less than 2 or greater than 4094 the API will respond with error '400'. If attr with tagging mode is provided it will be honored in config, if not, the default tagging mode will be set to 'untagged'. Vlan members may be tagged or untagged, but, the Vlan member port may be untagged in only one Vlan interface, deviations from this will cause the API to return '409' sub-code 0.",
+        "summary": "Add a physical port to a vlan interface",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "12 bit vlan_id",
+            "name": "vlan_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Attributes for Vlan Interface",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VlanMemberEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Vlan interface is not defined",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN member already exists on this VLAN interface OR Vlan member is being added to 2nd Vlan inteface as an untagged member.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/vlan/{vlan_id}/member/{if_name}/tagged/{tagged}": {
+      "delete": {
+        "description": "Remove a vlan member from a vlan interface which is defined by vlan_id. If the Vlan interface does not exist on LoxiLB OR a vlan member 'if_name' is not present on the interface the API will return '404'. If the vlan_id passed is less than 2 or greater than 4094 the API will respond with error '400'.",
+        "summary": "Remove a vlan member from a vlan interface",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "12 bit vlan_id",
+            "name": "vlan_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Physical port name",
+            "name": "if_name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "Tagged status",
+            "name": "tagged",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Vlan interface is not defined/Vlan member is not found on this Vlan interface",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/status/device": {
+      "get": {
+        "description": "Get a basic info (linux command \"uptime, hostnamectl\") in the device or system.",
+        "summary": "Get a basic info in the device",
+        "responses": {
+          "200": {
+            "description": "Device unique informations",
+            "schema": {
+              "$ref": "#/definitions/DeviceInfoEntry"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/status/filesystem": {
+      "get": {
+        "description": "Get a File system infomation (linux command \"df\") in the device or system.",
+        "summary": "Get a File System info in the device",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "filesystemAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/FileSystemInfoEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/status/process": {
+      "get": {
+        "description": "Get a process based on high usage CPU(linux command \"top\") in the device or system.",
+        "summary": "Get a process based on CPU usage info in the device",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "processAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/ProcessInfoEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -1448,6 +2394,39 @@ func init() {
         }
       }
     },
+    "DeviceInfoEntry": {
+      "type": "object",
+      "properties": {
+        "OS": {
+          "description": "Operation System of the device",
+          "type": "string"
+        },
+        "architecture": {
+          "description": "CPU architecture of the device",
+          "type": "string"
+        },
+        "bootID": {
+          "description": "Boot ID in the linux",
+          "type": "string"
+        },
+        "hostName": {
+          "description": "Device host name",
+          "type": "string"
+        },
+        "kernel": {
+          "description": "Kernel version of the device",
+          "type": "string"
+        },
+        "machineID": {
+          "description": "Device machine ID",
+          "type": "string"
+        },
+        "uptime": {
+          "description": "system uptime",
+          "type": "string"
+        }
+      }
+    },
     "Error": {
       "type": "object",
       "properties": {
@@ -1470,6 +2449,52 @@ func init() {
         "sub-code": {
           "type": "integer",
           "format": "int32"
+        }
+      }
+    },
+    "FDBEntry": {
+      "type": "object",
+      "properties": {
+        "dev": {
+          "description": "Name of the interface device to which you want to modify FDB",
+          "type": "string"
+        },
+        "macAddress": {
+          "description": "MAC address to FDB",
+          "type": "string"
+        }
+      }
+    },
+    "FileSystemInfoEntry": {
+      "type": "object",
+      "properties": {
+        "avail": {
+          "description": "size of remain the disk",
+          "type": "string"
+        },
+        "fileSystem": {
+          "description": "File system name mounted on this device",
+          "type": "string"
+        },
+        "mountedOn": {
+          "description": "path of the mounted on",
+          "type": "string"
+        },
+        "size": {
+          "description": "Boot ID in the linux",
+          "type": "string"
+        },
+        "type": {
+          "description": "File type (ex. nfs, ext4..)",
+          "type": "string"
+        },
+        "usePercent": {
+          "description": "usage per total size",
+          "type": "string"
+        },
+        "used": {
+          "description": "size of used the disk",
+          "type": "string"
         }
       }
     },
@@ -1541,6 +2566,10 @@ func init() {
             "externalIP": {
               "description": "IP address for externel access",
               "type": "string"
+            },
+            "fullNat": {
+              "description": "value for enable one-arm NAT",
+              "type": "boolean"
             },
             "port": {
               "description": "port number for the access",
@@ -1667,11 +2696,19 @@ func init() {
         }
       }
     },
-    "Neighborv4Mod": {
+    "NeighborEntry": {
       "type": "object",
       "properties": {
-        "IpAddress": {
+        "dev": {
+          "description": "Name of the interface device to which you want to add neighbor",
+          "type": "string"
+        },
+        "ipAddress": {
           "description": "IP address to neighbor",
+          "type": "string"
+        },
+        "macAddress": {
+          "description": "MAC address to neighbor",
           "type": "string"
         }
       }
@@ -1889,6 +2926,59 @@ func init() {
         }
       }
     },
+    "ProcessInfoEntry": {
+      "type": "object",
+      "properties": {
+        "CPUUsage": {
+          "description": "CPU usage of the process",
+          "type": "string"
+        },
+        "MemoryUsage": {
+          "description": "Memory usage of the process",
+          "type": "string"
+        },
+        "command": {
+          "description": "process command",
+          "type": "string"
+        },
+        "nice": {
+          "description": "process nice value",
+          "type": "string"
+        },
+        "pid": {
+          "description": "process ID",
+          "type": "string"
+        },
+        "priority": {
+          "description": "process priority",
+          "type": "string"
+        },
+        "residentSize": {
+          "description": "Physical memory usage",
+          "type": "string"
+        },
+        "sharedMemory": {
+          "description": "Shared memory usage",
+          "type": "string"
+        },
+        "status": {
+          "description": "process status",
+          "type": "string"
+        },
+        "time": {
+          "description": "Executation time",
+          "type": "string"
+        },
+        "user": {
+          "description": "User name that start the process",
+          "type": "string"
+        },
+        "virtMemory": {
+          "description": "virtual memory usage",
+          "type": "string"
+        }
+      }
+    },
     "RouteEntry": {
       "type": "object",
       "properties": {
@@ -2008,7 +3098,16 @@ func init() {
         }
       }
     },
-    "VlanPortMod": {
+    "VlanBridgeEntry": {
+      "type": "object",
+      "properties": {
+        "Vid": {
+          "description": "Vlan ID",
+          "type": "integer"
+        }
+      }
+    },
+    "VlanMemberEntry": {
       "type": "object",
       "properties": {
         "Dev": {
@@ -2018,10 +3117,76 @@ func init() {
         "Tagged": {
           "description": "Tagged status added",
           "type": "boolean"
+        }
+      }
+    },
+    "VxlanBridgeEntry": {
+      "type": "object",
+      "properties": {
+        "epIntf": {
+          "type": "string"
         },
-        "Vid": {
-          "description": "Vlan ID",
-          "type": "number"
+        "vxlanID": {
+          "type": "integer"
+        }
+      }
+    },
+    "VxlanEntry": {
+      "type": "object",
+      "properties": {
+        "mac_addr": {
+          "type": "string"
+        },
+        "multicast_group": {
+          "type": "string"
+        },
+        "udp": {
+          "type": "string"
+        },
+        "uif": {
+          "type": "string"
+        },
+        "vrf": {
+          "type": "string"
+        },
+        "vxlan_id": {
+          "description": "vxlan id (24-bit)",
+          "type": "string"
+        },
+        "vxlan_name": {
+          "type": "string"
+        }
+      }
+    },
+    "VxlanFDBreturnEntry": {
+      "type": "object",
+      "properties": {
+        "destination_ip": {
+          "type": "string",
+          "format": "ipv4"
+        },
+        "mac_addr": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "vrf": {
+          "type": "string"
+        },
+        "vtep_id": {
+          "type": "string"
+        },
+        "vxlan_id": {
+          "type": "string"
+        }
+      }
+    },
+    "VxlanPeerEntry": {
+      "type": "object",
+      "properties": {
+        "peerIP": {
+          "type": "string"
         }
       }
     }
@@ -2068,6 +3233,139 @@ func init() {
           },
           "401": {
             "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/fdb": {
+      "post": {
+        "description": "Assign FDB in the device",
+        "summary": "Assign FDB in the device",
+        "parameters": [
+          {
+            "description": "Attributes for IPv4 address",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FDBEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/fdb/{mac_address}/dev/{if_name}": {
+      "delete": {
+        "description": "Delete FDB in the device",
+        "summary": "Delete FDB in the device",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes IPv4 Address in the device",
+            "name": "mac_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes of the target device",
+            "name": "if_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2620,6 +3918,179 @@ func init() {
             "type": "string",
             "description": "Attributes of Mirror Ident.",
             "name": "ident",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/neighbor": {
+      "post": {
+        "description": "Assign IPv4 neighbor in the device",
+        "summary": "Assign IPv4 neighbor in the device",
+        "parameters": [
+          {
+            "description": "Attributes for IPv4 address",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NeighborEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/neighbor/all": {
+      "get": {
+        "description": "Get IPv4 neighbor in the device(interface)",
+        "summary": "Get IPv4 neighbor in the device(interface)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "neighborAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/NeighborEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/neighbor/{ip_address}/dev/{if_name}": {
+      "delete": {
+        "description": "Delete IPv4 neighbor in the device",
+        "summary": "Delete IPv4 neighbor in the device",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes IPv4 Address in the device",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes of the target device",
+            "name": "if_name",
             "in": "path",
             "required": true
           }
@@ -3414,6 +4885,646 @@ func init() {
           }
         }
       }
+    },
+    "/config/tunnel/vxlan": {
+      "post": {
+        "description": "Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.",
+        "summary": "Add a one of vxlan configuration",
+        "parameters": [
+          {
+            "description": "attributes for vxlan member interface",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VxlanBridgeEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VxLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/tunnel/vxlan/all": {
+      "get": {
+        "description": "Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.",
+        "summary": "Get a list of vxlan configurations",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "Attr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/VxlanFDBreturnEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/tunnel/vxlan/{vxlanID}": {
+      "delete": {
+        "description": "Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.",
+        "summary": "Delete a one of vxlan configuration",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "vxlan id (24-bit). Allows to remove routes with defined vnid only. Applicable for routes with nexthop_type 'vxlan-tunnel'. Otherwise '400' error will be returned",
+            "name": "vxlanID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/tunnel/vxlan/{vxlanID}/peer": {
+      "post": {
+        "description": "Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.",
+        "summary": "Add a one of vxlan remote(peer) ip address configuration",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "vxlan id (24-bit). Allows to remove routes with defined vnid only. Applicable for routes with nexthop_type 'vxlan-tunnel'. Otherwise '400' error will be returned",
+            "name": "vxlanID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "attributes for vxlan Peer interface",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VxlanPeerEntry"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/VxlanPeerEntry"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/tunnel/vxlan/{vxlanID}/peer/{PeerIP}": {
+      "delete": {
+        "description": "Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.",
+        "summary": "Remove a one of vxlan remote(peer) ip address configuration",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "vxlan id (24-bit). Allows to remove routes with defined vnid only. Applicable for routes with nexthop_type 'vxlan-tunnel'. Otherwise '400' error will be returned",
+            "name": "vxlanID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "attributes for vxlan Peer IP address",
+            "name": "PeerIP",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/VxlanEntry"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/vlan": {
+      "post": {
+        "description": "Create vlan interface in the device",
+        "summary": "Create vlan interface in the device",
+        "parameters": [
+          {
+            "description": "Attributes for Vlan Interface",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VlanBridgeEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/vlan/all": {
+      "get": {
+        "description": "Get vlan in the device",
+        "summary": "Get vlan in the device",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ipAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/VlanBridgeEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/vlan/{vlan_id}": {
+      "delete": {
+        "description": "Delete vlan in the device",
+        "summary": "Delete vlan in the device",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "Attributes IPv4 Address in the device",
+            "name": "vlan_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/vlan/{vlan_id}/member": {
+      "post": {
+        "description": "Add a member to interface Vlan{vlan_id}. If the vlan interface does not exist on LoxiLB it returns a '404' error. If such a member is already present on this Vlan interface the API returns '409' sub-code 0. If the vlan_id passed is less than 2 or greater than 4094 the API will respond with error '400'. If attr with tagging mode is provided it will be honored in config, if not, the default tagging mode will be set to 'untagged'. Vlan members may be tagged or untagged, but, the Vlan member port may be untagged in only one Vlan interface, deviations from this will cause the API to return '409' sub-code 0.",
+        "summary": "Add a physical port to a vlan interface",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "12 bit vlan_id",
+            "name": "vlan_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Attributes for Vlan Interface",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VlanMemberEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Vlan interface is not defined",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN member already exists on this VLAN interface OR Vlan member is being added to 2nd Vlan inteface as an untagged member.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/vlan/{vlan_id}/member/{if_name}/tagged/{tagged}": {
+      "delete": {
+        "description": "Remove a vlan member from a vlan interface which is defined by vlan_id. If the Vlan interface does not exist on LoxiLB OR a vlan member 'if_name' is not present on the interface the API will return '404'. If the vlan_id passed is less than 2 or greater than 4094 the API will respond with error '400'.",
+        "summary": "Remove a vlan member from a vlan interface",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "12 bit vlan_id",
+            "name": "vlan_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Physical port name",
+            "name": "if_name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "Tagged status",
+            "name": "tagged",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Vlan interface is not defined/Vlan member is not found on this Vlan interface",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/status/device": {
+      "get": {
+        "description": "Get a basic info (linux command \"uptime, hostnamectl\") in the device or system.",
+        "summary": "Get a basic info in the device",
+        "responses": {
+          "200": {
+            "description": "Device unique informations",
+            "schema": {
+              "$ref": "#/definitions/DeviceInfoEntry"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/status/filesystem": {
+      "get": {
+        "description": "Get a File system infomation (linux command \"df\") in the device or system.",
+        "summary": "Get a File System info in the device",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "filesystemAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/FileSystemInfoEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/status/process": {
+      "get": {
+        "description": "Get a process based on high usage CPU(linux command \"top\") in the device or system.",
+        "summary": "Get a process based on CPU usage info in the device",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "processAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/ProcessInfoEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -3458,6 +5569,39 @@ func init() {
         }
       }
     },
+    "DeviceInfoEntry": {
+      "type": "object",
+      "properties": {
+        "OS": {
+          "description": "Operation System of the device",
+          "type": "string"
+        },
+        "architecture": {
+          "description": "CPU architecture of the device",
+          "type": "string"
+        },
+        "bootID": {
+          "description": "Boot ID in the linux",
+          "type": "string"
+        },
+        "hostName": {
+          "description": "Device host name",
+          "type": "string"
+        },
+        "kernel": {
+          "description": "Kernel version of the device",
+          "type": "string"
+        },
+        "machineID": {
+          "description": "Device machine ID",
+          "type": "string"
+        },
+        "uptime": {
+          "description": "system uptime",
+          "type": "string"
+        }
+      }
+    },
     "Error": {
       "type": "object",
       "properties": {
@@ -3480,6 +5624,52 @@ func init() {
         "sub-code": {
           "type": "integer",
           "format": "int32"
+        }
+      }
+    },
+    "FDBEntry": {
+      "type": "object",
+      "properties": {
+        "dev": {
+          "description": "Name of the interface device to which you want to modify FDB",
+          "type": "string"
+        },
+        "macAddress": {
+          "description": "MAC address to FDB",
+          "type": "string"
+        }
+      }
+    },
+    "FileSystemInfoEntry": {
+      "type": "object",
+      "properties": {
+        "avail": {
+          "description": "size of remain the disk",
+          "type": "string"
+        },
+        "fileSystem": {
+          "description": "File system name mounted on this device",
+          "type": "string"
+        },
+        "mountedOn": {
+          "description": "path of the mounted on",
+          "type": "string"
+        },
+        "size": {
+          "description": "Boot ID in the linux",
+          "type": "string"
+        },
+        "type": {
+          "description": "File type (ex. nfs, ext4..)",
+          "type": "string"
+        },
+        "usePercent": {
+          "description": "usage per total size",
+          "type": "string"
+        },
+        "used": {
+          "description": "size of used the disk",
+          "type": "string"
         }
       }
     },
@@ -3539,6 +5729,10 @@ func init() {
               "description": "IP address for externel access",
               "type": "string"
             },
+            "fullNat": {
+              "description": "value for enable one-arm NAT",
+              "type": "boolean"
+            },
             "port": {
               "description": "port number for the access",
               "type": "integer"
@@ -3581,6 +5775,10 @@ func init() {
         "externalIP": {
           "description": "IP address for externel access",
           "type": "string"
+        },
+        "fullNat": {
+          "description": "value for enable one-arm NAT",
+          "type": "boolean"
         },
         "port": {
           "description": "port number for the access",
@@ -3789,11 +5987,19 @@ func init() {
         }
       }
     },
-    "Neighborv4Mod": {
+    "NeighborEntry": {
       "type": "object",
       "properties": {
-        "IpAddress": {
+        "dev": {
+          "description": "Name of the interface device to which you want to add neighbor",
+          "type": "string"
+        },
+        "ipAddress": {
           "description": "IP address to neighbor",
+          "type": "string"
+        },
+        "macAddress": {
+          "description": "MAC address to neighbor",
           "type": "string"
         }
       }
@@ -4183,6 +6389,59 @@ func init() {
         }
       }
     },
+    "ProcessInfoEntry": {
+      "type": "object",
+      "properties": {
+        "CPUUsage": {
+          "description": "CPU usage of the process",
+          "type": "string"
+        },
+        "MemoryUsage": {
+          "description": "Memory usage of the process",
+          "type": "string"
+        },
+        "command": {
+          "description": "process command",
+          "type": "string"
+        },
+        "nice": {
+          "description": "process nice value",
+          "type": "string"
+        },
+        "pid": {
+          "description": "process ID",
+          "type": "string"
+        },
+        "priority": {
+          "description": "process priority",
+          "type": "string"
+        },
+        "residentSize": {
+          "description": "Physical memory usage",
+          "type": "string"
+        },
+        "sharedMemory": {
+          "description": "Shared memory usage",
+          "type": "string"
+        },
+        "status": {
+          "description": "process status",
+          "type": "string"
+        },
+        "time": {
+          "description": "Executation time",
+          "type": "string"
+        },
+        "user": {
+          "description": "User name that start the process",
+          "type": "string"
+        },
+        "virtMemory": {
+          "description": "virtual memory usage",
+          "type": "string"
+        }
+      }
+    },
     "RouteEntry": {
       "type": "object",
       "properties": {
@@ -4358,7 +6617,16 @@ func init() {
         }
       }
     },
-    "VlanPortMod": {
+    "VlanBridgeEntry": {
+      "type": "object",
+      "properties": {
+        "Vid": {
+          "description": "Vlan ID",
+          "type": "integer"
+        }
+      }
+    },
+    "VlanMemberEntry": {
       "type": "object",
       "properties": {
         "Dev": {
@@ -4368,10 +6636,76 @@ func init() {
         "Tagged": {
           "description": "Tagged status added",
           "type": "boolean"
+        }
+      }
+    },
+    "VxlanBridgeEntry": {
+      "type": "object",
+      "properties": {
+        "epIntf": {
+          "type": "string"
         },
-        "Vid": {
-          "description": "Vlan ID",
-          "type": "number"
+        "vxlanID": {
+          "type": "integer"
+        }
+      }
+    },
+    "VxlanEntry": {
+      "type": "object",
+      "properties": {
+        "mac_addr": {
+          "type": "string"
+        },
+        "multicast_group": {
+          "type": "string"
+        },
+        "udp": {
+          "type": "string"
+        },
+        "uif": {
+          "type": "string"
+        },
+        "vrf": {
+          "type": "string"
+        },
+        "vxlan_id": {
+          "description": "vxlan id (24-bit)",
+          "type": "string"
+        },
+        "vxlan_name": {
+          "type": "string"
+        }
+      }
+    },
+    "VxlanFDBreturnEntry": {
+      "type": "object",
+      "properties": {
+        "destination_ip": {
+          "type": "string",
+          "format": "ipv4"
+        },
+        "mac_addr": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "vrf": {
+          "type": "string"
+        },
+        "vtep_id": {
+          "type": "string"
+        },
+        "vxlan_id": {
+          "type": "string"
+        }
+      }
+    },
+    "VxlanPeerEntry": {
+      "type": "object",
+      "properties": {
+        "peerIP": {
+          "type": "string"
         }
       }
     }
