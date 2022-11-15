@@ -563,7 +563,9 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		}
 		ret.Serv.ServPort = data.tuples.l4Dst.val
 		ret.Serv.Sel = data.act.action.(*ruleNatActs).sel
-
+		if data.act.actType == RtActFullNat {
+			ret.Serv.FullNat = true
+		}
 		// Make Endpoints
 		tmpEp := data.act.action.(*ruleNatActs).endPoints
 		for _, ep := range tmpEp {
