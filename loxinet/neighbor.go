@@ -373,9 +373,9 @@ NhExist:
 			fdbAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 		}
 		if port.SInfo.PortType&cmn.PortReal != 0 {
-			vid = port.PortNo + RealPortVb
+			vid = port.PortNo + RealPortIdB
 		} else {
-			vid = port.PortNo + BondVb
+			vid = port.PortNo + BondIdB
 		}
 
 		fdbKey := FdbKey{fdbAddr, vid}
@@ -419,9 +419,9 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 			fdbAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 		}
 		if port.SInfo.PortType&cmn.PortReal != 0 {
-			vid = port.PortNo + RealPortVb
+			vid = port.PortNo + RealPortIdB
 		} else {
-			vid = port.PortNo + BondVb
+			vid = port.PortNo + BondIdB
 		}
 
 		fdbKey := FdbKey{fdbAddr, vid}
