@@ -95,6 +95,8 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tmpSvc.Port = int64(lb.Serv.ServPort)
 		tmpSvc.Protocol = lb.Serv.Proto
 		tmpSvc.Sel = int64(lb.Serv.Sel)
+		tmpSvc.FullNat = lb.Serv.FullNat
+
 		tmpLB.ServiceArguments = &tmpSvc
 
 		// Endpoints match
