@@ -32,7 +32,7 @@ for ns1 in "${nslist[@]}"; do
         for size in ${sizes[@]}
         do
 
-			sudo ip netns exec $ns1 ping $gw1 -f -c 50 -s $size -W 1 2>&1> /dev/null;
+			sudo ip netns exec $ns1 ping $gw1 -f -c 50 -s $size -W 2 2>&1> /dev/null;
             if [[ $? -eq 0 ]]
 			then
 			    #echo -e "Ping [OK]"
