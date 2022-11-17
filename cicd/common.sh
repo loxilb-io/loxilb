@@ -48,7 +48,6 @@ spawn_docker_host() {
   fi
 
   $hexec $2 ifconfig lo up
-  $hexec $2 ifconfig eth0 0
   $hexec $2 sysctl net.ipv6.conf.all.disable_ipv6=1 2>&1 >> /dev/null
   $hexec $2 sysctl net.ipv4.conf.all.arp_accept=1 2>&1 >> /dev/null
 }

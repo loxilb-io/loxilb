@@ -423,6 +423,12 @@ type SessionUlClMod struct {
 	Args UlClArg `json:"ulclArgument"`
 }
 
+// SessionUlClMod - information related to a ulcl filter
+type HASMod struct {
+	// State - current HA state
+	State string `json:"haState"`
+}
+
 const (
 	// PolTypeTrtcm - Policer type trtcm
 	PolTypeTrtcm = 0 // Default
@@ -577,4 +583,6 @@ type NetHookInterface interface {
 	NetPolicerGet() ([]PolMod, error)
 	NetPolicerAdd(*PolMod) (int, error)
 	NetPolicerDel(*PolMod) (int, error)
+	NetHAStateMod(*HASMod) (int, error)
+	NetHAStateGet() (string, error)
 }

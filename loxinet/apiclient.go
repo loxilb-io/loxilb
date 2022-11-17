@@ -360,3 +360,19 @@ func (*NetAPIStruct) NetPolicerDel(pm *cmn.PolMod) (int, error) {
 	ret, err := mh.zr.Pols.PolDelete(pm.Ident)
 	return ret, err
 }
+
+// NetPolicerGet - Get a policer in loxinet
+func (*NetAPIStruct) NetHAStateGet() (string, error) {
+	// There is no locking requirement for this operation
+	ret, err := mh.zr.Has.HAStateGet()
+	return ret, err
+}
+
+// NetPolicerAdd - Add a policer in loxinet
+func (*NetAPIStruct) NetHAStateMod(hm *cmn.HASMod) (int, error) {
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	ret, err := mh.zr.Has.HAStateUpdate(hm.State)
+	return ret, err
+}
