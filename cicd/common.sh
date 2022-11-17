@@ -129,7 +129,7 @@ config_docker_host() {
             shift
             ;;
         --id)
-            local xid="$2"
+            local vid="$2"
             shift
             shift
             ;;
@@ -162,27 +162,9 @@ config_docker_host() {
   if [[ "$ptype" == "phy" ]]; then
     sudo ip -n $h1 addr add $addr dev $link1
   elif [[ "$ptype" == "vlan" ]]; then
-    sudo ip -n $h1 addr add $addr dev vlan$xid
+    sudo ip -n $h1 addr add $addr dev vlan$vid
   elif [[ "$ptype" == "vxlan" ]]; then
-    sudo ip -n $h1 addr add $addr dev vxlan$xid
-  elif [[ "$ptype" == "trunk" ]]; then
-    trunk="bond$xid"
-    sudo ip -n $h1 link set $link1 down
-    sudo ip -n $h1 link add $trunk type bond
-    sudo ip -n $h1 link set $link1 master $trunk
-    sudo ip -n $h1 link set $link1 up
-    sudo ip -n $h1 link set $trunk up
-
-    sudo ip -n $h2 link set $link2 down
-    sudo ip -n $h2 link add $trunk type bond
-    sudo ip -n $h2 link set $link2 master $trunk
-    sudo ip -n $h2 link set $link2 up
-    sudo ip -n $h2 link set $trunk up
-
-    sudo ip -n $h1 addr add $addr dev bond$xid
-    if [[ "$gw" != "" ]]; then
-      sudo ip -n $h2 addr add $gw/24 dev bond$xid
-    fi
+    sudo ip -n $h1 addr add $addr dev vxlan$vid
   else
     echo "Check port-type"
   fi
