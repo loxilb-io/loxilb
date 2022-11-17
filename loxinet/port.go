@@ -212,14 +212,27 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 			p.DP(DpCreate)
 		}
 		if p.SInfo.PortType == cmn.PortReal {
-			if ptype == cmn.PortVlanSif &&
-				l2i.IsPvid == true {
+
+			if ptype == cmn.PortVlanSif {
 				p.HInfo.Master = hwi.Master
 				p.SInfo.PortType |= ptype
 				if p.L2 != l2i {
+					var rp *Port = nil
+					lds := p.SInfo.BpfLoaded
+					if hwi.Real != "" {
+						rp = P.portSmap[hwi.Real]
+						if rp == nil {
+							tk.LogIt(tk.LogError, "port add - %s no real-port(%s) sif\n", name, hwi.Real)
+							return PortNoRealDevErr, errors.New("no-realport sif error")
+						}
+					} else {
+						p.SInfo.BpfLoaded = false
+					}
 					p.DP(DpRemove)
 
 					p.L2 = l2i
+					p.SInfo.PortReal = rp
+					p.SInfo.BpfLoaded = lds
 					p.DP(DpCreate)
 					tk.LogIt(tk.LogDebug, "port add - %s vinfo updated\n", name)
 					return 0, nil
@@ -397,6 +410,7 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 		p.DP(DpRemove)
 
 		p.SInfo.PortType = p.SInfo.PortType & ^cmn.PortVlanSif
+		p.SInfo.PortReal = nil
 		p.HInfo.Master = ""
 		p.L2.IsPvid = true
 		p.L2.Vid = p.PortNo + RealPortIdB
@@ -942,8 +956,7 @@ func (p *Port) DP(work DpWorkT) int {
 	}
 
 	if (work == DpCreate || work == DpRemove) &&
-		p.SInfo.PortType&cmn.PortReal == cmn.PortReal ||
-		p.SInfo.PortType&cmn.PortBond == cmn.PortBond {
+		(p.SInfo.PortType & (cmn.PortReal|cmn.PortBond) != 0 && p.L2.IsPvid == true) {
 		if work == DpCreate {
 			if p.SInfo.BpfLoaded == false {
 				pWq.LoadEbpf = p.Name
@@ -952,8 +965,10 @@ func (p *Port) DP(work DpWorkT) int {
 				pWq.LoadEbpf = ""
 			}
 		} else if work == DpRemove {
-			pWq.LoadEbpf = p.Name
-			p.SInfo.BpfLoaded = false
+			if p.SInfo.BpfLoaded == true {
+				pWq.LoadEbpf = p.Name
+				p.SInfo.BpfLoaded = false
+			}
 		}
 	} else {
 		pWq.LoadEbpf = ""

@@ -583,6 +583,7 @@ func DelVxLANPeerNoHook(vxlanid int, PeerIP string) int {
 	}
 	return ret
 }
+
 func ModLink(link nlp.Link, add bool) int {
 	var ifMac [6]byte
 	var ret int
@@ -671,7 +672,6 @@ func ModLink(link nlp.Link, add bool) int {
 			applyConfigMap(name, state, add)
 			return ret
 		} else {
-			tk.LogIt(tk.LogInfo, "[NLP] ####  Master idx %v\n", attrs.MasterIndex)
 			mif, err := nlp.LinkByIndex(attrs.MasterIndex)
 			if err != nil {
 				fmt.Println(err)
@@ -679,7 +679,6 @@ func ModLink(link nlp.Link, add bool) int {
 			} else {
 				if _, ok := mif.(*nlp.Bond); ok {
 					master = mif.Attrs().Name
-					tk.LogIt(tk.LogInfo, "[NLP] ####  Master name  %s\n", master)
 				}
 			}
 		}
