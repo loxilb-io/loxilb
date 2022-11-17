@@ -726,8 +726,14 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	r.zone = R.Zone
 	if serv.FullNat {
 		r.act.actType = RtActFullNat
+		// For full-nat mode, it is necessary to do own lb end-point health monitoring
+		r.ActChk = true
 	} else {
 		r.act.actType = RtActDnat
+		// Per LB end-point health-check is supposed to be handled at CCM,
+		// but it certain cases like stand-alone mode, loxilb can do its own
+		// lb end-point health monitoring
+		r.ActChk = false
 	}
 	r.act.action = &natActs
 	r.ruleNum, err = R.Tables[RtLB].HwMark.GetCounter()
@@ -736,10 +742,6 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		return RuleAllocErr, errors.New("rule-hwm error")
 	}
 	r.sT = time.Now()
-	// Per LB end-point health-check is supposed to be handled at CCM,
-	// but it certain cases like stand-alone mode, loxilb can do its own
-	// lb end-point health monitoring
-	r.ActChk = false
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 

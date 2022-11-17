@@ -583,6 +583,7 @@ func DelVxLANPeerNoHook(vxlanid int, PeerIP string) int {
 	}
 	return ret
 }
+
 func ModLink(link nlp.Link, add bool) int {
 	var ifMac [6]byte
 	var ret int
@@ -650,10 +651,12 @@ func ModLink(link nlp.Link, add bool) int {
 		}
 	}
 
-	/* Tagged Vlan port */
-	if strings.Contains(name, ".") {
-		/* Currently, Sub-interfaces can only be part of bridges */
-		if attrs.MasterIndex > 0 {
+	master := ""
+
+	if attrs.MasterIndex > 0 {
+		/* Tagged Vlan port */
+		if strings.Contains(name, ".") {
+			/* Currently, Sub-interfaces can only be part of bridges */
 			pname := strings.Split(name, ".")
 			if add {
 				ret, err = hooks.NetVlanPortAdd(&cmn.VlanPortMod{Vid: vid, Dev: pname[0], Tagged: true})
@@ -666,14 +669,23 @@ func ModLink(link nlp.Link, add bool) int {
 			} else {
 				tk.LogIt(tk.LogInfo, "[NLP] TVlan Port %v, v(%v), %v, %v, %v %s OK\n", name, vid, ifMac, state, mtu, mod)
 			}
-
+			applyConfigMap(name, state, add)
+			return ret
+		} else {
+			mif, err := nlp.LinkByIndex(attrs.MasterIndex)
+			if err != nil {
+				fmt.Println(err)
+				return -1
+			} else {
+				if _, ok := mif.(*nlp.Bond); ok {
+					master = mif.Attrs().Name
+				}
+			}
 		}
-		applyConfigMap(name, state, add)
-		return ret
 	}
 
 	/* Physical port/ Bond/ VxLAN */
-	master := ""
+
 	real := ""
 	pType := cmn.PortReal
 	tunId := 0
@@ -687,6 +699,11 @@ func ModLink(link nlp.Link, add bool) int {
 		}
 		real = uif.Attrs().Name
 		tk.LogIt(tk.LogInfo, "[NLP] Port %v, uif %v %s\n", name, real, mod)
+	} else if _, ok := link.(*nlp.Bond); ok {
+		pType = cmn.PortBond
+		tk.LogIt(tk.LogInfo, "[NLP] Bond %v, %s\n", name, mod)
+	} else if master != "" {
+		pType = cmn.PortBondSif
 	}
 
 	if add {
@@ -714,7 +731,7 @@ func ModLink(link nlp.Link, add bool) int {
 	}
 
 	/* Untagged vlan ports */
-	if attrs.MasterIndex > 0 {
+	if attrs.MasterIndex > 0 && master == "" {
 		if add {
 			ret, err = hooks.NetVlanPortAdd(&cmn.VlanPortMod{Vid: vid, Dev: name, Tagged: false})
 		} else {
