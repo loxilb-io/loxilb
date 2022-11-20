@@ -182,6 +182,7 @@ config_docker_host() {
     sudo ip -n $h1 addr add $addr dev bond$xid
     if [[ "$gw" != "" ]]; then
       sudo ip -n $h2 addr add $gw/24 dev bond$xid
+      sudo ip -n $h1 route add default via $gw
     fi
   else
     echo "Check port-type"
