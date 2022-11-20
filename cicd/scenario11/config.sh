@@ -34,5 +34,8 @@ create_docker_host_vlan --host1 llb1 --host2 l2ep1 --ptype untagged --id 100
 create_docker_host_vlan --host1 llb1 --host2 l2ep2 --ptype untagged --id 100
 create_docker_host_vlan --host1 llb1 --host2 l2ep3 --ptype untagged --id 100
 
-sleep 15
+$dexec llb1 bash -c 'for i in /proc/sys/net/ipv4/conf/*/rp_filter; do echo 0 > "$i"; done'
+
+#Need more time for lb end-point health check
+sleep 30
 $dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=100.100.100.2:1,100.100.100.3:1,100.100.100.4:1 --fullnat
