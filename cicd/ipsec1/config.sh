@@ -62,8 +62,8 @@ echo "Left IN policy"
 $dexec llb1 ip xfrm policy add dir in \
   tmpl src 7.7.7.2  dst 7.7.7.1  proto esp spi $SPI mode tunnel mark 100
 
-$dexec llb1 ip route add 25.25.25.0/24 dev vti100
-$dexec llb1 ip route add 26.26.26.0/24 dev vti100
+$dexec llb1 ip route add 25.25.25.0/24 via 77.77.77.1 dev vti100
+$dexec llb1 ip route add 26.26.26.0/24 via 77.77.77.1 dev vti100
 
 #xfrm Config(Right)
 $dexec llb2 ip link add vti100 type vti key 100 remote 7.7.7.1 local 7.7.7.2
@@ -88,5 +88,5 @@ $dexec llb2 ip xfrm policy add dir fwd \
 $dexec llb2 ip xfrm policy add dir out \
   tmpl src 7.7.7.2  dst 7.7.7.1  proto esp spi $SPI mode tunnel mark 100
 
-$dexec llb2 ip route add 31.31.31.0/24 dev vti100
-$dexec llb2 ip route add 32.32.32.0/24 dev vti100
+$dexec llb2 ip route add 31.31.31.0/24 via 77.77.77.2 dev vti100
+$dexec llb2 ip route add 32.32.32.0/24 via 77.77.77.2 dev vti100
