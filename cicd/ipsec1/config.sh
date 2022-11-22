@@ -58,7 +58,6 @@ $dexec llb1 ip xfrm policy add dir out \
   tmpl src 7.7.7.1  dst 7.7.7.2  proto esp spi $SPI mode tunnel mark 100
 $dexec llb1 ip xfrm policy add dir fwd \
   tmpl src 7.7.7.2  dst 7.7.7.1  proto esp spi $SPI mode tunnel mark 100
-echo "Left IN policy"
 $dexec llb1 ip xfrm policy add dir in \
   tmpl src 7.7.7.2  dst 7.7.7.1  proto esp spi $SPI mode tunnel mark 100
 
@@ -78,8 +77,6 @@ $dexec llb2 ip xfrm state add \
   src 7.7.7.2 dst 7.7.7.1  proto esp spi $SPI mode tunnel \
   auth sha256 $AUTHKEY enc aes $ENCKEY
 
-
-echo "Right IN policy"
 $dexec llb2 ip xfrm policy add dir in \
   tmpl src 7.7.7.1  dst 7.7.7.2  proto esp spi $SPI mode tunnel mark 100
 
