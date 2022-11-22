@@ -680,6 +680,12 @@ func port2String(e *Port, it IterIntf) {
 	if e.SInfo.PortType&cmn.PortVxlanSif == cmn.PortVxlanSif {
 		pStr += "vxlan-sif,"
 	}
+	if e.SInfo.PortType&cmn.PortVti == cmn.PortVti {
+		pStr += "vti,"
+	}
+	if e.SInfo.PortType&cmn.PortWg == cmn.PortWg {
+		pStr += "wg,"
+	}
 	if e.SInfo.PortProp&cmn.PortPropUpp == cmn.PortPropUpp {
 		pStr += "upp,"
 	}
@@ -922,7 +928,7 @@ func (p *Port) DP(work DpWorkT) int {
 		return 0
 	}
 
-	if (p.SInfo.PortType&(cmn.PortReal|cmn.PortBond) == 0) &&
+	if (p.SInfo.PortType&(cmn.PortReal|cmn.PortBond|cmn.PortVti|cmn.PortWg) == 0) &&
 		(p.SInfo.PortReal == nil || p.SInfo.PortReal.SInfo.PortType&cmn.PortReal != cmn.PortReal) {
 		return 0
 	}
@@ -956,7 +962,7 @@ func (p *Port) DP(work DpWorkT) int {
 	}
 
 	if (work == DpCreate || work == DpRemove) &&
-		(p.SInfo.PortType & (cmn.PortReal|cmn.PortBond) != 0 && p.L2.IsPvid == true) {
+		(p.IsLeafPort() == true && p.L2.IsPvid == true) {
 		if work == DpCreate {
 			if p.SInfo.BpfLoaded == false {
 				pWq.LoadEbpf = p.Name
@@ -978,4 +984,18 @@ func (p *Port) DP(work DpWorkT) int {
 	mh.dp.ToDpCh <- pWq
 
 	return 0
+}
+
+func (p *Port) IsLeafPort() bool {
+	if p.SInfo.PortType&(cmn.PortReal|cmn.PortBond|cmn.PortVti|cmn.PortWg) != 0 {
+		return true
+	}
+	return false
+}
+
+func (p *Port) IsSlavePort() bool {
+	if p.SInfo.PortType&(cmn.PortVlanSif|cmn.PortBondSif) == 0 {
+		return false
+	}
+	return true
 }

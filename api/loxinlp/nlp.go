@@ -689,6 +689,13 @@ func ModLink(link nlp.Link, add bool) int {
 	real := ""
 	pType := cmn.PortReal
 	tunId := 0
+
+	if strings.Contains(name, "ipsec")  || strings.Contains(name, "vti") {
+		pType = cmn.PortVti
+	} else if strings.Contains(name, "wg") {
+		pType = cmn.PortWg
+	}
+
 	if vxlan, ok := link.(*nlp.Vxlan); ok {
 		pType = cmn.PortVxlanBr
 		tunId = vxlan.VxlanId
