@@ -1,7 +1,8 @@
 .DEFAULT_GOAL := build
 bin=loxilb
+dock?=loxilb
 
-loxilbid=$(shell docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER")
+loxilbid=$(shell docker ps -f name=$(dock) | cut  -d " "  -f 1 | grep -iv  "CONTAINER")
 
 subsys:
 	cd loxilb-ebpf && $(MAKE) 

@@ -87,6 +87,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		GetConfigConntrackAllHandler: GetConfigConntrackAllHandlerFunc(func(params GetConfigConntrackAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigConntrackAll has not yet been implemented")
 		}),
+		GetConfigHastateAllHandler: GetConfigHastateAllHandlerFunc(func(params GetConfigHastateAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigHastateAll has not yet been implemented")
+		}),
 		GetConfigIpv4addressAllHandler: GetConfigIpv4addressAllHandlerFunc(func(params GetConfigIpv4addressAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigIpv4addressAll has not yet been implemented")
 		}),
@@ -131,6 +134,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		}),
 		PostConfigFdbHandler: PostConfigFdbHandlerFunc(func(params PostConfigFdbParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigFdb has not yet been implemented")
+		}),
+		PostConfigHastateHandler: PostConfigHastateHandlerFunc(func(params PostConfigHastateParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigHastate has not yet been implemented")
 		}),
 		PostConfigIpv4addressHandler: PostConfigIpv4addressHandlerFunc(func(params PostConfigIpv4addressParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigIpv4address has not yet been implemented")
@@ -234,6 +240,8 @@ type LoxilbRestAPIAPI struct {
 	DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler
 	// GetConfigConntrackAllHandler sets the operation handler for the get config conntrack all operation
 	GetConfigConntrackAllHandler GetConfigConntrackAllHandler
+	// GetConfigHastateAllHandler sets the operation handler for the get config hastate all operation
+	GetConfigHastateAllHandler GetConfigHastateAllHandler
 	// GetConfigIpv4addressAllHandler sets the operation handler for the get config ipv4address all operation
 	GetConfigIpv4addressAllHandler GetConfigIpv4addressAllHandler
 	// GetConfigLoadbalancerAllHandler sets the operation handler for the get config loadbalancer all operation
@@ -264,6 +272,8 @@ type LoxilbRestAPIAPI struct {
 	GetStatusProcessHandler GetStatusProcessHandler
 	// PostConfigFdbHandler sets the operation handler for the post config fdb operation
 	PostConfigFdbHandler PostConfigFdbHandler
+	// PostConfigHastateHandler sets the operation handler for the post config hastate operation
+	PostConfigHastateHandler PostConfigHastateHandler
 	// PostConfigIpv4addressHandler sets the operation handler for the post config ipv4address operation
 	PostConfigIpv4addressHandler PostConfigIpv4addressHandler
 	// PostConfigLoadbalancerHandler sets the operation handler for the post config loadbalancer operation
@@ -410,6 +420,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.GetConfigConntrackAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigConntrackAllHandler")
 	}
+	if o.GetConfigHastateAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigHastateAllHandler")
+	}
 	if o.GetConfigIpv4addressAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigIpv4addressAllHandler")
 	}
@@ -454,6 +467,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.PostConfigFdbHandler == nil {
 		unregistered = append(unregistered, "PostConfigFdbHandler")
+	}
+	if o.PostConfigHastateHandler == nil {
+		unregistered = append(unregistered, "PostConfigHastateHandler")
 	}
 	if o.PostConfigIpv4addressHandler == nil {
 		unregistered = append(unregistered, "PostConfigIpv4addressHandler")
@@ -642,6 +658,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
+	o.handlers["GET"]["/config/hastate/all"] = NewGetConfigHastateAll(o.context, o.GetConfigHastateAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
 	o.handlers["GET"]["/config/ipv4address/all"] = NewGetConfigIpv4addressAll(o.context, o.GetConfigIpv4addressAllHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
@@ -699,6 +719,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/config/fdb"] = NewPostConfigFdb(o.context, o.PostConfigFdbHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/hastate"] = NewPostConfigHastate(o.context, o.PostConfigHastateHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
