@@ -129,6 +129,10 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.PostConfigFdbHandler = operations.PostConfigFdbHandlerFunc(handler.ConfigPostFDB)
 	api.DeleteConfigFdbMacAddressDevIfNameHandler = operations.DeleteConfigFdbMacAddressDevIfNameHandlerFunc(handler.ConfigDeleteFDB)
 
+	// HA
+	api.GetConfigHastateAllHandler = operations.GetConfigHastateAllHandlerFunc(handler.ConfigGetHAState)
+	api.PostConfigHastateHandler = operations.PostConfigHastateHandlerFunc(handler.ConfigPostHAState)
+
 	api.PreServerShutdown = func() {}
 
 	api.ServerShutdown = func() {
