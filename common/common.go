@@ -50,6 +50,8 @@ const (
 	PortVxlanBr = 0x40
 	// PortWg - Wireguard port type
 	PortWg = 0x80
+	// PortVti - Vti port type
+	PortVti = 0x100
 )
 
 // PortProp - Defines auxiliary port properties
