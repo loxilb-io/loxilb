@@ -40,7 +40,7 @@ type HAStateH struct {
 }
 
 // HAInit - routine to initialize HA context
-func HAInit(zone *Zone) *HAStateH {
+func HAInit() *HAStateH {
 	var nHh = new(HAStateH)
 	nHh.StateStr = "Not Defined"
 	return nHh

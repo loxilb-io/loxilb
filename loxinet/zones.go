@@ -53,7 +53,6 @@ type Zone struct {
 	Sess    *SessH
 	Pols    *PolH
 	Mirrs   *MirrH
-	Has     *HAStateH
 	Mtx     sync.RWMutex
 }
 
@@ -102,7 +101,6 @@ func (z *ZoneH) ZoneAdd(name string) (int, error) {
 	zone.Sess = SessInit(zone)
 	zone.Pols = PolInit(zone)
 	zone.Mirrs = MirrInit(zone)
-	zone.Has = HAInit(zone)
 
 	z.ZoneMap[name] = zone
 

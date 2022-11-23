@@ -364,7 +364,7 @@ func (*NetAPIStruct) NetPolicerDel(pm *cmn.PolMod) (int, error) {
 // NetPolicerGet - Get a policer in loxinet
 func (*NetAPIStruct) NetHAStateGet() (string, error) {
 	// There is no locking requirement for this operation
-	ret, err := mh.zr.Has.HAStateGet()
+	ret, err := mh.has.HAStateGet()
 	return ret, err
 }
 
@@ -373,6 +373,6 @@ func (*NetAPIStruct) NetHAStateMod(hm *cmn.HASMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
-	ret, err := mh.zr.Has.HAStateUpdate(hm.State)
+	ret, err := mh.has.HAStateUpdate(hm.State)
 	return ret, err
 }
