@@ -324,8 +324,8 @@ func (l3 *L3H) IfaGet() []cmn.Ipv4AddrGet {
 		for _, ip := range ifa.Ifas {
 			o, _ := ip.IfaNet.Mask.Size()
 			tmpIPa.IP = append(tmpIPa.IP, fmt.Sprintf("%s/%d", ip.IfaAddr.String(), o))
-			ret = append(ret, tmpIPa)
 		}
+		ret = append(ret, tmpIPa)
 	}
 	return ret
 }
