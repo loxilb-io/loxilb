@@ -280,7 +280,7 @@ func (n *NeighH) NeighGet() ([]cmn.Neighv4Mod, error) {
 		tmpNeigh.HardwareAddr = n2.Attr.HardwareAddr
 		tmpNeigh.IP = n2.Addr
 		tmpNeigh.State = int(n2.Sync)
-		tmpNeigh.LinkIndex = n2.OifPort.PortNo
+		tmpNeigh.LinkIndex = n2.OifPort.SInfo.OsID
 		ret = append(ret, tmpNeigh)
 	}
 	return ret, nil
