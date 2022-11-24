@@ -300,6 +300,11 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 		return NeighOifErr, errors.New("nh-oif error")
 	}
 
+	// Special case to handle IpinIP Secure VTIs
+	if port.SInfo.PortType&(cmn.PortVti|cmn.PortWg) != 0 {
+		Attr.HardwareAddr, _ = net.ParseMAC("00:11:22:33:44:55")
+	}
+
 	mask := net.CIDRMask(32, 32)
 	ipnet := net.IPNet{IP: Addr, Mask: mask}
 	ra := RtAttr{0, 0, true}
@@ -364,18 +369,16 @@ NhExist:
 	}
 
 	//Add a related L2 Pair entry if needed
-	if port.SInfo.PortType&(cmn.PortVlanSif|cmn.PortBondSif) == 0 &&
-		port.SInfo.PortType&(cmn.PortReal|cmn.PortBond) != 0 &&
-		ne.Resolved {
+	if port.IsSlavePort() == false && port.IsLeafPort() == true && ne.Resolved {
 		var fdbAddr [6]byte
 		var vid int
 		for i := 0; i < 6; i++ {
 			fdbAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 		}
 		if port.SInfo.PortType&cmn.PortReal != 0 {
-			vid = port.PortNo + RealPortVb
+			vid = port.PortNo + RealPortIdB
 		} else {
-			vid = port.PortNo + BondVb
+			vid = port.PortNo + BondIdB
 		}
 
 		fdbKey := FdbKey{fdbAddr, vid}
@@ -409,19 +412,16 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 
 	// Delete related L2 Pair entry if needed
 	port := ne.OifPort
-	if port != nil &&
-		port.SInfo.PortType&(cmn.PortVlanSif|cmn.PortBondSif) == 0 &&
-		port.SInfo.PortType&(cmn.PortReal|cmn.PortBond) != 0 &&
-		ne.Resolved {
+	if port != nil && port.IsSlavePort() == false && port.IsLeafPort() == true && ne.Resolved {
 		var fdbAddr [6]byte
 		var vid int
 		for i := 0; i < 6; i++ {
 			fdbAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 		}
 		if port.SInfo.PortType&cmn.PortReal != 0 {
-			vid = port.PortNo + RealPortVb
+			vid = port.PortNo + RealPortIdB
 		} else {
-			vid = port.PortNo + BondVb
+			vid = port.PortNo + BondIdB
 		}
 
 		fdbKey := FdbKey{fdbAddr, vid}

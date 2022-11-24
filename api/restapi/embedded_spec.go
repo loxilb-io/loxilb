@@ -210,6 +210,107 @@ func init() {
         }
       }
     },
+    "/config/hastate": {
+      "post": {
+        "description": "Informs Current HA state in the device",
+        "summary": "Informs Current HA state in the device",
+        "parameters": [
+          {
+            "description": "Attributes for HA State",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/HAStatusEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/hastate/all": {
+      "get": {
+        "description": "Get HA State in the device(interface)",
+        "summary": "Get HA State in the device(interface)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "$ref": "#/definitions/HAStatusEntry"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/ipv4address": {
       "post": {
         "description": "Assign IPv4 addresses in the device",
@@ -2495,6 +2596,31 @@ func init() {
         "used": {
           "description": "size of used the disk",
           "type": "string"
+        }
+      }
+    },
+    "HAStatusEntry": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "description": "Current HA state",
+          "type": "string"
+        }
+      }
+    },
+    "HAStatusGetEntry": {
+      "type": "object",
+      "required": [
+        "sync"
+      ],
+      "properties": {
+        "state": {
+          "description": "Current HA State",
+          "type": "string"
+        },
+        "sync": {
+          "description": "Sync - sync state",
+          "type": "integer"
         }
       }
     },
@@ -3385,6 +3511,107 @@ func init() {
         }
       }
     },
+    "/config/hastate": {
+      "post": {
+        "description": "Informs Current HA state in the device",
+        "summary": "Informs Current HA state in the device",
+        "parameters": [
+          {
+            "description": "Attributes for HA State",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/HAStatusEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/hastate/all": {
+      "get": {
+        "description": "Get HA State in the device(interface)",
+        "summary": "Get HA State in the device(interface)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "$ref": "#/definitions/HAStatusEntry"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/ipv4address": {
       "post": {
         "description": "Assign IPv4 addresses in the device",
@@ -5670,6 +5897,31 @@ func init() {
         "used": {
           "description": "size of used the disk",
           "type": "string"
+        }
+      }
+    },
+    "HAStatusEntry": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "description": "Current HA state",
+          "type": "string"
+        }
+      }
+    },
+    "HAStatusGetEntry": {
+      "type": "object",
+      "required": [
+        "sync"
+      ],
+      "properties": {
+        "state": {
+          "description": "Current HA State",
+          "type": "string"
+        },
+        "sync": {
+          "description": "Sync - sync state",
+          "type": "integer"
         }
       }
     },

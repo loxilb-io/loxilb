@@ -48,8 +48,12 @@ const (
 	MaxBondInterfaces = 8
 	MaxRealInterfaces = 128
 	MaxInterfaces     = 512
-	RealPortVb        = 3800
-	BondVb            = 4000
+	MaxWgInterfaces   = 8
+	MaxVtiInterfaces  = 8
+	RealPortIdB       = 3800
+	BondIdB           = 4000
+	WgIdB             = 4010
+	VtIdB             = 4020
 )
 
 // PortEvent - port event type
@@ -136,6 +140,8 @@ type PortsH struct {
 	portNotifs []PortEventIntf
 	portHwMark *tk.Counter
 	bondHwMark *tk.Counter
+	wGHwMark   *tk.Counter
+	vtiHwMark  *tk.Counter
 }
 
 // PortInit - Initialize the port subsystem
@@ -146,6 +152,8 @@ func PortInit() *PortsH {
 	nllp.portOmap = make(map[int]*Port)
 	nllp.portHwMark = tk.NewCounter(1, MaxInterfaces)
 	nllp.bondHwMark = tk.NewCounter(1, MaxBondInterfaces)
+	nllp.wGHwMark = tk.NewCounter(1, MaxWgInterfaces)
+	nllp.vtiHwMark = tk.NewCounter(1, MaxVtiInterfaces)
 	return nllp
 }
 
@@ -204,14 +212,27 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 			p.DP(DpCreate)
 		}
 		if p.SInfo.PortType == cmn.PortReal {
-			if ptype == cmn.PortVlanSif &&
-				l2i.IsPvid == true {
+
+			if ptype == cmn.PortVlanSif {
 				p.HInfo.Master = hwi.Master
 				p.SInfo.PortType |= ptype
 				if p.L2 != l2i {
+					var rp *Port = nil
+					lds := p.SInfo.BpfLoaded
+					if hwi.Real != "" {
+						rp = P.portSmap[hwi.Real]
+						if rp == nil {
+							tk.LogIt(tk.LogError, "port add - %s no real-port(%s) sif\n", name, hwi.Real)
+							return PortNoRealDevErr, errors.New("no-realport sif error")
+						}
+					} else {
+						p.SInfo.BpfLoaded = false
+					}
 					p.DP(DpRemove)
 
 					p.L2 = l2i
+					p.SInfo.PortReal = rp
+					p.SInfo.BpfLoaded = lds
 					p.DP(DpCreate)
 					tk.LogIt(tk.LogDebug, "port add - %s vinfo updated\n", name)
 					return 0, nil
@@ -224,13 +245,12 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 					return PortNoMasterErr, errors.New("no-master error")
 				}
 				p.DP(DpRemove)
-
 				p.SInfo.PortType |= ptype
 				p.HInfo.Master = hwi.Master
 				p.L2.IsPvid = true
-				p.L2.Vid = master.PortNo + BondVb
+				p.L2.Vid = master.PortNo + BondIdB
 
-				p.DP(DpCreate)
+				//p.DP(DpCreate)
 				return 0, nil
 			}
 
@@ -261,6 +281,16 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 				return 0, nil
 			}
 		}
+		if p.SInfo.PortType&(cmn.PortReal|cmn.PortBondSif) == (cmn.PortReal | cmn.PortBondSif) {
+			if ptype == cmn.PortReal {
+				p.L2.IsPvid = true
+				p.L2.Vid = p.PortNo + RealPortIdB
+				p.SInfo.PortType &= ^cmn.PortBondSif
+				p.HInfo.Master = ""
+				p.DP(DpCreate)
+				return 0, nil
+			}
+		}
 		tk.LogIt(tk.LogError, "port add - %s exists\n", name)
 		return PortExistsErr, errors.New("port exists")
 	}
@@ -270,6 +300,10 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 
 	if ptype == cmn.PortBond {
 		rid, err = P.bondHwMark.GetCounter()
+	} else if ptype == cmn.PortWg {
+		rid, err = P.wGHwMark.GetCounter()
+	} else if ptype == cmn.PortVti {
+		rid, err = P.vtiHwMark.GetCounter()
 	} else {
 		rid, err = P.portHwMark.GetCounter()
 	}
@@ -305,7 +339,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 	switch ptype {
 	case cmn.PortReal:
 		p.L2.IsPvid = true
-		p.L2.Vid = rid + RealPortVb
+		p.L2.Vid = rid + RealPortIdB
 
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
@@ -313,7 +347,23 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 			PortHwInfo{vMac, true, true, 9000, "", "", 0})
 	case cmn.PortBond:
 		p.L2.IsPvid = true
-		p.L2.Vid = rid + BondVb
+		p.L2.Vid = rid + BondIdB
+
+		/* We create an vlan BD to keep things in sync */
+		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
+		zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
+			PortHwInfo{vMac, true, true, 9000, "", "", 0})
+	case cmn.PortWg:
+		p.L2.IsPvid = true
+		p.L2.Vid = rid + WgIdB
+
+		/* We create an vlan BD to keep things in sync */
+		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
+		zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
+			PortHwInfo{vMac, true, true, 9000, "", "", 0})
+	case cmn.PortVti:
+		p.L2.IsPvid = true
+		p.L2.Vid = rid + VtIdB
 
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
@@ -360,9 +410,10 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 		p.DP(DpRemove)
 
 		p.SInfo.PortType = p.SInfo.PortType & ^cmn.PortVlanSif
+		p.SInfo.PortReal = nil
 		p.HInfo.Master = ""
 		p.L2.IsPvid = true
-		p.L2.Vid = p.PortNo + RealPortVb
+		p.L2.Vid = p.PortNo + RealPortIdB
 		p.DP(DpCreate)
 		return 0, nil
 	}
@@ -384,7 +435,7 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 		p.DP(DpRemove)
 		p.SInfo.PortType = p.SInfo.PortType & ^cmn.PortVlanSif
 		p.L2.IsPvid = true
-		p.L2.Vid = p.PortNo + BondVb
+		p.L2.Vid = p.PortNo + BondIdB
 		p.DP(DpCreate)
 		return 0, nil
 	}
@@ -395,7 +446,7 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 		p.SInfo.PortType = p.SInfo.PortType & ^cmn.PortBondSif
 		p.HInfo.Master = ""
 		p.L2.IsPvid = true
-		p.L2.Vid = p.PortNo + RealPortVb
+		p.L2.Vid = p.PortNo + RealPortIdB
 		p.DP(DpCreate)
 		return 0, nil
 	}
@@ -421,6 +472,8 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 		}
 	case cmn.PortReal:
 	case cmn.PortBond:
+	case cmn.PortWg:
+	case cmn.PortVti:
 		zone := mh.zn.GetPortZone(p.Name)
 		if zone != nil {
 			zone.Vlans.VlanDelete(p.L2.Vid)
@@ -626,6 +679,12 @@ func port2String(e *Port, it IterIntf) {
 	}
 	if e.SInfo.PortType&cmn.PortVxlanSif == cmn.PortVxlanSif {
 		pStr += "vxlan-sif,"
+	}
+	if e.SInfo.PortType&cmn.PortVti == cmn.PortVti {
+		pStr += "vti,"
+	}
+	if e.SInfo.PortType&cmn.PortWg == cmn.PortWg {
+		pStr += "wg,"
 	}
 	if e.SInfo.PortProp&cmn.PortPropUpp == cmn.PortPropUpp {
 		pStr += "upp,"
@@ -869,7 +928,7 @@ func (p *Port) DP(work DpWorkT) int {
 		return 0
 	}
 
-	if (p.SInfo.PortType&cmn.PortReal != cmn.PortReal) &&
+	if (p.SInfo.PortType&(cmn.PortReal|cmn.PortBond|cmn.PortVti|cmn.PortWg) == 0) &&
 		(p.SInfo.PortReal == nil || p.SInfo.PortReal.SInfo.PortType&cmn.PortReal != cmn.PortReal) {
 		return 0
 	}
@@ -903,13 +962,19 @@ func (p *Port) DP(work DpWorkT) int {
 	}
 
 	if (work == DpCreate || work == DpRemove) &&
-		p.SInfo.PortType&cmn.PortReal == cmn.PortReal ||
-		p.SInfo.PortType&cmn.PortBond == cmn.PortBond {
-		if p.SInfo.BpfLoaded == false {
-			pWq.LoadEbpf = p.Name
-			p.SInfo.BpfLoaded = true
-		} else {
-			pWq.LoadEbpf = ""
+		(p.IsLeafPort() == true && p.L2.IsPvid == true) {
+		if work == DpCreate {
+			if p.SInfo.BpfLoaded == false {
+				pWq.LoadEbpf = p.Name
+				p.SInfo.BpfLoaded = true
+			} else {
+				pWq.LoadEbpf = ""
+			}
+		} else if work == DpRemove {
+			if p.SInfo.BpfLoaded == true {
+				pWq.LoadEbpf = p.Name
+				p.SInfo.BpfLoaded = false
+			}
 		}
 	} else {
 		pWq.LoadEbpf = ""
@@ -919,4 +984,18 @@ func (p *Port) DP(work DpWorkT) int {
 	mh.dp.ToDpCh <- pWq
 
 	return 0
+}
+
+func (p *Port) IsLeafPort() bool {
+	if p.SInfo.PortType&(cmn.PortReal|cmn.PortBond|cmn.PortVti|cmn.PortWg) != 0 {
+		return true
+	}
+	return false
+}
+
+func (p *Port) IsSlavePort() bool {
+	if p.SInfo.PortType&(cmn.PortVlanSif|cmn.PortBondSif) == 0 {
+		return false
+	}
+	return true
 }
