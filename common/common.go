@@ -312,6 +312,37 @@ type Routev4Mod struct {
 	Dst net.IPNet
 }
 
+// FwRuleOpts - Information related to Firewall options 
+type FwOptArg struct {
+	// Drop - Drop any matching rule
+	Drop bool `json:"drop"`
+	// Redirect - Redirect any matching rule
+	Rdr bool `json:"redirect"`
+	RdrPort string `json:"redirectPortName"`
+	// Allow - Allow any matching rule
+	Allow bool `json:"allow"`
+}
+
+// FwRuleArg - Information related to firewall rule
+type FwRuleArg struct {
+	// SrcIP - Source IP with subnet
+	SrcIP string `json:"sourceIP"`
+	// DstIP - Destination IP with subnet
+	DstIP string `json:"destinationIP"`
+	// SrcPortMin - Minimum source port range
+	SrcPortMin uint16 `json:"minSourcePort"`
+	// SrcPortMax - Maximum source port range
+	SrcPortMax uint16 `json:"maxSourcePort"`
+	// DstPortMin - Minimum destination port range
+	DstPortMin uint16 `json:"minDestinationPort"`
+	// SrcPortMax - Maximum source port range
+	DstPortMax uint16 `json:"maxDestinationPort"`
+	// Proto - the protocol
+	Proto uint8 `json:"protocol"`
+	// InPort - the incoming port
+	InPort string `json:"portName"`
+}
+
 // EpSelect - Selection method of load-balancer end-point
 type EpSelect uint
 

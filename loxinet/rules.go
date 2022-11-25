@@ -37,6 +37,7 @@ const (
 	RuleAllocErr
 	RuleNotExistsErr
 	RuleEpCountErr
+	RuleTupleErr
 )
 
 type ruleTMatch uint
@@ -106,8 +107,12 @@ type ruleMacTuple struct {
 	valid [6]uint8
 }
 
+type ruleStringTuple struct {
+	val   string
+}
+
 type ruleTuples struct {
-	port     rule32Tuple
+	port     ruleStringTuple
 	l2Src    ruleMacTuple
 	l2Dst    ruleMacTuple
 	vlanID   rule16Tuple
@@ -152,6 +157,16 @@ type ruleNatActs struct {
 	endPoints []ruleNatEp
 }
 
+type ruleFwOpt struct {
+	rdrMirr    string
+	rdrPort    string
+}
+
+type ruleFwOpts struct {
+	op        ruleTActType
+	opt 	  ruleFwOpt
+}
+
 type ruleTAct interface{}
 
 type ruleAct struct {
@@ -187,7 +202,7 @@ type ruleTableType uint
 
 // rt types
 const (
-	RtACL ruleTableType = iota + 1
+	RtFw ruleTableType = iota + 1
 	RtLB
 	RtMax
 )
@@ -219,9 +234,10 @@ func RulesInit(zone *Zone) *RuleH {
 	nRh.Cfg.RuleInactChkTime = LbaCheckTimeout
 	nRh.Cfg.RuleInactTries = MaxLbaInactiveTries
 
-	nRh.Tables[RtACL].tableMatch = RmMax - 1
-	nRh.Tables[RtACL].tableType = RtMf
-	nRh.Tables[RtACL].HwMark = tk.NewCounter(1, RtMaximumAcls)
+	nRh.Tables[RtFw].tableMatch = RmMax - 1
+	nRh.Tables[RtFw].tableType = RtMf
+	nRh.Tables[RtFw].eMap = make(map[string]*ruleEnt)
+	nRh.Tables[RtFw].HwMark = tk.NewCounter(1, RtMaximumAcls)
 
 	nRh.Tables[RtLB].tableMatch = RmL3Dst | RmL4Dst | RmL4Prot
 	nRh.Tables[RtLB].tableType = RtEm
@@ -233,8 +249,7 @@ func RulesInit(zone *Zone) *RuleH {
 
 func (r *ruleTuples) ruleMkKeyCompliance(match ruleTMatch) {
 	if match&RmPort != RmPort {
-		r.port.val = 0
-		r.port.valid = 0
+		r.port.val = ""
 	}
 	if match&RmL2Src != RmL2Src {
 		for i := 0; i < 6; i++ {
@@ -310,7 +325,7 @@ func (r *ruleTuples) ruleMkKeyCompliance(match ruleTMatch) {
 func (r *ruleTuples) ruleKey() string {
 	var ks string
 
-	ks = fmt.Sprintf("%d", r.port.val&r.port.valid)
+	ks = fmt.Sprintf("%s", r.port.val)
 	ks += fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",
 		r.l2Dst.addr[0]&r.l2Dst.valid[0],
 		r.l2Dst.addr[1]&r.l2Dst.valid[1],
@@ -370,8 +385,8 @@ func checkValidMACTuple(mt ruleMacTuple) bool {
 func (r *ruleTuples) String() string {
 	var ks string
 
-	if r.port.valid != 0 {
-		ks = fmt.Sprintf("inp-%d,", r.port.val&r.port.valid)
+	if r.port.val != "" {
+		ks = fmt.Sprintf("inp-%s,", r.port.val)
 	}
 
 	if checkValidMACTuple(r.l2Dst) {
@@ -796,6 +811,165 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 
 	return 0, nil
 }
+
+// AddFwRule - Add a firewallnat rule. The rule details are passed in fwRule argument
+// it will return 0 and nil error, else appropriate return code and error string will be set
+func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, error) {
+	var fwOpts ruleFwOpts
+	var l4src rule16Tuple
+	var l4dst rule16Tuple
+	var l4prot rule8Tuple
+
+	// Vaildate rule args
+	_, dNetAddr, err := net.ParseCIDR(fwRule.DstIP)
+	if err != nil {
+		return RuleTupleErr, errors.New("malformed-rule error")
+	}
+
+	_, sNetAddr, err := net.ParseCIDR(fwRule.SrcIP)
+	if err != nil {
+		return RuleTupleErr, errors.New("malformed-rule error")
+	}
+
+	l3dst := ruleIPTuple{*dNetAddr}
+	l3src := ruleIPTuple{*sNetAddr}
+
+	if  fwRule.Proto != 0 {
+		l4prot = rule8Tuple{0, 0}
+	} else {
+		l4prot = rule8Tuple{fwRule.Proto, 0xff}
+	}
+
+	if fwRule.SrcPortMax == fwRule.SrcPortMin {
+		if fwRule.SrcPortMin == 0 {
+			l4src = rule16Tuple{0, 0}
+		} else {
+			l4src = rule16Tuple{fwRule.SrcPortMin, 0xffff}
+		}
+	} else {
+		l4src = rule16Tuple{fwRule.SrcPortMax, fwRule.SrcPortMin}
+	}
+	if fwRule.DstPortMax == fwRule.DstPortMin {
+		if fwRule.DstPortMin == 0 {
+			l4dst = rule16Tuple{0, 0}
+		} else {
+			l4dst = rule16Tuple{fwRule.SrcPortMin, 0xffff}
+		}
+	} else {
+		l4dst = rule16Tuple{fwRule.DstPortMax, fwRule.DstPortMin}
+	}
+	inport := ruleStringTuple {fwRule.InPort}
+	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot, l4Src:l4src, l4Dst: l4dst, port: inport}
+
+	eFw := R.Tables[RtFw].eMap[rt.ruleKey()]
+
+	if eFw != nil {
+		// If a FW rule already exists
+	
+		eFw.DP(DpCreate)
+
+		return 0, nil
+	}
+
+	r := new(ruleEnt)
+	r.tuples = rt
+	r.zone = R.Zone
+
+	/* Default is drop */
+	fwOpts.op = RtActDrop
+	
+	if fwOptArgs.Allow {
+		fwOpts.op = RtActFwd
+	} else if fwOptArgs.Drop {
+		fwOpts.op = RtActDrop
+	} else if fwOptArgs.Rdr {
+		fwOpts.op = RtActRedirect
+		fwOpts.opt.rdrPort = fwOptArgs.RdrPort
+	}
+
+	r.act.action = &fwOpts
+	r.ruleNum, err = R.Tables[RtFw].HwMark.GetCounter()
+	if err != nil {
+		tk.LogIt(tk.LogError, "fw-rule - %s:%s mark error\n", eFw.tuples.String(), eFw.act.String())
+		return RuleAllocErr, errors.New("rule-mark error")
+	}
+	r.sT = time.Now()
+
+	tk.LogIt(tk.LogDebug, "fw-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
+
+	R.Tables[RtFw].eMap[rt.ruleKey()] = r
+
+	r.DP(DpCreate)
+
+	return 0, nil
+}
+
+
+// DeleteFwRule - Delete a direwall rule,
+// On success, it will return 0 and nil error, else appropriate return code and
+// error string will be set
+func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
+	var l4src rule16Tuple
+	var l4dst rule16Tuple
+	var l4prot rule8Tuple
+
+	// Vaildate rule args
+	_, dNetAddr, err := net.ParseCIDR(fwRule.DstIP)
+	if err != nil {
+		return RuleTupleErr, errors.New("malformed-rule error")
+	}
+
+	_, sNetAddr, err := net.ParseCIDR(fwRule.SrcIP)
+	if err != nil {
+		return RuleTupleErr, errors.New("malformed-rule error")
+	}
+
+	l3dst := ruleIPTuple{*dNetAddr}
+	l3src := ruleIPTuple{*sNetAddr}
+
+	if  fwRule.Proto != 0 {
+		l4prot = rule8Tuple{0, 0}
+	} else {
+		l4prot = rule8Tuple{fwRule.Proto, 0xff}
+	}
+
+	if fwRule.SrcPortMax == fwRule.SrcPortMin {
+		if fwRule.SrcPortMin == 0 {
+			l4src = rule16Tuple{0, 0}
+		} else {
+			l4src = rule16Tuple{fwRule.SrcPortMin, 0xffff}
+		}
+	} else {
+		l4src = rule16Tuple{fwRule.SrcPortMax, fwRule.SrcPortMin}
+	}
+	if fwRule.DstPortMax == fwRule.DstPortMin {
+		if fwRule.DstPortMin == 0 {
+			l4dst = rule16Tuple{0, 0}
+		} else {
+			l4dst = rule16Tuple{fwRule.SrcPortMin, 0xffff}
+		}
+	} else {
+		l4dst = rule16Tuple{fwRule.DstPortMax, fwRule.DstPortMin}
+	}
+	inport := ruleStringTuple {fwRule.InPort}
+	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot, l4Src:l4src, l4Dst: l4dst, port: inport}
+
+	rule := R.Tables[RtFw].eMap[rt.ruleKey()]
+	if rule == nil {
+		return RuleNotExistsErr, errors.New("no-rule error")
+	}
+
+	defer R.Tables[RtFw].HwMark.PutCounter(rule.ruleNum)
+
+	delete(R.Tables[RtFw].eMap, rt.ruleKey())
+
+	tk.LogIt(tk.LogDebug, "fw-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
+
+	rule.DP(DpRemove)
+
+	return 0, nil
+}
+
 
 // RulesSync - This is periodic ticker routine which does two main things :
 // 1. Syncs rule statistics counts
