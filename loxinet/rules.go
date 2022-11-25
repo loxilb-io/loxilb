@@ -1200,6 +1200,13 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 
 // DP - sync state of rule entity to data-path
 func (r *ruleEnt) DP(work DpWorkT) int {
+	isNat := false
+
+	if r.act.actType == RtActDnat ||
+		r.act.actType == RtActSnat ||
+		r.act.actType == RtActFullNat {
+		isNat = true
+	}
 
 	if work == DpMapGet {
 		nTable := new(TableDpWorkQ)
@@ -1213,7 +1220,11 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 		nStat := new(StatDpWorkQ)
 		nStat.Work = work
 		nStat.HwMark = uint32(r.ruleNum)
-		nStat.Name = MapNameNat4
+		if isNat == true {
+			nStat.Name = MapNameNat4
+		} else {
+			nStat.Name = MapNameFw4
+		}
 		nStat.Bytes = &r.stat.bytes
 		nStat.Packets = &r.stat.packets
 
@@ -1221,9 +1232,7 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 		return 0
 	}
 
-	if r.act.actType == RtActDnat ||
-		r.act.actType == RtActSnat ||
-		r.act.actType == RtActFullNat {
+	if isNat == true {
 		return r.Nat2DP(work)
 	}
 

@@ -36,6 +36,7 @@ const (
 	MapNameRt4  = "RT4"
 	MapNameULCL = "ULCL"
 	MapNameIpol = "IPOL"
+	MapNameFw4  = "FW4"
 )
 
 // error codes
