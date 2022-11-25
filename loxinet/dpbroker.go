@@ -191,6 +191,34 @@ type PolDpWorkQ struct {
 	Status *DpStatusT
 }
 
+// FwOpT - type of firewall operation
+type FwOpT uint8
+
+// Fw type constants
+const (
+	DpFwDrop FwOpT = iota + 1
+	DpFwFwd
+	DpFwRdr
+)
+
+// FwDpWorkQ - work queue entry for fw related operation
+type FwDpWorkQ struct {
+	Work      DpWorkT
+	Status    *DpStatusT
+	ZoneNum   int
+	SrcIP 	  net.IPNet
+	DstIP 	  net.IPNet
+	L4SrcMin  uint16
+	L4SrcMax  uint16
+	L4DstMin  uint16
+	L4DstMax  uint16
+	Proto     uint8
+	HwMark    int
+	FwType    FwOpT
+	FwVal1	  uint32
+	FwVal2	  uint32
+}
+
 // NatT - type of NAT
 type NatT uint8
 
