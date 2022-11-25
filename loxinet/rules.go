@@ -129,6 +129,7 @@ type ruleTuples struct {
 	inL4Prot rule8Tuple
 	inL4Src  rule16Tuple
 	inL4Dst  rule16Tuple
+	pref	 uint16
 }
 
 type ruleTActType uint
@@ -859,7 +860,8 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 		l4dst = rule16Tuple{fwRule.DstPortMax, fwRule.DstPortMin}
 	}
 	inport := ruleStringTuple {fwRule.InPort}
-	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot, l4Src:l4src, l4Dst: l4dst, port: inport}
+	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot, 
+		l4Src:l4src, l4Dst: l4dst, port: inport, pref: fwRule.Pref}
 
 	eFw := R.Tables[RtFw].eMap[rt.ruleKey()]
 
@@ -903,7 +905,6 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 
 	return 0, nil
 }
-
 
 // DeleteFwRule - Delete a direwall rule,
 // On success, it will return 0 and nil error, else appropriate return code and
@@ -1052,6 +1053,7 @@ func (R *RuleH) RulesTicker() {
 // RuleDestructAll - Destructor routine for all rules
 func (R *RuleH) RuleDestructAll() {
 	var lbs cmn.LbServiceArg
+	var fwr cmn.FwRuleArg
 	for _, r := range R.Tables[RtLB].eMap {
 		lbs.ServIP = r.tuples.l3Dst.addr.IP.String()
 		if r.tuples.l4Dst.val == 6 {
@@ -1069,6 +1071,29 @@ func (R *RuleH) RuleDestructAll() {
 		lbs.ServPort = r.tuples.l4Dst.val
 
 		R.DeleteNatLbRule(lbs)
+	}
+	for _, r := range R.Tables[RtFw].eMap {
+		fwr.DstIP = r.tuples.l3Dst.addr.String()
+		fwr.SrcIP = r.tuples.l3Src.addr.String()
+		if r.tuples.l4Src.valid == 0xffff {
+			fwr.SrcPortMin = r.tuples.l4Src.val
+			fwr.SrcPortMax = r.tuples.l4Src.val
+		} else {
+			fwr.SrcPortMin = r.tuples.l4Src.valid
+			fwr.SrcPortMax = r.tuples.l4Src.val
+		}
+		if r.tuples.l4Dst.valid == 0xffff {
+			fwr.DstPortMin = r.tuples.l4Dst.val
+			fwr.DstPortMax = r.tuples.l4Dst.val
+		} else {
+			fwr.DstPortMin = r.tuples.l4Dst.valid
+			fwr.DstPortMax = r.tuples.l4Dst.val
+		}
+
+		fwr.Proto = r.tuples.l4Prot.val
+		fwr.InPort = r.tuples.port.val
+
+		R.DeleteFwRule(fwr)
 	}
 	return
 }
@@ -1191,6 +1216,69 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 			ep := &nWork.endPoints[idx]
 			ep.RIP = net.IPv4(0, 0, 0, 0)
 		}
+	}
+
+	mh.dp.ToDpCh <- nWork
+
+	return 0
+}
+
+// Fw2DP - Sync state of fw-rule entity to data-path
+func (r *ruleEnt) Fw2DP(work DpWorkT) int {
+
+	nWork := new(FwDpWorkQ)
+
+	nWork.Work = work
+	nWork.Status = &r.Sync
+	nWork.ZoneNum = r.zone.ZoneNum
+	nWork.SrcIP = r.tuples.inL3Src.addr
+	nWork.DstIP = r.tuples.l3Dst.addr
+	if r.tuples.l4Src.valid == 0xffff {
+		nWork.L4SrcMin = r.tuples.l4Src.val
+		nWork.L4SrcMax = r.tuples.l4Src.val
+	} else {
+		nWork.L4SrcMin = r.tuples.l4Src.valid
+		nWork.L4SrcMax = r.tuples.l4Src.val
+	}
+	if r.tuples.l4Dst.valid == 0xffff {
+		nWork.L4DstMin = r.tuples.l4Dst.val
+		nWork.L4DstMax = r.tuples.l4Dst.val
+	} else {
+		nWork.L4DstMin = r.tuples.l4Dst.valid
+		nWork.L4DstMax = r.tuples.l4Dst.val
+	}
+	if r.tuples.port.val != "" {
+		port := r.zone.Ports.PortFindByName(r.tuples.port.val)
+		if port == nil {
+			r.Sync = DpChangeErr
+			return -1
+		}
+		nWork.Port = uint16(port.PortNo)
+	}
+	nWork.Proto = r.tuples.l4Prot.val
+	nWork.HwMark = r.ruleNum
+	nWork.Pref = r.tuples.pref
+
+	switch at := r.act.action.(type) {
+	case *ruleFwOpts:
+		switch at.op {
+		case RtActFwd:
+			nWork.FwType = DpFwFwd
+		case RtActDrop:
+			nWork.FwType = DpFwDrop
+		case RtActRedirect:
+			nWork.FwType = DpFwRdr
+			port := r.zone.Ports.PortFindByName(at.opt.rdrPort)
+			if port == nil {
+				r.Sync = DpChangeErr
+				return -1
+			}
+			nWork.FwVal1 = uint16(port.PortNo)
+		default:
+			nWork.FwType = DpFwDrop
+		}
+	default:
+		return -1
 	}
 
 	mh.dp.ToDpCh <- nWork

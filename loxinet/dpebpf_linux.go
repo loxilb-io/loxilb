@@ -78,6 +78,8 @@ const (
 	EbpfErrPolDel
 	EbpfErrMirrAdd
 	EbpfErrMirrDel
+	EbpfErrFwAdd
+	EbpfErrFwDel
 	EbpfErrWqUnk
 )
 
@@ -114,6 +116,8 @@ type (
 	polTact     C.struct_dp_pol_tact
 	polAct      C.struct_dp_policer_act
 	mirrTact    C.struct_dp_mirr_tact
+	fw4Ent      C.struct_dp_fwv4_ent
+	portAct     C.struct_dp_rdr_act
 )
 
 // DpEbpfH - context container
@@ -1160,3 +1164,97 @@ func (e *DpEbpfH) DpMirrAdd(w *MirrDpWorkQ) int {
 func (e *DpEbpfH) DpMirrDel(w *MirrDpWorkQ) int {
 	return e.DpMirrMod(w)
 }
+
+// DpFwRuleMod - routine to work on a ebpf fw mod request
+func (e *DpEbpfH) DpFwRuleMod(w *FwDpWorkQ) int {
+
+	fwe := new(fw4Ent)
+
+	C.memset(unsafe.Pointer(fwe), 0, C.sizeof_struct_dp_fwv4_ent)
+
+	fwe.k.dest.val = C.uint(tk.Ntohl(tk.IPtonl(w.DstIP.IP)))
+	fwe.k.dest.val = C.uint(tk.Ntohl(tk.IPtonl(net.IP(w.DstIP.Mask))))
+
+	fwe.k.source.val = C.uint(tk.Ntohl(tk.IPtonl(w.SrcIP.IP)))
+	fwe.k.source.val = C.uint(tk.Ntohl(tk.IPtonl(net.IP(w.SrcIP.Mask))))
+
+	if w.L4SrcMin == w.L4SrcMax {
+		fwe.k.sport.has_range = C.uint(0)
+		ptr := (*C.ushort)(unsafe.Pointer(&fwe.k.sport.u[0]))
+		*ptr = C.ushort(w.L4SrcMin)
+		ptr = (*C.ushort)(unsafe.Pointer(&fwe.k.sport.u[2]))
+		*ptr = C.ushort(0xffff)
+	} else {
+		fwe.k.sport.has_range = C.uint(1)
+		ptr := (*C.ushort)(unsafe.Pointer(&fwe.k.sport.u[0]))
+		*ptr = C.ushort(w.L4SrcMin)
+		ptr = (*C.ushort)(unsafe.Pointer(&fwe.k.sport.u[2]))
+		*ptr = C.ushort(w.L4SrcMax)
+	}
+
+	if w.L4DstMin == w.L4DstMax {
+		fwe.k.dport.has_range = C.uint(0)
+		ptr := (*C.ushort)(unsafe.Pointer(&fwe.k.dport.u[0]))
+		*ptr = C.ushort(w.L4DstMin)
+		ptr = (*C.ushort)(unsafe.Pointer(&fwe.k.dport.u[2]))
+		*ptr = C.ushort(0xffff)
+	} else {
+		fwe.k.dport.has_range = C.uint(1)
+		ptr := (*C.ushort)(unsafe.Pointer(&fwe.k.dport.u[0]))
+		*ptr = C.ushort(w.L4DstMin)
+		ptr = (*C.ushort)(unsafe.Pointer(&fwe.k.dport.u[2]))
+		*ptr = C.ushort(w.L4DstMax)
+	}
+
+	if w.Port != 0 {
+		fwe.k.inport.val = C.ushort(w.Port)
+		fwe.k.inport.valid = C.ushort(0xffff)
+	}
+
+	if w.Proto != 0 {
+		fwe.k.protocol.val = C.uchar(w.Proto)
+		fwe.k.protocol.valid = C.uchar(255)
+	}
+
+	fwe.fwa.ca.cidx = C.uint(w.HwMark)
+	fwe.fwa.ca.oif = C.ushort(w.Pref) // Overloaded field
+
+	if w.Work == DpCreate {
+		if w.FwType == DpFwFwd {
+			fwe.fwa.ca.act_type = C.DP_SET_NOP
+		} else if w.FwType == DpFwDrop {
+			fwe.fwa.ca.act_type = C.DP_SET_DROP
+		} else if w.FwType == DpFwRdr {
+			fwe.fwa.ca.act_type = C.DP_SET_RDR_PORT
+			pRdr := (*portAct)(getPtrOffset(unsafe.Pointer(&fwe.fwa),
+			C.sizeof_struct_dp_cmn_act))
+			pRdr.oport = C.ushort(w.FwVal1)
+		}
+		ret := C.llb_add_map_elem(C.LL_DP_FW4_MAP, unsafe.Pointer(&fwe), unsafe.Pointer(nil))
+		if ret != 0 {
+			tk.LogIt(tk.LogError, "ebpf fw error\n")
+			return EbpfErrFwAdd
+		}
+	} else if w.Work == DpRemove {
+		C.llb_del_map_elem(C.LL_DP_FW4_MAP, unsafe.Pointer(&fwe))
+	}
+	
+	return 0
+}
+
+// DpFwRuleAdd - routine to work on a ebpf fw add request
+func (e *DpEbpfH) DpFwRuleAdd(w *FwDpWorkQ) int {
+	ec := e.DpFwRuleMod(w)
+	if ec != 0 {
+		*w.Status = DpCreateErr
+	} else {
+		*w.Status = 0
+	}
+	return ec
+}
+
+// DpFwRuleDel - routine to work on a ebpf fw delete request
+func (e *DpEbpfH) DpFwRuleDel(w *FwDpWorkQ) int {
+	return e.DpFwRuleMod(w)
+}
+

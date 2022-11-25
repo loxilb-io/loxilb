@@ -376,3 +376,21 @@ func (*NetAPIStruct) NetHAStateMod(hm *cmn.HASMod) (int, error) {
 	ret, err := mh.has.HAStateUpdate(hm.State)
 	return ret, err
 }
+
+// NetFwRuleAdd - Add a firewall rule in loxinet
+func (*NetAPIStruct) NetFwRuleAdd(fm *cmn.FwRuleMod) (int, error) {
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	ret, err := mh.zr.Rules.AddFwRule(fm.Serv, fm.Opts)
+	return ret, err
+}
+
+// NetLbRuleDel - Delete a firewall rule in loxinet
+func (*NetAPIStruct) NetFwRuleDel(fm *cmn.FwRuleMod) (int, error) {
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	ret, err := mh.zr.Rules.DeleteFwRule(fm.Serv)
+	return ret, err
+}

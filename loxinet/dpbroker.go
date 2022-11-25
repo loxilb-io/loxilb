@@ -213,10 +213,12 @@ type FwDpWorkQ struct {
 	L4SrcMax  uint16
 	L4DstMin  uint16
 	L4DstMax  uint16
+	Port      uint16
+	Pref	  uint16
 	Proto     uint8
 	HwMark    int
 	FwType    FwOpT
-	FwVal1	  uint32
+	FwVal1	  uint16
 	FwVal2	  uint32
 }
 
@@ -322,6 +324,8 @@ type DpHookInterface interface {
 	DpRouteDel(*RouteDpWorkQ) int
 	DpNatLbRuleAdd(*NatDpWorkQ) int
 	DpNatLbRuleDel(*NatDpWorkQ) int
+	DpFwRuleAdd(w *FwDpWorkQ) int
+	DpFwRuleDel(w *FwDpWorkQ) int
 	DpStat(*StatDpWorkQ) int
 	DpUlClAdd(w *UlClDpWorkQ) int
 	DpUlClDel(w *UlClDpWorkQ) int
