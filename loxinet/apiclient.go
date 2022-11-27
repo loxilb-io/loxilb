@@ -386,11 +386,17 @@ func (*NetAPIStruct) NetFwRuleAdd(fm *cmn.FwRuleMod) (int, error) {
 	return ret, err
 }
 
-// NetLbRuleDel - Delete a firewall rule in loxinet
+// NetFwRuleDel - Delete a firewall rule in loxinet
 func (*NetAPIStruct) NetFwRuleDel(fm *cmn.FwRuleMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
 	ret, err := mh.zr.Rules.DeleteFwRule(fm.Rule)
+	return ret, err
+}
+
+// NetFwRuleGet - Get a firewall rule from loxinet
+func (*NetAPIStruct) NetFwRuleGet() ([]cmn.FwRuleMod, error) {
+	ret, err := mh.zr.Rules.GetFwRule()
 	return ret, err
 }

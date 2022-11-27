@@ -815,6 +815,41 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	return 0, nil
 }
 
+// GetFwRule - get all Fwrules and pack them into a cmn.FwRuleMod slice
+func (R *RuleH) GetFwRule() ([]cmn.FwRuleMod, error) {
+	var res []cmn.FwRuleMod
+
+	for _, data := range R.Tables[RtFw].eMap {
+		var ret cmn.FwRuleMod
+		// Make Fw Arguments
+		ret.Rule.DstIP = data.tuples.l3Dst.addr.String()
+		ret.Rule.SrcIP = data.tuples.l3Src.addr.String()
+		ret.Rule.DstPortMin = data.tuples.l4Dst.valid
+		ret.Rule.DstPortMin = data.tuples.l4Dst.val
+		ret.Rule.SrcPortMin = data.tuples.l4Src.valid
+		ret.Rule.SrcPortMin = data.tuples.l4Src.val
+		ret.Rule.Proto = data.tuples.l4Prot.val
+		ret.Rule.InPort = data.tuples.port.val
+		ret.Rule.Pref = data.tuples.pref
+
+		// Make Fw Opts
+		fwOpts := data.act.action.(*ruleFwOpts)
+		if fwOpts.op == RtActFwd {
+			ret.Opts.Allow = true
+		} else if fwOpts.op == RtActDrop {
+			ret.Opts.Drop = true
+		} else if fwOpts.op == RtActRedirect {
+			ret.Opts.Rdr = true
+			ret.Opts.RdrPort = fwOpts.opt.rdrPort
+		}
+
+		// Make FwRule
+		res = append(res, ret)
+	}
+
+	return res, nil
+}
+
 // AddFwRule - Add a firewall rule. The rule details are passed in fwRule argument
 // it will return 0 and nil error, else appropriate return code and error string will be set
 func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, error) {

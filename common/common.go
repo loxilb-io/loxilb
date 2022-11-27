@@ -630,4 +630,5 @@ type NetHookInterface interface {
 	NetHAStateGet() (string, error)
 	NetFwRuleAdd(*FwRuleMod) (int, error)
 	NetFwRuleDel(*FwRuleMod) (int, error)
+	NetFwRuleGet() ([]FwRuleMod, error)
 }
