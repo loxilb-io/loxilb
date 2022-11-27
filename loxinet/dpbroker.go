@@ -36,6 +36,7 @@ const (
 	MapNameRt4  = "RT4"
 	MapNameULCL = "ULCL"
 	MapNameIpol = "IPOL"
+	MapNameFw4  = "FW4"
 )
 
 // error codes
@@ -191,6 +192,36 @@ type PolDpWorkQ struct {
 	Status *DpStatusT
 }
 
+// FwOpT - type of firewall operation
+type FwOpT uint8
+
+// Fw type constants
+const (
+	DpFwDrop FwOpT = iota + 1
+	DpFwFwd
+	DpFwRdr
+)
+
+// FwDpWorkQ - work queue entry for fw related operation
+type FwDpWorkQ struct {
+	Work      DpWorkT
+	Status    *DpStatusT
+	ZoneNum   int
+	SrcIP 	  net.IPNet
+	DstIP 	  net.IPNet
+	L4SrcMin  uint16
+	L4SrcMax  uint16
+	L4DstMin  uint16
+	L4DstMax  uint16
+	Port      uint16
+	Pref	  uint16
+	Proto     uint8
+	HwMark    int
+	FwType    FwOpT
+	FwVal1	  uint16
+	FwVal2	  uint32
+}
+
 // NatT - type of NAT
 type NatT uint8
 
@@ -293,6 +324,8 @@ type DpHookInterface interface {
 	DpRouteDel(*RouteDpWorkQ) int
 	DpNatLbRuleAdd(*NatDpWorkQ) int
 	DpNatLbRuleDel(*NatDpWorkQ) int
+	DpFwRuleAdd(w *FwDpWorkQ) int
+	DpFwRuleDel(w *FwDpWorkQ) int
 	DpStat(*StatDpWorkQ) int
 	DpUlClAdd(w *UlClDpWorkQ) int
 	DpUlClDel(w *UlClDpWorkQ) int
@@ -416,6 +449,17 @@ func (dp *DpH) DpWorkOnMirr(mWq *MirrDpWorkQ) DpRetT {
 	return DpWqUnkErr
 }
 
+// DpWorkOnFw - routine to work on a firewall work queue request
+func (dp *DpH) DpWorkOnFw(fWq *FwDpWorkQ) DpRetT {
+	if fWq.Work == DpCreate {
+		return dp.DpHooks.DpFwRuleAdd(fWq)
+	} else if fWq.Work == DpRemove {
+		return dp.DpHooks.DpFwRuleDel(fWq)
+	}
+
+	return DpWqUnkErr
+}
+
 // DpWorkSingle - routine to work on a single dp work queue request
 func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 	var ret DpRetT
@@ -442,6 +486,8 @@ func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 		ret = dp.DpWorkOnStat(mq)
 	case *TableDpWorkQ:
 		ret, _ = dp.DpWorkOnTableOp(mq)
+	case *FwDpWorkQ:
+		ret = dp.DpWorkOnFw(mq)
 	default:
 		tk.LogIt(tk.LogError, "unexpected type %T\n", mq)
 		ret = DpWqUnkErr

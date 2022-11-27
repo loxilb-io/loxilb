@@ -37,6 +37,7 @@ const (
 	RuleAllocErr
 	RuleNotExistsErr
 	RuleEpCountErr
+	RuleTupleErr
 )
 
 type ruleTMatch uint
@@ -106,8 +107,12 @@ type ruleMacTuple struct {
 	valid [6]uint8
 }
 
+type ruleStringTuple struct {
+	val   string
+}
+
 type ruleTuples struct {
-	port     rule32Tuple
+	port     ruleStringTuple
 	l2Src    ruleMacTuple
 	l2Dst    ruleMacTuple
 	vlanID   rule16Tuple
@@ -124,6 +129,7 @@ type ruleTuples struct {
 	inL4Prot rule8Tuple
 	inL4Src  rule16Tuple
 	inL4Dst  rule16Tuple
+	pref	 uint16
 }
 
 type ruleTActType uint
@@ -150,6 +156,16 @@ type ruleNatEp struct {
 type ruleNatActs struct {
 	sel       cmn.EpSelect
 	endPoints []ruleNatEp
+}
+
+type ruleFwOpt struct {
+	rdrMirr    string
+	rdrPort    string
+}
+
+type ruleFwOpts struct {
+	op        ruleTActType
+	opt 	  ruleFwOpt
 }
 
 type ruleTAct interface{}
@@ -187,14 +203,14 @@ type ruleTableType uint
 
 // rt types
 const (
-	RtACL ruleTableType = iota + 1
+	RtFw ruleTableType = iota + 1
 	RtLB
 	RtMax
 )
 
 // rule specific loxilb constants
 const (
-	RtMaximumAcls = (8 * 1024)
+	RtMaximumFw4s = (8 * 1024)
 	RtMaximumLbs  = (2 * 1024)
 )
 
@@ -219,9 +235,10 @@ func RulesInit(zone *Zone) *RuleH {
 	nRh.Cfg.RuleInactChkTime = LbaCheckTimeout
 	nRh.Cfg.RuleInactTries = MaxLbaInactiveTries
 
-	nRh.Tables[RtACL].tableMatch = RmMax - 1
-	nRh.Tables[RtACL].tableType = RtMf
-	nRh.Tables[RtACL].HwMark = tk.NewCounter(1, RtMaximumAcls)
+	nRh.Tables[RtFw].tableMatch = RmMax - 1
+	nRh.Tables[RtFw].tableType = RtMf
+	nRh.Tables[RtFw].eMap = make(map[string]*ruleEnt)
+	nRh.Tables[RtFw].HwMark = tk.NewCounter(1, RtMaximumFw4s)
 
 	nRh.Tables[RtLB].tableMatch = RmL3Dst | RmL4Dst | RmL4Prot
 	nRh.Tables[RtLB].tableType = RtEm
@@ -233,8 +250,7 @@ func RulesInit(zone *Zone) *RuleH {
 
 func (r *ruleTuples) ruleMkKeyCompliance(match ruleTMatch) {
 	if match&RmPort != RmPort {
-		r.port.val = 0
-		r.port.valid = 0
+		r.port.val = ""
 	}
 	if match&RmL2Src != RmL2Src {
 		for i := 0; i < 6; i++ {
@@ -310,7 +326,7 @@ func (r *ruleTuples) ruleMkKeyCompliance(match ruleTMatch) {
 func (r *ruleTuples) ruleKey() string {
 	var ks string
 
-	ks = fmt.Sprintf("%d", r.port.val&r.port.valid)
+	ks = fmt.Sprintf("%s", r.port.val)
 	ks += fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",
 		r.l2Dst.addr[0]&r.l2Dst.valid[0],
 		r.l2Dst.addr[1]&r.l2Dst.valid[1],
@@ -370,8 +386,8 @@ func checkValidMACTuple(mt ruleMacTuple) bool {
 func (r *ruleTuples) String() string {
 	var ks string
 
-	if r.port.valid != 0 {
-		ks = fmt.Sprintf("inp-%d,", r.port.val&r.port.valid)
+	if r.port.val != "" {
+		ks = fmt.Sprintf("inp-%s,", r.port.val)
 	}
 
 	if checkValidMACTuple(r.l2Dst) {
@@ -466,6 +482,8 @@ func (a *ruleAct) String() string {
 
 	if a.actType == RtActDrop {
 		ks += fmt.Sprintf("%s", "drop")
+	} else if a.actType == RtActFwd {
+		ks += fmt.Sprintf("%s", "allow")
 	} else if a.actType == RtActDnat ||
 		a.actType == RtActSnat ||
 		a.actType == RtActFullNat {
@@ -797,6 +815,200 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	return 0, nil
 }
 
+// GetFwRule - get all Fwrules and pack them into a cmn.FwRuleMod slice
+func (R *RuleH) GetFwRule() ([]cmn.FwRuleMod, error) {
+	var res []cmn.FwRuleMod
+
+	for _, data := range R.Tables[RtFw].eMap {
+		var ret cmn.FwRuleMod
+		// Make Fw Arguments
+		ret.Rule.DstIP = data.tuples.l3Dst.addr.String()
+		ret.Rule.SrcIP = data.tuples.l3Src.addr.String()
+		ret.Rule.DstPortMin = data.tuples.l4Dst.valid
+		ret.Rule.DstPortMin = data.tuples.l4Dst.val
+		ret.Rule.SrcPortMin = data.tuples.l4Src.valid
+		ret.Rule.SrcPortMin = data.tuples.l4Src.val
+		ret.Rule.Proto = data.tuples.l4Prot.val
+		ret.Rule.InPort = data.tuples.port.val
+		ret.Rule.Pref = data.tuples.pref
+
+		// Make Fw Opts
+		fwOpts := data.act.action.(*ruleFwOpts)
+		if fwOpts.op == RtActFwd {
+			ret.Opts.Allow = true
+		} else if fwOpts.op == RtActDrop {
+			ret.Opts.Drop = true
+		} else if fwOpts.op == RtActRedirect {
+			ret.Opts.Rdr = true
+			ret.Opts.RdrPort = fwOpts.opt.rdrPort
+		}
+
+		// Make FwRule
+		res = append(res, ret)
+	}
+
+	return res, nil
+}
+
+// AddFwRule - Add a firewall rule. The rule details are passed in fwRule argument
+// it will return 0 and nil error, else appropriate return code and error string will be set
+func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, error) {
+	var fwOpts ruleFwOpts
+	var l4src rule16Tuple
+	var l4dst rule16Tuple
+	var l4prot rule8Tuple
+
+	// Vaildate rule args
+	_, dNetAddr, err := net.ParseCIDR(fwRule.DstIP)
+	if err != nil {
+		return RuleTupleErr, errors.New("malformed-rule error")
+	}
+
+	_, sNetAddr, err := net.ParseCIDR(fwRule.SrcIP)
+	if err != nil {
+		return RuleTupleErr, errors.New("malformed-rule error")
+	}
+
+	l3dst := ruleIPTuple{*dNetAddr}
+	l3src := ruleIPTuple{*sNetAddr}
+
+	if  fwRule.Proto == 0 {
+		l4prot = rule8Tuple{0, 0}
+	} else {
+		l4prot = rule8Tuple{fwRule.Proto, 0xff}
+	}
+
+	if fwRule.SrcPortMax == fwRule.SrcPortMin {
+		if fwRule.SrcPortMin == 0 {
+			l4src = rule16Tuple{0, 0}
+		} else {
+			l4src = rule16Tuple{fwRule.SrcPortMin, 0xffff}
+		}
+	} else {
+		l4src = rule16Tuple{fwRule.SrcPortMax, fwRule.SrcPortMin}
+	}
+	if fwRule.DstPortMax == fwRule.DstPortMin {
+		if fwRule.DstPortMin == 0 {
+			l4dst = rule16Tuple{0, 0}
+		} else {
+			l4dst = rule16Tuple{fwRule.SrcPortMin, 0xffff}
+		}
+	} else {
+		l4dst = rule16Tuple{fwRule.DstPortMax, fwRule.DstPortMin}
+	}
+	inport := ruleStringTuple {fwRule.InPort}
+	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot, 
+		l4Src:l4src, l4Dst: l4dst, port: inport, pref: fwRule.Pref}
+
+	eFw := R.Tables[RtFw].eMap[rt.ruleKey()]
+
+	if eFw != nil {
+		// If a FW rule already exists
+		return RuleExistsErr, errors.New("fwrule-exists error")
+	}
+
+	r := new(ruleEnt)
+	r.tuples = rt
+	r.zone = R.Zone
+
+	/* Default is drop */
+	fwOpts.op = RtActDrop
+	
+	if fwOptArgs.Allow {
+		r.act.actType = RtActFwd
+		fwOpts.op = RtActFwd
+	} else if fwOptArgs.Drop {
+		r.act.actType = RtActDrop
+		fwOpts.op = RtActDrop
+	} else if fwOptArgs.Rdr {
+		r.act.actType = RtActRedirect
+		fwOpts.op = RtActRedirect
+		fwOpts.opt.rdrPort = fwOptArgs.RdrPort
+	}
+
+	r.act.action = &fwOpts
+	r.ruleNum, err = R.Tables[RtFw].HwMark.GetCounter()
+	if err != nil {
+		tk.LogIt(tk.LogError, "fw-rule - %s:%s mark error\n", eFw.tuples.String(), eFw.act.String())
+		return RuleAllocErr, errors.New("rule-mark error")
+	}
+	r.sT = time.Now()
+
+	tk.LogIt(tk.LogDebug, "fw-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
+
+	R.Tables[RtFw].eMap[rt.ruleKey()] = r
+
+	r.DP(DpCreate)
+
+	return 0, nil
+}
+
+// DeleteFwRule - Delete a firewall rule,
+// On success, it will return 0 and nil error, else appropriate return code and
+// error string will be set
+func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
+	var l4src rule16Tuple
+	var l4dst rule16Tuple
+	var l4prot rule8Tuple
+
+	// Vaildate rule args
+	_, dNetAddr, err := net.ParseCIDR(fwRule.DstIP)
+	if err != nil {
+		return RuleTupleErr, errors.New("malformed-rule error")
+	}
+
+	_, sNetAddr, err := net.ParseCIDR(fwRule.SrcIP)
+	if err != nil {
+		return RuleTupleErr, errors.New("malformed-rule error")
+	}
+
+	l3dst := ruleIPTuple{*dNetAddr}
+	l3src := ruleIPTuple{*sNetAddr}
+
+	if  fwRule.Proto != 0 {
+		l4prot = rule8Tuple{0, 0}
+	} else {
+		l4prot = rule8Tuple{fwRule.Proto, 0xff}
+	}
+
+	if fwRule.SrcPortMax == fwRule.SrcPortMin {
+		if fwRule.SrcPortMin == 0 {
+			l4src = rule16Tuple{0, 0}
+		} else {
+			l4src = rule16Tuple{fwRule.SrcPortMin, 0xffff}
+		}
+	} else {
+		l4src = rule16Tuple{fwRule.SrcPortMax, fwRule.SrcPortMin}
+	}
+	if fwRule.DstPortMax == fwRule.DstPortMin {
+		if fwRule.DstPortMin == 0 {
+			l4dst = rule16Tuple{0, 0}
+		} else {
+			l4dst = rule16Tuple{fwRule.SrcPortMin, 0xffff}
+		}
+	} else {
+		l4dst = rule16Tuple{fwRule.DstPortMax, fwRule.DstPortMin}
+	}
+	inport := ruleStringTuple {fwRule.InPort}
+	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot, l4Src:l4src, l4Dst: l4dst, port: inport}
+
+	rule := R.Tables[RtFw].eMap[rt.ruleKey()]
+	if rule == nil {
+		return RuleNotExistsErr, errors.New("no-rule error")
+	}
+
+	defer R.Tables[RtFw].HwMark.PutCounter(rule.ruleNum)
+
+	delete(R.Tables[RtFw].eMap, rt.ruleKey())
+
+	tk.LogIt(tk.LogDebug, "fw-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
+
+	rule.DP(DpRemove)
+
+	return 0, nil
+}
+
+
 // RulesSync - This is periodic ticker routine which does two main things :
 // 1. Syncs rule statistics counts
 // 2. Check health of lb-rule end-points
@@ -868,6 +1080,18 @@ func (R *RuleH) RulesSync() {
 		}
 
 	}
+
+	for _, rule := range R.Tables[RtFw].eMap {
+		ruleKeys := rule.tuples.String()
+		ruleActs := rule.act.String()
+		if rule.Sync != 0 {
+			rule.DP(DpCreate)
+		}
+		rule.DP(DpStatsGet)
+		tk.LogIt(tk.LogDebug, "%d:%s,%s pc %v bc %v \n",
+			rule.ruleNum, ruleKeys, ruleActs,
+			rule.stat.packets, rule.stat.bytes)
+	}
 }
 
 // RulesTicker - Ticker for all rules
@@ -878,6 +1102,7 @@ func (R *RuleH) RulesTicker() {
 // RuleDestructAll - Destructor routine for all rules
 func (R *RuleH) RuleDestructAll() {
 	var lbs cmn.LbServiceArg
+	var fwr cmn.FwRuleArg
 	for _, r := range R.Tables[RtLB].eMap {
 		lbs.ServIP = r.tuples.l3Dst.addr.IP.String()
 		if r.tuples.l4Dst.val == 6 {
@@ -895,6 +1120,29 @@ func (R *RuleH) RuleDestructAll() {
 		lbs.ServPort = r.tuples.l4Dst.val
 
 		R.DeleteNatLbRule(lbs)
+	}
+	for _, r := range R.Tables[RtFw].eMap {
+		fwr.DstIP = r.tuples.l3Dst.addr.String()
+		fwr.SrcIP = r.tuples.l3Src.addr.String()
+		if r.tuples.l4Src.valid == 0xffff {
+			fwr.SrcPortMin = r.tuples.l4Src.val
+			fwr.SrcPortMax = r.tuples.l4Src.val
+		} else {
+			fwr.SrcPortMin = r.tuples.l4Src.valid
+			fwr.SrcPortMax = r.tuples.l4Src.val
+		}
+		if r.tuples.l4Dst.valid == 0xffff {
+			fwr.DstPortMin = r.tuples.l4Dst.val
+			fwr.DstPortMax = r.tuples.l4Dst.val
+		} else {
+			fwr.DstPortMin = r.tuples.l4Dst.valid
+			fwr.DstPortMax = r.tuples.l4Dst.val
+		}
+
+		fwr.Proto = r.tuples.l4Prot.val
+		fwr.InPort = r.tuples.port.val
+
+		R.DeleteFwRule(fwr)
 	}
 	return
 }
@@ -1024,8 +1272,78 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	return 0
 }
 
+// Fw2DP - Sync state of fw-rule entity to data-path
+func (r *ruleEnt) Fw2DP(work DpWorkT) int {
+
+	nWork := new(FwDpWorkQ)
+
+	nWork.Work = work
+	nWork.Status = &r.Sync
+	nWork.ZoneNum = r.zone.ZoneNum
+	nWork.SrcIP = r.tuples.l3Src.addr
+	nWork.DstIP = r.tuples.l3Dst.addr
+	if r.tuples.l4Src.valid == 0xffff {
+		nWork.L4SrcMin = r.tuples.l4Src.val
+		nWork.L4SrcMax = r.tuples.l4Src.val
+	} else {
+		nWork.L4SrcMin = r.tuples.l4Src.valid
+		nWork.L4SrcMax = r.tuples.l4Src.val
+	}
+	if r.tuples.l4Dst.valid == 0xffff {
+		nWork.L4DstMin = r.tuples.l4Dst.val
+		nWork.L4DstMax = r.tuples.l4Dst.val
+	} else {
+		nWork.L4DstMin = r.tuples.l4Dst.valid
+		nWork.L4DstMax = r.tuples.l4Dst.val
+	}
+	if r.tuples.port.val != "" {
+		port := r.zone.Ports.PortFindByName(r.tuples.port.val)
+		if port == nil {
+			r.Sync = DpChangeErr
+			return -1
+		}
+		nWork.Port = uint16(port.PortNo)
+	}
+	nWork.Proto = r.tuples.l4Prot.val
+	nWork.HwMark = r.ruleNum
+	nWork.Pref = r.tuples.pref
+
+	switch at := r.act.action.(type) {
+	case *ruleFwOpts:
+		switch at.op {
+		case RtActFwd:
+			nWork.FwType = DpFwFwd
+		case RtActDrop:
+			nWork.FwType = DpFwDrop
+		case RtActRedirect:
+			nWork.FwType = DpFwRdr
+			port := r.zone.Ports.PortFindByName(at.opt.rdrPort)
+			if port == nil {
+				r.Sync = DpChangeErr
+				return -1
+			}
+			nWork.FwVal1 = uint16(port.PortNo)
+		default:
+			nWork.FwType = DpFwDrop
+		}
+	default:
+		return -1
+	}
+
+	mh.dp.ToDpCh <- nWork
+
+	return 0
+}
+
 // DP - sync state of rule entity to data-path
 func (r *ruleEnt) DP(work DpWorkT) int {
+	isNat := false
+
+	if r.act.actType == RtActDnat ||
+		r.act.actType == RtActSnat ||
+		r.act.actType == RtActFullNat {
+		isNat = true
+	}
 
 	if work == DpMapGet {
 		nTable := new(TableDpWorkQ)
@@ -1039,7 +1357,11 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 		nStat := new(StatDpWorkQ)
 		nStat.Work = work
 		nStat.HwMark = uint32(r.ruleNum)
-		nStat.Name = MapNameNat4
+		if isNat == true {
+			nStat.Name = MapNameNat4
+		} else {
+			nStat.Name = MapNameFw4
+		}
 		nStat.Bytes = &r.stat.bytes
 		nStat.Packets = &r.stat.packets
 
@@ -1047,11 +1369,9 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 		return 0
 	}
 
-	if r.act.actType == RtActDnat ||
-		r.act.actType == RtActSnat ||
-		r.act.actType == RtActFullNat {
+	if isNat == true {
 		return r.Nat2DP(work)
+	} else {
+		return r.Fw2DP(work)
 	}
-
-	return -1
 }

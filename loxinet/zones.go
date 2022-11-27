@@ -70,7 +70,7 @@ func ZoneInit() *ZoneH {
 	zn.ZoneMap = make(map[string]*Zone)
 	zn.ZoneBrs = make(map[string]*Zone)
 	zn.ZonePorts = make(map[string]*Zone)
-	zn.ZoneMark = tk.NewCounter(0, MaximumZones)
+	zn.ZoneMark = tk.NewCounter(1, MaximumZones)
 
 	return zn
 }
