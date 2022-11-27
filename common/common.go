@@ -347,8 +347,8 @@ type FwRuleArg struct {
 
 // FwRuleMod - Info related to a firewall entry
 type FwRuleMod struct {
-	// Serv - service argument of type LbServiceArg
-	Serv FwRuleArg `json:"serviceArguments"`
+	// Serv - service argument of type FwRuleArg
+	Rule FwRuleArg `json:"ruleArguments"`
 	// Opts - firewall options
 	Opts FwOptArg `json:"opts"`
 }

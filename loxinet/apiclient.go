@@ -382,7 +382,7 @@ func (*NetAPIStruct) NetFwRuleAdd(fm *cmn.FwRuleMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
-	ret, err := mh.zr.Rules.AddFwRule(fm.Serv, fm.Opts)
+	ret, err := mh.zr.Rules.AddFwRule(fm.Rule, fm.Opts)
 	return ret, err
 }
 
@@ -391,6 +391,6 @@ func (*NetAPIStruct) NetFwRuleDel(fm *cmn.FwRuleMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
-	ret, err := mh.zr.Rules.DeleteFwRule(fm.Serv)
+	ret, err := mh.zr.Rules.DeleteFwRule(fm.Rule)
 	return ret, err
 }

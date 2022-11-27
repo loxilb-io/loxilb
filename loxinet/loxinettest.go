@@ -356,6 +356,47 @@ func TestLoxinet(t *testing.T) {
 		t.Errorf("Failed to delete mirror mirr-1\n")
 	}
 
+	fwR := cmn.FwRuleArg { SrcIP : "192.168.1.2/24", DstIP : "192.168.2.1/24", Pref : 100}
+	fwOpts := cmn.FwOptArg { Drop : true}
+	_, err = mh.zr.Rules.AddFwRule( fwR, fwOpts)
+	if err != nil {
+		t.Errorf("Failed to add fw-1\n")
+	}
+
+	fwR1 := cmn.FwRuleArg { SrcIP : "192.169.1.2/24", DstIP : "192.169.2.1/24", Pref : 200}
+	fwOpts = cmn.FwOptArg { Drop : true}
+	_, err = mh.zr.Rules.AddFwRule( fwR1, fwOpts)
+	if err != nil {
+		t.Errorf("Failed to add fw-2\n")
+	}
+
+	_, err = mh.zr.Rules.AddFwRule( fwR1, fwOpts)
+	if err == nil {
+		t.Errorf("Allowed to add duplicate fw-2\n")
+	}
+
+	fwR2 := cmn.FwRuleArg { SrcIP : "0.0.0.0/0", DstIP : "31.31.31.1/24", Pref : 200}
+	fwOpts = cmn.FwOptArg { Allow : true}
+	_, err = mh.zr.Rules.AddFwRule( fwR2, fwOpts)
+	if err != nil {
+		t.Errorf("Failed to add fw-3\n")
+	}
+
+	_, err = mh.zr.Rules.DeleteFwRule(fwR)
+	if err != nil {
+		t.Errorf("Failed to add fw-1\n")
+	}
+
+	_, err = mh.zr.Rules.DeleteFwRule(fwR1)
+	if err != nil {
+		t.Errorf("Failed to add fw-2\n")
+	}
+
+	_, err = mh.zr.Rules.DeleteFwRule(fwR2)
+	if err != nil {
+		t.Errorf("Failed to add fw-3\n")
+	}
+
 	fmt.Printf("#### Route-List ####\n")
 	mh.zr.Rt.Rts2String(&mh)
 
