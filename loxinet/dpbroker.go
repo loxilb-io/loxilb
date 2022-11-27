@@ -449,6 +449,17 @@ func (dp *DpH) DpWorkOnMirr(mWq *MirrDpWorkQ) DpRetT {
 	return DpWqUnkErr
 }
 
+// DpWorkOnFw - routine to work on a firewall work queue request
+func (dp *DpH) DpWorkOnFw(fWq *FwDpWorkQ) DpRetT {
+	if fWq.Work == DpCreate {
+		return dp.DpHooks.DpFwRuleAdd(fWq)
+	} else if fWq.Work == DpRemove {
+		return dp.DpHooks.DpFwRuleDel(fWq)
+	}
+
+	return DpWqUnkErr
+}
+
 // DpWorkSingle - routine to work on a single dp work queue request
 func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 	var ret DpRetT
@@ -475,6 +486,8 @@ func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 		ret = dp.DpWorkOnStat(mq)
 	case *TableDpWorkQ:
 		ret, _ = dp.DpWorkOnTableOp(mq)
+	case *FwDpWorkQ:
+		ret = dp.DpWorkOnFw(mq)
 	default:
 		tk.LogIt(tk.LogError, "unexpected type %T\n", mq)
 		ret = DpWqUnkErr

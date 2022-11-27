@@ -210,7 +210,7 @@ const (
 
 // rule specific loxilb constants
 const (
-	RtMaximumAcls = (8 * 1024)
+	RtMaximumFw4s = (8 * 1024)
 	RtMaximumLbs  = (2 * 1024)
 )
 
@@ -238,7 +238,7 @@ func RulesInit(zone *Zone) *RuleH {
 	nRh.Tables[RtFw].tableMatch = RmMax - 1
 	nRh.Tables[RtFw].tableType = RtMf
 	nRh.Tables[RtFw].eMap = make(map[string]*ruleEnt)
-	nRh.Tables[RtFw].HwMark = tk.NewCounter(1, RtMaximumAcls)
+	nRh.Tables[RtFw].HwMark = tk.NewCounter(1, RtMaximumFw4s)
 
 	nRh.Tables[RtLB].tableMatch = RmL3Dst | RmL4Dst | RmL4Prot
 	nRh.Tables[RtLB].tableType = RtEm
@@ -482,6 +482,8 @@ func (a *ruleAct) String() string {
 
 	if a.actType == RtActDrop {
 		ks += fmt.Sprintf("%s", "drop")
+	} else if a.actType == RtActFwd {
+		ks += fmt.Sprintf("%s", "allow")
 	} else if a.actType == RtActDnat ||
 		a.actType == RtActSnat ||
 		a.actType == RtActFullNat {
@@ -813,7 +815,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	return 0, nil
 }
 
-// AddFwRule - Add a firewallnat rule. The rule details are passed in fwRule argument
+// AddFwRule - Add a firewall rule. The rule details are passed in fwRule argument
 // it will return 0 and nil error, else appropriate return code and error string will be set
 func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, error) {
 	var fwOpts ruleFwOpts
@@ -835,7 +837,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	l3dst := ruleIPTuple{*dNetAddr}
 	l3src := ruleIPTuple{*sNetAddr}
 
-	if  fwRule.Proto != 0 {
+	if  fwRule.Proto == 0 {
 		l4prot = rule8Tuple{0, 0}
 	} else {
 		l4prot = rule8Tuple{fwRule.Proto, 0xff}
@@ -867,10 +869,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 
 	if eFw != nil {
 		// If a FW rule already exists
-	
-		eFw.DP(DpCreate)
-
-		return 0, nil
+		return RuleExistsErr, errors.New("fwrule-exists error")
 	}
 
 	r := new(ruleEnt)
@@ -881,10 +880,13 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	fwOpts.op = RtActDrop
 	
 	if fwOptArgs.Allow {
+		r.act.actType = RtActFwd
 		fwOpts.op = RtActFwd
 	} else if fwOptArgs.Drop {
+		r.act.actType = RtActDrop
 		fwOpts.op = RtActDrop
 	} else if fwOptArgs.Rdr {
+		r.act.actType = RtActRedirect
 		fwOpts.op = RtActRedirect
 		fwOpts.opt.rdrPort = fwOptArgs.RdrPort
 	}
@@ -906,7 +908,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	return 0, nil
 }
 
-// DeleteFwRule - Delete a direwall rule,
+// DeleteFwRule - Delete a firewall rule,
 // On success, it will return 0 and nil error, else appropriate return code and
 // error string will be set
 func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
@@ -1042,6 +1044,18 @@ func (R *RuleH) RulesSync() {
 			rule.DP(DpCreate)
 		}
 
+	}
+
+	for _, rule := range R.Tables[RtFw].eMap {
+		ruleKeys := rule.tuples.String()
+		ruleActs := rule.act.String()
+		if rule.Sync != 0 {
+			rule.DP(DpCreate)
+		}
+		rule.DP(DpStatsGet)
+		tk.LogIt(tk.LogDebug, "%d:%s,%s pc %v bc %v \n",
+			rule.ruleNum, ruleKeys, ruleActs,
+			rule.stat.packets, rule.stat.bytes)
 	}
 }
 
@@ -1231,7 +1245,7 @@ func (r *ruleEnt) Fw2DP(work DpWorkT) int {
 	nWork.Work = work
 	nWork.Status = &r.Sync
 	nWork.ZoneNum = r.zone.ZoneNum
-	nWork.SrcIP = r.tuples.inL3Src.addr
+	nWork.SrcIP = r.tuples.l3Src.addr
 	nWork.DstIP = r.tuples.l3Dst.addr
 	if r.tuples.l4Src.valid == 0xffff {
 		nWork.L4SrcMin = r.tuples.l4Src.val
@@ -1322,7 +1336,7 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 
 	if isNat == true {
 		return r.Nat2DP(work)
+	} else {
+		return r.Fw2DP(work)
 	}
-
-	return -1
 }
