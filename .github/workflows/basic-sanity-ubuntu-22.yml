@@ -32,8 +32,8 @@ jobs:
             cd -
             cd iproute2-main/
             export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:`pwd`/libbpf/src/ && LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && sudo cp -f tc/tc /usr/local/sbin/ntc && cd -
-            ip netns add test
-            ip netns del test
+            sudo ip netns add test
+            sudo ip netns del test
       - run: loxilb-ebpf/utils/mkllb_bpffs.sh
       - run: sudo -E env "PATH=$PATH" make
       - run: sudo -E env "PATH=$PATH" make test
