@@ -1248,8 +1248,10 @@ func (e *DpEbpfH) DpFwRuleMod(w *FwDpWorkQ) int {
 		} else if w.FwType == DpFwRdr {
 			fwe.fwa.ca.act_type = C.DP_SET_RDR_PORT
 			pRdr := (*portAct)(getPtrOffset(unsafe.Pointer(&fwe.fwa),
-			C.sizeof_struct_dp_cmn_act))
+				C.sizeof_struct_dp_cmn_act))
 			pRdr.oport = C.ushort(w.FwVal1)
+		} else if w.FwType == DpFwTrap {
+			fwe.fwa.ca.act_type = C.DP_SET_TOCP
 		}
 		ret := C.llb_add_map_elem(C.LL_DP_FW4_MAP, unsafe.Pointer(fwe), unsafe.Pointer(nil))
 		if ret != 0 {
@@ -1259,7 +1261,7 @@ func (e *DpEbpfH) DpFwRuleMod(w *FwDpWorkQ) int {
 	} else if w.Work == DpRemove {
 		C.llb_del_map_elem(C.LL_DP_FW4_MAP, unsafe.Pointer(fwe))
 	}
-	
+
 	return 0
 }
 
@@ -1278,4 +1280,3 @@ func (e *DpEbpfH) DpFwRuleAdd(w *FwDpWorkQ) int {
 func (e *DpEbpfH) DpFwRuleDel(w *FwDpWorkQ) int {
 	return e.DpFwRuleMod(w)
 }
-

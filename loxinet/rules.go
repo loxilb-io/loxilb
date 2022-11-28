@@ -108,7 +108,7 @@ type ruleMacTuple struct {
 }
 
 type ruleStringTuple struct {
-	val   string
+	val string
 }
 
 type ruleTuples struct {
@@ -129,7 +129,7 @@ type ruleTuples struct {
 	inL4Prot rule8Tuple
 	inL4Src  rule16Tuple
 	inL4Dst  rule16Tuple
-	pref	 uint16
+	pref     uint16
 }
 
 type ruleTActType uint
@@ -138,6 +138,7 @@ type ruleTActType uint
 const (
 	RtActDrop ruleTActType = iota + 1
 	RtActFwd
+	RtActTrap
 	RtActRedirect
 	RtActDnat
 	RtActSnat
@@ -159,13 +160,13 @@ type ruleNatActs struct {
 }
 
 type ruleFwOpt struct {
-	rdrMirr    string
-	rdrPort    string
+	rdrMirr string
+	rdrPort string
 }
 
 type ruleFwOpts struct {
-	op        ruleTActType
-	opt 	  ruleFwOpt
+	op  ruleTActType
+	opt ruleFwOpt
 }
 
 type ruleTAct interface{}
@@ -484,6 +485,8 @@ func (a *ruleAct) String() string {
 		ks += fmt.Sprintf("%s", "drop")
 	} else if a.actType == RtActFwd {
 		ks += fmt.Sprintf("%s", "allow")
+	} else if a.actType == RtActTrap {
+		ks += fmt.Sprintf("%s", "trap")
 	} else if a.actType == RtActDnat ||
 		a.actType == RtActSnat ||
 		a.actType == RtActFullNat {
@@ -841,6 +844,8 @@ func (R *RuleH) GetFwRule() ([]cmn.FwRuleMod, error) {
 		} else if fwOpts.op == RtActRedirect {
 			ret.Opts.Rdr = true
 			ret.Opts.RdrPort = fwOpts.opt.rdrPort
+		} else if fwOpts.op == RtActTrap {
+			ret.Opts.Trap = true
 		}
 
 		// Make FwRule
@@ -872,7 +877,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	l3dst := ruleIPTuple{*dNetAddr}
 	l3src := ruleIPTuple{*sNetAddr}
 
-	if  fwRule.Proto == 0 {
+	if fwRule.Proto == 0 {
 		l4prot = rule8Tuple{0, 0}
 	} else {
 		l4prot = rule8Tuple{fwRule.Proto, 0xff}
@@ -896,9 +901,9 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	} else {
 		l4dst = rule16Tuple{fwRule.DstPortMax, fwRule.DstPortMin}
 	}
-	inport := ruleStringTuple {fwRule.InPort}
-	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot, 
-		l4Src:l4src, l4Dst: l4dst, port: inport, pref: fwRule.Pref}
+	inport := ruleStringTuple{fwRule.InPort}
+	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot,
+		l4Src: l4src, l4Dst: l4dst, port: inport, pref: fwRule.Pref}
 
 	eFw := R.Tables[RtFw].eMap[rt.ruleKey()]
 
@@ -913,7 +918,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 
 	/* Default is drop */
 	fwOpts.op = RtActDrop
-	
+
 	if fwOptArgs.Allow {
 		r.act.actType = RtActFwd
 		fwOpts.op = RtActFwd
@@ -924,6 +929,9 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 		r.act.actType = RtActRedirect
 		fwOpts.op = RtActRedirect
 		fwOpts.opt.rdrPort = fwOptArgs.RdrPort
+	} else if fwOptArgs.Trap {
+		r.act.actType = RtActTrap
+		fwOpts.op = RtActTrap
 	}
 
 	r.act.action = &fwOpts
@@ -965,7 +973,7 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 	l3dst := ruleIPTuple{*dNetAddr}
 	l3src := ruleIPTuple{*sNetAddr}
 
-	if  fwRule.Proto != 0 {
+	if fwRule.Proto != 0 {
 		l4prot = rule8Tuple{0, 0}
 	} else {
 		l4prot = rule8Tuple{fwRule.Proto, 0xff}
@@ -989,8 +997,8 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 	} else {
 		l4dst = rule16Tuple{fwRule.DstPortMax, fwRule.DstPortMin}
 	}
-	inport := ruleStringTuple {fwRule.InPort}
-	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot, l4Src:l4src, l4Dst: l4dst, port: inport}
+	inport := ruleStringTuple{fwRule.InPort}
+	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot, l4Src: l4src, l4Dst: l4dst, port: inport}
 
 	rule := R.Tables[RtFw].eMap[rt.ruleKey()]
 	if rule == nil {
@@ -1007,7 +1015,6 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 
 	return 0, nil
 }
-
 
 // RulesSync - This is periodic ticker routine which does two main things :
 // 1. Syncs rule statistics counts
@@ -1323,6 +1330,8 @@ func (r *ruleEnt) Fw2DP(work DpWorkT) int {
 				return -1
 			}
 			nWork.FwVal1 = uint16(port.PortNo)
+		case RtActTrap:
+			nWork.FwType = DpFwTrap
 		default:
 			nWork.FwType = DpFwDrop
 		}
@@ -1371,7 +1380,8 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 
 	if isNat == true {
 		return r.Nat2DP(work)
-	} else {
-		return r.Fw2DP(work)
-	}
+	} 
+
+	return r.Fw2DP(work)
+
 }
