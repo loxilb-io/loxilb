@@ -1,13 +1,11 @@
 name: Sanity-CI-Ubuntu-22
 on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
-    inputs:
-      logLevel:
-        description: 'Log level'     
-        required: true
-        default: 'warning'
-      tags:
-        description: 'Santiy Check Ubuntu-22'  
 jobs:
   build:
     name: basic-sanity-ubuntu-22
@@ -23,6 +21,9 @@ jobs:
              go-version: '>=1.17.0'
       - run: sudo apt-get update
       - run: sudo apt -y install clang-13 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iproute2
+      - run: | 
+            sudo ip netns add test
+            sudo ip netns del test
       - run: |
             git clone https://github.com/loxilb-io/iproute2 iproute2-main
             cd iproute2-main/libbpf/src/
@@ -32,8 +33,6 @@ jobs:
             cd -
             cd iproute2-main/
             export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:`pwd`/libbpf/src/ && LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && sudo cp -f tc/tc /usr/local/sbin/ntc && cd -
-            sudo ip netns add test
-            sudo ip netns del test
       - run: loxilb-ebpf/utils/mkllb_bpffs.sh
       - run: sudo -E env "PATH=$PATH" make
       - run: sudo -E env "PATH=$PATH" make test
