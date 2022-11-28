@@ -273,6 +273,7 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 	return chg
 }
 
+// NeighGet - Get neigh entries in Neighv4Mod slice
 func (n *NeighH) NeighGet() ([]cmn.Neighv4Mod, error) {
 	var ret []cmn.Neighv4Mod
 	for _, n2 := range n.NeighMap {
@@ -376,9 +377,9 @@ NhExist:
 			fdbAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 		}
 		if port.SInfo.PortType&cmn.PortReal != 0 {
-			vid = port.PortNo + RealPortIdB
+			vid = port.PortNo + RealPortIDB
 		} else {
-			vid = port.PortNo + BondIdB
+			vid = port.PortNo + BondIDB
 		}
 
 		fdbKey := FdbKey{fdbAddr, vid}
@@ -419,9 +420,9 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 			fdbAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 		}
 		if port.SInfo.PortType&cmn.PortReal != 0 {
-			vid = port.PortNo + RealPortIdB
+			vid = port.PortNo + RealPortIDB
 		} else {
-			vid = port.PortNo + BondIdB
+			vid = port.PortNo + BondIDB
 		}
 
 		fdbKey := FdbKey{fdbAddr, vid}

@@ -312,12 +312,14 @@ type Routev4Mod struct {
 	Dst net.IPNet
 }
 
-// FwRuleOpts - Information related to Firewall options 
+// FwRuleOpts - Information related to Firewall options
 type FwOptArg struct {
 	// Drop - Drop any matching rule
 	Drop bool `json:"drop"`
+	// Trap - Trap anything matching rule
+	Trap bool `json:"trap"`
 	// Redirect - Redirect any matching rule
-	Rdr bool `json:"redirect"`
+	Rdr     bool   `json:"redirect"`
 	RdrPort string `json:"redirectPortName"`
 	// Allow - Allow any matching rule
 	Allow bool `json:"allow"`

@@ -11,7 +11,7 @@ loxilb is a cloud-native "edge" load-balancer stack built from grounds up using 
 -  L7 proxy support
 -  Make GTP tunnels first class citizens of the Linux world 
    * Support for QFI and other extension headers
--  eBPF based kernel forwarding (GPLv2 license)
+-  eBPF based kernel forwarding (Dual BSD/GPLv2 license)
    * Complete kernel bypass with home-grown stack for advanced features like [Conntrack](https://thermalcircle.de/doku.php?id=blog:linux:connection_tracking_1_modules_and_hooks), QoS etc
    * Highly scalable with low-latency & high througput 
 -  goLang based control plane components (Apache license)

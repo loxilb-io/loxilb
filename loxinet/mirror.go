@@ -137,6 +137,7 @@ func MirrInfoCmp(mInfo1, mInfo2 *cmn.MirrInfo) bool {
 	return false
 }
 
+// MirrGet - Get mirrors in loxinet
 func (M *MirrH) MirrGet() ([]cmn.MirrGetMod, error) {
 	var ret []cmn.MirrGetMod
 	for mk, me := range M.MirrMap {
