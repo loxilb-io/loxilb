@@ -160,6 +160,7 @@ func (r *RtH) RouteGet() ([]cmn.Routev4Get, error) {
 	return ret, nil
 }
 
+// GetFlagToString - Stringify route flags
 func GetFlagToString(flag int) string {
 	var ret string
 	if flag&RtTypeInd != 0 {

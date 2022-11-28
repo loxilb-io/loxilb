@@ -156,7 +156,7 @@ func (*NetAPIStruct) NetIpv4AddrDel(am *cmn.Ipv4AddrMod) (int, error) {
 	return ret, err
 }
 
-// NetNeighGet - Get a ipv4 neighbor in loxinet
+// NetNeighv4Get - Get a ipv4 neighbor in loxinet
 func (*NetAPIStruct) NetNeighv4Get() ([]cmn.Neighv4Mod, error) {
 	ret, err := mh.zr.Nh.NeighGet()
 	return ret, err
@@ -361,14 +361,14 @@ func (*NetAPIStruct) NetPolicerDel(pm *cmn.PolMod) (int, error) {
 	return ret, err
 }
 
-// NetPolicerGet - Get a policer in loxinet
+// NetHAStateGet - Get current node cluster state
 func (*NetAPIStruct) NetHAStateGet() (string, error) {
 	// There is no locking requirement for this operation
 	ret, err := mh.has.HAStateGet()
 	return ret, err
 }
 
-// NetPolicerAdd - Add a policer in loxinet
+// NetHAStateMod - Modify cluster state
 func (*NetAPIStruct) NetHAStateMod(hm *cmn.HASMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
