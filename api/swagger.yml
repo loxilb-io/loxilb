@@ -1560,18 +1560,20 @@ paths:
 #----------------------------------------------
 # HA State
 #----------------------------------------------
-  '/config/hastate/all':
+  '/config/cistate/all':
     get:
-      summary: Get HA State in the device(interface)
-      description: Get HA State in the device(interface)
+      summary: Get Cluster Instance State in the device
+      description: Get Cluster Instance State in the device
       responses:
         '200':
           description: OK
           schema:
             type: object
             properties:
-              schema:
-                $ref: '#/definitions/HAStatusEntry'
+              Attr:
+                type: array
+                items:
+                  $ref: '#/definitions/CIStatusGetEntry'         
         '401':
           description: Invalid authentication credentials
           schema:
@@ -1585,17 +1587,17 @@ paths:
           schema:
             $ref: '#/definitions/Error'
             
-  '/config/hastate':
+  '/config/cistate':
     post:
-      summary: Informs Current HA state in the device
-      description: Informs Current HA state in the device
+      summary: Informs Current Cluster Instance state in the device
+      description: Informs Current Cluster Instance state in the device
       parameters:
         - name: attr
           in: body
           required: true
-          description: Attributes for HA State
+          description: Attributes for CI State
           schema:
-            $ref: '#/definitions/HAStatusEntry'
+            $ref: '#/definitions/CIStatusEntry'
       responses:
         '204':
           description: OK
@@ -1760,9 +1762,10 @@ definitions:
           bgp:
             type: boolean
             description: value for BGP enable or not
-          fullNat:
-            type: boolean
-            description: value for enable one-arm NAT
+          mode:
+            type: integer
+            format: int32
+            description: value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)
             
       endpoints:
         type: array
@@ -2333,22 +2336,28 @@ definitions:
       peerIP:
         type: string
  
-  HAStatusEntry:
+  CIStatusEntry:
     type: object
     properties:
+      instance:
+        type: string
+        description: Instance name
       state:
         type: string
-        description: Current HA state
+        description: Current Cluster Instance State 
       
 
-  HAStatusGetEntry:
+  CIStatusGetEntry:
     type: object
     required: 
       - sync
     properties:
+      instance:
+        type: string
+        description: Instance name
       state:
         type: string
-        description: Current HA State     
+        description: Current Cluster Instance State     
       sync:
         type: integer
         description: Sync - sync state

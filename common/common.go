@@ -23,6 +23,24 @@ import (
 // This file defines the go interface implementation needed to interact with loxinet go module
 
 const (
+	// CIStateMaster - HA Master state
+	CIStateMaster = 1 + iota
+	// CIStateBackup - HA Backup/Slave state
+	CIStateBackup
+	// CIStateConflict - HA Fault/Conflict State
+	CIStateConflict
+	// CIStateNotDefined - HA State not enabled or stopped
+	CIStateNotDefined
+)
+
+const (
+	// HighLocalPref - High local preference for advertising BGP route(Default or Master)
+	HighLocalPref = 101
+	// LowLocalPref - Low local preference for advertising BGP route(Backup)
+	LowLocalPref = 100
+)
+
+const (
 	// AuWorkqLen - Address worker channel depth
 	AuWorkqLen = 1024
 	// LuWorkQLen - Link worker channel depth
@@ -367,6 +385,17 @@ const (
 	LbSelPrio
 )
 
+type LBMode int32
+
+const (
+	// LBModeDefault - Default Mode(DNAT)
+	LBModeDefault LBMode = iota
+	// LBModeOneArm - One Arm Mode
+	LBModeOneArm
+	// LBModeOneArm - Full NAT mode
+	LBModeFullNAT
+)
+
 // LbServiceArg - Information related to load-balancer service
 type LbServiceArg struct {
 	// ServIP - the service ip or vip  of the load-balancer rule
@@ -379,8 +408,8 @@ type LbServiceArg struct {
 	Sel EpSelect `json:"sel"`
 	// Bgp - export this rule with goBGP
 	Bgp bool `json:"bgp"`
-	// FullNat - Enable one-arm NAT
-	FullNat bool `json:"fullNat"`
+	// Mode - NAT mode
+	Mode int32 `json:"mode"`
 }
 
 // LbEndPointArg - Information related to load-balancer end-point
@@ -470,6 +499,8 @@ type SessionUlClMod struct {
 
 // SessionUlClMod - information related to a ulcl filter
 type HASMod struct {
+	// Instance - Cluster Instance
+	Instance string `json:"instance"`
 	// State - current HA state
 	State string `json:"haState"`
 }
@@ -628,8 +659,8 @@ type NetHookInterface interface {
 	NetPolicerGet() ([]PolMod, error)
 	NetPolicerAdd(*PolMod) (int, error)
 	NetPolicerDel(*PolMod) (int, error)
-	NetHAStateMod(*HASMod) (int, error)
-	NetHAStateGet() (string, error)
+	NetCIStateMod(*HASMod) (int, error)
+	NetCIStateGet() ([]HASMod, error)
 	NetFwRuleAdd(*FwRuleMod) (int, error)
 	NetFwRuleDel(*FwRuleMod) (int, error)
 	NetFwRuleGet() ([]FwRuleMod, error)

@@ -361,20 +361,27 @@ func (*NetAPIStruct) NetPolicerDel(pm *cmn.PolMod) (int, error) {
 	return ret, err
 }
 
-// NetHAStateGet - Get current node cluster state
-func (*NetAPIStruct) NetHAStateGet() (string, error) {
+// NetCIStateGet - Get current node cluster state
+func (*NetAPIStruct) NetCIStateGet() ([]cmn.HASMod, error) {
 	// There is no locking requirement for this operation
-	ret, err := mh.has.HAStateGet()
+	ret, err := mh.has.CIStateGet()
 	return ret, err
 }
 
-// NetHAStateMod - Modify cluster state
-func (*NetAPIStruct) NetHAStateMod(hm *cmn.HASMod) (int, error) {
+// NetCIStateMod - Modify cluster state
+func (*NetAPIStruct) NetCIStateMod(hm *cmn.HASMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
-	ret, err := mh.has.HAStateUpdate(hm.State)
-	return ret, err
+	state, err := mh.has.CIStateUpdate(*hm)
+	if err != nil {
+		return -1, err
+	}
+
+	if mh.bgp != nil {
+		mh.bgp.UpdateCIState(state)
+	}
+	return 0, nil
 }
 
 // NetFwRuleAdd - Add a firewall rule in loxinet

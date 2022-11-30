@@ -11,15 +11,15 @@ import (
 	golangswaggerpaths "path"
 )
 
-// GetConfigHastateAllURL generates an URL for the get config hastate all operation
-type GetConfigHastateAllURL struct {
+// GetConfigCistateAllURL generates an URL for the get config cistate all operation
+type GetConfigCistateAllURL struct {
 	_basePath string
 }
 
 // WithBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *GetConfigHastateAllURL) WithBasePath(bp string) *GetConfigHastateAllURL {
+func (o *GetConfigCistateAllURL) WithBasePath(bp string) *GetConfigCistateAllURL {
 	o.SetBasePath(bp)
 	return o
 }
@@ -27,15 +27,15 @@ func (o *GetConfigHastateAllURL) WithBasePath(bp string) *GetConfigHastateAllURL
 // SetBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *GetConfigHastateAllURL) SetBasePath(bp string) {
+func (o *GetConfigCistateAllURL) SetBasePath(bp string) {
 	o._basePath = bp
 }
 
 // Build a url path and query string
-func (o *GetConfigHastateAllURL) Build() (*url.URL, error) {
+func (o *GetConfigCistateAllURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/config/hastate/all"
+	var _path = "/config/cistate/all"
 
 	_basePath := o._basePath
 	if _basePath == "" {
@@ -47,7 +47,7 @@ func (o *GetConfigHastateAllURL) Build() (*url.URL, error) {
 }
 
 // Must is a helper function to panic when the url builder returns an error
-func (o *GetConfigHastateAllURL) Must(u *url.URL, err error) *url.URL {
+func (o *GetConfigCistateAllURL) Must(u *url.URL, err error) *url.URL {
 	if err != nil {
 		panic(err)
 	}
@@ -58,17 +58,17 @@ func (o *GetConfigHastateAllURL) Must(u *url.URL, err error) *url.URL {
 }
 
 // String returns the string representation of the path with query string
-func (o *GetConfigHastateAllURL) String() string {
+func (o *GetConfigCistateAllURL) String() string {
 	return o.Must(o.Build()).String()
 }
 
 // BuildFull builds a full url with scheme, host, path and query string
-func (o *GetConfigHastateAllURL) BuildFull(scheme, host string) (*url.URL, error) {
+func (o *GetConfigCistateAllURL) BuildFull(scheme, host string) (*url.URL, error) {
 	if scheme == "" {
-		return nil, errors.New("scheme is required for a full url on GetConfigHastateAllURL")
+		return nil, errors.New("scheme is required for a full url on GetConfigCistateAllURL")
 	}
 	if host == "" {
-		return nil, errors.New("host is required for a full url on GetConfigHastateAllURL")
+		return nil, errors.New("host is required for a full url on GetConfigCistateAllURL")
 	}
 
 	base, err := o.Build()
@@ -82,6 +82,6 @@ func (o *GetConfigHastateAllURL) BuildFull(scheme, host string) (*url.URL, error
 }
 
 // StringFull returns the string representation of a complete url
-func (o *GetConfigHastateAllURL) StringFull(scheme, host string) string {
+func (o *GetConfigCistateAllURL) StringFull(scheme, host string) string {
 	return o.Must(o.BuildFull(scheme, host)).String()
 }

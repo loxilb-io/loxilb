@@ -6,14 +6,13 @@ echo "#########################################"
 echo "Spawning all hosts"
 echo "#########################################"
 
-spawn_docker_host loxilb llb1
-spawn_docker_host loxilb llb2
-spawn_docker_host host ep1
-spawn_docker_host host ep2
-spawn_docker_host host ep3
-spawn_docker_host host r1
-#spawn_docker_host host r2
-spawn_docker_host host user
+spawn_docker_host --dock-type loxilb --dock-name llb1 --with-ka yes --ka-config $(pwd)/keepalived_config
+spawn_docker_host --dock-type loxilb --dock-name llb2 --with-ka yes --ka-config $(pwd)/keepalived_config
+spawn_docker_host --dock-type host --dock-name ep1
+spawn_docker_host --dock-type host --dock-name ep2
+spawn_docker_host --dock-type host --dock-name ep3
+spawn_docker_host --dock-type host --dock-name r1
+spawn_docker_host --dock-type host --dock-name user
 
 echo "#########################################"
 echo "Connecting and configuring  hosts"
@@ -45,7 +44,6 @@ config_docker_host --host1 llb2 --host2 r1 --ptype vlan --id 11 --addr 11.11.11.
 create_docker_host_vlan --host1 r1 --host2 ep1 --id 11 --ptype untagged
 create_docker_host_vlan --host1 r1 --host2 ep2 --id 11 --ptype untagged
 create_docker_host_vlan --host1 r1 --host2 ep3 --id 11 --ptype untagged
-#config_docker_host --host1 r2 --host2 llb1 --ptype vlan --id 11 --addr 11.11.11.3/24
 
 
 ##Pod networks
@@ -57,22 +55,11 @@ $hexec r1 ip route add 20.20.20.1/32 via 11.11.11.11
 $hexec llb1 ip route add 1.1.1.0/24 via 11.11.11.254
 $hexec llb2 ip route add 1.1.1.0/24 via 11.11.11.254
 
-$dexec llb1 apt update
-$dexec llb2 apt update
-$dexec llb1 apt install -y keepalived curl
-$dexec llb2 apt install -y keepalived curl
-$dexec llb1 ifconfig eth0 0
-$dexec llb2 ifconfig eth0 0
-
-
-docker cp keepalived.conf llb1:/etc/keepalived/
-docker cp keepalived.conf llb2:/etc/keepalived/
-docker cp notifyha.sh llb1:/root/loxilb-io/loxilb/
-docker cp notifyha.sh llb2:/root/loxilb-io/loxilb/
-$dexec llb1 systemctl start keepalived.service
-$dexec llb2 systemctl start keepalived.service
 sleep 1
 
 ##Create LB rule
-$dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=11.11.11.3:1,11.11.11.4:1,11.11.11.5:1 --fullnat
-$dexec llb2 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=11.11.11.3:1,11.11.11.4:1,11.11.11.5:1 --fullnat
+$dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=11.11.11.3:1,11.11.11.4:1,11.11.11.5:1 --mode=fullnat
+$dexec llb2 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=11.11.11.3:1,11.11.11.4:1,11.11.11.5:1 --mode=fullnat
+
+# keepalive will take few seconds to be UP and running with valid states
+sleep 10

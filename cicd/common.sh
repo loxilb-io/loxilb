@@ -24,33 +24,96 @@ pull_dockers() {
   docker pull ghcr.io/loxilb-io/loxilb:latest
   ## Host docker 
   docker pull eyes852/ubuntu-iperf-test:0.5
+  ## BGP host docker
+  docker pull ewindisch/quagga
+  ## Keepalive docker
+  docker pull osixia/keepalived:2.0.20
 }
 
 ## Creates a docker host
 ## arg1 - "loxilb"|"host"
 ## arg2 - instance-name
 spawn_docker_host() {
-  pid=""
-  if [[ "$1" == "loxilb" ]]; then
-    docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name $2 ghcr.io/loxilb-io/loxilb:latest
-
-  else
-    docker run -u root --cap-add SYS_ADMIN -dit --name $2 eyes852/ubuntu-iperf-test:0.5
+  POSITIONAL_ARGS=()
+  while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -t | --dock-type )
+      dtype="$2"
+      shift 2
+      ;;
+    -d | --dock-name )
+      dname="$2"
+      shift 2
+      ;;
+    -b | --with-bgp )
+      if [[ "$2" == "yes" ]]; then
+          bgp=$2
+      fi
+      shift 2
+      ;;
+    -c | --bgp-config )
+      bpath="$2"
+      bgp="yes"
+      shift 2
+      ;;
+    -k | --with-ka )
+      if [[ "$2" == "yes" ]]; then
+          ka=$2
+      fi
+      shift 2
+      ;;
+    -d | --ka-config )
+      kpath="$2"
+      ka="yes"
+      shift 2
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      exit
+      ;;
+  esac
+  done  
+  set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+  echo "Spawning $dname($dtype)" >&2 
+  if [[ "$dtype" == "loxilb" ]]; then
+    if [[ "$bgp" == "yes" ]]; then
+      bgp_opts="-b"
+      if [[ ! -z "$bpath" ]]; then
+        bgp_conf="-v $bpath:/etc/gobgp/"
+      fi
+    fi
+    docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit $bgp_conf -v /dev/log:/dev/log --name $dname ghcr.io/loxilb-io/loxilb:latest $bgp_opts
+    if [[ "$ka" == "yes" ]]; then
+      if [[ ! -z "$kpath" ]]; then
+        ka_conf="-v $kpath:/container/service/keepalived/assets/" 
+      fi
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit --network=container:$dname $ka_conf --name ka_$dname osixia/keepalived:2.0.20
+    fi
+  elif [[ "$dtype" == "host" ]]; then
+    if [[ ! -z "$bpath" ]]; then
+      bgp_conf="--volume $bpath:/etc/quagga" 
+    fi
+    if [[ "$bgp" == "yes" || ! -z "$bpath" ]]; then
+      docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit $bgp_conf --name $dname ewindisch/quagga
+    else
+      docker run -u root --cap-add SYS_ADMIN -dit --name $dname eyes852/ubuntu-iperf-test:0.5
+    fi
   fi
+
+  pid=""
 
   sleep 2
-  get_docker_pid $2
+  get_docker_pid $dname
   echo $pid
-  if [ ! -f "$hexist/$2" -a "$pid" != "" ]; then
-    sudo touch /var/run/netns/$2
+  if [ ! -f "$hexist/$dname" -a "$pid" != "" ]; then
+    sudo touch /var/run/netns/$dname
     #echo "sudo mount -o bind /proc/$pid/ns/net /var/run/netns/$2"
-    sudo mount -o bind /proc/$pid/ns/net /var/run/netns/$2
+    sudo mount -o bind /proc/$pid/ns/net /var/run/netns/$dname
   fi
 
-  $hexec $2 ifconfig lo up
-  $hexec $2 ifconfig eth0 0
-  $hexec $2 sysctl net.ipv6.conf.all.disable_ipv6=1 2>&1 >> /dev/null
-  $hexec $2 sysctl net.ipv4.conf.all.arp_accept=1 2>&1 >> /dev/null
+  $hexec $dname ifconfig lo up
+  $hexec $dname sysctl net.ipv6.conf.all.disable_ipv6=1 2>&1 >> /dev/null
+  $hexec $dname sysctl net.ipv4.conf.all.arp_accept=1 2>&1 >> /dev/null
 }
 
 ## Deletes a docker host
@@ -60,6 +123,11 @@ delete_docker_host() {
   if [ "$id" != "" ]; then
     docker stop $1 2>&1 >> /dev/null
     hd="true"
+    ka=`docker ps -f name=ka_$1| grep -w ka_$1 | cut  -d " "  -f 1 | grep -iv  "CONTAINER"`
+    if [ "$ka" != "" ]; then
+      docker stop ka_$1 2>&1 >> /dev/null
+      docker rm ka_$1 2>&1 >> /dev/null
+    fi
   fi
   if [ -f "$hexist/$1" ]; then
     $hns del $1
