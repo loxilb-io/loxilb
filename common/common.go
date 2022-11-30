@@ -409,7 +409,7 @@ type LbServiceArg struct {
 	// Bgp - export this rule with goBGP
 	Bgp bool `json:"bgp"`
 	// Mode - NAT mode
-	Mode int32 `json:"mode"`
+	Mode LBMode `json:"mode"`
 }
 
 // LbEndPointArg - Information related to load-balancer end-point

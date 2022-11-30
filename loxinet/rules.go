@@ -541,7 +541,7 @@ func (R *RuleH) Rules2Json() ([]byte, error) {
 		}
 		t.ServPort = data.tuples.l4Dst.val
 		t.Sel = data.act.action.(*ruleNatActs).sel
-		t.Mode = int32(data.act.action.(*ruleNatActs).mode)
+		t.Mode = data.act.action.(*ruleNatActs).mode
 
 		// Make Endpoints
 		tmpEp := data.act.action.(*ruleNatActs).endPoints
@@ -589,7 +589,7 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		}
 		ret.Serv.ServPort = data.tuples.l4Dst.val
 		ret.Serv.Sel = data.act.action.(*ruleNatActs).sel
-		ret.Serv.Mode = int32(data.act.action.(*ruleNatActs).mode)
+		ret.Serv.Mode = data.act.action.(*ruleNatActs).mode
 		 
 		// Make Endpoints
 		tmpEp := data.act.action.(*ruleNatActs).endPoints
@@ -753,7 +753,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	r := new(ruleEnt)
 	r.tuples = rt
 	r.zone = R.Zone
-	if serv.Mode == int32(cmn.LBModeFullNAT) || serv.Mode == int32(cmn.LBModeOneArm) {
+	if serv.Mode == cmn.LBModeFullNAT || serv.Mode == cmn.LBModeOneArm {
 		r.act.actType = RtActFullNat
 		// For full-nat mode, it is necessary to do own lb end-point health monitoring
 		r.ActChk = true
@@ -1164,7 +1164,6 @@ func (R *RuleH) RuleDestructAll() {
 
 // Nat2DP - Sync state of nat-rule entity to data-path
 func (r *ruleEnt) Nat2DP(work DpWorkT) int {
-	var mode cmn.LBMode
 
 	nWork := new(NatDpWorkQ)
 
@@ -1185,6 +1184,8 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	} else {
 		return -1
 	}
+
+	mode := cmn.LBModeDefault
 
 	switch at := r.act.action.(type) {
 	case *ruleNatActs:
