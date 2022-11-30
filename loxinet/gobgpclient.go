@@ -71,6 +71,7 @@ type GoBgpH struct {
 	state   goBgpState
 	rules   map[string]bool
 	noNlp   bool
+	hastate int
 }
 
 func (gbh *GoBgpH) getPathAttributeString(nlri bgp.AddrPrefixInterface, attrs []bgp.PathAttributeInterface) string {
@@ -202,6 +203,10 @@ func (gbh *GoBgpH) syncRoute(p *api.Path, showIdentifier bgp.BGPAddPathMode) err
 		Gw:  nexthop,
 	}
 
+	if route.Gw.IsUnspecified() {
+		return nil
+	}
+
 	if p.GetIsWithdraw() {
 		tk.LogIt(tk.LogDebug, "[GoBGP] ip route delete %s via %s", route.Dst.String(), route.Gw.String())
 		if err := nlp.RouteDel(route); err != nil {
@@ -278,7 +283,7 @@ func (gbh *GoBgpH) GetRoutes(client api.GobgpApiClient) int {
 }
 
 // AdvertiseRoute - advertise a new route using goBGP
-func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string) int {
+func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string, pref uint32) int {
 
 	// add routes
 	//tk.LogIt(tk.LogDebug, "\n\n\n Advertising Route : %v via %v\n\n\n", rtPrefix, nh)
@@ -294,6 +299,11 @@ func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 	a2, _ := apb.New(&api.NextHopAttribute{
 		NextHop: nh,
 	})
+
+	a3, _ := apb.New(&api.LocalPrefAttribute{
+		LocalPref: pref,
+	})
+
 	/*
 		a3, _ := apb.New(&api.AsPathAttribute{
 				Segments: []*api.AsSegment{
@@ -307,7 +317,7 @@ func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 		attrs := []*apb.Any{a1, a2, a3}
 	*/
 
-	attrs := []*apb.Any{a1, a2}
+	attrs := []*apb.Any{a1, a2, a3}
 
 	_, err := gbh.client.AddPath(context.Background(), &api.AddPathRequest{
 		Path: &api.Path{
@@ -321,11 +331,12 @@ func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 		tk.LogIt(tk.LogCritical, "Advertised Route add failed: %v\n", err)
 		return -1
 	}
+	tk.LogIt(tk.LogDebug, "Advertised Route [OK]: %s/%d\n", rtPrefix, pLen)
 	return 0
 }
 
 // DelAdvertiseRoute - delete previously advertised route in goBGP
-func (gbh *GoBgpH) DelAdvertiseRoute(rtPrefix string, pLen int, nh string) int {
+func (gbh *GoBgpH) DelAdvertiseRoute(rtPrefix string, pLen int, nh string, pref uint32) int {
 
 	// del routes
 	nlri, _ := apb.New(&api.IPAddressPrefix{
@@ -340,20 +351,12 @@ func (gbh *GoBgpH) DelAdvertiseRoute(rtPrefix string, pLen int, nh string) int {
 	a2, _ := apb.New(&api.NextHopAttribute{
 		NextHop: nh,
 	})
-	/*
-		a3, _ := apb.New(&api.AsPathAttribute{
-				Segments: []*api.AsSegment{
-						{
-								Type:    2,
-								Numbers: []uint32{6762, 39919, 65000, 35753, 65000},
-						},
-				},
-		})
 
-		attrs := []*apb.Any{a1, a2, a3}
-	*/
+	a3, _ := apb.New(&api.LocalPrefAttribute{
+		LocalPref: pref,
+	})
 
-	attrs := []*apb.Any{a1, a2}
+	attrs := []*apb.Any{a1, a2, a3}
 
 	_, err := gbh.client.DeletePath(context.Background(), &api.DeletePathRequest{
 		Path: &api.Path{
@@ -386,11 +389,11 @@ func GoBgpInit() *GoBgpH {
 }
 
 func (gbh *GoBgpH) goBgpSpawn() {
-	if _, err := os.Stat("/opt/loxilb/gobgp_loxilb.yaml"); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat("/etc/gobgp/gobgp_loxilb.yaml"); errors.Is(err, os.ErrNotExist) {
 		return
 	}
 	for {
-		command := "gobgpd -t yaml -f /opt/loxilb/gobgp_loxilb.yaml"
+		command := "gobgpd -t yaml -f /etc/gobgp/gobgp_loxilb.yaml"
 		cmd := exec.Command("bash", "-c", command)
 		err := cmd.Run()
 		if err != nil {
@@ -438,12 +441,18 @@ func (gbh *GoBgpH) goBgpConnect(host string) {
 
 // AddBGPRule - add a bgp rule in goBGP
 func (gbh *GoBgpH) AddBGPRule(IP string) {
+	var pref uint32
 	gbh.mtx.Lock()
 	if !gbh.rules[IP] {
 		gbh.rules[IP] = true
 	}
 	if gbh.state == BGPConnected {
-		gbh.AdvertiseRoute(IP, 32, "0.0.0.0")
+		if gbh.hastate == cmn.CIStateBackup {
+			pref = cmn.LowLocalPref
+		} else {
+			pref = cmn.HighLocalPref
+		}
+		gbh.AdvertiseRoute(IP, 32, "0.0.0.0", pref)
 	}
 
 	gbh.mtx.Unlock()
@@ -451,13 +460,19 @@ func (gbh *GoBgpH) AddBGPRule(IP string) {
 
 // DelBGPRule - delete a bgp rule in goBGP
 func (gbh *GoBgpH) DelBGPRule(IP string) {
+	var pref uint32
 	gbh.mtx.Lock()
 	if gbh.rules[IP] {
 		gbh.rules[IP] = false
 	}
 
 	if gbh.state == BGPConnected {
-		gbh.DelAdvertiseRoute(IP, 32, "0.0.0.0")
+		if gbh.hastate == cmn.CIStateBackup {
+			pref = cmn.LowLocalPref
+		} else {
+			pref = cmn.HighLocalPref
+		}
+		gbh.DelAdvertiseRoute(IP, 32, "0.0.0.0", pref)
 	}
 	gbh.mtx.Unlock()
 }
@@ -518,6 +533,9 @@ func (gbh *GoBgpH) AddCurrentBgpRoutesToIPRoute() error {
 				Gw:  net.ParseIP(r.Paths[0].GetNeighborIp()),
 			}
 		}
+		if nlpRoute.Gw.IsUnspecified() {
+			continue
+		}
 		tk.LogIt(tk.LogDebug, "[GoBGP] ip route add %s via %s", dstIPN.String(), nlpRoute.Gw.String())
 		nlp.RouteAdd(nlpRoute)
 	}
@@ -525,15 +543,26 @@ func (gbh *GoBgpH) AddCurrentBgpRoutesToIPRoute() error {
 	return nil
 }
 
-func (gbh *GoBgpH) getGoBgpRoutes() {
-	gbh.mtx.Lock()
-
+func (gbh *GoBgpH) advertiseAllRoutes() {
+	var pref uint32
+	if gbh.hastate == cmn.CIStateBackup {
+		pref = cmn.LowLocalPref
+	} else {
+		pref = cmn.HighLocalPref
+	}
 	for ip, valid := range gbh.rules {
 		tk.LogIt(tk.LogDebug, "[GoBGP] connected BGP rules ip %s is valied(%v)", ip, valid)
 		if valid {
-			gbh.AdvertiseRoute(ip, 32, "0.0.0.0")
+			gbh.AdvertiseRoute(ip, 32, "0.0.0.0", pref)
 		}
 	}
+}
+
+func (gbh *GoBgpH) getGoBgpRoutes() {
+	gbh.mtx.Lock()
+
+	gbh.advertiseAllRoutes()
+
 	if err := gbh.AddCurrentBgpRoutesToIPRoute(); err != nil {
 		tk.LogIt(tk.LogError, "[GoBGP] AddCurrentBgpRoutesToIpRoute() return err: %s", err.Error())
 	}
@@ -574,4 +603,10 @@ func (gbh *GoBgpH) goBgpMonitor() {
 		}
 		time.Sleep(1000 * time.Millisecond)
 	}
+}
+
+func (gbh *GoBgpH) UpdateCIState(state int) {
+	gbh.hastate = state
+	gbh.advertiseAllRoutes()
+	tk.LogIt(tk.LogNotice, "[BGP] HA state updated : %d\n", state)
 }

@@ -155,6 +155,7 @@ type ruleNatEp struct {
 }
 
 type ruleNatActs struct {
+	mode      cmn.LBMode
 	sel       cmn.EpSelect
 	endPoints []ruleNatEp
 }
@@ -500,6 +501,9 @@ func (a *ruleAct) String() string {
 
 		switch na := a.action.(type) {
 		case *ruleNatActs:
+			if na.mode == cmn.LBModeOneArm {
+				ks += fmt.Sprintf("%s", "onearm:")
+			}
 			for _, n := range na.endPoints {
 				ks += fmt.Sprintf("eip-%s,ep-%d,w-%d,",
 					n.xIP.String(), n.xPort, n.weight)
@@ -537,6 +541,7 @@ func (R *RuleH) Rules2Json() ([]byte, error) {
 		}
 		t.ServPort = data.tuples.l4Dst.val
 		t.Sel = data.act.action.(*ruleNatActs).sel
+		t.Mode = int32(data.act.action.(*ruleNatActs).mode)
 
 		// Make Endpoints
 		tmpEp := data.act.action.(*ruleNatActs).endPoints
@@ -584,9 +589,8 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		}
 		ret.Serv.ServPort = data.tuples.l4Dst.val
 		ret.Serv.Sel = data.act.action.(*ruleNatActs).sel
-		if data.act.actType == RtActFullNat {
-			ret.Serv.FullNat = true
-		}
+		ret.Serv.Mode = int32(data.act.action.(*ruleNatActs).mode)
+		 
 		// Make Endpoints
 		tmpEp := data.act.action.(*ruleNatActs).endPoints
 		for _, ep := range tmpEp {
@@ -661,6 +665,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	}
 
 	natActs.sel = serv.Sel
+	natActs.mode = cmn.LBMode(serv.Mode)
+
 	for _, k := range servEndPoints {
 		service = k.EpIP + "/32"
 		_, pNetAddr, err := net.ParseCIDR(service)
@@ -735,6 +741,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		// Update the rule
 		eRule.act.action.(*ruleNatActs).sel = natActs.sel
 		eRule.act.action.(*ruleNatActs).endPoints = eEps
+		eRule.act.action.(*ruleNatActs).mode = natActs.mode
+
 		eRule.sT = time.Now()
 		tk.LogIt(tk.LogDebug, "nat lb-rule updated - %s:%s\n", eRule.tuples.String(), eRule.act.String())
 		eRule.DP(DpCreate)
@@ -745,7 +753,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	r := new(ruleEnt)
 	r.tuples = rt
 	r.zone = R.Zone
-	if serv.FullNat {
+	if serv.Mode == int32(cmn.LBModeFullNAT) || serv.Mode == int32(cmn.LBModeOneArm) {
 		r.act.actType = RtActFullNat
 		// For full-nat mode, it is necessary to do own lb end-point health monitoring
 		r.ActChk = true
@@ -1156,6 +1164,7 @@ func (R *RuleH) RuleDestructAll() {
 
 // Nat2DP - Sync state of nat-rule entity to data-path
 func (r *ruleEnt) Nat2DP(work DpWorkT) int {
+	var mode cmn.LBMode
 
 	nWork := new(NatDpWorkQ)
 
@@ -1190,6 +1199,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 		default:
 			nWork.EpSel = EpRR
 		}
+		mode = at.mode
 		if at.sel == cmn.LbSelPrio {
 			j := 0
 			k := 0
@@ -1259,13 +1269,16 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	if nWork.NatType == DpFullNat {
 		for idx := range nWork.endPoints {
 			ep := &nWork.endPoints[idx]
-
-			e, sip := r.zone.L3.IfaSelectAny(ep.XIP)
-			if e != 0 {
-				r.Sync = DpCreateErr
-				return -1
+			if mode == cmn.LBModeOneArm {
+			    e, sip := r.zone.L3.IfaSelectAny(ep.XIP)
+			    if e != 0 {
+				    r.Sync = DpCreateErr
+				    return -1
+			    }
+			    ep.RIP = sip 
+			} else {
+			    ep.RIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
 			}
-			ep.RIP = sip
 		}
 	} else {
 		for idx := range nWork.endPoints {

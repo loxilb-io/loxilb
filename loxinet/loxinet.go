@@ -18,13 +18,14 @@ package loxinet
 
 import (
 	"fmt"
+	"os"
+	"sync"
+	"time"
+
 	apiserver "github.com/loxilb-io/loxilb/api"
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
-	"os"
-	"sync"
-	"time"
 )
 
 // string constant representing root security zone
@@ -53,7 +54,7 @@ type loxiNetH struct {
 	tDone  chan bool
 	wg     sync.WaitGroup
 	bgp    *GoBgpH
-	has    *HAStateH
+	has    *CIStateH
 }
 
 // NodeWalker - an implementation of node walker interface

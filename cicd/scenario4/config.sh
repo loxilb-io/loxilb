@@ -6,12 +6,12 @@ echo "#########################################"
 echo "Spawning all hosts"
 echo "#########################################"
 
-spawn_docker_host loxilb llb1
-spawn_docker_host host n1p1
-spawn_docker_host host n1p2
-spawn_docker_host host n2p1
-spawn_docker_host host n3p1
-spawn_docker_host host k8n1
+spawn_docker_host --dock-type loxilb --dock-name llb1
+spawn_docker_host --dock-type host --dock-name n1p1
+spawn_docker_host --dock-type host --dock-name n1p2
+spawn_docker_host --dock-type host --dock-name n2p1
+spawn_docker_host --dock-type host --dock-name n3p1
+spawn_docker_host --dock-type host --dock-name k8n1
 
 echo "#########################################"
 echo "Connecting and configuring  hosts"

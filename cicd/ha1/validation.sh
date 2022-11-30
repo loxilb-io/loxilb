@@ -1,13 +1,13 @@
 #!/bin/bash
 source ../common.sh
-echo SCENARIO-12
+echo HA-1
 
 function myfunc() {
 $hexec ep1 node ./server1.js &
 $hexec ep2 node ./server2.js &
 $hexec ep3 node ./server3.js &
 
-sleep 5
+sleep 30
 
 local code=0
 servArr=( "server1" "server2" "server3" )
@@ -28,7 +28,7 @@ do
         if [[ $waitCount == 11 ]];
         then
             echo "All Servers are not UP" >&2
-            echo SCENARIO-12 [FAILED] >&2
+            echo HA-1 [FAILED] >&2
             exit 1
         fi
     fi
@@ -51,9 +51,9 @@ done
 echo $code
 }
 
-status1=$($hexec llb1 curl -sX 'GET' 'http://0.0.0.0:11111/netlox/v1/config/hastate/all' -H 'accept: application/json' | jq -r '.schema.state')
-status2=$($hexec llb2 curl -sX 'GET' 'http://0.0.0.0:11111/netlox/v1/config/hastate/all' -H 'accept: application/json' | jq -r '.schema.state')
-echo SCENARIO-12 HA state llb1-$status1 llb2-$status2
+status1=$($hexec llb1 curl -sX 'GET' 'http://0.0.0.0:11111/netlox/v1/config/cistate/all' -H 'accept: application/json' | jq -r '.Attr[0].state')
+status2=$($hexec llb2 curl -sX 'GET' 'http://0.0.0.0:11111/netlox/v1/config/cistate/all' -H 'accept: application/json' | jq -r '.Attr[0].state')
+echo HA-1 HA state llb1-$status1 llb2-$status2
 
 if [[ $status1 == "MASTER" && $status2 == "BACKUP" ]];
 then
@@ -64,39 +64,39 @@ then
     master="llb2"
     backup="llb1"
 else
-    echo SCENARIO-12 HA state llb1-$status1 llb2-$status2 [FAILED]
+    echo HA-1 HA state llb1-$status1 llb2-$status2 [FAILED]
 fi
 echo "Master:$master Backup:$backup"
 
 code=$(myfunc)
 if [[ $code == 0 ]]
 then
-    echo SCENARIO-12 Phase-1 [OK]
-    $dexec $master systemctl restart keepalived.service
+    echo HA-1 Phase-1 [OK]
+    docker restart ka_$master
 else
-    echo SCENARIO-12 Phase-1 [FAILED]
+    echo HA-1 Phase-1 [FAILED]
 fi
 
 sleep 1
 
-status1=$($hexec $master curl -sX 'GET' 'http://0.0.0.0:11111/netlox/v1/config/hastate/all' -H 'accept: application/json' | jq -r '.schema.state')
-status2=$($hexec $backup curl -sX 'GET' 'http://0.0.0.0:11111/netlox/v1/config/hastate/all' -H 'accept: application/json' | jq -r '.schema.state')
-echo SCENARIO-12 HA state $master-$status1 $backup-$status2
+status1=$($hexec $master curl -sX 'GET' 'http://0.0.0.0:11111/netlox/v1/config/cistate/all' -H 'accept: application/json' | jq -r '.Attr[0].state')
+status2=$($hexec $backup curl -sX 'GET' 'http://0.0.0.0:11111/netlox/v1/config/cistate/all' -H 'accept: application/json' | jq -r '.Attr[0].state')
+echo HA-1 HA state $master-$status1 $backup-$status2
 
 if [[ $status2 == "MASTER" && $status1 == "BACKUP" ]];
 then
-    echo SCENARIO-12 HA [SUCCESS]
+    echo HA-1 HA [SUCCESS]
 else
-    echo SCENARIO-12 HA [FAILED]
+    echo HA-1 HA [FAILED]
     exit 1
 fi
 
 code=$(myfunc)
 if [[ $code == 0 ]]
 then
-    echo SCENARIO-12 [OK]
+    echo HA-1 [OK]
 else
-    echo SCENARIO-12 [FAILED]
+    echo HA-1 [FAILED]
 fi
 
 exit $code

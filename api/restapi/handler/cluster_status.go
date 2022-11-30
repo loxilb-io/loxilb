@@ -24,27 +24,35 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-func ConfigGetHAState(params operations.GetConfigHastateAllParams) middleware.Responder {
-	var result models.HAStatusEntry
+func ConfigGetCIState(params operations.GetConfigCistateAllParams) middleware.Responder {
+	var result []*models.CIStatusGetEntry
+	result = make([]*models.CIStatusGetEntry, 0)
 	tk.LogIt(tk.LogDebug, "[API] Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	state, err := ApiHooks.NetHAStateGet()
+	hasMod, err := ApiHooks.NetCIStateGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
-	result.State = state
-	return operations.NewGetConfigHastateAllOK().WithPayload(&operations.GetConfigHastateAllOKBody{Schema: &result})
+	for _, h := range hasMod {
+		var tempResult models.CIStatusGetEntry
+		tempResult.Instance = h.Instance
+		tempResult.State = h.State
+		result = append(result, &tempResult)
+	}
+
+	return operations.NewGetConfigCistateAllOK().WithPayload(&operations.GetConfigCistateAllOKBody{Attr: result})
 }
 
-func ConfigPostHAState(params operations.PostConfigHastateParams) middleware.Responder {
+func ConfigPostCIState(params operations.PostConfigCistateParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] HA %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var hasMod cmn.HASMod
 
 	// Set HA State
+	hasMod.Instance = params.Attr.Instance
 	hasMod.State = params.Attr.State
-	tk.LogIt(tk.LogDebug, "[API] New HA State : %v\n", hasMod.State)
-	_, err := ApiHooks.NetHAStateMod(&hasMod)
+	tk.LogIt(tk.LogDebug, "[API] Instance %s New HA State : %v\n", hasMod.Instance, hasMod.State)
+	_, err := ApiHooks.NetCIStateMod(&hasMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}

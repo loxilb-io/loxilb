@@ -17,42 +17,42 @@ import (
 	"github.com/loxilb-io/loxilb/api/models"
 )
 
-// NewPostConfigHastateParams creates a new PostConfigHastateParams object
+// NewPostConfigCistateParams creates a new PostConfigCistateParams object
 //
 // There are no default values defined in the spec.
-func NewPostConfigHastateParams() PostConfigHastateParams {
+func NewPostConfigCistateParams() PostConfigCistateParams {
 
-	return PostConfigHastateParams{}
+	return PostConfigCistateParams{}
 }
 
-// PostConfigHastateParams contains all the bound params for the post config hastate operation
+// PostConfigCistateParams contains all the bound params for the post config cistate operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters PostConfigHastate
-type PostConfigHastateParams struct {
+// swagger:parameters PostConfigCistate
+type PostConfigCistateParams struct {
 
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*Attributes for HA State
+	/*Attributes for CI State
 	  Required: true
 	  In: body
 	*/
-	Attr *models.HAStatusEntry
+	Attr *models.CIStatusEntry
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls.
 //
-// To ensure default values, the struct must have been initialized with NewPostConfigHastateParams() beforehand.
-func (o *PostConfigHastateParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
+// To ensure default values, the struct must have been initialized with NewPostConfigCistateParams() beforehand.
+func (o *PostConfigCistateParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
 	o.HTTPRequest = r
 
 	if runtime.HasBody(r) {
 		defer r.Body.Close()
-		var body models.HAStatusEntry
+		var body models.CIStatusEntry
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
 				res = append(res, errors.Required("attr", "body", ""))
