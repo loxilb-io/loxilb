@@ -12,19 +12,19 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-// NewGetConfigHastateAllParams creates a new GetConfigHastateAllParams object
+// NewGetConfigCistateAllParams creates a new GetConfigCistateAllParams object
 //
 // There are no default values defined in the spec.
-func NewGetConfigHastateAllParams() GetConfigHastateAllParams {
+func NewGetConfigCistateAllParams() GetConfigCistateAllParams {
 
-	return GetConfigHastateAllParams{}
+	return GetConfigCistateAllParams{}
 }
 
-// GetConfigHastateAllParams contains all the bound params for the get config hastate all operation
+// GetConfigCistateAllParams contains all the bound params for the get config cistate all operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters GetConfigHastateAll
-type GetConfigHastateAllParams struct {
+// swagger:parameters GetConfigCistateAll
+type GetConfigCistateAllParams struct {
 
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
@@ -33,8 +33,8 @@ type GetConfigHastateAllParams struct {
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls.
 //
-// To ensure default values, the struct must have been initialized with NewGetConfigHastateAllParams() beforehand.
-func (o *GetConfigHastateAllParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
+// To ensure default values, the struct must have been initialized with NewGetConfigCistateAllParams() beforehand.
+func (o *GetConfigCistateAllParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
 	o.HTTPRequest = r

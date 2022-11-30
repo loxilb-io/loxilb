@@ -75,37 +75,37 @@ echo "#########################################"
 echo "Spawning all hosts"
 echo "#########################################"
 
-spawn_docker_host loxilb llb1
-spawn_docker_host host l3h1
-spawn_docker_host host l3h2
-spawn_docker_host host l3h3
-spawn_docker_host host l2h1
-spawn_docker_host host l2h2
-spawn_docker_host host l2h3
-spawn_docker_host host l2h4
-spawn_docker_host host l2h5
-spawn_docker_host host l2h6
-spawn_docker_host host l2vxh1
-spawn_docker_host host l2vxh2
-spawn_docker_host host l2vxh3
-spawn_docker_host host l2vxh4
-spawn_docker_host host l2vxh5
-spawn_docker_host host l2vxh6
-spawn_docker_host host l2vxh7
-spawn_docker_host host l2vxh8
-spawn_docker_host host l2vxh9
-spawn_docker_host host l3vxh1
-spawn_docker_host host l3vxh2
-spawn_docker_host host l3vxh3
-spawn_docker_host host l3vxh4
-spawn_docker_host host l3vxh5
-spawn_docker_host host l3vxh6
-spawn_docker_host host l3vxh7
-spawn_docker_host host l3vxh8
-spawn_docker_host host l3vxh9
-spawn_docker_host host l3vxh10
-spawn_docker_host host l3vxh11
-spawn_docker_host host l3vxh12
+spawn_docker_host --dock-type loxilb --dock-name llb1
+spawn_docker_host --dock-type host --dock-name l3h1
+spawn_docker_host --dock-type host --dock-name l3h2
+spawn_docker_host --dock-type host --dock-name l3h3
+spawn_docker_host --dock-type host --dock-name l2h1
+spawn_docker_host --dock-type host --dock-name l2h2
+spawn_docker_host --dock-type host --dock-name l2h3
+spawn_docker_host --dock-type host --dock-name l2h4
+spawn_docker_host --dock-type host --dock-name l2h5
+spawn_docker_host --dock-type host --dock-name l2h6
+spawn_docker_host --dock-type host --dock-name l2vxh1
+spawn_docker_host --dock-type host --dock-name l2vxh2
+spawn_docker_host --dock-type host --dock-name l2vxh3
+spawn_docker_host --dock-type host --dock-name l2vxh4
+spawn_docker_host --dock-type host --dock-name l2vxh5
+spawn_docker_host --dock-type host --dock-name l2vxh6
+spawn_docker_host --dock-type host --dock-name l2vxh7
+spawn_docker_host --dock-type host --dock-name l2vxh8
+spawn_docker_host --dock-type host --dock-name l2vxh9
+spawn_docker_host --dock-type host --dock-name l3vxh1
+spawn_docker_host --dock-type host --dock-name l3vxh2
+spawn_docker_host --dock-type host --dock-name l3vxh3
+spawn_docker_host --dock-type host --dock-name l3vxh4
+spawn_docker_host --dock-type host --dock-name l3vxh5
+spawn_docker_host --dock-type host --dock-name l3vxh6
+spawn_docker_host --dock-type host --dock-name l3vxh7
+spawn_docker_host --dock-type host --dock-name l3vxh8
+spawn_docker_host --dock-type host --dock-name l3vxh9
+spawn_docker_host --dock-type host --dock-name l3vxh10
+spawn_docker_host --dock-type host --dock-name l3vxh11
+spawn_docker_host --dock-type host --dock-name l3vxh12
 
 echo "#########################################"
 echo "Connecting and configuring  hosts"

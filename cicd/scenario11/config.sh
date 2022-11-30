@@ -6,11 +6,11 @@ echo "#########################################"
 echo "Spawning all hosts"
 echo "#########################################"
 
-spawn_docker_host loxilb llb1
-spawn_docker_host host l2h1
-spawn_docker_host host l2ep1
-spawn_docker_host host l2ep2
-spawn_docker_host host l2ep3
+spawn_docker_host --dock-type loxilb --dock-name llb1
+spawn_docker_host --dock-type host --dock-name l2h1
+spawn_docker_host --dock-type host --dock-name l2ep1
+spawn_docker_host --dock-type host --dock-name l2ep2
+spawn_docker_host --dock-type host --dock-name l2ep3
 
 echo "#########################################"
 echo "Connecting and configuring  hosts"
@@ -38,7 +38,7 @@ $dexec llb1 bash -c 'for i in /proc/sys/net/ipv4/conf/*/rp_filter; do echo 0 > "
 
 sleep 5
 
-$dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=100.100.100.2:1,100.100.100.3:1,100.100.100.4:1 --fullnat
+$dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=100.100.100.2:1,100.100.100.3:1,100.100.100.4:1 --mode=onearm
 
 #Need more time for lb end-point health check
 sleep 40

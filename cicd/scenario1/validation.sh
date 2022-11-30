@@ -13,16 +13,16 @@ for ns1 in "${nslist[@]}"; do
     ns1L2=0
 	dev1=`sudo ip netns exec $ns1 ip route | grep "default" | cut -d " " -f 5`
     gw1=""
-    if [ -z "$dev1" ]
+    if [[ -z "$dev1" || "$dev" == "eth0" ]]
     then
         # No default route present, will try L2 now
-        net1=( `sudo ip netns exec $ns1 ip route | cut -d " " -f 1` )
-	    allhosts1=( `sudo ip netns exec $ns1 ip route | cut -d " " -f 9` )
+        net1=( `sudo ip netns exec $ns1 ip route | grep -v "eth0" | cut -d " " -f 1` )
+	    allhosts1=( `sudo ip netns exec $ns1 ip route | grep -v "eth0" cut -d " " -f 9` )
         ns1L2=1
         echo -e "$ns1 can do only L2"
     else
-	    hosts1=( `sudo ip netns exec $ns1 ip addr show dev $dev1 | grep -w inet | cut -d " " -f 6 | cut -d "/" -f 1` )
-	    gw1=`sudo ip netns exec $ns1 ip route | grep "default" | cut -d " " -f 3`
+	    hosts1=( `sudo ip netns exec $ns1 ip addr show dev $dev1 | grep -v "eth0" | grep -w inet | cut -d " " -f 6 | cut -d "/" -f 1` )
+	    gw1=`sudo ip netns exec $ns1 ip route | grep -v "eth0" | grep "default" | cut -d " " -f 3`
     fi
 
     if [ ! -z "$gw1" ]
@@ -57,14 +57,14 @@ for ns1 in "${nslist[@]}"; do
         if [ \( $ns1L2 -eq 0 \) -a \( $onlyL2 -eq 1 \) ]
         then
             onlyL2=0
-	        hosts1=( `sudo ip netns exec $ns1 ip addr show dev $dev1 | grep -w inet | cut -d " " -f 6 | cut -d "/" -f 1` )
+	        hosts1=( `sudo ip netns exec $ns1 ip addr show dev $dev1 | grep -v "eth0" | grep -w inet | cut -d " " -f 6 | cut -d "/" -f 1` )
         fi
 
-		dev2=`sudo ip netns exec $ns2 ip route | grep "default" | cut -d " " -f 5`
-        if [ \( "$dev2" = "" \) -o \( $ns1L2 -eq 1 \) ]
+		dev2=`sudo ip netns exec $ns2 ip route | grep -v "eth0" | grep "default" | cut -d " " -f 5`
+        if [ \( "$dev2" = "" \) -o \( $ns1L2 -eq 1 \) -o \( "$dev2" = "eth0" \) ]
         then
-            net1=( `sudo ip netns exec $ns1 ip route | grep src | cut -d " " -f 1` )
-	        allhosts1=( `sudo ip netns exec $ns1 ip route | grep src | cut -d " " -f 9` )
+            net1=( `sudo ip netns exec $ns1 ip route | grep -v "eth0" | grep src | cut -d " " -f 1` )
+	        allhosts1=( `sudo ip netns exec $ns1 ip route | grep -v "eth0" | grep src | cut -d " " -f 9` )
             onlyL2=1
             echo -e "$ns2 can do only L2 with $ns1"
         fi
@@ -72,8 +72,8 @@ for ns1 in "${nslist[@]}"; do
 
         if [ $onlyL2 == 1 ]
         then
-            net2=( `sudo ip netns exec $ns2 ip route | grep src | cut -d " " -f 1` )
-	        allhosts2=( `sudo ip netns exec $ns2 ip route | grep src | cut -d " " -f 9` )
+            net2=( `sudo ip netns exec $ns2 ip route | grep -v "eth0" | grep src | cut -d " " -f 1` )
+	        allhosts2=( `sudo ip netns exec $ns2 ip route | grep -v "eth0" | grep src | cut -d " " -f 9` )
             hosts1=()
             hosts2=()
 
@@ -112,8 +112,8 @@ for ns1 in "${nslist[@]}"; do
             done
 
         else    
-		    dev2=`sudo ip netns exec $ns2 ip route | grep "default" | cut -d " " -f 5`
-		    hosts2=( `sudo ip netns exec $ns2 ip addr show dev $dev2 | grep -w inet | cut -d " " -f 6 | cut -d "/" -f 1` )
+		    dev2=`sudo ip netns exec $ns2 ip route | grep -v "eth0" | grep "default" | cut -d " " -f 5`
+		    hosts2=( `sudo ip netns exec $ns2 ip addr show dev $dev2 | grep -v "eth0" | grep -w inet | cut -d " " -f 6 | cut -d "/" -f 1` )
             for size in ${sizes[@]}
             do
 		        for h1 in "${hosts1[@]}"

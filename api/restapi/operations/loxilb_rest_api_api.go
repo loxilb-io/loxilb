@@ -84,11 +84,11 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler: DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandlerFunc(func(params DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigVlanVlanIDMemberIfNameTaggedTagged has not yet been implemented")
 		}),
+		GetConfigCistateAllHandler: GetConfigCistateAllHandlerFunc(func(params GetConfigCistateAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigCistateAll has not yet been implemented")
+		}),
 		GetConfigConntrackAllHandler: GetConfigConntrackAllHandlerFunc(func(params GetConfigConntrackAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigConntrackAll has not yet been implemented")
-		}),
-		GetConfigHastateAllHandler: GetConfigHastateAllHandlerFunc(func(params GetConfigHastateAllParams) middleware.Responder {
-			return middleware.NotImplemented("operation GetConfigHastateAll has not yet been implemented")
 		}),
 		GetConfigIpv4addressAllHandler: GetConfigIpv4addressAllHandlerFunc(func(params GetConfigIpv4addressAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigIpv4addressAll has not yet been implemented")
@@ -132,11 +132,11 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		GetStatusProcessHandler: GetStatusProcessHandlerFunc(func(params GetStatusProcessParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetStatusProcess has not yet been implemented")
 		}),
+		PostConfigCistateHandler: PostConfigCistateHandlerFunc(func(params PostConfigCistateParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigCistate has not yet been implemented")
+		}),
 		PostConfigFdbHandler: PostConfigFdbHandlerFunc(func(params PostConfigFdbParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigFdb has not yet been implemented")
-		}),
-		PostConfigHastateHandler: PostConfigHastateHandlerFunc(func(params PostConfigHastateParams) middleware.Responder {
-			return middleware.NotImplemented("operation PostConfigHastate has not yet been implemented")
 		}),
 		PostConfigIpv4addressHandler: PostConfigIpv4addressHandlerFunc(func(params PostConfigIpv4addressParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigIpv4address has not yet been implemented")
@@ -238,10 +238,10 @@ type LoxilbRestAPIAPI struct {
 	DeleteConfigVlanVlanIDHandler DeleteConfigVlanVlanIDHandler
 	// DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler sets the operation handler for the delete config vlan vlan ID member if name tagged tagged operation
 	DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler
+	// GetConfigCistateAllHandler sets the operation handler for the get config cistate all operation
+	GetConfigCistateAllHandler GetConfigCistateAllHandler
 	// GetConfigConntrackAllHandler sets the operation handler for the get config conntrack all operation
 	GetConfigConntrackAllHandler GetConfigConntrackAllHandler
-	// GetConfigHastateAllHandler sets the operation handler for the get config hastate all operation
-	GetConfigHastateAllHandler GetConfigHastateAllHandler
 	// GetConfigIpv4addressAllHandler sets the operation handler for the get config ipv4address all operation
 	GetConfigIpv4addressAllHandler GetConfigIpv4addressAllHandler
 	// GetConfigLoadbalancerAllHandler sets the operation handler for the get config loadbalancer all operation
@@ -270,10 +270,10 @@ type LoxilbRestAPIAPI struct {
 	GetStatusFilesystemHandler GetStatusFilesystemHandler
 	// GetStatusProcessHandler sets the operation handler for the get status process operation
 	GetStatusProcessHandler GetStatusProcessHandler
+	// PostConfigCistateHandler sets the operation handler for the post config cistate operation
+	PostConfigCistateHandler PostConfigCistateHandler
 	// PostConfigFdbHandler sets the operation handler for the post config fdb operation
 	PostConfigFdbHandler PostConfigFdbHandler
-	// PostConfigHastateHandler sets the operation handler for the post config hastate operation
-	PostConfigHastateHandler PostConfigHastateHandler
 	// PostConfigIpv4addressHandler sets the operation handler for the post config ipv4address operation
 	PostConfigIpv4addressHandler PostConfigIpv4addressHandler
 	// PostConfigLoadbalancerHandler sets the operation handler for the post config loadbalancer operation
@@ -417,11 +417,11 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler")
 	}
+	if o.GetConfigCistateAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigCistateAllHandler")
+	}
 	if o.GetConfigConntrackAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigConntrackAllHandler")
-	}
-	if o.GetConfigHastateAllHandler == nil {
-		unregistered = append(unregistered, "GetConfigHastateAllHandler")
 	}
 	if o.GetConfigIpv4addressAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigIpv4addressAllHandler")
@@ -465,11 +465,11 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.GetStatusProcessHandler == nil {
 		unregistered = append(unregistered, "GetStatusProcessHandler")
 	}
+	if o.PostConfigCistateHandler == nil {
+		unregistered = append(unregistered, "PostConfigCistateHandler")
+	}
 	if o.PostConfigFdbHandler == nil {
 		unregistered = append(unregistered, "PostConfigFdbHandler")
-	}
-	if o.PostConfigHastateHandler == nil {
-		unregistered = append(unregistered, "PostConfigHastateHandler")
 	}
 	if o.PostConfigIpv4addressHandler == nil {
 		unregistered = append(unregistered, "PostConfigIpv4addressHandler")
@@ -654,11 +654,11 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/config/conntrack/all"] = NewGetConfigConntrackAll(o.context, o.GetConfigConntrackAllHandler)
+	o.handlers["GET"]["/config/cistate/all"] = NewGetConfigCistateAll(o.context, o.GetConfigCistateAllHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/config/hastate/all"] = NewGetConfigHastateAll(o.context, o.GetConfigHastateAllHandler)
+	o.handlers["GET"]["/config/conntrack/all"] = NewGetConfigConntrackAll(o.context, o.GetConfigConntrackAllHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -718,11 +718,11 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/config/fdb"] = NewPostConfigFdb(o.context, o.PostConfigFdbHandler)
+	o.handlers["POST"]["/config/cistate"] = NewPostConfigCistate(o.context, o.PostConfigCistateHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/config/hastate"] = NewPostConfigHastate(o.context, o.PostConfigHastateHandler)
+	o.handlers["POST"]["/config/fdb"] = NewPostConfigFdb(o.context, o.PostConfigFdbHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

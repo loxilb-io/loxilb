@@ -14,12 +14,15 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// HAStatusGetEntry h a status get entry
+// CIStatusGetEntry c i status get entry
 //
-// swagger:model HAStatusGetEntry
-type HAStatusGetEntry struct {
+// swagger:model CIStatusGetEntry
+type CIStatusGetEntry struct {
 
-	// Current HA State
+	// Instance name
+	Instance string `json:"instance,omitempty"`
+
+	// Current Cluster Instance State
 	State string `json:"state,omitempty"`
 
 	// Sync - sync state
@@ -27,8 +30,8 @@ type HAStatusGetEntry struct {
 	Sync *int64 `json:"sync"`
 }
 
-// Validate validates this h a status get entry
-func (m *HAStatusGetEntry) Validate(formats strfmt.Registry) error {
+// Validate validates this c i status get entry
+func (m *CIStatusGetEntry) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateSync(formats); err != nil {
@@ -41,7 +44,7 @@ func (m *HAStatusGetEntry) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *HAStatusGetEntry) validateSync(formats strfmt.Registry) error {
+func (m *CIStatusGetEntry) validateSync(formats strfmt.Registry) error {
 
 	if err := validate.Required("sync", "body", m.Sync); err != nil {
 		return err
@@ -50,13 +53,13 @@ func (m *HAStatusGetEntry) validateSync(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this h a status get entry based on context it is used
-func (m *HAStatusGetEntry) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this c i status get entry based on context it is used
+func (m *CIStatusGetEntry) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *HAStatusGetEntry) MarshalBinary() ([]byte, error) {
+func (m *CIStatusGetEntry) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -64,8 +67,8 @@ func (m *HAStatusGetEntry) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *HAStatusGetEntry) UnmarshalBinary(b []byte) error {
-	var res HAStatusGetEntry
+func (m *CIStatusGetEntry) UnmarshalBinary(b []byte) error {
+	var res CIStatusGetEntry
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
