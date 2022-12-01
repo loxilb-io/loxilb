@@ -19,3 +19,5 @@ Scenario9   -   3GPP GTP-ULCL SCTP LB Scenario
 Scenario10  -   SCTP Load Balancing after VxLAN Decap
 
 Scenario11  -   One-ARM Mode TCP Load Balancing
+
+Scenario12  -   Test reset establised TCP LB connection after inactivity
