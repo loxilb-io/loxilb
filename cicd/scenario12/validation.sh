@@ -32,14 +32,13 @@ do
     sleep 1
 done
 
-sudo pkill -9 node >> /dev/null 2>&1
+sudo killall -9 node >> /dev/null 2>&1
 $hexec l3ep1 iperf -s -p 8080 >> /dev/null 2>&1 &
 $hexec l3ep2 iperf -s -p 8080 >> /dev/null 2>&1 &
 $hexec l3ep3 iperf -s -p 8080 >> /dev/null 2>&1 &
-sleep 5
+sleep 30
 $hexec l3h1 nohup nc -d 20.20.20.1 2020 >> /dev/null 2>&1 &
 ncpid=$!
-echo $ncpid
 
 sleep 300
 
@@ -55,8 +54,8 @@ else
     echo SCENARIO-12 [OK]
     code=0
 fi
-sudo pkill -9 iperf
-sudo kill -9 $ncpid
-sudo killall -9 nc
+sudo killall -9 iperf >> /dev/null 2>&1
+sudo kill -9 $ncpid >> /dev/null 2>&1
+sudo killall -9 nc >> /dev/null 2>&1
 sudo rm -f nohup.out
 exit $code
