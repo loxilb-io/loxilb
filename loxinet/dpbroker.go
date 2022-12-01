@@ -265,6 +265,7 @@ type NatDpWorkQ struct {
 	HwMark    int
 	NatType   NatT
 	EpSel     NatSel
+	InActTo   uint64
 	endPoints []NatEP
 }
 

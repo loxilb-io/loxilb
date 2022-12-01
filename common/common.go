@@ -410,6 +410,8 @@ type LbServiceArg struct {
 	Bgp bool `json:"bgp"`
 	// Mode - NAT mode
 	Mode LBMode `json:"mode"`
+	// InactiveTimeout - Forced session reset after inactive timeout
+	InactiveTimeout uint32 `json:"inactiveTimeout"`
 }
 
 // LbEndPointArg - Information related to load-balancer end-point

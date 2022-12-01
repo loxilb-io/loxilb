@@ -666,6 +666,9 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 			return EbpfErrNat4Add
 		}
 
+		// seconds to nanoseconds
+		dat.ito = C.uint64_t(w.InActTo * 1000000000)
+
 		switch {
 		case w.EpSel == EpRR:
 			dat.sel_type = C.NAT_LB_SEL_RR
