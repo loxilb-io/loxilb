@@ -69,8 +69,8 @@ const (
 	MaxNatEndPoints          = 16
 	MaxLbaInactiveTries      = 3       // Default number of inactive tries before LB arm is turned off
 	LbaCheckTimeout          = 20      // Default timeout for checking LB arms
-	LbDefaultInactiveTimeout = 4 * 60  // Default inactive timeout for establiushed sessions
-	LbMaxInactiveTimeout     = 24 * 60 // Maximum inactive timeout for establiushed sessions
+	LbDefaultInactiveTimeout = 4 * 60  // Default inactive timeout for established sessions
+	LbMaxInactiveTimeout     = 24 * 60 // Maximum inactive timeout for established sessions
 )
 
 type ruleTType uint
