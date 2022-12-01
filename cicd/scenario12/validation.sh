@@ -37,7 +37,9 @@ $hexec l3ep1 iperf -s -p 8080 >> /dev/null 2>&1 &
 $hexec l3ep2 iperf -s -p 8080 >> /dev/null 2>&1 &
 $hexec l3ep3 iperf -s -p 8080 >> /dev/null 2>&1 &
 sleep 5
-$hexec l3h1 nohup nc -d 20.20.20.1 2020 &
+$hexec l3h1 nohup nc -d 20.20.20.1 2020 >> /dev/null 2>&1 &
+ncpid=$!
+echo $ncpid
 
 sleep 300
 
@@ -54,6 +56,7 @@ else
     code=0
 fi
 sudo pkill -9 iperf
-sudo pkill -9 nc
+sudo kill -9 $ncpid
+sudo killall -9 nc
 sudo rm -f nohup.out
 exit $code
