@@ -29,10 +29,9 @@ do
             exit 1
         fi
     fi
-    sleep 1
+    sleep 2
 done
 
-sudo killall -9 node >> /dev/null 2>&1
 $hexec l3ep1 iperf -s -p 8080 >> /dev/null 2>&1 &
 $hexec l3ep2 iperf -s -p 8080 >> /dev/null 2>&1 &
 $hexec l3ep3 iperf -s -p 8080 >> /dev/null 2>&1 &
