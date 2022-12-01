@@ -986,7 +986,7 @@ func (p *Port) DP(work DpWorkT) int {
 	return 0
 }
 
-// IsLeafPort - check if the port is a leaf port (eBPF hooks need to 
+// IsLeafPort - check if the port is a leaf port (eBPF hooks need to
 // attached to such ports)
 func (p *Port) IsLeafPort() bool {
 	if p.SInfo.PortType&(cmn.PortReal|cmn.PortBond|cmn.PortVti|cmn.PortWg) != 0 {

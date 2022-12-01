@@ -38,6 +38,7 @@ const (
 	RuleNotExistsErr
 	RuleEpCountErr
 	RuleTupleErr
+	RuleArgsErr
 )
 
 type ruleTMatch uint
@@ -65,9 +66,11 @@ const (
 
 // constants
 const (
-	MaxNatEndPoints     = 16
-	MaxLbaInactiveTries = 3  // Default number of inactive tries before LB arm is turned off
-	LbaCheckTimeout     = 20 // Default timeout for checking LB arms
+	MaxNatEndPoints          = 16
+	MaxLbaInactiveTries      = 3       // Default number of inactive tries before LB arm is turned off
+	LbaCheckTimeout          = 20      // Default timeout for checking LB arms
+	LbDefaultInactiveTimeout = 4 * 60  // Default inactive timeout for established sessions
+	LbMaxInactiveTimeout     = 24 * 60 // Maximum inactive timeout for established sessions
 )
 
 type ruleTType uint
@@ -189,6 +192,7 @@ type ruleEnt struct {
 	tuples  ruleTuples
 	ActChk  bool
 	sT      time.Time
+	iTo     uint32
 	act     ruleAct
 	stat    ruleStat
 }
@@ -541,7 +545,7 @@ func (R *RuleH) Rules2Json() ([]byte, error) {
 		}
 		t.ServPort = data.tuples.l4Dst.val
 		t.Sel = data.act.action.(*ruleNatActs).sel
-		t.Mode = int32(data.act.action.(*ruleNatActs).mode)
+		t.Mode = data.act.action.(*ruleNatActs).mode
 
 		// Make Endpoints
 		tmpEp := data.act.action.(*ruleNatActs).endPoints
@@ -589,8 +593,8 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		}
 		ret.Serv.ServPort = data.tuples.l4Dst.val
 		ret.Serv.Sel = data.act.action.(*ruleNatActs).sel
-		ret.Serv.Mode = int32(data.act.action.(*ruleNatActs).mode)
-		 
+		ret.Serv.Mode = data.act.action.(*ruleNatActs).mode
+
 		// Make Endpoints
 		tmpEp := data.act.action.(*ruleNatActs).endPoints
 		for _, ep := range tmpEp {
@@ -635,11 +639,18 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	var natActs ruleNatActs
 	var ipProto uint8
 
-	// Vaildate service args
+	// Validate service args
 	service := serv.ServIP + "/32"
 	_, sNetAddr, err := net.ParseCIDR(service)
 	if err != nil {
 		return RuleUnknownServiceErr, errors.New("malformed-service error")
+	}
+
+	// Validate inactivity timeout
+	if serv.InactiveTimeout > LbMaxInactiveTimeout {
+		return RuleArgsErr, errors.New("service-args error")
+	} else if serv.InactiveTimeout == 0 {
+		serv.InactiveTimeout = LbDefaultInactiveTimeout
 	}
 
 	// Currently support a maximum of MAX_NAT_EPS
@@ -744,6 +755,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		eRule.act.action.(*ruleNatActs).mode = natActs.mode
 
 		eRule.sT = time.Now()
+		eRule.iTo = serv.InactiveTimeout
 		tk.LogIt(tk.LogDebug, "nat lb-rule updated - %s:%s\n", eRule.tuples.String(), eRule.act.String())
 		eRule.DP(DpCreate)
 
@@ -753,7 +765,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	r := new(ruleEnt)
 	r.tuples = rt
 	r.zone = R.Zone
-	if serv.Mode == int32(cmn.LBModeFullNAT) || serv.Mode == int32(cmn.LBModeOneArm) {
+	if serv.Mode == cmn.LBModeFullNAT || serv.Mode == cmn.LBModeOneArm {
 		r.act.actType = RtActFullNat
 		// For full-nat mode, it is necessary to do own lb end-point health monitoring
 		r.ActChk = true
@@ -771,6 +783,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		return RuleAllocErr, errors.New("rule-hwm error")
 	}
 	r.sT = time.Now()
+	r.iTo = serv.InactiveTimeout
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
@@ -1164,7 +1177,6 @@ func (R *RuleH) RuleDestructAll() {
 
 // Nat2DP - Sync state of nat-rule entity to data-path
 func (r *ruleEnt) Nat2DP(work DpWorkT) int {
-	var mode cmn.LBMode
 
 	nWork := new(NatDpWorkQ)
 
@@ -1175,6 +1187,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.L4Port = r.tuples.l4Dst.val
 	nWork.Proto = r.tuples.l4Prot.val
 	nWork.HwMark = r.ruleNum
+	nWork.InActTo = uint64(r.iTo)
 
 	if r.act.actType == RtActDnat {
 		nWork.NatType = DpDnat
@@ -1185,6 +1198,8 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	} else {
 		return -1
 	}
+
+	mode := cmn.LBModeDefault
 
 	switch at := r.act.action.(type) {
 	case *ruleNatActs:
@@ -1270,14 +1285,14 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 		for idx := range nWork.endPoints {
 			ep := &nWork.endPoints[idx]
 			if mode == cmn.LBModeOneArm {
-			    e, sip := r.zone.L3.IfaSelectAny(ep.XIP)
-			    if e != 0 {
-				    r.Sync = DpCreateErr
-				    return -1
-			    }
-			    ep.RIP = sip 
+				e, sip := r.zone.L3.IfaSelectAny(ep.XIP)
+				if e != 0 {
+					r.Sync = DpCreateErr
+					return -1
+				}
+				ep.RIP = sip
 			} else {
-			    ep.RIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
+				ep.RIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
 			}
 		}
 	} else {
@@ -1393,7 +1408,7 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 
 	if isNat == true {
 		return r.Nat2DP(work)
-	} 
+	}
 
 	return r.Fw2DP(work)
 

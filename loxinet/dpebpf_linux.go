@@ -85,7 +85,7 @@ const (
 
 // constants
 const (
-	DpEbpfLinuxTiVal = 20
+	DpEbpfLinuxTiVal = 10
 )
 
 // ebpf table related defines in go
@@ -127,7 +127,7 @@ type DpEbpfH struct {
 	tbN    int
 }
 
-// dpEbpfTicker - this ticker routine runs every DPEBPF_LINUX_TIVAL seconds
+// dpEbpfTicker - this ticker routine runs every DpEbpfLinuxTiVal seconds
 func dpEbpfTicker() {
 	tbls := []int{int(C.LL_DP_RTV4_STATS_MAP),
 		int(C.LL_DP_TMAC_STATS_MAP),
@@ -666,6 +666,9 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 			return EbpfErrNat4Add
 		}
 
+		// seconds to nanoseconds
+		dat.ito = C.uint64_t(w.InActTo * 1000000000)
+
 		switch {
 		case w.EpSel == EpRR:
 			dat.sel_type = C.NAT_LB_SEL_RR
@@ -993,7 +996,7 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 					goCt4Ent.Bytes += b
 					goCt4Ent.Packets += p
 				}
-				fmt.Println(goCt4Ent)
+				//fmt.Println(goCt4Ent)
 				ctMap[goCt4Ent.Key()] = goCt4Ent
 			}
 			key = nextKey
