@@ -36,12 +36,12 @@ func NewGetConfigSessionAll(ctx *middleware.Context, handler GetConfigSessionAll
 	return &GetConfigSessionAll{Context: ctx, Handler: handler}
 }
 
-/* GetConfigSessionAll swagger:route GET /config/session/all getConfigSessionAll
+/*
+	GetConfigSessionAll swagger:route GET /config/session/all getConfigSessionAll
 
-Get all of the port interfaces
+# Get all of the port interfaces
 
 Get all of the port interfaces.
-
 */
 type GetConfigSessionAll struct {
 	Context *middleware.Context

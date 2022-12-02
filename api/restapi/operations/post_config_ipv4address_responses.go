@@ -16,7 +16,8 @@ import (
 // PostConfigIpv4addressNoContentCode is the HTTP code returned for type PostConfigIpv4addressNoContent
 const PostConfigIpv4addressNoContentCode int = 204
 
-/*PostConfigIpv4addressNoContent OK
+/*
+PostConfigIpv4addressNoContent OK
 
 swagger:response postConfigIpv4addressNoContent
 */
@@ -40,7 +41,8 @@ func (o *PostConfigIpv4addressNoContent) WriteResponse(rw http.ResponseWriter, p
 // PostConfigIpv4addressBadRequestCode is the HTTP code returned for type PostConfigIpv4addressBadRequest
 const PostConfigIpv4addressBadRequestCode int = 400
 
-/*PostConfigIpv4addressBadRequest Malformed arguments for API call
+/*
+PostConfigIpv4addressBadRequest Malformed arguments for API call
 
 swagger:response postConfigIpv4addressBadRequest
 */
@@ -84,7 +86,8 @@ func (o *PostConfigIpv4addressBadRequest) WriteResponse(rw http.ResponseWriter, 
 // PostConfigIpv4addressUnauthorizedCode is the HTTP code returned for type PostConfigIpv4addressUnauthorized
 const PostConfigIpv4addressUnauthorizedCode int = 401
 
-/*PostConfigIpv4addressUnauthorized Invalid authentication credentials
+/*
+PostConfigIpv4addressUnauthorized Invalid authentication credentials
 
 swagger:response postConfigIpv4addressUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *PostConfigIpv4addressUnauthorized) WriteResponse(rw http.ResponseWriter
 // PostConfigIpv4addressForbiddenCode is the HTTP code returned for type PostConfigIpv4addressForbidden
 const PostConfigIpv4addressForbiddenCode int = 403
 
-/*PostConfigIpv4addressForbidden Capacity insufficient
+/*
+PostConfigIpv4addressForbidden Capacity insufficient
 
 swagger:response postConfigIpv4addressForbidden
 */
@@ -172,7 +176,8 @@ func (o *PostConfigIpv4addressForbidden) WriteResponse(rw http.ResponseWriter, p
 // PostConfigIpv4addressNotFoundCode is the HTTP code returned for type PostConfigIpv4addressNotFound
 const PostConfigIpv4addressNotFoundCode int = 404
 
-/*PostConfigIpv4addressNotFound Resource not found
+/*
+PostConfigIpv4addressNotFound Resource not found
 
 swagger:response postConfigIpv4addressNotFound
 */
@@ -216,7 +221,8 @@ func (o *PostConfigIpv4addressNotFound) WriteResponse(rw http.ResponseWriter, pr
 // PostConfigIpv4addressConflictCode is the HTTP code returned for type PostConfigIpv4addressConflict
 const PostConfigIpv4addressConflictCode int = 409
 
-/*PostConfigIpv4addressConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+PostConfigIpv4addressConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response postConfigIpv4addressConflict
 */
@@ -260,7 +266,8 @@ func (o *PostConfigIpv4addressConflict) WriteResponse(rw http.ResponseWriter, pr
 // PostConfigIpv4addressInternalServerErrorCode is the HTTP code returned for type PostConfigIpv4addressInternalServerError
 const PostConfigIpv4addressInternalServerErrorCode int = 500
 
-/*PostConfigIpv4addressInternalServerError Internal service error
+/*
+PostConfigIpv4addressInternalServerError Internal service error
 
 swagger:response postConfigIpv4addressInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *PostConfigIpv4addressInternalServerError) WriteResponse(rw http.Respons
 // PostConfigIpv4addressServiceUnavailableCode is the HTTP code returned for type PostConfigIpv4addressServiceUnavailable
 const PostConfigIpv4addressServiceUnavailableCode int = 503
 
-/*PostConfigIpv4addressServiceUnavailable Maintanence mode
+/*
+PostConfigIpv4addressServiceUnavailable Maintanence mode
 
 swagger:response postConfigIpv4addressServiceUnavailable
 */

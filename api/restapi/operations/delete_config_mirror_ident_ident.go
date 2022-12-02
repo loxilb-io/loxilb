@@ -29,12 +29,12 @@ func NewDeleteConfigMirrorIdentIdent(ctx *middleware.Context, handler DeleteConf
 	return &DeleteConfigMirrorIdentIdent{Context: ctx, Handler: handler}
 }
 
-/* DeleteConfigMirrorIdentIdent swagger:route DELETE /config/mirror/ident/{ident} deleteConfigMirrorIdentIdent
+/*
+	DeleteConfigMirrorIdentIdent swagger:route DELETE /config/mirror/ident/{ident} deleteConfigMirrorIdentIdent
 
-Delete a Mirror service
+# Delete a Mirror service
 
 Delete a new Create a Mirror service.
-
 */
 type DeleteConfigMirrorIdentIdent struct {
 	Context *middleware.Context

@@ -16,7 +16,8 @@ import (
 // PostConfigVlanNoContentCode is the HTTP code returned for type PostConfigVlanNoContent
 const PostConfigVlanNoContentCode int = 204
 
-/*PostConfigVlanNoContent OK
+/*
+PostConfigVlanNoContent OK
 
 swagger:response postConfigVlanNoContent
 */
@@ -40,7 +41,8 @@ func (o *PostConfigVlanNoContent) WriteResponse(rw http.ResponseWriter, producer
 // PostConfigVlanBadRequestCode is the HTTP code returned for type PostConfigVlanBadRequest
 const PostConfigVlanBadRequestCode int = 400
 
-/*PostConfigVlanBadRequest Malformed arguments for API call
+/*
+PostConfigVlanBadRequest Malformed arguments for API call
 
 swagger:response postConfigVlanBadRequest
 */
@@ -84,7 +86,8 @@ func (o *PostConfigVlanBadRequest) WriteResponse(rw http.ResponseWriter, produce
 // PostConfigVlanUnauthorizedCode is the HTTP code returned for type PostConfigVlanUnauthorized
 const PostConfigVlanUnauthorizedCode int = 401
 
-/*PostConfigVlanUnauthorized Invalid authentication credentials
+/*
+PostConfigVlanUnauthorized Invalid authentication credentials
 
 swagger:response postConfigVlanUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *PostConfigVlanUnauthorized) WriteResponse(rw http.ResponseWriter, produ
 // PostConfigVlanForbiddenCode is the HTTP code returned for type PostConfigVlanForbidden
 const PostConfigVlanForbiddenCode int = 403
 
-/*PostConfigVlanForbidden Capacity insufficient
+/*
+PostConfigVlanForbidden Capacity insufficient
 
 swagger:response postConfigVlanForbidden
 */
@@ -172,7 +176,8 @@ func (o *PostConfigVlanForbidden) WriteResponse(rw http.ResponseWriter, producer
 // PostConfigVlanNotFoundCode is the HTTP code returned for type PostConfigVlanNotFound
 const PostConfigVlanNotFoundCode int = 404
 
-/*PostConfigVlanNotFound Resource not found
+/*
+PostConfigVlanNotFound Resource not found
 
 swagger:response postConfigVlanNotFound
 */
@@ -216,7 +221,8 @@ func (o *PostConfigVlanNotFound) WriteResponse(rw http.ResponseWriter, producer 
 // PostConfigVlanConflictCode is the HTTP code returned for type PostConfigVlanConflict
 const PostConfigVlanConflictCode int = 409
 
-/*PostConfigVlanConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+PostConfigVlanConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response postConfigVlanConflict
 */
@@ -260,7 +266,8 @@ func (o *PostConfigVlanConflict) WriteResponse(rw http.ResponseWriter, producer 
 // PostConfigVlanInternalServerErrorCode is the HTTP code returned for type PostConfigVlanInternalServerError
 const PostConfigVlanInternalServerErrorCode int = 500
 
-/*PostConfigVlanInternalServerError Internal service error
+/*
+PostConfigVlanInternalServerError Internal service error
 
 swagger:response postConfigVlanInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *PostConfigVlanInternalServerError) WriteResponse(rw http.ResponseWriter
 // PostConfigVlanServiceUnavailableCode is the HTTP code returned for type PostConfigVlanServiceUnavailable
 const PostConfigVlanServiceUnavailableCode int = 503
 
-/*PostConfigVlanServiceUnavailable Maintanence mode
+/*
+PostConfigVlanServiceUnavailable Maintanence mode
 
 swagger:response postConfigVlanServiceUnavailable
 */

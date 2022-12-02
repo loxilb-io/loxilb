@@ -16,7 +16,8 @@ import (
 // DeleteConfigTunnelVxlanVxlanIDNoContentCode is the HTTP code returned for type DeleteConfigTunnelVxlanVxlanIDNoContent
 const DeleteConfigTunnelVxlanVxlanIDNoContentCode int = 204
 
-/*DeleteConfigTunnelVxlanVxlanIDNoContent OK
+/*
+DeleteConfigTunnelVxlanVxlanIDNoContent OK
 
 swagger:response deleteConfigTunnelVxlanVxlanIdNoContent
 */
@@ -40,7 +41,8 @@ func (o *DeleteConfigTunnelVxlanVxlanIDNoContent) WriteResponse(rw http.Response
 // DeleteConfigTunnelVxlanVxlanIDUnauthorizedCode is the HTTP code returned for type DeleteConfigTunnelVxlanVxlanIDUnauthorized
 const DeleteConfigTunnelVxlanVxlanIDUnauthorizedCode int = 401
 
-/*DeleteConfigTunnelVxlanVxlanIDUnauthorized Invalid authentication credentials
+/*
+DeleteConfigTunnelVxlanVxlanIDUnauthorized Invalid authentication credentials
 
 swagger:response deleteConfigTunnelVxlanVxlanIdUnauthorized
 */
@@ -84,7 +86,8 @@ func (o *DeleteConfigTunnelVxlanVxlanIDUnauthorized) WriteResponse(rw http.Respo
 // DeleteConfigTunnelVxlanVxlanIDInternalServerErrorCode is the HTTP code returned for type DeleteConfigTunnelVxlanVxlanIDInternalServerError
 const DeleteConfigTunnelVxlanVxlanIDInternalServerErrorCode int = 500
 
-/*DeleteConfigTunnelVxlanVxlanIDInternalServerError Internal service error
+/*
+DeleteConfigTunnelVxlanVxlanIDInternalServerError Internal service error
 
 swagger:response deleteConfigTunnelVxlanVxlanIdInternalServerError
 */
@@ -128,7 +131,8 @@ func (o *DeleteConfigTunnelVxlanVxlanIDInternalServerError) WriteResponse(rw htt
 // DeleteConfigTunnelVxlanVxlanIDServiceUnavailableCode is the HTTP code returned for type DeleteConfigTunnelVxlanVxlanIDServiceUnavailable
 const DeleteConfigTunnelVxlanVxlanIDServiceUnavailableCode int = 503
 
-/*DeleteConfigTunnelVxlanVxlanIDServiceUnavailable Maintanence mode
+/*
+DeleteConfigTunnelVxlanVxlanIDServiceUnavailable Maintanence mode
 
 swagger:response deleteConfigTunnelVxlanVxlanIdServiceUnavailable
 */

@@ -36,12 +36,12 @@ func NewGetConfigSessionulclAll(ctx *middleware.Context, handler GetConfigSessio
 	return &GetConfigSessionulclAll{Context: ctx, Handler: handler}
 }
 
-/* GetConfigSessionulclAll swagger:route GET /config/sessionulcl/all getConfigSessionulclAll
+/*
+	GetConfigSessionulclAll swagger:route GET /config/sessionulcl/all getConfigSessionulclAll
+
+# Get
 
 Get
-
-Get
-
 */
 type GetConfigSessionulclAll struct {
 	Context *middleware.Context

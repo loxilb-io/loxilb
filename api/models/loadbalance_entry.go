@@ -215,6 +215,9 @@ type LoadbalanceEntryServiceArguments struct {
 	// IP address for externel access
 	ExternalIP string `json:"externalIP,omitempty"`
 
+	// value for inactivity timeout (in seconds)
+	InactiveTimeOut int32 `json:"inactiveTimeOut,omitempty"`
+
 	// value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)
 	Mode int32 `json:"mode,omitempty"`
 

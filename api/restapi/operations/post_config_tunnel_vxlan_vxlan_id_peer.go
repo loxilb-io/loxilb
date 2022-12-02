@@ -29,12 +29,12 @@ func NewPostConfigTunnelVxlanVxlanIDPeer(ctx *middleware.Context, handler PostCo
 	return &PostConfigTunnelVxlanVxlanIDPeer{Context: ctx, Handler: handler}
 }
 
-/* PostConfigTunnelVxlanVxlanIDPeer swagger:route POST /config/tunnel/vxlan/{vxlanID}/peer postConfigTunnelVxlanVxlanIdPeer
+/*
+	PostConfigTunnelVxlanVxlanIDPeer swagger:route POST /config/tunnel/vxlan/{vxlanID}/peer postConfigTunnelVxlanVxlanIdPeer
 
-Add a one of vxlan remote(peer) ip address configuration
+# Add a one of vxlan remote(peer) ip address configuration
 
 Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.
-
 */
 type PostConfigTunnelVxlanVxlanIDPeer struct {
 	Context *middleware.Context

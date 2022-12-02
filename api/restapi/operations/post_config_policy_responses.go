@@ -16,7 +16,8 @@ import (
 // PostConfigPolicyNoContentCode is the HTTP code returned for type PostConfigPolicyNoContent
 const PostConfigPolicyNoContentCode int = 204
 
-/*PostConfigPolicyNoContent OK
+/*
+PostConfigPolicyNoContent OK
 
 swagger:response postConfigPolicyNoContent
 */
@@ -40,7 +41,8 @@ func (o *PostConfigPolicyNoContent) WriteResponse(rw http.ResponseWriter, produc
 // PostConfigPolicyBadRequestCode is the HTTP code returned for type PostConfigPolicyBadRequest
 const PostConfigPolicyBadRequestCode int = 400
 
-/*PostConfigPolicyBadRequest Malformed arguments for API call
+/*
+PostConfigPolicyBadRequest Malformed arguments for API call
 
 swagger:response postConfigPolicyBadRequest
 */
@@ -84,7 +86,8 @@ func (o *PostConfigPolicyBadRequest) WriteResponse(rw http.ResponseWriter, produ
 // PostConfigPolicyUnauthorizedCode is the HTTP code returned for type PostConfigPolicyUnauthorized
 const PostConfigPolicyUnauthorizedCode int = 401
 
-/*PostConfigPolicyUnauthorized Invalid authentication credentials
+/*
+PostConfigPolicyUnauthorized Invalid authentication credentials
 
 swagger:response postConfigPolicyUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *PostConfigPolicyUnauthorized) WriteResponse(rw http.ResponseWriter, pro
 // PostConfigPolicyForbiddenCode is the HTTP code returned for type PostConfigPolicyForbidden
 const PostConfigPolicyForbiddenCode int = 403
 
-/*PostConfigPolicyForbidden Capacity insufficient
+/*
+PostConfigPolicyForbidden Capacity insufficient
 
 swagger:response postConfigPolicyForbidden
 */
@@ -172,7 +176,8 @@ func (o *PostConfigPolicyForbidden) WriteResponse(rw http.ResponseWriter, produc
 // PostConfigPolicyNotFoundCode is the HTTP code returned for type PostConfigPolicyNotFound
 const PostConfigPolicyNotFoundCode int = 404
 
-/*PostConfigPolicyNotFound Resource not found
+/*
+PostConfigPolicyNotFound Resource not found
 
 swagger:response postConfigPolicyNotFound
 */
@@ -216,7 +221,8 @@ func (o *PostConfigPolicyNotFound) WriteResponse(rw http.ResponseWriter, produce
 // PostConfigPolicyConflictCode is the HTTP code returned for type PostConfigPolicyConflict
 const PostConfigPolicyConflictCode int = 409
 
-/*PostConfigPolicyConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+PostConfigPolicyConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response postConfigPolicyConflict
 */
@@ -260,7 +266,8 @@ func (o *PostConfigPolicyConflict) WriteResponse(rw http.ResponseWriter, produce
 // PostConfigPolicyInternalServerErrorCode is the HTTP code returned for type PostConfigPolicyInternalServerError
 const PostConfigPolicyInternalServerErrorCode int = 500
 
-/*PostConfigPolicyInternalServerError Internal service error
+/*
+PostConfigPolicyInternalServerError Internal service error
 
 swagger:response postConfigPolicyInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *PostConfigPolicyInternalServerError) WriteResponse(rw http.ResponseWrit
 // PostConfigPolicyServiceUnavailableCode is the HTTP code returned for type PostConfigPolicyServiceUnavailable
 const PostConfigPolicyServiceUnavailableCode int = 503
 
-/*PostConfigPolicyServiceUnavailable Maintanence mode
+/*
+PostConfigPolicyServiceUnavailable Maintanence mode
 
 swagger:response postConfigPolicyServiceUnavailable
 */

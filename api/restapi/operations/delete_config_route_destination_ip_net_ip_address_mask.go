@@ -29,12 +29,12 @@ func NewDeleteConfigRouteDestinationIPNetIPAddressMask(ctx *middleware.Context, 
 	return &DeleteConfigRouteDestinationIPNetIPAddressMask{Context: ctx, Handler: handler}
 }
 
-/* DeleteConfigRouteDestinationIPNetIPAddressMask swagger:route DELETE /config/route/destinationIPNet/{ip_address}/{mask} deleteConfigRouteDestinationIpNetIpAddressMask
+/*
+	DeleteConfigRouteDestinationIPNetIPAddressMask swagger:route DELETE /config/route/destinationIPNet/{ip_address}/{mask} deleteConfigRouteDestinationIpNetIpAddressMask
 
-Create a new Load balancer service
+# Create a new Load balancer service
 
 Create a new load balancer service with .
-
 */
 type DeleteConfigRouteDestinationIPNetIPAddressMask struct {
 	Context *middleware.Context

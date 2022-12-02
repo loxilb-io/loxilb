@@ -16,7 +16,8 @@ import (
 // DeleteConfigNeighborIPAddressDevIfNameNoContentCode is the HTTP code returned for type DeleteConfigNeighborIPAddressDevIfNameNoContent
 const DeleteConfigNeighborIPAddressDevIfNameNoContentCode int = 204
 
-/*DeleteConfigNeighborIPAddressDevIfNameNoContent OK
+/*
+DeleteConfigNeighborIPAddressDevIfNameNoContent OK
 
 swagger:response deleteConfigNeighborIpAddressDevIfNameNoContent
 */
@@ -40,7 +41,8 @@ func (o *DeleteConfigNeighborIPAddressDevIfNameNoContent) WriteResponse(rw http.
 // DeleteConfigNeighborIPAddressDevIfNameBadRequestCode is the HTTP code returned for type DeleteConfigNeighborIPAddressDevIfNameBadRequest
 const DeleteConfigNeighborIPAddressDevIfNameBadRequestCode int = 400
 
-/*DeleteConfigNeighborIPAddressDevIfNameBadRequest Malformed arguments for API call
+/*
+DeleteConfigNeighborIPAddressDevIfNameBadRequest Malformed arguments for API call
 
 swagger:response deleteConfigNeighborIpAddressDevIfNameBadRequest
 */
@@ -84,7 +86,8 @@ func (o *DeleteConfigNeighborIPAddressDevIfNameBadRequest) WriteResponse(rw http
 // DeleteConfigNeighborIPAddressDevIfNameUnauthorizedCode is the HTTP code returned for type DeleteConfigNeighborIPAddressDevIfNameUnauthorized
 const DeleteConfigNeighborIPAddressDevIfNameUnauthorizedCode int = 401
 
-/*DeleteConfigNeighborIPAddressDevIfNameUnauthorized Invalid authentication credentials
+/*
+DeleteConfigNeighborIPAddressDevIfNameUnauthorized Invalid authentication credentials
 
 swagger:response deleteConfigNeighborIpAddressDevIfNameUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *DeleteConfigNeighborIPAddressDevIfNameUnauthorized) WriteResponse(rw ht
 // DeleteConfigNeighborIPAddressDevIfNameForbiddenCode is the HTTP code returned for type DeleteConfigNeighborIPAddressDevIfNameForbidden
 const DeleteConfigNeighborIPAddressDevIfNameForbiddenCode int = 403
 
-/*DeleteConfigNeighborIPAddressDevIfNameForbidden Capacity insufficient
+/*
+DeleteConfigNeighborIPAddressDevIfNameForbidden Capacity insufficient
 
 swagger:response deleteConfigNeighborIpAddressDevIfNameForbidden
 */
@@ -172,7 +176,8 @@ func (o *DeleteConfigNeighborIPAddressDevIfNameForbidden) WriteResponse(rw http.
 // DeleteConfigNeighborIPAddressDevIfNameNotFoundCode is the HTTP code returned for type DeleteConfigNeighborIPAddressDevIfNameNotFound
 const DeleteConfigNeighborIPAddressDevIfNameNotFoundCode int = 404
 
-/*DeleteConfigNeighborIPAddressDevIfNameNotFound Resource not found
+/*
+DeleteConfigNeighborIPAddressDevIfNameNotFound Resource not found
 
 swagger:response deleteConfigNeighborIpAddressDevIfNameNotFound
 */
@@ -216,7 +221,8 @@ func (o *DeleteConfigNeighborIPAddressDevIfNameNotFound) WriteResponse(rw http.R
 // DeleteConfigNeighborIPAddressDevIfNameConflictCode is the HTTP code returned for type DeleteConfigNeighborIPAddressDevIfNameConflict
 const DeleteConfigNeighborIPAddressDevIfNameConflictCode int = 409
 
-/*DeleteConfigNeighborIPAddressDevIfNameConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+DeleteConfigNeighborIPAddressDevIfNameConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response deleteConfigNeighborIpAddressDevIfNameConflict
 */
@@ -260,7 +266,8 @@ func (o *DeleteConfigNeighborIPAddressDevIfNameConflict) WriteResponse(rw http.R
 // DeleteConfigNeighborIPAddressDevIfNameInternalServerErrorCode is the HTTP code returned for type DeleteConfigNeighborIPAddressDevIfNameInternalServerError
 const DeleteConfigNeighborIPAddressDevIfNameInternalServerErrorCode int = 500
 
-/*DeleteConfigNeighborIPAddressDevIfNameInternalServerError Internal service error
+/*
+DeleteConfigNeighborIPAddressDevIfNameInternalServerError Internal service error
 
 swagger:response deleteConfigNeighborIpAddressDevIfNameInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *DeleteConfigNeighborIPAddressDevIfNameInternalServerError) WriteRespons
 // DeleteConfigNeighborIPAddressDevIfNameServiceUnavailableCode is the HTTP code returned for type DeleteConfigNeighborIPAddressDevIfNameServiceUnavailable
 const DeleteConfigNeighborIPAddressDevIfNameServiceUnavailableCode int = 503
 
-/*DeleteConfigNeighborIPAddressDevIfNameServiceUnavailable Maintanence mode
+/*
+DeleteConfigNeighborIPAddressDevIfNameServiceUnavailable Maintanence mode
 
 swagger:response deleteConfigNeighborIpAddressDevIfNameServiceUnavailable
 */

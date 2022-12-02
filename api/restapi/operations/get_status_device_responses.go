@@ -16,7 +16,8 @@ import (
 // GetStatusDeviceOKCode is the HTTP code returned for type GetStatusDeviceOK
 const GetStatusDeviceOKCode int = 200
 
-/*GetStatusDeviceOK Device unique informations
+/*
+GetStatusDeviceOK Device unique informations
 
 swagger:response getStatusDeviceOK
 */
@@ -60,7 +61,8 @@ func (o *GetStatusDeviceOK) WriteResponse(rw http.ResponseWriter, producer runti
 // GetStatusDeviceUnauthorizedCode is the HTTP code returned for type GetStatusDeviceUnauthorized
 const GetStatusDeviceUnauthorizedCode int = 401
 
-/*GetStatusDeviceUnauthorized Invalid authentication credentials
+/*
+GetStatusDeviceUnauthorized Invalid authentication credentials
 
 swagger:response getStatusDeviceUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *GetStatusDeviceUnauthorized) WriteResponse(rw http.ResponseWriter, prod
 // GetStatusDeviceInternalServerErrorCode is the HTTP code returned for type GetStatusDeviceInternalServerError
 const GetStatusDeviceInternalServerErrorCode int = 500
 
-/*GetStatusDeviceInternalServerError Internal service error
+/*
+GetStatusDeviceInternalServerError Internal service error
 
 swagger:response getStatusDeviceInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *GetStatusDeviceInternalServerError) WriteResponse(rw http.ResponseWrite
 // GetStatusDeviceServiceUnavailableCode is the HTTP code returned for type GetStatusDeviceServiceUnavailable
 const GetStatusDeviceServiceUnavailableCode int = 503
 
-/*GetStatusDeviceServiceUnavailable Maintanence mode
+/*
+GetStatusDeviceServiceUnavailable Maintanence mode
 
 swagger:response getStatusDeviceServiceUnavailable
 */

@@ -16,7 +16,8 @@ import (
 // DeleteConfigSessionIdentIdentNoContentCode is the HTTP code returned for type DeleteConfigSessionIdentIdentNoContent
 const DeleteConfigSessionIdentIdentNoContentCode int = 204
 
-/*DeleteConfigSessionIdentIdentNoContent OK
+/*
+DeleteConfigSessionIdentIdentNoContent OK
 
 swagger:response deleteConfigSessionIdentIdentNoContent
 */
@@ -40,7 +41,8 @@ func (o *DeleteConfigSessionIdentIdentNoContent) WriteResponse(rw http.ResponseW
 // DeleteConfigSessionIdentIdentBadRequestCode is the HTTP code returned for type DeleteConfigSessionIdentIdentBadRequest
 const DeleteConfigSessionIdentIdentBadRequestCode int = 400
 
-/*DeleteConfigSessionIdentIdentBadRequest Malformed arguments for API call
+/*
+DeleteConfigSessionIdentIdentBadRequest Malformed arguments for API call
 
 swagger:response deleteConfigSessionIdentIdentBadRequest
 */
@@ -84,7 +86,8 @@ func (o *DeleteConfigSessionIdentIdentBadRequest) WriteResponse(rw http.Response
 // DeleteConfigSessionIdentIdentUnauthorizedCode is the HTTP code returned for type DeleteConfigSessionIdentIdentUnauthorized
 const DeleteConfigSessionIdentIdentUnauthorizedCode int = 401
 
-/*DeleteConfigSessionIdentIdentUnauthorized Invalid authentication credentials
+/*
+DeleteConfigSessionIdentIdentUnauthorized Invalid authentication credentials
 
 swagger:response deleteConfigSessionIdentIdentUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *DeleteConfigSessionIdentIdentUnauthorized) WriteResponse(rw http.Respon
 // DeleteConfigSessionIdentIdentForbiddenCode is the HTTP code returned for type DeleteConfigSessionIdentIdentForbidden
 const DeleteConfigSessionIdentIdentForbiddenCode int = 403
 
-/*DeleteConfigSessionIdentIdentForbidden Capacity insufficient
+/*
+DeleteConfigSessionIdentIdentForbidden Capacity insufficient
 
 swagger:response deleteConfigSessionIdentIdentForbidden
 */
@@ -172,7 +176,8 @@ func (o *DeleteConfigSessionIdentIdentForbidden) WriteResponse(rw http.ResponseW
 // DeleteConfigSessionIdentIdentNotFoundCode is the HTTP code returned for type DeleteConfigSessionIdentIdentNotFound
 const DeleteConfigSessionIdentIdentNotFoundCode int = 404
 
-/*DeleteConfigSessionIdentIdentNotFound Resource not found
+/*
+DeleteConfigSessionIdentIdentNotFound Resource not found
 
 swagger:response deleteConfigSessionIdentIdentNotFound
 */
@@ -216,7 +221,8 @@ func (o *DeleteConfigSessionIdentIdentNotFound) WriteResponse(rw http.ResponseWr
 // DeleteConfigSessionIdentIdentConflictCode is the HTTP code returned for type DeleteConfigSessionIdentIdentConflict
 const DeleteConfigSessionIdentIdentConflictCode int = 409
 
-/*DeleteConfigSessionIdentIdentConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+DeleteConfigSessionIdentIdentConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response deleteConfigSessionIdentIdentConflict
 */
@@ -260,7 +266,8 @@ func (o *DeleteConfigSessionIdentIdentConflict) WriteResponse(rw http.ResponseWr
 // DeleteConfigSessionIdentIdentInternalServerErrorCode is the HTTP code returned for type DeleteConfigSessionIdentIdentInternalServerError
 const DeleteConfigSessionIdentIdentInternalServerErrorCode int = 500
 
-/*DeleteConfigSessionIdentIdentInternalServerError Internal service error
+/*
+DeleteConfigSessionIdentIdentInternalServerError Internal service error
 
 swagger:response deleteConfigSessionIdentIdentInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *DeleteConfigSessionIdentIdentInternalServerError) WriteResponse(rw http
 // DeleteConfigSessionIdentIdentServiceUnavailableCode is the HTTP code returned for type DeleteConfigSessionIdentIdentServiceUnavailable
 const DeleteConfigSessionIdentIdentServiceUnavailableCode int = 503
 
-/*DeleteConfigSessionIdentIdentServiceUnavailable Maintanence mode
+/*
+DeleteConfigSessionIdentIdentServiceUnavailable Maintanence mode
 
 swagger:response deleteConfigSessionIdentIdentServiceUnavailable
 */

@@ -16,7 +16,8 @@ import (
 // PostConfigTunnelVxlanNoContentCode is the HTTP code returned for type PostConfigTunnelVxlanNoContent
 const PostConfigTunnelVxlanNoContentCode int = 204
 
-/*PostConfigTunnelVxlanNoContent OK
+/*
+PostConfigTunnelVxlanNoContent OK
 
 swagger:response postConfigTunnelVxlanNoContent
 */
@@ -40,7 +41,8 @@ func (o *PostConfigTunnelVxlanNoContent) WriteResponse(rw http.ResponseWriter, p
 // PostConfigTunnelVxlanUnauthorizedCode is the HTTP code returned for type PostConfigTunnelVxlanUnauthorized
 const PostConfigTunnelVxlanUnauthorizedCode int = 401
 
-/*PostConfigTunnelVxlanUnauthorized Invalid authentication credentials
+/*
+PostConfigTunnelVxlanUnauthorized Invalid authentication credentials
 
 swagger:response postConfigTunnelVxlanUnauthorized
 */
@@ -84,7 +86,8 @@ func (o *PostConfigTunnelVxlanUnauthorized) WriteResponse(rw http.ResponseWriter
 // PostConfigTunnelVxlanConflictCode is the HTTP code returned for type PostConfigTunnelVxlanConflict
 const PostConfigTunnelVxlanConflictCode int = 409
 
-/*PostConfigTunnelVxlanConflict Resource Conflict. VxLAN already exists OR dependency VRF/VNET not found
+/*
+PostConfigTunnelVxlanConflict Resource Conflict. VxLAN already exists OR dependency VRF/VNET not found
 
 swagger:response postConfigTunnelVxlanConflict
 */
@@ -128,7 +131,8 @@ func (o *PostConfigTunnelVxlanConflict) WriteResponse(rw http.ResponseWriter, pr
 // PostConfigTunnelVxlanInternalServerErrorCode is the HTTP code returned for type PostConfigTunnelVxlanInternalServerError
 const PostConfigTunnelVxlanInternalServerErrorCode int = 500
 
-/*PostConfigTunnelVxlanInternalServerError Internal service error
+/*
+PostConfigTunnelVxlanInternalServerError Internal service error
 
 swagger:response postConfigTunnelVxlanInternalServerError
 */
@@ -172,7 +176,8 @@ func (o *PostConfigTunnelVxlanInternalServerError) WriteResponse(rw http.Respons
 // PostConfigTunnelVxlanServiceUnavailableCode is the HTTP code returned for type PostConfigTunnelVxlanServiceUnavailable
 const PostConfigTunnelVxlanServiceUnavailableCode int = 503
 
-/*PostConfigTunnelVxlanServiceUnavailable Maintanence mode
+/*
+PostConfigTunnelVxlanServiceUnavailable Maintanence mode
 
 swagger:response postConfigTunnelVxlanServiceUnavailable
 */

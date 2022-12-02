@@ -36,12 +36,12 @@ func NewGetConfigVlanAll(ctx *middleware.Context, handler GetConfigVlanAllHandle
 	return &GetConfigVlanAll{Context: ctx, Handler: handler}
 }
 
-/* GetConfigVlanAll swagger:route GET /config/vlan/all getConfigVlanAll
+/*
+	GetConfigVlanAll swagger:route GET /config/vlan/all getConfigVlanAll
+
+# Get vlan in the device
 
 Get vlan in the device
-
-Get vlan in the device
-
 */
 type GetConfigVlanAll struct {
 	Context *middleware.Context

@@ -16,7 +16,8 @@ import (
 // PostConfigRouteNoContentCode is the HTTP code returned for type PostConfigRouteNoContent
 const PostConfigRouteNoContentCode int = 204
 
-/*PostConfigRouteNoContent OK
+/*
+PostConfigRouteNoContent OK
 
 swagger:response postConfigRouteNoContent
 */
@@ -40,7 +41,8 @@ func (o *PostConfigRouteNoContent) WriteResponse(rw http.ResponseWriter, produce
 // PostConfigRouteBadRequestCode is the HTTP code returned for type PostConfigRouteBadRequest
 const PostConfigRouteBadRequestCode int = 400
 
-/*PostConfigRouteBadRequest Malformed arguments for API call
+/*
+PostConfigRouteBadRequest Malformed arguments for API call
 
 swagger:response postConfigRouteBadRequest
 */
@@ -84,7 +86,8 @@ func (o *PostConfigRouteBadRequest) WriteResponse(rw http.ResponseWriter, produc
 // PostConfigRouteUnauthorizedCode is the HTTP code returned for type PostConfigRouteUnauthorized
 const PostConfigRouteUnauthorizedCode int = 401
 
-/*PostConfigRouteUnauthorized Invalid authentication credentials
+/*
+PostConfigRouteUnauthorized Invalid authentication credentials
 
 swagger:response postConfigRouteUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *PostConfigRouteUnauthorized) WriteResponse(rw http.ResponseWriter, prod
 // PostConfigRouteForbiddenCode is the HTTP code returned for type PostConfigRouteForbidden
 const PostConfigRouteForbiddenCode int = 403
 
-/*PostConfigRouteForbidden Capacity insufficient
+/*
+PostConfigRouteForbidden Capacity insufficient
 
 swagger:response postConfigRouteForbidden
 */
@@ -172,7 +176,8 @@ func (o *PostConfigRouteForbidden) WriteResponse(rw http.ResponseWriter, produce
 // PostConfigRouteNotFoundCode is the HTTP code returned for type PostConfigRouteNotFound
 const PostConfigRouteNotFoundCode int = 404
 
-/*PostConfigRouteNotFound Resource not found
+/*
+PostConfigRouteNotFound Resource not found
 
 swagger:response postConfigRouteNotFound
 */
@@ -216,7 +221,8 @@ func (o *PostConfigRouteNotFound) WriteResponse(rw http.ResponseWriter, producer
 // PostConfigRouteConflictCode is the HTTP code returned for type PostConfigRouteConflict
 const PostConfigRouteConflictCode int = 409
 
-/*PostConfigRouteConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+PostConfigRouteConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response postConfigRouteConflict
 */
@@ -260,7 +266,8 @@ func (o *PostConfigRouteConflict) WriteResponse(rw http.ResponseWriter, producer
 // PostConfigRouteInternalServerErrorCode is the HTTP code returned for type PostConfigRouteInternalServerError
 const PostConfigRouteInternalServerErrorCode int = 500
 
-/*PostConfigRouteInternalServerError Internal service error
+/*
+PostConfigRouteInternalServerError Internal service error
 
 swagger:response postConfigRouteInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *PostConfigRouteInternalServerError) WriteResponse(rw http.ResponseWrite
 // PostConfigRouteServiceUnavailableCode is the HTTP code returned for type PostConfigRouteServiceUnavailable
 const PostConfigRouteServiceUnavailableCode int = 503
 
-/*PostConfigRouteServiceUnavailable Maintanence mode
+/*
+PostConfigRouteServiceUnavailable Maintanence mode
 
 swagger:response postConfigRouteServiceUnavailable
 */

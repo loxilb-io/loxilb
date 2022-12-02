@@ -36,12 +36,12 @@ func NewGetConfigLoadbalancerAll(ctx *middleware.Context, handler GetConfigLoadb
 	return &GetConfigLoadbalancerAll{Context: ctx, Handler: handler}
 }
 
-/* GetConfigLoadbalancerAll swagger:route GET /config/loadbalancer/all getConfigLoadbalancerAll
+/*
+	GetConfigLoadbalancerAll swagger:route GET /config/loadbalancer/all getConfigLoadbalancerAll
 
-Get all of the load balancer services
+# Get all of the load balancer services
 
 Get all of the load balancer services with conntrack infomation.
-
 */
 type GetConfigLoadbalancerAll struct {
 	Context *middleware.Context

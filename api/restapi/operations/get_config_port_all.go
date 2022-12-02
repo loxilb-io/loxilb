@@ -36,12 +36,12 @@ func NewGetConfigPortAll(ctx *middleware.Context, handler GetConfigPortAllHandle
 	return &GetConfigPortAll{Context: ctx, Handler: handler}
 }
 
-/* GetConfigPortAll swagger:route GET /config/port/all getConfigPortAll
+/*
+	GetConfigPortAll swagger:route GET /config/port/all getConfigPortAll
 
-Get all of the port interfaces
+# Get all of the port interfaces
 
 Get all of the port interfaces.
-
 */
 type GetConfigPortAll struct {
 	Context *middleware.Context

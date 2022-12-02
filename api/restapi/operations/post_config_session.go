@@ -29,12 +29,12 @@ func NewPostConfigSession(ctx *middleware.Context, handler PostConfigSessionHand
 	return &PostConfigSession{Context: ctx, Handler: handler}
 }
 
-/* PostConfigSession swagger:route POST /config/session postConfigSession
+/*
+	PostConfigSession swagger:route POST /config/session postConfigSession
 
-Create a new session config
+# Create a new session config
 
 Create a new session config for 5G.
-
 */
 type PostConfigSession struct {
 	Context *middleware.Context

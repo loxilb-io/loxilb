@@ -29,12 +29,12 @@ func NewPostConfigRoute(ctx *middleware.Context, handler PostConfigRouteHandler)
 	return &PostConfigRoute{Context: ctx, Handler: handler}
 }
 
-/* PostConfigRoute swagger:route POST /config/route postConfigRoute
+/*
+	PostConfigRoute swagger:route POST /config/route postConfigRoute
 
-Create a new route config
+# Create a new route config
 
 Create a new route config .
-
 */
 type PostConfigRoute struct {
 	Context *middleware.Context

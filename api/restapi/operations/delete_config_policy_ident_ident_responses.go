@@ -16,7 +16,8 @@ import (
 // DeleteConfigPolicyIdentIdentNoContentCode is the HTTP code returned for type DeleteConfigPolicyIdentIdentNoContent
 const DeleteConfigPolicyIdentIdentNoContentCode int = 204
 
-/*DeleteConfigPolicyIdentIdentNoContent OK
+/*
+DeleteConfigPolicyIdentIdentNoContent OK
 
 swagger:response deleteConfigPolicyIdentIdentNoContent
 */
@@ -40,7 +41,8 @@ func (o *DeleteConfigPolicyIdentIdentNoContent) WriteResponse(rw http.ResponseWr
 // DeleteConfigPolicyIdentIdentBadRequestCode is the HTTP code returned for type DeleteConfigPolicyIdentIdentBadRequest
 const DeleteConfigPolicyIdentIdentBadRequestCode int = 400
 
-/*DeleteConfigPolicyIdentIdentBadRequest Malformed arguments for API call
+/*
+DeleteConfigPolicyIdentIdentBadRequest Malformed arguments for API call
 
 swagger:response deleteConfigPolicyIdentIdentBadRequest
 */
@@ -84,7 +86,8 @@ func (o *DeleteConfigPolicyIdentIdentBadRequest) WriteResponse(rw http.ResponseW
 // DeleteConfigPolicyIdentIdentUnauthorizedCode is the HTTP code returned for type DeleteConfigPolicyIdentIdentUnauthorized
 const DeleteConfigPolicyIdentIdentUnauthorizedCode int = 401
 
-/*DeleteConfigPolicyIdentIdentUnauthorized Invalid authentication credentials
+/*
+DeleteConfigPolicyIdentIdentUnauthorized Invalid authentication credentials
 
 swagger:response deleteConfigPolicyIdentIdentUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *DeleteConfigPolicyIdentIdentUnauthorized) WriteResponse(rw http.Respons
 // DeleteConfigPolicyIdentIdentForbiddenCode is the HTTP code returned for type DeleteConfigPolicyIdentIdentForbidden
 const DeleteConfigPolicyIdentIdentForbiddenCode int = 403
 
-/*DeleteConfigPolicyIdentIdentForbidden Capacity insufficient
+/*
+DeleteConfigPolicyIdentIdentForbidden Capacity insufficient
 
 swagger:response deleteConfigPolicyIdentIdentForbidden
 */
@@ -172,7 +176,8 @@ func (o *DeleteConfigPolicyIdentIdentForbidden) WriteResponse(rw http.ResponseWr
 // DeleteConfigPolicyIdentIdentNotFoundCode is the HTTP code returned for type DeleteConfigPolicyIdentIdentNotFound
 const DeleteConfigPolicyIdentIdentNotFoundCode int = 404
 
-/*DeleteConfigPolicyIdentIdentNotFound Resource not found
+/*
+DeleteConfigPolicyIdentIdentNotFound Resource not found
 
 swagger:response deleteConfigPolicyIdentIdentNotFound
 */
@@ -216,7 +221,8 @@ func (o *DeleteConfigPolicyIdentIdentNotFound) WriteResponse(rw http.ResponseWri
 // DeleteConfigPolicyIdentIdentConflictCode is the HTTP code returned for type DeleteConfigPolicyIdentIdentConflict
 const DeleteConfigPolicyIdentIdentConflictCode int = 409
 
-/*DeleteConfigPolicyIdentIdentConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+DeleteConfigPolicyIdentIdentConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response deleteConfigPolicyIdentIdentConflict
 */
@@ -260,7 +266,8 @@ func (o *DeleteConfigPolicyIdentIdentConflict) WriteResponse(rw http.ResponseWri
 // DeleteConfigPolicyIdentIdentInternalServerErrorCode is the HTTP code returned for type DeleteConfigPolicyIdentIdentInternalServerError
 const DeleteConfigPolicyIdentIdentInternalServerErrorCode int = 500
 
-/*DeleteConfigPolicyIdentIdentInternalServerError Internal service error
+/*
+DeleteConfigPolicyIdentIdentInternalServerError Internal service error
 
 swagger:response deleteConfigPolicyIdentIdentInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *DeleteConfigPolicyIdentIdentInternalServerError) WriteResponse(rw http.
 // DeleteConfigPolicyIdentIdentServiceUnavailableCode is the HTTP code returned for type DeleteConfigPolicyIdentIdentServiceUnavailable
 const DeleteConfigPolicyIdentIdentServiceUnavailableCode int = 503
 
-/*DeleteConfigPolicyIdentIdentServiceUnavailable Maintanence mode
+/*
+DeleteConfigPolicyIdentIdentServiceUnavailable Maintanence mode
 
 swagger:response deleteConfigPolicyIdentIdentServiceUnavailable
 */

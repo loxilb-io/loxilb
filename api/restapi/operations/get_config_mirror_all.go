@@ -36,12 +36,12 @@ func NewGetConfigMirrorAll(ctx *middleware.Context, handler GetConfigMirrorAllHa
 	return &GetConfigMirrorAll{Context: ctx, Handler: handler}
 }
 
-/* GetConfigMirrorAll swagger:route GET /config/mirror/all getConfigMirrorAll
+/*
+	GetConfigMirrorAll swagger:route GET /config/mirror/all getConfigMirrorAll
+
+# Get
 
 Get
-
-Get
-
 */
 type GetConfigMirrorAll struct {
 	Context *middleware.Context

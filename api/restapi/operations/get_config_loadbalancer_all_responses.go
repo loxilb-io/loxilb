@@ -16,7 +16,8 @@ import (
 // GetConfigLoadbalancerAllOKCode is the HTTP code returned for type GetConfigLoadbalancerAllOK
 const GetConfigLoadbalancerAllOKCode int = 200
 
-/*GetConfigLoadbalancerAllOK OK
+/*
+GetConfigLoadbalancerAllOK OK
 
 swagger:response getConfigLoadbalancerAllOK
 */
@@ -60,7 +61,8 @@ func (o *GetConfigLoadbalancerAllOK) WriteResponse(rw http.ResponseWriter, produ
 // GetConfigLoadbalancerAllUnauthorizedCode is the HTTP code returned for type GetConfigLoadbalancerAllUnauthorized
 const GetConfigLoadbalancerAllUnauthorizedCode int = 401
 
-/*GetConfigLoadbalancerAllUnauthorized Invalid authentication credentials
+/*
+GetConfigLoadbalancerAllUnauthorized Invalid authentication credentials
 
 swagger:response getConfigLoadbalancerAllUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *GetConfigLoadbalancerAllUnauthorized) WriteResponse(rw http.ResponseWri
 // GetConfigLoadbalancerAllInternalServerErrorCode is the HTTP code returned for type GetConfigLoadbalancerAllInternalServerError
 const GetConfigLoadbalancerAllInternalServerErrorCode int = 500
 
-/*GetConfigLoadbalancerAllInternalServerError Internal service error
+/*
+GetConfigLoadbalancerAllInternalServerError Internal service error
 
 swagger:response getConfigLoadbalancerAllInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *GetConfigLoadbalancerAllInternalServerError) WriteResponse(rw http.Resp
 // GetConfigLoadbalancerAllServiceUnavailableCode is the HTTP code returned for type GetConfigLoadbalancerAllServiceUnavailable
 const GetConfigLoadbalancerAllServiceUnavailableCode int = 503
 
-/*GetConfigLoadbalancerAllServiceUnavailable Maintanence mode
+/*
+GetConfigLoadbalancerAllServiceUnavailable Maintanence mode
 
 swagger:response getConfigLoadbalancerAllServiceUnavailable
 */

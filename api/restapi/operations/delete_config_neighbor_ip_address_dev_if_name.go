@@ -29,12 +29,12 @@ func NewDeleteConfigNeighborIPAddressDevIfName(ctx *middleware.Context, handler 
 	return &DeleteConfigNeighborIPAddressDevIfName{Context: ctx, Handler: handler}
 }
 
-/* DeleteConfigNeighborIPAddressDevIfName swagger:route DELETE /config/neighbor/{ip_address}/dev/{if_name} deleteConfigNeighborIpAddressDevIfName
+/*
+	DeleteConfigNeighborIPAddressDevIfName swagger:route DELETE /config/neighbor/{ip_address}/dev/{if_name} deleteConfigNeighborIpAddressDevIfName
+
+# Delete IPv4 neighbor in the device
 
 Delete IPv4 neighbor in the device
-
-Delete IPv4 neighbor in the device
-
 */
 type DeleteConfigNeighborIPAddressDevIfName struct {
 	Context *middleware.Context

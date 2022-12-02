@@ -29,12 +29,12 @@ func NewDeleteConfigVlanVlanID(ctx *middleware.Context, handler DeleteConfigVlan
 	return &DeleteConfigVlanVlanID{Context: ctx, Handler: handler}
 }
 
-/* DeleteConfigVlanVlanID swagger:route DELETE /config/vlan/{vlan_id} deleteConfigVlanVlanId
+/*
+	DeleteConfigVlanVlanID swagger:route DELETE /config/vlan/{vlan_id} deleteConfigVlanVlanId
+
+# Delete vlan in the device
 
 Delete vlan in the device
-
-Delete vlan in the device
-
 */
 type DeleteConfigVlanVlanID struct {
 	Context *middleware.Context

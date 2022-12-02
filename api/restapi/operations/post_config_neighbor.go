@@ -29,12 +29,12 @@ func NewPostConfigNeighbor(ctx *middleware.Context, handler PostConfigNeighborHa
 	return &PostConfigNeighbor{Context: ctx, Handler: handler}
 }
 
-/* PostConfigNeighbor swagger:route POST /config/neighbor postConfigNeighbor
+/*
+	PostConfigNeighbor swagger:route POST /config/neighbor postConfigNeighbor
+
+# Assign IPv4 neighbor in the device
 
 Assign IPv4 neighbor in the device
-
-Assign IPv4 neighbor in the device
-
 */
 type PostConfigNeighbor struct {
 	Context *middleware.Context

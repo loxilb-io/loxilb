@@ -2,19 +2,19 @@
 
 // Package restapi Loxilb Rest API
 //
-//  Loxilb REST API for Baremetal Scenarios
-//  Schemes:
-//    http
-//    https
-//  Host: 0.0.0.0:8090
-//  BasePath: /netlox/v1
-//  Version: 0.0.1
+//	Loxilb REST API for Baremetal Scenarios
+//	Schemes:
+//	  http
+//	  https
+//	Host: 0.0.0.0:8090
+//	BasePath: /netlox/v1
+//	Version: 0.0.1
 //
-//  Consumes:
-//    - application/json
+//	Consumes:
+//	  - application/json
 //
-//  Produces:
-//    - application/json
+//	Produces:
+//	  - application/json
 //
 // swagger:meta
 package restapi

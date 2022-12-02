@@ -16,7 +16,8 @@ import (
 // GetConfigTunnelVxlanAllOKCode is the HTTP code returned for type GetConfigTunnelVxlanAllOK
 const GetConfigTunnelVxlanAllOKCode int = 200
 
-/*GetConfigTunnelVxlanAllOK OK
+/*
+GetConfigTunnelVxlanAllOK OK
 
 swagger:response getConfigTunnelVxlanAllOK
 */
@@ -60,7 +61,8 @@ func (o *GetConfigTunnelVxlanAllOK) WriteResponse(rw http.ResponseWriter, produc
 // GetConfigTunnelVxlanAllUnauthorizedCode is the HTTP code returned for type GetConfigTunnelVxlanAllUnauthorized
 const GetConfigTunnelVxlanAllUnauthorizedCode int = 401
 
-/*GetConfigTunnelVxlanAllUnauthorized Invalid authentication credentials
+/*
+GetConfigTunnelVxlanAllUnauthorized Invalid authentication credentials
 
 swagger:response getConfigTunnelVxlanAllUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *GetConfigTunnelVxlanAllUnauthorized) WriteResponse(rw http.ResponseWrit
 // GetConfigTunnelVxlanAllInternalServerErrorCode is the HTTP code returned for type GetConfigTunnelVxlanAllInternalServerError
 const GetConfigTunnelVxlanAllInternalServerErrorCode int = 500
 
-/*GetConfigTunnelVxlanAllInternalServerError Internal service error
+/*
+GetConfigTunnelVxlanAllInternalServerError Internal service error
 
 swagger:response getConfigTunnelVxlanAllInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *GetConfigTunnelVxlanAllInternalServerError) WriteResponse(rw http.Respo
 // GetConfigTunnelVxlanAllServiceUnavailableCode is the HTTP code returned for type GetConfigTunnelVxlanAllServiceUnavailable
 const GetConfigTunnelVxlanAllServiceUnavailableCode int = 503
 
-/*GetConfigTunnelVxlanAllServiceUnavailable Maintanence mode
+/*
+GetConfigTunnelVxlanAllServiceUnavailable Maintanence mode
 
 swagger:response getConfigTunnelVxlanAllServiceUnavailable
 */

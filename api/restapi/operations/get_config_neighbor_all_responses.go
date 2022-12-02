@@ -16,7 +16,8 @@ import (
 // GetConfigNeighborAllOKCode is the HTTP code returned for type GetConfigNeighborAllOK
 const GetConfigNeighborAllOKCode int = 200
 
-/*GetConfigNeighborAllOK OK
+/*
+GetConfigNeighborAllOK OK
 
 swagger:response getConfigNeighborAllOK
 */
@@ -60,7 +61,8 @@ func (o *GetConfigNeighborAllOK) WriteResponse(rw http.ResponseWriter, producer 
 // GetConfigNeighborAllUnauthorizedCode is the HTTP code returned for type GetConfigNeighborAllUnauthorized
 const GetConfigNeighborAllUnauthorizedCode int = 401
 
-/*GetConfigNeighborAllUnauthorized Invalid authentication credentials
+/*
+GetConfigNeighborAllUnauthorized Invalid authentication credentials
 
 swagger:response getConfigNeighborAllUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *GetConfigNeighborAllUnauthorized) WriteResponse(rw http.ResponseWriter,
 // GetConfigNeighborAllInternalServerErrorCode is the HTTP code returned for type GetConfigNeighborAllInternalServerError
 const GetConfigNeighborAllInternalServerErrorCode int = 500
 
-/*GetConfigNeighborAllInternalServerError Internal service error
+/*
+GetConfigNeighborAllInternalServerError Internal service error
 
 swagger:response getConfigNeighborAllInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *GetConfigNeighborAllInternalServerError) WriteResponse(rw http.Response
 // GetConfigNeighborAllServiceUnavailableCode is the HTTP code returned for type GetConfigNeighborAllServiceUnavailable
 const GetConfigNeighborAllServiceUnavailableCode int = 503
 
-/*GetConfigNeighborAllServiceUnavailable Maintanence mode
+/*
+GetConfigNeighborAllServiceUnavailable Maintanence mode
 
 swagger:response getConfigNeighborAllServiceUnavailable
 */

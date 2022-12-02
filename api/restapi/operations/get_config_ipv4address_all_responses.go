@@ -16,7 +16,8 @@ import (
 // GetConfigIpv4addressAllOKCode is the HTTP code returned for type GetConfigIpv4addressAllOK
 const GetConfigIpv4addressAllOKCode int = 200
 
-/*GetConfigIpv4addressAllOK OK
+/*
+GetConfigIpv4addressAllOK OK
 
 swagger:response getConfigIpv4addressAllOK
 */
@@ -60,7 +61,8 @@ func (o *GetConfigIpv4addressAllOK) WriteResponse(rw http.ResponseWriter, produc
 // GetConfigIpv4addressAllUnauthorizedCode is the HTTP code returned for type GetConfigIpv4addressAllUnauthorized
 const GetConfigIpv4addressAllUnauthorizedCode int = 401
 
-/*GetConfigIpv4addressAllUnauthorized Invalid authentication credentials
+/*
+GetConfigIpv4addressAllUnauthorized Invalid authentication credentials
 
 swagger:response getConfigIpv4addressAllUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *GetConfigIpv4addressAllUnauthorized) WriteResponse(rw http.ResponseWrit
 // GetConfigIpv4addressAllInternalServerErrorCode is the HTTP code returned for type GetConfigIpv4addressAllInternalServerError
 const GetConfigIpv4addressAllInternalServerErrorCode int = 500
 
-/*GetConfigIpv4addressAllInternalServerError Internal service error
+/*
+GetConfigIpv4addressAllInternalServerError Internal service error
 
 swagger:response getConfigIpv4addressAllInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *GetConfigIpv4addressAllInternalServerError) WriteResponse(rw http.Respo
 // GetConfigIpv4addressAllServiceUnavailableCode is the HTTP code returned for type GetConfigIpv4addressAllServiceUnavailable
 const GetConfigIpv4addressAllServiceUnavailableCode int = 503
 
-/*GetConfigIpv4addressAllServiceUnavailable Maintanence mode
+/*
+GetConfigIpv4addressAllServiceUnavailable Maintanence mode
 
 swagger:response getConfigIpv4addressAllServiceUnavailable
 */

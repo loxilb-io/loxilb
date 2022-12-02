@@ -36,12 +36,12 @@ func NewGetStatusProcess(ctx *middleware.Context, handler GetStatusProcessHandle
 	return &GetStatusProcess{Context: ctx, Handler: handler}
 }
 
-/* GetStatusProcess swagger:route GET /status/process getStatusProcess
+/*
+	GetStatusProcess swagger:route GET /status/process getStatusProcess
 
-Get a process based on CPU usage info in the device
+# Get a process based on CPU usage info in the device
 
 Get a process based on high usage CPU(linux command "top") in the device or system.
-
 */
 type GetStatusProcess struct {
 	Context *middleware.Context

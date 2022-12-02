@@ -16,7 +16,8 @@ import (
 // DeleteConfigIpv4addressIPAddressMaskDevIfNameNoContentCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressMaskDevIfNameNoContent
 const DeleteConfigIpv4addressIPAddressMaskDevIfNameNoContentCode int = 204
 
-/*DeleteConfigIpv4addressIPAddressMaskDevIfNameNoContent OK
+/*
+DeleteConfigIpv4addressIPAddressMaskDevIfNameNoContent OK
 
 swagger:response deleteConfigIpv4addressIpAddressMaskDevIfNameNoContent
 */
@@ -40,7 +41,8 @@ func (o *DeleteConfigIpv4addressIPAddressMaskDevIfNameNoContent) WriteResponse(r
 // DeleteConfigIpv4addressIPAddressMaskDevIfNameBadRequestCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressMaskDevIfNameBadRequest
 const DeleteConfigIpv4addressIPAddressMaskDevIfNameBadRequestCode int = 400
 
-/*DeleteConfigIpv4addressIPAddressMaskDevIfNameBadRequest Malformed arguments for API call
+/*
+DeleteConfigIpv4addressIPAddressMaskDevIfNameBadRequest Malformed arguments for API call
 
 swagger:response deleteConfigIpv4addressIpAddressMaskDevIfNameBadRequest
 */
@@ -84,7 +86,8 @@ func (o *DeleteConfigIpv4addressIPAddressMaskDevIfNameBadRequest) WriteResponse(
 // DeleteConfigIpv4addressIPAddressMaskDevIfNameUnauthorizedCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressMaskDevIfNameUnauthorized
 const DeleteConfigIpv4addressIPAddressMaskDevIfNameUnauthorizedCode int = 401
 
-/*DeleteConfigIpv4addressIPAddressMaskDevIfNameUnauthorized Invalid authentication credentials
+/*
+DeleteConfigIpv4addressIPAddressMaskDevIfNameUnauthorized Invalid authentication credentials
 
 swagger:response deleteConfigIpv4addressIpAddressMaskDevIfNameUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *DeleteConfigIpv4addressIPAddressMaskDevIfNameUnauthorized) WriteRespons
 // DeleteConfigIpv4addressIPAddressMaskDevIfNameForbiddenCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressMaskDevIfNameForbidden
 const DeleteConfigIpv4addressIPAddressMaskDevIfNameForbiddenCode int = 403
 
-/*DeleteConfigIpv4addressIPAddressMaskDevIfNameForbidden Capacity insufficient
+/*
+DeleteConfigIpv4addressIPAddressMaskDevIfNameForbidden Capacity insufficient
 
 swagger:response deleteConfigIpv4addressIpAddressMaskDevIfNameForbidden
 */
@@ -172,7 +176,8 @@ func (o *DeleteConfigIpv4addressIPAddressMaskDevIfNameForbidden) WriteResponse(r
 // DeleteConfigIpv4addressIPAddressMaskDevIfNameNotFoundCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressMaskDevIfNameNotFound
 const DeleteConfigIpv4addressIPAddressMaskDevIfNameNotFoundCode int = 404
 
-/*DeleteConfigIpv4addressIPAddressMaskDevIfNameNotFound Resource not found
+/*
+DeleteConfigIpv4addressIPAddressMaskDevIfNameNotFound Resource not found
 
 swagger:response deleteConfigIpv4addressIpAddressMaskDevIfNameNotFound
 */
@@ -216,7 +221,8 @@ func (o *DeleteConfigIpv4addressIPAddressMaskDevIfNameNotFound) WriteResponse(rw
 // DeleteConfigIpv4addressIPAddressMaskDevIfNameConflictCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressMaskDevIfNameConflict
 const DeleteConfigIpv4addressIPAddressMaskDevIfNameConflictCode int = 409
 
-/*DeleteConfigIpv4addressIPAddressMaskDevIfNameConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+DeleteConfigIpv4addressIPAddressMaskDevIfNameConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response deleteConfigIpv4addressIpAddressMaskDevIfNameConflict
 */
@@ -260,7 +266,8 @@ func (o *DeleteConfigIpv4addressIPAddressMaskDevIfNameConflict) WriteResponse(rw
 // DeleteConfigIpv4addressIPAddressMaskDevIfNameInternalServerErrorCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressMaskDevIfNameInternalServerError
 const DeleteConfigIpv4addressIPAddressMaskDevIfNameInternalServerErrorCode int = 500
 
-/*DeleteConfigIpv4addressIPAddressMaskDevIfNameInternalServerError Internal service error
+/*
+DeleteConfigIpv4addressIPAddressMaskDevIfNameInternalServerError Internal service error
 
 swagger:response deleteConfigIpv4addressIpAddressMaskDevIfNameInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *DeleteConfigIpv4addressIPAddressMaskDevIfNameInternalServerError) Write
 // DeleteConfigIpv4addressIPAddressMaskDevIfNameServiceUnavailableCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressMaskDevIfNameServiceUnavailable
 const DeleteConfigIpv4addressIPAddressMaskDevIfNameServiceUnavailableCode int = 503
 
-/*DeleteConfigIpv4addressIPAddressMaskDevIfNameServiceUnavailable Maintanence mode
+/*
+DeleteConfigIpv4addressIPAddressMaskDevIfNameServiceUnavailable Maintanence mode
 
 swagger:response deleteConfigIpv4addressIpAddressMaskDevIfNameServiceUnavailable
 */

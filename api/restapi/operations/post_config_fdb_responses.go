@@ -16,7 +16,8 @@ import (
 // PostConfigFdbNoContentCode is the HTTP code returned for type PostConfigFdbNoContent
 const PostConfigFdbNoContentCode int = 204
 
-/*PostConfigFdbNoContent OK
+/*
+PostConfigFdbNoContent OK
 
 swagger:response postConfigFdbNoContent
 */
@@ -40,7 +41,8 @@ func (o *PostConfigFdbNoContent) WriteResponse(rw http.ResponseWriter, producer 
 // PostConfigFdbBadRequestCode is the HTTP code returned for type PostConfigFdbBadRequest
 const PostConfigFdbBadRequestCode int = 400
 
-/*PostConfigFdbBadRequest Malformed arguments for API call
+/*
+PostConfigFdbBadRequest Malformed arguments for API call
 
 swagger:response postConfigFdbBadRequest
 */
@@ -84,7 +86,8 @@ func (o *PostConfigFdbBadRequest) WriteResponse(rw http.ResponseWriter, producer
 // PostConfigFdbUnauthorizedCode is the HTTP code returned for type PostConfigFdbUnauthorized
 const PostConfigFdbUnauthorizedCode int = 401
 
-/*PostConfigFdbUnauthorized Invalid authentication credentials
+/*
+PostConfigFdbUnauthorized Invalid authentication credentials
 
 swagger:response postConfigFdbUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *PostConfigFdbUnauthorized) WriteResponse(rw http.ResponseWriter, produc
 // PostConfigFdbForbiddenCode is the HTTP code returned for type PostConfigFdbForbidden
 const PostConfigFdbForbiddenCode int = 403
 
-/*PostConfigFdbForbidden Capacity insufficient
+/*
+PostConfigFdbForbidden Capacity insufficient
 
 swagger:response postConfigFdbForbidden
 */
@@ -172,7 +176,8 @@ func (o *PostConfigFdbForbidden) WriteResponse(rw http.ResponseWriter, producer 
 // PostConfigFdbNotFoundCode is the HTTP code returned for type PostConfigFdbNotFound
 const PostConfigFdbNotFoundCode int = 404
 
-/*PostConfigFdbNotFound Resource not found
+/*
+PostConfigFdbNotFound Resource not found
 
 swagger:response postConfigFdbNotFound
 */
@@ -216,7 +221,8 @@ func (o *PostConfigFdbNotFound) WriteResponse(rw http.ResponseWriter, producer r
 // PostConfigFdbConflictCode is the HTTP code returned for type PostConfigFdbConflict
 const PostConfigFdbConflictCode int = 409
 
-/*PostConfigFdbConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+PostConfigFdbConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response postConfigFdbConflict
 */
@@ -260,7 +266,8 @@ func (o *PostConfigFdbConflict) WriteResponse(rw http.ResponseWriter, producer r
 // PostConfigFdbInternalServerErrorCode is the HTTP code returned for type PostConfigFdbInternalServerError
 const PostConfigFdbInternalServerErrorCode int = 500
 
-/*PostConfigFdbInternalServerError Internal service error
+/*
+PostConfigFdbInternalServerError Internal service error
 
 swagger:response postConfigFdbInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *PostConfigFdbInternalServerError) WriteResponse(rw http.ResponseWriter,
 // PostConfigFdbServiceUnavailableCode is the HTTP code returned for type PostConfigFdbServiceUnavailable
 const PostConfigFdbServiceUnavailableCode int = 503
 
-/*PostConfigFdbServiceUnavailable Maintanence mode
+/*
+PostConfigFdbServiceUnavailable Maintanence mode
 
 swagger:response postConfigFdbServiceUnavailable
 */

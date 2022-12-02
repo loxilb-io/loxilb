@@ -36,12 +36,12 @@ func NewGetConfigTunnelVxlanAll(ctx *middleware.Context, handler GetConfigTunnel
 	return &GetConfigTunnelVxlanAll{Context: ctx, Handler: handler}
 }
 
-/* GetConfigTunnelVxlanAll swagger:route GET /config/tunnel/vxlan/all getConfigTunnelVxlanAll
+/*
+	GetConfigTunnelVxlanAll swagger:route GET /config/tunnel/vxlan/all getConfigTunnelVxlanAll
 
-Get a list of vxlan configurations
+# Get a list of vxlan configurations
 
 Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.
-
 */
 type GetConfigTunnelVxlanAll struct {
 	Context *middleware.Context
