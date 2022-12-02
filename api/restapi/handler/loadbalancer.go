@@ -24,7 +24,7 @@ import (
 )
 
 func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Load balancer %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var lbRules cmn.LbRuleMod
 
@@ -77,7 +77,7 @@ func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerExternal
 
 func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) middleware.Responder {
 	// Get LB rules
-	tk.LogIt(tk.LogDebug, "[API] Load balancer %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	res, err := ApiHooks.NetLbRuleGet()
 	if err != nil {
@@ -115,7 +115,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 	return operations.NewGetConfigLoadbalancerAllOK().WithPayload(&operations.GetConfigLoadbalancerAllOKBody{LbAttr: result})
 }
 func ConfigDeleteAllLoadbalancer(params operations.DeleteConfigLoadbalancerAllParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Load balancer %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	res, err := ApiHooks.NetLbRuleGet()
 	if err != nil {

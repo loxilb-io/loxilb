@@ -23,7 +23,7 @@ import (
 )
 
 func ConfigPostVLAN(params operations.PostConfigVlanParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] FDB %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.AddVLANNoHook(int(params.Attr.Vid))
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
@@ -32,7 +32,7 @@ func ConfigPostVLAN(params operations.PostConfigVlanParams) middleware.Responder
 }
 
 func ConfigDeleteVLAN(params operations.DeleteConfigVlanVlanIDParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] FDB %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.DelVLANNoHook(int(params.VlanID))
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
@@ -41,7 +41,7 @@ func ConfigDeleteVLAN(params operations.DeleteConfigVlanVlanIDParams) middleware
 }
 
 func ConfigPostVLANMember(params operations.PostConfigVlanVlanIDMemberParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] FDB %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.AddVLANMemberNoHook(int(params.VlanID), params.Attr.Dev, params.Attr.Tagged)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
@@ -50,7 +50,7 @@ func ConfigPostVLANMember(params operations.PostConfigVlanVlanIDMemberParams) mi
 }
 
 func ConfigDeleteVLANMember(params operations.DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] FDB %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.DelVLANMemberNoHook(int(params.VlanID), params.IfName, params.Tagged)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
@@ -59,7 +59,7 @@ func ConfigDeleteVLANMember(params operations.DeleteConfigVlanVlanIDMemberIfName
 }
 
 // func ConfigGetVLAN(params operations.GetConfigFDBAllParams) middleware.Responder {
-// 	tk.LogIt(tk.LogDebug, "[API] FDB   %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+// 	tk.LogIt(tk.LogDebug, "[API] FDB   %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 // 	res, _ := ApiHooks.NetIpv4AddrGet()
 // 	var result []*models.FDBGetEntry
 // 	result = make([]*models.FDBGetEntry, 0)

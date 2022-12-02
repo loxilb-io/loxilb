@@ -25,7 +25,7 @@ import (
 )
 
 func ConfigPostPolicy(params operations.PostConfigPolicyParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Policy %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] Policy %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var polMod cmn.PolMod
 
@@ -60,7 +60,7 @@ func ConfigPostPolicy(params operations.PostConfigPolicyParams) middleware.Respo
 }
 
 func ConfigDeletePolicy(params operations.DeleteConfigPolicyIdentIdentParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Policy %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] Policy %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var polMod cmn.PolMod
 
 	polMod.Ident = params.Ident
@@ -75,7 +75,7 @@ func ConfigDeletePolicy(params operations.DeleteConfigPolicyIdentIdentParams) mi
 }
 
 func ConfigGetPolicy(params operations.GetConfigPolicyAllParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Policy %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] Policy %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	res, err := ApiHooks.NetPolicerGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)

@@ -26,7 +26,7 @@ import (
 )
 
 func ConfigPostIPv4Address(params operations.PostConfigIpv4addressParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] IPv4 address %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] IPv4 address %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.AddAddrNoHook(params.Attr.IPAddress, params.Attr.Dev)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
@@ -35,7 +35,7 @@ func ConfigPostIPv4Address(params operations.PostConfigIpv4addressParams) middle
 }
 
 func ConfigDeleteIPv4Address(params operations.DeleteConfigIpv4addressIPAddressMaskDevIfNameParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] IPv4 address   %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] IPv4 address   %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ipNet := fmt.Sprintf("%s/%s", params.IPAddress, params.Mask)
 	ret := loxinlp.DelAddrNoHook(ipNet, params.IfName)
 	if ret != 0 {
@@ -45,7 +45,7 @@ func ConfigDeleteIPv4Address(params operations.DeleteConfigIpv4addressIPAddressM
 }
 
 func ConfigGetIPv4Address(params operations.GetConfigIpv4addressAllParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] IPv4 address   %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] IPv4 address   %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	res, _ := ApiHooks.NetIpv4AddrGet()
 	var result []*models.IPV4AddressGetEntry
 	result = make([]*models.IPV4AddressGetEntry, 0)

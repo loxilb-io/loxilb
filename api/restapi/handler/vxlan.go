@@ -23,7 +23,7 @@ import (
 )
 
 func ConfigPostVxLAN(params operations.PostConfigTunnelVxlanParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] FDB %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.AddVxLANBridgeNoHook(int(params.Attr.VxlanID), params.Attr.EpIntf)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
@@ -32,7 +32,7 @@ func ConfigPostVxLAN(params operations.PostConfigTunnelVxlanParams) middleware.R
 }
 
 func ConfigDeleteVxLAN(params operations.DeleteConfigTunnelVxlanVxlanIDParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] FDB %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.DelVxLANNoHook(int(params.VxlanID))
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
@@ -41,7 +41,7 @@ func ConfigDeleteVxLAN(params operations.DeleteConfigTunnelVxlanVxlanIDParams) m
 }
 
 func ConfigPostVxLANPeer(params operations.PostConfigTunnelVxlanVxlanIDPeerParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] FDB %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.AddVxLANPeerNoHook(int(params.VxlanID), params.Attr.PeerIP)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
@@ -50,7 +50,7 @@ func ConfigPostVxLANPeer(params operations.PostConfigTunnelVxlanVxlanIDPeerParam
 }
 
 func ConfigDeleteVxLANPeer(params operations.DeleteConfigTunnelVxlanVxlanIDPeerPeerIPParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] FDB %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.DelVxLANPeerNoHook(int(params.VxlanID), params.PeerIP)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}

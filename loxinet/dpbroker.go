@@ -547,7 +547,6 @@ func (dp *DpH) DpMapGetCt4() []cmn.CtInfo {
 				Proto: dCti.Proto, CState: dCti.CState, CAct: dCti.CAct,
 				Pkts: dCti.Packets, Bytes: dCti.Bytes}
 			CtInfoArr = append(CtInfoArr, cti)
-			fmt.Println(CtInfoArr)
 		}
 	}
 
