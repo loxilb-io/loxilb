@@ -32,6 +32,7 @@ do
     sleep 2
 done
 
+SERVICE="nc"
 $hexec l3ep1 iperf -s -p 8080 >> /dev/null 2>&1 &
 $hexec l3ep2 iperf -s -p 8080 >> /dev/null 2>&1 &
 $hexec l3ep3 iperf -s -p 8080 >> /dev/null 2>&1 &
@@ -39,11 +40,19 @@ sleep 30
 $hexec l3h1 nohup nc -d 20.20.20.1 2020 >> /dev/null 2>&1 &
 ncpid=$!
 
+sleep 10
+if pgrep -x "$SERVICE" >/dev/null
+then
+    echo $SERVICE is UP
+else
+    echo $SERVICE is DOWN
+    exit 1
+fi
+
 sleep 300
 
 # By default after 4m, loxilb will send reset after inactivity
 
-SERVICE="nc"
 code=0
 if pgrep -x "$SERVICE" >/dev/null
 then
