@@ -29,12 +29,12 @@ func NewPostConfigVlan(ctx *middleware.Context, handler PostConfigVlanHandler) *
 	return &PostConfigVlan{Context: ctx, Handler: handler}
 }
 
-/* PostConfigVlan swagger:route POST /config/vlan postConfigVlan
+/*
+	PostConfigVlan swagger:route POST /config/vlan postConfigVlan
+
+# Create vlan interface in the device
 
 Create vlan interface in the device
-
-Create vlan interface in the device
-
 */
 type PostConfigVlan struct {
 	Context *middleware.Context

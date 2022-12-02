@@ -29,12 +29,12 @@ func NewDeleteConfigTunnelVxlanVxlanIDPeerPeerIP(ctx *middleware.Context, handle
 	return &DeleteConfigTunnelVxlanVxlanIDPeerPeerIP{Context: ctx, Handler: handler}
 }
 
-/* DeleteConfigTunnelVxlanVxlanIDPeerPeerIP swagger:route DELETE /config/tunnel/vxlan/{vxlanID}/peer/{PeerIP} deleteConfigTunnelVxlanVxlanIdPeerPeerIp
+/*
+	DeleteConfigTunnelVxlanVxlanIDPeerPeerIP swagger:route DELETE /config/tunnel/vxlan/{vxlanID}/peer/{PeerIP} deleteConfigTunnelVxlanVxlanIdPeerPeerIp
 
-Remove a one of vxlan remote(peer) ip address configuration
+# Remove a one of vxlan remote(peer) ip address configuration
 
 Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.
-
 */
 type DeleteConfigTunnelVxlanVxlanIDPeerPeerIP struct {
 	Context *middleware.Context

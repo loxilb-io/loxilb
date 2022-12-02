@@ -16,7 +16,8 @@ import (
 // PostConfigMirrorNoContentCode is the HTTP code returned for type PostConfigMirrorNoContent
 const PostConfigMirrorNoContentCode int = 204
 
-/*PostConfigMirrorNoContent OK
+/*
+PostConfigMirrorNoContent OK
 
 swagger:response postConfigMirrorNoContent
 */
@@ -40,7 +41,8 @@ func (o *PostConfigMirrorNoContent) WriteResponse(rw http.ResponseWriter, produc
 // PostConfigMirrorBadRequestCode is the HTTP code returned for type PostConfigMirrorBadRequest
 const PostConfigMirrorBadRequestCode int = 400
 
-/*PostConfigMirrorBadRequest Malformed arguments for API call
+/*
+PostConfigMirrorBadRequest Malformed arguments for API call
 
 swagger:response postConfigMirrorBadRequest
 */
@@ -84,7 +86,8 @@ func (o *PostConfigMirrorBadRequest) WriteResponse(rw http.ResponseWriter, produ
 // PostConfigMirrorUnauthorizedCode is the HTTP code returned for type PostConfigMirrorUnauthorized
 const PostConfigMirrorUnauthorizedCode int = 401
 
-/*PostConfigMirrorUnauthorized Invalid authentication credentials
+/*
+PostConfigMirrorUnauthorized Invalid authentication credentials
 
 swagger:response postConfigMirrorUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *PostConfigMirrorUnauthorized) WriteResponse(rw http.ResponseWriter, pro
 // PostConfigMirrorForbiddenCode is the HTTP code returned for type PostConfigMirrorForbidden
 const PostConfigMirrorForbiddenCode int = 403
 
-/*PostConfigMirrorForbidden Capacity insufficient
+/*
+PostConfigMirrorForbidden Capacity insufficient
 
 swagger:response postConfigMirrorForbidden
 */
@@ -172,7 +176,8 @@ func (o *PostConfigMirrorForbidden) WriteResponse(rw http.ResponseWriter, produc
 // PostConfigMirrorNotFoundCode is the HTTP code returned for type PostConfigMirrorNotFound
 const PostConfigMirrorNotFoundCode int = 404
 
-/*PostConfigMirrorNotFound Resource not found
+/*
+PostConfigMirrorNotFound Resource not found
 
 swagger:response postConfigMirrorNotFound
 */
@@ -216,7 +221,8 @@ func (o *PostConfigMirrorNotFound) WriteResponse(rw http.ResponseWriter, produce
 // PostConfigMirrorConflictCode is the HTTP code returned for type PostConfigMirrorConflict
 const PostConfigMirrorConflictCode int = 409
 
-/*PostConfigMirrorConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+PostConfigMirrorConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response postConfigMirrorConflict
 */
@@ -260,7 +266,8 @@ func (o *PostConfigMirrorConflict) WriteResponse(rw http.ResponseWriter, produce
 // PostConfigMirrorInternalServerErrorCode is the HTTP code returned for type PostConfigMirrorInternalServerError
 const PostConfigMirrorInternalServerErrorCode int = 500
 
-/*PostConfigMirrorInternalServerError Internal service error
+/*
+PostConfigMirrorInternalServerError Internal service error
 
 swagger:response postConfigMirrorInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *PostConfigMirrorInternalServerError) WriteResponse(rw http.ResponseWrit
 // PostConfigMirrorServiceUnavailableCode is the HTTP code returned for type PostConfigMirrorServiceUnavailable
 const PostConfigMirrorServiceUnavailableCode int = 503
 
-/*PostConfigMirrorServiceUnavailable Maintanence mode
+/*
+PostConfigMirrorServiceUnavailable Maintanence mode
 
 swagger:response postConfigMirrorServiceUnavailable
 */

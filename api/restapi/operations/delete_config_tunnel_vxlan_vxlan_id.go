@@ -29,12 +29,12 @@ func NewDeleteConfigTunnelVxlanVxlanID(ctx *middleware.Context, handler DeleteCo
 	return &DeleteConfigTunnelVxlanVxlanID{Context: ctx, Handler: handler}
 }
 
-/* DeleteConfigTunnelVxlanVxlanID swagger:route DELETE /config/tunnel/vxlan/{vxlanID} deleteConfigTunnelVxlanVxlanId
+/*
+	DeleteConfigTunnelVxlanVxlanID swagger:route DELETE /config/tunnel/vxlan/{vxlanID} deleteConfigTunnelVxlanVxlanId
 
-Delete a one of vxlan configuration
+# Delete a one of vxlan configuration
 
 Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.
-
 */
 type DeleteConfigTunnelVxlanVxlanID struct {
 	Context *middleware.Context

@@ -16,7 +16,8 @@ import (
 // DeleteConfigRouteDestinationIPNetIPAddressMaskNoContentCode is the HTTP code returned for type DeleteConfigRouteDestinationIPNetIPAddressMaskNoContent
 const DeleteConfigRouteDestinationIPNetIPAddressMaskNoContentCode int = 204
 
-/*DeleteConfigRouteDestinationIPNetIPAddressMaskNoContent OK
+/*
+DeleteConfigRouteDestinationIPNetIPAddressMaskNoContent OK
 
 swagger:response deleteConfigRouteDestinationIpNetIpAddressMaskNoContent
 */
@@ -40,7 +41,8 @@ func (o *DeleteConfigRouteDestinationIPNetIPAddressMaskNoContent) WriteResponse(
 // DeleteConfigRouteDestinationIPNetIPAddressMaskBadRequestCode is the HTTP code returned for type DeleteConfigRouteDestinationIPNetIPAddressMaskBadRequest
 const DeleteConfigRouteDestinationIPNetIPAddressMaskBadRequestCode int = 400
 
-/*DeleteConfigRouteDestinationIPNetIPAddressMaskBadRequest Malformed arguments for API call
+/*
+DeleteConfigRouteDestinationIPNetIPAddressMaskBadRequest Malformed arguments for API call
 
 swagger:response deleteConfigRouteDestinationIpNetIpAddressMaskBadRequest
 */
@@ -84,7 +86,8 @@ func (o *DeleteConfigRouteDestinationIPNetIPAddressMaskBadRequest) WriteResponse
 // DeleteConfigRouteDestinationIPNetIPAddressMaskUnauthorizedCode is the HTTP code returned for type DeleteConfigRouteDestinationIPNetIPAddressMaskUnauthorized
 const DeleteConfigRouteDestinationIPNetIPAddressMaskUnauthorizedCode int = 401
 
-/*DeleteConfigRouteDestinationIPNetIPAddressMaskUnauthorized Invalid authentication credentials
+/*
+DeleteConfigRouteDestinationIPNetIPAddressMaskUnauthorized Invalid authentication credentials
 
 swagger:response deleteConfigRouteDestinationIpNetIpAddressMaskUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *DeleteConfigRouteDestinationIPNetIPAddressMaskUnauthorized) WriteRespon
 // DeleteConfigRouteDestinationIPNetIPAddressMaskForbiddenCode is the HTTP code returned for type DeleteConfigRouteDestinationIPNetIPAddressMaskForbidden
 const DeleteConfigRouteDestinationIPNetIPAddressMaskForbiddenCode int = 403
 
-/*DeleteConfigRouteDestinationIPNetIPAddressMaskForbidden Capacity insufficient
+/*
+DeleteConfigRouteDestinationIPNetIPAddressMaskForbidden Capacity insufficient
 
 swagger:response deleteConfigRouteDestinationIpNetIpAddressMaskForbidden
 */
@@ -172,7 +176,8 @@ func (o *DeleteConfigRouteDestinationIPNetIPAddressMaskForbidden) WriteResponse(
 // DeleteConfigRouteDestinationIPNetIPAddressMaskNotFoundCode is the HTTP code returned for type DeleteConfigRouteDestinationIPNetIPAddressMaskNotFound
 const DeleteConfigRouteDestinationIPNetIPAddressMaskNotFoundCode int = 404
 
-/*DeleteConfigRouteDestinationIPNetIPAddressMaskNotFound Resource not found
+/*
+DeleteConfigRouteDestinationIPNetIPAddressMaskNotFound Resource not found
 
 swagger:response deleteConfigRouteDestinationIpNetIpAddressMaskNotFound
 */
@@ -216,7 +221,8 @@ func (o *DeleteConfigRouteDestinationIPNetIPAddressMaskNotFound) WriteResponse(r
 // DeleteConfigRouteDestinationIPNetIPAddressMaskConflictCode is the HTTP code returned for type DeleteConfigRouteDestinationIPNetIPAddressMaskConflict
 const DeleteConfigRouteDestinationIPNetIPAddressMaskConflictCode int = 409
 
-/*DeleteConfigRouteDestinationIPNetIPAddressMaskConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+DeleteConfigRouteDestinationIPNetIPAddressMaskConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response deleteConfigRouteDestinationIpNetIpAddressMaskConflict
 */
@@ -260,7 +266,8 @@ func (o *DeleteConfigRouteDestinationIPNetIPAddressMaskConflict) WriteResponse(r
 // DeleteConfigRouteDestinationIPNetIPAddressMaskInternalServerErrorCode is the HTTP code returned for type DeleteConfigRouteDestinationIPNetIPAddressMaskInternalServerError
 const DeleteConfigRouteDestinationIPNetIPAddressMaskInternalServerErrorCode int = 500
 
-/*DeleteConfigRouteDestinationIPNetIPAddressMaskInternalServerError Internal service error
+/*
+DeleteConfigRouteDestinationIPNetIPAddressMaskInternalServerError Internal service error
 
 swagger:response deleteConfigRouteDestinationIpNetIpAddressMaskInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *DeleteConfigRouteDestinationIPNetIPAddressMaskInternalServerError) Writ
 // DeleteConfigRouteDestinationIPNetIPAddressMaskServiceUnavailableCode is the HTTP code returned for type DeleteConfigRouteDestinationIPNetIPAddressMaskServiceUnavailable
 const DeleteConfigRouteDestinationIPNetIPAddressMaskServiceUnavailableCode int = 503
 
-/*DeleteConfigRouteDestinationIPNetIPAddressMaskServiceUnavailable Maintanence mode
+/*
+DeleteConfigRouteDestinationIPNetIPAddressMaskServiceUnavailable Maintanence mode
 
 swagger:response deleteConfigRouteDestinationIpNetIpAddressMaskServiceUnavailable
 */

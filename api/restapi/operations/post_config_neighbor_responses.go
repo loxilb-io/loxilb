@@ -16,7 +16,8 @@ import (
 // PostConfigNeighborNoContentCode is the HTTP code returned for type PostConfigNeighborNoContent
 const PostConfigNeighborNoContentCode int = 204
 
-/*PostConfigNeighborNoContent OK
+/*
+PostConfigNeighborNoContent OK
 
 swagger:response postConfigNeighborNoContent
 */
@@ -40,7 +41,8 @@ func (o *PostConfigNeighborNoContent) WriteResponse(rw http.ResponseWriter, prod
 // PostConfigNeighborBadRequestCode is the HTTP code returned for type PostConfigNeighborBadRequest
 const PostConfigNeighborBadRequestCode int = 400
 
-/*PostConfigNeighborBadRequest Malformed arguments for API call
+/*
+PostConfigNeighborBadRequest Malformed arguments for API call
 
 swagger:response postConfigNeighborBadRequest
 */
@@ -84,7 +86,8 @@ func (o *PostConfigNeighborBadRequest) WriteResponse(rw http.ResponseWriter, pro
 // PostConfigNeighborUnauthorizedCode is the HTTP code returned for type PostConfigNeighborUnauthorized
 const PostConfigNeighborUnauthorizedCode int = 401
 
-/*PostConfigNeighborUnauthorized Invalid authentication credentials
+/*
+PostConfigNeighborUnauthorized Invalid authentication credentials
 
 swagger:response postConfigNeighborUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *PostConfigNeighborUnauthorized) WriteResponse(rw http.ResponseWriter, p
 // PostConfigNeighborForbiddenCode is the HTTP code returned for type PostConfigNeighborForbidden
 const PostConfigNeighborForbiddenCode int = 403
 
-/*PostConfigNeighborForbidden Capacity insufficient
+/*
+PostConfigNeighborForbidden Capacity insufficient
 
 swagger:response postConfigNeighborForbidden
 */
@@ -172,7 +176,8 @@ func (o *PostConfigNeighborForbidden) WriteResponse(rw http.ResponseWriter, prod
 // PostConfigNeighborNotFoundCode is the HTTP code returned for type PostConfigNeighborNotFound
 const PostConfigNeighborNotFoundCode int = 404
 
-/*PostConfigNeighborNotFound Resource not found
+/*
+PostConfigNeighborNotFound Resource not found
 
 swagger:response postConfigNeighborNotFound
 */
@@ -216,7 +221,8 @@ func (o *PostConfigNeighborNotFound) WriteResponse(rw http.ResponseWriter, produ
 // PostConfigNeighborConflictCode is the HTTP code returned for type PostConfigNeighborConflict
 const PostConfigNeighborConflictCode int = 409
 
-/*PostConfigNeighborConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+PostConfigNeighborConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response postConfigNeighborConflict
 */
@@ -260,7 +266,8 @@ func (o *PostConfigNeighborConflict) WriteResponse(rw http.ResponseWriter, produ
 // PostConfigNeighborInternalServerErrorCode is the HTTP code returned for type PostConfigNeighborInternalServerError
 const PostConfigNeighborInternalServerErrorCode int = 500
 
-/*PostConfigNeighborInternalServerError Internal service error
+/*
+PostConfigNeighborInternalServerError Internal service error
 
 swagger:response postConfigNeighborInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *PostConfigNeighborInternalServerError) WriteResponse(rw http.ResponseWr
 // PostConfigNeighborServiceUnavailableCode is the HTTP code returned for type PostConfigNeighborServiceUnavailable
 const PostConfigNeighborServiceUnavailableCode int = 503
 
-/*PostConfigNeighborServiceUnavailable Maintanence mode
+/*
+PostConfigNeighborServiceUnavailable Maintanence mode
 
 swagger:response postConfigNeighborServiceUnavailable
 */

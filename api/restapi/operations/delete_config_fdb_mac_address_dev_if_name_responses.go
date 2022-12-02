@@ -16,7 +16,8 @@ import (
 // DeleteConfigFdbMacAddressDevIfNameNoContentCode is the HTTP code returned for type DeleteConfigFdbMacAddressDevIfNameNoContent
 const DeleteConfigFdbMacAddressDevIfNameNoContentCode int = 204
 
-/*DeleteConfigFdbMacAddressDevIfNameNoContent OK
+/*
+DeleteConfigFdbMacAddressDevIfNameNoContent OK
 
 swagger:response deleteConfigFdbMacAddressDevIfNameNoContent
 */
@@ -40,7 +41,8 @@ func (o *DeleteConfigFdbMacAddressDevIfNameNoContent) WriteResponse(rw http.Resp
 // DeleteConfigFdbMacAddressDevIfNameBadRequestCode is the HTTP code returned for type DeleteConfigFdbMacAddressDevIfNameBadRequest
 const DeleteConfigFdbMacAddressDevIfNameBadRequestCode int = 400
 
-/*DeleteConfigFdbMacAddressDevIfNameBadRequest Malformed arguments for API call
+/*
+DeleteConfigFdbMacAddressDevIfNameBadRequest Malformed arguments for API call
 
 swagger:response deleteConfigFdbMacAddressDevIfNameBadRequest
 */
@@ -84,7 +86,8 @@ func (o *DeleteConfigFdbMacAddressDevIfNameBadRequest) WriteResponse(rw http.Res
 // DeleteConfigFdbMacAddressDevIfNameUnauthorizedCode is the HTTP code returned for type DeleteConfigFdbMacAddressDevIfNameUnauthorized
 const DeleteConfigFdbMacAddressDevIfNameUnauthorizedCode int = 401
 
-/*DeleteConfigFdbMacAddressDevIfNameUnauthorized Invalid authentication credentials
+/*
+DeleteConfigFdbMacAddressDevIfNameUnauthorized Invalid authentication credentials
 
 swagger:response deleteConfigFdbMacAddressDevIfNameUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *DeleteConfigFdbMacAddressDevIfNameUnauthorized) WriteResponse(rw http.R
 // DeleteConfigFdbMacAddressDevIfNameForbiddenCode is the HTTP code returned for type DeleteConfigFdbMacAddressDevIfNameForbidden
 const DeleteConfigFdbMacAddressDevIfNameForbiddenCode int = 403
 
-/*DeleteConfigFdbMacAddressDevIfNameForbidden Capacity insufficient
+/*
+DeleteConfigFdbMacAddressDevIfNameForbidden Capacity insufficient
 
 swagger:response deleteConfigFdbMacAddressDevIfNameForbidden
 */
@@ -172,7 +176,8 @@ func (o *DeleteConfigFdbMacAddressDevIfNameForbidden) WriteResponse(rw http.Resp
 // DeleteConfigFdbMacAddressDevIfNameNotFoundCode is the HTTP code returned for type DeleteConfigFdbMacAddressDevIfNameNotFound
 const DeleteConfigFdbMacAddressDevIfNameNotFoundCode int = 404
 
-/*DeleteConfigFdbMacAddressDevIfNameNotFound Resource not found
+/*
+DeleteConfigFdbMacAddressDevIfNameNotFound Resource not found
 
 swagger:response deleteConfigFdbMacAddressDevIfNameNotFound
 */
@@ -216,7 +221,8 @@ func (o *DeleteConfigFdbMacAddressDevIfNameNotFound) WriteResponse(rw http.Respo
 // DeleteConfigFdbMacAddressDevIfNameConflictCode is the HTTP code returned for type DeleteConfigFdbMacAddressDevIfNameConflict
 const DeleteConfigFdbMacAddressDevIfNameConflictCode int = 409
 
-/*DeleteConfigFdbMacAddressDevIfNameConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+DeleteConfigFdbMacAddressDevIfNameConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response deleteConfigFdbMacAddressDevIfNameConflict
 */
@@ -260,7 +266,8 @@ func (o *DeleteConfigFdbMacAddressDevIfNameConflict) WriteResponse(rw http.Respo
 // DeleteConfigFdbMacAddressDevIfNameInternalServerErrorCode is the HTTP code returned for type DeleteConfigFdbMacAddressDevIfNameInternalServerError
 const DeleteConfigFdbMacAddressDevIfNameInternalServerErrorCode int = 500
 
-/*DeleteConfigFdbMacAddressDevIfNameInternalServerError Internal service error
+/*
+DeleteConfigFdbMacAddressDevIfNameInternalServerError Internal service error
 
 swagger:response deleteConfigFdbMacAddressDevIfNameInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *DeleteConfigFdbMacAddressDevIfNameInternalServerError) WriteResponse(rw
 // DeleteConfigFdbMacAddressDevIfNameServiceUnavailableCode is the HTTP code returned for type DeleteConfigFdbMacAddressDevIfNameServiceUnavailable
 const DeleteConfigFdbMacAddressDevIfNameServiceUnavailableCode int = 503
 
-/*DeleteConfigFdbMacAddressDevIfNameServiceUnavailable Maintanence mode
+/*
+DeleteConfigFdbMacAddressDevIfNameServiceUnavailable Maintanence mode
 
 swagger:response deleteConfigFdbMacAddressDevIfNameServiceUnavailable
 */

@@ -16,7 +16,8 @@ import (
 // DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedNoContentCode is the HTTP code returned for type DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedNoContent
 const DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedNoContentCode int = 204
 
-/*DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedNoContent OK
+/*
+DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedNoContent OK
 
 swagger:response deleteConfigVlanVlanIdMemberIfNameTaggedTaggedNoContent
 */
@@ -40,7 +41,8 @@ func (o *DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedNoContent) WriteResponse(
 // DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedBadRequestCode is the HTTP code returned for type DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedBadRequest
 const DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedBadRequestCode int = 400
 
-/*DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedBadRequest Malformed arguments for API call
+/*
+DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedBadRequest Malformed arguments for API call
 
 swagger:response deleteConfigVlanVlanIdMemberIfNameTaggedTaggedBadRequest
 */
@@ -84,7 +86,8 @@ func (o *DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedBadRequest) WriteResponse
 // DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedUnauthorizedCode is the HTTP code returned for type DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedUnauthorized
 const DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedUnauthorizedCode int = 401
 
-/*DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedUnauthorized Invalid authentication credentials
+/*
+DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedUnauthorized Invalid authentication credentials
 
 swagger:response deleteConfigVlanVlanIdMemberIfNameTaggedTaggedUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedUnauthorized) WriteRespon
 // DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedNotFoundCode is the HTTP code returned for type DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedNotFound
 const DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedNotFoundCode int = 404
 
-/*DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedNotFound Vlan interface is not defined/Vlan member is not found on this Vlan interface
+/*
+DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedNotFound Vlan interface is not defined/Vlan member is not found on this Vlan interface
 
 swagger:response deleteConfigVlanVlanIdMemberIfNameTaggedTaggedNotFound
 */
@@ -172,7 +176,8 @@ func (o *DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedNotFound) WriteResponse(r
 // DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedInternalServerErrorCode is the HTTP code returned for type DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedInternalServerError
 const DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedInternalServerErrorCode int = 500
 
-/*DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedInternalServerError Internal service error
+/*
+DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedInternalServerError Internal service error
 
 swagger:response deleteConfigVlanVlanIdMemberIfNameTaggedTaggedInternalServerError
 */
@@ -216,7 +221,8 @@ func (o *DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedInternalServerError) Writ
 // DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedServiceUnavailableCode is the HTTP code returned for type DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedServiceUnavailable
 const DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedServiceUnavailableCode int = 503
 
-/*DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedServiceUnavailable Maintanence mode
+/*
+DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedServiceUnavailable Maintanence mode
 
 swagger:response deleteConfigVlanVlanIdMemberIfNameTaggedTaggedServiceUnavailable
 */

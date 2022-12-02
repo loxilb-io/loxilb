@@ -36,12 +36,12 @@ func NewGetConfigConntrackAll(ctx *middleware.Context, handler GetConfigConntrac
 	return &GetConfigConntrackAll{Context: ctx, Handler: handler}
 }
 
-/* GetConfigConntrackAll swagger:route GET /config/conntrack/all getConfigConntrackAll
+/*
+	GetConfigConntrackAll swagger:route GET /config/conntrack/all getConfigConntrackAll
 
 Get all of the conntrack entries.
 
 Get all of the conntrack infomation for all of the service.
-
 */
 type GetConfigConntrackAll struct {
 	Context *middleware.Context

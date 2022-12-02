@@ -36,12 +36,12 @@ func NewGetConfigNeighborAll(ctx *middleware.Context, handler GetConfigNeighborA
 	return &GetConfigNeighborAll{Context: ctx, Handler: handler}
 }
 
-/* GetConfigNeighborAll swagger:route GET /config/neighbor/all getConfigNeighborAll
+/*
+	GetConfigNeighborAll swagger:route GET /config/neighbor/all getConfigNeighborAll
 
 Get IPv4 neighbor in the device(interface)
 
 Get IPv4 neighbor in the device(interface)
-
 */
 type GetConfigNeighborAll struct {
 	Context *middleware.Context

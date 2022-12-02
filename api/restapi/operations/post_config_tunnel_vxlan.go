@@ -29,12 +29,12 @@ func NewPostConfigTunnelVxlan(ctx *middleware.Context, handler PostConfigTunnelV
 	return &PostConfigTunnelVxlan{Context: ctx, Handler: handler}
 }
 
-/* PostConfigTunnelVxlan swagger:route POST /config/tunnel/vxlan postConfigTunnelVxlan
+/*
+	PostConfigTunnelVxlan swagger:route POST /config/tunnel/vxlan postConfigTunnelVxlan
 
-Add a one of vxlan configuration
+# Add a one of vxlan configuration
 
 Return a list of existing tunnels of a type. If there're no tunnels to return, empty list will be returned.
-
 */
 type PostConfigTunnelVxlan struct {
 	Context *middleware.Context

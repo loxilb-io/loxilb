@@ -29,12 +29,12 @@ func NewPostConfigSessionulcl(ctx *middleware.Context, handler PostConfigSession
 	return &PostConfigSessionulcl{Context: ctx, Handler: handler}
 }
 
-/* PostConfigSessionulcl swagger:route POST /config/sessionulcl postConfigSessionulcl
+/*
+	PostConfigSessionulcl swagger:route POST /config/sessionulcl postConfigSessionulcl
 
-Create a new session config
+# Create a new session config
 
 Create a new session config for 5G.
-
 */
 type PostConfigSessionulcl struct {
 	Context *middleware.Context

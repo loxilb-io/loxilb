@@ -16,7 +16,8 @@ import (
 // PostConfigTunnelVxlanVxlanIDPeerOKCode is the HTTP code returned for type PostConfigTunnelVxlanVxlanIDPeerOK
 const PostConfigTunnelVxlanVxlanIDPeerOKCode int = 200
 
-/*PostConfigTunnelVxlanVxlanIDPeerOK OK
+/*
+PostConfigTunnelVxlanVxlanIDPeerOK OK
 
 swagger:response postConfigTunnelVxlanVxlanIdPeerOK
 */
@@ -60,7 +61,8 @@ func (o *PostConfigTunnelVxlanVxlanIDPeerOK) WriteResponse(rw http.ResponseWrite
 // PostConfigTunnelVxlanVxlanIDPeerUnauthorizedCode is the HTTP code returned for type PostConfigTunnelVxlanVxlanIDPeerUnauthorized
 const PostConfigTunnelVxlanVxlanIDPeerUnauthorizedCode int = 401
 
-/*PostConfigTunnelVxlanVxlanIDPeerUnauthorized Invalid authentication credentials
+/*
+PostConfigTunnelVxlanVxlanIDPeerUnauthorized Invalid authentication credentials
 
 swagger:response postConfigTunnelVxlanVxlanIdPeerUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *PostConfigTunnelVxlanVxlanIDPeerUnauthorized) WriteResponse(rw http.Res
 // PostConfigTunnelVxlanVxlanIDPeerInternalServerErrorCode is the HTTP code returned for type PostConfigTunnelVxlanVxlanIDPeerInternalServerError
 const PostConfigTunnelVxlanVxlanIDPeerInternalServerErrorCode int = 500
 
-/*PostConfigTunnelVxlanVxlanIDPeerInternalServerError Internal service error
+/*
+PostConfigTunnelVxlanVxlanIDPeerInternalServerError Internal service error
 
 swagger:response postConfigTunnelVxlanVxlanIdPeerInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *PostConfigTunnelVxlanVxlanIDPeerInternalServerError) WriteResponse(rw h
 // PostConfigTunnelVxlanVxlanIDPeerServiceUnavailableCode is the HTTP code returned for type PostConfigTunnelVxlanVxlanIDPeerServiceUnavailable
 const PostConfigTunnelVxlanVxlanIDPeerServiceUnavailableCode int = 503
 
-/*PostConfigTunnelVxlanVxlanIDPeerServiceUnavailable Maintanence mode
+/*
+PostConfigTunnelVxlanVxlanIDPeerServiceUnavailable Maintanence mode
 
 swagger:response postConfigTunnelVxlanVxlanIdPeerServiceUnavailable
 */

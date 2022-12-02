@@ -29,12 +29,12 @@ func NewDeleteConfigLoadbalancerAll(ctx *middleware.Context, handler DeleteConfi
 	return &DeleteConfigLoadbalancerAll{Context: ctx, Handler: handler}
 }
 
-/* DeleteConfigLoadbalancerAll swagger:route DELETE /config/loadbalancer/all deleteConfigLoadbalancerAll
+/*
+	DeleteConfigLoadbalancerAll swagger:route DELETE /config/loadbalancer/all deleteConfigLoadbalancerAll
 
-Delete all Load balancer services
+# Delete all Load balancer services
 
 Delete all load balancer services.
-
 */
 type DeleteConfigLoadbalancerAll struct {
 	Context *middleware.Context

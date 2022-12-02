@@ -16,7 +16,8 @@ import (
 // GetConfigVlanAllOKCode is the HTTP code returned for type GetConfigVlanAllOK
 const GetConfigVlanAllOKCode int = 200
 
-/*GetConfigVlanAllOK OK
+/*
+GetConfigVlanAllOK OK
 
 swagger:response getConfigVlanAllOK
 */
@@ -60,7 +61,8 @@ func (o *GetConfigVlanAllOK) WriteResponse(rw http.ResponseWriter, producer runt
 // GetConfigVlanAllUnauthorizedCode is the HTTP code returned for type GetConfigVlanAllUnauthorized
 const GetConfigVlanAllUnauthorizedCode int = 401
 
-/*GetConfigVlanAllUnauthorized Invalid authentication credentials
+/*
+GetConfigVlanAllUnauthorized Invalid authentication credentials
 
 swagger:response getConfigVlanAllUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *GetConfigVlanAllUnauthorized) WriteResponse(rw http.ResponseWriter, pro
 // GetConfigVlanAllInternalServerErrorCode is the HTTP code returned for type GetConfigVlanAllInternalServerError
 const GetConfigVlanAllInternalServerErrorCode int = 500
 
-/*GetConfigVlanAllInternalServerError Internal service error
+/*
+GetConfigVlanAllInternalServerError Internal service error
 
 swagger:response getConfigVlanAllInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *GetConfigVlanAllInternalServerError) WriteResponse(rw http.ResponseWrit
 // GetConfigVlanAllServiceUnavailableCode is the HTTP code returned for type GetConfigVlanAllServiceUnavailable
 const GetConfigVlanAllServiceUnavailableCode int = 503
 
-/*GetConfigVlanAllServiceUnavailable Maintanence mode
+/*
+GetConfigVlanAllServiceUnavailable Maintanence mode
 
 swagger:response getConfigVlanAllServiceUnavailable
 */

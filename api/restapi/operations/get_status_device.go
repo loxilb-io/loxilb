@@ -29,12 +29,12 @@ func NewGetStatusDevice(ctx *middleware.Context, handler GetStatusDeviceHandler)
 	return &GetStatusDevice{Context: ctx, Handler: handler}
 }
 
-/* GetStatusDevice swagger:route GET /status/device getStatusDevice
+/*
+	GetStatusDevice swagger:route GET /status/device getStatusDevice
 
-Get a basic info in the device
+# Get a basic info in the device
 
 Get a basic info (linux command "uptime, hostnamectl") in the device or system.
-
 */
 type GetStatusDevice struct {
 	Context *middleware.Context

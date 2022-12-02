@@ -29,12 +29,12 @@ func NewPostConfigPolicy(ctx *middleware.Context, handler PostConfigPolicyHandle
 	return &PostConfigPolicy{Context: ctx, Handler: handler}
 }
 
-/* PostConfigPolicy swagger:route POST /config/policy postConfigPolicy
+/*
+	PostConfigPolicy swagger:route POST /config/policy postConfigPolicy
 
-Create a new Policy QoS config
+# Create a new Policy QoS config
 
 Create a new Policy QoS config.
-
 */
 type PostConfigPolicy struct {
 	Context *middleware.Context

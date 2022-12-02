@@ -36,12 +36,12 @@ func NewGetConfigRouteAll(ctx *middleware.Context, handler GetConfigRouteAllHand
 	return &GetConfigRouteAll{Context: ctx, Handler: handler}
 }
 
-/* GetConfigRouteAll swagger:route GET /config/route/all getConfigRouteAll
+/*
+	GetConfigRouteAll swagger:route GET /config/route/all getConfigRouteAll
+
+# Get all route table
 
 Get all route table
-
-Get all route table
-
 */
 type GetConfigRouteAll struct {
 	Context *middleware.Context

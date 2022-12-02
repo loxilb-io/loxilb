@@ -16,7 +16,8 @@ import (
 // GetConfigRouteAllOKCode is the HTTP code returned for type GetConfigRouteAllOK
 const GetConfigRouteAllOKCode int = 200
 
-/*GetConfigRouteAllOK OK
+/*
+GetConfigRouteAllOK OK
 
 swagger:response getConfigRouteAllOK
 */
@@ -60,7 +61,8 @@ func (o *GetConfigRouteAllOK) WriteResponse(rw http.ResponseWriter, producer run
 // GetConfigRouteAllBadRequestCode is the HTTP code returned for type GetConfigRouteAllBadRequest
 const GetConfigRouteAllBadRequestCode int = 400
 
-/*GetConfigRouteAllBadRequest Malformed arguments for API call
+/*
+GetConfigRouteAllBadRequest Malformed arguments for API call
 
 swagger:response getConfigRouteAllBadRequest
 */
@@ -104,7 +106,8 @@ func (o *GetConfigRouteAllBadRequest) WriteResponse(rw http.ResponseWriter, prod
 // GetConfigRouteAllUnauthorizedCode is the HTTP code returned for type GetConfigRouteAllUnauthorized
 const GetConfigRouteAllUnauthorizedCode int = 401
 
-/*GetConfigRouteAllUnauthorized Invalid authentication credentials
+/*
+GetConfigRouteAllUnauthorized Invalid authentication credentials
 
 swagger:response getConfigRouteAllUnauthorized
 */
@@ -148,7 +151,8 @@ func (o *GetConfigRouteAllUnauthorized) WriteResponse(rw http.ResponseWriter, pr
 // GetConfigRouteAllForbiddenCode is the HTTP code returned for type GetConfigRouteAllForbidden
 const GetConfigRouteAllForbiddenCode int = 403
 
-/*GetConfigRouteAllForbidden Capacity insufficient
+/*
+GetConfigRouteAllForbidden Capacity insufficient
 
 swagger:response getConfigRouteAllForbidden
 */
@@ -192,7 +196,8 @@ func (o *GetConfigRouteAllForbidden) WriteResponse(rw http.ResponseWriter, produ
 // GetConfigRouteAllNotFoundCode is the HTTP code returned for type GetConfigRouteAllNotFound
 const GetConfigRouteAllNotFoundCode int = 404
 
-/*GetConfigRouteAllNotFound Resource not found
+/*
+GetConfigRouteAllNotFound Resource not found
 
 swagger:response getConfigRouteAllNotFound
 */
@@ -236,7 +241,8 @@ func (o *GetConfigRouteAllNotFound) WriteResponse(rw http.ResponseWriter, produc
 // GetConfigRouteAllConflictCode is the HTTP code returned for type GetConfigRouteAllConflict
 const GetConfigRouteAllConflictCode int = 409
 
-/*GetConfigRouteAllConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+GetConfigRouteAllConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response getConfigRouteAllConflict
 */
@@ -280,7 +286,8 @@ func (o *GetConfigRouteAllConflict) WriteResponse(rw http.ResponseWriter, produc
 // GetConfigRouteAllInternalServerErrorCode is the HTTP code returned for type GetConfigRouteAllInternalServerError
 const GetConfigRouteAllInternalServerErrorCode int = 500
 
-/*GetConfigRouteAllInternalServerError Internal service error
+/*
+GetConfigRouteAllInternalServerError Internal service error
 
 swagger:response getConfigRouteAllInternalServerError
 */
@@ -324,7 +331,8 @@ func (o *GetConfigRouteAllInternalServerError) WriteResponse(rw http.ResponseWri
 // GetConfigRouteAllServiceUnavailableCode is the HTTP code returned for type GetConfigRouteAllServiceUnavailable
 const GetConfigRouteAllServiceUnavailableCode int = 503
 
-/*GetConfigRouteAllServiceUnavailable Maintanence mode
+/*
+GetConfigRouteAllServiceUnavailable Maintanence mode
 
 swagger:response getConfigRouteAllServiceUnavailable
 */

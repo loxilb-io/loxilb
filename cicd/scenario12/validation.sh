@@ -49,9 +49,9 @@ else
     exit 1
 fi
 
-sleep 300
+sleep 100
 
-# By default after 4m, loxilb will send reset after inactivity
+# For this scenario, loxilb will send reset after configured inactivity of 30s
 
 code=0
 if pgrep -x "$SERVICE" >/dev/null

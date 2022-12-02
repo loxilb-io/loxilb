@@ -16,7 +16,8 @@ import (
 // GetConfigPortAllOKCode is the HTTP code returned for type GetConfigPortAllOK
 const GetConfigPortAllOKCode int = 200
 
-/*GetConfigPortAllOK OK
+/*
+GetConfigPortAllOK OK
 
 swagger:response getConfigPortAllOK
 */
@@ -60,7 +61,8 @@ func (o *GetConfigPortAllOK) WriteResponse(rw http.ResponseWriter, producer runt
 // GetConfigPortAllUnauthorizedCode is the HTTP code returned for type GetConfigPortAllUnauthorized
 const GetConfigPortAllUnauthorizedCode int = 401
 
-/*GetConfigPortAllUnauthorized Invalid authentication credentials
+/*
+GetConfigPortAllUnauthorized Invalid authentication credentials
 
 swagger:response getConfigPortAllUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *GetConfigPortAllUnauthorized) WriteResponse(rw http.ResponseWriter, pro
 // GetConfigPortAllInternalServerErrorCode is the HTTP code returned for type GetConfigPortAllInternalServerError
 const GetConfigPortAllInternalServerErrorCode int = 500
 
-/*GetConfigPortAllInternalServerError Internal service error
+/*
+GetConfigPortAllInternalServerError Internal service error
 
 swagger:response getConfigPortAllInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *GetConfigPortAllInternalServerError) WriteResponse(rw http.ResponseWrit
 // GetConfigPortAllServiceUnavailableCode is the HTTP code returned for type GetConfigPortAllServiceUnavailable
 const GetConfigPortAllServiceUnavailableCode int = 503
 
-/*GetConfigPortAllServiceUnavailable Maintanence mode
+/*
+GetConfigPortAllServiceUnavailable Maintanence mode
 
 swagger:response getConfigPortAllServiceUnavailable
 */

@@ -34,6 +34,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv.Sel = cmn.EpSelect(params.Attr.ServiceArguments.Sel)
 	lbRules.Serv.Bgp = params.Attr.ServiceArguments.Bgp
 	lbRules.Serv.Mode = cmn.LBMode(params.Attr.ServiceArguments.Mode)
+	lbRules.Serv.InactiveTimeout = uint32(params.Attr.ServiceArguments.InactiveTimeOut)
 
 	for _, data := range params.Attr.Endpoints {
 		lbRules.Eps = append(lbRules.Eps, cmn.LbEndPointArg{
@@ -53,7 +54,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 }
 
 func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Load balancer %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var lbServ cmn.LbServiceArg
 	var lbRules cmn.LbRuleMod
@@ -96,6 +97,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tmpSvc.Protocol = lb.Serv.Proto
 		tmpSvc.Sel = int64(lb.Serv.Sel)
 		tmpSvc.Mode = int32(lb.Serv.Mode)
+		tmpSvc.InactiveTimeOut = int32(lb.Serv.InactiveTimeout)
 
 		tmpLB.ServiceArguments = &tmpSvc
 

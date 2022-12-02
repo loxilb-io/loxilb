@@ -16,7 +16,8 @@ import (
 // GetStatusFilesystemOKCode is the HTTP code returned for type GetStatusFilesystemOK
 const GetStatusFilesystemOKCode int = 200
 
-/*GetStatusFilesystemOK OK
+/*
+GetStatusFilesystemOK OK
 
 swagger:response getStatusFilesystemOK
 */
@@ -60,7 +61,8 @@ func (o *GetStatusFilesystemOK) WriteResponse(rw http.ResponseWriter, producer r
 // GetStatusFilesystemUnauthorizedCode is the HTTP code returned for type GetStatusFilesystemUnauthorized
 const GetStatusFilesystemUnauthorizedCode int = 401
 
-/*GetStatusFilesystemUnauthorized Invalid authentication credentials
+/*
+GetStatusFilesystemUnauthorized Invalid authentication credentials
 
 swagger:response getStatusFilesystemUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *GetStatusFilesystemUnauthorized) WriteResponse(rw http.ResponseWriter, 
 // GetStatusFilesystemInternalServerErrorCode is the HTTP code returned for type GetStatusFilesystemInternalServerError
 const GetStatusFilesystemInternalServerErrorCode int = 500
 
-/*GetStatusFilesystemInternalServerError Internal service error
+/*
+GetStatusFilesystemInternalServerError Internal service error
 
 swagger:response getStatusFilesystemInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *GetStatusFilesystemInternalServerError) WriteResponse(rw http.ResponseW
 // GetStatusFilesystemServiceUnavailableCode is the HTTP code returned for type GetStatusFilesystemServiceUnavailable
 const GetStatusFilesystemServiceUnavailableCode int = 503
 
-/*GetStatusFilesystemServiceUnavailable Maintanence mode
+/*
+GetStatusFilesystemServiceUnavailable Maintanence mode
 
 swagger:response getStatusFilesystemServiceUnavailable
 */

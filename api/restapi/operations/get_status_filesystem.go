@@ -36,12 +36,12 @@ func NewGetStatusFilesystem(ctx *middleware.Context, handler GetStatusFilesystem
 	return &GetStatusFilesystem{Context: ctx, Handler: handler}
 }
 
-/* GetStatusFilesystem swagger:route GET /status/filesystem getStatusFilesystem
+/*
+	GetStatusFilesystem swagger:route GET /status/filesystem getStatusFilesystem
 
-Get a File System info in the device
+# Get a File System info in the device
 
 Get a File system infomation (linux command "df") in the device or system.
-
 */
 type GetStatusFilesystem struct {
 	Context *middleware.Context

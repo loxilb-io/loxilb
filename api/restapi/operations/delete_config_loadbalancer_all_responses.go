@@ -16,7 +16,8 @@ import (
 // DeleteConfigLoadbalancerAllNoContentCode is the HTTP code returned for type DeleteConfigLoadbalancerAllNoContent
 const DeleteConfigLoadbalancerAllNoContentCode int = 204
 
-/*DeleteConfigLoadbalancerAllNoContent OK
+/*
+DeleteConfigLoadbalancerAllNoContent OK
 
 swagger:response deleteConfigLoadbalancerAllNoContent
 */
@@ -40,7 +41,8 @@ func (o *DeleteConfigLoadbalancerAllNoContent) WriteResponse(rw http.ResponseWri
 // DeleteConfigLoadbalancerAllBadRequestCode is the HTTP code returned for type DeleteConfigLoadbalancerAllBadRequest
 const DeleteConfigLoadbalancerAllBadRequestCode int = 400
 
-/*DeleteConfigLoadbalancerAllBadRequest Malformed arguments for API call
+/*
+DeleteConfigLoadbalancerAllBadRequest Malformed arguments for API call
 
 swagger:response deleteConfigLoadbalancerAllBadRequest
 */
@@ -84,7 +86,8 @@ func (o *DeleteConfigLoadbalancerAllBadRequest) WriteResponse(rw http.ResponseWr
 // DeleteConfigLoadbalancerAllUnauthorizedCode is the HTTP code returned for type DeleteConfigLoadbalancerAllUnauthorized
 const DeleteConfigLoadbalancerAllUnauthorizedCode int = 401
 
-/*DeleteConfigLoadbalancerAllUnauthorized Invalid authentication credentials
+/*
+DeleteConfigLoadbalancerAllUnauthorized Invalid authentication credentials
 
 swagger:response deleteConfigLoadbalancerAllUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *DeleteConfigLoadbalancerAllUnauthorized) WriteResponse(rw http.Response
 // DeleteConfigLoadbalancerAllForbiddenCode is the HTTP code returned for type DeleteConfigLoadbalancerAllForbidden
 const DeleteConfigLoadbalancerAllForbiddenCode int = 403
 
-/*DeleteConfigLoadbalancerAllForbidden Capacity insufficient
+/*
+DeleteConfigLoadbalancerAllForbidden Capacity insufficient
 
 swagger:response deleteConfigLoadbalancerAllForbidden
 */
@@ -172,7 +176,8 @@ func (o *DeleteConfigLoadbalancerAllForbidden) WriteResponse(rw http.ResponseWri
 // DeleteConfigLoadbalancerAllNotFoundCode is the HTTP code returned for type DeleteConfigLoadbalancerAllNotFound
 const DeleteConfigLoadbalancerAllNotFoundCode int = 404
 
-/*DeleteConfigLoadbalancerAllNotFound Resource not found
+/*
+DeleteConfigLoadbalancerAllNotFound Resource not found
 
 swagger:response deleteConfigLoadbalancerAllNotFound
 */
@@ -216,7 +221,8 @@ func (o *DeleteConfigLoadbalancerAllNotFound) WriteResponse(rw http.ResponseWrit
 // DeleteConfigLoadbalancerAllConflictCode is the HTTP code returned for type DeleteConfigLoadbalancerAllConflict
 const DeleteConfigLoadbalancerAllConflictCode int = 409
 
-/*DeleteConfigLoadbalancerAllConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+DeleteConfigLoadbalancerAllConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response deleteConfigLoadbalancerAllConflict
 */
@@ -260,7 +266,8 @@ func (o *DeleteConfigLoadbalancerAllConflict) WriteResponse(rw http.ResponseWrit
 // DeleteConfigLoadbalancerAllInternalServerErrorCode is the HTTP code returned for type DeleteConfigLoadbalancerAllInternalServerError
 const DeleteConfigLoadbalancerAllInternalServerErrorCode int = 500
 
-/*DeleteConfigLoadbalancerAllInternalServerError Internal service error
+/*
+DeleteConfigLoadbalancerAllInternalServerError Internal service error
 
 swagger:response deleteConfigLoadbalancerAllInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *DeleteConfigLoadbalancerAllInternalServerError) WriteResponse(rw http.R
 // DeleteConfigLoadbalancerAllServiceUnavailableCode is the HTTP code returned for type DeleteConfigLoadbalancerAllServiceUnavailable
 const DeleteConfigLoadbalancerAllServiceUnavailableCode int = 503
 
-/*DeleteConfigLoadbalancerAllServiceUnavailable Maintanence mode
+/*
+DeleteConfigLoadbalancerAllServiceUnavailable Maintanence mode
 
 swagger:response deleteConfigLoadbalancerAllServiceUnavailable
 */

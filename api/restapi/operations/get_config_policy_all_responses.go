@@ -16,7 +16,8 @@ import (
 // GetConfigPolicyAllOKCode is the HTTP code returned for type GetConfigPolicyAllOK
 const GetConfigPolicyAllOKCode int = 200
 
-/*GetConfigPolicyAllOK OK
+/*
+GetConfigPolicyAllOK OK
 
 swagger:response getConfigPolicyAllOK
 */
@@ -60,7 +61,8 @@ func (o *GetConfigPolicyAllOK) WriteResponse(rw http.ResponseWriter, producer ru
 // GetConfigPolicyAllUnauthorizedCode is the HTTP code returned for type GetConfigPolicyAllUnauthorized
 const GetConfigPolicyAllUnauthorizedCode int = 401
 
-/*GetConfigPolicyAllUnauthorized Invalid authentication credentials
+/*
+GetConfigPolicyAllUnauthorized Invalid authentication credentials
 
 swagger:response getConfigPolicyAllUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *GetConfigPolicyAllUnauthorized) WriteResponse(rw http.ResponseWriter, p
 // GetConfigPolicyAllInternalServerErrorCode is the HTTP code returned for type GetConfigPolicyAllInternalServerError
 const GetConfigPolicyAllInternalServerErrorCode int = 500
 
-/*GetConfigPolicyAllInternalServerError Internal service error
+/*
+GetConfigPolicyAllInternalServerError Internal service error
 
 swagger:response getConfigPolicyAllInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *GetConfigPolicyAllInternalServerError) WriteResponse(rw http.ResponseWr
 // GetConfigPolicyAllServiceUnavailableCode is the HTTP code returned for type GetConfigPolicyAllServiceUnavailable
 const GetConfigPolicyAllServiceUnavailableCode int = 503
 
-/*GetConfigPolicyAllServiceUnavailable Maintanence mode
+/*
+GetConfigPolicyAllServiceUnavailable Maintanence mode
 
 swagger:response getConfigPolicyAllServiceUnavailable
 */

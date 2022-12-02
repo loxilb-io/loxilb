@@ -29,12 +29,12 @@ func NewPostConfigMirror(ctx *middleware.Context, handler PostConfigMirrorHandle
 	return &PostConfigMirror{Context: ctx, Handler: handler}
 }
 
-/* PostConfigMirror swagger:route POST /config/mirror postConfigMirror
+/*
+	PostConfigMirror swagger:route POST /config/mirror postConfigMirror
 
-Create a new Mirror config
+# Create a new Mirror config
 
 Create a new Mirror config.
-
 */
 type PostConfigMirror struct {
 	Context *middleware.Context

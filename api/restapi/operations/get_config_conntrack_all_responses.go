@@ -16,7 +16,8 @@ import (
 // GetConfigConntrackAllOKCode is the HTTP code returned for type GetConfigConntrackAllOK
 const GetConfigConntrackAllOKCode int = 200
 
-/*GetConfigConntrackAllOK OK
+/*
+GetConfigConntrackAllOK OK
 
 swagger:response getConfigConntrackAllOK
 */
@@ -60,7 +61,8 @@ func (o *GetConfigConntrackAllOK) WriteResponse(rw http.ResponseWriter, producer
 // GetConfigConntrackAllUnauthorizedCode is the HTTP code returned for type GetConfigConntrackAllUnauthorized
 const GetConfigConntrackAllUnauthorizedCode int = 401
 
-/*GetConfigConntrackAllUnauthorized Invalid authentication credentials
+/*
+GetConfigConntrackAllUnauthorized Invalid authentication credentials
 
 swagger:response getConfigConntrackAllUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *GetConfigConntrackAllUnauthorized) WriteResponse(rw http.ResponseWriter
 // GetConfigConntrackAllInternalServerErrorCode is the HTTP code returned for type GetConfigConntrackAllInternalServerError
 const GetConfigConntrackAllInternalServerErrorCode int = 500
 
-/*GetConfigConntrackAllInternalServerError Internal service error
+/*
+GetConfigConntrackAllInternalServerError Internal service error
 
 swagger:response getConfigConntrackAllInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *GetConfigConntrackAllInternalServerError) WriteResponse(rw http.Respons
 // GetConfigConntrackAllServiceUnavailableCode is the HTTP code returned for type GetConfigConntrackAllServiceUnavailable
 const GetConfigConntrackAllServiceUnavailableCode int = 503
 
-/*GetConfigConntrackAllServiceUnavailable Maintanence mode
+/*
+GetConfigConntrackAllServiceUnavailable Maintanence mode
 
 swagger:response getConfigConntrackAllServiceUnavailable
 */

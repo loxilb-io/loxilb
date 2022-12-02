@@ -29,12 +29,12 @@ func NewPostConfigLoadbalancer(ctx *middleware.Context, handler PostConfigLoadba
 	return &PostConfigLoadbalancer{Context: ctx, Handler: handler}
 }
 
-/* PostConfigLoadbalancer swagger:route POST /config/loadbalancer postConfigLoadbalancer
+/*
+	PostConfigLoadbalancer swagger:route POST /config/loadbalancer postConfigLoadbalancer
 
-Create a new Load balancer service
+# Create a new Load balancer service
 
 Create a new load balancer service with .
-
 */
 type PostConfigLoadbalancer struct {
 	Context *middleware.Context

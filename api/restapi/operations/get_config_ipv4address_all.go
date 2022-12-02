@@ -36,12 +36,12 @@ func NewGetConfigIpv4addressAll(ctx *middleware.Context, handler GetConfigIpv4ad
 	return &GetConfigIpv4addressAll{Context: ctx, Handler: handler}
 }
 
-/* GetConfigIpv4addressAll swagger:route GET /config/ipv4address/all getConfigIpv4addressAll
+/*
+	GetConfigIpv4addressAll swagger:route GET /config/ipv4address/all getConfigIpv4addressAll
 
 Get IPv4 addresses in the device(interface)
 
 Get IPv4 addresses in the device(interface)
-
 */
 type GetConfigIpv4addressAll struct {
 	Context *middleware.Context

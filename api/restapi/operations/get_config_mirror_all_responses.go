@@ -16,7 +16,8 @@ import (
 // GetConfigMirrorAllOKCode is the HTTP code returned for type GetConfigMirrorAllOK
 const GetConfigMirrorAllOKCode int = 200
 
-/*GetConfigMirrorAllOK OK
+/*
+GetConfigMirrorAllOK OK
 
 swagger:response getConfigMirrorAllOK
 */
@@ -60,7 +61,8 @@ func (o *GetConfigMirrorAllOK) WriteResponse(rw http.ResponseWriter, producer ru
 // GetConfigMirrorAllUnauthorizedCode is the HTTP code returned for type GetConfigMirrorAllUnauthorized
 const GetConfigMirrorAllUnauthorizedCode int = 401
 
-/*GetConfigMirrorAllUnauthorized Invalid authentication credentials
+/*
+GetConfigMirrorAllUnauthorized Invalid authentication credentials
 
 swagger:response getConfigMirrorAllUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *GetConfigMirrorAllUnauthorized) WriteResponse(rw http.ResponseWriter, p
 // GetConfigMirrorAllInternalServerErrorCode is the HTTP code returned for type GetConfigMirrorAllInternalServerError
 const GetConfigMirrorAllInternalServerErrorCode int = 500
 
-/*GetConfigMirrorAllInternalServerError Internal service error
+/*
+GetConfigMirrorAllInternalServerError Internal service error
 
 swagger:response getConfigMirrorAllInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *GetConfigMirrorAllInternalServerError) WriteResponse(rw http.ResponseWr
 // GetConfigMirrorAllServiceUnavailableCode is the HTTP code returned for type GetConfigMirrorAllServiceUnavailable
 const GetConfigMirrorAllServiceUnavailableCode int = 503
 
-/*GetConfigMirrorAllServiceUnavailable Maintanence mode
+/*
+GetConfigMirrorAllServiceUnavailable Maintanence mode
 
 swagger:response getConfigMirrorAllServiceUnavailable
 */

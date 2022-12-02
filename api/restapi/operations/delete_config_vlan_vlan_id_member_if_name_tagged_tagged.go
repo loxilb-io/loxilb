@@ -29,12 +29,12 @@ func NewDeleteConfigVlanVlanIDMemberIfNameTaggedTagged(ctx *middleware.Context, 
 	return &DeleteConfigVlanVlanIDMemberIfNameTaggedTagged{Context: ctx, Handler: handler}
 }
 
-/* DeleteConfigVlanVlanIDMemberIfNameTaggedTagged swagger:route DELETE /config/vlan/{vlan_id}/member/{if_name}/tagged/{tagged} deleteConfigVlanVlanIdMemberIfNameTaggedTagged
+/*
+	DeleteConfigVlanVlanIDMemberIfNameTaggedTagged swagger:route DELETE /config/vlan/{vlan_id}/member/{if_name}/tagged/{tagged} deleteConfigVlanVlanIdMemberIfNameTaggedTagged
 
-Remove a vlan member from a vlan interface
+# Remove a vlan member from a vlan interface
 
 Remove a vlan member from a vlan interface which is defined by vlan_id. If the Vlan interface does not exist on LoxiLB OR a vlan member 'if_name' is not present on the interface the API will return '404'. If the vlan_id passed is less than 2 or greater than 4094 the API will respond with error '400'.
-
 */
 type DeleteConfigVlanVlanIDMemberIfNameTaggedTagged struct {
 	Context *middleware.Context

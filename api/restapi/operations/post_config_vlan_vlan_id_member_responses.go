@@ -16,7 +16,8 @@ import (
 // PostConfigVlanVlanIDMemberNoContentCode is the HTTP code returned for type PostConfigVlanVlanIDMemberNoContent
 const PostConfigVlanVlanIDMemberNoContentCode int = 204
 
-/*PostConfigVlanVlanIDMemberNoContent OK
+/*
+PostConfigVlanVlanIDMemberNoContent OK
 
 swagger:response postConfigVlanVlanIdMemberNoContent
 */
@@ -40,7 +41,8 @@ func (o *PostConfigVlanVlanIDMemberNoContent) WriteResponse(rw http.ResponseWrit
 // PostConfigVlanVlanIDMemberBadRequestCode is the HTTP code returned for type PostConfigVlanVlanIDMemberBadRequest
 const PostConfigVlanVlanIDMemberBadRequestCode int = 400
 
-/*PostConfigVlanVlanIDMemberBadRequest Malformed arguments for API call
+/*
+PostConfigVlanVlanIDMemberBadRequest Malformed arguments for API call
 
 swagger:response postConfigVlanVlanIdMemberBadRequest
 */
@@ -84,7 +86,8 @@ func (o *PostConfigVlanVlanIDMemberBadRequest) WriteResponse(rw http.ResponseWri
 // PostConfigVlanVlanIDMemberUnauthorizedCode is the HTTP code returned for type PostConfigVlanVlanIDMemberUnauthorized
 const PostConfigVlanVlanIDMemberUnauthorizedCode int = 401
 
-/*PostConfigVlanVlanIDMemberUnauthorized Invalid authentication credentials
+/*
+PostConfigVlanVlanIDMemberUnauthorized Invalid authentication credentials
 
 swagger:response postConfigVlanVlanIdMemberUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *PostConfigVlanVlanIDMemberUnauthorized) WriteResponse(rw http.ResponseW
 // PostConfigVlanVlanIDMemberForbiddenCode is the HTTP code returned for type PostConfigVlanVlanIDMemberForbidden
 const PostConfigVlanVlanIDMemberForbiddenCode int = 403
 
-/*PostConfigVlanVlanIDMemberForbidden Capacity insufficient
+/*
+PostConfigVlanVlanIDMemberForbidden Capacity insufficient
 
 swagger:response postConfigVlanVlanIdMemberForbidden
 */
@@ -172,7 +176,8 @@ func (o *PostConfigVlanVlanIDMemberForbidden) WriteResponse(rw http.ResponseWrit
 // PostConfigVlanVlanIDMemberNotFoundCode is the HTTP code returned for type PostConfigVlanVlanIDMemberNotFound
 const PostConfigVlanVlanIDMemberNotFoundCode int = 404
 
-/*PostConfigVlanVlanIDMemberNotFound Vlan interface is not defined
+/*
+PostConfigVlanVlanIDMemberNotFound Vlan interface is not defined
 
 swagger:response postConfigVlanVlanIdMemberNotFound
 */
@@ -216,7 +221,8 @@ func (o *PostConfigVlanVlanIDMemberNotFound) WriteResponse(rw http.ResponseWrite
 // PostConfigVlanVlanIDMemberConflictCode is the HTTP code returned for type PostConfigVlanVlanIDMemberConflict
 const PostConfigVlanVlanIDMemberConflictCode int = 409
 
-/*PostConfigVlanVlanIDMemberConflict Resource Conflict. VLAN member already exists on this VLAN interface OR Vlan member is being added to 2nd Vlan inteface as an untagged member.
+/*
+PostConfigVlanVlanIDMemberConflict Resource Conflict. VLAN member already exists on this VLAN interface OR Vlan member is being added to 2nd Vlan inteface as an untagged member.
 
 swagger:response postConfigVlanVlanIdMemberConflict
 */
@@ -260,7 +266,8 @@ func (o *PostConfigVlanVlanIDMemberConflict) WriteResponse(rw http.ResponseWrite
 // PostConfigVlanVlanIDMemberInternalServerErrorCode is the HTTP code returned for type PostConfigVlanVlanIDMemberInternalServerError
 const PostConfigVlanVlanIDMemberInternalServerErrorCode int = 500
 
-/*PostConfigVlanVlanIDMemberInternalServerError Internal service error
+/*
+PostConfigVlanVlanIDMemberInternalServerError Internal service error
 
 swagger:response postConfigVlanVlanIdMemberInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *PostConfigVlanVlanIDMemberInternalServerError) WriteResponse(rw http.Re
 // PostConfigVlanVlanIDMemberServiceUnavailableCode is the HTTP code returned for type PostConfigVlanVlanIDMemberServiceUnavailable
 const PostConfigVlanVlanIDMemberServiceUnavailableCode int = 503
 
-/*PostConfigVlanVlanIDMemberServiceUnavailable Maintanence mode
+/*
+PostConfigVlanVlanIDMemberServiceUnavailable Maintanence mode
 
 swagger:response postConfigVlanVlanIdMemberServiceUnavailable
 */

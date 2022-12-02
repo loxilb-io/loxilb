@@ -16,7 +16,8 @@ import (
 // DeleteConfigMirrorIdentIdentNoContentCode is the HTTP code returned for type DeleteConfigMirrorIdentIdentNoContent
 const DeleteConfigMirrorIdentIdentNoContentCode int = 204
 
-/*DeleteConfigMirrorIdentIdentNoContent OK
+/*
+DeleteConfigMirrorIdentIdentNoContent OK
 
 swagger:response deleteConfigMirrorIdentIdentNoContent
 */
@@ -40,7 +41,8 @@ func (o *DeleteConfigMirrorIdentIdentNoContent) WriteResponse(rw http.ResponseWr
 // DeleteConfigMirrorIdentIdentBadRequestCode is the HTTP code returned for type DeleteConfigMirrorIdentIdentBadRequest
 const DeleteConfigMirrorIdentIdentBadRequestCode int = 400
 
-/*DeleteConfigMirrorIdentIdentBadRequest Malformed arguments for API call
+/*
+DeleteConfigMirrorIdentIdentBadRequest Malformed arguments for API call
 
 swagger:response deleteConfigMirrorIdentIdentBadRequest
 */
@@ -84,7 +86,8 @@ func (o *DeleteConfigMirrorIdentIdentBadRequest) WriteResponse(rw http.ResponseW
 // DeleteConfigMirrorIdentIdentUnauthorizedCode is the HTTP code returned for type DeleteConfigMirrorIdentIdentUnauthorized
 const DeleteConfigMirrorIdentIdentUnauthorizedCode int = 401
 
-/*DeleteConfigMirrorIdentIdentUnauthorized Invalid authentication credentials
+/*
+DeleteConfigMirrorIdentIdentUnauthorized Invalid authentication credentials
 
 swagger:response deleteConfigMirrorIdentIdentUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *DeleteConfigMirrorIdentIdentUnauthorized) WriteResponse(rw http.Respons
 // DeleteConfigMirrorIdentIdentForbiddenCode is the HTTP code returned for type DeleteConfigMirrorIdentIdentForbidden
 const DeleteConfigMirrorIdentIdentForbiddenCode int = 403
 
-/*DeleteConfigMirrorIdentIdentForbidden Capacity insufficient
+/*
+DeleteConfigMirrorIdentIdentForbidden Capacity insufficient
 
 swagger:response deleteConfigMirrorIdentIdentForbidden
 */
@@ -172,7 +176,8 @@ func (o *DeleteConfigMirrorIdentIdentForbidden) WriteResponse(rw http.ResponseWr
 // DeleteConfigMirrorIdentIdentNotFoundCode is the HTTP code returned for type DeleteConfigMirrorIdentIdentNotFound
 const DeleteConfigMirrorIdentIdentNotFoundCode int = 404
 
-/*DeleteConfigMirrorIdentIdentNotFound Resource not found
+/*
+DeleteConfigMirrorIdentIdentNotFound Resource not found
 
 swagger:response deleteConfigMirrorIdentIdentNotFound
 */
@@ -216,7 +221,8 @@ func (o *DeleteConfigMirrorIdentIdentNotFound) WriteResponse(rw http.ResponseWri
 // DeleteConfigMirrorIdentIdentConflictCode is the HTTP code returned for type DeleteConfigMirrorIdentIdentConflict
 const DeleteConfigMirrorIdentIdentConflictCode int = 409
 
-/*DeleteConfigMirrorIdentIdentConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+DeleteConfigMirrorIdentIdentConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response deleteConfigMirrorIdentIdentConflict
 */
@@ -260,7 +266,8 @@ func (o *DeleteConfigMirrorIdentIdentConflict) WriteResponse(rw http.ResponseWri
 // DeleteConfigMirrorIdentIdentInternalServerErrorCode is the HTTP code returned for type DeleteConfigMirrorIdentIdentInternalServerError
 const DeleteConfigMirrorIdentIdentInternalServerErrorCode int = 500
 
-/*DeleteConfigMirrorIdentIdentInternalServerError Internal service error
+/*
+DeleteConfigMirrorIdentIdentInternalServerError Internal service error
 
 swagger:response deleteConfigMirrorIdentIdentInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *DeleteConfigMirrorIdentIdentInternalServerError) WriteResponse(rw http.
 // DeleteConfigMirrorIdentIdentServiceUnavailableCode is the HTTP code returned for type DeleteConfigMirrorIdentIdentServiceUnavailable
 const DeleteConfigMirrorIdentIdentServiceUnavailableCode int = 503
 
-/*DeleteConfigMirrorIdentIdentServiceUnavailable Maintanence mode
+/*
+DeleteConfigMirrorIdentIdentServiceUnavailable Maintanence mode
 
 swagger:response deleteConfigMirrorIdentIdentServiceUnavailable
 */

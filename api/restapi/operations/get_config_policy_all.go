@@ -36,12 +36,12 @@ func NewGetConfigPolicyAll(ctx *middleware.Context, handler GetConfigPolicyAllHa
 	return &GetConfigPolicyAll{Context: ctx, Handler: handler}
 }
 
-/* GetConfigPolicyAll swagger:route GET /config/policy/all getConfigPolicyAll
+/*
+	GetConfigPolicyAll swagger:route GET /config/policy/all getConfigPolicyAll
+
+# Get
 
 Get
-
-Get
-
 */
 type GetConfigPolicyAll struct {
 	Context *middleware.Context

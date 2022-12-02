@@ -29,12 +29,12 @@ func NewDeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto(
 	return &DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto{Context: ctx, Handler: handler}
 }
 
-/* DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto swagger:route DELETE /config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto} deleteConfigLoadbalancerExternalipaddressIpAddressPortPortProtocolProto
+/*
+	DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto swagger:route DELETE /config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto} deleteConfigLoadbalancerExternalipaddressIpAddressPortPortProtocolProto
 
-Create a new Load balancer service
+# Create a new Load balancer service
 
 Create a new load balancer service with .
-
 */
 type DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto struct {
 	Context *middleware.Context

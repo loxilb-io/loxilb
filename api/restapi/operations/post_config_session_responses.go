@@ -16,7 +16,8 @@ import (
 // PostConfigSessionNoContentCode is the HTTP code returned for type PostConfigSessionNoContent
 const PostConfigSessionNoContentCode int = 204
 
-/*PostConfigSessionNoContent OK
+/*
+PostConfigSessionNoContent OK
 
 swagger:response postConfigSessionNoContent
 */
@@ -40,7 +41,8 @@ func (o *PostConfigSessionNoContent) WriteResponse(rw http.ResponseWriter, produ
 // PostConfigSessionBadRequestCode is the HTTP code returned for type PostConfigSessionBadRequest
 const PostConfigSessionBadRequestCode int = 400
 
-/*PostConfigSessionBadRequest Malformed arguments for API call
+/*
+PostConfigSessionBadRequest Malformed arguments for API call
 
 swagger:response postConfigSessionBadRequest
 */
@@ -84,7 +86,8 @@ func (o *PostConfigSessionBadRequest) WriteResponse(rw http.ResponseWriter, prod
 // PostConfigSessionUnauthorizedCode is the HTTP code returned for type PostConfigSessionUnauthorized
 const PostConfigSessionUnauthorizedCode int = 401
 
-/*PostConfigSessionUnauthorized Invalid authentication credentials
+/*
+PostConfigSessionUnauthorized Invalid authentication credentials
 
 swagger:response postConfigSessionUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *PostConfigSessionUnauthorized) WriteResponse(rw http.ResponseWriter, pr
 // PostConfigSessionForbiddenCode is the HTTP code returned for type PostConfigSessionForbidden
 const PostConfigSessionForbiddenCode int = 403
 
-/*PostConfigSessionForbidden Capacity insufficient
+/*
+PostConfigSessionForbidden Capacity insufficient
 
 swagger:response postConfigSessionForbidden
 */
@@ -172,7 +176,8 @@ func (o *PostConfigSessionForbidden) WriteResponse(rw http.ResponseWriter, produ
 // PostConfigSessionNotFoundCode is the HTTP code returned for type PostConfigSessionNotFound
 const PostConfigSessionNotFoundCode int = 404
 
-/*PostConfigSessionNotFound Resource not found
+/*
+PostConfigSessionNotFound Resource not found
 
 swagger:response postConfigSessionNotFound
 */
@@ -216,7 +221,8 @@ func (o *PostConfigSessionNotFound) WriteResponse(rw http.ResponseWriter, produc
 // PostConfigSessionConflictCode is the HTTP code returned for type PostConfigSessionConflict
 const PostConfigSessionConflictCode int = 409
 
-/*PostConfigSessionConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+PostConfigSessionConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response postConfigSessionConflict
 */
@@ -260,7 +266,8 @@ func (o *PostConfigSessionConflict) WriteResponse(rw http.ResponseWriter, produc
 // PostConfigSessionInternalServerErrorCode is the HTTP code returned for type PostConfigSessionInternalServerError
 const PostConfigSessionInternalServerErrorCode int = 500
 
-/*PostConfigSessionInternalServerError Internal service error
+/*
+PostConfigSessionInternalServerError Internal service error
 
 swagger:response postConfigSessionInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *PostConfigSessionInternalServerError) WriteResponse(rw http.ResponseWri
 // PostConfigSessionServiceUnavailableCode is the HTTP code returned for type PostConfigSessionServiceUnavailable
 const PostConfigSessionServiceUnavailableCode int = 503
 
-/*PostConfigSessionServiceUnavailable Maintanence mode
+/*
+PostConfigSessionServiceUnavailable Maintanence mode
 
 swagger:response postConfigSessionServiceUnavailable
 */

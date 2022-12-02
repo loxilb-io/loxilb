@@ -16,7 +16,8 @@ import (
 // PostConfigLoadbalancerOKCode is the HTTP code returned for type PostConfigLoadbalancerOK
 const PostConfigLoadbalancerOKCode int = 200
 
-/*PostConfigLoadbalancerOK OK
+/*
+PostConfigLoadbalancerOK OK
 
 swagger:response postConfigLoadbalancerOK
 */
@@ -60,7 +61,8 @@ func (o *PostConfigLoadbalancerOK) WriteResponse(rw http.ResponseWriter, produce
 // PostConfigLoadbalancerBadRequestCode is the HTTP code returned for type PostConfigLoadbalancerBadRequest
 const PostConfigLoadbalancerBadRequestCode int = 400
 
-/*PostConfigLoadbalancerBadRequest Malformed arguments for API call
+/*
+PostConfigLoadbalancerBadRequest Malformed arguments for API call
 
 swagger:response postConfigLoadbalancerBadRequest
 */
@@ -104,7 +106,8 @@ func (o *PostConfigLoadbalancerBadRequest) WriteResponse(rw http.ResponseWriter,
 // PostConfigLoadbalancerUnauthorizedCode is the HTTP code returned for type PostConfigLoadbalancerUnauthorized
 const PostConfigLoadbalancerUnauthorizedCode int = 401
 
-/*PostConfigLoadbalancerUnauthorized Invalid authentication credentials
+/*
+PostConfigLoadbalancerUnauthorized Invalid authentication credentials
 
 swagger:response postConfigLoadbalancerUnauthorized
 */
@@ -148,7 +151,8 @@ func (o *PostConfigLoadbalancerUnauthorized) WriteResponse(rw http.ResponseWrite
 // PostConfigLoadbalancerForbiddenCode is the HTTP code returned for type PostConfigLoadbalancerForbidden
 const PostConfigLoadbalancerForbiddenCode int = 403
 
-/*PostConfigLoadbalancerForbidden Capacity insufficient
+/*
+PostConfigLoadbalancerForbidden Capacity insufficient
 
 swagger:response postConfigLoadbalancerForbidden
 */
@@ -192,7 +196,8 @@ func (o *PostConfigLoadbalancerForbidden) WriteResponse(rw http.ResponseWriter, 
 // PostConfigLoadbalancerNotFoundCode is the HTTP code returned for type PostConfigLoadbalancerNotFound
 const PostConfigLoadbalancerNotFoundCode int = 404
 
-/*PostConfigLoadbalancerNotFound Resource not found
+/*
+PostConfigLoadbalancerNotFound Resource not found
 
 swagger:response postConfigLoadbalancerNotFound
 */
@@ -236,7 +241,8 @@ func (o *PostConfigLoadbalancerNotFound) WriteResponse(rw http.ResponseWriter, p
 // PostConfigLoadbalancerConflictCode is the HTTP code returned for type PostConfigLoadbalancerConflict
 const PostConfigLoadbalancerConflictCode int = 409
 
-/*PostConfigLoadbalancerConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+PostConfigLoadbalancerConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response postConfigLoadbalancerConflict
 */
@@ -280,7 +286,8 @@ func (o *PostConfigLoadbalancerConflict) WriteResponse(rw http.ResponseWriter, p
 // PostConfigLoadbalancerInternalServerErrorCode is the HTTP code returned for type PostConfigLoadbalancerInternalServerError
 const PostConfigLoadbalancerInternalServerErrorCode int = 500
 
-/*PostConfigLoadbalancerInternalServerError Internal service error
+/*
+PostConfigLoadbalancerInternalServerError Internal service error
 
 swagger:response postConfigLoadbalancerInternalServerError
 */
@@ -324,7 +331,8 @@ func (o *PostConfigLoadbalancerInternalServerError) WriteResponse(rw http.Respon
 // PostConfigLoadbalancerServiceUnavailableCode is the HTTP code returned for type PostConfigLoadbalancerServiceUnavailable
 const PostConfigLoadbalancerServiceUnavailableCode int = 503
 
-/*PostConfigLoadbalancerServiceUnavailable Maintanence mode
+/*
+PostConfigLoadbalancerServiceUnavailable Maintanence mode
 
 swagger:response postConfigLoadbalancerServiceUnavailable
 */

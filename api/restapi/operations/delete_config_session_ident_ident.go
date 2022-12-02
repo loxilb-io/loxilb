@@ -29,12 +29,12 @@ func NewDeleteConfigSessionIdentIdent(ctx *middleware.Context, handler DeleteCon
 	return &DeleteConfigSessionIdentIdent{Context: ctx, Handler: handler}
 }
 
-/* DeleteConfigSessionIdentIdent swagger:route DELETE /config/session/ident/{ident} deleteConfigSessionIdentIdent
+/*
+	DeleteConfigSessionIdentIdent swagger:route DELETE /config/session/ident/{ident} deleteConfigSessionIdentIdent
 
-Create a new Load balancer service
+# Create a new Load balancer service
 
 Create a new load balancer service with .
-
 */
 type DeleteConfigSessionIdentIdent struct {
 	Context *middleware.Context

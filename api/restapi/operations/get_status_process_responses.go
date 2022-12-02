@@ -16,7 +16,8 @@ import (
 // GetStatusProcessOKCode is the HTTP code returned for type GetStatusProcessOK
 const GetStatusProcessOKCode int = 200
 
-/*GetStatusProcessOK OK
+/*
+GetStatusProcessOK OK
 
 swagger:response getStatusProcessOK
 */
@@ -60,7 +61,8 @@ func (o *GetStatusProcessOK) WriteResponse(rw http.ResponseWriter, producer runt
 // GetStatusProcessUnauthorizedCode is the HTTP code returned for type GetStatusProcessUnauthorized
 const GetStatusProcessUnauthorizedCode int = 401
 
-/*GetStatusProcessUnauthorized Invalid authentication credentials
+/*
+GetStatusProcessUnauthorized Invalid authentication credentials
 
 swagger:response getStatusProcessUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *GetStatusProcessUnauthorized) WriteResponse(rw http.ResponseWriter, pro
 // GetStatusProcessInternalServerErrorCode is the HTTP code returned for type GetStatusProcessInternalServerError
 const GetStatusProcessInternalServerErrorCode int = 500
 
-/*GetStatusProcessInternalServerError Internal service error
+/*
+GetStatusProcessInternalServerError Internal service error
 
 swagger:response getStatusProcessInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *GetStatusProcessInternalServerError) WriteResponse(rw http.ResponseWrit
 // GetStatusProcessServiceUnavailableCode is the HTTP code returned for type GetStatusProcessServiceUnavailable
 const GetStatusProcessServiceUnavailableCode int = 503
 
-/*GetStatusProcessServiceUnavailable Maintanence mode
+/*
+GetStatusProcessServiceUnavailable Maintanence mode
 
 swagger:response getStatusProcessServiceUnavailable
 */

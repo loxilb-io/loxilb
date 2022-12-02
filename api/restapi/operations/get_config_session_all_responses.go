@@ -16,7 +16,8 @@ import (
 // GetConfigSessionAllOKCode is the HTTP code returned for type GetConfigSessionAllOK
 const GetConfigSessionAllOKCode int = 200
 
-/*GetConfigSessionAllOK OK
+/*
+GetConfigSessionAllOK OK
 
 swagger:response getConfigSessionAllOK
 */
@@ -60,7 +61,8 @@ func (o *GetConfigSessionAllOK) WriteResponse(rw http.ResponseWriter, producer r
 // GetConfigSessionAllUnauthorizedCode is the HTTP code returned for type GetConfigSessionAllUnauthorized
 const GetConfigSessionAllUnauthorizedCode int = 401
 
-/*GetConfigSessionAllUnauthorized Invalid authentication credentials
+/*
+GetConfigSessionAllUnauthorized Invalid authentication credentials
 
 swagger:response getConfigSessionAllUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *GetConfigSessionAllUnauthorized) WriteResponse(rw http.ResponseWriter, 
 // GetConfigSessionAllInternalServerErrorCode is the HTTP code returned for type GetConfigSessionAllInternalServerError
 const GetConfigSessionAllInternalServerErrorCode int = 500
 
-/*GetConfigSessionAllInternalServerError Internal service error
+/*
+GetConfigSessionAllInternalServerError Internal service error
 
 swagger:response getConfigSessionAllInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *GetConfigSessionAllInternalServerError) WriteResponse(rw http.ResponseW
 // GetConfigSessionAllServiceUnavailableCode is the HTTP code returned for type GetConfigSessionAllServiceUnavailable
 const GetConfigSessionAllServiceUnavailableCode int = 503
 
-/*GetConfigSessionAllServiceUnavailable Maintanence mode
+/*
+GetConfigSessionAllServiceUnavailable Maintanence mode
 
 swagger:response getConfigSessionAllServiceUnavailable
 */

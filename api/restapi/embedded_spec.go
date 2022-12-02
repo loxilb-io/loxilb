@@ -37,6 +37,110 @@ func init() {
   "host": "0.0.0.0:8090",
   "basePath": "/netlox/v1",
   "paths": {
+    "/config/cistate": {
+      "post": {
+        "description": "Informs Current Cluster Instance state in the device",
+        "summary": "Informs Current Cluster Instance state in the device",
+        "parameters": [
+          {
+            "description": "Attributes for CI State",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CIStatusEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/cistate/all": {
+      "get": {
+        "description": "Get Cluster Instance State in the device",
+        "summary": "Get Cluster Instance State in the device",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "Attr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/CIStatusGetEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/conntrack/all": {
       "get": {
         "description": "Get all of the conntrack infomation for all of the service.",
@@ -191,107 +295,6 @@ func init() {
           },
           "409": {
             "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "500": {
-            "description": "Internal service error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "503": {
-            "description": "Maintanence mode",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
-    },
-    "/config/hastate": {
-      "post": {
-        "description": "Informs Current HA state in the device",
-        "summary": "Informs Current HA state in the device",
-        "parameters": [
-          {
-            "description": "Attributes for HA State",
-            "name": "attr",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/HAStatusEntry"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Malformed arguments for API call",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "401": {
-            "description": "Invalid authentication credentials",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "403": {
-            "description": "Capacity insufficient",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "404": {
-            "description": "Resource not found",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "409": {
-            "description": "Resource Conflict.",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "500": {
-            "description": "Internal service error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "503": {
-            "description": "Maintanence mode",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
-    },
-    "/config/hastate/all": {
-      "get": {
-        "description": "Get HA State in the device(interface)",
-        "summary": "Get HA State in the device(interface)",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "schema": {
-                  "$ref": "#/definitions/HAStatusEntry"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid authentication credentials",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2454,6 +2457,39 @@ func init() {
     }
   },
   "definitions": {
+    "CIStatusEntry": {
+      "type": "object",
+      "properties": {
+        "instance": {
+          "description": "Instance name",
+          "type": "string"
+        },
+        "state": {
+          "description": "Current Cluster Instance State",
+          "type": "string"
+        }
+      }
+    },
+    "CIStatusGetEntry": {
+      "type": "object",
+      "required": [
+        "sync"
+      ],
+      "properties": {
+        "instance": {
+          "description": "Instance name",
+          "type": "string"
+        },
+        "state": {
+          "description": "Current Cluster Instance State",
+          "type": "string"
+        },
+        "sync": {
+          "description": "Sync - sync state",
+          "type": "integer"
+        }
+      }
+    },
     "ConntrackEntry": {
       "type": "object",
       "properties": {
@@ -2599,31 +2635,6 @@ func init() {
         }
       }
     },
-    "HAStatusEntry": {
-      "type": "object",
-      "properties": {
-        "state": {
-          "description": "Current HA state",
-          "type": "string"
-        }
-      }
-    },
-    "HAStatusGetEntry": {
-      "type": "object",
-      "required": [
-        "sync"
-      ],
-      "properties": {
-        "state": {
-          "description": "Current HA State",
-          "type": "string"
-        },
-        "sync": {
-          "description": "Sync - sync state",
-          "type": "integer"
-        }
-      }
-    },
     "IPv4AddressEntry": {
       "type": "object",
       "properties": {
@@ -2693,9 +2704,15 @@ func init() {
               "description": "IP address for externel access",
               "type": "string"
             },
-            "fullNat": {
-              "description": "value for enable one-arm NAT",
-              "type": "boolean"
+            "inactiveTimeOut": {
+              "description": "value for inactivity timeout (in seconds)",
+              "type": "integer",
+              "format": "int32"
+            },
+            "mode": {
+              "description": "value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)",
+              "type": "integer",
+              "format": "int32"
             },
             "port": {
               "description": "port number for the access",
@@ -3338,6 +3355,110 @@ func init() {
   "host": "0.0.0.0:8090",
   "basePath": "/netlox/v1",
   "paths": {
+    "/config/cistate": {
+      "post": {
+        "description": "Informs Current Cluster Instance state in the device",
+        "summary": "Informs Current Cluster Instance state in the device",
+        "parameters": [
+          {
+            "description": "Attributes for CI State",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CIStatusEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/cistate/all": {
+      "get": {
+        "description": "Get Cluster Instance State in the device",
+        "summary": "Get Cluster Instance State in the device",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "Attr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/CIStatusGetEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/conntrack/all": {
       "get": {
         "description": "Get all of the conntrack infomation for all of the service.",
@@ -3492,107 +3613,6 @@ func init() {
           },
           "409": {
             "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "500": {
-            "description": "Internal service error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "503": {
-            "description": "Maintanence mode",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
-    },
-    "/config/hastate": {
-      "post": {
-        "description": "Informs Current HA state in the device",
-        "summary": "Informs Current HA state in the device",
-        "parameters": [
-          {
-            "description": "Attributes for HA State",
-            "name": "attr",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/HAStatusEntry"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Malformed arguments for API call",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "401": {
-            "description": "Invalid authentication credentials",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "403": {
-            "description": "Capacity insufficient",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "404": {
-            "description": "Resource not found",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "409": {
-            "description": "Resource Conflict.",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "500": {
-            "description": "Internal service error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "503": {
-            "description": "Maintanence mode",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
-    },
-    "/config/hastate/all": {
-      "get": {
-        "description": "Get HA State in the device(interface)",
-        "summary": "Get HA State in the device(interface)",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "schema": {
-                  "$ref": "#/definitions/HAStatusEntry"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid authentication credentials",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -5755,6 +5775,39 @@ func init() {
     }
   },
   "definitions": {
+    "CIStatusEntry": {
+      "type": "object",
+      "properties": {
+        "instance": {
+          "description": "Instance name",
+          "type": "string"
+        },
+        "state": {
+          "description": "Current Cluster Instance State",
+          "type": "string"
+        }
+      }
+    },
+    "CIStatusGetEntry": {
+      "type": "object",
+      "required": [
+        "sync"
+      ],
+      "properties": {
+        "instance": {
+          "description": "Instance name",
+          "type": "string"
+        },
+        "state": {
+          "description": "Current Cluster Instance State",
+          "type": "string"
+        },
+        "sync": {
+          "description": "Sync - sync state",
+          "type": "integer"
+        }
+      }
+    },
     "ConntrackEntry": {
       "type": "object",
       "properties": {
@@ -5900,31 +5953,6 @@ func init() {
         }
       }
     },
-    "HAStatusEntry": {
-      "type": "object",
-      "properties": {
-        "state": {
-          "description": "Current HA state",
-          "type": "string"
-        }
-      }
-    },
-    "HAStatusGetEntry": {
-      "type": "object",
-      "required": [
-        "sync"
-      ],
-      "properties": {
-        "state": {
-          "description": "Current HA State",
-          "type": "string"
-        },
-        "sync": {
-          "description": "Sync - sync state",
-          "type": "integer"
-        }
-      }
-    },
     "IPv4AddressEntry": {
       "type": "object",
       "properties": {
@@ -5981,9 +6009,15 @@ func init() {
               "description": "IP address for externel access",
               "type": "string"
             },
-            "fullNat": {
-              "description": "value for enable one-arm NAT",
-              "type": "boolean"
+            "inactiveTimeOut": {
+              "description": "value for inactivity timeout (in seconds)",
+              "type": "integer",
+              "format": "int32"
+            },
+            "mode": {
+              "description": "value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)",
+              "type": "integer",
+              "format": "int32"
             },
             "port": {
               "description": "port number for the access",
@@ -6028,9 +6062,15 @@ func init() {
           "description": "IP address for externel access",
           "type": "string"
         },
-        "fullNat": {
-          "description": "value for enable one-arm NAT",
-          "type": "boolean"
+        "inactiveTimeOut": {
+          "description": "value for inactivity timeout (in seconds)",
+          "type": "integer",
+          "format": "int32"
+        },
+        "mode": {
+          "description": "value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)",
+          "type": "integer",
+          "format": "int32"
         },
         "port": {
           "description": "port number for the access",

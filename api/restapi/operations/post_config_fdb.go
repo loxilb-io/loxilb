@@ -29,12 +29,12 @@ func NewPostConfigFdb(ctx *middleware.Context, handler PostConfigFdbHandler) *Po
 	return &PostConfigFdb{Context: ctx, Handler: handler}
 }
 
-/* PostConfigFdb swagger:route POST /config/fdb postConfigFdb
+/*
+	PostConfigFdb swagger:route POST /config/fdb postConfigFdb
+
+# Assign FDB in the device
 
 Assign FDB in the device
-
-Assign FDB in the device
-
 */
 type PostConfigFdb struct {
 	Context *middleware.Context

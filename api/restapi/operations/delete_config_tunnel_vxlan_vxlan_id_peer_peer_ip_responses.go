@@ -16,7 +16,8 @@ import (
 // DeleteConfigTunnelVxlanVxlanIDPeerPeerIPOKCode is the HTTP code returned for type DeleteConfigTunnelVxlanVxlanIDPeerPeerIPOK
 const DeleteConfigTunnelVxlanVxlanIDPeerPeerIPOKCode int = 200
 
-/*DeleteConfigTunnelVxlanVxlanIDPeerPeerIPOK OK
+/*
+DeleteConfigTunnelVxlanVxlanIDPeerPeerIPOK OK
 
 swagger:response deleteConfigTunnelVxlanVxlanIdPeerPeerIpOK
 */
@@ -60,7 +61,8 @@ func (o *DeleteConfigTunnelVxlanVxlanIDPeerPeerIPOK) WriteResponse(rw http.Respo
 // DeleteConfigTunnelVxlanVxlanIDPeerPeerIPUnauthorizedCode is the HTTP code returned for type DeleteConfigTunnelVxlanVxlanIDPeerPeerIPUnauthorized
 const DeleteConfigTunnelVxlanVxlanIDPeerPeerIPUnauthorizedCode int = 401
 
-/*DeleteConfigTunnelVxlanVxlanIDPeerPeerIPUnauthorized Invalid authentication credentials
+/*
+DeleteConfigTunnelVxlanVxlanIDPeerPeerIPUnauthorized Invalid authentication credentials
 
 swagger:response deleteConfigTunnelVxlanVxlanIdPeerPeerIpUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *DeleteConfigTunnelVxlanVxlanIDPeerPeerIPUnauthorized) WriteResponse(rw 
 // DeleteConfigTunnelVxlanVxlanIDPeerPeerIPInternalServerErrorCode is the HTTP code returned for type DeleteConfigTunnelVxlanVxlanIDPeerPeerIPInternalServerError
 const DeleteConfigTunnelVxlanVxlanIDPeerPeerIPInternalServerErrorCode int = 500
 
-/*DeleteConfigTunnelVxlanVxlanIDPeerPeerIPInternalServerError Internal service error
+/*
+DeleteConfigTunnelVxlanVxlanIDPeerPeerIPInternalServerError Internal service error
 
 swagger:response deleteConfigTunnelVxlanVxlanIdPeerPeerIpInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *DeleteConfigTunnelVxlanVxlanIDPeerPeerIPInternalServerError) WriteRespo
 // DeleteConfigTunnelVxlanVxlanIDPeerPeerIPServiceUnavailableCode is the HTTP code returned for type DeleteConfigTunnelVxlanVxlanIDPeerPeerIPServiceUnavailable
 const DeleteConfigTunnelVxlanVxlanIDPeerPeerIPServiceUnavailableCode int = 503
 
-/*DeleteConfigTunnelVxlanVxlanIDPeerPeerIPServiceUnavailable Maintanence mode
+/*
+DeleteConfigTunnelVxlanVxlanIDPeerPeerIPServiceUnavailable Maintanence mode
 
 swagger:response deleteConfigTunnelVxlanVxlanIdPeerPeerIpServiceUnavailable
 */

@@ -29,12 +29,12 @@ func NewDeleteConfigFdbMacAddressDevIfName(ctx *middleware.Context, handler Dele
 	return &DeleteConfigFdbMacAddressDevIfName{Context: ctx, Handler: handler}
 }
 
-/* DeleteConfigFdbMacAddressDevIfName swagger:route DELETE /config/fdb/{mac_address}/dev/{if_name} deleteConfigFdbMacAddressDevIfName
+/*
+	DeleteConfigFdbMacAddressDevIfName swagger:route DELETE /config/fdb/{mac_address}/dev/{if_name} deleteConfigFdbMacAddressDevIfName
+
+# Delete FDB in the device
 
 Delete FDB in the device
-
-Delete FDB in the device
-
 */
 type DeleteConfigFdbMacAddressDevIfName struct {
 	Context *middleware.Context

@@ -29,12 +29,12 @@ func NewPostConfigIpv4address(ctx *middleware.Context, handler PostConfigIpv4add
 	return &PostConfigIpv4address{Context: ctx, Handler: handler}
 }
 
-/* PostConfigIpv4address swagger:route POST /config/ipv4address postConfigIpv4address
+/*
+	PostConfigIpv4address swagger:route POST /config/ipv4address postConfigIpv4address
+
+# Assign IPv4 addresses in the device
 
 Assign IPv4 addresses in the device
-
-Assign IPv4 addresses in the device
-
 */
 type PostConfigIpv4address struct {
 	Context *middleware.Context

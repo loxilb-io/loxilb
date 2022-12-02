@@ -29,12 +29,12 @@ func NewDeleteConfigSessionulclIdentIdentUlclAddressIPAddress(ctx *middleware.Co
 	return &DeleteConfigSessionulclIdentIdentUlclAddressIPAddress{Context: ctx, Handler: handler}
 }
 
-/* DeleteConfigSessionulclIdentIdentUlclAddressIPAddress swagger:route DELETE /config/sessionulcl/ident/{ident}/ulclAddress/{ip_address} deleteConfigSessionulclIdentIdentUlclAddressIpAddress
+/*
+	DeleteConfigSessionulclIdentIdentUlclAddressIPAddress swagger:route DELETE /config/sessionulcl/ident/{ident}/ulclAddress/{ip_address} deleteConfigSessionulclIdentIdentUlclAddressIpAddress
 
-Create a new Load balancer service
+# Create a new Load balancer service
 
 Create a new load balancer service with .
-
 */
 type DeleteConfigSessionulclIdentIdentUlclAddressIPAddress struct {
 	Context *middleware.Context

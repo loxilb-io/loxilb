@@ -29,12 +29,12 @@ func NewDeleteConfigPolicyIdentIdent(ctx *middleware.Context, handler DeleteConf
 	return &DeleteConfigPolicyIdentIdent{Context: ctx, Handler: handler}
 }
 
-/* DeleteConfigPolicyIdentIdent swagger:route DELETE /config/policy/ident/{ident} deleteConfigPolicyIdentIdent
+/*
+	DeleteConfigPolicyIdentIdent swagger:route DELETE /config/policy/ident/{ident} deleteConfigPolicyIdentIdent
 
-Delete a Policy QoS service
+# Delete a Policy QoS service
 
 Delete a new Create a Policy QoS service.
-
 */
 type DeleteConfigPolicyIdentIdent struct {
 	Context *middleware.Context
