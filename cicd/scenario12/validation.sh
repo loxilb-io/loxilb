@@ -40,7 +40,7 @@ sleep 30
 $hexec l3h1 nohup nc -d 20.20.20.1 2020 >> /dev/null 2>&1 &
 ncpid=$!
 
-sleep 10
+sleep 30
 if pgrep -x "$SERVICE" >/dev/null
 then
     echo $SERVICE is UP
