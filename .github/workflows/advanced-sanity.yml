@@ -97,3 +97,8 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+             cd cicd/sctp-fullnat/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
