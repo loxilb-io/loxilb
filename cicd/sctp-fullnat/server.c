@@ -127,7 +127,7 @@ main (int argc, char* argv[])
                                     //      printf("Successfully sent %d bytes data to client\n", ret);
                           }
                           close (connSock);
-                          if (count >= 10)
+                          if (count >= 5)
                               exit(0);
                   }
           }

@@ -10,7 +10,7 @@ servArr=( "server1" "server2" )
 ep=( "10.0.3.10" "10.0.3.11" )
 j=0
 waitCount=0
-while [ $j -le 2 ]
+while [ $j -le 1 ]
 do
     res=$($hexec c1 ./client ${ep[j]} 38412)
     #echo $res
