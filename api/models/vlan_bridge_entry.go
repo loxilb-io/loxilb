@@ -18,7 +18,7 @@ import (
 type VlanBridgeEntry struct {
 
 	// Vlan ID
-	Vid int64 `json:"Vid,omitempty"`
+	Vid int64 `json:"vid,omitempty"`
 }
 
 // Validate validates this vlan bridge entry

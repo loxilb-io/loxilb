@@ -235,6 +235,26 @@ type VlanPortMod struct {
 	Tagged bool `json:"tagged"`
 }
 
+// vlanStat - statistics for vlan interface
+type VlanStat struct {
+	InBytes    uint64
+	InPackets  uint64
+	OutBytes   uint64
+	OutPackets uint64
+}
+
+// VlanGet - Info for vlan interface to get
+type VlanGet struct {
+	// Vid - vlan identifier
+	Vid int `json:"vid"`
+	// Dev - name of port
+	Dev string `json:"dev"`
+	// Slaves - name of slave ports
+	Member []VlanPortMod `json:"member"`
+	// Stat Vlan traffic statistics
+	Stat VlanStat `json:"vlanStatistic"`
+}
+
 const (
 	// FdbPhy - fdb of a real dev
 	FdbPhy = 0
@@ -633,6 +653,7 @@ type NetHookInterface interface {
 	NetPortGet() ([]PortDump, error)
 	NetPortAdd(*PortMod) (int, error)
 	NetPortDel(*PortMod) (int, error)
+	NetVlanGet() ([]VlanGet, error)
 	NetVlanAdd(*VlanMod) (int, error)
 	NetVlanDel(*VlanMod) (int, error)
 	NetVlanPortAdd(*VlanPortMod) (int, error)
