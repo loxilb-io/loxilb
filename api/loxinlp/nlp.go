@@ -167,6 +167,27 @@ func applyUlClConfig() bool {
 	return true
 }
 
+func applyFWConfig() bool {
+	var resp struct {
+		Attr []cmn.FwRuleMod `json:"fwAttr"`
+	}
+	byteBuf, err := ioutil.ReadFile("/opt/loxilb/FWconfig.txt")
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+
+	// Unmashal to Json
+	if err := json.Unmarshal(byteBuf, &resp); err != nil {
+		fmt.Printf("Error: Failed to unmarshal File: (%s)\n", err.Error())
+		return false
+	}
+	for _, fw := range resp.Attr {
+		hooks.NetFwRuleAdd(&fw)
+	}
+	return true
+}
+
 func applyRoutes(name string) {
 	tk.LogIt(tk.LogDebug, "[NLP] Applying Route Config for %s \n", name)
 	command := "loxicmd apply --per-intf " + name + " -r -c /opt/loxilb/ipconfig/"
@@ -1346,6 +1367,15 @@ func LbSessionGet(done bool) int {
 		}
 
 		tk.LogIt(tk.LogInfo, "[NLP] Session UlCl done\n")
+		if _, err := os.Stat("/opt/loxilb/FWconfig.txt"); errors.Is(err, os.ErrNotExist) {
+			if err != nil {
+				tk.LogIt(tk.LogInfo, "[NLP] No Firewall config file : %s \n", err.Error())
+			}
+		} else {
+			applyFWConfig()
+		}
+		tk.LogIt(tk.LogInfo, "[NLP] Firewall done\n")
+
 		tk.LogIt(tk.LogInfo, "[NLP] LbSessionGet done\n")
 	}
 
