@@ -1204,10 +1204,10 @@ paths:
           schema:
             type: object
             properties:
-              ipAttr:
+              vlanAttr:
                 type: array
                 items:
-                  $ref: '#/definitions/VlanBridgeEntry'
+                  $ref: '#/definitions/VlanGetEntry'
         '401':
           description: Invalid authentication credentials
           schema:
@@ -1619,6 +1619,151 @@ paths:
             $ref: '#/definitions/Error'
         '409':
           description: Resource Conflict.
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+#----------------------------------------------
+# Firewall Configuration
+#----------------------------------------------
+  '/config/firewall/all':
+    get:
+      summary: Get all of the firewall config
+      description: Get all of the firewall configuration.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              fwAttr:
+                type: array
+                items:
+                  $ref: '#/definitions/FirewallEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/config/firewall':
+    post:
+      summary: Create a new firewall config
+      description: Create a new firewall config for security.
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes for  firewall sevice
+          schema:
+            $ref: '#/definitions/FirewallEntry'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+ 
+    delete:
+      summary: Delete of the firewall service
+      description: Delete of the firewall service.
+      parameters:
+        - name: sourceIP
+          in: query
+          type: string
+          description: Source IP address
+        - name: destinationIP
+          in: query
+          type: string
+          description:  Destination IP in CIDR notation
+        - name: minSourcePort
+          in: query
+          type: string
+          description: Minimum source port range
+        - name: maxSourcePort
+          in: query
+          type: string
+          description: Maximum source port range
+        - name: minDestinationPort
+          in: query
+          type: string
+          description: Minimum destination port range
+        - name: maxDestinationPort
+          in: query
+          type: string
+          description: Maximum destination port range  
+        - name: protocol
+          in: query
+          type: string
+          description: the protocol
+        - name: portName
+          in: query
+          type: string
+          description: the incoming port     
+        - name: preference
+          in: query
+          type: string
+          description: User preference for ordering
+  
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
           schema:
             $ref: '#/definitions/Error'
         '500':
@@ -2133,18 +2278,41 @@ definitions:
   VlanBridgeEntry:
     type: object
     properties:
-      Vid:
+      vid:
         type: integer
         description: Vlan ID
             
-      
+  VlanGetEntry:
+    type: object
+    properties:
+      vid:
+        type: integer
+        description: Vlan ID
+      dev:
+        type: string
+        description: Interface device name
+      member:
+        type: array
+        items:
+          $ref: '#/definitions/VlanMemberEntry'
+      vlanStatistic:
+        type: object
+        properties:
+          inBytes:
+            type: integer
+          inPackets:
+            type: integer
+          outBytes:
+            type: integer
+          outPackets:
+            type: integer
   VlanMemberEntry:
     type: object
     properties:
-      Dev:
+      dev:
         type: string
         description: Interface device name
-      Tagged:
+      tagged:
         type: boolean
         description: Tagged status added
         
@@ -2365,3 +2533,62 @@ definitions:
       sync:
         type: integer
         description: Sync - sync state
+                
+  FirewallOptionEntry:
+    type: object
+    properties:
+      drop:
+        type: boolean
+        description: Drop any matching rule
+      trap:
+        type: boolean
+        description: Trap anything matching rule
+      redirect:
+        type: boolean
+        description: Redirect any matching rule
+      allow:
+        type: boolean
+        description: Allow any matching rule
+      redirectPortName:
+        type: string
+        description: Redirect any matching rule
+        
+  FirewallRuleEntry:
+    type: object
+    properties:
+      sourceIP:
+        type: string
+        description: Source IP in CIDR notation
+      destinationIP:
+        type: string
+        description: Destination IP in CIDR notation
+      minSourcePort:
+        type: integer
+        description:  Minimum source port range
+      maxSourcePort:
+        type: integer
+        description:  Maximum  source port range
+      minDestinationPort:
+        type: integer
+        description: Minimum destination port range
+      maxDestinationPort:
+        type: integer
+        description:  Maximum  destination port range
+      protocol:
+        type: integer
+        description:   the protocol
+      portName:
+        type: string
+        description:  the incoming port
+      preference:
+        type: integer
+        description:  User preference for ordering
+    
+  FirewallEntry:
+    type: object
+    properties:
+      ruleArguments:
+        $ref: '#/definitions/FirewallRuleEntry'
+      opts:
+        $ref: '#/definitions/FirewallOptionEntry'       
+        
