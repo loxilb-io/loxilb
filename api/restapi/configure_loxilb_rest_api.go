@@ -105,6 +105,7 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.GetStatusFilesystemHandler = operations.GetStatusFilesystemHandlerFunc(handler.ConfigGetFileSystem)
 
 	// VLAN
+	api.GetConfigVlanAllHandler = operations.GetConfigVlanAllHandlerFunc(handler.ConfigGetVLAN)
 	api.PostConfigVlanHandler = operations.PostConfigVlanHandlerFunc(handler.ConfigPostVLAN)
 	api.DeleteConfigVlanVlanIDHandler = operations.DeleteConfigVlanVlanIDHandlerFunc(handler.ConfigDeleteVLAN)
 
@@ -132,6 +133,11 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	// Cluster Instance
 	api.GetConfigCistateAllHandler = operations.GetConfigCistateAllHandlerFunc(handler.ConfigGetCIState)
 	api.PostConfigCistateHandler = operations.PostConfigCistateHandlerFunc(handler.ConfigPostCIState)
+
+	// Firewall
+	api.GetConfigFirewallAllHandler = operations.GetConfigFirewallAllHandlerFunc(handler.ConfigGetFW)
+	api.PostConfigFirewallHandler = operations.PostConfigFirewallHandlerFunc(handler.ConfigPostFW)
+	api.DeleteConfigFirewallHandler = operations.DeleteConfigFirewallHandlerFunc(handler.ConfigDeleteFW)
 
 	api.PreServerShutdown = func() {}
 

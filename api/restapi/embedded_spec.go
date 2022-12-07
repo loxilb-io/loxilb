@@ -314,6 +314,217 @@ func init() {
         }
       }
     },
+    "/config/firewall": {
+      "post": {
+        "description": "Create a new firewall config for security.",
+        "summary": "Create a new firewall config",
+        "parameters": [
+          {
+            "description": "Attributes for  firewall sevice",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FirewallEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete of the firewall service.",
+        "summary": "Delete of the firewall service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Source IP address",
+            "name": "sourceIP",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Destination IP in CIDR notation",
+            "name": "destinationIP",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Minimum source port range",
+            "name": "minSourcePort",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Maximum source port range",
+            "name": "maxSourcePort",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Minimum destination port range",
+            "name": "minDestinationPort",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Maximum destination port range",
+            "name": "maxDestinationPort",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "the protocol",
+            "name": "protocol",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "the incoming port",
+            "name": "portName",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "User preference for ordering",
+            "name": "preference",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/firewall/all": {
+      "get": {
+        "description": "Get all of the firewall configuration.",
+        "summary": "Get all of the firewall config",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "fwAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/FirewallEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/ipv4address": {
       "post": {
         "description": "Assign IPv4 addresses in the device",
@@ -2114,10 +2325,10 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
-                "ipAttr": {
+                "vlanAttr": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/VlanBridgeEntry"
+                    "$ref": "#/definitions/VlanGetEntry"
                   }
                 }
               }
@@ -2631,6 +2842,83 @@ func init() {
         },
         "used": {
           "description": "size of used the disk",
+          "type": "string"
+        }
+      }
+    },
+    "FirewallEntry": {
+      "type": "object",
+      "properties": {
+        "opts": {
+          "$ref": "#/definitions/FirewallOptionEntry"
+        },
+        "ruleArguments": {
+          "$ref": "#/definitions/FirewallRuleEntry"
+        }
+      }
+    },
+    "FirewallOptionEntry": {
+      "type": "object",
+      "properties": {
+        "allow": {
+          "description": "Allow any matching rule",
+          "type": "boolean"
+        },
+        "drop": {
+          "description": "Drop any matching rule",
+          "type": "boolean"
+        },
+        "redirect": {
+          "description": "Redirect any matching rule",
+          "type": "boolean"
+        },
+        "redirectPortName": {
+          "description": "Redirect any matching rule",
+          "type": "string"
+        },
+        "trap": {
+          "description": "Trap anything matching rule",
+          "type": "boolean"
+        }
+      }
+    },
+    "FirewallRuleEntry": {
+      "type": "object",
+      "properties": {
+        "destinationIP": {
+          "description": "Destination IP in CIDR notation",
+          "type": "string"
+        },
+        "maxDestinationPort": {
+          "description": "Maximum  destination port range",
+          "type": "integer"
+        },
+        "maxSourcePort": {
+          "description": "Maximum  source port range",
+          "type": "integer"
+        },
+        "minDestinationPort": {
+          "description": "Minimum destination port range",
+          "type": "integer"
+        },
+        "minSourcePort": {
+          "description": "Minimum source port range",
+          "type": "integer"
+        },
+        "portName": {
+          "description": "the incoming port",
+          "type": "string"
+        },
+        "preference": {
+          "description": "User preference for ordering",
+          "type": "integer"
+        },
+        "protocol": {
+          "description": "the protocol",
+          "type": "integer"
+        },
+        "sourceIP": {
+          "description": "Source IP in CIDR notation",
           "type": "string"
         }
       }
@@ -3244,20 +3532,56 @@ func init() {
     "VlanBridgeEntry": {
       "type": "object",
       "properties": {
-        "Vid": {
+        "vid": {
           "description": "Vlan ID",
           "type": "integer"
+        }
+      }
+    },
+    "VlanGetEntry": {
+      "type": "object",
+      "properties": {
+        "dev": {
+          "description": "Interface device name",
+          "type": "string"
+        },
+        "member": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VlanMemberEntry"
+          }
+        },
+        "vid": {
+          "description": "Vlan ID",
+          "type": "integer"
+        },
+        "vlanStatistic": {
+          "type": "object",
+          "properties": {
+            "inBytes": {
+              "type": "integer"
+            },
+            "inPackets": {
+              "type": "integer"
+            },
+            "outBytes": {
+              "type": "integer"
+            },
+            "outPackets": {
+              "type": "integer"
+            }
+          }
         }
       }
     },
     "VlanMemberEntry": {
       "type": "object",
       "properties": {
-        "Dev": {
+        "dev": {
           "description": "Interface device name",
           "type": "string"
         },
-        "Tagged": {
+        "tagged": {
           "description": "Tagged status added",
           "type": "boolean"
         }
@@ -3613,6 +3937,217 @@ func init() {
           },
           "409": {
             "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/firewall": {
+      "post": {
+        "description": "Create a new firewall config for security.",
+        "summary": "Create a new firewall config",
+        "parameters": [
+          {
+            "description": "Attributes for  firewall sevice",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FirewallEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete of the firewall service.",
+        "summary": "Delete of the firewall service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Source IP address",
+            "name": "sourceIP",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Destination IP in CIDR notation",
+            "name": "destinationIP",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Minimum source port range",
+            "name": "minSourcePort",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Maximum source port range",
+            "name": "maxSourcePort",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Minimum destination port range",
+            "name": "minDestinationPort",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Maximum destination port range",
+            "name": "maxDestinationPort",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "the protocol",
+            "name": "protocol",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "the incoming port",
+            "name": "portName",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "User preference for ordering",
+            "name": "preference",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/firewall/all": {
+      "get": {
+        "description": "Get all of the firewall configuration.",
+        "summary": "Get all of the firewall config",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "fwAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/FirewallEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -5432,10 +5967,10 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
-                "ipAttr": {
+                "vlanAttr": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/VlanBridgeEntry"
+                    "$ref": "#/definitions/VlanGetEntry"
                   }
                 }
               }
@@ -5949,6 +6484,83 @@ func init() {
         },
         "used": {
           "description": "size of used the disk",
+          "type": "string"
+        }
+      }
+    },
+    "FirewallEntry": {
+      "type": "object",
+      "properties": {
+        "opts": {
+          "$ref": "#/definitions/FirewallOptionEntry"
+        },
+        "ruleArguments": {
+          "$ref": "#/definitions/FirewallRuleEntry"
+        }
+      }
+    },
+    "FirewallOptionEntry": {
+      "type": "object",
+      "properties": {
+        "allow": {
+          "description": "Allow any matching rule",
+          "type": "boolean"
+        },
+        "drop": {
+          "description": "Drop any matching rule",
+          "type": "boolean"
+        },
+        "redirect": {
+          "description": "Redirect any matching rule",
+          "type": "boolean"
+        },
+        "redirectPortName": {
+          "description": "Redirect any matching rule",
+          "type": "string"
+        },
+        "trap": {
+          "description": "Trap anything matching rule",
+          "type": "boolean"
+        }
+      }
+    },
+    "FirewallRuleEntry": {
+      "type": "object",
+      "properties": {
+        "destinationIP": {
+          "description": "Destination IP in CIDR notation",
+          "type": "string"
+        },
+        "maxDestinationPort": {
+          "description": "Maximum  destination port range",
+          "type": "integer"
+        },
+        "maxSourcePort": {
+          "description": "Maximum  source port range",
+          "type": "integer"
+        },
+        "minDestinationPort": {
+          "description": "Minimum destination port range",
+          "type": "integer"
+        },
+        "minSourcePort": {
+          "description": "Minimum source port range",
+          "type": "integer"
+        },
+        "portName": {
+          "description": "the incoming port",
+          "type": "string"
+        },
+        "preference": {
+          "description": "User preference for ordering",
+          "type": "integer"
+        },
+        "protocol": {
+          "description": "the protocol",
+          "type": "integer"
+        },
+        "sourceIP": {
+          "description": "Source IP in CIDR notation",
           "type": "string"
         }
       }
@@ -6912,8 +7524,61 @@ func init() {
     "VlanBridgeEntry": {
       "type": "object",
       "properties": {
-        "Vid": {
+        "vid": {
           "description": "Vlan ID",
+          "type": "integer"
+        }
+      }
+    },
+    "VlanGetEntry": {
+      "type": "object",
+      "properties": {
+        "dev": {
+          "description": "Interface device name",
+          "type": "string"
+        },
+        "member": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VlanMemberEntry"
+          }
+        },
+        "vid": {
+          "description": "Vlan ID",
+          "type": "integer"
+        },
+        "vlanStatistic": {
+          "type": "object",
+          "properties": {
+            "inBytes": {
+              "type": "integer"
+            },
+            "inPackets": {
+              "type": "integer"
+            },
+            "outBytes": {
+              "type": "integer"
+            },
+            "outPackets": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "VlanGetEntryVlanStatistic": {
+      "type": "object",
+      "properties": {
+        "inBytes": {
+          "type": "integer"
+        },
+        "inPackets": {
+          "type": "integer"
+        },
+        "outBytes": {
+          "type": "integer"
+        },
+        "outPackets": {
           "type": "integer"
         }
       }
@@ -6921,11 +7586,11 @@ func init() {
     "VlanMemberEntry": {
       "type": "object",
       "properties": {
-        "Dev": {
+        "dev": {
           "description": "Interface device name",
           "type": "string"
         },
-        "Tagged": {
+        "tagged": {
           "description": "Tagged status added",
           "type": "boolean"
         }

@@ -45,6 +45,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		DeleteConfigFdbMacAddressDevIfNameHandler: DeleteConfigFdbMacAddressDevIfNameHandlerFunc(func(params DeleteConfigFdbMacAddressDevIfNameParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigFdbMacAddressDevIfName has not yet been implemented")
 		}),
+		DeleteConfigFirewallHandler: DeleteConfigFirewallHandlerFunc(func(params DeleteConfigFirewallParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigFirewall has not yet been implemented")
+		}),
 		DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler: DeleteConfigIpv4addressIPAddressMaskDevIfNameHandlerFunc(func(params DeleteConfigIpv4addressIPAddressMaskDevIfNameParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigIpv4addressIPAddressMaskDevIfName has not yet been implemented")
 		}),
@@ -89,6 +92,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		}),
 		GetConfigConntrackAllHandler: GetConfigConntrackAllHandlerFunc(func(params GetConfigConntrackAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigConntrackAll has not yet been implemented")
+		}),
+		GetConfigFirewallAllHandler: GetConfigFirewallAllHandlerFunc(func(params GetConfigFirewallAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigFirewallAll has not yet been implemented")
 		}),
 		GetConfigIpv4addressAllHandler: GetConfigIpv4addressAllHandlerFunc(func(params GetConfigIpv4addressAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigIpv4addressAll has not yet been implemented")
@@ -137,6 +143,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		}),
 		PostConfigFdbHandler: PostConfigFdbHandlerFunc(func(params PostConfigFdbParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigFdb has not yet been implemented")
+		}),
+		PostConfigFirewallHandler: PostConfigFirewallHandlerFunc(func(params PostConfigFirewallParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigFirewall has not yet been implemented")
 		}),
 		PostConfigIpv4addressHandler: PostConfigIpv4addressHandlerFunc(func(params PostConfigIpv4addressParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigIpv4address has not yet been implemented")
@@ -212,6 +221,8 @@ type LoxilbRestAPIAPI struct {
 
 	// DeleteConfigFdbMacAddressDevIfNameHandler sets the operation handler for the delete config fdb mac address dev if name operation
 	DeleteConfigFdbMacAddressDevIfNameHandler DeleteConfigFdbMacAddressDevIfNameHandler
+	// DeleteConfigFirewallHandler sets the operation handler for the delete config firewall operation
+	DeleteConfigFirewallHandler DeleteConfigFirewallHandler
 	// DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler sets the operation handler for the delete config ipv4address IP address mask dev if name operation
 	DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler
 	// DeleteConfigLoadbalancerAllHandler sets the operation handler for the delete config loadbalancer all operation
@@ -242,6 +253,8 @@ type LoxilbRestAPIAPI struct {
 	GetConfigCistateAllHandler GetConfigCistateAllHandler
 	// GetConfigConntrackAllHandler sets the operation handler for the get config conntrack all operation
 	GetConfigConntrackAllHandler GetConfigConntrackAllHandler
+	// GetConfigFirewallAllHandler sets the operation handler for the get config firewall all operation
+	GetConfigFirewallAllHandler GetConfigFirewallAllHandler
 	// GetConfigIpv4addressAllHandler sets the operation handler for the get config ipv4address all operation
 	GetConfigIpv4addressAllHandler GetConfigIpv4addressAllHandler
 	// GetConfigLoadbalancerAllHandler sets the operation handler for the get config loadbalancer all operation
@@ -274,6 +287,8 @@ type LoxilbRestAPIAPI struct {
 	PostConfigCistateHandler PostConfigCistateHandler
 	// PostConfigFdbHandler sets the operation handler for the post config fdb operation
 	PostConfigFdbHandler PostConfigFdbHandler
+	// PostConfigFirewallHandler sets the operation handler for the post config firewall operation
+	PostConfigFirewallHandler PostConfigFirewallHandler
 	// PostConfigIpv4addressHandler sets the operation handler for the post config ipv4address operation
 	PostConfigIpv4addressHandler PostConfigIpv4addressHandler
 	// PostConfigLoadbalancerHandler sets the operation handler for the post config loadbalancer operation
@@ -378,6 +393,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.DeleteConfigFdbMacAddressDevIfNameHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigFdbMacAddressDevIfNameHandler")
 	}
+	if o.DeleteConfigFirewallHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigFirewallHandler")
+	}
 	if o.DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler")
 	}
@@ -422,6 +440,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.GetConfigConntrackAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigConntrackAllHandler")
+	}
+	if o.GetConfigFirewallAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigFirewallAllHandler")
 	}
 	if o.GetConfigIpv4addressAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigIpv4addressAllHandler")
@@ -470,6 +491,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.PostConfigFdbHandler == nil {
 		unregistered = append(unregistered, "PostConfigFdbHandler")
+	}
+	if o.PostConfigFirewallHandler == nil {
+		unregistered = append(unregistered, "PostConfigFirewallHandler")
 	}
 	if o.PostConfigIpv4addressHandler == nil {
 		unregistered = append(unregistered, "PostConfigIpv4addressHandler")
@@ -602,6 +626,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
+	o.handlers["DELETE"]["/config/firewall"] = NewDeleteConfigFirewall(o.context, o.DeleteConfigFirewallHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
 	o.handlers["DELETE"]["/config/ipv4address/{ip_address}/{mask}/dev/{if_name}"] = NewDeleteConfigIpv4addressIPAddressMaskDevIfName(o.context, o.DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
@@ -659,6 +687,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/config/conntrack/all"] = NewGetConfigConntrackAll(o.context, o.GetConfigConntrackAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/config/firewall/all"] = NewGetConfigFirewallAll(o.context, o.GetConfigFirewallAllHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -723,6 +755,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/config/fdb"] = NewPostConfigFdb(o.context, o.PostConfigFdbHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/firewall"] = NewPostConfigFirewall(o.context, o.PostConfigFirewallHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
