@@ -88,6 +88,51 @@ func VlanValid(vlanID int) bool {
 	return false
 }
 
+func (V *VlansH) VlanGet() ([]cmn.VlanGet, error) {
+	ret := []cmn.VlanGet{}
+	for k, v := range V.VlanMap {
+		if v.Created {
+			tmpVlan := cmn.VlanGet{
+				Vid: k,
+				Dev: v.Name,
+			}
+			if v.NumTagPorts != 0 {
+				for _, port := range v.TaggedPorts {
+					if port != nil {
+						tmpSlave := cmn.VlanPortMod{
+							Vid:    k,
+							Dev:    port.Name,
+							Tagged: true,
+						}
+						tmpVlan.Member = append(tmpVlan.Member, tmpSlave)
+					}
+
+				}
+			}
+			if v.NumUnTagPorts != 0 {
+				for _, port := range v.UnTaggedPorts {
+					if port != nil {
+						tmpSlave := cmn.VlanPortMod{
+							Vid:    k,
+							Dev:    port.Name,
+							Tagged: false,
+						}
+						tmpVlan.Member = append(tmpVlan.Member, tmpSlave)
+					}
+
+				}
+			}
+			tmpVlan.Stat.InBytes = v.Stat.inBytes
+			tmpVlan.Stat.InPackets = v.Stat.inPackets
+			tmpVlan.Stat.OutBytes = v.Stat.outBytes
+			tmpVlan.Stat.OutPackets = v.Stat.outPackets
+
+			ret = append(ret, tmpVlan)
+		}
+	}
+	return ret, nil
+}
+
 // VlanAdd - routine to add vlan interface
 func (V *VlansH) VlanAdd(vlanID int, name string, zone string, osid int, hwi PortHwInfo) (int, error) {
 	if VlanValid(vlanID) == false {

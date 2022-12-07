@@ -90,6 +90,15 @@ func (*NetAPIStruct) NetPortDel(pm *cmn.PortMod) (int, error) {
 	return ret, err
 }
 
+// NetVlanGet - Get Vlan Information of loxinet
+func (*NetAPIStruct) NetVlanGet() ([]cmn.VlanGet, error) {
+	ret, err := mh.zr.Vlans.VlanGet()
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+
 // NetVlanAdd - Add vlan info to loxinet
 func (*NetAPIStruct) NetVlanAdd(vm *cmn.VlanMod) (int, error) {
 	mh.mtx.Lock()

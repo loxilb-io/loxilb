@@ -69,15 +69,15 @@ func (o *GetConfigVlanAll) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 // swagger:model GetConfigVlanAllOKBody
 type GetConfigVlanAllOKBody struct {
 
-	// ip attr
-	IPAttr []*models.VlanBridgeEntry `json:"ipAttr"`
+	// vlan attr
+	VlanAttr []*models.VlanGetEntry `json:"vlanAttr"`
 }
 
 // Validate validates this get config vlan all o k body
 func (o *GetConfigVlanAllOKBody) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := o.validateIPAttr(formats); err != nil {
+	if err := o.validateVlanAttr(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -87,22 +87,22 @@ func (o *GetConfigVlanAllOKBody) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (o *GetConfigVlanAllOKBody) validateIPAttr(formats strfmt.Registry) error {
-	if swag.IsZero(o.IPAttr) { // not required
+func (o *GetConfigVlanAllOKBody) validateVlanAttr(formats strfmt.Registry) error {
+	if swag.IsZero(o.VlanAttr) { // not required
 		return nil
 	}
 
-	for i := 0; i < len(o.IPAttr); i++ {
-		if swag.IsZero(o.IPAttr[i]) { // not required
+	for i := 0; i < len(o.VlanAttr); i++ {
+		if swag.IsZero(o.VlanAttr[i]) { // not required
 			continue
 		}
 
-		if o.IPAttr[i] != nil {
-			if err := o.IPAttr[i].Validate(formats); err != nil {
+		if o.VlanAttr[i] != nil {
+			if err := o.VlanAttr[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("getConfigVlanAllOK" + "." + "ipAttr" + "." + strconv.Itoa(i))
+					return ve.ValidateName("getConfigVlanAllOK" + "." + "vlanAttr" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("getConfigVlanAllOK" + "." + "ipAttr" + "." + strconv.Itoa(i))
+					return ce.ValidateName("getConfigVlanAllOK" + "." + "vlanAttr" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -117,7 +117,7 @@ func (o *GetConfigVlanAllOKBody) validateIPAttr(formats strfmt.Registry) error {
 func (o *GetConfigVlanAllOKBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
-	if err := o.contextValidateIPAttr(ctx, formats); err != nil {
+	if err := o.contextValidateVlanAttr(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -127,16 +127,16 @@ func (o *GetConfigVlanAllOKBody) ContextValidate(ctx context.Context, formats st
 	return nil
 }
 
-func (o *GetConfigVlanAllOKBody) contextValidateIPAttr(ctx context.Context, formats strfmt.Registry) error {
+func (o *GetConfigVlanAllOKBody) contextValidateVlanAttr(ctx context.Context, formats strfmt.Registry) error {
 
-	for i := 0; i < len(o.IPAttr); i++ {
+	for i := 0; i < len(o.VlanAttr); i++ {
 
-		if o.IPAttr[i] != nil {
-			if err := o.IPAttr[i].ContextValidate(ctx, formats); err != nil {
+		if o.VlanAttr[i] != nil {
+			if err := o.VlanAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("getConfigVlanAllOK" + "." + "ipAttr" + "." + strconv.Itoa(i))
+					return ve.ValidateName("getConfigVlanAllOK" + "." + "vlanAttr" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("getConfigVlanAllOK" + "." + "ipAttr" + "." + strconv.Itoa(i))
+					return ce.ValidateName("getConfigVlanAllOK" + "." + "vlanAttr" + "." + strconv.Itoa(i))
 				}
 				return err
 			}

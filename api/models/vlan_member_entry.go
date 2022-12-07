@@ -18,10 +18,10 @@ import (
 type VlanMemberEntry struct {
 
 	// Interface device name
-	Dev string `json:"Dev,omitempty"`
+	Dev string `json:"dev,omitempty"`
 
 	// Tagged status added
-	Tagged bool `json:"Tagged,omitempty"`
+	Tagged bool `json:"tagged,omitempty"`
 }
 
 // Validate validates this vlan member entry
