@@ -587,6 +587,16 @@ func (P *PortsH) PortsToGet() ([]cmn.PortDump, error) {
 			tk.LogIt(tk.LogError, "port-zone is not active")
 			continue
 		}
+
+		ifis := tk.IfiStat{Ifs: [tk.MaxSidx]uint64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}
+		opCode := tk.NetGetIfiStats(ports.Name, &ifis)
+		if opCode == 0 {
+			ports.Stats.RxBytes = ifis.Ifs[tk.RxBytes]
+			ports.Stats.RxPackets = ifis.Ifs[tk.RxPkts]
+			ports.Stats.TxBytes = ifis.Ifs[tk.TxBytes]
+			ports.Stats.TxPackets = ifis.Ifs[tk.TxPkts]
+		}
+
 		routed := false
 		var addr4 []string
 		addr4 = append(addr4, zn.L3.IfObjMkString(ports.Name))
@@ -752,6 +762,7 @@ func (P *PortsH) PortNotifierRegister(notifier PortEventIntf) {
 func (P *PortsH) PortTicker() {
 	var ev PortEvent
 	var portMod = false
+
 	for _, port := range P.portSmap {
 		portMod = false
 

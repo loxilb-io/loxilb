@@ -11,7 +11,7 @@ require (
 	github.com/go-openapi/swag v0.22.3
 	github.com/go-openapi/validate v0.22.0
 	github.com/jessevdk/go-flags v1.5.0
-	github.com/loxilb-io/loxilib v0.7.0
+	github.com/loxilb-io/loxilib v0.7.7
 	github.com/osrg/gobgp/v3 v3.5.0
 	github.com/vishvananda/netlink v1.1.1-0.20210330154013-f5de75959ad5
 	golang.org/x/net v0.0.0-20220812174116-3211cb980234
