@@ -387,10 +387,31 @@ type FwRuleArg struct {
 
 // FwRuleMod - Info related to a firewall entry
 type FwRuleMod struct {
-	// Serv - service argument of type FwRuleArg
+	// Rule - service argument of type FwRuleArg
 	Rule FwRuleArg `json:"ruleArguments"`
 	// Opts - firewall options
 	Opts FwOptArg `json:"opts"`
+}
+
+// EndPointMod - Info related to a end-point entry
+type EndPointMod struct {
+	// Name - hostname in CIDR
+	Name string `json:"hostName"`
+	// Desc - host specific description
+	Desc string `json:"Description"`
+	// InActTries - No. of inactive probes to mark
+	// an end-point inactive
+	InActTries int `json:"inactiveTries"`
+	// ProbeType - Type of probe : "icmp","connect-tcp", "connect-udp", "connect-sctp", "http"
+	ProbeType string `json:"probeType"`
+	// ProbeReq - Request string in case of http probe
+	ProbeReq string `json:"probeReq"`
+	// ProbeResp - Response string in case of http probe
+	ProbeResp string `json:"probeResp"`
+	// ProbeDuration - How frequently (in seconds) to check activity
+	ProbeDuration uint32 `json:"probeDuration"`
+	// ProbePort - Port to probe for connect type
+	ProbePort uint16 `json:"probePort"`
 }
 
 // EpSelect - Selection method of load-balancer end-point

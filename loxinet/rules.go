@@ -39,6 +39,7 @@ const (
 	RuleEpCountErr
 	RuleTupleErr
 	RuleArgsErr
+	RuleEpNotExistErr
 )
 
 type ruleTMatch uint
@@ -67,10 +68,12 @@ const (
 // constants
 const (
 	MaxNatEndPoints          = 16
-	MaxLbaInactiveTries      = 3       // Default number of inactive tries before LB arm is turned off
-	LbaCheckTimeout          = 20      // Default timeout for checking LB arms
-	LbDefaultInactiveTimeout = 4 * 60  // Default inactive timeout for established sessions
-	LbMaxInactiveTimeout     = 24 * 60 // Maximum inactive timeout for established sessions
+	DflLbaInactiveTries      = 3         // Default number of inactive tries before LB arm is turned off
+	MaxDflLbaInactiveTries   = 100       // Max number of inactive tries before LB arm is turned off
+	DflLbaCheckTimeout       = 20        // Default timeout for checking LB arms
+	MaxHostProbeTime         = 24 * 3600 // Max possible host health check duration
+	LbDefaultInactiveTimeout = 4 * 60    // Default inactive timeout for established sessions
+	LbMaxInactiveTimeout     = 24 * 60   // Maximum inactive timeout for established sessions
 )
 
 type ruleTType uint
@@ -147,6 +150,31 @@ const (
 	RtActSnat
 	RtActFullNat
 )
+
+// possible types of end-point probe
+const (
+	HostProbePing    = "ping"
+	HostProbeConnect = "connect"
+	HostProbeHttp    = "http"
+)
+
+type epHostOpts struct {
+	inActTries    int
+	probeType     string
+	probeReq      string
+	probeResp     string
+	probeDuration uint32
+	probePort     uint16
+}
+
+type epHost struct {
+	hostName   string
+	desc       string
+	ruleCount  int
+	activity   bool
+	probeDelay time.Time
+	opts       epHostOpts
+}
 
 type ruleNatEp struct {
 	xIP        net.IP
@@ -231,6 +259,7 @@ type RuleH struct {
 	Zone   *Zone
 	Cfg    RuleCfg
 	Tables [RtMax]ruleTable
+	epMap  map[string]*epHost
 }
 
 // RulesInit - initialize the Rules subsystem
@@ -238,9 +267,10 @@ func RulesInit(zone *Zone) *RuleH {
 	var nRh = new(RuleH)
 	nRh.Zone = zone
 
-	nRh.Cfg.RuleInactChkTime = LbaCheckTimeout
-	nRh.Cfg.RuleInactTries = MaxLbaInactiveTries
+	nRh.Cfg.RuleInactChkTime = DflLbaCheckTimeout
+	nRh.Cfg.RuleInactTries = DflLbaInactiveTries
 
+	nRh.epMap = make(map[string]*epHost)
 	nRh.Tables[RtFw].tableMatch = RmMax - 1
 	nRh.Tables[RtFw].tableType = RtMf
 	nRh.Tables[RtFw].eMap = make(map[string]*ruleEnt)
@@ -1034,6 +1064,101 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 
 	rule.DP(DpRemove)
 
+	return 0, nil
+}
+
+// GetEpHosts - get all end-points and pack them into a cmn.EndPointMod slice
+func (R *RuleH) GetEpHosts() ([]cmn.EndPointMod, error) {
+	var res []cmn.EndPointMod
+
+	for _, data := range R.epMap {
+		var ret cmn.EndPointMod
+		// Make end-point
+		ret.Name = data.hostName
+		ret.Desc = data.desc
+		ret.InActTries = data.opts.inActTries
+		ret.ProbeType = data.opts.probeType
+		ret.ProbeDuration = data.opts.probeDuration
+		ret.ProbeReq = data.opts.probeReq
+		ret.ProbeResp = data.opts.probeResp
+		ret.ProbePort = data.opts.probePort
+
+		// Append to slice
+		res = append(res, ret)
+	}
+
+	return res, nil
+}
+
+// IsEpHostActive - Check if end-point is active
+func (R *RuleH) IsEpHostActive(hostName string) bool {
+	ep := R.epMap[hostName]
+	if ep == nil {
+		return false
+	}
+
+	return ep.activity
+}
+
+// AddEpHost - Add an end-point host
+// It will return 0 and nil error, else appropriate return code and error string will be set
+func (R *RuleH) AddEpHost(apiCall bool, hostName string, desc string, args epHostOpts) (int, error) {
+	ep := R.epMap[hostName]
+	if ep != nil {
+		if apiCall {
+			ep.opts = args
+			return 0, nil
+		}
+		ep.ruleCount++
+		return 0, nil
+	}
+
+	// Validate hostopts
+	if net.ParseIP(hostName) == nil {
+		return RuleArgsErr, errors.New("host-parse error")
+	}
+
+	if args.inActTries > MaxDflLbaInactiveTries ||
+		args.probeDuration > MaxHostProbeTime {
+		return RuleArgsErr, errors.New("host-args error")
+	}
+
+	if args.probeType != HostProbePing &&
+		args.probeType != HostProbeConnect &&
+		args.probeType != HostProbeHttp {
+		return RuleArgsErr, errors.New("host-args unknown probe type")
+	}
+
+	ep = new(epHost)
+	ep.hostName = hostName
+	ep.desc = desc
+	ep.opts = args
+	if apiCall != true {
+		ep.ruleCount = 1
+	}
+
+	R.epMap[hostName] = ep
+
+	return 0, nil
+}
+
+// DeleteEpHost - Delete an end-point host
+// It will return 0 and nil error, else appropriate return code and error string will be set
+func (R *RuleH) DeleteEpHost(apiCall bool, hostName string, desc string, args epHostOpts) (int, error) {
+	ep := R.epMap[hostName]
+	if ep == nil {
+		return RuleEpNotExistErr, errors.New("host-notfound error")
+	}
+
+	if apiCall == false {
+		ep.ruleCount--
+	}
+
+	if ep.ruleCount > 0 {
+		return 0, nil
+	}
+
+	delete(R.epMap, ep.hostName)
 	return 0, nil
 }
 
