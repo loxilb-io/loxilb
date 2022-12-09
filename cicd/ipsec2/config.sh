@@ -37,29 +37,11 @@ config_docker_host --host1 llb2 --host2 rh1 --ptype phy --addr 25.25.25.254/24
 config_docker_host --host1 rh2 --host2 llb2 --ptype phy --addr 26.26.26.1/24 --gw 26.26.26.254
 config_docker_host --host1 llb2 --host2 rh2 --ptype phy --addr 26.26.26.254/24
 
-SPI=0x69427567
-AUTHKEY=0x0123456789ABCDEF0123456789ABCDEF
-ENCKEY=0xFEDCBA9876543210FEDCBA9876543210
-
 #xfrm Config(Left)
 $dexec llb1 ip link add vti100 type vti key 100 remote 7.7.7.2 local 7.7.7.1
 $dexec llb1 ip link set vti100 up
 $dexec llb1 ip addr add 77.77.77.2/24 remote 77.77.77.1/24 dev vti100
 $dexec llb1 sysctl -w "net.ipv4.conf.vti100.disable_policy=1"
-
-$dexec llb1 ip xfrm state add \
-  src 7.7.7.1 dst 7.7.7.2  proto esp spi $SPI mode tunnel \
-  auth sha256 $AUTHKEY enc aes $ENCKEY
-$dexec llb1 ip xfrm state add \
-  src 7.7.7.2 dst 7.7.7.1  proto esp spi $SPI mode tunnel \
-  auth sha256 $AUTHKEY enc aes $ENCKEY
-
-$dexec llb1 ip xfrm policy add dir out \
-  tmpl src 7.7.7.1  dst 7.7.7.2  proto esp spi $SPI mode tunnel mark 100
-$dexec llb1 ip xfrm policy add dir fwd \
-  tmpl src 7.7.7.2  dst 7.7.7.1  proto esp spi $SPI mode tunnel mark 100
-$dexec llb1 ip xfrm policy add dir in \
-  tmpl src 7.7.7.2  dst 7.7.7.1  proto esp spi $SPI mode tunnel mark 100
 
 $dexec llb1 ip route add 25.25.25.0/24 via 77.77.77.1 dev vti100
 $dexec llb1 ip route add 26.26.26.0/24 via 77.77.77.1 dev vti100
@@ -71,22 +53,20 @@ $dexec llb2 ip link set vti100 up
 $dexec llb2 ip addr add 77.77.77.1/24 remote 77.77.77.2/24 dev vti100
 $dexec llb2 sysctl -w "net.ipv4.conf.vti100.disable_policy=1"
 
-$dexec llb2 ip xfrm state add \
-  src 7.7.7.1 dst 7.7.7.2  proto esp spi $SPI mode tunnel \
-  auth sha256 $AUTHKEY enc aes $ENCKEY
-$dexec llb2 ip xfrm state add \
-  src 7.7.7.2 dst 7.7.7.1  proto esp spi $SPI mode tunnel \
-  auth sha256 $AUTHKEY enc aes $ENCKEY
-
-$dexec llb2 ip xfrm policy add dir in \
-  tmpl src 7.7.7.1  dst 7.7.7.2  proto esp spi $SPI mode tunnel mark 100
-
-$dexec llb2 ip xfrm policy add dir fwd \
-  tmpl src 7.7.7.1  dst 7.7.7.2  proto esp spi $SPI mode tunnel mark 100
-$dexec llb2 ip xfrm policy add dir out \
-  tmpl src 7.7.7.2  dst 7.7.7.1  proto esp spi $SPI mode tunnel mark 100
-
 $dexec llb2 ip route add 31.31.31.0/24 via 77.77.77.2 dev vti100
 $dexec llb2 ip route add 32.32.32.0/24 via 77.77.77.2 dev vti100
-
 $dexec llb2 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=25.25.25.1:1,26.26.26.1:1
+
+$dexec llb1 apt update
+$dexec llb1 apt install -y strongswan strongswan-swanctl systemctl
+docker cp llb1_ipsec_config/ipsec.conf llb1:/etc/
+docker cp llb1_ipsec_config/ipsec.secrets llb1:/etc/
+docker cp llb1_ipsec_config/charon.conf llb1:/etc/strongswan.d/
+$dexec llb1 systemctl restart strongswan-starter
+
+$dexec llb2 apt update
+$dexec llb2 apt install -y strongswan strongswan-swanctl systemctl
+docker cp llb2_ipsec_config/ipsec.conf llb2:/etc/
+docker cp llb2_ipsec_config/ipsec.secrets llb2:/etc/
+docker cp llb2_ipsec_config/charon.conf llb2:/etc/strongswan.d/
+$dexec llb2 systemctl restart strongswan-starter
