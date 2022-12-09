@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo IPSEC-1
+echo IPSEC-2
 $hexec rh1 node ./server1.js &
 $hexec rh2 node ./server2.js &
 
@@ -43,13 +43,13 @@ then
          $(expr $llb1_tx2 - $llb1_tx1) != 2000 ||
          $(expr $llb2_tx2 - $llb2_tx1) != 2000 ]]; then
      echo "IPSec Tunnel Traffic [NOK]"
-     echo "IPSEC-1 [FAILED]"
+     echo "IPSEC-2 [FAILED]"
      exit 1;
    else
      echo "IPSec Tunnel Traffic [OK]"
    fi
 else
-    echo "IPSEC-1 [FAILED]"
+    echo "IPSEC-2 [FAILED]"
     exit $code
 fi
 
@@ -70,7 +70,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            echo IPSEC-1 [FAILED]
+            echo IPSEC-2 [FAILED]
             exit 1
         fi
     fi
@@ -106,9 +106,9 @@ done
 done
 if [[ $code == 0 ]]
 then
-    echo IPSEC-1 [OK]
+    echo IPSEC-2 [OK]
 else
-    echo IPSEC-1 [FAILED]
+    echo IPSEC-2 [FAILED]
 fi
 exit $code
 
