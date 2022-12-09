@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"net"
 	"sort"
-	"time"
 	"sync"
+	"time"
 
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
@@ -266,8 +266,8 @@ type RuleCfg struct {
 }
 
 type epChecker struct {
-	hChk  *time.Ticker
-	tD    chan bool
+	hChk *time.Ticker
+	tD   chan bool
 }
 
 // RuleH - context container
@@ -1280,7 +1280,7 @@ func (ep *epHost) epCheckNow() {
 				ep.inActTries++
 				if ep.inActTries > ep.opts.inActTryThr {
 					ep.inactive = true
-					ep.inActTries = 0 
+					ep.inActTries = 0
 					tk.LogIt(tk.LogDebug, "inactive ep - %s:%s\n", sName, ep.opts.probeType)
 				}
 			}
