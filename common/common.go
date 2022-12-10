@@ -412,6 +412,12 @@ type EndPointMod struct {
 	ProbeDuration uint32 `json:"probeDuration"`
 	// ProbePort - Port to probe for connect type
 	ProbePort uint16 `json:"probePort"`
+	// MinDelay - Minimum delay in this end-point
+	MinDelay string `json:"minDelay"`
+	// AvgDelay - Average delay in this end-point
+	AvgDelay string `json:"avgDelay"`
+	// MaxDelay - Max delay in this end-point
+	MaxDelay string `json:"maxDelay"`
 }
 
 // EpSelect - Selection method of load-balancer end-point
@@ -708,4 +714,7 @@ type NetHookInterface interface {
 	NetFwRuleAdd(*FwRuleMod) (int, error)
 	NetFwRuleDel(*FwRuleMod) (int, error)
 	NetFwRuleGet() ([]FwRuleMod, error)
+	NetEpHostAdd(fm *EndPointMod) (int, error)
+	NetEpHostDel(fm *EndPointMod) (int, error)
+	NetEpHostGet() ([]EndPointMod, error)
 }
