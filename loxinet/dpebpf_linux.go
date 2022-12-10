@@ -687,8 +687,8 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		for _, k := range w.endPoints {
 			nxfa.wprio = C.ushort(k.Weight)
 			nxfa.nat_xport = C.ushort(tk.Htons(k.XPort))
-			nxfa.nat_xip = C.uint(tk.IPtonl(k.XIP))
-			nxfa.nat_rip = C.uint(tk.IPtonl(k.RIP))
+			nxfa.nat_xip[0] = C.uint(tk.IPtonl(k.XIP))
+			nxfa.nat_rip[0] = C.uint(tk.IPtonl(k.RIP))
 
 			if k.InActive {
 				nxfa.inactive = 1
@@ -916,35 +916,35 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ctv4_key, ctDat *C.struct_dp_ctv4_dat) *D
 		ctDat.xi.nat_flags == C.LLB_NAT_SRC {
 		var xip net.IP
 
-		xip = append(xip, uint8(ctDat.xi.nat_xip&0xff))
-		xip = append(xip, uint8(ctDat.xi.nat_xip>>8&0xff))
-		xip = append(xip, uint8(ctDat.xi.nat_xip>>16&0xff))
-		xip = append(xip, uint8(ctDat.xi.nat_xip>>24&0xff))
+		xip = append(xip, uint8(ctDat.xi.nat_xip[0]&0xff))
+		xip = append(xip, uint8(ctDat.xi.nat_xip[0]>>8&0xff))
+		xip = append(xip, uint8(ctDat.xi.nat_xip[0]>>16&0xff))
+		xip = append(xip, uint8(ctDat.xi.nat_xip[0]>>24&0xff))
 
 		port := tk.Ntohs(uint16(ctDat.xi.nat_xport))
 
 		if ctDat.xi.nat_flags == C.LLB_NAT_DST {
-			if ctDat.xi.nat_rip == 0 {
+			if ctDat.xi.nat_rip[0] == 0 {
 				ct.CAct = fmt.Sprintf("dnat-%s:%d:w%d", xip.String(), port, ctDat.xi.wprio)
 			} else {
 				var rip net.IP
 
-				rip = append(rip, uint8(ctDat.xi.nat_rip&0xff))
-				rip = append(rip, uint8(ctDat.xi.nat_rip>>8&0xff))
-				rip = append(rip, uint8(ctDat.xi.nat_rip>>16&0xff))
-				rip = append(rip, uint8(ctDat.xi.nat_rip>>24&0xff))
+				rip = append(rip, uint8(ctDat.xi.nat_rip[0]&0xff))
+				rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>8&0xff))
+				rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>16&0xff))
+				rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>24&0xff))
 				ct.CAct = fmt.Sprintf("fdnat-%s,%s:%d:w%d", rip.String(), xip.String(), port, ctDat.xi.wprio)
 			}
 		} else if ctDat.xi.nat_flags == C.LLB_NAT_SRC {
-			if ctDat.xi.nat_rip == 0 {
+			if ctDat.xi.nat_rip[0] == 0 {
 				ct.CAct = fmt.Sprintf("snat-%s:%d:w%d", xip.String(), port, ctDat.xi.wprio)
 			} else {
 				var rip net.IP
 
-				rip = append(rip, uint8(ctDat.xi.nat_rip&0xff))
-				rip = append(rip, uint8(ctDat.xi.nat_rip>>8&0xff))
-				rip = append(rip, uint8(ctDat.xi.nat_rip>>16&0xff))
-				rip = append(rip, uint8(ctDat.xi.nat_rip>>24&0xff))
+				rip = append(rip, uint8(ctDat.xi.nat_rip[0]&0xff))
+				rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>8&0xff))
+				rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>16&0xff))
+				rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>24&0xff))
 				ct.CAct = fmt.Sprintf("fsnat-%s,%s:%d:w%d", xip.String(), rip.String(), port, ctDat.xi.wprio)
 			}
 		}
