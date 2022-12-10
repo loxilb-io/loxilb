@@ -156,8 +156,8 @@ func dpEbpfTicker() {
 			// Age any entries related to Conntrack
 			// Conntrack entries also use ACL entries for fast-forwarding
 			// which might also get aged out in this process
-			C.llb_collect_map_stats(C.int(C.LL_DP_ACLV4_STATS_MAP))
-			C.llb_age_map_entries(C.LL_DP_CTV4_MAP)
+			C.llb_collect_map_stats(C.int(C.LL_DP_ACL_STATS_MAP))
+			C.llb_age_map_entries(C.LL_DP_CT_MAP)
 			C.llb_age_map_entries(C.LL_DP_FCV4_MAP)
 			mh.dpEbpf.tbN++
 		}
@@ -818,11 +818,11 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 	return 0
 }
 
-func convDPCt2GoObj(ctKey *C.struct_dp_ctv4_key, ctDat *C.struct_dp_ctv4_dat) *DpCtInfo {
+func convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtInfo {
 	ct := new(DpCtInfo)
 
-	ct.DIP = tk.NltoIP(uint32(ctKey.daddr))
-	ct.SIP = tk.NltoIP(uint32(ctKey.saddr))
+	ct.DIP = tk.NltoIP(uint32(ctKey.daddr[0]))
+	ct.SIP = tk.NltoIP(uint32(ctKey.saddr[0]))
 	ct.Dport = tk.Ntohs(uint16(ctKey.dport))
 	ct.Sport = tk.Ntohs(uint16(ctKey.sport))
 	ct.Packets = uint64(ctDat.pb.packets)
@@ -963,23 +963,23 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 
 	switch {
 	case w.Name == MapNameCt4:
-		tbl = C.LL_DP_ACLV4_MAP
+		tbl = C.LL_DP_ACL_MAP
 	default:
 		return EbpfErrWqUnk, errors.New("unknown work type")
 	}
 
-	if tbl == C.LL_DP_ACLV4_MAP {
+	if tbl == C.LL_DP_ACL_MAP {
 		ctMap := make(map[string]*DpCtInfo)
 		var n int = 0
-		var key *C.struct_dp_ctv4_key = nil
-		nextKey := new(C.struct_dp_ctv4_key)
-		var tact C.struct_dp_aclv4_tact
-		var act *C.struct_dp_ctv4_dat
+		var key *C.struct_dp_ct_key = nil
+		nextKey := new(C.struct_dp_ct_key)
+		var tact C.struct_dp_acl_tact
+		var act *C.struct_dp_ct_dat
 
 		fd := C.llb_map2fd(C.int(tbl))
 
 		for C.bpf_map_get_next_key(C.int(fd), (unsafe.Pointer)(key), (unsafe.Pointer)(nextKey)) == 0 {
-			ctKey := (*C.struct_dp_ctv4_key)(unsafe.Pointer(nextKey))
+			ctKey := (*C.struct_dp_ct_key)(unsafe.Pointer(nextKey))
 
 			if C.bpf_map_lookup_elem(C.int(fd), (unsafe.Pointer)(nextKey), (unsafe.Pointer)(&tact)) != 0 {
 				continue
@@ -990,7 +990,7 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 			if act.dir == C.CT_DIR_IN || act.dir == C.CT_DIR_OUT {
 				var b, p uint64
 				goCt4Ent := convDPCt2GoObj(ctKey, act)
-				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_ACLV4_STATS_MAP), C.uint(tact.ca.cidx), C.int(1),
+				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_ACL_STATS_MAP), C.uint(tact.ca.cidx), C.int(1),
 					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
 				if ret == 0 {
 					goCt4Ent.Bytes += b
