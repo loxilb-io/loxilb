@@ -22,10 +22,12 @@ import (
 	"fmt"
 	"net"
 	"sort"
+	"sync"
 	"time"
 
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
+	probing "github.com/prometheus-community/pro-bing"
 )
 
 // error codes
@@ -39,6 +41,7 @@ const (
 	RuleEpCountErr
 	RuleTupleErr
 	RuleArgsErr
+	RuleEpNotExistErr
 )
 
 type ruleTMatch uint
@@ -67,10 +70,14 @@ const (
 // constants
 const (
 	MaxNatEndPoints          = 16
-	MaxLbaInactiveTries      = 3       // Default number of inactive tries before LB arm is turned off
-	LbaCheckTimeout          = 20      // Default timeout for checking LB arms
-	LbDefaultInactiveTimeout = 4 * 60  // Default inactive timeout for established sessions
-	LbMaxInactiveTimeout     = 24 * 60 // Maximum inactive timeout for established sessions
+	DflLbaInactiveTries      = 3         // Default number of inactive tries before LB arm is turned off
+	MaxDflLbaInactiveTries   = 100       // Max number of inactive tries before LB arm is turned off
+	DflLbaCheckTimeout       = 20        // Default timeout for checking LB arms
+	MaxHostProbeTime         = 24 * 3600 // Max possible host health check duration
+	LbDefaultInactiveTimeout = 4 * 60    // Default inactive timeout for established sessions
+	LbMaxInactiveTimeout     = 24 * 60   // Maximum inactive timeout for established sessions
+	MaxEndPointCheckers      = 3         // Maximum helpers to check endpoint health
+	EndPointCheckerDuration  = 10        // Duration at which helpers will run
 )
 
 type ruleTType uint
@@ -147,6 +154,38 @@ const (
 	RtActSnat
 	RtActFullNat
 )
+
+// possible types of end-point probe
+const (
+	HostProbePing        = "ping"
+	HostProbeConnectTcp  = "connect-tcp"
+	HostProbeConnectUdp  = "connect-udp"
+	HostProbeConnectSctp = "connect-sctp"
+	HostProbeHttp        = "http"
+)
+
+type epHostOpts struct {
+	inActTryThr   int
+	probeType     string
+	probeReq      string
+	probeResp     string
+	probeDuration uint32
+	probePort     uint16
+}
+
+type epHost struct {
+	hostName   string
+	desc       string
+	ruleCount  int
+	inactive   bool
+	sT         time.Time
+	avgDelay   time.Duration
+	minDelay   time.Duration
+	maxDelay   time.Duration
+	hID        uint8
+	inActTries int
+	opts       epHostOpts
+}
 
 type ruleNatEp struct {
 	xIP        net.IP
@@ -226,11 +265,21 @@ type RuleCfg struct {
 	RuleInactChkTime int
 }
 
+type epChecker struct {
+	hChk *time.Ticker
+	tD   chan bool
+}
+
 // RuleH - context container
 type RuleH struct {
 	Zone   *Zone
 	Cfg    RuleCfg
 	Tables [RtMax]ruleTable
+	epMap  map[string]*epHost
+	epCs   [MaxEndPointCheckers]epChecker
+	wg     sync.WaitGroup
+	lepHID uint8
+	epMx   sync.RWMutex
 }
 
 // RulesInit - initialize the Rules subsystem
@@ -238,9 +287,10 @@ func RulesInit(zone *Zone) *RuleH {
 	var nRh = new(RuleH)
 	nRh.Zone = zone
 
-	nRh.Cfg.RuleInactChkTime = LbaCheckTimeout
-	nRh.Cfg.RuleInactTries = MaxLbaInactiveTries
+	nRh.Cfg.RuleInactChkTime = DflLbaCheckTimeout
+	nRh.Cfg.RuleInactTries = DflLbaInactiveTries
 
+	nRh.epMap = make(map[string]*epHost)
 	nRh.Tables[RtFw].tableMatch = RmMax - 1
 	nRh.Tables[RtFw].tableType = RtMf
 	nRh.Tables[RtFw].eMap = make(map[string]*ruleEnt)
@@ -250,6 +300,13 @@ func RulesInit(zone *Zone) *RuleH {
 	nRh.Tables[RtLB].tableType = RtEm
 	nRh.Tables[RtLB].eMap = make(map[string]*ruleEnt)
 	nRh.Tables[RtLB].HwMark = tk.NewCounter(1, RtMaximumLbs)
+
+	for i := 0; i < MaxEndPointCheckers; i++ {
+		nRh.epCs[i].tD = make(chan bool)
+		nRh.epCs[i].hChk = time.NewTicker(EndPointCheckerDuration * time.Second)
+		go epTicker(nRh, i)
+	}
+	nRh.wg.Add(MaxEndPointCheckers)
 
 	return nRh
 }
@@ -632,6 +689,36 @@ func validateXlateEPWeights(servEndPoints []cmn.LbEndPointArg) (int, error) {
 	return 0, nil
 }
 
+func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool) {
+	var hopts epHostOpts
+	hopts.inActTryThr = DflLbaInactiveTries
+	hopts.probeDuration = DflLbaCheckTimeout
+	for _, nep := range endpoints {
+		if r.tuples.l4Prot.val == 6 {
+			hopts.probeType = HostProbeConnectTcp
+			hopts.probePort = nep.xPort
+		} else if r.tuples.l4Prot.val == 17 {
+			hopts.probeType = HostProbeConnectUdp
+			hopts.probePort = nep.xPort
+		} else if r.tuples.l4Prot.val == 1 {
+			hopts.probeType = HostProbePing
+		} else if r.tuples.l4Prot.val == 132 {
+			hopts.probeType = HostProbeConnectSctp
+			hopts.probePort = nep.xPort
+		} else {
+			hopts.probeType = HostProbePing
+		}
+		hopts.probeType = HostProbePing
+		if doAddOp {
+			if nep.inActive != true {
+				R.AddEpHost(false, nep.xIP.String(), nep.xIP.String(), hopts)
+			}
+		} else {
+			R.DeleteEpHost(false, nep.xIP.String())
+		}
+	}
+}
+
 // AddNatLbRule - Add a service LB nat rule. The service details are passed in serv argument,
 // and end-point information is passed in the slice servEndPoints. On success,
 // it will return 0 and nil error, else appropriate return code and error string will be set
@@ -754,6 +841,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		eRule.act.action.(*ruleNatActs).endPoints = eEps
 		eRule.act.action.(*ruleNatActs).mode = natActs.mode
 
+		R.modNatEpHost(eRule, eEps, true)
+
 		eRule.sT = time.Now()
 		eRule.iTo = serv.InactiveTimeout
 		tk.LogIt(tk.LogDebug, "nat lb-rule updated - %s:%s\n", eRule.tuples.String(), eRule.act.String())
@@ -784,6 +873,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	}
 	r.sT = time.Now()
 	r.iTo = serv.InactiveTimeout
+
+	R.modNatEpHost(r, natActs.endPoints, true)
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
@@ -829,6 +920,9 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	}
 
 	defer R.Tables[RtLB].HwMark.PutCounter(rule.ruleNum)
+
+	eEps := rule.act.action.(*ruleNatActs).endPoints
+	R.modNatEpHost(rule, eEps, false)
 
 	delete(R.Tables[RtLB].eMap, rt.ruleKey())
 
@@ -1037,6 +1131,257 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 	return 0, nil
 }
 
+// GetEpHosts - get all end-points and pack them into a cmn.EndPointMod slice
+func (R *RuleH) GetEpHosts() ([]cmn.EndPointMod, error) {
+	var res []cmn.EndPointMod
+
+	for _, data := range R.epMap {
+		var ret cmn.EndPointMod
+		// Make end-point
+		ret.Name = data.hostName
+		ret.Desc = data.desc
+		ret.InActTries = data.opts.inActTryThr
+		ret.ProbeType = data.opts.probeType
+		ret.ProbeDuration = data.opts.probeDuration
+		ret.ProbeReq = data.opts.probeReq
+		ret.ProbeResp = data.opts.probeResp
+		ret.ProbePort = data.opts.probePort
+		ret.MinDelay = fmt.Sprintf("%v", data.minDelay)
+		ret.AvgDelay = fmt.Sprintf("%v", data.avgDelay)
+		ret.MaxDelay = fmt.Sprintf("%v", data.maxDelay)
+
+		// Append to slice
+		res = append(res, ret)
+	}
+
+	return res, nil
+}
+
+// IsEpHostActive - Check if end-point is active
+func (R *RuleH) IsEpHostActive(hostName string) bool {
+	ep := R.epMap[hostName]
+	if ep == nil {
+		return true // Are we sure ??
+	}
+
+	return !ep.inactive
+}
+
+func validateEpHostOpts(hostName string, args epHostOpts) (int, error) {
+	// Validate hostopts
+	if net.ParseIP(hostName) == nil {
+		return RuleArgsErr, errors.New("host-parse error")
+	}
+
+	if args.inActTryThr > MaxDflLbaInactiveTries ||
+		args.probeDuration > MaxHostProbeTime {
+		return RuleArgsErr, errors.New("host-args error")
+	}
+
+	if args.probeType != HostProbePing &&
+		args.probeType != HostProbeConnectTcp &&
+		args.probeType != HostProbeConnectUdp &&
+		args.probeType != HostProbeConnectSctp &&
+		args.probeType != HostProbeHttp {
+		return RuleArgsErr, errors.New("host-args unknown probe type")
+	}
+
+	if (args.probeType == HostProbeConnectTcp ||
+		args.probeType == HostProbeConnectUdp ||
+		args.probeType == HostProbeConnectSctp) &&
+		args.probePort == 0 {
+		return RuleArgsErr, errors.New("host-args unknown probe port")
+	}
+
+	return 0, nil
+}
+
+// AddEpHost - Add an end-point host
+// It will return 0 and nil error, else appropriate return code and error string will be set
+func (R *RuleH) AddEpHost(apiCall bool, hostName string, desc string, args epHostOpts) (int, error) {
+
+	R.epMx.Lock()
+	defer R.epMx.Unlock()
+
+	// Validate hostopts
+	_, err := validateEpHostOpts(hostName, args)
+	if err != nil {
+		return RuleArgsErr, err
+	}
+
+	ep := R.epMap[hostName]
+	if ep != nil {
+		if apiCall {
+			ep.opts = args
+			return 0, nil
+		}
+		ep.ruleCount++
+		return 0, nil
+	}
+
+	ep = new(epHost)
+	ep.hostName = hostName
+	ep.desc = desc
+	ep.opts = args
+	if apiCall != true {
+		ep.ruleCount = 1
+	}
+	ep.hID = R.lepHID % MaxEndPointCheckers
+	ep.sT = time.Now()
+	R.lepHID++
+
+	R.epMap[hostName] = ep
+
+	tk.LogIt(tk.LogDebug, "ep-host added %s:%d\n", hostName, ep.hID)
+
+	return 0, nil
+}
+
+// DeleteEpHost - Delete an end-point host
+// It will return 0 and nil error, else appropriate return code and error string will be set
+func (R *RuleH) DeleteEpHost(apiCall bool, hostName string) (int, error) {
+	R.epMx.Lock()
+	defer R.epMx.Unlock()
+
+	ep := R.epMap[hostName]
+	if ep == nil {
+		return RuleEpNotExistErr, errors.New("host-notfound error")
+	}
+
+	if apiCall == false {
+		ep.ruleCount--
+	}
+
+	if ep.ruleCount > 0 {
+		return 0, nil
+	}
+
+	delete(R.epMap, ep.hostName)
+
+	tk.LogIt(tk.LogDebug, "ep-host deleted %s\n", hostName)
+
+	return 0, nil
+}
+
+func (ep *epHost) epCheckNow() {
+	var sType string
+
+	sName := fmt.Sprintf("%s:%d", ep.hostName, ep.opts.probePort)
+	if ep.opts.probeType == HostProbeConnectTcp ||
+		ep.opts.probeType == HostProbeConnectUdp ||
+		ep.opts.probeType == HostProbeConnectSctp {
+		if ep.opts.probeType == HostProbeConnectTcp {
+			sType = "tcp"
+		} else if ep.opts.probeType == HostProbeConnectUdp {
+			sType = "udp"
+		} else {
+			sType = "sctp"
+		}
+		sOk := tk.L4ServiceProber(sType, sName)
+		if sOk == false {
+			if ep.inActTries <= ep.opts.inActTryThr {
+				ep.inActTries++
+				if ep.inActTries > ep.opts.inActTryThr {
+					ep.inactive = true
+					ep.inActTries = 0
+					tk.LogIt(tk.LogDebug, "inactive ep - %s:%s\n", sName, ep.opts.probeType)
+				}
+			}
+		} else {
+			if ep.inactive {
+				ep.inactive = false
+				ep.inActTries = 0
+				tk.LogIt(tk.LogDebug, "active ep - %s:%s\n", sName, ep.opts.probeType)
+			}
+		}
+	} else if ep.opts.probeType == HostProbePing {
+		pinger, err := probing.NewPinger(ep.hostName)
+		if err != nil {
+			return
+		}
+
+		pinger.Count = 2
+		pinger.Size = 100
+		pinger.Interval = 1
+		pinger.Timeout = time.Duration(3000000000)
+		pinger.SetPrivileged(true)
+
+		//pinger.OnFinish = func(stats *ping.Statistics) {
+		//	fmt.Printf("\n--- %s ping statistics ---\n", stats.Addr)
+		//	fmt.Printf("%d packets transmitted, %d packets received, %v%% packet loss\n",
+		//		stats.PacketsSent, stats.PacketsRecv, stats.PacketLoss)
+		//	fmt.Printf("round-trip min/avg/max/stddev = %v/%v/%v/%v\n",
+		//		stats.MinRtt, stats.AvgRtt, stats.MaxRtt, stats.StdDevRtt)
+		//}
+
+		//pinger.OnRecv = func(pkt *probing.Packet) {
+		//	fmt.Printf("%d bytes from %s: icmp_seq=%d time=%v\n",
+		//		pkt.Nbytes, pkt.IPAddr, pkt.Seq, pkt.Rtt)
+		//}
+		err = pinger.Run()
+		if err != nil {
+			return
+		}
+
+		stats := pinger.Statistics()
+
+		if stats.PacketsRecv != 0 {
+			ep.avgDelay = stats.AvgRtt
+			ep.minDelay = stats.MinRtt
+			ep.maxDelay = stats.MaxRtt
+			if ep.inactive {
+				ep.inactive = false
+				ep.inActTries = 0
+				tk.LogIt(tk.LogDebug, "active ep - %s:%s(%v)\n", sName, ep.opts.probeType, ep.avgDelay)
+			}
+		} else {
+			ep.avgDelay = time.Duration(0)
+			ep.minDelay = time.Duration(0)
+			ep.maxDelay = time.Duration(0)
+			if ep.inActTries <= ep.opts.inActTryThr {
+				ep.inActTries++
+				if ep.inActTries > ep.opts.inActTryThr {
+					ep.inactive = true
+					ep.inActTries = 0
+					tk.LogIt(tk.LogDebug, "inactive ep - %s:%s\n", sName, ep.opts.probeType)
+				}
+			}
+		}
+		pinger.Stop()
+	} else {
+		// TODO
+		ep.inactive = false
+		ep.inActTries = 0
+	}
+}
+
+func epTicker(R *RuleH, helper int) {
+	epc := R.epCs[helper]
+
+	for {
+		select {
+		case <-epc.tD:
+			return
+		case t := <-epc.hChk.C:
+			var epHosts []*epHost
+			tk.LogIt(-1, "Tick at %v:%d\n", t, helper)
+			R.epMx.Lock()
+			for _, host := range R.epMap {
+				if host.hID == uint8(helper) &&
+					time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(host.opts.probeDuration) {
+					epHosts = append(epHosts, host)
+					host.sT = t
+				}
+			}
+			R.epMx.Unlock()
+
+			for _, eph := range epHosts {
+				eph.epCheckNow()
+			}
+		}
+	}
+}
+
 // RulesSync - This is periodic ticker routine which does two main things :
 // 1. Syncs rule statistics counts
 // 2. Check health of lb-rule end-points
@@ -1078,17 +1423,13 @@ func (R *RuleH) RulesSync() {
 				}
 
 				for idx, n := range na.endPoints {
+					sOk := R.IsEpHostActive(n.xIP.String())
 					np := &na.endPoints[idx]
-					sName := fmt.Sprintf("%s:%d", n.xIP.String(), n.xPort)
-					sOk := tk.L4ServiceProber(sType, sName)
 					if sOk == false {
-						if n.inActTries <= R.Cfg.RuleInactTries {
-							np.inActTries++
-							if np.inActTries > R.Cfg.RuleInactTries {
-								np.inActive = true
-								rChg = true
-								tk.LogIt(tk.LogDebug, "nat lb-rule inactive ep - %s:%s\n", sType, sName)
-							}
+						if np.inActive == false {
+							np.inActive = true
+							rChg = true
+							tk.LogIt(tk.LogDebug, "nat lb-rule inactive ep - %s:%s\n", sType, n.xIP.String())
 						}
 					} else {
 						if n.inActive {
@@ -1106,7 +1447,6 @@ func (R *RuleH) RulesSync() {
 			tk.LogIt(tk.LogDebug, "nat lb-Rule updated %d:%s,%s\n", rule.ruleNum, ruleKeys, ruleActs)
 			rule.DP(DpCreate)
 		}
-
 	}
 
 	for _, rule := range R.Tables[RtFw].eMap {

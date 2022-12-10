@@ -47,6 +47,8 @@ done
 done
 if [[ $code == 0 ]]
 then
+    $dexec llb1 loxicmd get ct
+    $dexec llb1 loxicmd get port
     echo SCENARIO-11 [OK]
 else
     echo SCENARIO-11 [FAILED]

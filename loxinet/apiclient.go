@@ -416,3 +416,32 @@ func (*NetAPIStruct) NetFwRuleGet() ([]cmn.FwRuleMod, error) {
 	ret, err := mh.zr.Rules.GetFwRule()
 	return ret, err
 }
+
+// NetEpHostAdd - Add a LB end-point in loxinet
+func (*NetAPIStruct) NetEpHostAdd(em *cmn.EndPointMod) (int, error) {
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	epArgs := epHostOpts{inActTryThr: em.InActTries, probeType: em.ProbeType,
+		probeReq: em.ProbeReq, probeResp: em.ProbeResp,
+		probeDuration: em.ProbeDuration, probePort: em.ProbePort,
+	}
+
+	ret, err := mh.zr.Rules.AddEpHost(true, em.Name, em.Desc, epArgs)
+	return ret, err
+}
+
+// NetEpHostDel - Delete a LB end-point in loxinet
+func (*NetAPIStruct) NetEpHostDel(fm *cmn.EndPointMod) (int, error) {
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	ret, err := mh.zr.Rules.DeleteEpHost(true, fm.Name)
+	return ret, err
+}
+
+// NetEpHostGet - Get LB end-points from loxinet
+func (*NetAPIStruct) NetEpHostGet() ([]cmn.EndPointMod, error) {
+	ret, err := mh.zr.Rules.GetEpHosts()
+	return ret, err
+}
