@@ -49,7 +49,7 @@ func ConfigDeleteRoute(params operations.DeleteConfigRouteDestinationIPNetIPAddr
 
 func ConfigGetRoute(params operations.GetConfigRouteAllParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] Route  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	res, _ := ApiHooks.NetRoutev4Get()
+	res, _ := ApiHooks.NetRouteGet()
 	var result []*models.RouteGetEntry
 	result = make([]*models.RouteGetEntry, 0)
 	for _, route := range res {

@@ -151,10 +151,10 @@ func (r *RtH) RtFind(Dst net.IPNet, Zone string) *Rt {
 }
 
 // RouteGet - tlpm package interface implementation
-func (r *RtH) RouteGet() ([]cmn.Routev4Get, error) {
-	var ret []cmn.Routev4Get
+func (r *RtH) RouteGet() ([]cmn.RouteGet, error) {
+	var ret []cmn.RouteGet
 	for rk, r2 := range r.RtMap {
-		var tmpRt cmn.Routev4Get
+		var tmpRt cmn.RouteGet
 		tmpRt.Dst = rk.RtCidr
 		tmpRt.Flags = GetFlagToString(r2.TFlags)
 		if len(r2.NhAttr) != 0 {

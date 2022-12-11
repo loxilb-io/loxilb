@@ -315,10 +315,10 @@ func (l3 *L3H) IfObjMkString(obj string) string {
 }
 
 // IfaGet - Get All of the IPv4Address in the Ifa
-func (l3 *L3H) IfaGet() []cmn.Ipv4AddrGet {
-	var ret []cmn.Ipv4AddrGet
+func (l3 *L3H) IfaGet() []cmn.IpAddrGet {
+	var ret []cmn.IpAddrGet
 	for ifName, ifa := range l3.IfaMap {
-		var tmpIPa cmn.Ipv4AddrGet
+		var tmpIPa cmn.IpAddrGet
 		tmpIPa.Dev = ifName.Obj
 		tmpIPa.Sync = cmn.DpStatusT(ifa.Sync)
 		for _, ip := range ifa.Ifas {

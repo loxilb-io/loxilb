@@ -785,7 +785,7 @@ func AddAddr(addr nlp.Addr, link nlp.Link) int {
 	name := attrs.Name
 	ipStr := (addr.IPNet).String()
 
-	ret, err := hooks.NetIpv4AddrAdd(&cmn.Ipv4AddrMod{Dev: name, IP: ipStr})
+	ret, err := hooks.NetAddrAdd(&cmn.IpAddrMod{Dev: name, IP: ipStr})
 	if err != nil {
 		tk.LogIt(tk.LogError, "[NLP] IPv4 Address %v Port %v failed %v\n", ipStr, name, err)
 		ret = -1
@@ -1023,7 +1023,7 @@ func AddRoute(route nlp.Route) int {
 	} else {
 		ipNet = *route.Dst
 	}
-	ret, err := hooks.NetRoutev4Add(&cmn.Routev4Mod{Protocol: int(route.Protocol), Flags: route.Flags,
+	ret, err := hooks.NetRouteAdd(&cmn.RouteMod{Protocol: int(route.Protocol), Flags: route.Flags,
 		Gw: route.Gw, LinkIndex: route.LinkIndex, Dst: ipNet})
 	if err != nil {
 		if route.Gw != nil {
@@ -1087,7 +1087,7 @@ func DelRoute(route nlp.Route) int {
 	} else {
 		ipNet = *route.Dst
 	}
-	ret, err := hooks.NetRoutev4Del(&cmn.Routev4Mod{Dst: ipNet})
+	ret, err := hooks.NetRouteDel(&cmn.RouteMod{Dst: ipNet})
 	if err != nil {
 		if route.Gw != nil {
 			tk.LogIt(tk.LogError, "[NLP] RT  %s via %s delete failed-%s\n", ipNet.String(),
@@ -1123,21 +1123,21 @@ func AUWorkSingle(m nlp.AddrUpdate) int {
 	attrs := link.Attrs()
 	name := attrs.Name
 	if m.NewAddr {
-		_, err := hooks.NetIpv4AddrAdd(&cmn.Ipv4AddrMod{Dev: name, IP: m.LinkAddress.String()})
+		_, err := hooks.NetAddrAdd(&cmn.IpAddrMod{Dev: name, IP: m.LinkAddress.String()})
 		if err != nil {
-			tk.LogIt(tk.LogInfo, "[NLP] IPv4 Address %v Port %v add failed\n", m.LinkAddress.String(), name)
+			tk.LogIt(tk.LogInfo, "[NLP] Address %v Port %v add failed\n", m.LinkAddress.String(), name)
 			fmt.Println(err)
 		} else {
-			tk.LogIt(tk.LogInfo, "[NLP] IPv4 Address %v Port %v added\n", m.LinkAddress.String(), name)
+			tk.LogIt(tk.LogInfo, "[NLP] Address %v Port %v added\n", m.LinkAddress.String(), name)
 		}
 
 	} else {
-		_, err := hooks.NetIpv4AddrDel(&cmn.Ipv4AddrMod{Dev: name, IP: m.LinkAddress.String()})
+		_, err := hooks.NetAddrDel(&cmn.IpAddrMod{Dev: name, IP: m.LinkAddress.String()})
 		if err != nil {
-			tk.LogIt(tk.LogInfo, "[NLP] IPv4 Address %v Port %v delete failed\n", m.LinkAddress.String(), name)
+			tk.LogIt(tk.LogInfo, "[NLP] Address %v Port %v delete failed\n", m.LinkAddress.String(), name)
 			fmt.Println(err)
 		} else {
-			tk.LogIt(tk.LogInfo, "[NLP] IPv4 Address %v Port %v deleted\n", m.LinkAddress.String(), name)
+			tk.LogIt(tk.LogInfo, "[NLP] Address %v Port %v deleted\n", m.LinkAddress.String(), name)
 		}
 	}
 
