@@ -47,6 +47,7 @@ import (
 	"syscall"
 	"time"
 	"unsafe"
+	"strings"
 
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
@@ -108,8 +109,8 @@ type (
 	rt4Key      C.struct_dp_rtv4_key
 	rtDat       C.struct_dp_rt_tact
 	rtL3NhAct   C.struct_dp_rt_nh_act
-	nat4Key     C.struct_dp_natv4_key
-	nat4Acts    C.struct_dp_natv4_tacts
+	natKey      C.struct_dp_nat_key
+	natActs     C.struct_dp_nat_tacts
 	nxfrmAct    C.struct_mf_xfrm_inf
 	sess4Key    C.struct_dp_sess4_key
 	sessAct     C.struct_dp_sess_tact
@@ -213,6 +214,14 @@ func unLoadEbpfPgm(name string) int {
 	C.free(unsafe.Pointer(ifStr))
 	C.free(unsafe.Pointer(section))
 	return int(ret)
+}
+
+func isNetIPv4(address string) bool {
+    return strings.Count(address, ":") < 2
+}
+
+func isNetIPv6(address string) bool {
+    return strings.Count(address, ":") >= 2
 }
 
 func getPtrOffset(ptr unsafe.Pointer, size uintptr) unsafe.Pointer {
@@ -648,16 +657,27 @@ func (e *DpEbpfH) DpRouteDel(w *RouteDpWorkQ) int {
 // DpNatLbRuleMod - routine to work on a ebpf nat-lb change request
 func DpNatLbRuleMod(w *NatDpWorkQ) int {
 
-	key := new(nat4Key)
+	key := new(natKey)
 
-	key.daddr = C.uint(tk.IPtonl(w.ServiceIP))
+	key.daddr = [4]C.uint{ 0, 0, 0, 0}
+	if isNetIPv4(w.ServiceIP.String()) {
+		key.daddr[0] = C.uint(tk.IPtonl(w.ServiceIP))
+	} else {
+		aPtr := (*C.uchar)(unsafe.Pointer(&key.daddr[0]))
+		for bp := 0; bp < 16; bp++ {
+			*aPtr = C.uchar(w.ServiceIP[bp])
+			aPtr = (*C.uchar)(getPtrOffset(unsafe.Pointer(aPtr),
+					C.sizeof_uchar))
+		}
+
+	}
 	key.dport = C.ushort(tk.Htons(w.L4Port))
 	key.l4proto = C.uchar(w.Proto)
 	key.zone = C.ushort(w.ZoneNum)
 
 	if w.Work == DpCreate {
-		dat := new(nat4Acts)
-		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_natv4_tacts)
+		dat := new(natActs)
+		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_nat_tacts)
 		if w.NatType == DpSnat {
 			dat.ca.act_type = C.DP_SET_SNAT
 		} else if w.NatType == DpDnat || w.NatType == DpFullNat {
@@ -706,7 +726,7 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 
 		dat.nxfrm = C.uint(len(w.endPoints))
 
-		ret := C.llb_add_map_elem(C.LL_DP_NAT4_MAP,
+		ret := C.llb_add_map_elem(C.LL_DP_NAT_MAP,
 			unsafe.Pointer(key),
 			unsafe.Pointer(dat))
 
@@ -716,7 +736,7 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 
 		return 0
 	} else if w.Work == DpRemove {
-		C.llb_del_map_elem(C.LL_DP_NAT4_MAP, unsafe.Pointer(key))
+		C.llb_del_map_elem(C.LL_DP_NAT_MAP, unsafe.Pointer(key))
 		return 0
 	}
 
@@ -747,7 +767,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 	sync := 0
 	switch {
 	case w.Name == MapNameNat4:
-		tbl = append(tbl, int(C.LL_DP_NAT4_STATS_MAP))
+		tbl = append(tbl, int(C.LL_DP_NAT_STATS_MAP))
 		sync = 1
 	case w.Name == MapNameBD:
 		tbl = append(tbl, int(C.LL_DP_BD_STATS_MAP), int(C.LL_DP_TX_BD_STATS_MAP))
