@@ -106,6 +106,7 @@ type (
 	rtL2NhAct   C.struct_dp_rt_l2nh_act
 	rtVxL2NhAct C.struct_dp_rt_l2vxnh_act
 	rt4Key      C.struct_dp_rtv4_key
+	rt6Key      C.struct_dp_rtv6_key
 	rtDat       C.struct_dp_rt_tact
 	rtL3NhAct   C.struct_dp_rt_nh_act
 	natKey      C.struct_dp_nat_key
@@ -576,28 +577,53 @@ func (e *DpEbpfH) DpNextHopDel(w *NextHopDpWorkQ) int {
 
 // DpRouteMod - routine to work on a ebpf route change request
 func DpRouteMod(w *RouteDpWorkQ) int {
+	var mapNum C.int
+	var mapSnum C.int
 	var act *rtL3NhAct
 	var kPtr *[6]uint8
-
-	key := new(rt4Key)
-
-	len, _ := w.Dst.Mask.Size()
-	len += 16 /* 16-bit ZoneNum + prefix-len */
-	key.l.prefixlen = C.uint(len)
-	kPtr = (*[6]uint8)(getPtrOffset(unsafe.Pointer(key),
-		C.sizeof_struct_bpf_lpm_trie_key))
+	var key unsafe.Pointer
 
 	if w.ZoneNum == 0 {
 		tk.LogIt(tk.LogError, "ZoneNum must be specified\n")
 		syscall.Exit(1)
 	}
 
-	kPtr[0] = uint8(w.ZoneNum >> 8 & 0xff)
-	kPtr[1] = uint8(w.ZoneNum & 0xff)
-	kPtr[2] = uint8(w.Dst.IP[0])
-	kPtr[3] = uint8(w.Dst.IP[1])
-	kPtr[4] = uint8(w.Dst.IP[2])
-	kPtr[5] = uint8(w.Dst.IP[3])
+	if IsNetIPv4(w.Dst.IP.String()) {
+		key4 := new(rt4Key)
+
+		len, _ := w.Dst.Mask.Size()
+		len += 16 /* 16-bit ZoneNum + prefix-len */
+		key4.l.prefixlen = C.uint(len)
+		kPtr = (*[6]uint8)(getPtrOffset(unsafe.Pointer(key4),
+			C.sizeof_struct_bpf_lpm_trie_key))
+
+		kPtr[0] = uint8(w.ZoneNum >> 8 & 0xff)
+		kPtr[1] = uint8(w.ZoneNum & 0xff)
+		kPtr[2] = uint8(w.Dst.IP[0])
+		kPtr[3] = uint8(w.Dst.IP[1])
+		kPtr[4] = uint8(w.Dst.IP[2])
+		kPtr[5] = uint8(w.Dst.IP[3])
+		key = unsafe.Pointer(key4)
+		mapNum = C.LL_DP_RTV4_MAP
+		mapSnum = C.LL_DP_RTV4_STATS_MAP
+	} else {
+		key6 := new(rt6Key)
+
+		len, _ := w.Dst.Mask.Size()
+		key6.l.prefixlen = C.uint(len)
+
+		k6Ptr := (*C.uchar)(getPtrOffset(unsafe.Pointer(key6),
+			C.sizeof_struct_bpf_lpm_trie_key))
+
+		for bp := 0; bp < 16; bp++ {
+			*k6Ptr = C.uchar(w.Dst.IP[bp])
+			k6Ptr = (*C.uchar)(getPtrOffset(unsafe.Pointer(k6Ptr),
+				C.sizeof_uchar))
+		}
+		key = unsafe.Pointer(key6)
+		mapNum = C.LL_DP_RTV6_MAP
+		mapSnum = C.LL_DP_RTV6_STATS_MAP
+	}
 
 	if w.Work == DpCreate {
 		dat := new(rtDat)
@@ -616,7 +642,7 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 			dat.ca.cidx = C.uint(w.RtHwMark)
 		}
 
-		ret := C.llb_add_map_elem(C.LL_DP_RTV4_MAP,
+		ret := C.llb_add_map_elem(mapNum,
 			unsafe.Pointer(key),
 			unsafe.Pointer(dat))
 		if ret != 0 {
@@ -624,10 +650,10 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 		}
 		return 0
 	} else if w.Work == DpRemove {
-		C.llb_del_map_elem(C.LL_DP_RTV4_MAP, unsafe.Pointer(key))
+		C.llb_del_map_elem(mapNum, unsafe.Pointer(key))
 
 		if w.RtHwMark > 0 {
-			C.llb_clear_map_stats(C.LL_DP_RTV4_STATS_MAP, C.uint(w.RtHwMark))
+			C.llb_clear_map_stats(mapSnum, C.uint(w.RtHwMark))
 		}
 		return 0
 	}
