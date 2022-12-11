@@ -42,8 +42,7 @@ const (
 // constants
 const (
 	NeighAts       = 10
-	MaxV4Neigh     = 2048
-	MaxV6Neigh     = 1024
+	MaxSysNeigh    = 4096
 	MaxTunnelNeigh = 1024
 )
 
@@ -104,7 +103,6 @@ type Neigh struct {
 type NeighH struct {
 	NeighMap map[NeighKey]*Neigh
 	NeighID  *tk.Counter
-	Neigh6ID *tk.Counter
 	NeighTID *tk.Counter
 	Zone     *Zone
 }
@@ -113,9 +111,8 @@ type NeighH struct {
 func NeighInit(zone *Zone) *NeighH {
 	var nNh = new(NeighH)
 	nNh.NeighMap = make(map[NeighKey]*Neigh)
-	nNh.NeighID = tk.NewCounter(1, MaxV4Neigh)
-	nNh.NeighTID = tk.NewCounter(MaxV4Neigh+1, MaxTunnelNeigh)
-	nNh.Neigh6ID = tk.NewCounter(1, MaxV6Neigh)
+	nNh.NeighID = tk.NewCounter(1, MaxSysNeigh)
+	nNh.NeighTID = tk.NewCounter(MaxSysNeigh+1, MaxTunnelNeigh)
 	nNh.Zone = zone
 
 	return nNh
@@ -123,6 +120,10 @@ func NeighInit(zone *Zone) *NeighH {
 
 // Activate - Try to activate a neighbor
 func (n *NeighH) Activate(ne *Neigh) {
+
+	if IsNetIPv6(ne.Addr.String()) {
+		return
+	}
 
 	if ne.Resolved {
 		return
@@ -306,7 +307,12 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 		Attr.HardwareAddr, _ = net.ParseMAC("00:11:22:33:44:55")
 	}
 
-	mask := net.CIDRMask(32, 32)
+	var mask net.IPMask
+	if IsNetIPv4(Addr.String()) {
+		mask = net.CIDRMask(32, 32)
+	} else {
+		mask = net.CIDRMask(128, 128)
+	}
 	ipnet := net.IPNet{IP: Addr, Mask: mask}
 	ra := RtAttr{0, 0, true}
 	na := []RtNhAttr{{Addr, Attr.OSLinkIndex}}
@@ -330,18 +336,10 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 		return NeighExistsErr, errors.New("nh exists")
 	}
 
-	if Addr.To4() == nil {
-		idx, err = n.Neigh6ID.GetCounter()
-		if err != nil {
-			tk.LogIt(tk.LogError, "neigh6 add - %s:%s no hwmarks\n", Addr.String(), Zone)
-			return NeighRangeErr, errors.New("nh6-hwm error")
-		}
-	} else {
-		idx, err = n.NeighID.GetCounter()
-		if err != nil {
-			tk.LogIt(tk.LogError, "neigh add - %s:%s no hwmarks\n", Addr.String(), Zone)
-			return NeighRangeErr, errors.New("nh-hwm error")
-		}
+	idx, err = n.NeighID.GetCounter()
+	if err != nil {
+		tk.LogIt(tk.LogError, "neigh add - %s:%s no hwmarks\n", Addr.String(), Zone)
+		return NeighRangeErr, errors.New("nh-hwm error")
 	}
 
 	ne = new(Neigh)
@@ -452,12 +450,7 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 	}
 
 	n.NeighDelAllTunEP(ne)
-
-	if ne.Addr.To4() == nil {
-		n.Neigh6ID.PutCounter(ne.HwMark)
-	} else {
-		n.Neigh6ID.PutCounter(ne.HwMark)
-	}
+	n.NeighID.PutCounter(ne.HwMark)
 
 	ne.tFdb = nil
 	ne.HwMark = -1

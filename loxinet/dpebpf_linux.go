@@ -47,7 +47,6 @@ import (
 	"syscall"
 	"time"
 	"unsafe"
-	"strings"
 
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
@@ -214,14 +213,6 @@ func unLoadEbpfPgm(name string) int {
 	C.free(unsafe.Pointer(ifStr))
 	C.free(unsafe.Pointer(section))
 	return int(ret)
-}
-
-func isNetIPv4(address string) bool {
-    return strings.Count(address, ":") < 2
-}
-
-func isNetIPv6(address string) bool {
-    return strings.Count(address, ":") >= 2
 }
 
 func getPtrOffset(ptr unsafe.Pointer, size uintptr) unsafe.Pointer {
@@ -659,15 +650,15 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 
 	key := new(natKey)
 
-	key.daddr = [4]C.uint{ 0, 0, 0, 0}
-	if isNetIPv4(w.ServiceIP.String()) {
+	key.daddr = [4]C.uint{0, 0, 0, 0}
+	if IsNetIPv4(w.ServiceIP.String()) {
 		key.daddr[0] = C.uint(tk.IPtonl(w.ServiceIP))
 	} else {
 		aPtr := (*C.uchar)(unsafe.Pointer(&key.daddr[0]))
 		for bp := 0; bp < 16; bp++ {
 			*aPtr = C.uchar(w.ServiceIP[bp])
 			aPtr = (*C.uchar)(getPtrOffset(unsafe.Pointer(aPtr),
-					C.sizeof_uchar))
+				C.sizeof_uchar))
 		}
 
 	}
