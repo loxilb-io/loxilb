@@ -93,7 +93,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 		ra := RtAttr{0, 0, false}
 		_, err = mh.zr.Rt.RtAdd(*network, RootZone, ra, nil)
 		if err != nil {
-			tk.LogIt(tk.LogDebug, "ifa add - %s:%s self-rt error", addr.String(), Obj)
+			tk.LogIt(tk.LogDebug, "ifa add - %s:%s self-rt error\n", addr.String(), Obj)
 			return L3AddrErr, errors.New("self-route add error")
 		}
 
@@ -104,7 +104,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 
 	for _, ifaEnt := range ifa.Ifas {
 		if ifaEnt.IfaAddr.Equal(addr) {
-			tk.LogIt(tk.LogDebug, "ifa add - exists %s:%s", addr.String(), Obj)
+			tk.LogIt(tk.LogDebug, "ifa add - exists %s:%s\n", addr.String(), Obj)
 			return L3AddrErr, errors.New("ip address exists")
 		}
 
@@ -132,13 +132,13 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 	ra := RtAttr{0, 0, false}
 	_, err = mh.zr.Rt.RtAdd(*network, RootZone, ra, nil)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "ifa add - %s:%s self-rt error", addr.String(), Obj)
+		tk.LogIt(tk.LogDebug, " - %s:%s self-rt error\n", addr.String(), Obj)
 		return L3AddrErr, errors.New("self-route add error")
 	}
 
 	ifa.DP(DpCreate)
 
-	tk.LogIt(tk.LogDebug, "ifa added %s:%s", addr.String(), Obj)
+	tk.LogIt(tk.LogDebug, "ifa added %s:%s\n", addr.String(), Obj)
 
 	return 0, nil
 }
@@ -149,7 +149,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 	var found bool = false
 	addr, network, err := net.ParseCIDR(Cidr)
 	if err != nil {
-		tk.LogIt(tk.LogError, "ifa delete - malformed %s:%s", addr.String(), Obj)
+		tk.LogIt(tk.LogError, "ifa delete - malformed %s:%s\n", addr.String(), Obj)
 		return L3AddrErr, errors.New("ip address parse error")
 	}
 
@@ -157,7 +157,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 	ifa := l3.IfaMap[key]
 
 	if ifa == nil {
-		tk.LogIt(tk.LogError, "ifa delete - no such %s:%s", addr.String(), Obj)
+		tk.LogIt(tk.LogError, "ifa delete - no such %s:%s\n", addr.String(), Obj)
 		return L3AddrErr, errors.New("no such ip address")
 	}
 
@@ -180,7 +180,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 		// delete self-routes related to this ifa
 		_, err = mh.zr.Rt.RtDelete(*network, RootZone)
 		if err != nil {
-			tk.LogIt(tk.LogError, "ifa delete %s:%s self-rt error", addr.String(), Obj)
+			tk.LogIt(tk.LogError, "ifa delete %s:%s self-rt error\n", addr.String(), Obj)
 			// Continue after logging error because there is noway to fallback
 		}
 		if len(ifa.Ifas) == 0 {
@@ -188,12 +188,12 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 
 			ifa.DP(DpRemove)
 
-			tk.LogIt(tk.LogDebug, "ifa deleted %s:%s", addr.String(), Obj)
+			tk.LogIt(tk.LogDebug, "ifa deleted %s:%s\n", addr.String(), Obj)
 		}
 		return 0, nil
 	}
 
-	tk.LogIt(tk.LogDebug, "ifa delete - no such %s:%s", addr.String(), Obj)
+	tk.LogIt(tk.LogDebug, "ifa delete - no such %s:%s\n", addr.String(), Obj)
 	return L3AddrErr, errors.New("no such ifa")
 }
 
