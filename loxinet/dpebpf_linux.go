@@ -855,11 +855,28 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 	return 0
 }
 
+func convDPv6Addr2NetIP(addr unsafe.Pointer) net.IP {
+	var goIP net.IP
+	aPtr := (*C.uchar)(addr)
+
+	for i := 0; i < 16; i++ {
+		goIP = append(goIP, uint8(*aPtr))
+		aPtr = (*C.uchar)(getPtrOffset(unsafe.Pointer(aPtr),
+				C.sizeof_uchar))
+	}
+	return goIP
+}
+
 func convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtInfo {
 	ct := new(DpCtInfo)
 
-	ct.DIP = tk.NltoIP(uint32(ctKey.daddr[0]))
-	ct.SIP = tk.NltoIP(uint32(ctKey.saddr[0]))
+	if ctKey.v6 == 0 {
+		ct.DIP = tk.NltoIP(uint32(ctKey.daddr[0]))
+		ct.SIP = tk.NltoIP(uint32(ctKey.saddr[0]))
+	} else {
+		ct.SIP = convDPv6Addr2NetIP(unsafe.Pointer(&ctKey.saddr[0]))
+		ct.DIP = convDPv6Addr2NetIP(unsafe.Pointer(&ctKey.daddr[0]))
+	}
 	ct.Dport = tk.Ntohs(uint16(ctKey.dport))
 	ct.Sport = tk.Ntohs(uint16(ctKey.sport))
 	ct.Packets = uint64(ctDat.pb.packets)
