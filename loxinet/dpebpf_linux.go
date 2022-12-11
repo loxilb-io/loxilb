@@ -196,6 +196,27 @@ func DpEbpfInit() *DpEbpfH {
 	return ne
 }
 
+func convNetIP2DPv6Addr(addr unsafe.Pointer, goIP net.IP) {
+	aPtr := (*C.uchar)(addr)
+	for bp := 0; bp < 16; bp++ {
+		*aPtr = C.uchar(goIP[bp])
+		aPtr = (*C.uchar)(getPtrOffset(unsafe.Pointer(aPtr),
+				C.sizeof_uchar))
+	}
+}
+
+func convDPv6Addr2NetIP(addr unsafe.Pointer) net.IP {
+	var goIP net.IP
+	aPtr := (*C.uchar)(addr)
+
+	for i := 0; i < 16; i++ {
+		goIP = append(goIP, uint8(*aPtr))
+		aPtr = (*C.uchar)(getPtrOffset(unsafe.Pointer(aPtr),
+				C.sizeof_uchar))
+	}
+	return goIP
+}
+
 // loadEbpfPgm - load loxilb eBPF program to an interface
 func loadEbpfPgm(name string) int {
 	ifStr := C.CString(name)
@@ -680,13 +701,7 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 	if IsNetIPv4(w.ServiceIP.String()) {
 		key.daddr[0] = C.uint(tk.IPtonl(w.ServiceIP))
 	} else {
-		aPtr := (*C.uchar)(unsafe.Pointer(&key.daddr[0]))
-		for bp := 0; bp < 16; bp++ {
-			*aPtr = C.uchar(w.ServiceIP[bp])
-			aPtr = (*C.uchar)(getPtrOffset(unsafe.Pointer(aPtr),
-				C.sizeof_uchar))
-		}
-
+		convNetIP2DPv6Addr(unsafe.Pointer(&key.daddr[0]), w.ServiceIP)
 	}
 	key.dport = C.ushort(tk.Htons(w.L4Port))
 	key.l4proto = C.uchar(w.Proto)
@@ -724,8 +739,13 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		for _, k := range w.endPoints {
 			nxfa.wprio = C.ushort(k.Weight)
 			nxfa.nat_xport = C.ushort(tk.Htons(k.XPort))
-			nxfa.nat_xip[0] = C.uint(tk.IPtonl(k.XIP))
-			nxfa.nat_rip[0] = C.uint(tk.IPtonl(k.RIP))
+			if nxfa.nv6 == 0 {
+				nxfa.nat_xip[0] = C.uint(tk.IPtonl(k.XIP))
+				nxfa.nat_rip[0] = C.uint(tk.IPtonl(k.RIP))
+			} else {
+				convNetIP2DPv6Addr(unsafe.Pointer(&nxfa.nat_xip[0]), k.XIP)
+				convNetIP2DPv6Addr(unsafe.Pointer(&nxfa.nat_rip[0]), k.RIP)
+			}
 
 			if k.InActive {
 				nxfa.inactive = 1
@@ -853,18 +873,6 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 	}
 
 	return 0
-}
-
-func convDPv6Addr2NetIP(addr unsafe.Pointer) net.IP {
-	var goIP net.IP
-	aPtr := (*C.uchar)(addr)
-
-	for i := 0; i < 16; i++ {
-		goIP = append(goIP, uint8(*aPtr))
-		aPtr = (*C.uchar)(getPtrOffset(unsafe.Pointer(aPtr),
-				C.sizeof_uchar))
-	}
-	return goIP
 }
 
 func convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtInfo {
