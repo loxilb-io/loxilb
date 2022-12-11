@@ -884,8 +884,12 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtI
 
 	p := uint8(ctKey.l4proto)
 	switch {
-	case p == 1:
-		ct.Proto = "icmp"
+	case p == 1 || p == 58:
+		if p == 1 {
+			ct.Proto = "icmp"
+		} else {
+			ct.Proto = "icmp6"
+		}
 		i := (*C.ct_icmp_pinf_t)(unsafe.Pointer(&ctDat.pi))
 		switch {
 		case i.state&C.CT_ICMP_DUNR != 0:
