@@ -286,8 +286,8 @@ type IpAddrMod struct {
 	IP string
 }
 
-// Neighv4Mod - Info about an neighbor
-type Neighv4Mod struct {
+// NeighMod - Info about an neighbor
+type NeighMod struct {
 	// IP - The IP address
 	IP net.IP
 	// LinkIndex - OS allocated index
@@ -690,9 +690,9 @@ type NetHookInterface interface {
 	NetAddrGet() ([]IpAddrGet, error)
 	NetAddrAdd(*IpAddrMod) (int, error)
 	NetAddrDel(*IpAddrMod) (int, error)
-	NetNeighv4Get() ([]Neighv4Mod, error)
-	NetNeighv4Add(*Neighv4Mod) (int, error)
-	NetNeighv4Del(*Neighv4Mod) (int, error)
+	NetNeighGet() ([]NeighMod, error)
+	NetNeighAdd(*NeighMod) (int, error)
+	NetNeighDel(*NeighMod) (int, error)
 	NetRouteGet() ([]RouteGet, error)
 	NetRouteAdd(*RouteMod) (int, error)
 	NetRouteDel(*RouteMod) (int, error)

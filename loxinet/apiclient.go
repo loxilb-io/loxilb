@@ -165,14 +165,14 @@ func (*NetAPIStruct) NetAddrDel(am *cmn.IpAddrMod) (int, error) {
 	return ret, err
 }
 
-// NetNeighv4Get - Get a ipv4 neighbor in loxinet
-func (*NetAPIStruct) NetNeighv4Get() ([]cmn.Neighv4Mod, error) {
+// NetNeighGet - Get a neighbor in loxinet
+func (*NetAPIStruct) NetNeighGet() ([]cmn.NeighMod, error) {
 	ret, err := mh.zr.Nh.NeighGet()
 	return ret, err
 }
 
-// NetNeighv4Add - Add a ipv4 neighbor in loxinet
-func (*NetAPIStruct) NetNeighv4Add(nm *cmn.Neighv4Mod) (int, error) {
+// NetNeighAdd - Add a neighbor in loxinet
+func (*NetAPIStruct) NetNeighAdd(nm *cmn.NeighMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -186,8 +186,8 @@ func (*NetAPIStruct) NetNeighv4Add(nm *cmn.Neighv4Mod) (int, error) {
 	return 0, nil
 }
 
-// NetNeighv4Del - Delete a ipv4 neighbor in loxinet
-func (*NetAPIStruct) NetNeighv4Del(nm *cmn.Neighv4Mod) (int, error) {
+// NetNeighDel - Delete a neighbor in loxinet
+func (*NetAPIStruct) NetNeighDel(nm *cmn.NeighMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 

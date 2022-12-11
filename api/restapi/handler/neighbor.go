@@ -44,7 +44,7 @@ func ConfigDeleteNeighbor(params operations.DeleteConfigNeighborIPAddressDevIfNa
 
 func ConfigGetNeighbor(params operations.GetConfigNeighborAllParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] IPv4 Neighbor  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	res, _ := ApiHooks.NetNeighv4Get()
+	res, _ := ApiHooks.NetNeighGet()
 	var result []*models.NeighborEntry
 	result = make([]*models.NeighborEntry, 0)
 	for _, neighbor := range res {

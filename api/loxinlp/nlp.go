@@ -861,8 +861,9 @@ func AddNeigh(neigh nlp.Neigh, link nlp.Link) int {
 	}
 	copy(mac[:], neigh.HardwareAddr[:6])
 
-	if neigh.Family == unix.AF_INET {
-		ret, err = hooks.NetNeighv4Add(&cmn.Neighv4Mod{IP: neigh.IP, LinkIndex: neigh.LinkIndex,
+	if neigh.Family == unix.AF_INET ||
+		neigh.Family == unix.AF_INET6 {
+		ret, err = hooks.NetNeighAdd(&cmn.NeighMod{IP: neigh.IP, LinkIndex: neigh.LinkIndex,
 			State:        neigh.State,
 			HardwareAddr: neigh.HardwareAddr})
 		if err != nil {
@@ -944,9 +945,10 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 	attrs := link.Attrs()
 	name := attrs.Name
 
-	if neigh.Family == unix.AF_INET {
+	if neigh.Family == unix.AF_INET ||
+		neigh.Family == unix.AF_INET6 {
 
-		ret, err = hooks.NetNeighv4Del(&cmn.Neighv4Mod{IP: neigh.IP})
+		ret, err = hooks.NetNeighDel(&cmn.NeighMod{IP: neigh.IP})
 		if err != nil {
 			tk.LogIt(tk.LogError, "[NLP] NH  %v %v del failed\n", neigh.IP.String(), name)
 			ret = -1

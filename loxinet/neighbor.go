@@ -275,10 +275,10 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 }
 
 // NeighGet - Get neigh entries in Neighv4Mod slice
-func (n *NeighH) NeighGet() ([]cmn.Neighv4Mod, error) {
-	var ret []cmn.Neighv4Mod
+func (n *NeighH) NeighGet() ([]cmn.NeighMod, error) {
+	var ret []cmn.NeighMod
 	for _, n2 := range n.NeighMap {
-		var tmpNeigh cmn.Neighv4Mod
+		var tmpNeigh cmn.NeighMod
 		tmpNeigh.HardwareAddr = n2.Attr.HardwareAddr
 		tmpNeigh.IP = n2.Addr
 		tmpNeigh.State = int(n2.Sync)
