@@ -1287,7 +1287,7 @@ func NlpGet(ch chan bool) int {
 			}
 		}
 
-		addrs, err := nlp.AddrList(link, nlp.FAMILY_V4)
+		addrs, err := nlp.AddrList(link, nlp.FAMILY_ALL)
 		if err != nil {
 			tk.LogIt(tk.LogError, "[NLP] Error getting address list %v for intf %s\n",
 				err, link.Attrs().Name)
@@ -1316,7 +1316,7 @@ func NlpGet(ch chan bool) int {
 		}
 
 		/* Get Routes */
-		routes, err := nlp.RouteList(link, nlp.FAMILY_V4)
+		routes, err := nlp.RouteList(link, nlp.FAMILY_ALL)
 		if err != nil {
 			tk.LogIt(tk.LogError, "[NLP] Error getting route list %v\n", err)
 		}
