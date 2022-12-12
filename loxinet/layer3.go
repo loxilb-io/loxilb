@@ -214,6 +214,10 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP) (int, net.IP) {
 			continue
 		}
 
+		if IsNetIPv6(addr.String()) && IsNetIPv4(ifaEnt.IfaNet.IP.String()) {
+			continue
+		}
+
 		if ifaEnt.IfaNet.Contains(addr) {
 			return 0, ifaEnt.IfaAddr
 		}
@@ -230,6 +234,34 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP) (int, net.IP) {
 // IfaSelectAny - Given any dest ip address, select optimal interface source ip address
 // This is useful to determine source ip address when sending traffic to the given ip address
 func (l3 *L3H) IfaSelectAny(addr net.IP) (int, net.IP) {
+	var err int
+	var tDat tk.TrieData
+	var firstIP *net.IP
+
+	v6 := false
+	IfObj := ""
+	firstIP = nil
+
+	if IsNetIPv4(addr.String()) {
+		err, _, tDat = l3.Zone.Rt.Trie4.FindTrie(addr.String())
+	} else {
+		v6 = true
+		err, _, tDat = l3.Zone.Rt.Trie6.FindTrie(addr.String())
+	}
+	if err == 0 {
+		switch rtn := tDat.(type) {
+		case *Neigh:
+			if rtn != nil {
+				IfObj = rtn.OifPort.Name
+			}
+		default:
+			break
+		}
+	}
+
+	if IfObj != "" {
+		return l3.IfaSelect(IfObj, addr)
+	}
 
 	for _, ifa := range l3.IfaMap {
 		if ifa.Key.Obj == "lo" {
@@ -241,21 +273,22 @@ func (l3 *L3H) IfaSelectAny(addr net.IP) (int, net.IP) {
 				continue
 			}
 
+			if v6 && IsNetIPv4(ifaEnt.IfaNet.IP.String()) {
+				continue
+			}
+
 			if ifaEnt.IfaNet.Contains(addr) {
 				return 0, ifaEnt.IfaAddr
+			}
+
+			if firstIP == nil {
+				firstIP = &ifaEnt.IfaAddr
 			}
 		}
 	}
 
-	for _, ifa := range l3.IfaMap {
-		if ifa.Key.Obj == "lo" {
-			continue
-		}
-
-		// Select first IP from any list
-		if len(ifa.Ifas) > 0 {
-			return 0, ifa.Ifas[0].IfaAddr
-		}
+	if firstIP != nil {
+		return 0, *firstIP
 	}
 
 	return L3AddrErr, net.IPv4(0, 0, 0, 0)

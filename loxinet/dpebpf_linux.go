@@ -201,7 +201,7 @@ func convNetIP2DPv6Addr(addr unsafe.Pointer, goIP net.IP) {
 	for bp := 0; bp < 16; bp++ {
 		*aPtr = C.uchar(goIP[bp])
 		aPtr = (*C.uchar)(getPtrOffset(unsafe.Pointer(aPtr),
-				C.sizeof_uchar))
+			C.sizeof_uchar))
 	}
 }
 
@@ -212,7 +212,7 @@ func convDPv6Addr2NetIP(addr unsafe.Pointer) net.IP {
 	for i := 0; i < 16; i++ {
 		goIP = append(goIP, uint8(*aPtr))
 		aPtr = (*C.uchar)(getPtrOffset(unsafe.Pointer(aPtr),
-				C.sizeof_uchar))
+			C.sizeof_uchar))
 	}
 	return goIP
 }
