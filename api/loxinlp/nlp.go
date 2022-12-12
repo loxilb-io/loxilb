@@ -549,6 +549,60 @@ func DelVxLANNoHook(vxlanid int) int {
 
 	return ret
 }
+
+func GetVxLANPeerNoHook() (map[int][]string, error) {
+	ret := map[int][]string{}
+	links, err := nlp.LinkList()
+	if err != nil {
+		tk.LogIt(tk.LogError, "[NLP] Error in getting device info(%v)\n", err)
+		return nil, err
+	}
+
+	for _, link := range links {
+		if link.Type() == "vxlan" {
+			neighs, err := nlp.NeighList(link.Attrs().Index, unix.AF_BRIDGE)
+			if err != nil {
+				tk.LogIt(tk.LogError, "[NLP] Error getting neighbors list %v for intf %s\n",
+					err, link.Attrs().Name)
+				return nil, err
+			}
+			for _, neigh := range neighs {
+				if neigh.IP != nil {
+					ret[link.Attrs().Index] = append(ret[link.Attrs().Index], neigh.IP.String())
+				}
+			}
+		}
+	}
+	return ret, nil
+}
+
+func GetFDBNoHook() ([]map[string]string, error) {
+	ret := []map[string]string{}
+	links, err := nlp.LinkList()
+	if err != nil {
+		tk.LogIt(tk.LogError, "[NLP] Error in getting device info(%v)\n", err)
+		return nil, err
+	}
+
+	for _, link := range links {
+		if link.Attrs().MasterIndex > 0 {
+			fdbs, err := nlp.NeighList(link.Attrs().Index, unix.AF_BRIDGE)
+			if err != nil {
+				tk.LogIt(tk.LogError, "[NLP] Error getting fdb list %v for intf %s\n",
+					err, link.Attrs().Name)
+				return nil, err
+			}
+			for _, fdb := range fdbs {
+				tmpRet := map[string]string{}
+				tmpRet["macAddress"] = fdb.HardwareAddr.String()
+				tmpRet["dev"] = link.Attrs().Name
+				ret = append(ret, tmpRet)
+			}
+		}
+	}
+	return ret, nil
+}
+
 func AddVxLANPeerNoHook(vxlanid int, PeerIP string) int {
 	var ret int
 	MacAddress, _ := net.ParseMAC("00:00:00:00:00:00")
