@@ -703,7 +703,6 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		key.v6 = 0
 	} else {
 		convNetIP2DPv6Addr(unsafe.Pointer(&key.daddr[0]), w.ServiceIP)
-		fmt.Printf("%s:0x%v",  w.ServiceIP.String(), key.daddr)
 		key.v6 = 1
 	}
 	key.dport = C.ushort(tk.Htons(w.L4Port))
