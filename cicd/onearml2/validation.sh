@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo SCENARIO-11
+echo ONEARM-L2
 $hexec l2ep1 node ./server1.js &
 $hexec l2ep2 node ./server2.js &
 $hexec l2ep3 node ./server3.js &
@@ -25,7 +25,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            echo SCENARIO-11 [FAILED]
+            echo ONEARM-L2 [FAILED]
             exit 1
         fi
     fi
@@ -47,11 +47,10 @@ done
 done
 if [[ $code == 0 ]]
 then
+    echo ONEARM-L2 [OK]
+else
     $dexec llb1 loxicmd get ct
     $dexec llb1 loxicmd get port
-    echo SCENARIO-11 [OK]
-else
-    echo SCENARIO-11 [FAILED]
+    echo ONEARM-L2 [FAILED]
 fi
 exit $code
-

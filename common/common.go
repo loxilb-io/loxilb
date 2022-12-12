@@ -278,16 +278,16 @@ type FdbMod struct {
 	Type int
 }
 
-// Ipv4AddrMod - Info about an ip address
-type Ipv4AddrMod struct {
+// IpAddrMod - Info about an ip address
+type IpAddrMod struct {
 	// Dev - name of the related device
 	Dev string
 	// IP - Actual IP address
 	IP string
 }
 
-// Neighv4Mod - Info about an neighbor
-type Neighv4Mod struct {
+// NeighMod - Info about an neighbor
+type NeighMod struct {
 	// IP - The IP address
 	IP net.IP
 	// LinkIndex - OS allocated index
@@ -298,8 +298,8 @@ type Neighv4Mod struct {
 	HardwareAddr net.HardwareAddr
 }
 
-// Ipv4AddrGet - Info about an ip addresses
-type Ipv4AddrGet struct {
+// IpAddrGet - Info about an ip addresses
+type IpAddrGet struct {
 	// Dev - name of the related device
 	Dev string
 	// IP - Actual IP address
@@ -316,8 +316,8 @@ type RouteGetEntryStatistic struct {
 	Packets int
 }
 
-// Routev4Get - Info about an route
-type Routev4Get struct {
+// RouteGet - Info about an route
+type RouteGet struct {
 	// Protocol - Protocol type
 	Protocol int
 	// Flags - flag type
@@ -336,8 +336,8 @@ type Routev4Get struct {
 	Sync DpStatusT
 }
 
-// Routev4Mod - Info about a route
-type Routev4Mod struct {
+// RouteMod - Info about a route
+type RouteMod struct {
 	// Protocol - Protocol type
 	Protocol int
 	// Flags - flag type
@@ -687,15 +687,15 @@ type NetHookInterface interface {
 	NetVlanPortDel(*VlanPortMod) (int, error)
 	NetFdbAdd(*FdbMod) (int, error)
 	NetFdbDel(*FdbMod) (int, error)
-	NetIpv4AddrGet() ([]Ipv4AddrGet, error)
-	NetIpv4AddrAdd(*Ipv4AddrMod) (int, error)
-	NetIpv4AddrDel(*Ipv4AddrMod) (int, error)
-	NetNeighv4Get() ([]Neighv4Mod, error)
-	NetNeighv4Add(*Neighv4Mod) (int, error)
-	NetNeighv4Del(*Neighv4Mod) (int, error)
-	NetRoutev4Get() ([]Routev4Get, error)
-	NetRoutev4Add(*Routev4Mod) (int, error)
-	NetRoutev4Del(*Routev4Mod) (int, error)
+	NetAddrGet() ([]IpAddrGet, error)
+	NetAddrAdd(*IpAddrMod) (int, error)
+	NetAddrDel(*IpAddrMod) (int, error)
+	NetNeighGet() ([]NeighMod, error)
+	NetNeighAdd(*NeighMod) (int, error)
+	NetNeighDel(*NeighMod) (int, error)
+	NetRouteGet() ([]RouteGet, error)
+	NetRouteAdd(*RouteMod) (int, error)
+	NetRouteDel(*RouteMod) (int, error)
 	NetLbRuleAdd(*LbRuleMod) (int, error)
 	NetLbRuleDel(*LbRuleMod) (int, error)
 	NetLbRuleGet() ([]LbRuleMod, error)
