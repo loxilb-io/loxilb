@@ -114,6 +114,7 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler = operations.DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandlerFunc(handler.ConfigDeleteVLANMember)
 
 	// VxLAN
+	api.GetConfigTunnelVxlanAllHandler = operations.GetConfigTunnelVxlanAllHandlerFunc(handler.ConfigGetVxLAN)
 	api.PostConfigTunnelVxlanHandler = operations.PostConfigTunnelVxlanHandlerFunc(handler.ConfigPostVxLAN)
 	api.DeleteConfigTunnelVxlanVxlanIDHandler = operations.DeleteConfigTunnelVxlanVxlanIDHandlerFunc(handler.ConfigDeleteVxLAN)
 
@@ -127,6 +128,7 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.GetConfigNeighborAllHandler = operations.GetConfigNeighborAllHandlerFunc(handler.ConfigGetNeighbor)
 
 	// FDB
+	api.GetConfigFdbAllHandler = operations.GetConfigFdbAllHandlerFunc(handler.ConfigGetFDB)
 	api.PostConfigFdbHandler = operations.PostConfigFdbHandlerFunc(handler.ConfigPostFDB)
 	api.DeleteConfigFdbMacAddressDevIfNameHandler = operations.DeleteConfigFdbMacAddressDevIfNameHandlerFunc(handler.ConfigDeleteFDB)
 

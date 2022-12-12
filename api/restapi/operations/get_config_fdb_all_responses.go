@@ -16,7 +16,8 @@ import (
 // GetConfigFdbAllOKCode is the HTTP code returned for type GetConfigFdbAllOK
 const GetConfigFdbAllOKCode int = 200
 
-/*GetConfigFdbAllOK OK
+/*
+GetConfigFdbAllOK OK
 
 swagger:response getConfigFdbAllOK
 */
@@ -60,7 +61,8 @@ func (o *GetConfigFdbAllOK) WriteResponse(rw http.ResponseWriter, producer runti
 // GetConfigFdbAllUnauthorizedCode is the HTTP code returned for type GetConfigFdbAllUnauthorized
 const GetConfigFdbAllUnauthorizedCode int = 401
 
-/*GetConfigFdbAllUnauthorized Invalid authentication credentials
+/*
+GetConfigFdbAllUnauthorized Invalid authentication credentials
 
 swagger:response getConfigFdbAllUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *GetConfigFdbAllUnauthorized) WriteResponse(rw http.ResponseWriter, prod
 // GetConfigFdbAllInternalServerErrorCode is the HTTP code returned for type GetConfigFdbAllInternalServerError
 const GetConfigFdbAllInternalServerErrorCode int = 500
 
-/*GetConfigFdbAllInternalServerError Internal service error
+/*
+GetConfigFdbAllInternalServerError Internal service error
 
 swagger:response getConfigFdbAllInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *GetConfigFdbAllInternalServerError) WriteResponse(rw http.ResponseWrite
 // GetConfigFdbAllServiceUnavailableCode is the HTTP code returned for type GetConfigFdbAllServiceUnavailable
 const GetConfigFdbAllServiceUnavailableCode int = 503
 
-/*GetConfigFdbAllServiceUnavailable Maintanence mode
+/*
+GetConfigFdbAllServiceUnavailable Maintanence mode
 
 swagger:response getConfigFdbAllServiceUnavailable
 */

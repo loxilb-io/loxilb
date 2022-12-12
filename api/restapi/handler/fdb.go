@@ -18,6 +18,7 @@ package handler
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/loxilb-io/loxilb/api/loxinlp"
+	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	tk "github.com/loxilb-io/loxilib"
 )
@@ -38,4 +39,18 @@ func ConfigDeleteFDB(params operations.DeleteConfigFdbMacAddressDevIfNameParams)
 		return &ResultResponse{Result: "fail"}
 	}
 	return &ResultResponse{Result: "Success"}
+}
+
+func ConfigGetFDB(params operations.GetConfigFdbAllParams) middleware.Responder {
+	tk.LogIt(tk.LogDebug, "[API] FDB  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	fdbs, _ := loxinlp.GetFDBNoHook()
+	var result []*models.FDBEntry
+	result = make([]*models.FDBEntry, 0)
+	for _, fdb := range fdbs {
+		var tmpResult models.FDBEntry
+		tmpResult.MacAddress = fdb["macAddress"]
+		tmpResult.Dev = fdb["dev"]
+		result = append(result, &tmpResult)
+	}
+	return operations.NewGetConfigFdbAllOK().WithPayload(&operations.GetConfigFdbAllOKBody{FdbAttr: result})
 }
