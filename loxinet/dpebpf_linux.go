@@ -700,8 +700,11 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 	key.daddr = [4]C.uint{0, 0, 0, 0}
 	if IsNetIPv4(w.ServiceIP.String()) {
 		key.daddr[0] = C.uint(tk.IPtonl(w.ServiceIP))
+		key.v6 = 0
 	} else {
 		convNetIP2DPv6Addr(unsafe.Pointer(&key.daddr[0]), w.ServiceIP)
+		fmt.Printf("%s:0x%v",  w.ServiceIP.String(), key.daddr)
+		key.v6 = 1
 	}
 	key.dport = C.ushort(tk.Htons(w.L4Port))
 	key.l4proto = C.uchar(w.Proto)
@@ -739,12 +742,17 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		for _, k := range w.endPoints {
 			nxfa.wprio = C.ushort(k.Weight)
 			nxfa.nat_xport = C.ushort(tk.Htons(k.XPort))
-			if nxfa.nv6 == 0 {
+			if IsNetIPv6(k.XIP.String()) {
+				convNetIP2DPv6Addr(unsafe.Pointer(&nxfa.nat_xip[0]), k.XIP)
+
+				if IsNetIPv6(k.RIP.String()) {
+					convNetIP2DPv6Addr(unsafe.Pointer(&nxfa.nat_rip[0]), k.RIP)
+				}
+				nxfa.nv6 = 1
+			} else {
 				nxfa.nat_xip[0] = C.uint(tk.IPtonl(k.XIP))
 				nxfa.nat_rip[0] = C.uint(tk.IPtonl(k.RIP))
-			} else {
-				convNetIP2DPv6Addr(unsafe.Pointer(&nxfa.nat_xip[0]), k.XIP)
-				convNetIP2DPv6Addr(unsafe.Pointer(&nxfa.nat_rip[0]), k.RIP)
+				nxfa.nv6 = 0
 			}
 
 			if k.InActive {
@@ -982,35 +990,49 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtI
 		ctDat.xi.nat_flags == C.LLB_NAT_SRC {
 		var xip net.IP
 
-		xip = append(xip, uint8(ctDat.xi.nat_xip[0]&0xff))
-		xip = append(xip, uint8(ctDat.xi.nat_xip[0]>>8&0xff))
-		xip = append(xip, uint8(ctDat.xi.nat_xip[0]>>16&0xff))
-		xip = append(xip, uint8(ctDat.xi.nat_xip[0]>>24&0xff))
+		if ctDat.xi.nv6 == 0 {
+			xip = append(xip, uint8(ctDat.xi.nat_xip[0]&0xff))
+			xip = append(xip, uint8(ctDat.xi.nat_xip[0]>>8&0xff))
+			xip = append(xip, uint8(ctDat.xi.nat_xip[0]>>16&0xff))
+			xip = append(xip, uint8(ctDat.xi.nat_xip[0]>>24&0xff))
+		} else {
+			xip = convDPv6Addr2NetIP(unsafe.Pointer(&ctDat.xi.nat_xip[0]))
+		}
 
 		port := tk.Ntohs(uint16(ctDat.xi.nat_xport))
 
 		if ctDat.xi.nat_flags == C.LLB_NAT_DST {
-			if ctDat.xi.nat_rip[0] == 0 {
+			if ctDat.xi.nat_rip[0] == 0 && ctDat.xi.nat_rip[1] == 0 &&
+				ctDat.xi.nat_rip[2] == 0 && ctDat.xi.nat_rip[3] == 0 {
 				ct.CAct = fmt.Sprintf("dnat-%s:%d:w%d", xip.String(), port, ctDat.xi.wprio)
 			} else {
 				var rip net.IP
 
-				rip = append(rip, uint8(ctDat.xi.nat_rip[0]&0xff))
-				rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>8&0xff))
-				rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>16&0xff))
-				rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>24&0xff))
+				if ctDat.xi.nv6 == 0 {
+					rip = append(rip, uint8(ctDat.xi.nat_rip[0]&0xff))
+					rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>8&0xff))
+					rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>16&0xff))
+					rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>24&0xff))
+				} else {
+					rip = convDPv6Addr2NetIP(unsafe.Pointer(&ctDat.xi.nat_rip[0]))
+				}
 				ct.CAct = fmt.Sprintf("fdnat-%s,%s:%d:w%d", rip.String(), xip.String(), port, ctDat.xi.wprio)
 			}
 		} else if ctDat.xi.nat_flags == C.LLB_NAT_SRC {
-			if ctDat.xi.nat_rip[0] == 0 {
+			if ctDat.xi.nat_rip[0] == 0 && ctDat.xi.nat_rip[1] == 0 &&
+				ctDat.xi.nat_rip[2] == 0 && ctDat.xi.nat_rip[3] == 0 {
 				ct.CAct = fmt.Sprintf("snat-%s:%d:w%d", xip.String(), port, ctDat.xi.wprio)
 			} else {
 				var rip net.IP
 
-				rip = append(rip, uint8(ctDat.xi.nat_rip[0]&0xff))
-				rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>8&0xff))
-				rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>16&0xff))
-				rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>24&0xff))
+				if ctDat.xi.nv6 == 0 {
+					rip = append(rip, uint8(ctDat.xi.nat_rip[0]&0xff))
+					rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>8&0xff))
+					rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>16&0xff))
+					rip = append(rip, uint8(ctDat.xi.nat_rip[0]>>24&0xff))
+				} else {
+					rip = convDPv6Addr2NetIP(unsafe.Pointer(&ctDat.xi.nat_rip[0]))
+				}
 				ct.CAct = fmt.Sprintf("fsnat-%s,%s:%d:w%d", xip.String(), rip.String(), port, ctDat.xi.wprio)
 			}
 		}

@@ -727,7 +727,12 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	var ipProto uint8
 
 	// Validate service args
-	service := serv.ServIP + "/32"
+	service := ""
+	if IsNetIPv4(serv.ServIP) {
+		service = serv.ServIP + "/32"
+	} else {
+		service = serv.ServIP + "/128"
+	}
 	_, sNetAddr, err := net.ParseCIDR(service)
 	if err != nil {
 		return RuleUnknownServiceErr, errors.New("malformed-service error")
@@ -766,15 +771,14 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	natActs.mode = cmn.LBMode(serv.Mode)
 
 	for _, k := range servEndPoints {
-		service = k.EpIP + "/32"
-		_, pNetAddr, err := net.ParseCIDR(service)
-		if err != nil {
+		pNetAddr := net.ParseIP(k.EpIP)
+		if pNetAddr == nil {
 			return RuleUnknownEpErr, errors.New("malformed-lbep error")
 		}
 		if serv.Proto == "icmp" && k.EpPort != 0 {
 			return RuleUnknownServiceErr, errors.New("malformed-service error")
 		}
-		ep := ruleNatEp{pNetAddr.IP, k.EpPort, k.Weight, 0, false, false}
+		ep := ruleNatEp{pNetAddr, k.EpPort, k.Weight, 0, false, false}
 		natActs.endPoints = append(natActs.endPoints, ep)
 	}
 
@@ -891,7 +895,12 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	var ipProto uint8
 
-	service := serv.ServIP + "/32"
+	service := ""
+	if IsNetIPv4(serv.ServIP) {
+		service = serv.ServIP + "/32"
+	} else {
+		service = serv.ServIP + "/128"
+	}
 	_, sNetAddr, err := net.ParseCIDR(service)
 	if err != nil {
 		return RuleUnknownServiceErr, errors.New("malformed-service error")
@@ -978,7 +987,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	var l4dst rule16Tuple
 	var l4prot rule8Tuple
 
-	// Vaildate rule args
+	// Validate rule args
 	_, dNetAddr, err := net.ParseCIDR(fwRule.DstIP)
 	if err != nil {
 		return RuleTupleErr, errors.New("malformed-rule error")
