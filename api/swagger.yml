@@ -1101,6 +1101,32 @@ paths:
 #----------------------------------------------
 # FDB
 #----------------------------------------------
+  '/config/fdb/all':
+    get:
+      summary: Get FDB in the device(interface)
+      description: Get FDB in the device(interface). 
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              fdbAttr:
+                type: array
+                items:
+                  $ref: '#/definitions/FDBEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
   '/config/fdb':
     post:
       summary: Assign FDB in the device
@@ -1413,10 +1439,10 @@ paths:
           schema:
             type: object
             properties:
-              Attr:
+              vxlanAttr:
                 type: array
                 items:
-                  $ref: '#/definitions/VxlanFDBreturnEntry'
+                  $ref: '#/definitions/VxlanEntry'
         '401':
           description: Invalid authentication credentials
           schema:
@@ -2458,41 +2484,19 @@ definitions:
         type: string
         description: path of the mounted on
   
-  VxlanFDBreturnEntry:
-    type: object
-    properties:
-      mac_addr:
-        type: string
-      vxlan_id:
-        type: string
-      vrf:
-        type: string
-      destination_ip:
-        type: string
-        format: ipv4
-      vtep_id:
-        type: string
-      status:
-        type: string
-        
   VxlanEntry:
     type: object
     properties:
-      vxlan_name:
+      vxlanName:
         type: string
-      vxlan_id:
+      epIntf:
         type: string
-        description: vxlan id (24-bit)
-      vrf:
-        type: string
-      multicast_group:
-        type: string
-      udp:
-        type: string
-      uif:
-        type: string
-      mac_addr:
-        type: string
+      vxlanID:
+        type: integer
+      peerIP:
+        type: array
+        items:
+          type: string
         
   VxlanBridgeEntry:
     type: object

@@ -18,12 +18,13 @@ package handler
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/loxilb-io/loxilb/api/loxinlp"
+	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	tk "github.com/loxilb-io/loxilib"
 )
 
 func ConfigPostVxLAN(params operations.PostConfigTunnelVxlanParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] VxLAN %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.AddVxLANBridgeNoHook(int(params.Attr.VxlanID), params.Attr.EpIntf)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
@@ -32,7 +33,7 @@ func ConfigPostVxLAN(params operations.PostConfigTunnelVxlanParams) middleware.R
 }
 
 func ConfigDeleteVxLAN(params operations.DeleteConfigTunnelVxlanVxlanIDParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] VxLAN %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.DelVxLANNoHook(int(params.VxlanID))
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
@@ -41,7 +42,7 @@ func ConfigDeleteVxLAN(params operations.DeleteConfigTunnelVxlanVxlanIDParams) m
 }
 
 func ConfigPostVxLANPeer(params operations.PostConfigTunnelVxlanVxlanIDPeerParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] VxLAN %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.AddVxLANPeerNoHook(int(params.VxlanID), params.Attr.PeerIP)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
@@ -50,10 +51,38 @@ func ConfigPostVxLANPeer(params operations.PostConfigTunnelVxlanVxlanIDPeerParam
 }
 
 func ConfigDeleteVxLANPeer(params operations.DeleteConfigTunnelVxlanVxlanIDPeerPeerIPParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] VxLAN %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.DelVxLANPeerNoHook(int(params.VxlanID), params.PeerIP)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
 	}
 	return &ResultResponse{Result: "Success"}
+}
+
+func ConfigGetVxLAN(params operations.GetConfigTunnelVxlanAllParams) middleware.Responder {
+	tk.LogIt(tk.LogDebug, "[API] VxLAN   %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+
+	peers, _ := loxinlp.GetVxLANPeerNoHook()
+	ports, err := ApiHooks.NetPortGet()
+	if err != nil {
+		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		return &ResultResponse{Result: err.Error()}
+	}
+	var result []*models.VxlanEntry
+	result = make([]*models.VxlanEntry, 0)
+
+	for _, port := range ports {
+		if port.SInfo.PortType&0x40 == 0x40 { // 0x40 is const of the PortVxlanBr
+			// Vxlan Port
+			var tmpResult models.VxlanEntry
+			tmpResult.PeerIP = peers[port.SInfo.OsID]
+			tmpResult.VxlanName = port.Name
+			tmpResult.VxlanID = int64(port.HInfo.TunID)
+			tmpResult.EpIntf = port.HInfo.Real
+			result = append(result, &tmpResult)
+
+		}
+	}
+
+	return operations.NewGetConfigTunnelVxlanAllOK().WithPayload(&operations.GetConfigTunnelVxlanAllOKBody{VxlanAttr: result})
 }

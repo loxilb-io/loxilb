@@ -17,26 +17,17 @@ import (
 // swagger:model VxlanEntry
 type VxlanEntry struct {
 
-	// mac addr
-	MacAddr string `json:"mac_addr,omitempty"`
+	// ep intf
+	EpIntf string `json:"epIntf,omitempty"`
 
-	// multicast group
-	MulticastGroup string `json:"multicast_group,omitempty"`
+	// peer IP
+	PeerIP []string `json:"peerIP"`
 
-	// udp
-	UDP string `json:"udp,omitempty"`
-
-	// uif
-	Uif string `json:"uif,omitempty"`
-
-	// vrf
-	Vrf string `json:"vrf,omitempty"`
-
-	// vxlan id (24-bit)
-	VxlanID string `json:"vxlan_id,omitempty"`
+	// vxlan ID
+	VxlanID int64 `json:"vxlanID,omitempty"`
 
 	// vxlan name
-	VxlanName string `json:"vxlan_name,omitempty"`
+	VxlanName string `json:"vxlanName,omitempty"`
 }
 
 // Validate validates this vxlan entry
