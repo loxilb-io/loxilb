@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo SCENARIO-12
+echo LB-TIMEOUT
 $hexec l3ep1 node ./server1.js &
 $hexec l3ep2 node ./server2.js &
 $hexec l3ep3 node ./server3.js &
@@ -25,7 +25,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            echo SCENARIO-12[FAILED]
+            echo LB-TIMEOUT[FAILED]
             exit 1
         fi
     fi
@@ -56,10 +56,10 @@ sleep 100
 code=0
 if pgrep -x "$SERVICE" >/dev/null
 then
-    echo SCENARIO-12 [FAILED]
+    echo LB-TIMEOUT [FAILED]
     code=1
 else
-    echo SCENARIO-12 [OK]
+    echo LB-TIMEOUT [OK]
     code=0
 fi
 sudo killall -9 iperf >> /dev/null 2>&1
