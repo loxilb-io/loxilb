@@ -384,7 +384,7 @@ NhExist:
 		fdbAttr := FdbAttr{port.Name, net.ParseIP("0.0.0.0"), cmn.FdbPhy}
 
 		code, err := n.Zone.L2.L2FdbAdd(fdbKey, fdbAttr)
-		if err != nil &&  code != L2SameFdbErr {
+		if err != nil && code != L2SameFdbErr {
 			n.Zone.Rt.RtDelete(ipnet, Zone)
 			n.NeighDelete(Addr, Zone)
 			tk.LogIt(tk.LogError, "neigh add - %s:%s mac fail\n", Addr.String(), Zone)
