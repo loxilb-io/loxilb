@@ -49,10 +49,12 @@ while : ; do
   then
     master="llb1"
     backup="llb2"
+    break
   elif [[ $status2 == "MASTER" && $status1 == "BACKUP" ]]; 
   then
     master="llb2"
     backup="llb1"
+    break
   else
     echo CLUSTER-1 HA state llb1-$status1 llb2-$status2 [FAILED]
     sleep 0.2
@@ -63,7 +65,6 @@ while : ; do
       exit 1;
     fi
   fi
-  break
 done
 
 echo CLUSTER-1 HA state llb1-$status1 llb2-$status2
