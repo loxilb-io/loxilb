@@ -55,6 +55,7 @@ then
     backup="llb1"
 else
     echo CLUSTER-1 HA state llb1-$status1 llb2-$status2 [FAILED]
+    exit 1
 fi
 echo "Master:$master Backup:$backup"
 
