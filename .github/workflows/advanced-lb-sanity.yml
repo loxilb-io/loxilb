@@ -62,3 +62,8 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+             cd cicd/nat66tcp/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
