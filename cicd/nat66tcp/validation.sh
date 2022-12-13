@@ -13,10 +13,8 @@ j=0
 waitCount=0
 while [ $j -le 2 ]
 do
-    echo HELLLO
-    #res=$($hexec l3h1 curl -g -6 --max-time 10 ${ep[j]}:2020)
-    res=$($hexec l3h1 curl --max-time 10 -s ${ep[j]}:8080)
-    echo $res
+    svr=${ep[j]}
+    res=$($hexec l3h1 curl -s -j -6 --max-time 10 [${svr}]:8080)
     if [[ $res == "${servArr[j]}" ]]
     then
         echo "$res UP"
@@ -38,7 +36,7 @@ for i in {1..4}
 do
 for j in {0..2}
 do
-    res=$($hexec l3h1 curl -j -6 --max-time 10 '[2001::1]:2020')
+    res=$($hexec l3h1 curl -s -j -6 --max-time 10 '[2001::1]:2020')
     echo $res
     if [[ $res != "${servArr[j]}" ]]
     then

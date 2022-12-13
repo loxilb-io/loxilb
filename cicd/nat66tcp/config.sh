@@ -61,9 +61,9 @@ $hexec l3ep3 ip -6 addr add 6ffe::1/64 dev el3ep3llb1
 $hexec l3ep3 ip -6 route add default via 6ffe::2
 
 $hexec llb1 ip -6 addr add 3ffe::2/64 dev ellb1l3h1
-$hexec l3ep1 ip -6 addr add 4ffe::2/64 dev ellb1l3ep1
-$hexec l3ep2 ip -6 addr add 5ffe::2/64 dev ellb1l3ep2
-$hexec l3ep3 ip -6 addr add 6ffe::2/64 dev ellb1l3ep3
+$hexec llb1 ip -6 addr add 4ffe::2/64 dev ellb1l3ep1
+$hexec llb1 ip -6 addr add 5ffe::2/64 dev ellb1l3ep2
+$hexec llb1 ip -6 addr add 6ffe::2/64 dev ellb1l3ep3
 
 sleep 5
 $dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1
