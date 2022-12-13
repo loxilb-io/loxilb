@@ -13,11 +13,11 @@ on:
         required: true
         default: 'warning'
       tags:
-        description: 'IPSec Sanity'
+        description: 'Cluster Sanity'
        
 jobs:
   build:
-    name: ipsec-sanity
+    name: cluster-sanity
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
