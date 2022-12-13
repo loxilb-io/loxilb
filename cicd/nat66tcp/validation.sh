@@ -32,15 +32,31 @@ do
     sleep 1
 done
 
+nid=0
 for i in {1..4}
 do
 for j in {0..2}
 do
     res=$($hexec l3h1 curl -s -j -6 --max-time 10 '[2001::1]:2020')
     echo $res
-    if [[ $res != "${servArr[j]}" ]]
-    then
+    ids=`echo "${res//[!0-9]/}"`
+    if [[ $res == *"server"* ]]; then
+      ids=`echo "${res//[!0-9]/}"`
+      if [[ $nid == 0 ]];then
+        nid=$((($ids + 1)%4))
+        if [[ $nid == 0 ]];then
+          nid=1
+        fi
+      elif [[ $nid != $((ids)) ]]; then
+        echo "Expected server$nid got server$((ids))"
         code=1
+      fi
+      nid=$((($ids + 1)%4))
+      if [[ $nid == 0 ]];then
+        nid=1
+      fi
+    else
+      code=1
     fi
     sleep 1
 done
