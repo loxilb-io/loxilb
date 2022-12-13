@@ -63,6 +63,7 @@ while : ; do
       exit 1;
     fi
   fi
+  break
 done
 
 echo CLUSTER-1 HA state llb1-$status1 llb2-$status2
