@@ -35,6 +35,10 @@ pull_dockers() {
 ## arg2 - instance-name
 spawn_docker_host() {
   POSITIONAL_ARGS=()
+  local bpath
+  local kpath
+  local ka
+  local bgp
   while [[ $# -gt 0 ]]; do
   case "$1" in
     -t | --dock-type )

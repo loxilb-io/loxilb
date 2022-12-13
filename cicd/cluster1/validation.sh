@@ -41,21 +41,32 @@ function myfunc() {
   echo $code
 }
 
-status1=$($hexec llb1 curl -sX 'GET' 'http://0.0.0.0:11111/netlox/v1/config/cistate/all' -H 'accept: application/json' | jq -r '.Attr[0].state')
-status2=$($hexec llb2 curl -sX 'GET' 'http://0.0.0.0:11111/netlox/v1/config/cistate/all' -H 'accept: application/json' | jq -r '.Attr[0].state')
-echo CLUSTER-1 HA state llb1-$status1 llb2-$status2
-
-if [[ $status1 == "MASTER" && $status2 == "BACKUP" ]];
-then
+while : ; do
+  status1=$($hexec llb1 curl -sX 'GET' 'http://0.0.0.0:11111/netlox/v1/config/cistate/all' -H 'accept: application/json' | jq -r '.Attr[0].state')
+  status2=$($hexec llb2 curl -sX 'GET' 'http://0.0.0.0:11111/netlox/v1/config/cistate/all' -H 'accept: application/json' | jq -r '.Attr[0].state')
+  count=0
+  if [[ $status1 == "MASTER" && $status2 == "BACKUP" ]];
+  then
     master="llb1"
     backup="llb2"
-elif [[ $status2 == "MASTER" && $status1 == "BACKUP" ]]; 
-then
+  elif [[ $status2 == "MASTER" && $status1 == "BACKUP" ]]; 
+  then
     master="llb2"
     backup="llb1"
-else
+  else
     echo CLUSTER-1 HA state llb1-$status1 llb2-$status2 [FAILED]
-fi
+    sleep 0.2
+    count=$(( $count + 1 ))
+    
+    if [[ $count -ge 2000 ]]; then
+      echo "KeepAlive llb1-$status1, llb2-$status2 [NOK]"
+      exit 1;
+    fi
+  fi
+  break
+done
+
+echo CLUSTER-1 HA state llb1-$status1 llb2-$status2
 echo "Master:$master Backup:$backup"
 
 count=0
@@ -65,11 +76,11 @@ while : ; do
     echo "$master BGP connection [OK]"
     break;
   fi
-  sleep 0.1
+  sleep 0.2
   count=$(( $count + 1 ))
-  if [[ $count -ge 1000 ]]; then
+  if [[ $count -ge 2000 ]]; then
     echo "$master BGP connection [NOK]"
-    return 1;
+    exit 1;
   fi
 done
 
@@ -80,11 +91,11 @@ while : ; do
     echo "$backup BGP connection [OK]"
     break;
   fi
-  sleep 0.1
+  sleep 0.2
   count=$(( $count + 1 ))
-  if [[ $count -ge 1000 ]]; then
+  if [[ $count -ge 2000 ]]; then
     echo "$backup BGP connection [NOK]"
-    return 1;
+    exit 1;
   fi
 done
 
