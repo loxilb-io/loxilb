@@ -1,4 +1,4 @@
-name: Adv-Sanity-CI
+name: IPsec-Sanity-CI
 
 on:
   push:
@@ -13,11 +13,11 @@ on:
         required: true
         default: 'warning'
       tags:
-        description: 'Advanced Sanity'
+        description: 'IPSec Sanity'
        
 jobs:
   build:
-    name: advanced-sanity
+    name: ipsec-sanity
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -47,42 +47,12 @@ jobs:
       - run: id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"` && docker commit $id ghcr.io/loxilb-io/loxilb:latest
       - run: docker stop loxilb && docker rm loxilb
       - run: |
-             cd cicd/scenario3/
+             cd cicd/ipsec1/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
-             cd cicd/scenario4/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-             cd cicd/scenario5/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-             cd cicd/scenario6/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-             cd cicd/scenario7/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-             cd cicd/scenario8/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-             cd cicd/scenario9/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-             cd cicd/scenario10/
+             cd cicd/ipsec2/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh

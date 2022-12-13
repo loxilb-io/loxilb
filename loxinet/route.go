@@ -47,7 +47,7 @@ const (
 
 // constants
 const (
-	MaxSysRoutes = 32 * 1024
+	MaxSysRoutes = (32 + 8) * 1024 //32k Ipv4 + 8k Ipv6
 )
 
 // RtKey - key for a rt entry
@@ -99,6 +99,7 @@ type Rt struct {
 type RtH struct {
 	RtMap  map[RtKey]*Rt
 	Trie4  *tk.TrieRoot
+	Trie6  *tk.TrieRoot
 	Zone   *Zone
 	HwMark *tk.Counter
 }
@@ -108,6 +109,7 @@ func RtInit(zone *Zone) *RtH {
 	var nRt = new(RtH)
 	nRt.RtMap = make(map[RtKey]*Rt)
 	nRt.Trie4 = tk.TrieInit(false)
+	nRt.Trie6 = tk.TrieInit(false)
 	nRt.Zone = zone
 	nRt.HwMark = tk.NewCounter(1, MaxSysRoutes)
 	return nRt
@@ -140,10 +142,10 @@ func (r *RtH) RtFind(Dst net.IPNet, Zone string) *Rt {
 }
 
 // RouteGet - tlpm package interface implementation
-func (r *RtH) RouteGet() ([]cmn.Routev4Get, error) {
-	var ret []cmn.Routev4Get
+func (r *RtH) RouteGet() ([]cmn.RouteGet, error) {
+	var ret []cmn.RouteGet
 	for rk, r2 := range r.RtMap {
-		var tmpRt cmn.Routev4Get
+		var tmpRt cmn.RouteGet
 		tmpRt.Dst = rk.RtCidr
 		tmpRt.Flags = GetFlagToString(r2.TFlags)
 		if len(r2.NhAttr) != 0 {
@@ -260,10 +262,16 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 	}
 
 	var tret int
-	if len(rt.NextHops) > 0 {
-		tret = r.Trie4.AddTrie(Dst.String(), rt.NextHops[0])
+	var tR *tk.TrieRoot
+	if tk.IsNetIPv4(Dst.IP.String()) {
+		tR = r.Trie4
 	} else {
-		tret = r.Trie4.AddTrie(Dst.String(), nil)
+		tR = r.Trie6
+	}
+	if len(rt.NextHops) > 0 {
+		tret = tR.AddTrie(Dst.String(), rt.NextHops[0])
+	} else {
+		tret = tR.AddTrie(Dst.String(), nil)
 	}
 	if tret != 0 {
 		// Delete any neigbors created here
@@ -328,7 +336,13 @@ func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 	}
 	//}
 
-	tret := r.Trie4.DelTrie(Dst.String())
+	var tR *tk.TrieRoot
+	if tk.IsNetIPv4(string(Dst.IP)) {
+		tR = r.Trie4
+	} else {
+		tR = r.Trie6
+	}
+	tret := tR.DelTrie(Dst.String())
 	if tret != 0 {
 		tk.LogIt(tk.LogError, "rt delete - %s:%s lpm not found\n", Dst.String(), Zone)
 		return RtTrieDelErr, errors.New("rt-lpm delete error")

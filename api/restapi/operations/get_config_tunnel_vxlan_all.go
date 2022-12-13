@@ -69,15 +69,15 @@ func (o *GetConfigTunnelVxlanAll) ServeHTTP(rw http.ResponseWriter, r *http.Requ
 // swagger:model GetConfigTunnelVxlanAllOKBody
 type GetConfigTunnelVxlanAllOKBody struct {
 
-	// attr
-	Attr []*models.VxlanFDBreturnEntry `json:"Attr"`
+	// vxlan attr
+	VxlanAttr []*models.VxlanEntry `json:"vxlanAttr"`
 }
 
 // Validate validates this get config tunnel vxlan all o k body
 func (o *GetConfigTunnelVxlanAllOKBody) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := o.validateAttr(formats); err != nil {
+	if err := o.validateVxlanAttr(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -87,22 +87,22 @@ func (o *GetConfigTunnelVxlanAllOKBody) Validate(formats strfmt.Registry) error 
 	return nil
 }
 
-func (o *GetConfigTunnelVxlanAllOKBody) validateAttr(formats strfmt.Registry) error {
-	if swag.IsZero(o.Attr) { // not required
+func (o *GetConfigTunnelVxlanAllOKBody) validateVxlanAttr(formats strfmt.Registry) error {
+	if swag.IsZero(o.VxlanAttr) { // not required
 		return nil
 	}
 
-	for i := 0; i < len(o.Attr); i++ {
-		if swag.IsZero(o.Attr[i]) { // not required
+	for i := 0; i < len(o.VxlanAttr); i++ {
+		if swag.IsZero(o.VxlanAttr[i]) { // not required
 			continue
 		}
 
-		if o.Attr[i] != nil {
-			if err := o.Attr[i].Validate(formats); err != nil {
+		if o.VxlanAttr[i] != nil {
+			if err := o.VxlanAttr[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("getConfigTunnelVxlanAllOK" + "." + "Attr" + "." + strconv.Itoa(i))
+					return ve.ValidateName("getConfigTunnelVxlanAllOK" + "." + "vxlanAttr" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("getConfigTunnelVxlanAllOK" + "." + "Attr" + "." + strconv.Itoa(i))
+					return ce.ValidateName("getConfigTunnelVxlanAllOK" + "." + "vxlanAttr" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -117,7 +117,7 @@ func (o *GetConfigTunnelVxlanAllOKBody) validateAttr(formats strfmt.Registry) er
 func (o *GetConfigTunnelVxlanAllOKBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
-	if err := o.contextValidateAttr(ctx, formats); err != nil {
+	if err := o.contextValidateVxlanAttr(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -127,16 +127,16 @@ func (o *GetConfigTunnelVxlanAllOKBody) ContextValidate(ctx context.Context, for
 	return nil
 }
 
-func (o *GetConfigTunnelVxlanAllOKBody) contextValidateAttr(ctx context.Context, formats strfmt.Registry) error {
+func (o *GetConfigTunnelVxlanAllOKBody) contextValidateVxlanAttr(ctx context.Context, formats strfmt.Registry) error {
 
-	for i := 0; i < len(o.Attr); i++ {
+	for i := 0; i < len(o.VxlanAttr); i++ {
 
-		if o.Attr[i] != nil {
-			if err := o.Attr[i].ContextValidate(ctx, formats); err != nil {
+		if o.VxlanAttr[i] != nil {
+			if err := o.VxlanAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("getConfigTunnelVxlanAllOK" + "." + "Attr" + "." + strconv.Itoa(i))
+					return ve.ValidateName("getConfigTunnelVxlanAllOK" + "." + "vxlanAttr" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("getConfigTunnelVxlanAllOK" + "." + "Attr" + "." + strconv.Itoa(i))
+					return ce.ValidateName("getConfigTunnelVxlanAllOK" + "." + "vxlanAttr" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
