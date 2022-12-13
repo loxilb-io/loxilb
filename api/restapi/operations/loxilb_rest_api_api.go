@@ -93,6 +93,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		GetConfigConntrackAllHandler: GetConfigConntrackAllHandlerFunc(func(params GetConfigConntrackAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigConntrackAll has not yet been implemented")
 		}),
+		GetConfigFdbAllHandler: GetConfigFdbAllHandlerFunc(func(params GetConfigFdbAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigFdbAll has not yet been implemented")
+		}),
 		GetConfigFirewallAllHandler: GetConfigFirewallAllHandlerFunc(func(params GetConfigFirewallAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigFirewallAll has not yet been implemented")
 		}),
@@ -253,6 +256,8 @@ type LoxilbRestAPIAPI struct {
 	GetConfigCistateAllHandler GetConfigCistateAllHandler
 	// GetConfigConntrackAllHandler sets the operation handler for the get config conntrack all operation
 	GetConfigConntrackAllHandler GetConfigConntrackAllHandler
+	// GetConfigFdbAllHandler sets the operation handler for the get config fdb all operation
+	GetConfigFdbAllHandler GetConfigFdbAllHandler
 	// GetConfigFirewallAllHandler sets the operation handler for the get config firewall all operation
 	GetConfigFirewallAllHandler GetConfigFirewallAllHandler
 	// GetConfigIpv4addressAllHandler sets the operation handler for the get config ipv4address all operation
@@ -440,6 +445,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.GetConfigConntrackAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigConntrackAllHandler")
+	}
+	if o.GetConfigFdbAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigFdbAllHandler")
 	}
 	if o.GetConfigFirewallAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigFirewallAllHandler")
@@ -687,6 +695,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/config/conntrack/all"] = NewGetConfigConntrackAll(o.context, o.GetConfigConntrackAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/config/fdb/all"] = NewGetConfigFdbAll(o.context, o.GetConfigFdbAllHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

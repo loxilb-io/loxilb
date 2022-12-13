@@ -141,14 +141,14 @@ func (*NetAPIStruct) NetVlanPortDel(vm *cmn.VlanPortMod) (int, error) {
 }
 
 // NetIpv4AddrGet - Get an IPv4 Address info from loxinet
-func (*NetAPIStruct) NetIpv4AddrGet() ([]cmn.Ipv4AddrGet, error) {
+func (*NetAPIStruct) NetAddrGet() ([]cmn.IpAddrGet, error) {
 	// There is no locking requirement for this operation
 	ret := mh.zr.L3.IfaGet()
 	return ret, nil
 }
 
-// NetIpv4AddrAdd - Add an ipv4 address in loxinet
-func (*NetAPIStruct) NetIpv4AddrAdd(am *cmn.Ipv4AddrMod) (int, error) {
+// NetAddrAdd - Add an ipv4 address in loxinet
+func (*NetAPIStruct) NetAddrAdd(am *cmn.IpAddrMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -156,8 +156,8 @@ func (*NetAPIStruct) NetIpv4AddrAdd(am *cmn.Ipv4AddrMod) (int, error) {
 	return ret, err
 }
 
-// NetIpv4AddrDel - Delete an ipv4 address in loxinet
-func (*NetAPIStruct) NetIpv4AddrDel(am *cmn.Ipv4AddrMod) (int, error) {
+// NetAddrDel - Delete an ipv4 address in loxinet
+func (*NetAPIStruct) NetAddrDel(am *cmn.IpAddrMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -165,14 +165,14 @@ func (*NetAPIStruct) NetIpv4AddrDel(am *cmn.Ipv4AddrMod) (int, error) {
 	return ret, err
 }
 
-// NetNeighv4Get - Get a ipv4 neighbor in loxinet
-func (*NetAPIStruct) NetNeighv4Get() ([]cmn.Neighv4Mod, error) {
+// NetNeighGet - Get a neighbor in loxinet
+func (*NetAPIStruct) NetNeighGet() ([]cmn.NeighMod, error) {
 	ret, err := mh.zr.Nh.NeighGet()
 	return ret, err
 }
 
-// NetNeighv4Add - Add a ipv4 neighbor in loxinet
-func (*NetAPIStruct) NetNeighv4Add(nm *cmn.Neighv4Mod) (int, error) {
+// NetNeighAdd - Add a neighbor in loxinet
+func (*NetAPIStruct) NetNeighAdd(nm *cmn.NeighMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -186,8 +186,8 @@ func (*NetAPIStruct) NetNeighv4Add(nm *cmn.Neighv4Mod) (int, error) {
 	return 0, nil
 }
 
-// NetNeighv4Del - Delete a ipv4 neighbor in loxinet
-func (*NetAPIStruct) NetNeighv4Del(nm *cmn.Neighv4Mod) (int, error) {
+// NetNeighDel - Delete a neighbor in loxinet
+func (*NetAPIStruct) NetNeighDel(nm *cmn.NeighMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -215,15 +215,15 @@ func (*NetAPIStruct) NetFdbDel(fm *cmn.FdbMod) (int, error) {
 	return ret, err
 }
 
-// NetRoutev4Get - Get Route info from loxinet
-func (*NetAPIStruct) NetRoutev4Get() ([]cmn.Routev4Get, error) {
+// NetRouteGet - Get Route info from loxinet
+func (*NetAPIStruct) NetRouteGet() ([]cmn.RouteGet, error) {
 	// There is no locking requirement for this operation
 	ret, _ := mh.zr.Rt.RouteGet()
 	return ret, nil
 }
 
-// NetRoutev4Add - Add an ipv4 route in loxinet
-func (*NetAPIStruct) NetRoutev4Add(rm *cmn.Routev4Mod) (int, error) {
+// NetRouteAdd - Add a route in loxinet
+func (*NetAPIStruct) NetRouteAdd(rm *cmn.RouteMod) (int, error) {
 	var ret int
 	var err error
 
@@ -241,8 +241,8 @@ func (*NetAPIStruct) NetRoutev4Add(rm *cmn.Routev4Mod) (int, error) {
 	return ret, err
 }
 
-// NetRoutev4Del - Delete an ipv4 route in loxinet
-func (*NetAPIStruct) NetRoutev4Del(rm *cmn.Routev4Mod) (int, error) {
+// NetRouteDel - Delete a route in loxinet
+func (*NetAPIStruct) NetRouteDel(rm *cmn.RouteMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -414,5 +414,34 @@ func (*NetAPIStruct) NetFwRuleDel(fm *cmn.FwRuleMod) (int, error) {
 // NetFwRuleGet - Get a firewall rule from loxinet
 func (*NetAPIStruct) NetFwRuleGet() ([]cmn.FwRuleMod, error) {
 	ret, err := mh.zr.Rules.GetFwRule()
+	return ret, err
+}
+
+// NetEpHostAdd - Add a LB end-point in loxinet
+func (*NetAPIStruct) NetEpHostAdd(em *cmn.EndPointMod) (int, error) {
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	epArgs := epHostOpts{inActTryThr: em.InActTries, probeType: em.ProbeType,
+		probeReq: em.ProbeReq, probeResp: em.ProbeResp,
+		probeDuration: em.ProbeDuration, probePort: em.ProbePort,
+	}
+
+	ret, err := mh.zr.Rules.AddEpHost(true, em.Name, em.Desc, epArgs)
+	return ret, err
+}
+
+// NetEpHostDel - Delete a LB end-point in loxinet
+func (*NetAPIStruct) NetEpHostDel(fm *cmn.EndPointMod) (int, error) {
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	ret, err := mh.zr.Rules.DeleteEpHost(true, fm.Name)
+	return ret, err
+}
+
+// NetEpHostGet - Get LB end-points from loxinet
+func (*NetAPIStruct) NetEpHostGet() ([]cmn.EndPointMod, error) {
+	ret, err := mh.zr.Rules.GetEpHosts()
 	return ret, err
 }

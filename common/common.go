@@ -278,16 +278,16 @@ type FdbMod struct {
 	Type int
 }
 
-// Ipv4AddrMod - Info about an ip address
-type Ipv4AddrMod struct {
+// IpAddrMod - Info about an ip address
+type IpAddrMod struct {
 	// Dev - name of the related device
 	Dev string
 	// IP - Actual IP address
 	IP string
 }
 
-// Neighv4Mod - Info about an neighbor
-type Neighv4Mod struct {
+// NeighMod - Info about an neighbor
+type NeighMod struct {
 	// IP - The IP address
 	IP net.IP
 	// LinkIndex - OS allocated index
@@ -298,8 +298,8 @@ type Neighv4Mod struct {
 	HardwareAddr net.HardwareAddr
 }
 
-// Ipv4AddrGet - Info about an ip addresses
-type Ipv4AddrGet struct {
+// IpAddrGet - Info about an ip addresses
+type IpAddrGet struct {
 	// Dev - name of the related device
 	Dev string
 	// IP - Actual IP address
@@ -316,8 +316,8 @@ type RouteGetEntryStatistic struct {
 	Packets int
 }
 
-// Routev4Get - Info about an route
-type Routev4Get struct {
+// RouteGet - Info about an route
+type RouteGet struct {
 	// Protocol - Protocol type
 	Protocol int
 	// Flags - flag type
@@ -336,8 +336,8 @@ type Routev4Get struct {
 	Sync DpStatusT
 }
 
-// Routev4Mod - Info about a route
-type Routev4Mod struct {
+// RouteMod - Info about a route
+type RouteMod struct {
 	// Protocol - Protocol type
 	Protocol int
 	// Flags - flag type
@@ -387,10 +387,37 @@ type FwRuleArg struct {
 
 // FwRuleMod - Info related to a firewall entry
 type FwRuleMod struct {
-	// Serv - service argument of type FwRuleArg
+	// Rule - service argument of type FwRuleArg
 	Rule FwRuleArg `json:"ruleArguments"`
 	// Opts - firewall options
 	Opts FwOptArg `json:"opts"`
+}
+
+// EndPointMod - Info related to a end-point entry
+type EndPointMod struct {
+	// Name - hostname in CIDR
+	Name string `json:"hostName"`
+	// Desc - host specific description
+	Desc string `json:"Description"`
+	// InActTries - No. of inactive probes to mark
+	// an end-point inactive
+	InActTries int `json:"inactiveTries"`
+	// ProbeType - Type of probe : "icmp","connect-tcp", "connect-udp", "connect-sctp", "http"
+	ProbeType string `json:"probeType"`
+	// ProbeReq - Request string in case of http probe
+	ProbeReq string `json:"probeReq"`
+	// ProbeResp - Response string in case of http probe
+	ProbeResp string `json:"probeResp"`
+	// ProbeDuration - How frequently (in seconds) to check activity
+	ProbeDuration uint32 `json:"probeDuration"`
+	// ProbePort - Port to probe for connect type
+	ProbePort uint16 `json:"probePort"`
+	// MinDelay - Minimum delay in this end-point
+	MinDelay string `json:"minDelay"`
+	// AvgDelay - Average delay in this end-point
+	AvgDelay string `json:"avgDelay"`
+	// MaxDelay - Max delay in this end-point
+	MaxDelay string `json:"maxDelay"`
 }
 
 // EpSelect - Selection method of load-balancer end-point
@@ -660,15 +687,15 @@ type NetHookInterface interface {
 	NetVlanPortDel(*VlanPortMod) (int, error)
 	NetFdbAdd(*FdbMod) (int, error)
 	NetFdbDel(*FdbMod) (int, error)
-	NetIpv4AddrGet() ([]Ipv4AddrGet, error)
-	NetIpv4AddrAdd(*Ipv4AddrMod) (int, error)
-	NetIpv4AddrDel(*Ipv4AddrMod) (int, error)
-	NetNeighv4Get() ([]Neighv4Mod, error)
-	NetNeighv4Add(*Neighv4Mod) (int, error)
-	NetNeighv4Del(*Neighv4Mod) (int, error)
-	NetRoutev4Get() ([]Routev4Get, error)
-	NetRoutev4Add(*Routev4Mod) (int, error)
-	NetRoutev4Del(*Routev4Mod) (int, error)
+	NetAddrGet() ([]IpAddrGet, error)
+	NetAddrAdd(*IpAddrMod) (int, error)
+	NetAddrDel(*IpAddrMod) (int, error)
+	NetNeighGet() ([]NeighMod, error)
+	NetNeighAdd(*NeighMod) (int, error)
+	NetNeighDel(*NeighMod) (int, error)
+	NetRouteGet() ([]RouteGet, error)
+	NetRouteAdd(*RouteMod) (int, error)
+	NetRouteDel(*RouteMod) (int, error)
 	NetLbRuleAdd(*LbRuleMod) (int, error)
 	NetLbRuleDel(*LbRuleMod) (int, error)
 	NetLbRuleGet() ([]LbRuleMod, error)
@@ -687,4 +714,7 @@ type NetHookInterface interface {
 	NetFwRuleAdd(*FwRuleMod) (int, error)
 	NetFwRuleDel(*FwRuleMod) (int, error)
 	NetFwRuleGet() ([]FwRuleMod, error)
+	NetEpHostAdd(fm *EndPointMod) (int, error)
+	NetEpHostDel(fm *EndPointMod) (int, error)
+	NetEpHostGet() ([]EndPointMod, error)
 }

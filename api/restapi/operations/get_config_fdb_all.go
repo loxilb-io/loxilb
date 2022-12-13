@@ -36,12 +36,12 @@ func NewGetConfigFdbAll(ctx *middleware.Context, handler GetConfigFdbAllHandler)
 	return &GetConfigFdbAll{Context: ctx, Handler: handler}
 }
 
-/* GetConfigFdbAll swagger:route GET /config/fdb/all getConfigFdbAll
+/*
+	GetConfigFdbAll swagger:route GET /config/fdb/all getConfigFdbAll
 
 Get FDB in the device(interface)
 
-Get FDB in the device(interface)
-
+Get FDB in the device(interface).
 */
 type GetConfigFdbAll struct {
 	Context *middleware.Context
@@ -69,15 +69,15 @@ func (o *GetConfigFdbAll) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 // swagger:model GetConfigFdbAllOKBody
 type GetConfigFdbAllOKBody struct {
 
-	// ip attr
-	IPAttr []*models.FDBEntry `json:"ipAttr"`
+	// fdb attr
+	FdbAttr []*models.FDBEntry `json:"fdbAttr"`
 }
 
 // Validate validates this get config fdb all o k body
 func (o *GetConfigFdbAllOKBody) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := o.validateIPAttr(formats); err != nil {
+	if err := o.validateFdbAttr(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -87,22 +87,22 @@ func (o *GetConfigFdbAllOKBody) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (o *GetConfigFdbAllOKBody) validateIPAttr(formats strfmt.Registry) error {
-	if swag.IsZero(o.IPAttr) { // not required
+func (o *GetConfigFdbAllOKBody) validateFdbAttr(formats strfmt.Registry) error {
+	if swag.IsZero(o.FdbAttr) { // not required
 		return nil
 	}
 
-	for i := 0; i < len(o.IPAttr); i++ {
-		if swag.IsZero(o.IPAttr[i]) { // not required
+	for i := 0; i < len(o.FdbAttr); i++ {
+		if swag.IsZero(o.FdbAttr[i]) { // not required
 			continue
 		}
 
-		if o.IPAttr[i] != nil {
-			if err := o.IPAttr[i].Validate(formats); err != nil {
+		if o.FdbAttr[i] != nil {
+			if err := o.FdbAttr[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("getConfigFdbAllOK" + "." + "ipAttr" + "." + strconv.Itoa(i))
+					return ve.ValidateName("getConfigFdbAllOK" + "." + "fdbAttr" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("getConfigFdbAllOK" + "." + "ipAttr" + "." + strconv.Itoa(i))
+					return ce.ValidateName("getConfigFdbAllOK" + "." + "fdbAttr" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -117,7 +117,7 @@ func (o *GetConfigFdbAllOKBody) validateIPAttr(formats strfmt.Registry) error {
 func (o *GetConfigFdbAllOKBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
-	if err := o.contextValidateIPAttr(ctx, formats); err != nil {
+	if err := o.contextValidateFdbAttr(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -127,16 +127,16 @@ func (o *GetConfigFdbAllOKBody) ContextValidate(ctx context.Context, formats str
 	return nil
 }
 
-func (o *GetConfigFdbAllOKBody) contextValidateIPAttr(ctx context.Context, formats strfmt.Registry) error {
+func (o *GetConfigFdbAllOKBody) contextValidateFdbAttr(ctx context.Context, formats strfmt.Registry) error {
 
-	for i := 0; i < len(o.IPAttr); i++ {
+	for i := 0; i < len(o.FdbAttr); i++ {
 
-		if o.IPAttr[i] != nil {
-			if err := o.IPAttr[i].ContextValidate(ctx, formats); err != nil {
+		if o.FdbAttr[i] != nil {
+			if err := o.FdbAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("getConfigFdbAllOK" + "." + "ipAttr" + "." + strconv.Itoa(i))
+					return ve.ValidateName("getConfigFdbAllOK" + "." + "fdbAttr" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("getConfigFdbAllOK" + "." + "ipAttr" + "." + strconv.Itoa(i))
+					return ce.ValidateName("getConfigFdbAllOK" + "." + "fdbAttr" + "." + strconv.Itoa(i))
 				}
 				return err
 			}

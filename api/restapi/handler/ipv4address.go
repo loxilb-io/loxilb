@@ -46,7 +46,7 @@ func ConfigDeleteIPv4Address(params operations.DeleteConfigIpv4addressIPAddressM
 
 func ConfigGetIPv4Address(params operations.GetConfigIpv4addressAllParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] IPv4 address   %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	res, _ := ApiHooks.NetIpv4AddrGet()
+	res, _ := ApiHooks.NetAddrGet()
 	var result []*models.IPV4AddressGetEntry
 	result = make([]*models.IPV4AddressGetEntry, 0)
 	for _, ipaddrs := range res {

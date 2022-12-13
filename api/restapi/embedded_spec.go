@@ -245,6 +245,46 @@ func init() {
         }
       }
     },
+    "/config/fdb/all": {
+      "get": {
+        "description": "Get FDB in the device(interface).",
+        "summary": "Get FDB in the device(interface)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "fdbAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/FDBEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/fdb/{mac_address}/dev/{if_name}": {
       "delete": {
         "description": "Delete FDB in the device",
@@ -2082,10 +2122,10 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
-                "Attr": {
+                "vxlanAttr": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/VxlanFDBreturnEntry"
+                    "$ref": "#/definitions/VxlanEntry"
                   }
                 }
               }
@@ -3601,50 +3641,19 @@ func init() {
     "VxlanEntry": {
       "type": "object",
       "properties": {
-        "mac_addr": {
+        "epIntf": {
           "type": "string"
         },
-        "multicast_group": {
-          "type": "string"
+        "peerIP": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
-        "udp": {
-          "type": "string"
+        "vxlanID": {
+          "type": "integer"
         },
-        "uif": {
-          "type": "string"
-        },
-        "vrf": {
-          "type": "string"
-        },
-        "vxlan_id": {
-          "description": "vxlan id (24-bit)",
-          "type": "string"
-        },
-        "vxlan_name": {
-          "type": "string"
-        }
-      }
-    },
-    "VxlanFDBreturnEntry": {
-      "type": "object",
-      "properties": {
-        "destination_ip": {
-          "type": "string",
-          "format": "ipv4"
-        },
-        "mac_addr": {
-          "type": "string"
-        },
-        "status": {
-          "type": "string"
-        },
-        "vrf": {
-          "type": "string"
-        },
-        "vtep_id": {
-          "type": "string"
-        },
-        "vxlan_id": {
+        "vxlanName": {
           "type": "string"
         }
       }
@@ -3868,6 +3877,46 @@ func init() {
           },
           "409": {
             "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/fdb/all": {
+      "get": {
+        "description": "Get FDB in the device(interface).",
+        "summary": "Get FDB in the device(interface)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "fdbAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/FDBEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -5724,10 +5773,10 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
-                "Attr": {
+                "vxlanAttr": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/VxlanFDBreturnEntry"
+                    "$ref": "#/definitions/VxlanEntry"
                   }
                 }
               }
@@ -7610,50 +7659,19 @@ func init() {
     "VxlanEntry": {
       "type": "object",
       "properties": {
-        "mac_addr": {
+        "epIntf": {
           "type": "string"
         },
-        "multicast_group": {
-          "type": "string"
+        "peerIP": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
-        "udp": {
-          "type": "string"
+        "vxlanID": {
+          "type": "integer"
         },
-        "uif": {
-          "type": "string"
-        },
-        "vrf": {
-          "type": "string"
-        },
-        "vxlan_id": {
-          "description": "vxlan id (24-bit)",
-          "type": "string"
-        },
-        "vxlan_name": {
-          "type": "string"
-        }
-      }
-    },
-    "VxlanFDBreturnEntry": {
-      "type": "object",
-      "properties": {
-        "destination_ip": {
-          "type": "string",
-          "format": "ipv4"
-        },
-        "mac_addr": {
-          "type": "string"
-        },
-        "status": {
-          "type": "string"
-        },
-        "vrf": {
-          "type": "string"
-        },
-        "vtep_id": {
-          "type": "string"
-        },
-        "vxlan_id": {
+        "vxlanName": {
           "type": "string"
         }
       }

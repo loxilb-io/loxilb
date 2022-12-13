@@ -93,7 +93,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 		ra := RtAttr{0, 0, false}
 		_, err = mh.zr.Rt.RtAdd(*network, RootZone, ra, nil)
 		if err != nil {
-			tk.LogIt(tk.LogDebug, "ifa add - %s:%s self-rt error", addr.String(), Obj)
+			tk.LogIt(tk.LogDebug, "ifa add - %s:%s self-rt error\n", addr.String(), Obj)
 			return L3AddrErr, errors.New("self-route add error")
 		}
 
@@ -104,7 +104,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 
 	for _, ifaEnt := range ifa.Ifas {
 		if ifaEnt.IfaAddr.Equal(addr) {
-			tk.LogIt(tk.LogDebug, "ifa add - exists %s:%s", addr.String(), Obj)
+			tk.LogIt(tk.LogDebug, "ifa add - exists %s:%s\n", addr.String(), Obj)
 			return L3AddrErr, errors.New("ip address exists")
 		}
 
@@ -132,13 +132,13 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 	ra := RtAttr{0, 0, false}
 	_, err = mh.zr.Rt.RtAdd(*network, RootZone, ra, nil)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "ifa add - %s:%s self-rt error", addr.String(), Obj)
+		tk.LogIt(tk.LogDebug, " - %s:%s self-rt error\n", addr.String(), Obj)
 		return L3AddrErr, errors.New("self-route add error")
 	}
 
 	ifa.DP(DpCreate)
 
-	tk.LogIt(tk.LogDebug, "ifa added %s:%s", addr.String(), Obj)
+	tk.LogIt(tk.LogDebug, "ifa added %s:%s\n", addr.String(), Obj)
 
 	return 0, nil
 }
@@ -149,7 +149,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 	var found bool = false
 	addr, network, err := net.ParseCIDR(Cidr)
 	if err != nil {
-		tk.LogIt(tk.LogError, "ifa delete - malformed %s:%s", addr.String(), Obj)
+		tk.LogIt(tk.LogError, "ifa delete - malformed %s:%s\n", addr.String(), Obj)
 		return L3AddrErr, errors.New("ip address parse error")
 	}
 
@@ -157,7 +157,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 	ifa := l3.IfaMap[key]
 
 	if ifa == nil {
-		tk.LogIt(tk.LogError, "ifa delete - no such %s:%s", addr.String(), Obj)
+		tk.LogIt(tk.LogError, "ifa delete - no such %s:%s\n", addr.String(), Obj)
 		return L3AddrErr, errors.New("no such ip address")
 	}
 
@@ -180,7 +180,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 		// delete self-routes related to this ifa
 		_, err = mh.zr.Rt.RtDelete(*network, RootZone)
 		if err != nil {
-			tk.LogIt(tk.LogError, "ifa delete %s:%s self-rt error", addr.String(), Obj)
+			tk.LogIt(tk.LogError, "ifa delete %s:%s self-rt error\n", addr.String(), Obj)
 			// Continue after logging error because there is noway to fallback
 		}
 		if len(ifa.Ifas) == 0 {
@@ -188,12 +188,12 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 
 			ifa.DP(DpRemove)
 
-			tk.LogIt(tk.LogDebug, "ifa deleted %s:%s", addr.String(), Obj)
+			tk.LogIt(tk.LogDebug, "ifa deleted %s:%s\n", addr.String(), Obj)
 		}
 		return 0, nil
 	}
 
-	tk.LogIt(tk.LogDebug, "ifa delete - no such %s:%s", addr.String(), Obj)
+	tk.LogIt(tk.LogDebug, "ifa delete - no such %s:%s\n", addr.String(), Obj)
 	return L3AddrErr, errors.New("no such ifa")
 }
 
@@ -214,6 +214,10 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP) (int, net.IP) {
 			continue
 		}
 
+		if tk.IsNetIPv6(addr.String()) && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String()) {
+			continue
+		}
+
 		if ifaEnt.IfaNet.Contains(addr) {
 			return 0, ifaEnt.IfaAddr
 		}
@@ -230,6 +234,34 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP) (int, net.IP) {
 // IfaSelectAny - Given any dest ip address, select optimal interface source ip address
 // This is useful to determine source ip address when sending traffic to the given ip address
 func (l3 *L3H) IfaSelectAny(addr net.IP) (int, net.IP) {
+	var err int
+	var tDat tk.TrieData
+	var firstIP *net.IP
+
+	v6 := false
+	IfObj := ""
+	firstIP = nil
+
+	if tk.IsNetIPv4(addr.String()) {
+		err, _, tDat = l3.Zone.Rt.Trie4.FindTrie(addr.String())
+	} else {
+		v6 = true
+		err, _, tDat = l3.Zone.Rt.Trie6.FindTrie(addr.String())
+	}
+	if err == 0 {
+		switch rtn := tDat.(type) {
+		case *Neigh:
+			if rtn != nil {
+				IfObj = rtn.OifPort.Name
+			}
+		default:
+			break
+		}
+	}
+
+	if IfObj != "" {
+		return l3.IfaSelect(IfObj, addr)
+	}
 
 	for _, ifa := range l3.IfaMap {
 		if ifa.Key.Obj == "lo" {
@@ -241,21 +273,22 @@ func (l3 *L3H) IfaSelectAny(addr net.IP) (int, net.IP) {
 				continue
 			}
 
+			if v6 && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String()) {
+				continue
+			}
+
 			if ifaEnt.IfaNet.Contains(addr) {
 				return 0, ifaEnt.IfaAddr
+			}
+
+			if firstIP == nil {
+				firstIP = &ifaEnt.IfaAddr
 			}
 		}
 	}
 
-	for _, ifa := range l3.IfaMap {
-		if ifa.Key.Obj == "lo" {
-			continue
-		}
-
-		// Select first IP from any list
-		if len(ifa.Ifas) > 0 {
-			return 0, ifa.Ifas[0].IfaAddr
-		}
+	if firstIP != nil {
+		return 0, *firstIP
 	}
 
 	return L3AddrErr, net.IPv4(0, 0, 0, 0)
@@ -315,10 +348,10 @@ func (l3 *L3H) IfObjMkString(obj string) string {
 }
 
 // IfaGet - Get All of the IPv4Address in the Ifa
-func (l3 *L3H) IfaGet() []cmn.Ipv4AddrGet {
-	var ret []cmn.Ipv4AddrGet
+func (l3 *L3H) IfaGet() []cmn.IpAddrGet {
+	var ret []cmn.IpAddrGet
 	for ifName, ifa := range l3.IfaMap {
-		var tmpIPa cmn.Ipv4AddrGet
+		var tmpIPa cmn.IpAddrGet
 		tmpIPa.Dev = ifName.Obj
 		tmpIPa.Sync = cmn.DpStatusT(ifa.Sync)
 		for _, ip := range ifa.Ifas {
