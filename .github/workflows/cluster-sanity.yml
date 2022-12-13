@@ -1,4 +1,4 @@
-name: IPsec-Sanity-CI
+name: Cluster-Sanity-CI
 
 on:
   push:
