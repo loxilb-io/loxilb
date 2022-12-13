@@ -67,3 +67,8 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+             cd cicd/lb6timeout/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
