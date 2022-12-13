@@ -113,19 +113,19 @@ done
 
 count=0
 while : ; do
-rnh=$($hexec r1 ip route list match 20.20.20.1 | grep "proto zebra" | cut -d ' ' -f 3)
+  rnh=$($hexec r1 ip route list match 20.20.20.1 | grep "proto zebra" | cut -d ' ' -f 3)
 
-if [[ $rnh == "11.11.11.1" ]];
-then
+  if [[ $rnh == "11.11.11.1" ]];
+  then
     master="llb1"
     backup="llb2"
     break
-elif [[ $rnh == "11.11.11.2" ]]; 
-then
+  elif [[ $rnh == "11.11.11.2" ]]; 
+  then
     master="llb2"
     backup="llb1"
     break
-else
+  else
     sleep 0.2
     count=$(( $count + 1 ))
     if [[ $count -ge 2000 ]]; then
@@ -133,7 +133,8 @@ else
       echo CLUSTER-3 Service Route not advertised to External Router [FAILED]
       exit 1;
     fi
-fi
+  fi
+done
 
 echo "Master:$master Backup:$backup"
 
