@@ -54,7 +54,7 @@ while : ; do
     master="llb2"
     backup="llb1"
   else
-    #echo CLUSTER-1 HA state llb1-$status1 llb2-$status2 [FAILED]
+    echo CLUSTER-1 HA state llb1-$status1 llb2-$status2 [FAILED]
     sleep 0.2
     count=$(( $count + 1 ))
     
