@@ -121,7 +121,7 @@ func NeighInit(zone *Zone) *NeighH {
 // Activate - Try to activate a neighbor
 func (n *NeighH) Activate(ne *Neigh) {
 
-	if IsNetIPv6(ne.Addr.String()) {
+	if tk.IsNetIPv6(ne.Addr.String()) {
 		return
 	}
 
@@ -308,7 +308,7 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 	}
 
 	var mask net.IPMask
-	if IsNetIPv4(Addr.String()) {
+	if tk.IsNetIPv4(Addr.String()) {
 		mask = net.CIDRMask(32, 32)
 	} else {
 		mask = net.CIDRMask(128, 128)

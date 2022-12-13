@@ -214,7 +214,7 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP) (int, net.IP) {
 			continue
 		}
 
-		if IsNetIPv6(addr.String()) && IsNetIPv4(ifaEnt.IfaNet.IP.String()) {
+		if tk.IsNetIPv6(addr.String()) && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String()) {
 			continue
 		}
 
@@ -242,7 +242,7 @@ func (l3 *L3H) IfaSelectAny(addr net.IP) (int, net.IP) {
 	IfObj := ""
 	firstIP = nil
 
-	if IsNetIPv4(addr.String()) {
+	if tk.IsNetIPv4(addr.String()) {
 		err, _, tDat = l3.Zone.Rt.Trie4.FindTrie(addr.String())
 	} else {
 		v6 = true
@@ -273,7 +273,7 @@ func (l3 *L3H) IfaSelectAny(addr net.IP) (int, net.IP) {
 				continue
 			}
 
-			if v6 && IsNetIPv4(ifaEnt.IfaNet.IP.String()) {
+			if v6 && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String()) {
 				continue
 			}
 
