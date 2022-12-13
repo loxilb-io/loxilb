@@ -609,7 +609,7 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 		syscall.Exit(1)
 	}
 
-	if IsNetIPv4(w.Dst.IP.String()) {
+	if tk.IsNetIPv4(w.Dst.IP.String()) {
 		key4 := new(rt4Key)
 
 		len, _ := w.Dst.Mask.Size()
@@ -698,7 +698,7 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 	key := new(natKey)
 
 	key.daddr = [4]C.uint{0, 0, 0, 0}
-	if IsNetIPv4(w.ServiceIP.String()) {
+	if tk.IsNetIPv4(w.ServiceIP.String()) {
 		key.daddr[0] = C.uint(tk.IPtonl(w.ServiceIP))
 		key.v6 = 0
 	} else {
@@ -741,10 +741,10 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		for _, k := range w.endPoints {
 			nxfa.wprio = C.ushort(k.Weight)
 			nxfa.nat_xport = C.ushort(tk.Htons(k.XPort))
-			if IsNetIPv6(k.XIP.String()) {
+			if tk.IsNetIPv6(k.XIP.String()) {
 				convNetIP2DPv6Addr(unsafe.Pointer(&nxfa.nat_xip[0]), k.XIP)
 
-				if IsNetIPv6(k.RIP.String()) {
+				if tk.IsNetIPv6(k.RIP.String()) {
 					convNetIP2DPv6Addr(unsafe.Pointer(&nxfa.nat_rip[0]), k.RIP)
 				}
 				nxfa.nv6 = 1

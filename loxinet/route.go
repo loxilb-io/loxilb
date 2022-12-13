@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"strings"
 
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
@@ -103,14 +102,6 @@ type RtH struct {
 	Trie6  *tk.TrieRoot
 	Zone   *Zone
 	HwMark *tk.Counter
-}
-
-func IsNetIPv4(address string) bool {
-	return strings.Count(address, ":") < 2
-}
-
-func IsNetIPv6(address string) bool {
-	return strings.Count(address, ":") >= 2
 }
 
 // RtInit - Initialize the route subsystem
@@ -272,7 +263,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 
 	var tret int
 	var tR *tk.TrieRoot
-	if IsNetIPv4(Dst.IP.String()) {
+	if tk.IsNetIPv4(Dst.IP.String()) {
 		tR = r.Trie4
 	} else {
 		tR = r.Trie6
@@ -346,7 +337,7 @@ func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 	//}
 
 	var tR *tk.TrieRoot
-	if IsNetIPv4(string(Dst.IP)) {
+	if tk.IsNetIPv4(string(Dst.IP)) {
 		tR = r.Trie4
 	} else {
 		tR = r.Trie6

@@ -728,7 +728,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 
 	// Validate service args
 	service := ""
-	if IsNetIPv4(serv.ServIP) {
+	if tk.IsNetIPv4(serv.ServIP) {
 		service = serv.ServIP + "/32"
 	} else {
 		service = serv.ServIP + "/128"
@@ -896,7 +896,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	var ipProto uint8
 
 	service := ""
-	if IsNetIPv4(serv.ServIP) {
+	if tk.IsNetIPv4(serv.ServIP) {
 		service = serv.ServIP + "/32"
 	} else {
 		service = serv.ServIP + "/128"
