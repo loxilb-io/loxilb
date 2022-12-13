@@ -65,11 +65,11 @@ while : ; do
     echo "$master BGP connection [OK]"
     break;
   fi
-  sleep 0.1
+  sleep 0.2
   count=$(( $count + 1 ))
-  if [[ $count -ge 1000 ]]; then
+  if [[ $count -ge 2000 ]]; then
     echo "$master BGP connection [NOK]"
-    return 1;
+    exit 1;
   fi
 done
 
@@ -80,11 +80,11 @@ while : ; do
     echo "$backup BGP connection [OK]"
     break;
   fi
-  sleep 0.1
+  sleep 0.2
   count=$(( $count + 1 ))
-  if [[ $count -ge 1000 ]]; then
+  if [[ $count -ge 2000 ]]; then
     echo "$backup BGP connection [NOK]"
-    return 1;
+    exit 1;
   fi
 done
 

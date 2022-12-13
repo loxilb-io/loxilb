@@ -78,4 +78,4 @@ $dexec llb2 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=10.10.10.3:
 $dexec llb1 loxicmd create lb 20.20.20.1 --sctp=2020:8080 --endpoints=10.10.10.3:1,10.10.10.4:1,10.10.10.5:1 --mode=onearm --bgp
 $dexec llb2 loxicmd create lb 20.20.20.1 --sctp=2020:8080 --endpoints=10.10.10.3:1,10.10.10.4:1,10.10.10.5:1 --mode=onearm --bgp
 # keepalive will take few seconds to be UP and running with valid states
-sleep 20
+sleep 40

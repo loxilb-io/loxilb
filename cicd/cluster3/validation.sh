@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo CLUSTER-2
+echo CLUSTER-3
 
 declare -A llbIp
 llbIp["llb1"]="11.11.11.1"
@@ -80,6 +80,36 @@ function sctp_validate() {
   echo $code
 }
 
+count=0
+while : ; do
+  $dexec llb1 gobgp neigh | grep "Estab" 2>&1 >> /dev/null
+  if [[ $? -eq 0 ]]; then
+    echo "llb1 BGP connection [OK]"
+    break;
+  fi
+  sleep 0.2
+  count=$(( $count + 1 ))
+  if [[ $count -ge 2000 ]]; then
+    echo "llb1 BGP connection [NOK]"
+    exit 1;
+  fi
+done
+
+count=0
+while : ; do
+  $dexec llb2 gobgp neigh | grep "Estab" >> /dev/null
+  if [[ $? -eq 0 ]]; then
+    echo "llb2 BGP connection [OK]"
+    break;
+  fi
+  sleep 0.2
+  count=$(( $count + 1 ))
+  if [[ $count -ge 2000 ]]; then
+    echo "$backup BGP connection [NOK]"
+    exit 1;
+  fi
+done
+
 rnh=$($hexec r1 ip route list match 20.20.20.1 | grep "proto zebra" | cut -d ' ' -f 3)
 
 if [[ $rnh == "11.11.11.1" ]];
@@ -91,60 +121,32 @@ then
     master="llb2"
     backup="llb1"
 else
-    echo CLUSTER-2 Service Route not advertised to External Router [FAILED]
+    echo CLUSTER-3 Service Route not advertised to External Router [FAILED]
+    exit 1
 fi
 
 echo "Master:$master Backup:$backup"
 
-count=0
-while : ; do
-  $dexec $master gobgp neigh | grep "Estab" 2>&1 >> /dev/null
-  if [[ $? -eq 0 ]]; then
-    echo "$master BGP connection [OK]"
-    break;
-  fi
-  sleep 0.1
-  count=$(( $count + 1 ))
-  if [[ $count -ge 1000 ]]; then
-    echo "$master BGP connection [NOK]"
-    return 1;
-  fi
-done
 
-count=0
-while : ; do
-  $dexec $backup gobgp neigh | grep "Estab" >> /dev/null
-  if [[ $? -eq 0 ]]; then
-    echo "$backup BGP connection [OK]"
-    break;
-  fi
-  sleep 0.1
-  count=$(( $count + 1 ))
-  if [[ $count -ge 1000 ]]; then
-    echo "$backup BGP connection [NOK]"
-    return 1;
-  fi
-done
-
-echo "CLUSTER-2 TCP Start"
+echo "CLUSTER-3 TCP Start"
 code=0
 code=$(tcp_validate $master)
 if [[ $code == 0 ]]
 then
-    echo CLUSTER-2 TCP Phase-1 [OK]
+    echo CLUSTER-3 TCP Phase-1 [OK]
 else
-    echo CLUSTER-2 TCP Phase-1 [FAILED]
+    echo CLUSTER-3 TCP Phase-1 [FAILED]
     exit 1
 fi
-echo "CLUSTER-2 SCTP Start"
+echo "CLUSTER-3 SCTP Start"
 code=0
 code=$(sctp_validate $master)
 if [[ $code == 0 ]]
 then
-    echo CLUSTER-2 SCTP Phase-1 [OK]
+    echo CLUSTER-3 SCTP Phase-1 [OK]
     docker stop $master
 else
-    echo CLUSTER-2 SCTP Phase-1 [FAILED]
+    echo CLUSTER-3 SCTP Phase-1 [FAILED]
     exit 1
 fi
 
@@ -154,27 +156,27 @@ rnh=$($hexec r1 ip route list match 20.20.20.1 | grep "proto zebra" | cut -d ' '
 
 if [[ ${llbIp[$backup]} == "$rnh" ]]
 then
-    echo CLUSTER-2 HA [SUCCESS]
+    echo CLUSTER-3 HA [SUCCESS]
 else
-    echo CLUSTER-2 HA [FAILED]
+    echo CLUSTER-3 HA [FAILED]
     exit 1
 fi
 code=0
 code=$(tcp_validate $backup)
 if [[ $code == 0 ]]
 then
-    echo CLUSTER-2 TCP [OK]
+    echo CLUSTER-3 TCP [OK]
 else
-    echo CLUSTER-2 TCP [FAILED]
+    echo CLUSTER-3 TCP [FAILED]
     exit 1
 fi
 
 code=$(sctp_validate $backup)
 if [[ $code == 0 ]]
 then
-    echo CLUSTER-2 SCTP [OK]
+    echo CLUSTER-3 SCTP [OK]
 else
-    echo CLUSTER-2 SCTP [FAILED]
+    echo CLUSTER-3 SCTP [FAILED]
 fi
 
 exit $code

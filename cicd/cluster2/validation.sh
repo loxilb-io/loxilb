@@ -97,6 +97,7 @@ then
     backup="llb1"
 else
     echo CLUSTER-2 HA state llb1-$status1 llb2-$status2 [FAILED]
+    exit 1
 fi
 echo "Master:$master Backup:$backup"
 
@@ -111,7 +112,7 @@ while : ; do
   count=$(( $count + 1 ))
   if [[ $count -ge 1000 ]]; then
     echo "$master BGP connection [NOK]"
-    return 1;
+    exit 1;
   fi
 done
 
@@ -126,7 +127,7 @@ while : ; do
   count=$(( $count + 1 ))
   if [[ $count -ge 1000 ]]; then
     echo "$backup BGP connection [NOK]"
-    return 1;
+    exit 1;
   fi
 done
 
