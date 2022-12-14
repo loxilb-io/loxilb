@@ -57,3 +57,8 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+             cd cicd/cluster3/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
