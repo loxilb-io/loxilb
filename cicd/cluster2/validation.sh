@@ -62,11 +62,26 @@ function tcp_validate() {
   do
     res=$($hexec user curl --max-time 10 -s 20.20.20.1:2020)
     echo -e $res >&2
-    if [[ $res != "${servArr[j]}" ]]
-    then
-        echo "Expected : "${servArr[j]}", Received : $res" >&2
+    ids=`echo "${res//[!0-9]/}"`
+    if [[ $res == *"server"* ]]; then
+      ids=`echo "${res//[!0-9]/}"`
+      if [[ $nid == 0 ]];then
+        nid=$((($ids + 1)%4))
+        if [[ $nid == 0 ]];then
+          nid=1
+        fi
+      elif [[ $nid != $((ids)) ]]; then
+        echo "Expected server$nid got server$((ids))"
         code=1
+      fi
+      nid=$((($ids + 1)%4))
+      if [[ $nid == 0 ]];then
+        nid=1
+      fi
+    else
+      code=1
     fi
+
     sleep 1
   done
   done
@@ -126,11 +141,26 @@ function sctp_validate() {
   do
     res=$($hexec user timeout 10 ../common/sctp_client 20.20.20.1 2020)
     echo -e $res >&2
-    if [[ $res != "${servArr[j]}" ]]
-    then
-        echo "Expected : "${servArr[j]}", Received : $res" >&2
+    ids=`echo "${res//[!0-9]/}"`
+    if [[ $res == *"server"* ]]; then
+      ids=`echo "${res//[!0-9]/}"`
+      if [[ $nid == 0 ]];then
+        nid=$((($ids + 1)%4))
+        if [[ $nid == 0 ]];then
+          nid=1
+        fi
+      elif [[ $nid != $((ids)) ]]; then
+        echo "Expected server$nid got server$((ids))"
         code=1
+      fi
+      nid=$((($ids + 1)%4))
+      if [[ $nid == 0 ]];then
+        nid=1
+      fi
+    else
+      code=1
     fi
+
     sleep 1
   done
   done
