@@ -3,13 +3,13 @@ source ../common.sh
 echo CLUSTER-1
 
 function myfunc() {
-  $hexec ep1 node ./server1.js &
-  $hexec ep2 node ./server2.js &
-  $hexec ep3 node ./server3.js &
-
+  $hexec ep1 node ../common/tcp_server.js server1 &
+  $hexec ep2 node ../common/tcp_server.js server2 &
+  $hexec ep3 node ../common/tcp_server.js server3 &
+  
   sleep 20
 
-  local code=0
+  local mycode=0
   servArr=( "server1" "server2" "server3" )
   declare -A llbIp
 
@@ -22,23 +22,24 @@ function myfunc() {
   else
     $hexec r2 ip route match 20.20.20.1
     echo "BGP Service Route [NOK]" >&2
+    sudo pkill node
     return 1
   fi 
-
   for i in {1..5}
   do
   for j in {0..2}
   do
-    res=$($hexec user curl --max-time 10 -s 20.20.20.1:2020)
+    res=$($hexec user timeout 1 curl --max-time 10 -s 20.20.20.1:2020)
     echo -e $res >&2
-    if [[ $res != "${servArr[j]}" ]]
+    if [[ $res != "${servArr[j]}" && $mycode == 0 ]]
     then
-        code=1
+        mycode=1
     fi
     sleep 1
   done
   done
-  echo $code
+  sudo pkill node
+  echo "$mycode"
 }
 
 while : ; do
@@ -57,10 +58,12 @@ while : ; do
     break
   else
     echo CLUSTER-1 HA state llb1-$status1 llb2-$status2 [FAILED]
-    sleep 0.2
+    sleep 10
     count=$(( $count + 1 ))
-    
-    if [[ $count -ge 2000 ]]; then
+    docker logs ka_llb1
+    echo "##############################################"
+    docker logs ka_llb2
+    if [[ $count -ge 20 ]]; then
       echo "KeepAlive llb1-$status1, llb2-$status2 [NOK]"
       exit 1;
     fi
@@ -100,7 +103,8 @@ while : ; do
   fi
 done
 
-code=$(myfunc $master)
+#code=$(myfunc $master)
+code=`myfunc $master`
 if [[ $code == 0 ]]
 then
     echo CLUSTER-1 Phase-1 [OK]

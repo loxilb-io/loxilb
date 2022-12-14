@@ -7,9 +7,9 @@ llbIp["llb1"]="11.11.11.1"
 llbIp["llb2"]="11.11.11.2"
 
 function tcp_validate() {
-  $hexec ep1 node ./server1.js &
-  $hexec ep2 node ./server2.js &
-  $hexec ep3 node ./server3.js &
+  $hexec ep1 node ../common/tcp_server.js server1 &
+  $hexec ep2 node ../common/tcp_server.js server2 &
+  $hexec ep3 node ../common/tcp_server.js server3 &
 
   sleep 20
 
@@ -23,6 +23,7 @@ function tcp_validate() {
   else
     $hexec r2 ip route list match 20.20.20.1 >&2
     echo "BGP Service Route [NOK]" >&2
+    sudo pkill node
     return 1
   fi 
 
@@ -40,13 +41,14 @@ function tcp_validate() {
     sleep 1
   done
   done
+  sudo pkill node
   echo $code
 }
 
 function sctp_validate() {
-  $hexec ep1 ./server server1 &
-  $hexec ep2 ./server server2 &
-  $hexec ep3 ./server server3 &
+  $hexec ep1 ../common/sctp_server server1 &
+  $hexec ep2 ../common/sctp_server server2 &
+  $hexec ep3 ../common/sctp_server server3 &
 
   sleep 20
 
@@ -60,6 +62,7 @@ function sctp_validate() {
   else
     $hexec r2 ip route list match 20.20.20.1 >&2
     echo "BGP Service Route [NOK]" >&2
+    sudo pkill sctp_server
     return 1
   fi 
 
@@ -67,7 +70,7 @@ function sctp_validate() {
   do
   for j in {0..2}
   do
-    res=$($hexec user ./client 20.20.20.1 2020)
+    res=$($hexec user timeout 10 ../common/sctp_client 20.20.20.1 2020)
     echo -e $res >&2
     if [[ $res != "${servArr[j]}" ]]
     then
@@ -77,6 +80,7 @@ function sctp_validate() {
     sleep 1
   done
   done
+  sudo pkill sctp_server
   echo $code
 }
 
