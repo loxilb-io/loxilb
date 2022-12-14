@@ -60,12 +60,15 @@ while : ; do
     echo CLUSTER-1 HA state llb1-$status1 llb2-$status2 [FAILED]
     sleep 10
     count=$(( $count + 1 ))
-    docker logs ka_llb1
-    echo "##############################################"
-    docker logs ka_llb2
     if [[ $count -ge 20 ]]; then
       echo "KeepAlive llb1-$status1, llb2-$status2 [NOK]"
       exit 1;
+    fi
+    if [[ $status1 != "MASTER" || $status1 != "BACKUP" ]]; then
+      docker restart ka_llb1
+    fi
+    if [[ $status1 != "MASTER" || $status1 != "BACKUP" ]]; then
+      docker restart ka_llb2
     fi
   fi
 done
