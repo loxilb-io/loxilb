@@ -31,9 +31,10 @@ function myfunc() {
   do
     res=$($hexec user timeout 1 curl --max-time 10 -s 20.20.20.1:2020)
     echo -e $res >&2
-    if [[ $res != "${servArr[j]}" && $mycode == 0 ]]
+    if [[ $res != "${servArr[j]}" ]]
     then
         mycode=1
+        echo "Expected : "${servArr[j]}", Received : $res" >&2
     fi
     sleep 1
   done
@@ -58,7 +59,6 @@ while : ; do
     break
   else
     echo CLUSTER-1 HA state llb1-$status1 llb2-$status2 [FAILED]
-    sleep 10
     count=$(( $count + 1 ))
     if [[ $count -ge 20 ]]; then
       echo "KeepAlive llb1-$status1, llb2-$status2 [NOK]"
@@ -70,6 +70,7 @@ while : ; do
     if [[ $status1 != "MASTER" || $status1 != "BACKUP" ]]; then
       docker restart ka_llb2
     fi
+    sleep 10
   fi
 done
 

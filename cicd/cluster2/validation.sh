@@ -76,7 +76,7 @@ function sctp_validate() {
     echo -e $res >&2
     if [[ $res != "${servArr[j]}" ]]
     then
-        echo "Expected : "${servArr[j]}", Received : $res" 2>&1
+        echo "Expected : "${servArr[j]}", Received : $res" >&2
         code=1
     fi
     sleep 1
@@ -102,7 +102,6 @@ while : ; do
     break
   else
     echo CLUSTER-2 HA state llb1-$status1 llb2-$status2 [FAILED]
-    sleep 10
     count=$(( $count + 1 ))
     if [[ $count -ge 20 ]]; then
       echo "KeepAlive llb1-$status1, llb2-$status2 [NOK]"
@@ -114,6 +113,7 @@ while : ; do
     if [[ $status2 != "MASTER" || $status2 != "BACKUP" ]]; then
       docker restart ka_llb2
     fi
+    sleep 10
   fi
 done
 
