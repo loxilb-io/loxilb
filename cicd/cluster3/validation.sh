@@ -1,11 +1,15 @@
 #!/bin/bash
 source ../common.sh
 echo CLUSTER-3
+declare -A llbExIp
+llbExIp["llb1"]="11.11.11.1"
+llbExIp["llb2"]="11.11.11.2"
 
-declare -A llbIp
-llbIp["llb1"]="11.11.11.1"
-llbIp["llb2"]="11.11.11.2"
+declare -A llbInIp
+llbInIp["llb1"]="10.10.10.1"
+llbInIp["llb2"]="10.10.10.2"
 
+ep=( "10.10.10.3" "10.10.10.4" "10.10.10.5" )
 function tcp_validate() {
   $hexec ep1 node ../common/tcp_server.js server1 &
   $hexec ep2 node ../common/tcp_server.js server2 &
@@ -16,8 +20,8 @@ function tcp_validate() {
   local code=0
   servArr=( "server1" "server2" "server3" )
 
-  echo "Master-$1(${llbIp[$1]})" >&2
-  $hexec r1 ip route list match 20.20.20.1 | grep -w ${llbIp[$1]} 2>&1 >/dev/null
+  echo "Master-$1(${llbExIp[$1]})" >&2
+  $hexec r1 ip route list match 20.20.20.1 | grep -w ${llbExIp[$1]} 2>&1 >/dev/null
   if [[ $? -eq 0 ]]; then
     echo "BGP Service Route [OK]" >&2
   else
@@ -27,7 +31,32 @@ function tcp_validate() {
     return 1
   fi 
 
-  for i in {1..5}
+  $hexec r1 ip route replace 10.10.10.0/24 via ${llbExIp[$1]}
+  $hexec r2 ip route replace 1.1.1.0/24 via ${llbInIp[$1]}
+  j=0
+  waitCount=0
+  while [ $j -le 2 ]
+  do
+    res=$($hexec user curl --max-time 10 -s ${ep[j]}:8080)
+    if [[ $res == "${servArr[j]}" ]]
+    then
+        echo "$res UP" >&2
+        j=$(( $j + 1 ))
+    else
+        echo "Waiting for ${servArr[j]}(${ep[j]})" >&2
+        waitCount=$(( $waitCount + 1 ))
+        if [[ $waitCount == 11 ]];
+        then
+            echo "All TCP Servers are not UP" >&2
+            echo CLUSTER-2 [FAILED] >&2
+            sudo pkill node
+            exit 1
+        fi
+    fi
+    sleep 1
+  done
+
+  for i in {1..4}
   do
   for j in {0..2}
   do
@@ -55,8 +84,8 @@ function sctp_validate() {
   local code=0
   servArr=( "server1" "server2" "server3" )
 
-  echo "Master-$1(${llbIp[$1]})" >&2
-  $hexec r1 ip route list match 20.20.20.1 | grep -w ${llbIp[$1]} 2>&1 >/dev/null
+  echo "Master-$1(${llbExIp[$1]})" >&2
+  $hexec r1 ip route list match 20.20.20.1 | grep -w ${llbExIp[$1]} 2>&1 >/dev/null
   if [[ $? -eq 0 ]]; then
     echo "BGP Service Route [OK]" >&2
   else
@@ -65,8 +94,33 @@ function sctp_validate() {
     sudo pkill sctp_server
     return 1
   fi 
+  
+  $hexec r1 ip route replace 10.10.10.0/24 via ${llbExIp[$1]}
+  $hexec r2 ip route replace 1.1.1.0/24 via ${llbInIp[$1]}
+  j=0
+  waitCount=0
+  while [ $j -le 2 ]
+  do
+    res=$($hexec user timeout 10 ../common/sctp_client ${ep[j]} 8080)
+    if [[ $res == "${servArr[j]}" ]]
+    then
+        echo "$res UP" >&2
+        j=$(( $j + 1 ))
+    else
+        echo "Waiting for ${servArr[j]}(${ep[j]})" >&2
+        waitCount=$(( $waitCount + 1 ))
+        if [[ $waitCount == 10 ]];
+        then
+            echo "All SCTP Servers are not UP" >&2
+            echo CLUSTER-2 [FAILED] >&2
+            exit 1
+        fi
 
-  for i in {1..5}
+    fi
+    sleep 1
+  done
+
+  for i in {1..4}
   do
   for j in {0..2}
   do
@@ -164,14 +218,15 @@ else
     exit 1
 fi
 
-sleep 2
+sleep 10
 
 rnh=$($hexec r1 ip route list match 20.20.20.1 | grep "proto zebra" | cut -d ' ' -f 3)
 
-if [[ ${llbIp[$backup]} == "$rnh" ]]
+if [[ ${llbExIp[$backup]} == "$rnh" ]]
 then
     echo CLUSTER-3 HA [SUCCESS]
 else
+    $hexec r1 ip route list match 20.20.20.1
     echo CLUSTER-3 HA [FAILED]
     exit 1
 fi

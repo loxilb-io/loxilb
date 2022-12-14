@@ -11,6 +11,7 @@ function myfunc() {
 
   local mycode=0
   servArr=( "server1" "server2" "server3" )
+  ep=( "31.31.31.1" "32.32.32.1" "33.33.33.1" )
   declare -A llbIp
 
   llbIp["llb1"]="10.10.10.1"
@@ -24,8 +25,32 @@ function myfunc() {
     echo "BGP Service Route [NOK]" >&2
     sudo pkill node
     return 1
-  fi 
-  for i in {1..5}
+  fi
+  $hexec r2 ip route replace 1.1.1.0/24 via ${llbIp[$1]}
+  j=0
+  waitCount=0
+  while [ $j -le 2 ]
+  do
+    res=$($hexec user curl --max-time 10 -s ${ep[j]}:8080)
+    if [[ $res == "${servArr[j]}" ]]
+    then
+        echo "$res UP" >&2
+        j=$(( $j + 1 ))
+    else
+        echo "Waiting for ${servArr[j]}(${ep[j]})" >&2
+        waitCount=$(( $waitCount + 1 ))
+        if [[ $waitCount == 11 ]];
+        then
+            echo "All TCP Servers are not UP" >&2
+            echo CLUSTER-2 [FAILED] >&2
+            sudo pkill node
+            exit 1
+        fi
+    fi
+    sleep 1
+  done
+
+  for i in {1..4}
   do
   for j in {0..2}
   do
@@ -64,10 +89,10 @@ while : ; do
       echo "KeepAlive llb1-$status1, llb2-$status2 [NOK]"
       exit 1;
     fi
-    if [[ $status1 != "MASTER" || $status1 != "BACKUP" ]]; then
+    if [[ $status1 != "MASTER" && $status1 != "BACKUP" ]]; then
       docker restart ka_llb1
     fi
-    if [[ $status1 != "MASTER" || $status1 != "BACKUP" ]]; then
+    if [[ $status1 != "MASTER" && $status1 != "BACKUP" ]]; then
       docker restart ka_llb2
     fi
     sleep 10
