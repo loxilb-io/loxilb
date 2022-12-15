@@ -775,6 +775,9 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		if pNetAddr == nil {
 			return RuleUnknownEpErr, errors.New("malformed-lbep error")
 		}
+		if tk.IsNetIPv4(serv.ServIP) && tk.IsNetIPv6(k.EpIP) {
+			return RuleUnknownServiceErr, errors.New("malformed-service nat46 error")
+		}
 		if serv.Proto == "icmp" && k.EpPort != 0 {
 			return RuleUnknownServiceErr, errors.New("malformed-service error")
 		}
@@ -1639,6 +1642,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 					r.Sync = DpCreateErr
 					return -1
 				}
+
 				ep.RIP = sip
 			} else {
 				ep.RIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
@@ -1647,7 +1651,16 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	} else {
 		for idx := range nWork.endPoints {
 			ep := &nWork.endPoints[idx]
-			ep.RIP = net.IPv4(0, 0, 0, 0)
+			if tk.IsNetIPv6(nWork.ServiceIP.String()) && tk.IsNetIPv4(ep.XIP.String()) {
+				e, sip := r.zone.L3.IfaSelectAny(ep.XIP)
+				if e != 0 {
+					r.Sync = DpCreateErr
+					return -1
+				}
+				ep.RIP = sip
+			} else {
+				ep.RIP = net.IPv4(0, 0, 0, 0)
+			}
 		}
 	}
 
