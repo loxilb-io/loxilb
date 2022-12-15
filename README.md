@@ -4,7 +4,8 @@
 loxilb is a cloud-native "edge" load-balancer stack built from grounds up using eBPF at its core. loxilb aims to provide the following :
 
 - Service type external load-balancer for kubernetes (hence the name loxilb)
-- L4/NAT stateful loadbalancer 
+- L4/NAT stateful loadbalancer
+   * NAT44, NAT66, NAT64
    * High-availability support
    * K8s CCM compliance
 -  Optimized SRv6 implementation in eBPF 
