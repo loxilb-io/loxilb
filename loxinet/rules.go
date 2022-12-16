@@ -1596,6 +1596,9 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 			}
 			if j < MaxNatEndPoints {
 				v := 0
+				if k == 0 {
+					k = len(at.endPoints)
+				}
 				for j < MaxNatEndPoints {
 					idx := small[v%k]
 					oEp := &at.endPoints[idx]
