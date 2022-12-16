@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo SCENARIO-6
+echo SCENARIO-sctplb
 $hexec l3ep1 ./server server1 &
 $hexec l3ep2 ./server server2 &
 $hexec l3ep3 ./server server3 &
@@ -25,7 +25,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            echo SCENARIO-6 [FAILED]
+            echo SCENARIO-sctplb [FAILED]
             exit 1
         fi
 
@@ -48,9 +48,9 @@ done
 done
 if [[ $code == 0 ]]
 then
-    echo SCENARIO-6 [OK]
+    echo SCENARIO-sctplb [OK]
 else
-    echo SCENARIO-6 [FAILED]
+    echo SCENARIO-sctplb [FAILED]
 fi
 exit $code
 

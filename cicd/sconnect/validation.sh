@@ -1,7 +1,7 @@
 #!/bin/bash
 code=0
 sizes=( 64 100 500 1000 1500 2000 5000 )
-echo "SCENARIO 1"
+echo "SCENARIO sconnect"
 if [[ $# -gt 0 ]]; then
     nslist=( "$@" )
 else
@@ -143,9 +143,9 @@ done
 echo -e "********************************************************************"
 if [[ $code == 0 ]]
 then
-    echo SCENARIO-1 [OK]
+    echo SCENARIO-sconnect [OK]
 else
-    echo SCENARIO-1 [FAILED]
+    echo SCENARIO-sconnect [FAILED]
 fi
 
 exit $code

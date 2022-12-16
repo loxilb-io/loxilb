@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo SCENARIO-tcplb
+echo "SCENARIO nat64tcp"
 $hexec l3ep1 node ./server1.js &
 $hexec l3ep2 node ./server2.js &
 $hexec l3ep3 node ./server3.js &
@@ -25,31 +25,47 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            echo SCENARIO-tcplb [FAILED]
+            echo SCENARIO-nat64tcp [FAILED]
             exit 1
         fi
     fi
     sleep 1
 done
 
+nid=0
 for i in {1..4}
 do
 for j in {0..2}
 do
-    res=$($hexec l3h1 curl --max-time 10 -s 20.20.20.1:2020)
+    res=$($hexec l3h1 curl -s -j -6 --max-time 10 '[2001::1]:2020')
     echo $res
-    if [[ $res != "${servArr[j]}" ]]
-    then
+    ids=`echo "${res//[!0-9]/}"`
+    if [[ $res == *"server"* ]]; then
+      ids=`echo "${res//[!0-9]/}"`
+      if [[ $nid == 0 ]];then
+        nid=$((($ids + 1)%4))
+        if [[ $nid == 0 ]];then
+          nid=1
+        fi
+      elif [[ $nid != $((ids)) ]]; then
+        echo "Expected server$nid got server$((ids))"
         code=1
+      fi
+      nid=$((($ids + 1)%4))
+      if [[ $nid == 0 ]];then
+        nid=1
+      fi
+    else
+      code=1
     fi
     sleep 1
 done
 done
 if [[ $code == 0 ]]
 then
-    echo SCENARIO-tcplb [OK]
+    echo nat64tcp [OK]
 else
-    echo SCENARIO-tcplb [FAILED]
+    echo nat64tcp [FAILED]
 fi
 exit $code
 

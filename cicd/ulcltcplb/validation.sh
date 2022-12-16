@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo SCENARIO-3
+echo SCENARIO-ulcltcplb
 $hexec l3e1 node ./server1.js &
 $hexec l3e2 node ./server2.js &
 $hexec l3e3 node ./server3.js &
@@ -26,7 +26,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            echo SCENARIO-3 [FAILED]
+            echo SCENARIO-ulcltcplb [FAILED]
             exit 1
         fi
     fi
@@ -61,9 +61,9 @@ done
 done
 if [[ $code == 0 ]]
 then
-    echo SCENARIO-3 [OK]
+    echo SCENARIO-ulcltcplb [OK]
 else
-    echo SCENARIO-3 [FAILED]
+    echo SCENARIO-ulcltcplb [FAILED]
 fi
 exit $code
 

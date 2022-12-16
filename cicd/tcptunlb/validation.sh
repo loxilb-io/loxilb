@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo SCENARIO-8
+echo SCENARIO-tcptunlb
 $hexec l3e1 node ./server1.js &
 $hexec l3e2 node ./server2.js &
 $hexec l3e3 node ./server3.js &
@@ -26,7 +26,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            echo SCENARIO-8 [FAILED]
+            echo SCENARIO-tcptunlb [FAILED]
             exit 1
         fi
     fi
@@ -62,9 +62,9 @@ done
 done
 if [[ $code == 0 ]]
 then
-    echo SCENARIO-8 [OK]
+    echo SCENARIO-tcptunlb [OK]
 else
-    echo SCENARIO-8 [FAILED]
+    echo SCENARIO-tcptunlb [FAILED]
 fi
 exit $code
 

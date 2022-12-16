@@ -1,7 +1,7 @@
 #!/bin/bash
 source ../common.sh
 
-echo SCENARIO-7
+echo SCENARIO-udplb
 $hexec l3ep1 ./server 8080 server1 &
 $hexec l3ep2 ./server 8080 server2 &
 $hexec l3ep3 ./server 8080 server3 &
@@ -26,7 +26,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            echo SCENARIO-7 [FAILED]
+            echo SCENARIO-udplb [FAILED]
             exit 1
         fi
 
@@ -58,9 +58,9 @@ done
 done
 if [[ $code == 0 ]]
 then
-    echo SCENARIO-7 [OK]
+    echo SCENARIO-udplb [OK]
 else
-    echo SCENARIO-7 [FAILED]
+    echo SCENARIO-udplb [FAILED]
 fi
 exit $code
 
