@@ -1,19 +1,19 @@
 #!/bin/bash
 source ../common.sh
-echo SCENARIO-4
-$hexec n1p1 node ./server1.js &
-$hexec n2p1 node ./server2.js &
-$hexec n3p1 node ./server3.js &
+echo SCENARIO-sctplb
+$hexec l3ep1 ./server server1 &
+$hexec l3ep2 ./server server2 &
+$hexec l3ep3 ./server server3 &
 
 sleep 5
 code=0
 servArr=( "server1" "server2" "server3" )
-ep=( "31.31.31.1" "33.33.33.1" "34.34.34.1" )
+ep=( "31.31.31.1" "32.32.32.1" "33.33.33.1" )
 j=0
 waitCount=0
 while [ $j -le 2 ]
 do
-    res=$($hexec n1p1 curl --max-time 10 -s ${ep[j]}:8080)
+    res=$($hexec l3h1 ./client ${ep[j]} 8080)
     #echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
@@ -25,9 +25,10 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            echo SCENARIO-4 [FAILED]
+            echo SCENARIO-sctplb [FAILED]
             exit 1
         fi
+
     fi
     sleep 1
 done
@@ -36,7 +37,7 @@ for i in {1..4}
 do
 for j in {0..2}
 do
-    res=$($hexec n1p1 curl --max-time 10 -s 20.20.20.1:2020)
+    res=$($hexec l3h1 ./client 20.20.20.1 2020)
     echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
@@ -47,9 +48,9 @@ done
 done
 if [[ $code == 0 ]]
 then
-    echo SCENARIO-4 [OK]
+    echo SCENARIO-sctplb [OK]
 else
-    echo SCENARIO-4 [FAILED]
+    echo SCENARIO-sctplb [FAILED]
 fi
 exit $code
 

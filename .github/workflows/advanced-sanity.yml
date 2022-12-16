@@ -8,10 +8,10 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
     inputs:
-      logLevel:
-        description: 'Log level'     
+      userInput:
+        description: 'Enter string to print at end'
         required: true
-        default: 'warning'
+        default: 'Finished'
       tags:
         description: 'Advanced Sanity'
        
@@ -47,43 +47,52 @@ jobs:
       - run: id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"` && docker commit $id ghcr.io/loxilb-io/loxilb:latest
       - run: docker stop loxilb && docker rm loxilb
       - run: |
-             cd cicd/scenario3/
+             cd cicd/ulcltcplb/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
-             cd cicd/scenario4/
+      - run: |
+             cd cicd/k8slb/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
-             cd cicd/scenario5/
+      - run: |
+             cd cicd/tcplb/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
-             cd cicd/scenario6/
+
+      - run: |
+             cd cicd/sctplb/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
-             cd cicd/scenario7/
+      - run: |
+             cd cicd/udplb/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
-             cd cicd/scenario8/
+      - run: |
+             cd cicd/tcptunlb/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
-             cd cicd/scenario9/
+      - run: |
+             cd cicd/ulclsctplb/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
-             cd cicd/scenario10/
+      - run: |
+             cd cicd/sctptunlb/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - run: echo ${{ github.event.inputs.userInput }}

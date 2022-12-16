@@ -1,11 +1,11 @@
 #!/bin/bash
 source ../common.sh
-echo SCENARIO-9
-$hexec l3e1 ./server server1 &
-$hexec l3e2 ./server server2 &
-$hexec l3e3 ./server server3 &
+echo SCENARIO-tcptunlb
+$hexec l3e1 node ./server1.js &
+$hexec l3e2 node ./server2.js &
+$hexec l3e3 node ./server3.js &
 
-sleep 5
+sleep 10
 code=0
 servArr=( "server1" "server2" "server3" )
 ep=( "25.25.25.1" "26.26.26.1" "27.27.27.1" )
@@ -13,8 +13,8 @@ j=0
 waitCount=0
 while [ $j -le 2 ]
 do
-    #res=$($hexec ue1 curl ${ep[j]}:8080)
-    res=`$hexec ue1 ./client ${ep[j]} 8080`
+    #res=$($hexec h1 curl ${ep[j]}:8080)
+    res=`$hexec h1 curl --max-time 10 -s ${ep[j]}:8080`
     #echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
@@ -26,10 +26,9 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            echo SCENARIO-9 [FAILED]
+            echo SCENARIO-tcptunlb [FAILED]
             exit 1
         fi
-
     fi
     sleep 1
 done
@@ -40,8 +39,9 @@ for i in {1..2}
 do
 for j in {0..2}
 do
-    res=$($hexec ue$k ./client 88.88.88.88 2020)
-    echo -e $res
+    #$hexec h$k ping ${ep[j]} -f -c 5 -W 1;
+    res=`$hexec h$k curl --max-time 10 -s 88.88.88.88:2020`
+    #echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
         echo -e "Expected ${servArr[j]}, Received : $res"
@@ -62,9 +62,9 @@ done
 done
 if [[ $code == 0 ]]
 then
-    echo SCENARIO-9 [OK]
+    echo SCENARIO-tcptunlb [OK]
 else
-    echo SCENARIO-9 [FAILED]
+    echo SCENARIO-tcptunlb [FAILED]
 fi
 exit $code
 
