@@ -3,10 +3,10 @@ name: Cluster-Sanity-CI
 on:
   workflow_dispatch:
     inputs:
-      logLevel:
-        description: 'Log level'     
+      userInput:
+        description: 'Enter string to print at end'
         required: true
-        default: 'warning'
+        default: 'Finished'
       tags:
         description: 'Cluster Sanity'
        
@@ -57,3 +57,4 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - run: echo ${{ github.event.inputs.userInput }}

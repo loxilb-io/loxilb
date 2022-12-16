@@ -6,7 +6,7 @@ on:
       testName:
         description: 'Test Scenario Name'     
         required: true
-        default: 'scenario1'
+        default: 'sconnect'
        
 jobs:
   build:

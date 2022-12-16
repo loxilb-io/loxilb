@@ -8,10 +8,10 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
     inputs:
-      logLevel:
-        description: 'Log level'     
+      userInput:
+        description: 'Enter string to print at end'
         required: true
-        default: 'warning'
+        default: 'Finished'
       tags:
         description: 'IPSec Sanity'
        
@@ -52,8 +52,10 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - run: |
              cd cicd/ipsec2/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - run: echo ${{ github.event.inputs.userInput }}
