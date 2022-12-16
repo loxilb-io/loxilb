@@ -82,3 +82,15 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - run: |
+             cd cicd/wrrtcplb1/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/wrrtcplb2/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
