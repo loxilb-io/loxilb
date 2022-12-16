@@ -39,7 +39,7 @@ jobs:
       - run: id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"` && docker commit $id ghcr.io/loxilb-io/loxilb:latest
       - run: docker stop loxilb && docker rm loxilb
       - run: |
-             cd cicd/scenario1/
+             cd cicd/sconnect/
              ./config.sh
              ./validation.sh
              cd -
