@@ -33,6 +33,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv.Proto = params.Attr.ServiceArguments.Protocol
 	lbRules.Serv.Sel = cmn.EpSelect(params.Attr.ServiceArguments.Sel)
 	lbRules.Serv.Bgp = params.Attr.ServiceArguments.Bgp
+	lbRules.Serv.Monitor = params.Attr.ServiceArguments.Monitor
 	lbRules.Serv.Mode = cmn.LBMode(params.Attr.ServiceArguments.Mode)
 	lbRules.Serv.InactiveTimeout = uint32(params.Attr.ServiceArguments.InactiveTimeOut)
 

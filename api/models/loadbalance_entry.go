@@ -221,6 +221,9 @@ type LoadbalanceEntryServiceArguments struct {
 	// value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)
 	Mode int32 `json:"mode,omitempty"`
 
+	// value for monitoring enabled or not
+	Monitor bool `json:"monitor,omitempty"`
+
 	// port number for the access
 	Port int64 `json:"port,omitempty"`
 

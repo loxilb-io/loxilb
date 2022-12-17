@@ -455,6 +455,8 @@ type LbServiceArg struct {
 	Sel EpSelect `json:"sel"`
 	// Bgp - export this rule with goBGP
 	Bgp bool `json:"bgp"`
+	// Monitor - monitor end-points of this rule
+	Monitor bool `json:"monitor"`
 	// Mode - NAT mode
 	Mode LBMode `json:"mode"`
 	// InactiveTimeout - Forced session reset after inactive timeout
