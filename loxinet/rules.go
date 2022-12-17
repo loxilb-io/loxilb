@@ -231,6 +231,7 @@ type ruleEnt struct {
 	Sync    DpStatusT
 	tuples  ruleTuples
 	ActChk  bool
+	BGP     bool
 	sT      time.Time
 	iTo     uint32
 	act     ruleAct
@@ -652,6 +653,9 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.ServPort = data.tuples.l4Dst.val
 		ret.Serv.Sel = data.act.action.(*ruleNatActs).sel
 		ret.Serv.Mode = data.act.action.(*ruleNatActs).mode
+		ret.Serv.Monitor = data.ActChk
+		ret.Serv.InactiveTimeout = data.iTo
+		ret.Serv.Bgp = data.BGP
 
 		// Make Endpoints
 		tmpEp := data.act.action.(*ruleNatActs).endPoints
@@ -881,6 +885,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	}
 	r.sT = time.Now()
 	r.iTo = serv.InactiveTimeout
+	r.BGP = serv.Bgp
 
 	R.modNatEpHost(r, natActs.endPoints, true)
 
