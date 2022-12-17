@@ -3042,6 +3042,10 @@ func init() {
               "type": "integer",
               "format": "int32"
             },
+            "monitor": {
+              "description": "value for monitoring enabled or not",
+              "type": "boolean"
+            },
             "port": {
               "description": "port number for the access",
               "type": "integer"
@@ -6680,6 +6684,10 @@ func init() {
               "type": "integer",
               "format": "int32"
             },
+            "monitor": {
+              "description": "value for monitoring enabled or not",
+              "type": "boolean"
+            },
             "port": {
               "description": "port number for the access",
               "type": "integer"
@@ -6732,6 +6740,10 @@ func init() {
           "description": "value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)",
           "type": "integer",
           "format": "int32"
+        },
+        "monitor": {
+          "description": "value for monitoring enabled or not",
+          "type": "boolean"
         },
         "port": {
           "description": "port number for the access",

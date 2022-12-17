@@ -70,9 +70,10 @@ const (
 // constants
 const (
 	MaxNatEndPoints          = 16
-	DflLbaInactiveTries      = 3         // Default number of inactive tries before LB arm is turned off
+	DflLbaInactiveTries      = 2         // Default number of inactive tries before LB arm is turned off
 	MaxDflLbaInactiveTries   = 100       // Max number of inactive tries before LB arm is turned off
-	DflLbaCheckTimeout       = 20        // Default timeout for checking LB arms
+	DflLbaCheckTimeout       = 15        // Default timeout for checking LB arms
+	DflHostProbeTimeout      = 5         // Default probe timeout for end-point host
 	MaxHostProbeTime         = 24 * 3600 // Max possible host health check duration
 	LbDefaultInactiveTimeout = 4 * 60    // Default inactive timeout for established sessions
 	LbMaxInactiveTimeout     = 24 * 60   // Maximum inactive timeout for established sessions
@@ -692,7 +693,7 @@ func validateXlateEPWeights(servEndPoints []cmn.LbEndPointArg) (int, error) {
 func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool) {
 	var hopts epHostOpts
 	hopts.inActTryThr = DflLbaInactiveTries
-	hopts.probeDuration = DflLbaCheckTimeout
+	hopts.probeDuration = DflHostProbeTimeout
 	for _, nep := range endpoints {
 		if r.tuples.l4Prot.val == 6 {
 			hopts.probeType = HostProbeConnectTcp
@@ -870,7 +871,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		// Per LB end-point health-check is supposed to be handled at CCM,
 		// but it certain cases like stand-alone mode, loxilb can do its own
 		// lb end-point health monitoring
-		r.ActChk = false
+		r.ActChk = serv.Monitor
 	}
 	r.act.action = &natActs
 	r.ruleNum, err = R.Tables[RtLB].HwMark.GetCounter()
@@ -1448,6 +1449,7 @@ func (R *RuleH) RulesSync() {
 							np.inActive = false
 							np.inActTries = 0
 							rChg = true
+							tk.LogIt(tk.LogDebug, "nat lb-rule active ep - %s:%s\n", sType, n.xIP.String())
 						}
 					}
 				}

@@ -1933,6 +1933,9 @@ definitions:
           bgp:
             type: boolean
             description: value for BGP enable or not
+          monitor:
+            type: boolean
+            description: value for monitoring enabled or not
           mode:
             type: integer
             format: int32
