@@ -99,6 +99,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tmpSvc.Sel = int64(lb.Serv.Sel)
 		tmpSvc.Mode = int32(lb.Serv.Mode)
 		tmpSvc.InactiveTimeOut = int32(lb.Serv.InactiveTimeout)
+		tmpSvc.Monitor = lb.Serv.Monitor
 
 		tmpLB.ServiceArguments = &tmpSvc
 
