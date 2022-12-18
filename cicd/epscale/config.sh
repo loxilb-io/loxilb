@@ -40,7 +40,14 @@ for j in {1..255}
 do
   $hexec l3ep$i ip addr add 35.$i.$j.1/24 dev el3ep${i}llb1
   $hexec llb1 ip addr add 35.$i.$j.254/24 dev ellb1l3ep${i}
-  $dexec llb1 loxicmd create lb 20.$i.$j.1 --tcp=2020:8080 --endpoints=35.$i.$j.1:1
+done
+done
+
+for i in {1..3}
+do
+for j in {1..255}
+do
+  $dexec llb1 loxicmd create lb 20.$i.$j.1 --tcp=2020:8080 --endpoints=35.$i.$j.1:1 2>&1 > /dev/null
 done
 done
 

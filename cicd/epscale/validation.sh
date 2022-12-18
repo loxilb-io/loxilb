@@ -1,9 +1,9 @@
 #!/bin/bash
 source ../common.sh
 echo SCENARIO-epscale
-$hexec l3ep1 node ./server1.js &
-$hexec l3ep2 node ./server2.js &
-$hexec l3ep3 node ./server3.js &
+$hexec l3ep1 socat -v -T0.05 tcp-l:8080,reuseaddr,fork system:"echo 'server1'; cat" >/dev/null 2>&1 &
+$hexec l3ep2 socat -v -T0.05 tcp-l:8080,reuseaddr,fork system:"echo 'server2'; cat" >/dev/null 2>&1 &
+$hexec l3ep3 socat -v -T0.05 tcp-l:8080,reuseaddr,fork system:"echo 'server3'; cat" >/dev/null 2>&1 &
 
 sleep 5
 code=0
@@ -13,7 +13,7 @@ j=0
 waitCount=0
 while [ $j -le 2 ]
 do
-    res=$($hexec l3h1 curl --max-time 10 -s ${ep[j]}:8080)
+    res=$($hexec l3h1 socat -T10 - TCP:${ep[j]}:8080)
     #echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
@@ -32,18 +32,15 @@ do
     sleep 1
 done
 
-for i in {1..4}
-do
 for j in {0..2}
 do
-    res=$($hexec l3h1 curl --max-time 10 -s 20.20.20.1:2020)
+    res=$($hexec l3h1 socat -T10 - TCP:20.1.20.1:2020)
     echo $res
-    if [[ $res != "${servArr[j]}" ]]
+    if [[ $res != "server1" ]]
     then
         code=1
     fi
     sleep 1
-done
 done
 if [[ $code == 0 ]]
 then
@@ -51,5 +48,7 @@ then
 else
     echo SCENARIO-epscale [FAILED]
 fi
+$hexec l3ep1 killall  -9 socat > /dev/null 2>&1
+$hexec l3ep2 killall  -9 socat > /dev/null 2>&1
+$hexec l3ep3 killall  -9 socat > /dev/null 2>&1
 exit $code
-
