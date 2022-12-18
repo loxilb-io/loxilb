@@ -1959,6 +1959,9 @@ definitions:
             targetPort:
               type: integer
               description:  port number for access service
+            state:
+              type: string
+              description: state of the endpoint
   
   RouteEntry:
     type: object
@@ -2559,7 +2562,7 @@ definitions:
       redirectPortName:
         type: string
         description: Redirect any matching rule
-        
+
   FirewallRuleEntry:
     type: object
     properties:
@@ -2598,4 +2601,4 @@ definitions:
         $ref: '#/definitions/FirewallRuleEntry'
       opts:
         $ref: '#/definitions/FirewallOptionEntry'       
-        
+

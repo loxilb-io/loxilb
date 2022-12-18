@@ -3010,6 +3010,10 @@ func init() {
                 "description": "IP address for externel access",
                 "type": "string"
               },
+              "state": {
+                "description": "state of the endpoint",
+                "type": "string"
+              },
               "targetPort": {
                 "description": "port number for access service",
                 "type": "integer"
@@ -6708,6 +6712,10 @@ func init() {
       "properties": {
         "endpointIP": {
           "description": "IP address for externel access",
+          "type": "string"
+        },
+        "state": {
+          "description": "state of the endpoint",
           "type": "string"
         },
         "targetPort": {

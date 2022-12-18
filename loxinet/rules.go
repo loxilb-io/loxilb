@@ -660,11 +660,16 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		// Make Endpoints
 		tmpEp := data.act.action.(*ruleNatActs).endPoints
 		for _, ep := range tmpEp {
+			state := "active"
+			if ep.inActive {
+				state = "inactive"
+			}
 
 			ret.Eps = append(ret.Eps, cmn.LbEndPointArg{
 				EpIP:   ep.xIP.String(),
 				EpPort: ep.xPort,
 				Weight: ep.weight,
+				State : state,
 			})
 		}
 		// Make LB rule
