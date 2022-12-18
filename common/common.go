@@ -472,6 +472,8 @@ type LbEndPointArg struct {
 	// Weight - weight associated with end-point
 	// Only valid for weighted round-robin selection
 	Weight uint8 `json:"weight"`
+	// State - current state of the end-point
+	State string `json:"state"`
 }
 
 // LbRuleMod - Info related to a load-balancer entry

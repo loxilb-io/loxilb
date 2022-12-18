@@ -169,6 +169,9 @@ type LoadbalanceEntryEndpointsItems0 struct {
 	// IP address for externel access
 	EndpointIP string `json:"endpointIP,omitempty"`
 
+	// state of the endpoint
+	State string `json:"state,omitempty"`
+
 	// port number for access service
 	TargetPort int64 `json:"targetPort,omitempty"`
 
