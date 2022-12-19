@@ -78,7 +78,7 @@ const (
 	LbDefaultInactiveTimeout = 4 * 60    // Default inactive timeout for established sessions
 	LbMaxInactiveTimeout     = 24 * 60   // Maximum inactive timeout for established sessions
 	MaxEndPointCheckers      = 3         // Maximum helpers to check endpoint health
-	EndPointCheckerDuration  = 10        // Duration at which helpers will run
+	EndPointCheckerDuration  = 5         // Duration at which ep-helpers will run
 )
 
 type ruleTType uint
@@ -1323,10 +1323,10 @@ func (ep *epHost) epCheckNow() {
 			return
 		}
 
-		pinger.Count = 2
+		pinger.Count = 1
 		pinger.Size = 100
 		pinger.Interval = 1
-		pinger.Timeout = time.Duration(3000000000)
+		pinger.Timeout = time.Duration(2000000000)
 		pinger.SetPrivileged(true)
 
 		//pinger.OnFinish = func(stats *ping.Statistics) {
@@ -1393,13 +1393,17 @@ func epTicker(R *RuleH, helper int) {
 				if host.hID == uint8(helper) &&
 					time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(host.opts.probeDuration) {
 					epHosts = append(epHosts, host)
-					host.sT = t
 				}
 			}
 			R.epMx.Unlock()
 
+			cnt := 0
 			for _, eph := range epHosts {
-				eph.epCheckNow()
+				if cnt < 50 {
+					eph.epCheckNow()
+					eph.sT = t
+					cnt++
+				}
 			}
 		}
 	}
