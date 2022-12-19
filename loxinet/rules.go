@@ -1342,17 +1342,12 @@ func (ep *epHost) epCheckNow() {
 		//	fmt.Printf("%d bytes from %s: icmp_seq=%d time=%v\n",
 		//		pkt.Nbytes, pkt.IPAddr, pkt.Seq, pkt.Rtt)
 		//}
-		t1 := time.Now()
 		err = pinger.Run()
 		if err != nil {
 			return
 		}
 
 		stats := pinger.Statistics()
-
-		if stats.PacketsRecv == 0 {
-			tk.LogIt(tk.LogDebug, "check - %s:%vms:%d\n", sName, time.Now().Sub(t1).Milliseconds(),stats.PacketsRecv)
-		}
 
 		if stats.PacketsRecv != 0 {
 			ep.avgDelay = stats.AvgRtt
@@ -1361,6 +1356,7 @@ func (ep *epHost) epCheckNow() {
 			if ep.inactive {
 				ep.inactive = false
 				ep.inActTries = 0
+				ep.opts.probeDuration = DflHostProbeTimeout
 				tk.LogIt(tk.LogDebug, "active ep - %s:%s(%v)\n", sName, ep.opts.probeType, ep.avgDelay)
 			}
 		} else {
@@ -1373,6 +1369,12 @@ func (ep *epHost) epCheckNow() {
 					ep.inactive = true
 					ep.inActTries = 0
 					tk.LogIt(tk.LogDebug, "inactive ep - %s:%s\n", sName, ep.opts.probeType)
+				}
+			} else {
+				ep.inActTries++
+				// Inactive eps are moved back
+				if ep.opts.probeDuration < 3*DflHostProbeTimeout {
+					ep.opts.probeDuration += 20
 				}
 			}
 		}
@@ -1406,7 +1408,6 @@ func epTicker(R *RuleH, helper int) {
 			}
 			R.epMx.Unlock()
 
-			tk.LogIt(tk.LogDebug, "\n\nHelper %d - %d\n\n", helper, len(epHosts))
 			cnt := 0
 			for _, eph := range epHosts {
 					eph.epCheckNow()
