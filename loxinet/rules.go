@@ -1399,7 +1399,7 @@ func epTicker(R *RuleH, helper int) {
 
 			cnt := 0
 			for _, eph := range epHosts {
-				if cnt < 50 {
+				if cnt < 30 {
 					eph.epCheckNow()
 					eph.sT = t
 					cnt++
