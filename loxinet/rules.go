@@ -73,7 +73,7 @@ const (
 	DflLbaInactiveTries      = 2         // Default number of inactive tries before LB arm is turned off
 	MaxDflLbaInactiveTries   = 100       // Max number of inactive tries before LB arm is turned off
 	DflLbaCheckTimeout       = 15        // Default timeout for checking LB arms
-	DflHostProbeTimeout      = 20        // Default probe timeout for end-point host
+	DflHostProbeTimeout      = 60        // Default probe timeout for end-point host
 	MaxHostProbeTime         = 24 * 3600 // Max possible host health check duration
 	LbDefaultInactiveTimeout = 4 * 60    // Default inactive timeout for established sessions
 	LbMaxInactiveTimeout     = 24 * 60   // Maximum inactive timeout for established sessions
@@ -1324,10 +1324,10 @@ func (ep *epHost) epCheckNow() {
 			return
 		}
 
-		pinger.Count = 1
+		pinger.Count = ep.opts.inActTryThr
 		pinger.Size = 100
 		pinger.Interval = time.Duration(200000000)
-		pinger.Timeout =  time.Duration(3000000000)
+		pinger.Timeout =  time.Duration(500000000)
 		pinger.SetPrivileged(true)
 
 		//pinger.OnFinish = func(stats *ping.Statistics) {
@@ -1350,7 +1350,9 @@ func (ep *epHost) epCheckNow() {
 
 		stats := pinger.Statistics()
 
-		tk.LogIt(tk.LogDebug, "Probe - %s:%vms:%d\n", sName, time.Now().Sub(t1).Milliseconds(),stats.PacketsRecv)
+		if stats.PacketsRecv == 0 {
+			tk.LogIt(tk.LogDebug, "check - %s:%vms:%d\n", sName, time.Now().Sub(t1).Milliseconds(),stats.PacketsRecv)
+		}
 
 		if stats.PacketsRecv != 0 {
 			ep.avgDelay = stats.AvgRtt
@@ -1365,9 +1367,9 @@ func (ep *epHost) epCheckNow() {
 			ep.avgDelay = time.Duration(0)
 			ep.minDelay = time.Duration(0)
 			ep.maxDelay = time.Duration(0)
-			if ep.inActTries < ep.opts.inActTryThr {
+			if ep.inActTries < 1 {
 				ep.inActTries++
-				if ep.inActTries >= ep.opts.inActTryThr {
+				if ep.inActTries >= 1 {
 					ep.inactive = true
 					ep.inActTries = 0
 					tk.LogIt(tk.LogDebug, "inactive ep - %s:%s\n", sName, ep.opts.probeType)
