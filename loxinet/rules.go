@@ -79,7 +79,7 @@ const (
 	LbMaxInactiveTimeout     = 24 * 60   // Maximum inactive timeout for established sessions
 	MaxEndPointCheckers      = 4         // Maximum helpers to check endpoint health
 	EndPointCheckerDuration  = 2         // Duration at which ep-helpers will run
-	MAcEndPointSweeps        = 65535     // Maximum end-point sweeps per round
+	MAcEndPointSweeps        = 50        // Maximum end-point sweeps per round
 )
 
 type ruleTType uint
