@@ -1251,7 +1251,7 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, desc string, args epHos
 		ep.ruleCount = 1
 	}
 	ep.hID = R.lepHID % MaxEndPointCheckers
-	ep.sT = time.Now()
+	//ep.sT = time.Now()
 	R.lepHID++
 
 	R.epMap[hostName] = ep
