@@ -100,3 +100,9 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - run: |
+             cd cicd/tcplbmark/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -

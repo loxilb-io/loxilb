@@ -934,6 +934,12 @@ func init() {
             "description": "option for BGP enable",
             "name": "bgp",
             "in": "query"
+          },
+          {
+            "type": "number",
+            "description": "block value if any",
+            "name": "block",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2908,6 +2914,10 @@ func init() {
           "description": "Drop any matching rule",
           "type": "boolean"
         },
+        "fwMark": {
+          "description": "Set a fwmark for any matching rule",
+          "type": "integer"
+        },
         "redirect": {
           "description": "Redirect any matching rule",
           "type": "boolean"
@@ -3031,6 +3041,11 @@ func init() {
             "bgp": {
               "description": "value for BGP enable or not",
               "type": "boolean"
+            },
+            "block": {
+              "description": "block-number if any of this LB entry",
+              "type": "integer",
+              "format": "uint16"
             },
             "externalIP": {
               "description": "IP address for externel access",
@@ -4593,6 +4608,12 @@ func init() {
             "description": "option for BGP enable",
             "name": "bgp",
             "in": "query"
+          },
+          {
+            "type": "number",
+            "description": "block value if any",
+            "name": "block",
+            "in": "query"
           }
         ],
         "responses": {
@@ -6567,6 +6588,10 @@ func init() {
           "description": "Drop any matching rule",
           "type": "boolean"
         },
+        "fwMark": {
+          "description": "Set a fwmark for any matching rule",
+          "type": "integer"
+        },
         "redirect": {
           "description": "Redirect any matching rule",
           "type": "boolean"
@@ -6674,6 +6699,11 @@ func init() {
               "description": "value for BGP enable or not",
               "type": "boolean"
             },
+            "block": {
+              "description": "block-number if any of this LB entry",
+              "type": "integer",
+              "format": "uint16"
+            },
             "externalIP": {
               "description": "IP address for externel access",
               "type": "string"
@@ -6734,6 +6764,11 @@ func init() {
         "bgp": {
           "description": "value for BGP enable or not",
           "type": "boolean"
+        },
+        "block": {
+          "description": "block-number if any of this LB entry",
+          "type": "integer",
+          "format": "uint16"
         },
         "externalIP": {
           "description": "IP address for externel access",

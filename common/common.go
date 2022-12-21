@@ -361,6 +361,8 @@ type FwOptArg struct {
 	RdrPort string `json:"redirectPortName"`
 	// Allow - Allow any matching rule
 	Allow bool `json:"allow"`
+	// Mark - Mark the matching rule
+	Mark  uint32 `json:"fwMark"`
 }
 
 // FwRuleArg - Information related to firewall rule
@@ -451,6 +453,8 @@ type LbServiceArg struct {
 	ServPort uint16 `json:"port"`
 	// Proto - the service protocol of the load-balancer rule
 	Proto string `json:"protocol"`
+	// BlockNum - An arbitrary block num to further segregate a service
+	BlockNum uint16 `json:"block"`
 	// Sel - one of LbSelRr,LbSelHash, or LbSelHash
 	Sel EpSelect `json:"sel"`
 	// Bgp - export this rule with goBGP

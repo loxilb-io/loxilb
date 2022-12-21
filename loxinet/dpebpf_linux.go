@@ -705,6 +705,7 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		convNetIP2DPv6Addr(unsafe.Pointer(&key.daddr[0]), w.ServiceIP)
 		key.v6 = 1
 	}
+	key.mark = C.ushort(w.BlockNum)
 	key.dport = C.ushort(tk.Htons(w.L4Port))
 	key.l4proto = C.uchar(w.Proto)
 	key.zone = C.ushort(w.ZoneNum)
@@ -1328,7 +1329,7 @@ func (e *DpEbpfH) DpFwRuleMod(w *FwDpWorkQ) int {
 	}
 
 	fwe.fwa.ca.cidx = C.uint(w.HwMark)
-	fwe.fwa.ca.oif = C.ushort(w.Pref) // Overloaded field
+	fwe.fwa.ca.oaux = C.ushort(w.Pref) // Overloaded field
 
 	if w.Work == DpCreate {
 		if w.FwType == DpFwFwd {
@@ -1343,6 +1344,7 @@ func (e *DpEbpfH) DpFwRuleMod(w *FwDpWorkQ) int {
 		} else if w.FwType == DpFwTrap {
 			fwe.fwa.ca.act_type = C.DP_SET_TOCP
 		}
+		fwe.fwa.ca.mark = C.uint(w.FwVal2)
 		ret := C.llb_add_map_elem(C.LL_DP_FW4_MAP, unsafe.Pointer(fwe), unsafe.Pointer(nil))
 		if ret != 0 {
 			tk.LogIt(tk.LogError, "ebpf fw error\n")

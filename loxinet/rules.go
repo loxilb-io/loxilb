@@ -207,6 +207,7 @@ type ruleNatActs struct {
 type ruleFwOpt struct {
 	rdrMirr string
 	rdrPort string
+	fwMark  uint32
 }
 
 type ruleFwOpts struct {
@@ -434,6 +435,7 @@ func (r *ruleTuples) ruleKey() string {
 	ks += fmt.Sprintf("%d", r.inL4Prot.val&r.inL4Prot.valid)
 	ks += fmt.Sprintf("%d", r.inL4Src.val&r.inL4Src.valid)
 	ks += fmt.Sprintf("%d", r.inL4Dst.val&r.inL4Dst.valid)
+	ks += fmt.Sprintf("%d", r.pref)
 	return ks
 }
 
@@ -657,6 +659,7 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.Monitor = data.ActChk
 		ret.Serv.InactiveTimeout = data.iTo
 		ret.Serv.Bgp = data.BGP
+		ret.Serv.BlockNum = data.tuples.pref
 
 		// Make Endpoints
 		tmpEp := data.act.action.(*ruleNatActs).endPoints
@@ -805,7 +808,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
 
 	eRule := R.Tables[RtLB].eMap[rt.ruleKey()]
 
@@ -936,7 +939,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
 
 	rule := R.Tables[RtLB].eMap[rt.ruleKey()]
 	if rule == nil {
@@ -986,6 +989,7 @@ func (R *RuleH) GetFwRule() ([]cmn.FwRuleMod, error) {
 		} else if fwOpts.op == RtActTrap {
 			ret.Opts.Trap = true
 		}
+		ret.Opts.Mark = fwOpts.opt.fwMark
 
 		// Make FwRule
 		res = append(res, ret)
@@ -1057,6 +1061,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 
 	/* Default is drop */
 	fwOpts.op = RtActDrop
+	fwOpts.opt.fwMark = fwOptArgs.Mark
 
 	if fwOptArgs.Allow {
 		r.act.actType = RtActFwd
@@ -1137,7 +1142,7 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 		l4dst = rule16Tuple{fwRule.DstPortMax, fwRule.DstPortMin}
 	}
 	inport := ruleStringTuple{fwRule.InPort}
-	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot, l4Src: l4src, l4Dst: l4dst, port: inport}
+	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot, l4Src: l4src, l4Dst: l4dst, port: inport, pref: fwRule.Pref}
 
 	rule := R.Tables[RtFw].eMap[rt.ruleKey()]
 	if rule == nil {
@@ -1565,6 +1570,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.L4Port = r.tuples.l4Dst.val
 	nWork.Proto = r.tuples.l4Prot.val
 	nWork.HwMark = r.ruleNum
+	nWork.BlockNum = r.tuples.pref
 	nWork.InActTo = uint64(r.iTo)
 
 	if r.act.actType == RtActDnat {
@@ -1754,6 +1760,7 @@ func (r *ruleEnt) Fw2DP(work DpWorkT) int {
 		default:
 			nWork.FwType = DpFwDrop
 		}
+		nWork.FwVal2 = at.opt.fwMark
 	default:
 		return -1
 	}

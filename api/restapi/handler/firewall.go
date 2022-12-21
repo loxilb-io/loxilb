@@ -41,12 +41,21 @@ func ConfigPostFW(params operations.PostConfigFirewallParams) middleware.Respond
 	Rules.SrcIP = params.Attr.RuleArguments.SourceIP
 	Rules.SrcPortMax = uint16(params.Attr.RuleArguments.MinSourcePort)
 	Rules.SrcPortMin = uint16(params.Attr.RuleArguments.MaxSourcePort)
+
+	if Rules.DstIP == "" {
+		Rules.DstIP = "0.0.0.0/0"
+	}
+
+	if Rules.SrcIP == "" {
+		Rules.SrcIP = "0.0.0.0/0"
+	}
 	// opts
 	Opts.Allow = params.Attr.Opts.Allow
 	Opts.Drop = params.Attr.Opts.Drop
 	Opts.Rdr = params.Attr.Opts.Redirect
 	Opts.RdrPort = params.Attr.Opts.RedirectPortName
 	Opts.Trap = params.Attr.Opts.Trap
+	Opts.Mark = uint32(params.Attr.Opts.FwMark)
 
 	FW.Rule = Rules
 	FW.Opts = Opts
@@ -108,6 +117,14 @@ func ConfigDeleteFW(params operations.DeleteConfigFirewallParams) middleware.Res
 		Rules.SrcIP = *params.SourceIP
 	}
 
+	if Rules.DstIP == "" {
+		Rules.DstIP = "0.0.0.0/0"
+	}
+
+	if Rules.SrcIP == "" {
+		Rules.SrcIP = "0.0.0.0/0"
+	}
+
 	if params.MinSourcePort != nil {
 		SrcPortMin, err := strconv.Atoi(*params.MinSourcePort)
 		if err != nil {
@@ -163,6 +180,7 @@ func ConfigGetFW(params operations.GetConfigFirewallAllParams) middleware.Respon
 		tmpOpts.Redirect = FW.Opts.Rdr
 		tmpOpts.RedirectPortName = FW.Opts.RdrPort
 		tmpOpts.Trap = FW.Opts.Trap
+		tmpOpts.FwMark = int64(FW.Opts.Mark)
 
 		tmpResult.RuleArguments = &tmpRule
 		tmpResult.Opts = &tmpOpts

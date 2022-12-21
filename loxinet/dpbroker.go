@@ -261,6 +261,7 @@ type NatDpWorkQ struct {
 	ZoneNum   int
 	ServiceIP net.IP
 	L4Port    uint16
+	BlockNum  uint16
 	Proto     uint8
 	HwMark    int
 	NatType   NatT

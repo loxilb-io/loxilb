@@ -31,6 +31,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv.ServIP = params.Attr.ServiceArguments.ExternalIP
 	lbRules.Serv.ServPort = uint16(params.Attr.ServiceArguments.Port)
 	lbRules.Serv.Proto = params.Attr.ServiceArguments.Protocol
+	lbRules.Serv.BlockNum = params.Attr.ServiceArguments.Block
 	lbRules.Serv.Sel = cmn.EpSelect(params.Attr.ServiceArguments.Sel)
 	lbRules.Serv.Bgp = params.Attr.ServiceArguments.Bgp
 	lbRules.Serv.Monitor = params.Attr.ServiceArguments.Monitor
@@ -62,6 +63,9 @@ func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerExternal
 	lbServ.ServIP = params.IPAddress
 	lbServ.ServPort = uint16(params.Port)
 	lbServ.Proto = params.Proto
+	if params.Block != nil {
+		lbServ.BlockNum = uint16(*params.Block)
+	}
 	if params.Bgp != nil {
 		lbServ.Bgp = *params.Bgp
 	}
@@ -96,6 +100,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tmpSvc.Bgp = lb.Serv.Bgp
 		tmpSvc.Port = int64(lb.Serv.ServPort)
 		tmpSvc.Protocol = lb.Serv.Proto
+		tmpSvc.Block = uint16(lb.Serv.BlockNum)
 		tmpSvc.Sel = int64(lb.Serv.Sel)
 		tmpSvc.Mode = int32(lb.Serv.Mode)
 		tmpSvc.InactiveTimeOut = int32(lb.Serv.InactiveTimeout)
