@@ -705,6 +705,7 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		convNetIP2DPv6Addr(unsafe.Pointer(&key.daddr[0]), w.ServiceIP)
 		key.v6 = 1
 	}
+	key.mark = C.ushort(w.BlockNum)
 	key.dport = C.ushort(tk.Htons(w.L4Port))
 	key.l4proto = C.uchar(w.Proto)
 	key.zone = C.ushort(w.ZoneNum)
@@ -1328,7 +1329,7 @@ func (e *DpEbpfH) DpFwRuleMod(w *FwDpWorkQ) int {
 	}
 
 	fwe.fwa.ca.cidx = C.uint(w.HwMark)
-	fwe.fwa.ca.oif = C.ushort(w.Pref) // Overloaded field
+	fwe.fwa.ca.oaux = C.ushort(w.Pref) // Overloaded field
 
 	if w.Work == DpCreate {
 		if w.FwType == DpFwFwd {

@@ -434,6 +434,7 @@ func (r *ruleTuples) ruleKey() string {
 	ks += fmt.Sprintf("%d", r.inL4Prot.val&r.inL4Prot.valid)
 	ks += fmt.Sprintf("%d", r.inL4Src.val&r.inL4Src.valid)
 	ks += fmt.Sprintf("%d", r.inL4Dst.val&r.inL4Dst.valid)
+	ks += fmt.Sprintf("%d", r.pref)
 	return ks
 }
 
@@ -657,6 +658,7 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.Monitor = data.ActChk
 		ret.Serv.InactiveTimeout = data.iTo
 		ret.Serv.Bgp = data.BGP
+		ret.Serv.BlockNum = data.tuples.pref
 
 		// Make Endpoints
 		tmpEp := data.act.action.(*ruleNatActs).endPoints
@@ -805,7 +807,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
 
 	eRule := R.Tables[RtLB].eMap[rt.ruleKey()]
 
@@ -936,7 +938,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
 
 	rule := R.Tables[RtLB].eMap[rt.ruleKey()]
 	if rule == nil {
@@ -1565,6 +1567,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.L4Port = r.tuples.l4Dst.val
 	nWork.Proto = r.tuples.l4Prot.val
 	nWork.HwMark = r.ruleNum
+	nWork.BlockNum = r.tuples.pref
 	nWork.InActTo = uint64(r.iTo)
 
 	if r.act.actType == RtActDnat {

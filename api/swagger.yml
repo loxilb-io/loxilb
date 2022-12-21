@@ -156,7 +156,12 @@ paths:
         - name: bgp
           in: query
           type: boolean
-          description: option for BGP enable 
+          description: option for BGP enable
+        - name: block
+          in: query
+          type: number
+          required: false
+          description: block value if any
       responses:
         '204':
           description: OK
@@ -1940,6 +1945,10 @@ definitions:
             type: integer
             format: int32
             description: value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)
+          block:
+            type: integer
+            format: uint16
+            description: block-number if any of this LB entry
           inactiveTimeOut:
             type: integer
             format: int32

@@ -36,6 +36,10 @@ type DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoPara
 	  In: query
 	*/
 	Bgp *bool
+	/*block value if any
+	  In: query
+	*/
+	Block *float64
 	/*Attributes for load balance service
 	  Required: true
 	  In: path
@@ -66,6 +70,11 @@ func (o *DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto
 
 	qBgp, qhkBgp, _ := qs.GetOK("bgp")
 	if err := o.bindBgp(qBgp, qhkBgp, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qBlock, qhkBlock, _ := qs.GetOK("block")
+	if err := o.bindBlock(qBlock, qhkBlock, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -108,6 +117,29 @@ func (o *DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto
 		return errors.InvalidType("bgp", "query", "bool", raw)
 	}
 	o.Bgp = &value
+
+	return nil
+}
+
+// bindBlock binds and validates parameter Block from query.
+func (o *DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) bindBlock(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	value, err := swag.ConvertFloat64(raw)
+	if err != nil {
+		return errors.InvalidType("block", "query", "float64", raw)
+	}
+	o.Block = &value
 
 	return nil
 }

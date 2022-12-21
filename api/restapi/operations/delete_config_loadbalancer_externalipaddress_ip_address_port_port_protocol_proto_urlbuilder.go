@@ -20,7 +20,8 @@ type DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoURL 
 	Port      float64
 	Proto     string
 
-	Bgp *bool
+	Bgp   *bool
+	Block *float64
 
 	_basePath string
 	// avoid unkeyed usage
@@ -83,6 +84,14 @@ func (o *DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto
 	}
 	if bgpQ != "" {
 		qs.Set("bgp", bgpQ)
+	}
+
+	var blockQ string
+	if o.Block != nil {
+		blockQ = swag.FormatFloat64(*o.Block)
+	}
+	if blockQ != "" {
+		qs.Set("block", blockQ)
 	}
 
 	_result.RawQuery = qs.Encode()
