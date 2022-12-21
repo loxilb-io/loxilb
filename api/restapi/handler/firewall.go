@@ -41,6 +41,14 @@ func ConfigPostFW(params operations.PostConfigFirewallParams) middleware.Respond
 	Rules.SrcIP = params.Attr.RuleArguments.SourceIP
 	Rules.SrcPortMax = uint16(params.Attr.RuleArguments.MinSourcePort)
 	Rules.SrcPortMin = uint16(params.Attr.RuleArguments.MaxSourcePort)
+
+	if Rules.DstIP == "" {
+		Rules.DstIP = "0.0.0.0/0"
+	}
+
+	if Rules.SrcIP == "" {
+		Rules.SrcIP = "0.0.0.0/0"
+	}
 	// opts
 	Opts.Allow = params.Attr.Opts.Allow
 	Opts.Drop = params.Attr.Opts.Drop
@@ -107,6 +115,14 @@ func ConfigDeleteFW(params operations.DeleteConfigFirewallParams) middleware.Res
 	}
 	if params.SourceIP != nil {
 		Rules.SrcIP = *params.SourceIP
+	}
+
+	if Rules.DstIP == "" {
+		Rules.DstIP = "0.0.0.0/0"
+	}
+
+	if Rules.SrcIP == "" {
+		Rules.SrcIP = "0.0.0.0/0"
 	}
 
 	if params.MinSourcePort != nil {
