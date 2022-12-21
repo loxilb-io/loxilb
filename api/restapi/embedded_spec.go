@@ -2914,6 +2914,10 @@ func init() {
           "description": "Drop any matching rule",
           "type": "boolean"
         },
+        "fwMark": {
+          "description": "Set a fwmark for any matching rule",
+          "type": "integer"
+        },
         "redirect": {
           "description": "Redirect any matching rule",
           "type": "boolean"
@@ -6583,6 +6587,10 @@ func init() {
         "drop": {
           "description": "Drop any matching rule",
           "type": "boolean"
+        },
+        "fwMark": {
+          "description": "Set a fwmark for any matching rule",
+          "type": "integer"
         },
         "redirect": {
           "description": "Redirect any matching rule",

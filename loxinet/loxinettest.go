@@ -384,17 +384,17 @@ func TestLoxinet(t *testing.T) {
 
 	_, err = mh.zr.Rules.DeleteFwRule(fwR)
 	if err != nil {
-		t.Errorf("Failed to add fw-1\n")
+		t.Errorf("Failed to del fw-1\n")
 	}
 
 	_, err = mh.zr.Rules.DeleteFwRule(fwR1)
 	if err != nil {
-		t.Errorf("Failed to add fw-2\n")
+		t.Errorf("Failed to del fw-2\n")
 	}
 
 	_, err = mh.zr.Rules.DeleteFwRule(fwR2)
 	if err != nil {
-		t.Errorf("Failed to add fw-3\n")
+		t.Errorf("Failed to del fw-3\n")
 	}
 
 	fmt.Printf("#### Route-List ####\n")

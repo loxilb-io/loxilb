@@ -207,6 +207,7 @@ type ruleNatActs struct {
 type ruleFwOpt struct {
 	rdrMirr string
 	rdrPort string
+	fwMark  uint32
 }
 
 type ruleFwOpts struct {
@@ -988,6 +989,7 @@ func (R *RuleH) GetFwRule() ([]cmn.FwRuleMod, error) {
 		} else if fwOpts.op == RtActTrap {
 			ret.Opts.Trap = true
 		}
+		ret.Opts.Mark = fwOpts.opt.fwMark
 
 		// Make FwRule
 		res = append(res, ret)
@@ -1059,6 +1061,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 
 	/* Default is drop */
 	fwOpts.op = RtActDrop
+	fwOpts.opt.fwMark = fwOptArgs.Mark
 
 	if fwOptArgs.Allow {
 		r.act.actType = RtActFwd
@@ -1139,7 +1142,7 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 		l4dst = rule16Tuple{fwRule.DstPortMax, fwRule.DstPortMin}
 	}
 	inport := ruleStringTuple{fwRule.InPort}
-	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot, l4Src: l4src, l4Dst: l4dst, port: inport}
+	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot, l4Src: l4src, l4Dst: l4dst, port: inport, pref: fwRule.Pref}
 
 	rule := R.Tables[RtFw].eMap[rt.ruleKey()]
 	if rule == nil {
@@ -1757,6 +1760,7 @@ func (r *ruleEnt) Fw2DP(work DpWorkT) int {
 		default:
 			nWork.FwType = DpFwDrop
 		}
+		nWork.FwVal2 = at.opt.fwMark
 	default:
 		return -1
 	}

@@ -2571,6 +2571,9 @@ definitions:
       redirectPortName:
         type: string
         description: Redirect any matching rule
+      fwMark:
+        type: integer
+        description: Set a fwmark for any matching rule
 
   FirewallRuleEntry:
     type: object

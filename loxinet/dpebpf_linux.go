@@ -1344,6 +1344,7 @@ func (e *DpEbpfH) DpFwRuleMod(w *FwDpWorkQ) int {
 		} else if w.FwType == DpFwTrap {
 			fwe.fwa.ca.act_type = C.DP_SET_TOCP
 		}
+		fwe.fwa.ca.mark = C.uint(w.FwVal2)
 		ret := C.llb_add_map_elem(C.LL_DP_FW4_MAP, unsafe.Pointer(fwe), unsafe.Pointer(nil))
 		if ret != 0 {
 			tk.LogIt(tk.LogError, "ebpf fw error\n")

@@ -47,6 +47,7 @@ func ConfigPostFW(params operations.PostConfigFirewallParams) middleware.Respond
 	Opts.Rdr = params.Attr.Opts.Redirect
 	Opts.RdrPort = params.Attr.Opts.RedirectPortName
 	Opts.Trap = params.Attr.Opts.Trap
+	Opts.Mark = uint32(params.Attr.Opts.FwMark)
 
 	FW.Rule = Rules
 	FW.Opts = Opts
@@ -163,6 +164,7 @@ func ConfigGetFW(params operations.GetConfigFirewallAllParams) middleware.Respon
 		tmpOpts.Redirect = FW.Opts.Rdr
 		tmpOpts.RedirectPortName = FW.Opts.RdrPort
 		tmpOpts.Trap = FW.Opts.Trap
+		tmpOpts.FwMark = int64(FW.Opts.Mark)
 
 		tmpResult.RuleArguments = &tmpRule
 		tmpResult.Opts = &tmpOpts
