@@ -73,12 +73,13 @@ const (
 	DflLbaInactiveTries      = 2         // Default number of inactive tries before LB arm is turned off
 	MaxDflLbaInactiveTries   = 100       // Max number of inactive tries before LB arm is turned off
 	DflLbaCheckTimeout       = 15        // Default timeout for checking LB arms
-	DflHostProbeTimeout      = 5         // Default probe timeout for end-point host
+	DflHostProbeTimeout      = 60        // Default probe timeout for end-point host
 	MaxHostProbeTime         = 24 * 3600 // Max possible host health check duration
 	LbDefaultInactiveTimeout = 4 * 60    // Default inactive timeout for established sessions
 	LbMaxInactiveTimeout     = 24 * 60   // Maximum inactive timeout for established sessions
-	MaxEndPointCheckers      = 3         // Maximum helpers to check endpoint health
-	EndPointCheckerDuration  = 10        // Duration at which helpers will run
+	MaxEndPointCheckers      = 4         // Maximum helpers to check endpoint health
+	EndPointCheckerDuration  = 2         // Duration at which ep-helpers will run
+	MAcEndPointSweeps        = 50        // Maximum end-point sweeps per round
 )
 
 type ruleTType uint
@@ -1250,7 +1251,7 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, desc string, args epHos
 		ep.ruleCount = 1
 	}
 	ep.hID = R.lepHID % MaxEndPointCheckers
-	ep.sT = time.Now()
+	//ep.sT = time.Now()
 	R.lepHID++
 
 	R.epMap[hostName] = ep
@@ -1323,10 +1324,10 @@ func (ep *epHost) epCheckNow() {
 			return
 		}
 
-		pinger.Count = 2
+		pinger.Count = ep.opts.inActTryThr
 		pinger.Size = 100
-		pinger.Interval = 1
-		pinger.Timeout = time.Duration(3000000000)
+		pinger.Interval = time.Duration(200000000)
+		pinger.Timeout =  time.Duration(500000000)
 		pinger.SetPrivileged(true)
 
 		//pinger.OnFinish = func(stats *ping.Statistics) {
@@ -1355,18 +1356,25 @@ func (ep *epHost) epCheckNow() {
 			if ep.inactive {
 				ep.inactive = false
 				ep.inActTries = 0
+				ep.opts.probeDuration = DflHostProbeTimeout
 				tk.LogIt(tk.LogDebug, "active ep - %s:%s(%v)\n", sName, ep.opts.probeType, ep.avgDelay)
 			}
 		} else {
 			ep.avgDelay = time.Duration(0)
 			ep.minDelay = time.Duration(0)
 			ep.maxDelay = time.Duration(0)
-			if ep.inActTries <= ep.opts.inActTryThr {
+			if ep.inActTries < 1 {
 				ep.inActTries++
-				if ep.inActTries > ep.opts.inActTryThr {
+				if ep.inActTries >= 1 {
 					ep.inactive = true
 					ep.inActTries = 0
 					tk.LogIt(tk.LogDebug, "inactive ep - %s:%s\n", sName, ep.opts.probeType)
+				}
+			} else {
+				ep.inActTries++
+				// Inactive eps are moved back
+				if ep.opts.probeDuration < 3*DflHostProbeTimeout {
+					ep.opts.probeDuration += 20
 				}
 			}
 		}
@@ -1386,21 +1394,27 @@ func epTicker(R *RuleH, helper int) {
 		case <-epc.tD:
 			return
 		case t := <-epc.hChk.C:
-			var epHosts []*epHost
+			epHosts := make([]*epHost, 0)
 			tk.LogIt(-1, "Tick at %v:%d\n", t, helper)
 			R.epMx.Lock()
 			for _, host := range R.epMap {
 				if host.hID == uint8(helper) &&
 					time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(host.opts.probeDuration) {
 					epHosts = append(epHosts, host)
-					host.sT = t
+					if len(epHosts) >= MAcEndPointSweeps {
+						break
+					}
 				}
 			}
 			R.epMx.Unlock()
 
+			cnt := 0
 			for _, eph := range epHosts {
-				eph.epCheckNow()
+					eph.epCheckNow()
+					eph.sT = time.Now()
+					cnt++
 			}
+			epHosts = nil
 		}
 	}
 }
@@ -1419,7 +1433,7 @@ func (R *RuleH) RulesSync() {
 			rule.DP(DpCreate)
 		}
 		rule.DP(DpStatsGet)
-		tk.LogIt(tk.LogDebug, "%d:%s,%s pc %v bc %v \n",
+		tk.LogIt(-1, "%d:%s,%s pc %v bc %v \n",
 			rule.ruleNum, ruleKeys, ruleActs,
 			rule.stat.packets, rule.stat.bytes)
 
@@ -1480,7 +1494,7 @@ func (R *RuleH) RulesSync() {
 			rule.DP(DpCreate)
 		}
 		rule.DP(DpStatsGet)
-		tk.LogIt(tk.LogDebug, "%d:%s,%s pc %v bc %v \n",
+		tk.LogIt(-1, "%d:%s,%s pc %v bc %v \n",
 			rule.ruleNum, ruleKeys, ruleActs,
 			rule.stat.packets, rule.stat.bytes)
 	}

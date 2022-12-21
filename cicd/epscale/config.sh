@@ -43,13 +43,9 @@ do
 done
 done
 
-for i in {1..3}
-do
-for j in {1..255}
-do
-  $dexec llb1 loxicmd create lb 20.$i.$j.1 --tcp=2020:8080 --endpoints=35.$i.$j.1:1 2>&1 > /dev/null
-done
-done
+docker cp ./lbconfig.sh llb1:/root/
 
 sleep 5
 $dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1
+$dexec llb1 chmod 777 /root/lbconfig.sh
+$dexec llb1 /root/lbconfig.sh
