@@ -1009,7 +1009,7 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtI
 				ctDat.xi.nat_rip[2] == 0 && ctDat.xi.nat_rip[3] == 0 {
 				nmode := ""
 				if ctDat.xi.dsr != 0 {
-					nmode = "dsr"
+					nmode = "ddsr"
 				} else {
 					nmode = "dnat"
 				}
@@ -1030,7 +1030,13 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtI
 		} else if ctDat.xi.nat_flags == C.LLB_NAT_SRC {
 			if ctDat.xi.nat_rip[0] == 0 && ctDat.xi.nat_rip[1] == 0 &&
 				ctDat.xi.nat_rip[2] == 0 && ctDat.xi.nat_rip[3] == 0 {
-				ct.CAct = fmt.Sprintf("snat-%s:%d:w%d", xip.String(), port, ctDat.xi.wprio)
+				nmode := ""
+				if ctDat.xi.dsr != 0 {
+					nmode = "sdsr"
+				} else {
+					nmode = "snat"
+				}
+				ct.CAct = fmt.Sprintf("%s-%s:%d:w%d", nmode, xip.String(), port, ctDat.xi.wprio)
 			} else {
 				var rip net.IP
 
