@@ -230,7 +230,7 @@ func (*NetAPIStruct) NetRouteAdd(rm *cmn.RouteMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
-	ra := RtAttr{rm.Protocol, rm.Flags, false}
+	ra := RtAttr{rm.Protocol, rm.Flags, false, rm.LinkIndex}
 	if rm.Gw != nil {
 		na := []RtNhAttr{{rm.Gw, rm.LinkIndex}}
 		ret, err = mh.zr.Rt.RtAdd(rm.Dst, RootZone, ra, na)

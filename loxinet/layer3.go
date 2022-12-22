@@ -76,6 +76,12 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 		return L3AddrErr, errors.New("ip address parse error")
 	}
 
+	ifObjID := -1
+	pObj := l3.Zone.Ports.PortFindByName(Obj)
+	if pObj != nil {
+		ifObjID = pObj.SInfo.OsID
+	}
+
 	key := IfaKey{Obj}
 	ifa := l3.IfaMap[key]
 
@@ -90,7 +96,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 		l3.IfaMap[key] = ifa
 
 		// ifa needs related self-routes
-		ra := RtAttr{0, 0, false}
+		ra := RtAttr{0, 0, false, ifObjID}
 		_, err = mh.zr.Rt.RtAdd(*network, RootZone, ra, nil)
 		if err != nil {
 			tk.LogIt(tk.LogDebug, "ifa add - %s:%s self-rt error\n", addr.String(), Obj)
@@ -129,7 +135,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 
 	// ifa needs to related self-routes
 	// FIXME - Code duplication with primary address route above
-	ra := RtAttr{0, 0, false}
+	ra := RtAttr{0, 0, false, ifObjID}
 	_, err = mh.zr.Rt.RtAdd(*network, RootZone, ra, nil)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, " - %s:%s self-rt error\n", addr.String(), Obj)
@@ -200,7 +206,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 // IfaSelect - Given any ip address, select optimal ip address from Obj's ifa list
 // This is useful to determine source ip address when sending traffic
 // to the given ip address
-func (l3 *L3H) IfaSelect(Obj string, addr net.IP) (int, net.IP) {
+func (l3 *L3H) IfaSelect(Obj string, addr net.IP, findAny bool) (int, net.IP) {
 
 	key := IfaKey{Obj}
 	ifa := l3.IfaMap[key]
@@ -223,6 +229,10 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP) (int, net.IP) {
 		}
 	}
 
+	if findAny == false {
+		return L3AddrErr, net.IPv4(0, 0, 0, 0)
+	}
+
 	// Select first IP
 	if len(ifa.Ifas) > 0 {
 		return 0, ifa.Ifas[0].IfaAddr
@@ -233,7 +243,7 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP) (int, net.IP) {
 
 // IfaSelectAny - Given any dest ip address, select optimal interface source ip address
 // This is useful to determine source ip address when sending traffic to the given ip address
-func (l3 *L3H) IfaSelectAny(addr net.IP) (int, net.IP) {
+func (l3 *L3H) IfaSelectAny(addr net.IP, findAny bool) (int, net.IP) {
 	var err int
 	var tDat tk.TrieData
 	var firstIP *net.IP
@@ -254,13 +264,18 @@ func (l3 *L3H) IfaSelectAny(addr net.IP) (int, net.IP) {
 			if rtn != nil {
 				IfObj = rtn.OifPort.Name
 			}
+		case *int:
+			p := l3.Zone.Ports.PortFindByOSID(*rtn)
+			if p != nil {
+				IfObj = p.Name
+			}
 		default:
 			break
 		}
 	}
 
 	if IfObj != "" {
-		return l3.IfaSelect(IfObj, addr)
+		return l3.IfaSelect(IfObj, addr, findAny)
 	}
 
 	for _, ifa := range l3.IfaMap {
@@ -285,6 +300,10 @@ func (l3 *L3H) IfaSelectAny(addr net.IP) (int, net.IP) {
 				firstIP = &ifaEnt.IfaAddr
 			}
 		}
+	}
+
+	if findAny == false {
+		return L3AddrErr, net.IPv4(0, 0, 0, 0)
 	}
 
 	if firstIP != nil {
