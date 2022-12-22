@@ -133,7 +133,7 @@ func (n *NeighH) Activate(ne *Neigh) {
 		return
 	}
 
-	ret, Sip := n.Zone.L3.IfaSelect(ne.OifPort.Name, ne.Addr)
+	ret, Sip := n.Zone.L3.IfaSelect(ne.OifPort.Name, ne.Addr, true)
 	if ret != 0 {
 		fmt.Printf("Failed to select l3 ifa select")
 	}
@@ -158,7 +158,7 @@ func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTu
 			return 0, tep
 		}
 	}
-	e, sIP := n.Zone.L3.IfaSelect(port.Name, rIP)
+	e, sIP := n.Zone.L3.IfaSelect(port.Name, rIP, false)
 	if e != 0 {
 		return -1, nil
 	}
@@ -314,7 +314,7 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 		mask = net.CIDRMask(128, 128)
 	}
 	ipnet := net.IPNet{IP: Addr, Mask: mask}
-	ra := RtAttr{0, 0, true}
+	ra := RtAttr{0, 0, true, Attr.OSLinkIndex}
 	na := []RtNhAttr{{Addr, Attr.OSLinkIndex}}
 
 	if found == true {

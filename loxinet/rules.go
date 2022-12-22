@@ -1689,8 +1689,9 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 		for idx := range nWork.endPoints {
 			ep := &nWork.endPoints[idx]
 			if mode == cmn.LBModeOneArm {
-				e, sip := r.zone.L3.IfaSelectAny(ep.XIP)
+				e, sip := r.zone.L3.IfaSelectAny(ep.XIP, false)
 				if e != 0 {
+					tk.LogIt(tk.LogDebug, "Failed to find suitable source for %s\n", ep.XIP.String())
 					r.Sync = DpCreateErr
 					return -1
 				}
@@ -1704,7 +1705,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 		for idx := range nWork.endPoints {
 			ep := &nWork.endPoints[idx]
 			if tk.IsNetIPv6(nWork.ServiceIP.String()) && tk.IsNetIPv4(ep.XIP.String()) {
-				e, sip := r.zone.L3.IfaSelectAny(ep.XIP)
+				e, sip := r.zone.L3.IfaSelectAny(ep.XIP, false)
 				if e != 0 {
 					r.Sync = DpCreateErr
 					return -1

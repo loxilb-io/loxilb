@@ -61,6 +61,7 @@ type RtAttr struct {
 	Protocol  int
 	OSFlags   int
 	HostRoute bool
+	Ifi       int
 }
 
 // RtNhAttr - neighbor attribs for a rt entry
@@ -239,6 +240,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 		for i := 0; i < len(Na); i++ {
 			nh, _ := r.Zone.Nh.NeighFind(Na[i].NhAddr, Zone)
 			if nh == nil {
+
 				// If this is a host route then neighbor has to exist
 				// Usually host route addition is triggered by neigh add
 				if Ra.HostRoute == true {
@@ -271,7 +273,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 	if len(rt.NextHops) > 0 {
 		tret = tR.AddTrie(Dst.String(), rt.NextHops[0])
 	} else {
-		tret = tR.AddTrie(Dst.String(), nil)
+		tret = tR.AddTrie(Dst.String(), &rt.Attr.Ifi)
 	}
 	if tret != 0 {
 		// Delete any neigbors created here
