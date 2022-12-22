@@ -106,3 +106,9 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - run: |
+             cd cicd/tcplbepmod/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -          

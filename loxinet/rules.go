@@ -195,6 +195,7 @@ type ruleNatEp struct {
 	weight     uint8
 	inActTries int
 	inActive   bool
+	noService  bool
 	Mark       bool
 }
 
@@ -665,15 +666,19 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		tmpEp := data.act.action.(*ruleNatActs).endPoints
 		for _, ep := range tmpEp {
 			state := "active"
-			if ep.inActive {
+			if ep.noService {
 				state = "inactive"
+			}
+
+			if ep.inActive {
+				continue
 			}
 
 			ret.Eps = append(ret.Eps, cmn.LbEndPointArg{
 				EpIP:   ep.xIP.String(),
 				EpPort: ep.xPort,
 				Weight: ep.weight,
-				State : state,
+				State:  state,
 			})
 		}
 		// Make LB rule
@@ -796,10 +801,10 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 			return RuleUnknownServiceErr, errors.New("malformed-service error")
 		}
 
-		if natActs.mode == cmn.LBModeDSR &&  k.EpPort != serv.ServPort {
+		if natActs.mode == cmn.LBModeDSR && k.EpPort != serv.ServPort {
 			return RuleUnknownServiceErr, errors.New("malformed-service dsr-port error")
 		}
-		ep := ruleNatEp{pNetAddr, k.EpPort, k.Weight, 0, false, false}
+		ep := ruleNatEp{pNetAddr, k.EpPort, k.Weight, 0, false, false, false}
 		natActs.endPoints = append(natActs.endPoints, ep)
 	}
 
@@ -830,6 +835,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 					e := &eEps[i]
 					n := &natActs.endPoints[j]
 					if eEp.inActive {
+						ruleChg = true
 						e.inActive = false
 					}
 					e.Mark = true
@@ -1336,7 +1342,7 @@ func (ep *epHost) epCheckNow() {
 		pinger.Count = ep.opts.inActTryThr
 		pinger.Size = 100
 		pinger.Interval = time.Duration(200000000)
-		pinger.Timeout =  time.Duration(500000000)
+		pinger.Timeout = time.Duration(500000000)
 		pinger.SetPrivileged(true)
 
 		//pinger.OnFinish = func(stats *ping.Statistics) {
@@ -1419,9 +1425,9 @@ func epTicker(R *RuleH, helper int) {
 
 			cnt := 0
 			for _, eph := range epHosts {
-					eph.epCheckNow()
-					eph.sT = time.Now()
-					cnt++
+				eph.epCheckNow()
+				eph.sT = time.Now()
+				cnt++
 			}
 			epHosts = nil
 		}
@@ -1472,17 +1478,17 @@ func (R *RuleH) RulesSync() {
 					sOk := R.IsEpHostActive(n.xIP.String())
 					np := &na.endPoints[idx]
 					if sOk == false {
-						if np.inActive == false {
-							np.inActive = true
+						if np.noService == false {
+							np.noService = true
 							rChg = true
-							tk.LogIt(tk.LogDebug, "nat lb-rule inactive ep - %s:%s\n", sType, n.xIP.String())
+							tk.LogIt(tk.LogDebug, "nat lb-rule service-down ep - %s:%s\n", sType, n.xIP.String())
 						}
 					} else {
-						if n.inActive {
-							np.inActive = false
+						if n.noService {
+							np.noService = false
 							np.inActTries = 0
 							rChg = true
-							tk.LogIt(tk.LogDebug, "nat lb-rule active ep - %s:%s\n", sType, n.xIP.String())
+							tk.LogIt(tk.LogDebug, "nat lb-rule service-up ep - %s:%s\n", sType, n.xIP.String())
 						}
 					}
 				}
@@ -1655,7 +1661,9 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 				ep.XIP = e.xIP
 				ep.XPort = e.xPort
 				ep.Weight = e.weight
-				ep.InActive = e.inActive
+				if e.inActive || e.noService {
+					ep.InActive = true
+				}
 				nWork.endPoints = append(nWork.endPoints, ep)
 			}
 		} else {
@@ -1665,7 +1673,9 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 				ep.XIP = k.xIP
 				ep.XPort = k.xPort
 				ep.Weight = k.weight
-				ep.InActive = k.inActive
+				if k.inActive || k.noService {
+					ep.InActive = true
+				}
 
 				nWork.endPoints = append(nWork.endPoints, ep)
 			}
