@@ -795,6 +795,10 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		if serv.Proto == "icmp" && k.EpPort != 0 {
 			return RuleUnknownServiceErr, errors.New("malformed-service error")
 		}
+
+		if natActs.mode == cmn.LBModeDSR &&  k.EpPort != serv.ServPort {
+			return RuleUnknownServiceErr, errors.New("malformed-service dsr-port error")
+		}
 		ep := ruleNatEp{pNetAddr, k.EpPort, k.Weight, 0, false, false}
 		natActs.endPoints = append(natActs.endPoints, ep)
 	}
@@ -1599,6 +1603,9 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 			nWork.EpSel = EpRR
 		}
 		mode = at.mode
+		if mode == cmn.LBModeDSR {
+			nWork.DsrMode = true
+		}
 		if at.sel == cmn.LbSelPrio {
 			j := 0
 			k := 0

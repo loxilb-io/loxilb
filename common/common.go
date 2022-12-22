@@ -441,8 +441,10 @@ const (
 	LBModeDefault LBMode = iota
 	// LBModeOneArm - One Arm Mode
 	LBModeOneArm
-	// LBModeOneArm - Full NAT mode
+	// LBModeOneArm - Full NAT Mode
 	LBModeFullNAT
+	// LBModeDSR - DSR Mode
+	LBModeDSR
 )
 
 // LbServiceArg - Information related to load-balancer service

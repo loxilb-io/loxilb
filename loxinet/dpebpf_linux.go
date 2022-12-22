@@ -736,6 +736,9 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 			dat.sel_type = C.NAT_LB_SEL_RR
 		}
 		dat.ca.cidx = C.uint(w.HwMark)
+		if w.DsrMode {
+			dat.ca.oaux = 1
+		}
 
 		nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[0]))
 
@@ -1004,7 +1007,13 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtI
 		if ctDat.xi.nat_flags == C.LLB_NAT_DST {
 			if ctDat.xi.nat_rip[0] == 0 && ctDat.xi.nat_rip[1] == 0 &&
 				ctDat.xi.nat_rip[2] == 0 && ctDat.xi.nat_rip[3] == 0 {
-				ct.CAct = fmt.Sprintf("dnat-%s:%d:w%d", xip.String(), port, ctDat.xi.wprio)
+				nmode := ""
+				if ctDat.xi.dsr != 0 {
+					nmode = "dsr"
+				} else {
+					nmode = "dnat"
+				}
+				ct.CAct = fmt.Sprintf("%s-%s:%d:w%d", nmode, xip.String(), port, ctDat.xi.wprio)
 			} else {
 				var rip net.IP
 
