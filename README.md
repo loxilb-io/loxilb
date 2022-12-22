@@ -5,8 +5,7 @@ loxilb is a cloud-native "edge" load-balancer stack built from grounds up using 
 
 - Service type external load-balancer for kubernetes (hence the name loxilb)
 - L4/NAT stateful loadbalancer
-   * NAT44, NAT66, NAT64
-   * One-ARM, FullNAT, DSR mode etc
+   * NAT44, NAT66, NAT64 with One-ARM, FullNAT, DSR etc
    * High-availability support
    * K8s CCM compliance
    * High-perf replacement for the *aging* iptables/ipvs 
