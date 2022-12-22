@@ -262,7 +262,7 @@ type NatDpWorkQ struct {
 	ServiceIP net.IP
 	L4Port    uint16
 	BlockNum  uint16
-	DsrMode	  bool
+	DsrMode   bool
 	Proto     uint8
 	HwMark    int
 	NatType   NatT

@@ -678,7 +678,7 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 				EpIP:   ep.xIP.String(),
 				EpPort: ep.xPort,
 				Weight: ep.weight,
-				State : state,
+				State:  state,
 			})
 		}
 		// Make LB rule
@@ -801,7 +801,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 			return RuleUnknownServiceErr, errors.New("malformed-service error")
 		}
 
-		if natActs.mode == cmn.LBModeDSR &&  k.EpPort != serv.ServPort {
+		if natActs.mode == cmn.LBModeDSR && k.EpPort != serv.ServPort {
 			return RuleUnknownServiceErr, errors.New("malformed-service dsr-port error")
 		}
 		ep := ruleNatEp{pNetAddr, k.EpPort, k.Weight, 0, false, false, false}
@@ -1342,7 +1342,7 @@ func (ep *epHost) epCheckNow() {
 		pinger.Count = ep.opts.inActTryThr
 		pinger.Size = 100
 		pinger.Interval = time.Duration(200000000)
-		pinger.Timeout =  time.Duration(500000000)
+		pinger.Timeout = time.Duration(500000000)
 		pinger.SetPrivileged(true)
 
 		//pinger.OnFinish = func(stats *ping.Statistics) {
@@ -1425,9 +1425,9 @@ func epTicker(R *RuleH, helper int) {
 
 			cnt := 0
 			for _, eph := range epHosts {
-					eph.epCheckNow()
-					eph.sT = time.Now()
-					cnt++
+				eph.epCheckNow()
+				eph.sT = time.Now()
+				cnt++
 			}
 			epHosts = nil
 		}
