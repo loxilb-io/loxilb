@@ -12,6 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // NewDeleteConfigFirewallParams creates a new DeleteConfigFirewallParams object
@@ -38,19 +39,19 @@ type DeleteConfigFirewallParams struct {
 	/*Maximum destination port range
 	  In: query
 	*/
-	MaxDestinationPort *string
+	MaxDestinationPort *int64
 	/*Maximum source port range
 	  In: query
 	*/
-	MaxSourcePort *string
+	MaxSourcePort *int64
 	/*Minimum destination port range
 	  In: query
 	*/
-	MinDestinationPort *string
+	MinDestinationPort *int64
 	/*Minimum source port range
 	  In: query
 	*/
-	MinSourcePort *string
+	MinSourcePort *int64
 	/*the incoming port
 	  In: query
 	*/
@@ -58,11 +59,11 @@ type DeleteConfigFirewallParams struct {
 	/*User preference for ordering
 	  In: query
 	*/
-	Preference *string
+	Preference *int64
 	/*the protocol
 	  In: query
 	*/
-	Protocol *string
+	Protocol *int64
 	/*Source IP address
 	  In: query
 	*/
@@ -161,7 +162,12 @@ func (o *DeleteConfigFirewallParams) bindMaxDestinationPort(rawData []string, ha
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-	o.MaxDestinationPort = &raw
+
+	value, err := swag.ConvertInt64(raw)
+	if err != nil {
+		return errors.InvalidType("maxDestinationPort", "query", "int64", raw)
+	}
+	o.MaxDestinationPort = &value
 
 	return nil
 }
@@ -179,7 +185,12 @@ func (o *DeleteConfigFirewallParams) bindMaxSourcePort(rawData []string, hasKey 
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-	o.MaxSourcePort = &raw
+
+	value, err := swag.ConvertInt64(raw)
+	if err != nil {
+		return errors.InvalidType("maxSourcePort", "query", "int64", raw)
+	}
+	o.MaxSourcePort = &value
 
 	return nil
 }
@@ -197,7 +208,12 @@ func (o *DeleteConfigFirewallParams) bindMinDestinationPort(rawData []string, ha
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-	o.MinDestinationPort = &raw
+
+	value, err := swag.ConvertInt64(raw)
+	if err != nil {
+		return errors.InvalidType("minDestinationPort", "query", "int64", raw)
+	}
+	o.MinDestinationPort = &value
 
 	return nil
 }
@@ -215,7 +231,12 @@ func (o *DeleteConfigFirewallParams) bindMinSourcePort(rawData []string, hasKey 
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-	o.MinSourcePort = &raw
+
+	value, err := swag.ConvertInt64(raw)
+	if err != nil {
+		return errors.InvalidType("minSourcePort", "query", "int64", raw)
+	}
+	o.MinSourcePort = &value
 
 	return nil
 }
@@ -251,7 +272,12 @@ func (o *DeleteConfigFirewallParams) bindPreference(rawData []string, hasKey boo
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-	o.Preference = &raw
+
+	value, err := swag.ConvertInt64(raw)
+	if err != nil {
+		return errors.InvalidType("preference", "query", "int64", raw)
+	}
+	o.Preference = &value
 
 	return nil
 }
@@ -269,7 +295,12 @@ func (o *DeleteConfigFirewallParams) bindProtocol(rawData []string, hasKey bool,
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-	o.Protocol = &raw
+
+	value, err := swag.ConvertInt64(raw)
+	if err != nil {
+		return errors.InvalidType("protocol", "query", "int64", raw)
+	}
+	o.Protocol = &value
 
 	return nil
 }

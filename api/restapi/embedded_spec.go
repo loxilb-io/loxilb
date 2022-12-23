@@ -434,31 +434,31 @@ func init() {
             "in": "query"
           },
           {
-            "type": "string",
+            "type": "integer",
             "description": "Minimum source port range",
             "name": "minSourcePort",
             "in": "query"
           },
           {
-            "type": "string",
+            "type": "integer",
             "description": "Maximum source port range",
             "name": "maxSourcePort",
             "in": "query"
           },
           {
-            "type": "string",
+            "type": "integer",
             "description": "Minimum destination port range",
             "name": "minDestinationPort",
             "in": "query"
           },
           {
-            "type": "string",
+            "type": "integer",
             "description": "Maximum destination port range",
             "name": "maxDestinationPort",
             "in": "query"
           },
           {
-            "type": "string",
+            "type": "integer",
             "description": "the protocol",
             "name": "protocol",
             "in": "query"
@@ -470,7 +470,7 @@ func init() {
             "in": "query"
           },
           {
-            "type": "string",
+            "type": "integer",
             "description": "User preference for ordering",
             "name": "preference",
             "in": "query"
@@ -4108,31 +4108,31 @@ func init() {
             "in": "query"
           },
           {
-            "type": "string",
+            "type": "integer",
             "description": "Minimum source port range",
             "name": "minSourcePort",
             "in": "query"
           },
           {
-            "type": "string",
+            "type": "integer",
             "description": "Maximum source port range",
             "name": "maxSourcePort",
             "in": "query"
           },
           {
-            "type": "string",
+            "type": "integer",
             "description": "Minimum destination port range",
             "name": "minDestinationPort",
             "in": "query"
           },
           {
-            "type": "string",
+            "type": "integer",
             "description": "Maximum destination port range",
             "name": "maxDestinationPort",
             "in": "query"
           },
           {
-            "type": "string",
+            "type": "integer",
             "description": "the protocol",
             "name": "protocol",
             "in": "query"
@@ -4144,7 +4144,7 @@ func init() {
             "in": "query"
           },
           {
-            "type": "string",
+            "type": "integer",
             "description": "User preference for ordering",
             "name": "preference",
             "in": "query"

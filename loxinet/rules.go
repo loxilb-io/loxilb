@@ -413,8 +413,18 @@ func (r *ruleTuples) ruleKey() string {
 	ks += fmt.Sprintf("%s", r.l3Dst.addr.String())
 	ks += fmt.Sprintf("%s", r.l3Src.addr.String())
 	ks += fmt.Sprintf("%d", r.l4Prot.val&r.l4Prot.valid)
-	ks += fmt.Sprintf("%d", r.l4Src.val&r.l4Src.valid)
-	ks += fmt.Sprintf("%d", r.l4Dst.val&r.l4Dst.valid)
+
+	if r.l4Src.valid == 0xffff {
+		ks += fmt.Sprintf("%d", r.l4Src.val&r.l4Src.valid)
+	} else {
+		ks += fmt.Sprintf("%d%d", r.l4Src.val, r.l4Src.valid)
+	}
+
+	if r.l4Dst.valid == 0xffff {
+		ks += fmt.Sprintf("%d", r.l4Dst.val&r.l4Dst.valid)
+	} else {
+		ks += fmt.Sprintf("%d%d", r.l4Dst.val, r.l4Dst.valid)
+	}
 
 	ks += fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",
 		r.inL2Dst.addr[0]&r.inL2Dst.valid[0],
@@ -979,10 +989,19 @@ func (R *RuleH) GetFwRule() ([]cmn.FwRuleMod, error) {
 		// Make Fw Arguments
 		ret.Rule.DstIP = data.tuples.l3Dst.addr.String()
 		ret.Rule.SrcIP = data.tuples.l3Src.addr.String()
-		ret.Rule.DstPortMin = data.tuples.l4Dst.valid
-		ret.Rule.DstPortMin = data.tuples.l4Dst.val
-		ret.Rule.SrcPortMin = data.tuples.l4Src.valid
-		ret.Rule.SrcPortMin = data.tuples.l4Src.val
+		if data.tuples.l4Dst.valid == 0xffff {
+			ret.Rule.DstPortMin = data.tuples.l4Dst.val
+		} else {
+			ret.Rule.DstPortMin = data.tuples.l4Dst.valid
+		}
+		ret.Rule.DstPortMax = data.tuples.l4Dst.val
+		if data.tuples.l4Src.valid == 0xffff {
+			ret.Rule.SrcPortMin = data.tuples.l4Src.val
+		} else {
+			ret.Rule.SrcPortMin = data.tuples.l4Src.valid
+		}
+
+		ret.Rule.SrcPortMax = data.tuples.l4Src.val
 		ret.Rule.Proto = data.tuples.l4Prot.val
 		ret.Rule.InPort = data.tuples.port.val
 		ret.Rule.Pref = data.tuples.pref
@@ -1049,7 +1068,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 		if fwRule.DstPortMin == 0 {
 			l4dst = rule16Tuple{0, 0}
 		} else {
-			l4dst = rule16Tuple{fwRule.SrcPortMin, 0xffff}
+			l4dst = rule16Tuple{fwRule.DstPortMin, 0xffff}
 		}
 	} else {
 		l4dst = rule16Tuple{fwRule.DstPortMax, fwRule.DstPortMin}
@@ -1127,7 +1146,7 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 	l3dst := ruleIPTuple{*dNetAddr}
 	l3src := ruleIPTuple{*sNetAddr}
 
-	if fwRule.Proto != 0 {
+	if fwRule.Proto == 0 {
 		l4prot = rule8Tuple{0, 0}
 	} else {
 		l4prot = rule8Tuple{fwRule.Proto, 0xff}
@@ -1146,7 +1165,7 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 		if fwRule.DstPortMin == 0 {
 			l4dst = rule16Tuple{0, 0}
 		} else {
-			l4dst = rule16Tuple{fwRule.SrcPortMin, 0xffff}
+			l4dst = rule16Tuple{fwRule.DstPortMin, 0xffff}
 		}
 	} else {
 		l4dst = rule16Tuple{fwRule.DstPortMax, fwRule.DstPortMin}

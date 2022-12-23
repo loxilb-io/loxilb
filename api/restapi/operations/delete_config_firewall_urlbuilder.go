@@ -9,18 +9,20 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
+
+	"github.com/go-openapi/swag"
 )
 
 // DeleteConfigFirewallURL generates an URL for the delete config firewall operation
 type DeleteConfigFirewallURL struct {
 	DestinationIP      *string
-	MaxDestinationPort *string
-	MaxSourcePort      *string
-	MinDestinationPort *string
-	MinSourcePort      *string
+	MaxDestinationPort *int64
+	MaxSourcePort      *int64
+	MinDestinationPort *int64
+	MinSourcePort      *int64
 	PortName           *string
-	Preference         *string
-	Protocol           *string
+	Preference         *int64
+	Protocol           *int64
 	SourceIP           *string
 
 	_basePath string
@@ -67,7 +69,7 @@ func (o *DeleteConfigFirewallURL) Build() (*url.URL, error) {
 
 	var maxDestinationPortQ string
 	if o.MaxDestinationPort != nil {
-		maxDestinationPortQ = *o.MaxDestinationPort
+		maxDestinationPortQ = swag.FormatInt64(*o.MaxDestinationPort)
 	}
 	if maxDestinationPortQ != "" {
 		qs.Set("maxDestinationPort", maxDestinationPortQ)
@@ -75,7 +77,7 @@ func (o *DeleteConfigFirewallURL) Build() (*url.URL, error) {
 
 	var maxSourcePortQ string
 	if o.MaxSourcePort != nil {
-		maxSourcePortQ = *o.MaxSourcePort
+		maxSourcePortQ = swag.FormatInt64(*o.MaxSourcePort)
 	}
 	if maxSourcePortQ != "" {
 		qs.Set("maxSourcePort", maxSourcePortQ)
@@ -83,7 +85,7 @@ func (o *DeleteConfigFirewallURL) Build() (*url.URL, error) {
 
 	var minDestinationPortQ string
 	if o.MinDestinationPort != nil {
-		minDestinationPortQ = *o.MinDestinationPort
+		minDestinationPortQ = swag.FormatInt64(*o.MinDestinationPort)
 	}
 	if minDestinationPortQ != "" {
 		qs.Set("minDestinationPort", minDestinationPortQ)
@@ -91,7 +93,7 @@ func (o *DeleteConfigFirewallURL) Build() (*url.URL, error) {
 
 	var minSourcePortQ string
 	if o.MinSourcePort != nil {
-		minSourcePortQ = *o.MinSourcePort
+		minSourcePortQ = swag.FormatInt64(*o.MinSourcePort)
 	}
 	if minSourcePortQ != "" {
 		qs.Set("minSourcePort", minSourcePortQ)
@@ -107,7 +109,7 @@ func (o *DeleteConfigFirewallURL) Build() (*url.URL, error) {
 
 	var preferenceQ string
 	if o.Preference != nil {
-		preferenceQ = *o.Preference
+		preferenceQ = swag.FormatInt64(*o.Preference)
 	}
 	if preferenceQ != "" {
 		qs.Set("preference", preferenceQ)
@@ -115,7 +117,7 @@ func (o *DeleteConfigFirewallURL) Build() (*url.URL, error) {
 
 	var protocolQ string
 	if o.Protocol != nil {
-		protocolQ = *o.Protocol
+		protocolQ = swag.FormatInt64(*o.Protocol)
 	}
 	if protocolQ != "" {
 		qs.Set("protocol", protocolQ)

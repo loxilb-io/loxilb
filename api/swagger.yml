@@ -1747,23 +1747,23 @@ paths:
           description:  Destination IP in CIDR notation
         - name: minSourcePort
           in: query
-          type: string
+          type: integer
           description: Minimum source port range
         - name: maxSourcePort
           in: query
-          type: string
+          type: integer
           description: Maximum source port range
         - name: minDestinationPort
           in: query
-          type: string
+          type: integer
           description: Minimum destination port range
         - name: maxDestinationPort
           in: query
-          type: string
+          type: integer
           description: Maximum destination port range  
         - name: protocol
           in: query
-          type: string
+          type: integer
           description: the protocol
         - name: portName
           in: query
@@ -1771,7 +1771,7 @@ paths:
           description: the incoming port     
         - name: preference
           in: query
-          type: string
+          type: integer
           description: User preference for ordering
   
       responses:
