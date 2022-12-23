@@ -93,7 +93,7 @@ func NlpRegister(hook cmn.NetHookInterface) {
 }
 
 func applyAllConfig(name string) bool {
-	command := "loxicmd apply --per-intf " + name + " -c /opt/loxilb/ipconfig/"
+	command := "loxicmd apply --per-intf " + name + " -c /etc/loxilb/ipconfig/"
 	cmd := exec.Command("bash", "-c", command)
 	output, err := cmd.Output()
 	if err != nil {
@@ -108,7 +108,7 @@ func applyLoadBalancerConfig() bool {
 	var resp struct {
 		Attr []cmn.LbRuleMod `json:"lbAttr"`
 	}
-	byteBuf, err := ioutil.ReadFile("/opt/loxilb/lbconfig.txt")
+	byteBuf, err := ioutil.ReadFile("/etc/loxilb/lbconfig.txt")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -129,7 +129,7 @@ func applySessionConfig() bool {
 	var resp struct {
 		Attr []cmn.SessionMod `json:"sessionAttr"`
 	}
-	byteBuf, err := ioutil.ReadFile("/opt/loxilb/sessionconfig.txt")
+	byteBuf, err := ioutil.ReadFile("/etc/loxilb/sessionconfig.txt")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -150,7 +150,7 @@ func applyUlClConfig() bool {
 	var resp struct {
 		Attr []cmn.SessionUlClMod `json:"ulclAttr"`
 	}
-	byteBuf, err := ioutil.ReadFile("/opt/loxilb/sessionulclconfig.txt")
+	byteBuf, err := ioutil.ReadFile("/etc/loxilb/sessionulclconfig.txt")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -171,7 +171,7 @@ func applyFWConfig() bool {
 	var resp struct {
 		Attr []cmn.FwRuleMod `json:"fwAttr"`
 	}
-	byteBuf, err := ioutil.ReadFile("/opt/loxilb/FWconfig.txt")
+	byteBuf, err := ioutil.ReadFile("/etc/loxilb/FWconfig.txt")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -190,7 +190,7 @@ func applyFWConfig() bool {
 
 func applyRoutes(name string) {
 	tk.LogIt(tk.LogDebug, "[NLP] Applying Route Config for %s \n", name)
-	command := "loxicmd apply --per-intf " + name + " -r -c /opt/loxilb/ipconfig/"
+	command := "loxicmd apply --per-intf " + name + " -r -c /etc/loxilb/ipconfig/"
 	cmd := exec.Command("bash", "-c", command)
 	output, err := cmd.Output()
 	if err != nil {
@@ -203,7 +203,7 @@ func applyRoutes(name string) {
 func applyConfigMap(name string, state bool, add bool) {
 	var configApplied bool
 	var needRouteApply bool
-	if _, err := os.Stat("/opt/loxilb/ipconfig/"); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat("/etc/loxilb/ipconfig/"); errors.Is(err, os.ErrNotExist) {
 		return
 	}
 	if add {
@@ -1395,8 +1395,9 @@ var nNl *NlH
 func LbSessionGet(done bool) int {
 
 	if done {
+		
 		tk.LogIt(tk.LogInfo, "[NLP] LbSessionGet Start\n")
-		if _, err := os.Stat("/opt/loxilb/lbconfig.txt"); errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat("/etc/loxilb/lbconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
 				tk.LogIt(tk.LogInfo, "[NLP] No load balancer config file : %s \n", err.Error())
 			}
@@ -1405,7 +1406,7 @@ func LbSessionGet(done bool) int {
 		}
 
 		tk.LogIt(tk.LogInfo, "[NLP] LoadBalancer done\n")
-		if _, err := os.Stat("/opt/loxilb/sessionconfig.txt"); errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat("/etc/loxilb/sessionconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
 				tk.LogIt(tk.LogInfo, "[NLP] No Session config file : %s \n", err.Error())
 			}
@@ -1414,7 +1415,7 @@ func LbSessionGet(done bool) int {
 		}
 
 		tk.LogIt(tk.LogInfo, "[NLP] Session done\n")
-		if _, err := os.Stat("/opt/loxilb/sessionulclconfig.txt"); errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat("/etc/loxilb/sessionulclconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
 				tk.LogIt(tk.LogInfo, "[NLP] No UlCl config file : %s \n", err.Error())
 			}
@@ -1423,7 +1424,7 @@ func LbSessionGet(done bool) int {
 		}
 
 		tk.LogIt(tk.LogInfo, "[NLP] Session UlCl done\n")
-		if _, err := os.Stat("/opt/loxilb/FWconfig.txt"); errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat("/etc/loxilb/FWconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
 				tk.LogIt(tk.LogInfo, "[NLP] No Firewall config file : %s \n", err.Error())
 			}
@@ -1455,7 +1456,6 @@ func NlpInit() *NlH {
 	checkInit := make(chan bool)
 	go NlpGet(checkInit)
 	done := <-checkInit
-	go LbSessionGet(done)
 
 	err := nlp.LinkSubscribe(nNl.FromLUCh, nNl.FromAUDone)
 	if err != nil {
@@ -1484,5 +1484,8 @@ func NlpInit() *NlH {
 
 	go NLWorker(nNl)
 	tk.LogIt(tk.LogInfo, "[NLP] NLP Subscription done\n")
+	
+	go LbSessionGet(done)
+	
 	return nNl
 }

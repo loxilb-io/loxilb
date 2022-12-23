@@ -55,7 +55,7 @@ function tcp_validate() {
     fi
     sleep 1
   done
-
+  nid=0
   for i in {1..4}
   do
   for j in {0..2}
@@ -71,7 +71,7 @@ function tcp_validate() {
           nid=1
         fi
       elif [[ $nid != $((ids)) ]]; then
-        echo "Expected server$nid got server$((ids))"
+        echo "Expected server$nid got server$((ids))" >&2
         code=1
       fi
       nid=$((($ids + 1)%4))
@@ -134,7 +134,7 @@ function sctp_validate() {
     fi
     sleep 1
   done
-
+  nid=0
   for i in {1..4}
   do
   for j in {0..2}
@@ -150,7 +150,7 @@ function sctp_validate() {
           nid=1
         fi
       elif [[ $nid != $((ids)) ]]; then
-        echo "Expected server$nid got server$((ids))"
+        echo "Expected server$nid got server$((ids))" >&2
         code=1
       fi
       nid=$((($ids + 1)%4))

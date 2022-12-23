@@ -12,6 +12,8 @@ dexec="sudo docker exec -i "
 hns="sudo ip netns "
 hexist="$vrn$hn"
 
+loxilbs=()
+
 ## Given a docker name(arg1), return its pid
 get_docker_pid() {
   id=`docker ps -f name=$1| grep -w $1 | cut  -d " "  -f 1 | grep -iv  "CONTAINER"`
@@ -80,13 +82,18 @@ spawn_docker_host() {
   set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
   echo "Spawning $dname($dtype)" >&2 
   if [[ "$dtype" == "loxilb" ]]; then
+    loxilbs+=("$dname")
+    if [[ "$pick_config" == "yes" ]]; then
+        echo "$dname will pick config from $(pwd)/${dname}_config"
+        loxilb_config="-v $(pwd)/${dname}_config:/etc/loxilb/"
+    fi
     if [[ "$bgp" == "yes" ]]; then
       bgp_opts="-b"
       if [[ ! -z "$bpath" ]]; then
         bgp_conf="-v $bpath:/etc/gobgp/"
       fi
     fi
-    docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit $bgp_conf -v /dev/log:/dev/log --name $dname ghcr.io/loxilb-io/loxilb:latest $bgp_opts
+    docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit $bgp_conf -v /dev/log:/dev/log -v /sys/kernel/debug:/sys/kernel/debug:rw $loxilb_config --name $dname ghcr.io/loxilb-io/loxilb:latest $bgp_opts
     if [[ "$ka" == "yes" ]]; then
       if [[ ! -z "$kpath" ]]; then
         ka_conf="-v $kpath:/container/service/keepalived/assets/" 
@@ -118,6 +125,7 @@ spawn_docker_host() {
   $hexec $dname ifconfig lo up
   $hexec $dname sysctl net.ipv6.conf.all.disable_ipv6=1 2>&1 >> /dev/null
   $hexec $dname sysctl net.ipv4.conf.all.arp_accept=1 2>&1 >> /dev/null
+  $hexec $dname sysctl net.ipv4.conf.eth0.arp_ignore=2 2>&1 >> /dev/null
 }
 
 ## Deletes a docker host
@@ -128,6 +136,7 @@ delete_docker_host() {
     docker stop $1 2>&1 >> /dev/null
     hd="true"
     ka=`docker ps -f name=ka_$1| grep -w ka_$1 | cut  -d " "  -f 1 | grep -iv  "CONTAINER"`
+    loxilbs=( "${loxilbs[@]/$1}" )
     if [ "$ka" != "" ]; then
       docker stop ka_$1 2>&1 >> /dev/null
       docker rm ka_$1 2>&1 >> /dev/null
@@ -231,6 +240,11 @@ config_docker_host() {
   link2=e$h2$h1
   #echo "$h1:$link1->$h2:$link2"
 
+  #if [[ -n "${loxilbs[$h1]}" && "$pick_config" == "yes" ]]; then
+  if [[ ${loxilbs[*]} =~ (^|[[:space:]])$h1($|[[:space:]]) && "$pick_config" == "yes" ]]; then
+    return
+  fi
+
   if [[ "$ptype" == "phy" ]]; then
     sudo ip -n $h1 addr add $addr dev $link1
   elif [[ "$ptype" == "vlan" ]]; then
@@ -254,7 +268,7 @@ config_docker_host() {
     sudo ip -n $h1 addr add $addr dev bond$xid
     if [[ "$gw" != "" ]]; then
       sudo ip -n $h2 addr add $gw/24 dev bond$xid
-      sudo ip -n $h1 route add default via $gw
+      sudo ip -n $h1 route add default via $gw proto static
     fi
   else
     echo "Check port-type"
@@ -310,6 +324,10 @@ create_docker_host_vlan() {
             ;;
     esac
   done
+
+  if [[ ${loxilbs[*]} =~ (^|[[:space:]])$h1($|[[:space:]]) && "$pick_config" == "yes" ]]; then
+    return
+  fi
 
   set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
   link1=e$h1$h2
@@ -394,6 +412,10 @@ create_docker_host_vxlan() {
     esac
   done
 
+  if [[ ${loxilbs[*]} =~ (^|[[:space:]])$h1($|[[:space:]]) && "$pick_config" == "yes" ]]; then
+    return
+  fi
+
   set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
   link1=e$h1$h2
   link2=e$h2$h1
@@ -447,6 +469,10 @@ create_docker_host_cnbridge() {
     esac
   done
 
+  if [[ ${loxilbs[*]} =~ (^|[[:space:]])$h1($|[[:space:]]) && "$pick_config" == "yes" ]]; then
+    return
+  fi
+
   set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
   link1=e$h1$h2
   link2=e$h2$h1
@@ -460,4 +486,26 @@ create_docker_host_cnbridge() {
   sudo ip -n $h1 link set br$h1 up
 }
 
+#Arg1: host name
+#Arg2: --<proto>:<iport>:<oport>
+#Arg3: --endpoints:<ip>:<weight>,..
+function create_lb_rule() {
+  if [[ ${loxilbs[*]} =~ (^|[[:space:]])$1($|[[:space:]]) && "$pick_config" == "yes" ]]; then
+    return
+  fi
+  args=( "$@" )
+  args=( "${args[@]/$1}" )
+  echo "$1: loxicmd create lb ${args[*]}"
+  $dexec $1 loxicmd create lb ${args[*]}
+}
 
+#Arg1: host name
+#Arg2: <prefix/mask>
+#Arg3: <nexthop-ip>
+function add_route() {
+  if [[ ${loxilbs[*]} =~ (^|[[:space:]])$1($|[[:space:]]) && "$pick_config" == "yes" ]]; then
+    return
+  fi
+  echo "$1: ip route add $2 via $3 proto static"
+  $hexec $1 ip route add $2 via $3 proto static
+}

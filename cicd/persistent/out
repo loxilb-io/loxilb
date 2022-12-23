@@ -1,0 +1,1153 @@
+loxilb start
+INFO: xdp_link_detach() no curr XDP prog on ifindex:3
+ntc filter del dev llb0 ingress 2>&1
+RTNETLINK answers: Invalid argument
+We have an error talking to the kernel
+NR 0 PSEC xdp_packet_hook /opt/loxilb/llb_xdp_main.o
+libbpf: Error in bpf_create_map_xattr(nh_map):Invalid argument(-22). Retrying without BTF.
+libbpf: Error in bpf_create_map_xattr(xctk):ERROR: strerror_r(-524)=22(-524). Retrying without BTF.
+llb_link_prop_add: IF-llb0 added idx 0 type 1
+Setting up for llb0|xdp_packet_hook
+intf_map: 
+intf_stats_map: 
+bd_stats_map: 
+smac_map: 
+tmac_map: 
+acl_map: 
+rt_v4_map: 
+rt_v6_map: 
+nh_map: 
+dmac_map: 
+tx_intf_map: 
+mirr_map: 
+tx_intf_stats_map: 
+tx_bd_stats_map: 
+pkt_ring: 
+rt_v4_stats_map: 
+rt_v6_stats_map: 
+acl_stats_map: 
+tmac_stats_map: 
+fc_v4_map: 
+fc_v4_stats_map: 
+pgm_tbl: 
+polx_map: 
+ct_map: 
+nat_map: 
+nat_stats_map: 
+sess_v4_map: 
+sess_v4_stats_map: 
+fw_v4_map: 
+fw_v4_stats_map: 
+crc32c_map: 
+libbpf: failed to statfs /opt/loxilb/dp/bpf: No such file or directory
+/opt/loxilb/dp/bpf: Unpin maps failed
+llb_psec_add: SEC-tc_packet_hook0 added idx 0
+NR 0 PSEC tc_packet_hook0 /opt/loxilb/llb_ebpf_main.o
+ntc qdisc add dev llb0 clsact 2>&1 >/dev/null
+AUTOLOAD: sec tc_packet_hook1 prog tc_packet_func
+AUTOLOAD: sec tc_packet_hook2 prog tc_packet_func_slow
+AUTOLOAD: sec tc_packet_hook3 prog tc_packet_func_fw
+AUTOLOAD: sec tc_packet_hook4 prog tc_csum_func1
+AUTOLOAD: sec tc_packet_hook5 prog tc_csum_func2
+AUTOLOAD: sec tc_packet_hook6 prog tc_slow_unp_func
+ntc filter add dev llb0 ingress bpf da obj /opt/loxilb/llb_ebpf_main.o sec tc_packet_hook0 2>&1
+llb_link_prop_add: IF-llb0 ref idx 0:1 type 2
+libbpf: loading object 'nsync_bpf' from buffer
+libbpf: elf: section(2) kprobe/bpf_map_update_value.isra.0, size 736, link 0, flags 6, type=1
+libbpf: sec 'kprobe/bpf_map_update_value.isra.0': found program 'bpf_prog_user_mapupdate' at insn offset 0 (0 bytes), code size 92 insns (736 bytes)
+libbpf: elf: section(3) kprobe/array_map_update_elem, size 728, link 0, flags 6, type=1
+libbpf: sec 'kprobe/array_map_update_elem': found program 'bpf_prog_kern_mapupdate' at insn offset 0 (0 bytes), code size 91 insns (728 bytes)
+libbpf: elf: section(4) tp/syscalls/sys_enter_bpf, size 600, link 0, flags 6, type=1
+libbpf: sec 'tp/syscalls/sys_enter_bpf': found program 'bpf_prog_syscall' at insn offset 0 (0 bytes), code size 75 insns (600 bytes)
+libbpf: elf: section(5) license, size 13, link 0, flags 3, type=1
+libbpf: license of nsync_bpf is Dual BSD/GPL
+libbpf: elf: section(6) .maps, size 32, link 0, flags 3, type=1
+libbpf: elf: section(7) .BTF, size 8663, link 0, flags 0, type=1
+libbpf: elf: section(8) .BTF.ext, size 1820, link 0, flags 0, type=1
+libbpf: elf: section(9) .symtab, size 480, link 16, flags 0, type=2
+libbpf: elf: section(10) .relkprobe/bpf_map_update_value.isra.0, size 16, link 9, flags 0, type=9
+libbpf: elf: section(11) .relkprobe/array_map_update_elem, size 16, link 9, flags 0, type=9
+libbpf: elf: section(12) .reltp/syscalls/sys_enter_bpf, size 16, link 9, flags 0, type=9
+libbpf: looking for externs among 20 symbols...
+libbpf: collected 0 externs total
+libbpf: map 'map_events': at sec_idx 6, offset 0.
+libbpf: map 'map_events': found type = 4.
+libbpf: map 'map_events': found key [3], sz = 4.
+libbpf: map 'map_events': found value [8], sz = 4.
+libbpf: map 'map_events': found max_entries = 1024.
+libbpf: sec '.relkprobe/bpf_map_update_value.isra.0': collecting relocation for section(2) 'kprobe/bpf_map_update_value.isra.0'
+libbpf: sec '.relkprobe/bpf_map_update_value.isra.0': relo #0: insn #84 against 'map_events'
+libbpf: prog 'bpf_prog_user_mapupdate': found map 0 (map_events, sec 6, off 0) for insn #84
+libbpf: sec '.relkprobe/array_map_update_elem': collecting relocation for section(3) 'kprobe/array_map_update_elem'
+libbpf: sec '.relkprobe/array_map_update_elem': relo #0: insn #83 against 'map_events'
+libbpf: prog 'bpf_prog_kern_mapupdate': found map 0 (map_events, sec 6, off 0) for insn #83
+libbpf: sec '.reltp/syscalls/sys_enter_bpf': collecting relocation for section(4) 'tp/syscalls/sys_enter_bpf'
+libbpf: sec '.reltp/syscalls/sys_enter_bpf': relo #0: insn #67 against 'map_events'
+libbpf: prog 'bpf_prog_syscall': found map 0 (map_events, sec 6, off 0) for insn #67
+libbpf: loading kernel BTF '/sys/kernel/btf/vmlinux': 0
+libbpf: Error in bpf_create_map_xattr(map_events):ERROR: strerror_r(-524)=22(-524). Retrying without BTF.
+libbpf: map 'map_events': created successfully, fd=90
+libbpf: sec 'kprobe/bpf_map_update_value.isra.0': found 7 CO-RE relocations
+libbpf: prog 'bpf_prog_user_mapupdate': relo #0: kind <byte_off> (0), spec is [13] struct pt_regs.cx (0:11 @ offset 88)
+libbpf: CO-RE relocating [0] struct pt_regs: found target candidate [224] struct pt_regs in [vmlinux]
+libbpf: prog 'bpf_prog_user_mapupdate': relo #0: matching candidate #0 [224] struct pt_regs.cx (0:11 @ offset 88)
+libbpf: prog 'bpf_prog_user_mapupdate': relo #0: patched insn #0 (LDX/ST/STX) off 88 -> 88
+libbpf: prog 'bpf_prog_user_mapupdate': relo #1: kind <byte_off> (0), spec is [13] struct pt_regs.dx (0:12 @ offset 96)
+libbpf: prog 'bpf_prog_user_mapupdate': relo #1: matching candidate #0 [224] struct pt_regs.dx (0:12 @ offset 96)
+libbpf: prog 'bpf_prog_user_mapupdate': relo #1: patched insn #2 (LDX/ST/STX) off 96 -> 96
+libbpf: prog 'bpf_prog_user_mapupdate': relo #2: kind <byte_off> (0), spec is [13] struct pt_regs.di (0:14 @ offset 112)
+libbpf: prog 'bpf_prog_user_mapupdate': relo #2: matching candidate #0 [224] struct pt_regs.di (0:14 @ offset 112)
+libbpf: prog 'bpf_prog_user_mapupdate': relo #2: patched insn #5 (LDX/ST/STX) off 112 -> 112
+libbpf: prog 'bpf_prog_user_mapupdate': relo #3: kind <byte_off> (0), spec is [17] struct bpf_map.id (0:9 @ offset 48)
+libbpf: CO-RE relocating [0] struct bpf_map: found target candidate [2150] struct bpf_map in [vmlinux]
+libbpf: prog 'bpf_prog_user_mapupdate': relo #3: matching candidate #0 [2150] struct bpf_map.id (0:10 @ offset 52)
+libbpf: prog 'bpf_prog_user_mapupdate': relo #3: patched insn #8 (ALU/ALU64) imm 48 -> 52
+libbpf: prog 'bpf_prog_user_mapupdate': relo #4: kind <byte_off> (0), spec is [17] struct bpf_map.key_size (0:4 @ offset 28)
+libbpf: prog 'bpf_prog_user_mapupdate': relo #4: matching candidate #0 [2150] struct bpf_map.key_size (0:4 @ offset 28)
+libbpf: prog 'bpf_prog_user_mapupdate': relo #4: patched insn #18 (ALU/ALU64) imm 28 -> 28
+libbpf: prog 'bpf_prog_user_mapupdate': relo #5: kind <byte_off> (0), spec is [17] struct bpf_map.value_size (0:5 @ offset 32)
+libbpf: prog 'bpf_prog_user_mapupdate': relo #5: matching candidate #0 [2150] struct bpf_map.value_size (0:5 @ offset 32)
+libbpf: prog 'bpf_prog_user_mapupdate': relo #5: patched insn #27 (ALU/ALU64) imm 32 -> 32
+libbpf: prog 'bpf_prog_user_mapupdate': relo #6: kind <byte_off> (0), spec is [17] struct bpf_map.name (0:15 @ offset 88)
+libbpf: prog 'bpf_prog_user_mapupdate': relo #6: matching candidate #0 [2150] struct bpf_map.name (0:16 @ offset 88)
+libbpf: prog 'bpf_prog_user_mapupdate': relo #6: patched insn #54 (ALU/ALU64) imm 88 -> 88
+libbpf: sec 'kprobe/array_map_update_elem': found 7 CO-RE relocations
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #0: kind <byte_off> (0), spec is [13] struct pt_regs.dx (0:12 @ offset 96)
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #0: matching candidate #0 [224] struct pt_regs.dx (0:12 @ offset 96)
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #0: patched insn #0 (LDX/ST/STX) off 96 -> 96
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #1: kind <byte_off> (0), spec is [13] struct pt_regs.si (0:13 @ offset 104)
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #1: matching candidate #0 [224] struct pt_regs.si (0:13 @ offset 104)
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #1: patched insn #2 (LDX/ST/STX) off 104 -> 104
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #2: kind <byte_off> (0), spec is [13] struct pt_regs.di (0:14 @ offset 112)
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #2: matching candidate #0 [224] struct pt_regs.di (0:14 @ offset 112)
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #2: patched insn #5 (LDX/ST/STX) off 112 -> 112
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #3: kind <byte_off> (0), spec is [17] struct bpf_map.id (0:9 @ offset 48)
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #3: matching candidate #0 [2150] struct bpf_map.id (0:10 @ offset 52)
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #3: patched insn #8 (ALU/ALU64) imm 48 -> 52
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #4: kind <byte_off> (0), spec is [17] struct bpf_map.key_size (0:4 @ offset 28)
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #4: matching candidate #0 [2150] struct bpf_map.key_size (0:4 @ offset 28)
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #4: patched insn #18 (ALU/ALU64) imm 28 -> 28
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #5: kind <byte_off> (0), spec is [17] struct bpf_map.value_size (0:5 @ offset 32)
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #5: matching candidate #0 [2150] struct bpf_map.value_size (0:5 @ offset 32)
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #5: patched insn #27 (ALU/ALU64) imm 32 -> 32
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #6: kind <byte_off> (0), spec is [17] struct bpf_map.name (0:15 @ offset 88)
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #6: matching candidate #0 [2150] struct bpf_map.name (0:16 @ offset 88)
+libbpf: prog 'bpf_prog_kern_mapupdate': relo #6: patched insn #53 (ALU/ALU64) imm 88 -> 88
+libbpf: sec 'tp/syscalls/sys_enter_bpf': found 2 CO-RE relocations
+libbpf: prog 'bpf_prog_syscall': relo #0: kind <byte_off> (0), spec is [75] union bpf_attr.map_id (0:7:0:2 @ offset 0)
+libbpf: CO-RE relocating [0] union bpf_attr: found target candidate [2129] union bpf_attr in [vmlinux]
+libbpf: prog 'bpf_prog_syscall': relo #0: matching candidate #0 [2129] union bpf_attr.map_id (0:7:0:2 @ offset 0)
+libbpf: prog 'bpf_prog_syscall': relo #0: patched insn #6 (ALU/ALU64) imm 0 -> 0
+libbpf: prog 'bpf_prog_syscall': relo #1: kind <byte_off> (0), spec is [75] union bpf_attr.map_fd (0:1:0 @ offset 0)
+libbpf: prog 'bpf_prog_syscall': relo #1: matching candidate #0 [2129] union bpf_attr.map_fd (0:1:0 @ offset 0)
+libbpf: prog 'bpf_prog_syscall': relo #1: patched insn #36 (ALU/ALU64) imm 0 -> 0
+ebpf unload - lo
+ntc filter del dev lo ingress 2>&1
+RTNETLINK answers: Invalid argument
+We have an error talking to the kernel
+ebpf unload - ip_vti0
+ntc filter del dev ip_vti0 ingress 2>&1
+RTNETLINK answers: Invalid argument
+We have an error talking to the kernel
+ebpf unload - eth0
+ntc filter del dev eth0 ingress 2>&1
+RTNETLINK answers: Invalid argument
+We have an error talking to the kernel
+
+
+
+
+BGP Monitor start *******************
+BGP session 127.0.0.1:50051 not ready. Will Retry!
+[NLP] Getting device info
+[NLP] ADD Device lo mac([0 0 0 0 0 0]) attrs(&{1 65536 1000 lo  up|loopback 65609 0 0 <nil>  0xc00042c600 0 0xc000136150 loopback <nil> unknown -1 1 1 65536 65535 [] 0 <nil>}) info recvd
+port add - vlan3801 isPvid false
+port added - vlan3801:2
+vlan 3801 bd created
+port added - lo:1
+[NLP] Port lo, [0 0 0 0 0 0], true, 65536 add [OK]
+[NLP] Applying Config for lo 
+ip link set lo up
+
+ip link set dev lo mtu 65536
+
+ip addr add 127.0.0.1/8 dev lo
+exit status 2
+Configuration applied for - lo
+
+[NLP] Applied Config for lo 
+rt added - 127.0.0.0/8:root
+[NLP] IPv4 Address 127.0.0.1/8 Port lo added
+neigh rtpair - 0.0.0.0/32->0.0.0.0
+rt added - 0.0.0.0/32:root
+neigh added - 0.0.0.0:root (1)
+[NLP] NH 0.0.0.0 mac [0 0 0 0 0 0] dev lo added
+[NLP] No STATIC routes found for intf lo
+[NLP] ADD Device ip_vti0 mac([0 0 0 0 0 0]) attrs(&{2 1480 1000 ip_vti0  0 128 0 0 <nil>  0xc00042c780 0 0xc000136168 ipip <nil> down -1 1 1 65536 65535 [] 0 <nil>}) info recvd
+port add - vlan4021 isPvid false
+port added - vlan4021:3
+vlan 4021 bd created
+port added - ip_vti0:1
+[NLP] Port ip_vti0, [0 0 0 0 0 0], false, 1480 add [OK]
+[NLP] Applying Config for ip_vti0 
+ip link set ip_vti0 up
+
+ip link set dev ip_vti0 mtu 1480
+
+Configuration applied for - ip_vti0
+
+[NLP] Applied Config for ip_vti0 
+[NLP] No addresses found for intf ip_vti0
+[NLP] No neighbors found for intf ip_vti0
+[NLP] No STATIC routes found for intf ip_vti0
+[NLP] ADD Device llb0 mac([58 189 193 221 99 153]) attrs(&{3 1500 1000 llb0 3a:bd:c1:dd:63:99 up|broadcast|multicast 69699 0 0 <nil>  0xc00042c900 0 0xc000136180 ether <nil> unknown -1 1 1 65536 65535 [] 0 <nil>}) info recvd
+port add - vlan3804 isPvid false
+port added - vlan3804:5
+vlan 3804 bd created
+port added - llb0:4
+[NLP] Port llb0, [58 189 193 221 99 153], true, 1500 add [OK]
+[NLP] Applying Config for llb0 
+ip link set llb0 up
+
+Configuration applied for - llb0
+
+[NLP] Applied Config for llb0 
+[NLP] No addresses found for intf llb0
+[NLP] No neighbors found for intf llb0
+[NLP] No STATIC routes found for intf llb0
+[NLP] ADD Device eth0 mac([2 66 172 17 0 2]) attrs(&{2496 1500 0 eth0 02:42:ac:11:00:02 up|broadcast|multicast 69699 2497 0 <nil>  0xc00042ca80 0 0xc000136198 ether <nil> up 0 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - vlan3806 isPvid false
+port added - vlan3806:7
+vlan 3806 bd created
+port added - eth0:6
+[NLP] Port eth0, [2 66 172 17 0 2], true, 1500 add [OK]
+[NLP] Applying Config for eth0 
+ip link set eth0 up
+
+ip addr add 172.17.0.2/16 dev eth0
+exit status 2
+Configuration applied for - eth0
+
+[NLP] Applied Config for eth0 
+rt added - 172.17.0.0/16:root
+[NLP] IPv4 Address 172.17.0.2/16 Port eth0 added
+[NLP] No neighbors found for intf eth0
+neigh rtpair - 172.17.0.1/32->172.17.0.1
+rt added - 172.17.0.1/32:root
+neigh added - 172.17.0.1:root (2)
+neigh rtpair - 0.0.0.0/0->172.17.0.1
+rt added - 0.0.0.0/0:root
+[NLP] RT  0.0.0.0/0 via 172.17.0.1 added
+rt add - 172.17.0.0/16:root exists
+[NLP] RT  172.17.0.0/16 add failed-rt exists
+[NLP] nlp get done
+[NLP] Link msgs subscribed
+[NLP] Addr msgs subscribed
+[NLP] Neigh msgs subscribed
+[NLP] Route msgs subscribed
+[NLP] NLP Subscription done
+ebpf intfmap added - 1 vlan 0 -> 1
+ebpf txintfmap added - 1 -> 1
+NR 0 PSEC tc_packet_hook0 /opt/loxilb/llb_ebpf_main.o
+ntc qdisc add dev ip_vti0 clsact 2>&1 >/dev/null
+AUTOLOAD: sec tc_packet_hook1 prog tc_packet_func
+AUTOLOAD: sec tc_packet_hook2 prog tc_packet_func_slow
+AUTOLOAD: sec tc_packet_hook3 prog tc_packet_func_fw
+AUTOLOAD: sec tc_packet_hook4 prog tc_csum_func1
+AUTOLOAD: sec tc_packet_hook5 prog tc_csum_func2
+AUTOLOAD: sec tc_packet_hook6 prog tc_slow_unp_func
+2022/12/22 07:22:08 Serving loxilb rest API at http://127.0.0.1:11111
+2022/12/22 07:22:08 Serving loxilb rest API at https://127.0.0.1:8091
+ntc filter add dev ip_vti0 ingress bpf da obj /opt/loxilb/llb_ebpf_main.o sec tc_packet_hook0 2>&1
+llb_link_prop_add: IF-ip_vti0 added idx 1 type 2
+ebpf intfmap added - 2 vlan 0 -> 1
+ebpf txintfmap added - 1 -> 2
+ebpf intfmap added - 3 vlan 0 -> 511
+ebpf txintfmap added - 511 -> 3
+NR 1 PSEC tc_packet_hook0 /opt/loxilb/llb_ebpf_main.o
+ntc qdisc add dev eth0 clsact 2>&1 >/dev/null
+AUTOLOAD: sec tc_packet_hook1 prog tc_packet_func
+AUTOLOAD: sec tc_packet_hook2 prog tc_packet_func_slow
+AUTOLOAD: sec tc_packet_hook3 prog tc_packet_func_fw
+AUTOLOAD: sec tc_packet_hook4 prog tc_csum_func1
+AUTOLOAD: sec tc_packet_hook5 prog tc_csum_func2
+AUTOLOAD: sec tc_packet_hook6 prog tc_slow_unp_func
+ntc filter add dev eth0 ingress bpf da obj /opt/loxilb/llb_ebpf_main.o sec tc_packet_hook0 2>&1
+llb_link_prop_add: IF-eth0 added idx 2 type 2
+ebpf intfmap added - 2496 vlan 0 -> 6
+ebpf txintfmap added - 6 -> 2496
+[API] HA POST API called. url : /netlox/v1/config/cistate
+[API] Instance default New HA State : STOP
+[HA] Instance default Current State NOT_DEFINED Updated State: STOP
+[BGP] HA state updated : 4
+BGP session 127.0.0.1:50051 ready! Attributes[global:{asn:64512  router_id:"11.11.11.1"  listen_port:179  listen_addresses:"0.0.0.0"  listen_addresses:"::"}]
+******************* BGP 127.0.0.1:50051 connected *******************
+[API] HA POST API called. url : /netlox/v1/config/cistate
+[API] Instance default New HA State : STOP
+[HA] Instance default Current State STOP Updated State: STOP
+[BGP] HA state updated : 4
+[NLP] LbSessionGet Start
+ep-host added 10.10.10.3:0
+ep-host added 10.10.10.4:1
+ep-host added 10.10.10.5:2
+nat lb-rule added - 1:dst-20.20.20.1/32,proto-132,dport-2020,-do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive|
+Advertised Route [OK]: 20.20.20.1/32
+nat lb-rule added - 2:dst-20.20.20.1/32,proto-6,dport-2020,-do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive|
+Advertised Route [OK]: 20.20.20.1/32
+[NLP] LoadBalancer done
+[NLP] Session done
+[NLP] Session UlCl done
+[NLP] Firewall done
+[NLP] LbSessionGet done
+nh update - 172.17.0.1:root (true)
+rt add - 172.17.0.1/32:root exists
+added fdb ent, {[2 66 236 232 239 158] 3806}
+neigh added - 172.17.0.1:root (2)
+[NLP] NH 172.17.0.1 mac [2 66 236 232 239 158] dev eth0 added
+2022-12-22T07:22:13Z [ADDROUTE] 20.20.20.1/32 via 0.0.0.0 aspath [] attrs [{Origin: i} {LocalPref: 101}]
+[API] HA POST API called. url : /netlox/v1/config/cistate
+[API] Instance default New HA State : STOP
+[HA] Instance default Current State STOP Updated State: STOP
+[GoBGP] connected BGP rules ip 20.20.20.1 is valied(true)Advertised Route [OK]: 20.20.20.1/32
+[BGP] HA state updated : 4
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+[API] HA POST API called. url : /netlox/v1/config/cistate
+[API] Instance default New HA State : STOP
+[HA] Instance default Current State STOP Updated State: STOP
+[GoBGP] connected BGP rules ip 20.20.20.1 is valied(true)Advertised Route [OK]: 20.20.20.1/32
+[BGP] HA state updated : 4
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+[NLP] ADD Device ellb1r1 mac([86 198 153 172 235 158]) attrs(&{4 1500 1000 ellb1r1 56:c6:99:ac:eb:9e broadcast|multicast 4098 0 0 <nil>  0xc0051de000 0 0xc0000381b0 ether <nil> down -1 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - vlan3808 isPvid false
+port added - vlan3808:9
+vlan 3808 bd created
+port added - ellb1r1:8
+[NLP] Port ellb1r1, [86 198 153 172 235 158], false, 1500 add [OK]
+[NLP] Applying Config for ellb1r1 
+ip link set ellb1r1 up
+
+ip link set dev ellb1r1 mtu 9000
+
+ip link add vlan11 type bridge 
+
+ip link set vlan11 up
+
+ip link set ellb1r1 down
+
+ip link set ellb1r1 master vlan11
+
+ip link set ellb1r1 up
+
+Configuration applied for - ellb1r1
+
+[NLP] Applied Config for ellb1r1 
+[NLP] ADD Device ellb1r1 mac([86 198 153 172 235 158]) attrs(&{4 9000 1000 ellb1r1 56:c6:99:ac:eb:9e broadcast|multicast 4098 4 0 <nil>  0xc0051de180 0 0xc0000381e0 ether <nil> down 1 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - ellb1r1 exists
+[NLP] Port ellb1r1, [86 198 153 172 235 158], false, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 false true false} 
+[NLP] ADD Device ellb1r1 mac([86 198 153 172 235 158]) attrs(&{4 9000 1000 ellb1r1 56:c6:99:ac:eb:9e up|broadcast|multicast 69699 4 0 <nil>  0xc0051de300 0 0xc000038210 ether <nil> unknown 1 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - ellb1r1 exists
+[NLP] Port ellb1r1, [86 198 153 172 235 158], true, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 true true false} 
+[NLP] ADD Device vlan11 mac([178 223 231 29 24 47]) attrs(&{5 1500 1000 vlan11 b2:df:e7:1d:18:2f broadcast|multicast 4098 0 0 <nil>  0xc0051de480 0 0xc000038258 ether <nil> down -1 1 1 65536 65535 [] 0 <nil>}) info recvd
+port add - vlan11 isPvid false
+port added - vlan11:10
+vlan 11 bd created
+[NLP] Bridge vlan11, 11, [178 223 231 29 24 47], false, 1500 ADD [OK]
+port add - vlan11 exists
+[NLP] Port vlan11, [178 223 231 29 24 47], false, 1500 add failed
+port exists
+[NLP] Applying Config for vlan11 
+ip link set vlan11 up
+
+ip addr add 11.11.11.1/24 dev vlan11
+
+ip addr add 11.11.11.11/32 dev vlan11
+
+ip route replace 1.1.1.0/24 via 11.11.11.254 proto static
+
+Configuration applied for - vlan11
+
+[NLP] Applied Config for vlan11 
+[NLP] ADD Device vlan11 mac([178 223 231 29 24 47]) attrs(&{5 1500 1000 vlan11 b2:df:e7:1d:18:2f up|broadcast|multicast 69699 0 0 <nil>  0xc0051de600 0 0xc0000382b8 ether <nil> unknown -1 1 1 65536 65535 [] 0 <nil>}) info recvd
+[NLP] Bridge vlan11, 11, [178 223 231 29 24 47], true, 1500 ADD failed
+Vlan already created
+[NLP] ConfigMap for vlan11 : {vlan11 0 true true false} 
+port add - vlan11 exists
+[NLP] Port vlan11, [178 223 231 29 24 47], true, 1500 add failed
+port exists
+[NLP] ConfigMap for vlan11 : {vlan11 0 true true false} 
+[NLP] ADD Device ellb1r1 mac([86 198 153 172 235 158]) attrs(&{4 9000 1000 ellb1r1 56:c6:99:ac:eb:9e broadcast|multicast 4098 4 0 <nil>  0xc0051de780 0 0xc0000382e8 ether <nil> down 1 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - ellb1r1 exists
+[NLP] Port ellb1r1, [86 198 153 172 235 158], false, 9000 add failed
+port exists
+[NLP] Route Config for ellb1r1 will be tried
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 false true true} 
+[NLP] ADD Device ellb1r1 mac([86 198 153 172 235 158]) attrs(&{4 9000 1000 ellb1r1 56:c6:99:ac:eb:9e broadcast|multicast 4098 4 5 <nil>  0xc0051de900 0 0xc000038318 ether <nil> down 1 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - ellb1r1 exists
+[NLP] Port ellb1r1, [86 198 153 172 235 158], false, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 false true true} 
+port add - ellb1r1 vinfo updated
+[NLP] Vlan(11) Port ellb1r1, [86 198 153 172 235 158], false, 9000 ADD [OK]
+[NLP] ADD Device ellb1r1 mac([86 198 153 172 235 158]) attrs(&{4 9000 1000 ellb1r1 56:c6:99:ac:eb:9e broadcast|multicast 4098 4 5 <nil>  0xc0051dea80 0 0xc000038348 ether <nil> down 1 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - ellb1r1 exists
+[NLP] Port ellb1r1, [86 198 153 172 235 158], false, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 false true true} 
+[NLP] Vlan(11) Port ellb1r1, [86 198 153 172 235 158], false, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 false true true} 
+[NLP] ADD Device vlan11 mac([178 223 231 29 24 47]) attrs(&{5 1500 1000 vlan11 b2:df:e7:1d:18:2f up|broadcast|multicast 69699 0 0 <nil>  0xc0051dec00 0 0xc000038378 ether <nil> unknown -1 1 1 65536 65535 [] 0 <nil>}) info recvd
+[NLP] Bridge vlan11, 11, [178 223 231 29 24 47], true, 1500 ADD failed
+Vlan already created
+[NLP] ConfigMap for vlan11 : {vlan11 0 true true false} 
+port add - vlan11 exists
+[NLP] Port vlan11, [178 223 231 29 24 47], true, 1500 add failed
+port exists
+[NLP] ConfigMap for vlan11 : {vlan11 0 true true false} 
+[NLP] ADD Device ellb1r1 mac([86 198 153 172 235 158]) attrs(&{4 9000 -1 ellb1r1 56:c6:99:ac:eb:9e broadcast|multicast 4098 0 5 <nil>  <nil> 0 <nil> ether Learning Flood down -1 0 0 0 0 [] 0 <nil>}) info recvd
+port add - ellb1r1 exists
+[NLP] Port ellb1r1, [86 198 153 172 235 158], false, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 false true true} 
+[NLP] Vlan(11) Port ellb1r1, [86 198 153 172 235 158], false, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 false true true} 
+[NLP] ADD Device vlan11 mac([86 198 153 172 235 158]) attrs(&{5 1500 1000 vlan11 56:c6:99:ac:eb:9e up|broadcast|multicast 4163 0 0 <nil>  0xc0051ded80 0 0xc0000383c0 ether <nil> unknown -1 1 1 65536 65535 [] 0 <nil>}) info recvd
+[NLP] Bridge vlan11, 11, [86 198 153 172 235 158], true, 1500 ADD failed
+Vlan already created
+[NLP] ConfigMap for vlan11 : {vlan11 0 true true false} 
+port add - vlan11 exists
+[NLP] Port vlan11, [86 198 153 172 235 158], true, 1500 add failed
+port exists
+[NLP] ConfigMap for vlan11 : {vlan11 0 true true false} 
+[NLP] ADD Device vlan11 mac([86 198 153 172 235 158]) attrs(&{5 9000 1000 vlan11 56:c6:99:ac:eb:9e up|broadcast|multicast 4163 0 0 <nil>  0xc0051def00 0 0xc0000383f0 ether <nil> unknown -1 1 1 65536 65535 [] 0 <nil>}) info recvd
+[NLP] Bridge vlan11, 11, [86 198 153 172 235 158], true, 9000 ADD failed
+Vlan already created
+[NLP] ConfigMap for vlan11 : {vlan11 0 true true false} 
+port add - vlan11 exists
+[NLP] Port vlan11, [86 198 153 172 235 158], true, 9000 add failed
+port exists
+[NLP] ConfigMap for vlan11 : {vlan11 0 true true false} 
+[NLP] ADD Device ellb1r1 mac([86 198 153 172 235 158]) attrs(&{4 9000 1000 ellb1r1 56:c6:99:ac:eb:9e up|broadcast|multicast 69699 4 5 <nil>  0xc0051df080 0 0xc000038420 ether <nil> unknown 1 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - ellb1r1 exists
+[NLP] Port ellb1r1, [86 198 153 172 235 158], true, 9000 add failed
+port exists
+[NLP] Applying Route Config for ellb1r1 
+Route Configuration applied for - ellb1r1
+
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 true true false} 
+[NLP] Vlan(11) Port ellb1r1, [86 198 153 172 235 158], true, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 true true false} 
+[NLP] ADD Device ellb1r1 mac([86 198 153 172 235 158]) attrs(&{4 9000 -1 ellb1r1 56:c6:99:ac:eb:9e up|broadcast|multicast 69699 0 5 <nil>  <nil> 0 <nil> ether Learning Flood unknown -1 0 0 0 0 [] 0 <nil>}) info recvd
+port add - ellb1r1 exists
+[NLP] Port ellb1r1, [86 198 153 172 235 158], true, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 true true false} 
+[NLP] Vlan(11) Port ellb1r1, [86 198 153 172 235 158], true, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 true true false} 
+[NLP] ADD Device ellb1r1 mac([86 198 153 172 235 158]) attrs(&{4 9000 -1 ellb1r1 56:c6:99:ac:eb:9e up|broadcast|multicast 69699 0 5 <nil>  <nil> 0 <nil> ether Learning Flood unknown -1 0 0 0 0 [] 0 <nil>}) info recvd
+port add - ellb1r1 exists
+[NLP] Port ellb1r1, [86 198 153 172 235 158], true, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 true true false} 
+[NLP] Vlan(11) Port ellb1r1, [86 198 153 172 235 158], true, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 true true false} 
+[NLP] ADD Device ellb1r2 mac([30 130 15 110 79 175]) attrs(&{6 1500 1000 ellb1r2 1e:82:0f:6e:4f:af broadcast|multicast 4098 3 0 <nil>  0xc0051df200 0 0xc000038480 ether <nil> down 2 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - vlan3811 isPvid false
+port added - vlan3811:12
+vlan 3811 bd created
+port added - ellb1r2:11
+[NLP] Port ellb1r2, [30 130 15 110 79 175], false, 1500 add [OK]
+[NLP] Applying Config for ellb1r2 
+ip link set ellb1r2 up
+
+ip link set dev ellb1r2 mtu 9000
+
+ip link add vlan10 type bridge 
+
+ip link set vlan10 up
+
+ip link set ellb1r2 down
+
+ip link set ellb1r2 master vlan10
+
+ip link set ellb1r2 up
+
+Configuration applied for - ellb1r2
+
+[NLP] Applied Config for ellb1r2 
+[NLP] ADD Device ellb1r2 mac([30 130 15 110 79 175]) attrs(&{6 9000 1000 ellb1r2 1e:82:0f:6e:4f:af broadcast|multicast 4098 3 0 <nil>  0xc0051df380 0 0xc0000384e0 ether <nil> down 2 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - ellb1r2 exists
+[NLP] Port ellb1r2, [30 130 15 110 79 175], false, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 false true false} 
+[NLP] ADD Device ellb1r2 mac([30 130 15 110 79 175]) attrs(&{6 9000 1000 ellb1r2 1e:82:0f:6e:4f:af up|broadcast|multicast 4163 3 0 <nil>  0xc0051df500 0 0xc000038510 ether <nil> unknown 2 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - ellb1r2 exists
+[NLP] Port ellb1r2, [30 130 15 110 79 175], true, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 true true false} 
+[NLP] ADD Device ellb1r2 mac([30 130 15 110 79 175]) attrs(&{6 9000 1000 ellb1r2 1e:82:0f:6e:4f:af up|broadcast|multicast 69699 3 0 <nil>  0xc0051df680 0 0xc000038540 ether <nil> up 2 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - ellb1r2 exists
+[NLP] Port ellb1r2, [30 130 15 110 79 175], true, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 true true false} 
+[NLP] ADD Device vlan10 mac([146 162 176 134 80 83]) attrs(&{7 1500 1000 vlan10 92:a2:b0:86:50:53 broadcast|multicast 4098 0 0 <nil>  0xc0051df800 0 0xc000038570 ether <nil> down -1 1 1 65536 65535 [] 0 <nil>}) info recvd
+port add - vlan10 isPvid false
+port added - vlan10:13
+vlan 10 bd created
+[NLP] Bridge vlan10, 10, [146 162 176 134 80 83], false, 1500 ADD [OK]
+port add - vlan10 exists
+[NLP] Port vlan10, [146 162 176 134 80 83], false, 1500 add failed
+port exists
+[NLP] Applying Config for vlan10 
+ip link set vlan10 up
+
+ip addr add 10.10.10.1/24 dev vlan10
+
+Configuration applied for - vlan10
+
+[NLP] Applied Config for vlan10 
+[NLP] ADD Device vlan10 mac([146 162 176 134 80 83]) attrs(&{7 1500 1000 vlan10 92:a2:b0:86:50:53 up|broadcast|multicast 69699 0 0 <nil>  0xc0051df980 0 0xc0000385a0 ether <nil> unknown -1 1 1 65536 65535 [] 0 <nil>}) info recvd
+[NLP] Bridge vlan10, 10, [146 162 176 134 80 83], true, 1500 ADD failed
+Vlan already created
+[NLP] ConfigMap for vlan10 : {vlan10 0 true true false} 
+port add - vlan10 exists
+[NLP] Port vlan10, [146 162 176 134 80 83], true, 1500 add failed
+port exists
+[NLP] ConfigMap for vlan10 : {vlan10 0 true true false} 
+[NLP] ADD Device ellb1r2 mac([30 130 15 110 79 175]) attrs(&{6 9000 1000 ellb1r2 1e:82:0f:6e:4f:af broadcast|multicast 4098 3 0 <nil>  0xc0051dfb00 0 0xc0000385d0 ether <nil> down 2 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - ellb1r2 exists
+[NLP] Port ellb1r2, [30 130 15 110 79 175], false, 9000 add failed
+port exists
+[NLP] Route Config for ellb1r2 will be tried
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 false true true} 
+[NLP] ADD Device ellb1r2 mac([30 130 15 110 79 175]) attrs(&{6 9000 1000 ellb1r2 1e:82:0f:6e:4f:af broadcast|multicast 4098 3 7 <nil>  0xc0051dfc80 0 0xc000038600 ether <nil> down 2 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - ellb1r2 exists
+[NLP] Port ellb1r2, [30 130 15 110 79 175], false, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 false true true} 
+port add - ellb1r2 vinfo updated
+[NLP] Vlan(10) Port ellb1r2, [30 130 15 110 79 175], false, 9000 ADD [OK]
+[NLP] ADD Device ellb1r2 mac([30 130 15 110 79 175]) attrs(&{6 9000 1000 ellb1r2 1e:82:0f:6e:4f:af broadcast|multicast 4098 3 7 <nil>  0xc0051dfe00 0 0xc000038630 ether <nil> down 2 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - ellb1r2 exists
+[NLP] Port ellb1r2, [30 130 15 110 79 175], false, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 false true true} 
+[NLP] Vlan(10) Port ellb1r2, [30 130 15 110 79 175], false, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 false true true} 
+[NLP] ADD Device vlan10 mac([146 162 176 134 80 83]) attrs(&{7 1500 1000 vlan10 92:a2:b0:86:50:53 up|broadcast|multicast 69699 0 0 <nil>  0xc0051f6000 0 0xc000038660 ether <nil> unknown -1 1 1 65536 65535 [] 0 <nil>}) info recvd
+[NLP] Bridge vlan10, 10, [146 162 176 134 80 83], true, 1500 ADD failed
+Vlan already created
+[NLP] ConfigMap for vlan10 : {vlan10 0 true true false} 
+port add - vlan10 exists
+[NLP] Port vlan10, [146 162 176 134 80 83], true, 1500 add failed
+port exists
+[NLP] ConfigMap for vlan10 : {vlan10 0 true true false} 
+[NLP] ADD Device ellb1r2 mac([30 130 15 110 79 175]) attrs(&{6 9000 -1 ellb1r2 1e:82:0f:6e:4f:af broadcast|multicast 4098 3 7 <nil>  <nil> 0 <nil> ether Learning Flood down -1 0 0 0 0 [] 0 <nil>}) info recvd
+port add - ellb1r2 exists
+[NLP] Port ellb1r2, [30 130 15 110 79 175], false, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 false true true} 
+[NLP] Vlan(10) Port ellb1r2, [30 130 15 110 79 175], false, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 false true true} 
+[NLP] ADD Device vlan10 mac([30 130 15 110 79 175]) attrs(&{7 1500 1000 vlan10 1e:82:0f:6e:4f:af up|broadcast|multicast 4163 0 0 <nil>  0xc0051f6180 0 0xc0000386a8 ether <nil> unknown -1 1 1 65536 65535 [] 0 <nil>}) info recvd
+[NLP] Bridge vlan10, 10, [30 130 15 110 79 175], true, 1500 ADD failed
+Vlan already created
+[NLP] ConfigMap for vlan10 : {vlan10 0 true true false} 
+port add - vlan10 exists
+[NLP] Port vlan10, [30 130 15 110 79 175], true, 1500 add failed
+port exists
+[NLP] ConfigMap for vlan10 : {vlan10 0 true true false} 
+[NLP] ADD Device vlan10 mac([30 130 15 110 79 175]) attrs(&{7 9000 1000 vlan10 1e:82:0f:6e:4f:af up|broadcast|multicast 4163 0 0 <nil>  0xc0051f6300 0 0xc0000386d8 ether <nil> unknown -1 1 1 65536 65535 [] 0 <nil>}) info recvd
+[NLP] Bridge vlan10, 10, [30 130 15 110 79 175], true, 9000 ADD failed
+Vlan already created
+[NLP] ConfigMap for vlan10 : {vlan10 0 true true false} 
+port add - vlan10 exists
+[NLP] Port vlan10, [30 130 15 110 79 175], true, 9000 add failed
+port exists
+[NLP] ConfigMap for vlan10 : {vlan10 0 true true false} 
+[NLP] ADD Device ellb1r2 mac([30 130 15 110 79 175]) attrs(&{6 9000 1000 ellb1r2 1e:82:0f:6e:4f:af up|broadcast|multicast 69699 3 7 <nil>  0xc0051f6480 0 0xc000038708 ether <nil> up 2 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - ellb1r2 exists
+[NLP] Port ellb1r2, [30 130 15 110 79 175], true, 9000 add failed
+port exists
+[NLP] Applying Route Config for ellb1r2 
+Route Configuration applied for - ellb1r2
+
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 true true false} 
+[NLP] Vlan(10) Port ellb1r2, [30 130 15 110 79 175], true, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 true true false} 
+[NLP] ADD Device ellb1r2 mac([30 130 15 110 79 175]) attrs(&{6 9000 -1 ellb1r2 1e:82:0f:6e:4f:af up|broadcast|multicast 69699 3 7 <nil>  <nil> 0 <nil> ether Learning Flood up -1 0 0 0 0 [] 0 <nil>}) info recvd
+port add - ellb1r2 exists
+[NLP] Port ellb1r2, [30 130 15 110 79 175], true, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 true true false} 
+[NLP] Vlan(10) Port ellb1r2, [30 130 15 110 79 175], true, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 true true false} 
+[NLP] ADD Device ellb1r2 mac([30 130 15 110 79 175]) attrs(&{6 9000 -1 ellb1r2 1e:82:0f:6e:4f:af up|broadcast|multicast 69699 3 7 <nil>  <nil> 0 <nil> ether Learning Flood up -1 0 0 0 0 [] 0 <nil>}) info recvd
+port add - ellb1r2 exists
+[NLP] Port ellb1r2, [30 130 15 110 79 175], true, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 true true false} 
+[NLP] Vlan(10) Port ellb1r2, [30 130 15 110 79 175], true, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 true true false} 
+[NLP] ADD Device ellb1r2 mac([30 130 15 110 79 175]) attrs(&{6 9000 -1 ellb1r2 1e:82:0f:6e:4f:af up|broadcast|multicast 69699 3 7 <nil>  <nil> 0 <nil> ether Learning Flood up -1 0 0 0 0 [] 0 <nil>}) info recvd
+port add - ellb1r2 exists
+[NLP] Port ellb1r2, [30 130 15 110 79 175], true, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 true true false} 
+[NLP] Vlan(10) Port ellb1r2, [30 130 15 110 79 175], true, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 true true false} 
+[NLP] ADD Device ellb1r2 mac([30 130 15 110 79 175]) attrs(&{6 9000 1000 ellb1r2 1e:82:0f:6e:4f:af up|broadcast|multicast 69699 3 7 <nil>  0xc0051f6600 0 0xc000038780 ether <nil> up 2 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - ellb1r2 exists
+[NLP] Port ellb1r2, [30 130 15 110 79 175], true, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 true true false} 
+[NLP] Vlan(10) Port ellb1r2, [30 130 15 110 79 175], true, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 true true false} 
+rt added - 11.11.11.0/24:root
+[NLP] Address 11.11.11.1/24 Port vlan11 added
+rt added - 11.11.11.11/32:root
+ifa added 11.11.11.11:vlan11
+[NLP] Address 11.11.11.11/32 Port vlan11 added
+rt added - 10.10.10.0/24:root
+[NLP] Address 10.10.10.1/24 Port vlan10 added
+rt added - 11.11.11.1/32:root
+[NLP] RT  11.11.11.1/32 added
+rt add - 11.11.11.0/24:root exists
+[NLP] RT  11.11.11.0/24 add failed-rt exists
+rt added - 11.11.11.255/32:root
+[NLP] RT  11.11.11.255/32 added
+rt add - 11.11.11.11/32:root exists
+[NLP] RT  11.11.11.11/32 add failed-rt exists
+neigh rtpair - 11.11.11.254/32->11.11.11.254
+rt added - 11.11.11.254/32:root
+neigh added - 11.11.11.254:root (3)
+neigh rtpair - 1.1.1.0/24->11.11.11.254
+rt added - 1.1.1.0/24:root
+[NLP] RT  1.1.1.0/24 via 11.11.11.254 added
+rt added - 10.10.10.1/32:root
+[NLP] RT  10.10.10.1/32 added
+rt add - 10.10.10.0/24:root exists
+[NLP] RT  10.10.10.0/24 add failed-rt exists
+rt added - 10.10.10.255/32:root
+[NLP] RT  10.10.10.255/32 added
+NR 2 PSEC tc_packet_hook0 /opt/loxilb/llb_ebpf_main.o
+ntc qdisc add dev ellb1r1 clsact 2>&1 >/dev/null
+AUTOLOAD: sec tc_packet_hook1 prog tc_packet_func
+AUTOLOAD: sec tc_packet_hook2 prog tc_packet_func_slow
+AUTOLOAD: sec tc_packet_hook3 prog tc_packet_func_fw
+AUTOLOAD: sec tc_packet_hook4 prog tc_csum_func1
+AUTOLOAD: sec tc_packet_hook5 prog tc_csum_func2
+AUTOLOAD: sec tc_packet_hook6 prog tc_slow_unp_func
+ntc filter add dev ellb1r1 ingress bpf da obj /opt/loxilb/llb_ebpf_main.o sec tc_packet_hook0 2>&1
+llb_link_prop_add: IF-ellb1r1 added idx 3 type 2
+ebpf intfmap added - 4 vlan 0 -> 8
+ebpf txintfmap added - 8 -> 4
+ebpf intfmap added - 4 vlan 0 -> 8
+ebpf txintfmap added - 8 -> 4
+NR 3 PSEC tc_packet_hook0 /opt/loxilb/llb_ebpf_main.o
+ntc qdisc add dev ellb1r2 clsact 2>&1 >/dev/null
+AUTOLOAD: sec tc_packet_hook1 prog tc_packet_func
+AUTOLOAD: sec tc_packet_hook2 prog tc_packet_func_slow
+AUTOLOAD: sec tc_packet_hook3 prog tc_packet_func_fw
+AUTOLOAD: sec tc_packet_hook4 prog tc_csum_func1
+AUTOLOAD: sec tc_packet_hook5 prog tc_csum_func2
+AUTOLOAD: sec tc_packet_hook6 prog tc_slow_unp_func
+ntc filter add dev ellb1r2 ingress bpf da obj /opt/loxilb/llb_ebpf_main.o sec tc_packet_hook0 2>&1
+llb_link_prop_add: IF-ellb1r2 added idx 4 type 2
+ebpf intfmap added - 6 vlan 0 -> 11
+ebpf txintfmap added - 11 -> 6
+ebpf intfmap added - 6 vlan 0 -> 11
+ebpf txintfmap added - 11 -> 6
+[NLP] ADD Device ellb1r1 mac([86 198 153 172 235 158]) attrs(&{4 9000 -1 ellb1r1 56:c6:99:ac:eb:9e up|broadcast|multicast 69699 0 5 <nil>  <nil> 0 <nil> ether Learning Flood up -1 0 0 0 0 [] 0 <nil>}) info recvd
+port add - ellb1r1 exists
+[NLP] Port ellb1r1, [86 198 153 172 235 158], true, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 true true false} 
+[NLP] Vlan(11) Port ellb1r1, [86 198 153 172 235 158], true, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 true true false} 
+[NLP] ADD Device ellb1r1 mac([86 198 153 172 235 158]) attrs(&{4 9000 1000 ellb1r1 56:c6:99:ac:eb:9e up|broadcast|multicast 69699 4 5 <nil>  0xc000429380 0 0xc004202bd0 ether <nil> up 1 40 40 65536 65535 [] 0 <nil>}) info recvd
+port add - ellb1r1 exists
+[NLP] Port ellb1r1, [86 198 153 172 235 158], true, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 true true false} 
+[NLP] Vlan(11) Port ellb1r1, [86 198 153 172 235 158], true, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 true true false} 
+[NLP] ADD Device vlan11 mac([86 198 153 172 235 158]) attrs(&{5 9000 1000 vlan11 56:c6:99:ac:eb:9e up|broadcast|multicast 69699 0 0 <nil>  0xc000429500 0 0xc004202c00 ether <nil> up -1 1 1 65536 65535 [] 0 <nil>}) info recvd
+[NLP] Bridge vlan11, 11, [86 198 153 172 235 158], true, 9000 ADD failed
+Vlan already created
+[NLP] ConfigMap for vlan11 : {vlan11 0 true true false} 
+port add - vlan11 exists
+[NLP] Port vlan11, [86 198 153 172 235 158], true, 9000 add failed
+port exists
+[NLP] ConfigMap for vlan11 : {vlan11 0 true true false} 
+[NLP] ADD Device vlan10 mac([30 130 15 110 79 175]) attrs(&{7 9000 1000 vlan10 1e:82:0f:6e:4f:af up|broadcast|multicast 69699 0 0 <nil>  0xc000429680 0 0xc004202c30 ether <nil> up -1 1 1 65536 65535 [] 0 <nil>}) info recvd
+[NLP] Bridge vlan10, 10, [30 130 15 110 79 175], true, 9000 ADD failed
+Vlan already created
+[NLP] ConfigMap for vlan10 : {vlan10 0 true true false} 
+port add - vlan10 exists
+[NLP] Port vlan10, [30 130 15 110 79 175], true, 9000 add failed
+port exists
+[NLP] ConfigMap for vlan10 : {vlan10 0 true true false} 
+added fdb ent, {[66 31 148 56 125 103] 11}
+[NLP] L2fdb [66 31 148 56 125 103] brId 11 dst 0.0.0.0 dev ellb1r1 added
+added fdb ent, {[174 42 64 77 118 70] 10}
+[NLP] L2fdb [174 42 64 77 118 70] brId 10 dst 0.0.0.0 dev ellb1r2 added
+added fdb ent, {[22 149 180 20 249 127] 10}
+[NLP] L2fdb [22 149 180 20 249 127] brId 10 dst 0.0.0.0 dev ellb1r2 added
+added fdb ent, {[166 83 19 36 208 174] 10}
+[NLP] L2fdb [166 83 19 36 208 174] brId 10 dst 0.0.0.0 dev ellb1r2 added
+added fdb ent, {[118 241 19 15 24 54] 10}
+[NLP] L2fdb [118 241 19 15 24 54] brId 10 dst 0.0.0.0 dev ellb1r2 added
+neigh rtpair - 10.10.10.3/32->10.10.10.3
+rt added - 10.10.10.3/32:root
+neigh added - 10.10.10.3:root (4)
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+neigh rtpair - 10.10.10.5/32->10.10.10.5
+rt added - 10.10.10.5/32:root
+neigh added - 10.10.10.5:root (5)
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+neigh rtpair - 10.10.10.4/32->10.10.10.4
+rt added - 10.10.10.4/32:root
+neigh added - 10.10.10.4:root (6)
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+added fdb ent, {[106 241 74 68 40 252] 10}
+[NLP] L2fdb [106 241 74 68 40 252] brId 10 dst 0.0.0.0 dev ellb1r2 added
+added fdb ent, {[30 239 145 103 32 247] 11}
+[NLP] L2fdb [30 239 145 103 32 247] brId 11 dst 0.0.0.0 dev ellb1r1 added
+added fdb ent, {[2 244 130 112 56 243] 10}
+[NLP] L2fdb [2 244 130 112 56 243] brId 10 dst 0.0.0.0 dev ellb1r2 added
+[API] HA POST API called. url : /netlox/v1/config/cistate
+[API] Instance default New HA State : BACKUP
+[HA] Instance default Current State STOP Updated State: BACKUP
+[GoBGP] connected BGP rules ip 20.20.20.1 is valied(true)Advertised Route [OK]: 20.20.20.1/32
+[BGP] HA state updated : 2
+rt deleted - 11.11.11.11/32:root
+[NLP] Address 11.11.11.11/32 Port vlan11 deleted
+rt delete - 11.11.11.11/32:root not found
+[NLP] RT  11.11.11.11/32 delete failed-no such route
+2022-12-22T07:22:34Z [ADDROUTE] 20.20.20.1/32 via 0.0.0.0 aspath [] attrs [{Origin: i} {LocalPref: 100}]
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+nh update - 11.11.11.254:root (true)
+rt add - 11.11.11.254/32:root exists
+neigh added - 11.11.11.254:root (3)
+[NLP] NH 11.11.11.254 mac [66 31 148 56 125 103] dev vlan11 added
+[API] HA POST API called. url : /netlox/v1/config/cistate
+[API] Instance default New HA State : MASTER
+[HA] Instance default Current State BACKUP Updated State: MASTER
+[GoBGP] connected BGP rules ip 20.20.20.1 is valied(true)Advertised Route [OK]: 20.20.20.1/32
+[BGP] HA state updated : 1
+2022-12-22T07:22:37Z [ADDROUTE] 20.20.20.1/32 via 0.0.0.0 aspath [] attrs [{Origin: i} {LocalPref: 101}]
+rt added - 11.11.11.11/32:root
+ifa added 11.11.11.11:vlan11
+[NLP] Address 11.11.11.11/32 Port vlan11 added
+rt add - 11.11.11.11/32:root exists
+[NLP] RT  11.11.11.11/32 add failed-rt exists
+[NLP] ADD Device ellb1r2 mac([30 130 15 110 79 175]) attrs(&{6 9000 -1 ellb1r2 1e:82:0f:6e:4f:af up|broadcast|multicast 69699 3 7 <nil>  <nil> 0 <nil> ether Learning Flood up -1 0 0 0 0 [] 0 <nil>}) info recvd
+port add - ellb1r2 exists
+[NLP] Port ellb1r2, [30 130 15 110 79 175], true, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 true true false} 
+[NLP] Vlan(10) Port ellb1r2, [30 130 15 110 79 175], true, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r2 : {ellb1r2 0 true true false} 
+[NLP] ADD Device ellb1r1 mac([86 198 153 172 235 158]) attrs(&{4 9000 -1 ellb1r1 56:c6:99:ac:eb:9e up|broadcast|multicast 69699 0 5 <nil>  <nil> 0 <nil> ether Learning Flood up -1 0 0 0 0 [] 0 <nil>}) info recvd
+port add - ellb1r1 exists
+[NLP] Port ellb1r1, [86 198 153 172 235 158], true, 9000 add failed
+port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 true true false} 
+[NLP] Vlan(11) Port ellb1r1, [86 198 153 172 235 158], true, 9000 ADD failed
+vlan untag port exists
+[NLP] ConfigMap for ellb1r1 : {ellb1r1 0 true true false} 
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+##10.10.10.3:10813 -> 10.10.10.1:10813 (1):0 (Aged:0:0:0)
+##10.10.10.4:14520 -> 10.10.10.1:14520 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.4:14520 -> 10.10.10.1:14520 (1)
+##10.10.10.5:31321 -> 10.10.10.1:31321 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:31321 -> 10.10.10.1:31321 (1)
+rdir ct4 not found 10.10.10.3:10813 -> 10.10.10.1:10813 (1)
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+nh add - 172.17.0.1:root exists
+[NLP] NH 172.17.0.1 mac [2 66 236 232 239 158] dev eth0 added
+##10.10.10.3:20807 -> 10.10.10.1:20807 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:20807 -> 10.10.10.1:20807 (1)
+##10.10.10.4:5157 -> 10.10.10.1:5157 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.4:5157 -> 10.10.10.1:5157 (1)
+##10.10.10.5:63029 -> 10.10.10.1:63029 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:63029 -> 10.10.10.1:63029 (1)
+nh add - 11.11.11.254:root exists
+[NLP] NH 11.11.11.254 mac [66 31 148 56 125 103] dev vlan11 added
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+##10.10.10.5:25520 -> 10.10.10.1:25520 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:25520 -> 10.10.10.1:25520 (1)
+##10.10.10.3:10031 -> 10.10.10.1:10031 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:10031 -> 10.10.10.1:10031 (1)
+##10.10.10.4:33453 -> 10.10.10.1:33453 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.4:33453 -> 10.10.10.1:33453 (1)
+[API] Status GET API called. url : /netlox/v1/config/cistate/all
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+##10.10.10.3:36337 -> 10.10.10.1:36337 (1):0 (Aged:0:0:0)
+##10.10.10.4:32136 -> 10.10.10.1:32136 (1):0 (Aged:0:0:0)
+##10.10.10.5:34232 -> 10.10.10.1:34232 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:34232 -> 10.10.10.1:34232 (1)
+rdir ct4 not found 10.10.10.4:32136 -> 10.10.10.1:32136 (1)
+rdir ct4 not found 10.10.10.3:36337 -> 10.10.10.1:36337 (1)
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+##10.10.10.5:847 -> 10.10.10.1:847 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:847 -> 10.10.10.1:847 (1)
+##10.10.10.4:27519 -> 10.10.10.1:27519 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.4:27519 -> 10.10.10.1:27519 (1)
+##10.10.10.3:1662 -> 10.10.10.1:1662 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:1662 -> 10.10.10.1:1662 (1)
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+##10.10.10.4:53629 -> 10.10.10.1:53629 (1):0 (Aged:0:0:0)
+##10.10.10.3:1853 -> 10.10.10.1:1853 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:1853 -> 10.10.10.1:1853 (1)
+rdir ct4 not found 10.10.10.4:53629 -> 10.10.10.1:53629 (1)
+##10.10.10.5:19585 -> 10.10.10.1:19585 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:19585 -> 10.10.10.1:19585 (1)
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+##10.10.10.3:47160 -> 10.10.10.1:47160 (1):0 (Aged:0:0:0)
+##10.10.10.4:16214 -> 10.10.10.1:16214 (1):0 (Aged:0:0:0)
+##10.10.10.5:28877 -> 10.10.10.1:28877 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.4:16214 -> 10.10.10.1:16214 (1)
+rdir ct4 not found 10.10.10.5:28877 -> 10.10.10.1:28877 (1)
+rdir ct4 not found 10.10.10.3:47160 -> 10.10.10.1:47160 (1)
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+##10.10.10.5:3789 -> 10.10.10.1:3789 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:3789 -> 10.10.10.1:3789 (1)
+##10.10.10.3:4700 -> 10.10.10.1:4700 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:4700 -> 10.10.10.1:4700 (1)
+##10.10.10.4:321 -> 10.10.10.1:321 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.4:321 -> 10.10.10.1:321 (1)
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+##10.10.10.3:36045 -> 10.10.10.1:36045 (1):0 (Aged:0:0:0)
+##10.10.10.4:28414 -> 10.10.10.1:28414 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.4:28414 -> 10.10.10.1:28414 (1)
+##10.10.10.5:21119 -> 10.10.10.1:21119 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:21119 -> 10.10.10.1:21119 (1)
+rdir ct4 not found 10.10.10.3:36045 -> 10.10.10.1:36045 (1)
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+##10.10.10.3:58522 -> 10.10.10.1:58522 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:58522 -> 10.10.10.1:58522 (1)
+##10.10.10.5:50532 -> 10.10.10.1:50532 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:50532 -> 10.10.10.1:50532 (1)
+##10.10.10.4:37149 -> 10.10.10.1:37149 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.4:37149 -> 10.10.10.1:37149 (1)
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2022-12-22T07:24:26Z [ADDROUTE] 0.0.0.0/0 via 172.17.0.1 aspath [] attrs [{Origin: ?} {Med: 0} {LocalPref: 100}]
+[GoBGP] ip route add 0.0.0.0/0 via 172.17.0.1[GoBGP] failed to ip route add. err: file exists failed to2022-12-22T07:24:26Z [ADDROUTE] 0.0.0.0/0 via 172.17.0.1 aspath [] attrs [{Origin: ?} {Med: 0} {LocalPref: 100}]
+2022-12-22T07:24:26Z [ADDROUTE] 1.1.1.0/24 via 11.11.11.254 aspath [] attrs [{Origin: ?} {Med: 0} {LocalPref: 100}]
+[GoBGP] ip route add 1.1.1.0/24 via 11.11.11.254[GoBGP] failed to ip route add. err: file exists failed to2022-12-22T07:24:26Z [ADDROUTE] 1.1.1.0/24 via 11.11.11.254 aspath [] attrs [{Origin: ?} {Med: 0} {LocalPref: 100}]
+2022-12-22T07:24:26Z [ADDROUTE] 172.17.0.0/16 via 11.11.11.254 aspath [] attrs [{Origin: ?} {Med: 0} {LocalPref: 100}]
+[GoBGP] ip route add 172.17.0.0/16 via 11.11.11.254[GoBGP] failed to ip route add. err: file exists failed to2022-12-22T07:24:26Z [ADDROUTE] 172.17.0.0/16 via 11.11.11.254 aspath [] attrs [{Origin: ?} {Med: 0} {LocalPref: 100}]
+2022-12-22T07:24:26Z [ADDROUTE] 127.0.0.0/8 via 11.11.11.254 aspath [] attrs [{Origin: ?} {Med: 0} {LocalPref: 100}]
+[GoBGP] ip route add 127.0.0.0/8 via 11.11.11.2542022-12-22T07:24:26Z [ADDROUTE] 11.11.11.0/24 via 11.11.11.254 aspath [] attrs [{Origin: ?} {Med: 0} {LocalPref: 100}]
+[GoBGP] ip route add 11.11.11.0/24 via 11.11.11.254[GoBGP] failed to ip route add. err: file exists failed to2022-12-22T07:24:26Z [ADDROUTE] 11.11.11.0/24 via 11.11.11.254 aspath [] attrs [{Origin: ?} {Med: 0} {LocalPref: 100}]
+rt deleted - 127.0.0.0/8:root
+neigh rtpair - 127.0.0.0/8->11.11.11.254
+rt added - 127.0.0.0/8:root
+[NLP] RT  127.0.0.0/8 via 11.11.11.254 added
+##10.10.10.4:17818 -> 10.10.10.1:17818 (1):0 (Aged:0:0:0)
+##10.10.10.5:38428 -> 10.10.10.1:38428 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:38428 -> 10.10.10.1:38428 (1)
+rdir ct4 not found 10.10.10.4:17818 -> 10.10.10.1:17818 (1)
+##10.10.10.3:16280 -> 10.10.10.1:16280 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:16280 -> 10.10.10.1:16280 (1)
+nh add - 11.11.11.254:root exists
+[NLP] NH 11.11.11.254 mac [66 31 148 56 125 103] dev vlan11 added
+nh add - 11.11.11.254:root exists
+[NLP] NH 11.11.11.254 mac [66 31 148 56 125 103] dev vlan11 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+##10.10.10.3:21324 -> 10.10.10.1:21324 (1):0 (Aged:0:0:0)
+##10.10.10.5:54803 -> 10.10.10.1:54803 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:54803 -> 10.10.10.1:54803 (1)
+##10.10.10.4:34890 -> 10.10.10.1:34890 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.4:34890 -> 10.10.10.1:34890 (1)
+rdir ct4 not found 10.10.10.3:21324 -> 10.10.10.1:21324 (1)
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+neigh rtpair - 10.10.10.254/32->10.10.10.254
+rt added - 10.10.10.254/32:root
+neigh added - 10.10.10.254:root (7)
+[NLP] NH 10.10.10.254 mac [2 244 130 112 56 243] dev vlan10 added
+2022-12-22T07:24:46Z [ADDROUTE] 10.10.10.0/24 via 11.11.11.1 aspath [] attrs [{Origin: ?} {Med: 0} {LocalPref: 100}]
+[GoBGP] ip route add 10.10.10.0/24 via 11.11.11.1[GoBGP] failed to ip route add. err: file exists failed to2022-12-22T07:24:46Z [ADDROUTE] 10.10.10.0/24 via 11.11.11.1 aspath [] attrs [{Origin: ?} {Med: 0} {LocalPref: 100}]
+##10.10.10.4:52069 -> 10.10.10.1:52069 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.4:52069 -> 10.10.10.1:52069 (1)
+##10.10.10.3:38118 -> 10.10.10.1:38118 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:38118 -> 10.10.10.1:38118 (1)
+##10.10.10.5:53490 -> 10.10.10.1:53490 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:53490 -> 10.10.10.1:53490 (1)
+nh update - 10.10.10.3:root (true)
+rt add - 10.10.10.3/32:root exists
+added fdb ent, {[2 66 172 17 0 4] 3806}
+neigh added - 10.10.10.3:root (4)
+[NLP] NH 10.10.10.3 mac [2 66 172 17 0 4] dev eth0 added
+nh update - 10.10.10.4:root (true)
+rt add - 10.10.10.4/32:root exists
+added fdb ent, {[2 66 172 17 0 5] 3806}
+neigh added - 10.10.10.4:root (6)
+[NLP] NH 10.10.10.4 mac [2 66 172 17 0 5] dev eth0 added
+nh update - 10.10.10.5:root (true)
+rt add - 10.10.10.5/32:root exists
+added fdb ent, {[2 66 172 17 0 6] 3806}
+neigh added - 10.10.10.5:root (5)
+[NLP] NH 10.10.10.5 mac [2 66 172 17 0 6] dev eth0 added
+nh update - 10.10.10.3:root (true)
+rt add - 10.10.10.3/32:root exists
+neigh added - 10.10.10.3:root (4)
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+nh add - 11.11.11.254:root exists
+[NLP] NH 11.11.11.254 mac [66 31 148 56 125 103] dev vlan11 added
+nh update - 10.10.10.5:root (true)
+rt add - 10.10.10.5/32:root exists
+neigh added - 10.10.10.5:root (5)
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+nh update - 10.10.10.4:root (true)
+rt add - 10.10.10.4/32:root exists
+neigh added - 10.10.10.4:root (6)
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+##10.10.10.5:44714 -> 10.10.10.1:44714 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:44714 -> 10.10.10.1:44714 (1)
+##10.10.10.3:60123 -> 10.10.10.1:60123 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:60123 -> 10.10.10.1:60123 (1)
+##10.10.10.4:47147 -> 10.10.10.1:47147 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.4:47147 -> 10.10.10.1:47147 (1)
+nh add - 11.11.11.254:root exists
+[NLP] NH 11.11.11.254 mac [66 31 148 56 125 103] dev vlan11 added
+nh add - 11.11.11.254:root exists
+[NLP] NH 11.11.11.254 mac [66 31 148 56 125 103] dev vlan11 added
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+[API] HA POST API called. url : /netlox/v1/config/cistate
+[API] Instance default New HA State : STOP
+[HA] Instance default Current State MASTER Updated State: STOP
+[GoBGP] connected BGP rules ip 20.20.20.1 is valied(true)Advertised Route [OK]: 20.20.20.1/32
+[BGP] HA state updated : 4
+rt deleted - 11.11.11.11/32:root
+[NLP] Address 11.11.11.11/32 Port vlan11 deleted
+rt delete - 11.11.11.11/32:root not found
+[NLP] RT  11.11.11.11/32 delete failed-no such route
+neigh rtpair - 11.11.11.11/32->11.11.11.11
+rt added - 11.11.11.11/32:root
+neigh added - 11.11.11.11:root (8)
+[NLP] NH 11.11.11.11 mac [30 239 145 103 32 247] dev vlan11 added
+[API] HA POST API called. url : /netlox/v1/config/cistate
+[API] Instance default New HA State : BACKUP
+[HA] Instance default Current State STOP Updated State: BACKUP
+[GoBGP] connected BGP rules ip 20.20.20.1 is valied(true)Advertised Route [OK]: 20.20.20.1/32
+[BGP] HA state updated : 2
+2022-12-22T07:25:05Z [ADDROUTE] 20.20.20.1/32 via 0.0.0.0 aspath [] attrs [{Origin: i} {LocalPref: 100}]
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 57 bc 3818 
+[API] Status GET API called. url : /netlox/v1/config/cistate/all
+##10.10.10.4:3684 -> 10.10.10.1:3684 (1):0 (Aged:0:0:0)
+##10.10.10.5:43606 -> 10.10.10.1:43606 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:43606 -> 10.10.10.1:43606 (1)
+rdir ct4 not found 10.10.10.4:3684 -> 10.10.10.1:3684 (1)
+##10.10.10.3:18838 -> 10.10.10.1:18838 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:18838 -> 10.10.10.1:18838 (1)
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 134 bc 8956 
+##10.10.10.5:4148 -> 10.10.10.1:4148 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:4148 -> 10.10.10.1:4148 (1)
+##10.10.10.3:12483 -> 10.10.10.1:12483 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:12483 -> 10.10.10.1:12483 (1)
+##10.10.10.4:29865 -> 10.10.10.1:29865 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.4:29865 -> 10.10.10.1:29865 (1)
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 134 bc 8956 
+##10.10.10.4:41907 -> 10.10.10.1:41907 (1):0 (Aged:0:0:0)
+##10.10.10.3:8099 -> 10.10.10.1:8099 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:8099 -> 10.10.10.1:8099 (1)
+rdir ct4 not found 10.10.10.4:41907 -> 10.10.10.1:41907 (1)
+##10.10.10.5:58796 -> 10.10.10.1:58796 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:58796 -> 10.10.10.1:58796 (1)
+2022-12-22T07:25:31Z [ADDROUTE] 10.10.10.0/24 via 11.11.11.2 aspath [] attrs [{Origin: ?} {Med: 0} {LocalPref: 100}]
+[GoBGP] ip route add 10.10.10.0/24 via 11.11.11.2[GoBGP] failed to ip route add. err: file exists failed to2022-12-22T07:25:31Z [ADDROUTE] 10.10.10.0/24 via 11.11.11.2 aspath [] attrs [{Origin: ?} {Med: 0} {LocalPref: 100}]
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 134 bc 8956 
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+##10.10.10.4:33157 -> 10.10.10.1:33157 (1):0 (Aged:0:0:0)
+##10.10.10.5:46068 -> 10.10.10.1:46068 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:46068 -> 10.10.10.1:46068 (1)
+rdir ct4 not found 10.10.10.4:33157 -> 10.10.10.1:33157 (1)
+##10.10.10.3:48817 -> 10.10.10.1:48817 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:48817 -> 10.10.10.1:48817 (1)
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 134 bc 8956 
+##10.10.10.3:57726 -> 10.10.10.1:57726 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:57726 -> 10.10.10.1:57726 (1)
+##10.10.10.4:40508 -> 10.10.10.1:40508 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.4:40508 -> 10.10.10.1:40508 (1)
+##10.10.10.5:59901 -> 10.10.10.1:59901 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:59901 -> 10.10.10.1:59901 (1)
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 134 bc 8956 
+##10.10.10.4:24826 -> 10.10.10.1:24826 (1):0 (Aged:0:0:0)
+##10.10.10.3:13238 -> 10.10.10.1:13238 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:13238 -> 10.10.10.1:13238 (1)
+rdir ct4 not found 10.10.10.4:24826 -> 10.10.10.1:24826 (1)
+##10.10.10.5:36986 -> 10.10.10.1:36986 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:36986 -> 10.10.10.1:36986 (1)
+nh add - 11.11.11.254:root exists
+[NLP] NH 11.11.11.254 mac [66 31 148 56 125 103] dev vlan11 added
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 134 bc 8956 
+##10.10.10.5:12617 -> 10.10.10.1:12617 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:12617 -> 10.10.10.1:12617 (1)
+##10.10.10.3:25781 -> 10.10.10.1:25781 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:25781 -> 10.10.10.1:25781 (1)
+##10.10.10.4:11091 -> 10.10.10.1:11091 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.4:11091 -> 10.10.10.1:11091 (1)
+nh add - 10.10.10.4:root exists
+[NLP] NH 10.10.10.4 mac [166 83 19 36 208 174] dev vlan10 added
+nh add - 10.10.10.5:root exists
+[NLP] NH 10.10.10.5 mac [118 241 19 15 24 54] dev vlan10 added
+nh add - 10.10.10.3:root exists
+[NLP] NH 10.10.10.3 mac [22 149 180 20 249 127] dev vlan10 added
+1:dst-20.20.20.1/32,proto-132,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 0 bc 0 
+2:dst-20.20.20.1/32,proto-6,dport-2020,,do-fullnat:onearm:eip-10.10.10.3,ep-8080,w-1,alive|eip-10.10.10.4,ep-8080,w-1,alive|eip-10.10.10.5,ep-8080,w-1,alive| pc 134 bc 8956 
+nh add - 11.11.11.254:root exists
+[NLP] NH 11.11.11.254 mac [66 31 148 56 125 103] dev vlan11 added
+nh add - 11.11.11.254:root exists
+[NLP] NH 11.11.11.254 mac [66 31 148 56 125 103] dev vlan11 added
+##10.10.10.5:21184 -> 10.10.10.1:21184 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.5:21184 -> 10.10.10.1:21184 (1)
+##10.10.10.3:16576 -> 10.10.10.1:16576 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.3:16576 -> 10.10.10.1:16576 (1)
+##10.10.10.4:20184 -> 10.10.10.1:20184 (1):0 (Aged:0:0:0)
+rdir ct4 not found 10.10.10.4:20184 -> 10.10.10.1:20184 (1)
