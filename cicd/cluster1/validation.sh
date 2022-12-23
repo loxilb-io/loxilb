@@ -49,7 +49,7 @@ function myfunc() {
     fi
     sleep 1
   done
-
+  nid=0
   for i in {1..4}
   do
   for j in {0..2}

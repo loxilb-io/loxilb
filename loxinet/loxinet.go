@@ -104,18 +104,18 @@ func loxiNetInit() {
 		tk.LogIt(tk.LogError, "root zone not found\n")
 		return
 	}
+	
+	// Initialize goBgp client
+	if opts.Opts.Bgp {
+		mh.bgp = GoBgpInit()
+	}
 
 	// Initialize the nlp subsystem
 	if opts.Opts.NoNlp == false {
 		nlp.NlpRegister(NetAPIInit())
 		nlp.NlpInit()
 	}
-
-	// Initialize goBgp client
-	if opts.Opts.Bgp {
-		mh.bgp = GoBgpInit()
-	}
-
+	
 	// Initialize and spawn the api server subsystem
 	if opts.Opts.NoApi == false {
 		apiserver.RegisterAPIHooks(NetAPIInit())

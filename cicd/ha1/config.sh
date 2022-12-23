@@ -52,14 +52,14 @@ config_docker_host --host1 ep2 --host2 r1 --ptype phy --addr 11.11.11.4/24 --gw 
 config_docker_host --host1 ep3 --host2 r1 --ptype phy --addr 11.11.11.5/24 --gw 11.11.11.11
 
 $hexec r1 ip route add 20.20.20.1/32 via 11.11.11.11
-$hexec llb1 ip route add 1.1.1.0/24 via 11.11.11.254
-$hexec llb2 ip route add 1.1.1.0/24 via 11.11.11.254
+add_route llb1 1.1.1.0/24 11.11.11.254
+add_route llb2 1.1.1.0/24 11.11.11.254
 
 sleep 1
 
 ##Create LB rule
-$dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=11.11.11.3:1,11.11.11.4:1,11.11.11.5:1 --mode=fullnat
-$dexec llb2 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=11.11.11.3:1,11.11.11.4:1,11.11.11.5:1 --mode=fullnat
+create_lb_rule llb1 20.20.20.1 --tcp=2020:8080 --endpoints=11.11.11.3:1,11.11.11.4:1,11.11.11.5:1 --mode=fullnat
+create_lb_rule llb2 20.20.20.1 --tcp=2020:8080 --endpoints=11.11.11.3:1,11.11.11.4:1,11.11.11.5:1 --mode=fullnat
 
 # keepalive will take few seconds to be UP and running with valid states
 sleep 10

@@ -67,15 +67,15 @@ config_docker_host --host1 ep3 --host2 r2 --ptype vlan --id 10 --addr 10.10.10.5
 
 
 ##Pod networks
-$hexec llb1 ip route add 1.1.1.0/24 via 11.11.11.254
-$hexec llb2 ip route add 1.1.1.0/24 via 11.11.11.254
+add_route llb1 1.1.1.0/24 11.11.11.254
+add_route llb2 1.1.1.0/24 11.11.11.254
 
 sleep 1
 ##Create LB rule
-$dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=10.10.10.3:1,10.10.10.4:1,10.10.10.5:1 --mode=onearm --bgp
-$dexec llb2 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=10.10.10.3:1,10.10.10.4:1,10.10.10.5:1 --mode=onearm --bgp
+create_lb_rule llb1 20.20.20.1 --tcp=2020:8080 --endpoints=10.10.10.3:1,10.10.10.4:1,10.10.10.5:1 --mode=onearm --bgp
+create_lb_rule llb2 20.20.20.1 --tcp=2020:8080 --endpoints=10.10.10.3:1,10.10.10.4:1,10.10.10.5:1 --mode=onearm --bgp
 
-$dexec llb1 loxicmd create lb 20.20.20.1 --sctp=2020:8080 --endpoints=10.10.10.3:1,10.10.10.4:1,10.10.10.5:1 --mode=onearm --bgp
-$dexec llb2 loxicmd create lb 20.20.20.1 --sctp=2020:8080 --endpoints=10.10.10.3:1,10.10.10.4:1,10.10.10.5:1 --mode=onearm --bgp
+create_lb_rule llb1 20.20.20.1 --sctp=2020:8080 --endpoints=10.10.10.3:1,10.10.10.4:1,10.10.10.5:1 --mode=onearm --bgp
+create_lb_rule llb2 20.20.20.1 --sctp=2020:8080 --endpoints=10.10.10.3:1,10.10.10.4:1,10.10.10.5:1 --mode=onearm --bgp
 # keepalive will take few seconds to be UP and running with valid states
 sleep 60

@@ -77,13 +77,13 @@ config_docker_host --host1 ep3 --host2 r2 --ptype vlan --id 33 --addr 33.33.33.1
 
 ##Pod networks
 $hexec r1 ip route add 20.20.20.1/32 via 11.11.11.11
-$hexec llb1 ip route add 1.1.1.0/24 via 11.11.11.254
-$hexec llb2 ip route add 1.1.1.0/24 via 11.11.11.254
+add_route llb1 1.1.1.0/24 11.11.11.254
+add_route llb2 1.1.1.0/24 11.11.11.254
 
 sleep 1
 ##Create LB rule
-$dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1 --mode=fullnat --bgp
-$dexec llb2 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1 --mode=fullnat --bgp
+create_lb_rule llb1 20.20.20.1 --tcp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1 --mode=fullnat --bgp
+create_lb_rule llb2 20.20.20.1 --tcp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1 --mode=fullnat --bgp
 
 # keepalive will take few seconds to be UP and running with valid states
 sleep 60
