@@ -45,6 +45,7 @@ jobs:
              cd cicd/sconnect/
              ./config.sh
              ./validation.sh
+             ./rmconfig.sh
              cd -
       - run: |
              cd cicd/tcplb/
