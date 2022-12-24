@@ -46,3 +46,9 @@ jobs:
              ./config.sh
              ./validation.sh
              cd -
+      - run: |
+             cd cicd/tcplb/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
