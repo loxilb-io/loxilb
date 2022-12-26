@@ -17,7 +17,6 @@ package handler
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/loxilb-io/loxilb/api/models"
@@ -39,8 +38,8 @@ func ConfigPostFW(params operations.PostConfigFirewallParams) middleware.Respond
 	Rules.Pref = uint16(params.Attr.RuleArguments.Preference)
 	Rules.Proto = uint8(params.Attr.RuleArguments.Protocol)
 	Rules.SrcIP = params.Attr.RuleArguments.SourceIP
-	Rules.SrcPortMax = uint16(params.Attr.RuleArguments.MinSourcePort)
-	Rules.SrcPortMin = uint16(params.Attr.RuleArguments.MaxSourcePort)
+	Rules.SrcPortMax = uint16(params.Attr.RuleArguments.MaxSourcePort)
+	Rules.SrcPortMin = uint16(params.Attr.RuleArguments.MinSourcePort)
 
 	if Rules.DstIP == "" {
 		Rules.DstIP = "0.0.0.0/0"
@@ -61,9 +60,6 @@ func ConfigPostFW(params operations.PostConfigFirewallParams) middleware.Respond
 	FW.Opts = Opts
 	fmt.Printf("FW: %v\n", FW)
 	_, err := ApiHooks.NetFwRuleAdd(&FW)
-	// if ret != 0 {
-	// 	return &ResultResponse{Result: "fail"}
-	// }
 	if err != nil {
 		return &ResultResponse{Result: err.Error()}
 	}
@@ -82,36 +78,21 @@ func ConfigDeleteFW(params operations.DeleteConfigFirewallParams) middleware.Res
 		Rules.DstIP = *params.DestinationIP
 	}
 	if params.MaxDestinationPort != nil {
-		DstPortMax, err := strconv.Atoi(*params.MaxDestinationPort)
-		if err != nil {
-			return &ResultResponse{Result: err.Error()}
-		}
-		Rules.DstPortMax = uint16(DstPortMax)
+		Rules.DstPortMax = uint16(*params.MaxDestinationPort)
 	}
 
 	if params.MinDestinationPort != nil {
-		DstPortMin, err := strconv.Atoi(*params.MinDestinationPort)
-		if err != nil {
-			return &ResultResponse{Result: err.Error()}
-		}
-		Rules.DstPortMin = uint16(DstPortMin)
+
+		Rules.DstPortMin = uint16(*params.MinDestinationPort)
 	}
 	if params.PortName != nil {
 		Rules.InPort = *params.PortName
 	}
 	if params.Preference != nil {
-		Pref, err := strconv.Atoi(*params.Preference)
-		if err != nil {
-			return &ResultResponse{Result: err.Error()}
-		}
-		Rules.Pref = uint16(Pref)
+		Rules.Pref = uint16(*params.Preference)
 	}
 	if params.Protocol != nil {
-		Proto, err := strconv.Atoi(*params.Protocol)
-		if err != nil {
-			return &ResultResponse{Result: err.Error()}
-		}
-		Rules.Proto = uint8(Proto)
+		Rules.Proto = uint8(*params.Protocol)
 	}
 	if params.SourceIP != nil {
 		Rules.SrcIP = *params.SourceIP
@@ -126,19 +107,11 @@ func ConfigDeleteFW(params operations.DeleteConfigFirewallParams) middleware.Res
 	}
 
 	if params.MinSourcePort != nil {
-		SrcPortMin, err := strconv.Atoi(*params.MinSourcePort)
-		if err != nil {
-			return &ResultResponse{Result: err.Error()}
-		}
-		Rules.SrcPortMin = uint16(SrcPortMin)
+		Rules.SrcPortMin = uint16(*params.MinSourcePort)
 	}
 
 	if params.MaxSourcePort != nil {
-		SrcPortMax, err := strconv.Atoi(*params.MaxSourcePort)
-		if err != nil {
-			return &ResultResponse{Result: err.Error()}
-		}
-		Rules.SrcPortMax = uint16(SrcPortMax)
+		Rules.SrcPortMax = uint16(*params.MaxSourcePort)
 	}
 
 	FW.Rule = Rules
