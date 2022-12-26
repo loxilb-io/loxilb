@@ -36,6 +36,7 @@ package loxinet
 #include "../loxilb-ebpf/kernel/loxilb_libdp.h"
 int bpf_map_get_next_key(int fd, const void *key, void *next_key);
 int bpf_map_lookup_elem(int fd, const void *key, void *value);
+extern void goMapNotiHandler(struct ll_dp_map_notif *);
 #cgo CFLAGS:  -I./../loxilb-ebpf/libbpf/src/ -I./../loxilb-ebpf/common
 #cgo LDFLAGS: -L. -L/lib64 -L./../loxilb-ebpf/kernel -L./../loxilb-ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=/lib64/ -lloxilbdp -lbpf -lelf -lz
 */
@@ -119,6 +120,7 @@ type (
 	mirrTact    C.struct_dp_mirr_tact
 	fw4Ent      C.struct_dp_fwv4_ent
 	portAct     C.struct_dp_rdr_act
+	mapNoti     C.struct_ll_dp_map_notif
 )
 
 // DpEbpfH - context container
@@ -126,6 +128,12 @@ type DpEbpfH struct {
 	ticker *time.Ticker
 	tDone  chan bool
 	tbN    int
+}
+
+//export goMapNotiHandler
+func goMapNotiHandler(m *mapNoti) {
+	fmt.Printf("Go function called\n")
+	fmt.Printf("key len %d\n", m.key_len)
 }
 
 // dpEbpfTicker - this ticker routine runs every DpEbpfLinuxTiVal seconds
