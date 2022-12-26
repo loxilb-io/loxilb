@@ -132,8 +132,26 @@ type DpEbpfH struct {
 
 //export goMapNotiHandler
 func goMapNotiHandler(m *mapNoti) {
+	var tact *C.struct_dp_acl_tact
+	var act *C.struct_dp_ct_dat
+
 	fmt.Printf("Go function called\n")
 	fmt.Printf("key len %d\n", m.key_len)
+	fmt.Printf("val len %d\n", m.val_len)
+
+
+	if m.addop == 0 {
+		return
+	}
+
+	ctKey := (*C.struct_dp_ct_key)(unsafe.Pointer(m.key))
+	tact = (*C.struct_dp_acl_tact)(unsafe.Pointer(m.val))
+
+	act = &tact.ctd
+
+	goCt4Ent := convDPCt2GoObj(ctKey, act)
+
+	fmt.Println(goCt4Ent)
 }
 
 // dpEbpfTicker - this ticker routine runs every DpEbpfLinuxTiVal seconds
