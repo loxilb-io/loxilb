@@ -48,7 +48,7 @@ func fileCreate(fname string) int {
 	return 0
 }
 
-var version string = "0.7.0"
+var version string = "0.7.8"
 var buildInfo string = ""
 
 func main() {
