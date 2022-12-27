@@ -148,15 +148,28 @@ func goMapNotiHandler(m *mapNoti) {
 		return
 	}
 
+	fmt.Printf("goMapNotiHandler %v\n", m.addop)
+
 	act = &tact.ctd
 
 	goCtEnt := convDPCt2GoObj(ctKey, act)
-	goCtEnt.key = C.GoBytes(unsafe.Pointer(m.key), m.key_len)
-	goCtEnt.lTs = time.Now()
+	goCtEnt.PKey = C.GoBytes(unsafe.Pointer(m.key), m.key_len)
+	goCtEnt.LTs = time.Now()
 
-	// No value in delete op
 	if m.addop != 0 {
-		goCtEnt.val = C.GoBytes(unsafe.Pointer(m.val), m.val_len)
+		mh.mtx.Lock()
+		r := mh.zr.Rules.GetNatLbRuleByID(uint32(act.rid))
+		mh.mtx.Unlock()
+
+		if r == nil {
+			return
+		}
+		goCtEnt.ServiceIP = r.tuples.l3Dst.addr.IP
+		goCtEnt.L4ServPort = r.tuples.l4Dst.val
+		goCtEnt.BlockNum = r.tuples.pref
+
+		// No value in delete op
+		goCtEnt.PVal = C.GoBytes(unsafe.Pointer(m.val), m.val_len)
 	}
 
 	// fmt.Println(goCtEnt)
@@ -165,12 +178,13 @@ func goMapNotiHandler(m *mapNoti) {
 
 func dpCTMapNotifierWorker(cti *DpCtInfo) {
 	op := "update"
+
 	mh.dpEbpf.mtx.Lock()
 	defer mh.dpEbpf.mtx.Unlock()
 
 	mapKey := cti.Key()
 
-	if len(cti.val) == 0 {
+	if len(cti.PVal) == 0 {
 		cti = mh.dpEbpf.ctMap[mapKey]
 		if cti != nil {
 			delete(mh.dpEbpf.ctMap, mapKey)
@@ -183,8 +197,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 		mh.dpEbpf.ctMap[cti.Key()] = cti
 	}
 
-	ctStr := cti.String()
-	tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", cti.lTs.Format(time.UnixDate), op, ctStr)
+	tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", cti.LTs.Format(time.UnixDate), op, cti.String())
 }
 
 func dpCTMapChkUpdates() {
@@ -198,48 +211,48 @@ func dpCTMapChkUpdates() {
 
 	for _, cti := range mh.dpEbpf.ctMap {
 		if cti.CState != "est" {
-			if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.key[0]), unsafe.Pointer(&tact)) != 0 {
+			if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
 				continue
 			}
 
 			act = &tact.ctd
-			goCtEnt := convDPCt2GoObj((*C.struct_dp_ct_key)(unsafe.Pointer(&cti.key[0])), act)
-			goCtEnt.lTs = time.Now()
+			goCtEnt := convDPCt2GoObj((*C.struct_dp_ct_key)(unsafe.Pointer(&cti.PKey[0])), act)
+			goCtEnt.LTs = time.Now()
 
 			if goCtEnt.CState != cti.CState ||
 				goCtEnt.CAct != cti.CState {
-				goCtEnt.key = cti.key
-				goCtEnt.val = C.GoBytes(unsafe.Pointer(&tact), C.sizeof_struct_dp_acl_tact)
+				goCtEnt.PKey = cti.PKey
+				goCtEnt.PVal = C.GoBytes(unsafe.Pointer(&tact), C.sizeof_struct_dp_acl_tact)
 				mh.dpEbpf.ctMap[goCtEnt.Key()] = goCtEnt
 				ctStr := goCtEnt.String()
-				tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", goCtEnt.lTs.Format(time.UnixDate), "update", ctStr)
-				cti.nSync = true
-				cti.nTs = time.Now()
+				tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", goCtEnt.LTs.Format(time.UnixDate), "update", ctStr)
+				cti.NSync = true
+				cti.NTs = time.Now()
 			}
 		} else {
 			var b uint64
 			var p uint64
 
-			if len(cti.val) > 0 {
-				ptact := (*C.struct_dp_acl_tact)(unsafe.Pointer(&cti.val[0]))
+			if len(cti.PVal) > 0 {
+				ptact := (*C.struct_dp_acl_tact)(unsafe.Pointer(&cti.PVal[0]))
 				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_ACL_STATS_MAP), C.uint(ptact.ca.cidx), C.int(1),
 					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
 				if ret == 0 {
 					if cti.Packets != p {
 						cti.Bytes = b
 						cti.Packets = p
-						if cti.nSync == false {
-							cti.nSync = true
-							cti.nTs = time.Now()
+						if cti.NSync == false {
+							cti.NSync = true
+							cti.NTs = time.Now()
 						}
 					}
 				}
 			}
 		}
-		if cti.nSync == true &&
-			time.Duration(tc.Sub(cti.nTs).Seconds()) >= time.Duration(30) {
+		if cti.NSync == true &&
+			time.Duration(tc.Sub(cti.NTs).Seconds()) >= time.Duration(30) {
 			tk.LogIt(tk.LogInfo, "[CT] SYNC - %s\n", cti.String())
-			cti.nSync = false
+			cti.NSync = false
 		}
 	}
 }

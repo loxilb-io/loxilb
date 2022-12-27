@@ -282,11 +282,16 @@ type DpCtInfo struct {
 	CAct    string
 	Packets uint64
 	Bytes   uint64
-	key     []byte
-	val     []byte
-	lTs     time.Time
-	nTs     time.Time
-	nSync   bool
+	PKey    []byte
+	PVal    []byte
+	LTs     time.Time
+	NTs     time.Time
+	NSync   bool
+
+	// LB Association Data
+	ServiceIP  net.IP
+	L4ServPort uint16
+	BlockNum   uint16
 }
 
 // UlClDpWorkQ - work queue entry for ul-cl filter related operation
