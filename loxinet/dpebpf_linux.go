@@ -135,146 +135,6 @@ type DpEbpfH struct {
 	ctMap   map[string]*DpCtInfo
 }
 
-//export goMapNotiHandler
-func goMapNotiHandler(m *mapNoti) {
-	var tact *C.struct_dp_acl_tact
-	var act *C.struct_dp_ct_dat
-
-	ctKey := (*C.struct_dp_ct_key)(unsafe.Pointer(m.key))
-	tact = (*C.struct_dp_acl_tact)(unsafe.Pointer(m.val))
-
-	// Only connection oriented protocols
-	if ctKey.l4proto != 6 && ctKey.l4proto != 132 {
-		return
-	}
-
-	fmt.Printf("goMapNotiHandler %v\n", m.addop)
-
-	act = &tact.ctd
-
-	goCtEnt := convDPCt2GoObj(ctKey, act)
-	goCtEnt.PKey = C.GoBytes(unsafe.Pointer(m.key), m.key_len)
-	goCtEnt.LTs = time.Now()
-
-	if m.addop != 0 {
-		mh.mtx.Lock()
-		r := mh.zr.Rules.GetNatLbRuleByID(uint32(act.rid))
-		mh.mtx.Unlock()
-
-		if r == nil {
-			return
-		}
-		goCtEnt.ServiceIP = r.tuples.l3Dst.addr.IP
-		goCtEnt.L4ServPort = r.tuples.l4Dst.val
-		goCtEnt.BlockNum = r.tuples.pref
-
-		// No value in delete op
-		goCtEnt.PVal = C.GoBytes(unsafe.Pointer(m.val), m.val_len)
-	}
-
-	// fmt.Println(goCtEnt)
-	mh.dpEbpf.ToMapCh <- goCtEnt
-}
-
-func dpCTMapNotifierWorker(cti *DpCtInfo) {
-	op := "update"
-
-	mh.dpEbpf.mtx.Lock()
-	defer mh.dpEbpf.mtx.Unlock()
-
-	mapKey := cti.Key()
-
-	if len(cti.PVal) == 0 {
-		cti = mh.dpEbpf.ctMap[mapKey]
-		if cti != nil {
-			delete(mh.dpEbpf.ctMap, mapKey)
-		} else {
-			tk.LogIt(tk.LogInfo, "[CT] %v not found\n", cti)
-			return
-		}
-		op = "delete"
-	} else {
-		mh.dpEbpf.ctMap[cti.Key()] = cti
-	}
-
-	tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", cti.LTs.Format(time.UnixDate), op, cti.String())
-}
-
-func dpCTMapChkUpdates() {
-	mh.dpEbpf.mtx.Lock()
-	defer mh.dpEbpf.mtx.Unlock()
-	var tact C.struct_dp_acl_tact
-	var act *C.struct_dp_ct_dat
-
-	tc := time.Now()
-	fd := C.llb_map2fd(C.LL_DP_ACL_MAP)
-
-	for _, cti := range mh.dpEbpf.ctMap {
-		if cti.CState != "est" {
-			if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
-				continue
-			}
-
-			act = &tact.ctd
-			goCtEnt := convDPCt2GoObj((*C.struct_dp_ct_key)(unsafe.Pointer(&cti.PKey[0])), act)
-			goCtEnt.LTs = time.Now()
-
-			if goCtEnt.CState != cti.CState ||
-				goCtEnt.CAct != cti.CState {
-				goCtEnt.PKey = cti.PKey
-				goCtEnt.PVal = C.GoBytes(unsafe.Pointer(&tact), C.sizeof_struct_dp_acl_tact)
-				mh.dpEbpf.ctMap[goCtEnt.Key()] = goCtEnt
-				ctStr := goCtEnt.String()
-				tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", goCtEnt.LTs.Format(time.UnixDate), "update", ctStr)
-				cti.NSync = true
-				cti.NTs = time.Now()
-			}
-		} else {
-			var b uint64
-			var p uint64
-
-			if len(cti.PVal) > 0 && cti.NSync == false  {
-				ptact := (*C.struct_dp_acl_tact)(unsafe.Pointer(&cti.PVal[0]))
-				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_ACL_STATS_MAP), C.uint(ptact.ca.cidx), C.int(1),
-					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
-				if ret == 0 {
-					if cti.Packets != p {
-						cti.Bytes = b
-						cti.Packets = p
-						cti.NSync = true
-						cti.NTs = time.Now()
-					}
-				}
-			}
-		}
-		if cti.NSync == true &&
-			time.Duration(tc.Sub(cti.NTs).Seconds()) >= time.Duration(30) {
-			tk.LogIt(tk.LogInfo, "[CT] SYNC - %s\n", cti.String())
-			cti.NSync = false
-		}
-	}
-}
-
-// dpMapNotifierWorker - Work on any map notifications
-func dpMapNotifierWorker(f chan int, ch chan interface{}) {
-	for {
-		for n := 0; n < DpWorkQLen; n++ {
-			select {
-			case m := <-ch:
-				switch mq := m.(type) {
-				case *DpCtInfo:
-					dpCTMapNotifierWorker(mq)
-				}
-			case <-f:
-				return
-			default:
-				continue
-			}
-		}
-		time.Sleep(2000 * time.Millisecond)
-	}
-}
-
 // dpEbpfTicker - this ticker routine runs every DpEbpfLinuxTiVal seconds
 func dpEbpfTicker() {
 	tbls := []int{int(C.LL_DP_RTV4_STATS_MAP),
@@ -1538,4 +1398,154 @@ func (e *DpEbpfH) DpFwRuleAdd(w *FwDpWorkQ) int {
 // DpFwRuleDel - routine to work on a ebpf fw delete request
 func (e *DpEbpfH) DpFwRuleDel(w *FwDpWorkQ) int {
 	return e.DpFwRuleMod(w)
+}
+
+//export goMapNotiHandler
+func goMapNotiHandler(m *mapNoti) {
+	var tact *C.struct_dp_acl_tact
+	var act *C.struct_dp_ct_dat
+
+	ctKey := (*C.struct_dp_ct_key)(unsafe.Pointer(m.key))
+	tact = (*C.struct_dp_acl_tact)(unsafe.Pointer(m.val))
+
+	// Only connection oriented protocols
+	if ctKey.l4proto != 6 && ctKey.l4proto != 132 {
+		return
+	}
+
+	fmt.Printf("goMapNotiHandler %v\n", m.addop)
+
+	act = &tact.ctd
+
+	goCtEnt := convDPCt2GoObj(ctKey, act)
+	goCtEnt.PKey = C.GoBytes(unsafe.Pointer(m.key), m.key_len)
+	goCtEnt.LTs = time.Now()
+
+	if m.addop != 0 {
+		mh.mtx.Lock()
+		r := mh.zr.Rules.GetNatLbRuleByID(uint32(act.rid))
+		mh.mtx.Unlock()
+
+		if r == nil {
+			return
+		}
+		goCtEnt.ServiceIP = r.tuples.l3Dst.addr.IP
+		goCtEnt.L4ServPort = r.tuples.l4Dst.val
+		goCtEnt.BlockNum = r.tuples.pref
+
+		// No value in delete op
+		goCtEnt.PVal = C.GoBytes(unsafe.Pointer(m.val), m.val_len)
+	}
+
+	// fmt.Println(goCtEnt)
+	mh.dpEbpf.ToMapCh <- goCtEnt
+}
+
+func dpCTMapNotifierWorker(cti *DpCtInfo) {
+	op := "update"
+
+	mh.dpEbpf.mtx.Lock()
+	defer mh.dpEbpf.mtx.Unlock()
+
+	mapKey := cti.Key()
+
+	if len(cti.PVal) == 0 {
+		cti = mh.dpEbpf.ctMap[mapKey]
+		if cti != nil {
+			delete(mh.dpEbpf.ctMap, mapKey)
+		} else {
+			tk.LogIt(tk.LogInfo, "[CT] %v not found\n", cti)
+			return
+		}
+		op = "delete"
+	} else {
+		mh.dpEbpf.ctMap[cti.Key()] = cti
+	}
+
+	tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", cti.LTs.Format(time.UnixDate), op, cti.String())
+}
+
+func dpCTMapChkUpdates() {
+	mh.dpEbpf.mtx.Lock()
+	defer mh.dpEbpf.mtx.Unlock()
+	var tact C.struct_dp_acl_tact
+	var act *C.struct_dp_ct_dat
+
+	tc := time.Now()
+	fd := C.llb_map2fd(C.LL_DP_ACL_MAP)
+
+	for _, cti := range mh.dpEbpf.ctMap {
+		if cti.CState != "est" {
+			if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
+				continue
+			}
+
+			act = &tact.ctd
+			goCtEnt := convDPCt2GoObj((*C.struct_dp_ct_key)(unsafe.Pointer(&cti.PKey[0])), act)
+			goCtEnt.LTs = time.Now()
+
+			if goCtEnt.CState != cti.CState ||
+				goCtEnt.CAct != cti.CState {
+				goCtEnt.PKey = cti.PKey
+				goCtEnt.PVal = C.GoBytes(unsafe.Pointer(&tact), C.sizeof_struct_dp_acl_tact)
+				mh.dpEbpf.ctMap[goCtEnt.Key()] = goCtEnt
+				ctStr := goCtEnt.String()
+				tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", goCtEnt.LTs.Format(time.UnixDate), "update", ctStr)
+				cti.NSync = true
+				cti.NTs = time.Now()
+			}
+		} else {
+			var b uint64
+			var p uint64
+
+			if len(cti.PVal) > 0 && cti.NSync == false  {
+				ptact := (*C.struct_dp_acl_tact)(unsafe.Pointer(&cti.PVal[0]))
+				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_ACL_STATS_MAP), C.uint(ptact.ca.cidx), C.int(1),
+					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
+				if ret == 0 {
+					if cti.Packets != p {
+						cti.Bytes = b
+						cti.Packets = p
+						cti.NSync = true
+						cti.NTs = time.Now()
+					}
+				}
+			}
+		}
+		if cti.NSync == true &&
+			time.Duration(tc.Sub(cti.NTs).Seconds()) >= time.Duration(30) {
+			tk.LogIt(tk.LogInfo, "[CT] SYNC - %s\n", cti.String())
+			cti.NSync = false
+		}
+	}
+}
+
+// dpMapNotifierWorker - Work on any map notifications
+func dpMapNotifierWorker(f chan int, ch chan interface{}) {
+	for {
+		for n := 0; n < DpWorkQLen; n++ {
+			select {
+			case m := <-ch:
+				switch mq := m.(type) {
+				case *DpCtInfo:
+					dpCTMapNotifierWorker(mq)
+				}
+			case <-f:
+				return
+			default:
+				continue
+			}
+		}
+		time.Sleep(2000 * time.Millisecond)
+	}
+}
+
+// DpCtAdd - routine to work on a ebpf ct add request
+func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
+	return 0
+}
+
+// DpCtDel - routine to work on a ebpf ct delete request
+func (e *DpEbpfH) DpCtDel(w *DpCtInfo) int {
+	return 0
 }

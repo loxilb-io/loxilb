@@ -294,6 +294,10 @@ type DpCtInfo struct {
 	BlockNum   uint16
 }
 
+type DpNSync struct {
+	// For peer to peer RPC
+}
+
 // UlClDpWorkQ - work queue entry for ul-cl filter related operation
 type UlClDpWorkQ struct {
 	Work   DpWorkT
@@ -359,6 +363,31 @@ type DpH struct {
 	FromDpCh chan interface{}
 	ToFinCh  chan int
 	DpHooks  DpHookInterface
+	Peers    []net.IP
+}
+
+// DpBrokerInit - initialize the DP broker subsystem
+func DpBrokerInit(dph DpHookInterface) *DpH {
+	nDp := new(DpH)
+
+	nDp.ToDpCh = make(chan interface{}, DpWorkQLen)
+	nDp.FromDpCh = make(chan interface{}, DpWorkQLen)
+	nDp.ToFinCh = make(chan int)
+	nDp.DpHooks = dph
+
+	go DpWorker(nDp, nDp.ToFinCh, nDp.ToDpCh)
+
+	return nDp
+}
+
+// DpWorkOnCtAdd - Add a CT entry from remote
+func (n *DpNSync)DpWorkOnCtAdd(cti *DpCtInfo, ret *int) error {
+	return nil
+}
+
+// DpWorkOnCtDelete - Delete a CT entry from remote
+func (n *DpNSync)DpWorkOnCtDelete(cti *DpCtInfo, ret *int) error {
+	return nil
 }
 
 // DpWorkOnPort - routine to work on a port work queue request
@@ -531,20 +560,6 @@ func DpWorker(dp *DpH, f chan int, ch chan interface{}) {
 		}
 		time.Sleep(1000 * time.Millisecond)
 	}
-}
-
-// DpBrokerInit - initialize the DP broker subsystem
-func DpBrokerInit(dph DpHookInterface) *DpH {
-	nDp := new(DpH)
-
-	nDp.ToDpCh = make(chan interface{}, DpWorkQLen)
-	nDp.FromDpCh = make(chan interface{}, DpWorkQLen)
-	nDp.ToFinCh = make(chan int)
-	nDp.DpHooks = dph
-
-	go DpWorker(nDp, nDp.ToFinCh, nDp.ToDpCh)
-
-	return nDp
 }
 
 // DpMapGetCt4 - get DP conntrack information as a map
