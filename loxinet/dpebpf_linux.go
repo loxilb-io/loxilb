@@ -233,7 +233,7 @@ func dpCTMapChkUpdates() {
 			var b uint64
 			var p uint64
 
-			if len(cti.PVal) > 0 {
+			if len(cti.PVal) > 0 && cti.NSync == false  {
 				ptact := (*C.struct_dp_acl_tact)(unsafe.Pointer(&cti.PVal[0]))
 				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_ACL_STATS_MAP), C.uint(ptact.ca.cidx), C.int(1),
 					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
@@ -241,10 +241,8 @@ func dpCTMapChkUpdates() {
 					if cti.Packets != p {
 						cti.Bytes = b
 						cti.Packets = p
-						if cti.NSync == false {
-							cti.NSync = true
-							cti.NTs = time.Now()
-						}
+						cti.NSync = true
+						cti.NTs = time.Now()
 					}
 				}
 			}
