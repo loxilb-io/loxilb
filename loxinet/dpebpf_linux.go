@@ -82,6 +82,8 @@ const (
 	EbpfErrMirrDel
 	EbpfErrFwAdd
 	EbpfErrFwDel
+	EbpfErrCtAdd
+	EbpfErrCtDel
 	EbpfErrWqUnk
 )
 
@@ -1432,6 +1434,13 @@ func goMapNotiHandler(m *mapNoti) {
 		goCtEnt.ServiceIP = r.tuples.l3Dst.addr.IP
 		goCtEnt.L4ServPort = r.tuples.l4Dst.val
 		goCtEnt.BlockNum = r.tuples.pref
+		if r.tuples.l4Prot.val == 6 {
+			goCtEnt.ServProto = "tcp"
+		} else if r.tuples.l4Prot.val == 132 {
+			goCtEnt.ServProto = "sctp"
+		} else {
+			return
+		}
 
 		// No value in delete op
 		goCtEnt.PVal = C.GoBytes(unsafe.Pointer(m.val), m.val_len)
@@ -1498,7 +1507,7 @@ func dpCTMapChkUpdates() {
 			var b uint64
 			var p uint64
 
-			if len(cti.PVal) > 0 && cti.NSync == false  {
+			if len(cti.PVal) > 0 && cti.NSync == false {
 				ptact := (*C.struct_dp_acl_tact)(unsafe.Pointer(&cti.PVal[0]))
 				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_ACL_STATS_MAP), C.uint(ptact.ca.cidx), C.int(1),
 					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
@@ -1542,10 +1551,64 @@ func dpMapNotifierWorker(f chan int, ch chan interface{}) {
 
 // DpCtAdd - routine to work on a ebpf ct add request
 func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
+	var serv cmn.LbServiceArg
+
+	serv.ServIP = w.ServiceIP.String()
+	serv.Proto = w.ServProto
+	serv.ServPort = w.L4ServPort
+	serv.BlockNum = w.BlockNum
+
+	mh.mtx.Lock()
+	r := mh.zr.Rules.GetNatLbRuleByServArgs(serv)
+	mh.mtx.Unlock()
+
+	if r == nil || len(w.PVal) == 0 || len(w.PKey) == 0 {
+		tk.LogIt(tk.LogDebug, "Invalid CT op - %v", w)
+		return EbpfErrCtAdd
+	}
+
+	// Fix few things
+	ptact := (*C.struct_dp_acl_tact)(unsafe.Pointer(&w.PVal[0]))
+	ptact.ctd.rid = C.uint(r.ruleNum) // Race-condition here
+	ptact.lts = C.get_os_nsecs()
+
+	mh.dpEbpf.mtx.Lock()
+	defer mh.dpEbpf.mtx.Unlock()
+
+	mapKey := w.Key()
+	cti := new(DpCtInfo)
+	*cti = *w
+
+	mh.dpEbpf.ctMap[mapKey] = cti
+
+	ret := C.llb_add_map_elem(C.LL_DP_ACL_MAP, unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&cti.PVal[0]))
+	if ret != 0 {
+		mh.dpEbpf.ctMap[mapKey] = nil
+		tk.LogIt(tk.LogError, "ctInfo (%s) rpc add error\n", cti.String())
+		return EbpfErrCtAdd
+	}
+
 	return 0
 }
 
 // DpCtDel - routine to work on a ebpf ct delete request
 func (e *DpEbpfH) DpCtDel(w *DpCtInfo) int {
+	mh.dpEbpf.mtx.Lock()
+	defer mh.dpEbpf.mtx.Unlock()
+
+	if len(w.PKey) == 0 {
+		tk.LogIt(tk.LogDebug, "Invalid CT op - %v", w)
+		return EbpfErrCtDel
+	}
+
+	mapKey := w.Key()
+	cti := mh.dpEbpf.ctMap[mapKey]
+	if cti == nil {
+		return EbpfErrCtDel
+	}
+
+	mh.dpEbpf.ctMap[mapKey] = nil
+	C.llb_del_map_elem(C.LL_DP_ACL_MAP, unsafe.Pointer(&cti.PKey[0]))
+
 	return 0
 }

@@ -18,7 +18,10 @@ package loxinet
 
 import (
 	"fmt"
+	"io"
 	"net"
+	"net/http"
+	"net/rpc"
 	"time"
 
 	cmn "github.com/loxilb-io/loxilb/common"
@@ -72,7 +75,8 @@ const (
 
 // maximum dp work queue lengths
 const (
-	DpWorkQLen = 1024
+	DpWorkQLen  = 1024
+	DpNSyncPort = 22222
 )
 
 // MirrDpWorkQ - work queue entry for mirror operation
@@ -192,6 +196,13 @@ type PolDpWorkQ struct {
 	Status *DpStatusT
 }
 
+// PeerDpWorkQ - work queue entry for peer association
+type PeerDpWorkQ struct {
+	Work   DpWorkT
+	PeerIP net.IP
+	Status *DpStatusT
+}
+
 // FwOpT - type of firewall operation
 type FwOpT uint8
 
@@ -290,6 +301,7 @@ type DpCtInfo struct {
 
 	// LB Association Data
 	ServiceIP  net.IP
+	ServProto  string
 	L4ServPort uint16
 	BlockNum   uint16
 }
@@ -355,6 +367,13 @@ type DpHookInterface interface {
 	DpUlClAdd(w *UlClDpWorkQ) int
 	DpUlClDel(w *UlClDpWorkQ) int
 	DpTableGet(w *TableDpWorkQ) (DpRetT, error)
+	DpCtAdd(w *DpCtInfo) int
+	DpCtDel(w *DpCtInfo) int
+}
+
+type DpPeer struct {
+	Peer   net.IP
+	Client *rpc.Client
 }
 
 // DpH - datapath context container
@@ -363,7 +382,21 @@ type DpH struct {
 	FromDpCh chan interface{}
 	ToFinCh  chan int
 	DpHooks  DpHookInterface
-	Peers    []net.IP
+	Peers    []DpPeer
+	RPC      *DpNSync
+}
+
+// DpNsyncWorker - Nsync worker
+func DpNsyncWorker(dp *DpH) {
+	rpc.Register(dp.RPC)
+	rpc.HandleHTTP()
+
+	http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
+		io.WriteString(res, "loxilb-nsync\n")
+	})
+
+	listener := fmt.Sprintf(":%d", DpNSyncPort)
+	http.ListenAndServe(listener, nil)
 }
 
 // DpBrokerInit - initialize the DP broker subsystem
@@ -374,19 +407,25 @@ func DpBrokerInit(dph DpHookInterface) *DpH {
 	nDp.FromDpCh = make(chan interface{}, DpWorkQLen)
 	nDp.ToFinCh = make(chan int)
 	nDp.DpHooks = dph
+	nDp.RPC = new(DpNSync)
 
 	go DpWorker(nDp, nDp.ToFinCh, nDp.ToDpCh)
+	go DpNsyncWorker(nDp)
 
 	return nDp
 }
 
 // DpWorkOnCtAdd - Add a CT entry from remote
-func (n *DpNSync)DpWorkOnCtAdd(cti *DpCtInfo, ret *int) error {
+func (n *DpNSync) DpWorkOnCtAdd(cti *DpCtInfo, ret *int) error {
+	r := mh.dp.DpHooks.DpCtAdd(cti)
+	*ret = r
 	return nil
 }
 
 // DpWorkOnCtDelete - Delete a CT entry from remote
-func (n *DpNSync)DpWorkOnCtDelete(cti *DpCtInfo, ret *int) error {
+func (n *DpNSync) DpWorkOnCtDelete(cti *DpCtInfo, ret *int) error {
+	r := mh.dp.DpHooks.DpCtDel(cti)
+	*ret = r
 	return nil
 }
 
@@ -510,6 +549,39 @@ func (dp *DpH) DpWorkOnFw(fWq *FwDpWorkQ) DpRetT {
 	return DpWqUnkErr
 }
 
+// DpWorkOnPeerOp - routine to work on a peer request for clustering
+func (dp *DpH) DpWorkOnPeerOp(pWq *PeerDpWorkQ) DpRetT {
+	var err error
+	if pWq.Work == DpCreate {
+		var newPeer DpPeer
+		for _, pe := range dp.Peers {
+			if pe.Peer.Equal(pWq.PeerIP) {
+				return DpCreateErr
+			}
+		}
+		newPeer.Peer = pWq.PeerIP
+		cStr := fmt.Sprintf("%s:%d", newPeer.Peer.String(), DpNSyncPort)
+		newPeer.Client, err = rpc.DialHTTP("tcp", cStr)
+		if err != nil {
+			tk.LogIt(tk.LogError, "Could not connect to %s\n", cStr)
+			newPeer.Client = nil
+		}
+		dp.Peers = append(dp.Peers, newPeer)
+	} else if pWq.Work == DpRemove {
+		for idx, pe := range dp.Peers {
+			if pe.Peer.Equal(pWq.PeerIP) {
+				if pe.Client != nil {
+					pe.Client.Close()
+				}
+				dp.Peers = append(dp.Peers[:idx], dp.Peers[idx+1:]...)
+				return 0
+			}
+		}
+	}
+
+	return DpWqUnkErr
+}
+
 // DpWorkSingle - routine to work on a single dp work queue request
 func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 	var ret DpRetT
@@ -538,6 +610,8 @@ func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 		ret, _ = dp.DpWorkOnTableOp(mq)
 	case *FwDpWorkQ:
 		ret = dp.DpWorkOnFw(mq)
+	case *PeerDpWorkQ:
+		ret = dp.DpWorkOnPeerOp(mq)
 	default:
 		tk.LogIt(tk.LogError, "unexpected type %T\n", mq)
 		ret = DpWqUnkErr

@@ -758,6 +758,39 @@ func (R *RuleH) GetNatLbRuleByID(ruleID uint32) *ruleEnt {
 	return nil
 }
 
+// GetNatLbRuleByServArgs - Get a NAT rule by its service args
+func (R *RuleH) GetNatLbRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
+	var ipProto uint8
+	service := ""
+	if tk.IsNetIPv4(serv.ServIP) {
+		service = serv.ServIP + "/32"
+	} else {
+		service = serv.ServIP + "/128"
+	}
+	_, sNetAddr, err := net.ParseCIDR(service)
+	if err != nil {
+		return nil
+	}
+
+	if serv.Proto == "tcp" {
+		ipProto = 6
+	} else if serv.Proto == "udp" {
+		ipProto = 17
+	} else if serv.Proto == "icmp" {
+		ipProto = 1
+	} else if serv.Proto == "sctp" {
+		ipProto = 132
+	} else {
+		return nil
+	}
+
+	l4prot := rule8Tuple{ipProto, 0xff}
+	l3dst := ruleIPTuple{*sNetAddr}
+	l4dst := rule16Tuple{serv.ServPort, 0xffff}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
+	return R.Tables[RtLB].eMap[rt.ruleKey()]
+}
+
 // AddNatLbRule - Add a service LB nat rule. The service details are passed in serv argument,
 // and end-point information is passed in the slice servEndPoints. On success,
 // it will return 0 and nil error, else appropriate return code and error string will be set
