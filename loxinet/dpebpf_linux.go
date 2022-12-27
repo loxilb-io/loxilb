@@ -45,6 +45,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"sync"
 	"syscall"
 	"time"
 	"unsafe"
@@ -125,9 +126,13 @@ type (
 
 // DpEbpfH - context container
 type DpEbpfH struct {
-	ticker *time.Ticker
-	tDone  chan bool
-	tbN    int
+	ticker  *time.Ticker
+	tDone   chan bool
+	tbN     int
+	ToMapCh chan interface{}
+	ToFinCh chan int
+	mtx     sync.RWMutex
+	ctMap   map[string]*DpCtInfo
 }
 
 //export goMapNotiHandler
@@ -135,23 +140,128 @@ func goMapNotiHandler(m *mapNoti) {
 	var tact *C.struct_dp_acl_tact
 	var act *C.struct_dp_ct_dat
 
-	fmt.Printf("Go function called\n")
-	fmt.Printf("key len %d\n", m.key_len)
-	fmt.Printf("val len %d\n", m.val_len)
-
-
-	if m.addop == 0 {
-		return
-	}
-
 	ctKey := (*C.struct_dp_ct_key)(unsafe.Pointer(m.key))
 	tact = (*C.struct_dp_acl_tact)(unsafe.Pointer(m.val))
 
+	// Only connection oriented protocols
+	if ctKey.l4proto != 6 && ctKey.l4proto != 132 {
+		return
+	}
+
 	act = &tact.ctd
 
-	goCt4Ent := convDPCt2GoObj(ctKey, act)
+	goCtEnt := convDPCt2GoObj(ctKey, act)
+	goCtEnt.key = C.GoBytes(unsafe.Pointer(m.key), m.key_len)
+	goCtEnt.lTs = time.Now()
 
-	fmt.Println(goCt4Ent)
+	// No value in delete op
+	if m.addop != 0 {
+		goCtEnt.val = C.GoBytes(unsafe.Pointer(m.val), m.val_len)
+	}
+
+	// fmt.Println(goCtEnt)
+	mh.dpEbpf.ToMapCh <- goCtEnt
+}
+
+func dpCTMapNotifierWorker(cti *DpCtInfo) {
+	op := "update"
+	mh.dpEbpf.mtx.Lock()
+	defer mh.dpEbpf.mtx.Unlock()
+
+	mapKey := cti.Key()
+
+	if len(cti.val) == 0 {
+		cti = mh.dpEbpf.ctMap[mapKey]
+		if cti != nil {
+			delete(mh.dpEbpf.ctMap, mapKey)
+		} else {
+			tk.LogIt(tk.LogInfo, "[CT] %v not found\n", cti)
+			return
+		}
+		op = "delete"
+	} else {
+		mh.dpEbpf.ctMap[cti.Key()] = cti
+	}
+
+	ctStr := cti.String()
+	tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", cti.lTs.Format(time.UnixDate), op, ctStr)
+}
+
+func dpCTMapChkUpdates() {
+	mh.dpEbpf.mtx.Lock()
+	defer mh.dpEbpf.mtx.Unlock()
+	var tact C.struct_dp_acl_tact
+	var act *C.struct_dp_ct_dat
+
+	tc := time.Now()
+	fd := C.llb_map2fd(C.LL_DP_ACL_MAP)
+
+	for _, cti := range mh.dpEbpf.ctMap {
+		if cti.CState != "est" {
+			if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.key[0]), unsafe.Pointer(&tact)) != 0 {
+				continue
+			}
+
+			act = &tact.ctd
+			goCtEnt := convDPCt2GoObj((*C.struct_dp_ct_key)(unsafe.Pointer(&cti.key[0])), act)
+			goCtEnt.lTs = time.Now()
+
+			if goCtEnt.CState != cti.CState ||
+				goCtEnt.CAct != cti.CState {
+				goCtEnt.key = cti.key
+				goCtEnt.val = C.GoBytes(unsafe.Pointer(&tact), C.sizeof_struct_dp_acl_tact)
+				mh.dpEbpf.ctMap[goCtEnt.Key()] = goCtEnt
+				ctStr := goCtEnt.String()
+				tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", goCtEnt.lTs.Format(time.UnixDate), "update", ctStr)
+				cti.nSync = true
+				cti.nTs = time.Now()
+			}
+		} else {
+			var b uint64
+			var p uint64
+
+			if len(cti.val) > 0 {
+				ptact := (*C.struct_dp_acl_tact)(unsafe.Pointer(&cti.val[0]))
+				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_ACL_STATS_MAP), C.uint(ptact.ca.cidx), C.int(1),
+					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
+				if ret == 0 {
+					if cti.Packets != p {
+						cti.Bytes = b
+						cti.Packets = p
+						if cti.nSync == false {
+							cti.nSync = true
+							cti.nTs = time.Now()
+						}
+					}
+				}
+			}
+		}
+		if cti.nSync == true &&
+			time.Duration(tc.Sub(cti.nTs).Seconds()) >= time.Duration(30) {
+			tk.LogIt(tk.LogInfo, "[CT] SYNC - %s\n", cti.String())
+			cti.nSync = false
+		}
+	}
+}
+
+// dpMapNotifierWorker - Work on any map notifications
+func dpMapNotifierWorker(f chan int, ch chan interface{}) {
+	for {
+		for n := 0; n < DpWorkQLen; n++ {
+			select {
+			case m := <-ch:
+				switch mq := m.(type) {
+				case *DpCtInfo:
+					dpCTMapNotifierWorker(mq)
+				}
+			case <-f:
+				return
+			default:
+				continue
+			}
+		}
+		time.Sleep(2000 * time.Millisecond)
+	}
 }
 
 // dpEbpfTicker - this ticker routine runs every DpEbpfLinuxTiVal seconds
@@ -186,6 +296,7 @@ func dpEbpfTicker() {
 			C.llb_collect_map_stats(C.int(C.LL_DP_ACL_STATS_MAP))
 			C.llb_age_map_entries(C.LL_DP_CT_MAP)
 			C.llb_age_map_entries(C.LL_DP_FCV4_MAP)
+			dpCTMapChkUpdates()
 			mh.dpEbpf.tbN++
 		}
 	}
@@ -215,9 +326,13 @@ func DpEbpfInit() *DpEbpfH {
 
 	ne := new(DpEbpfH)
 	ne.tDone = make(chan bool)
+	ne.ToMapCh = make(chan interface{}, DpWorkQLen)
+	ne.ToFinCh = make(chan int)
 	ne.ticker = time.NewTicker(DpEbpfLinuxTiVal * time.Second)
+	ne.ctMap = make(map[string]*DpCtInfo)
 
 	go dpEbpfTicker()
+	go dpMapNotifierWorker(ne.ToFinCh, ne.ToMapCh)
 
 	return ne
 }

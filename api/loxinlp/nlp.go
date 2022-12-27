@@ -1395,7 +1395,7 @@ var nNl *NlH
 func LbSessionGet(done bool) int {
 
 	if done {
-		
+
 		tk.LogIt(tk.LogInfo, "[NLP] LbSessionGet Start\n")
 		if _, err := os.Stat("/etc/loxilb/lbconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
@@ -1484,8 +1484,8 @@ func NlpInit() *NlH {
 
 	go NLWorker(nNl)
 	tk.LogIt(tk.LogInfo, "[NLP] NLP Subscription done\n")
-	
+
 	go LbSessionGet(done)
-	
+
 	return nNl
 }

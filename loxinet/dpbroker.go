@@ -282,6 +282,11 @@ type DpCtInfo struct {
 	CAct    string
 	Packets uint64
 	Bytes   uint64
+	key     []byte
+	val     []byte
+	lTs     time.Time
+	nTs     time.Time
+	nSync   bool
 }
 
 // UlClDpWorkQ - work queue entry for ul-cl filter related operation
@@ -302,6 +307,13 @@ type UlClDpWorkQ struct {
 // Key - outputs a key string for given DpCtInfo pointer
 func (ct *DpCtInfo) Key() string {
 	str := fmt.Sprintf("%s%s%d%d%s", ct.DIP.String(), ct.SIP.String(), ct.Dport, ct.Sport, ct.Proto)
+	return str
+}
+
+// String - stringify the given DpCtInfo
+func (ct *DpCtInfo) String() string {
+	str := fmt.Sprintf("%s:%d->%s:%d (%s), ", ct.SIP.String(), ct.Sport, ct.DIP.String(), ct.Dport, ct.Proto)
+	str += fmt.Sprintf("%s:%s [%v:%v]", ct.CState, ct.CAct, ct.Packets, ct.Bytes)
 	return str
 }
 
