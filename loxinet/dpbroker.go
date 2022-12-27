@@ -77,6 +77,7 @@ const (
 const (
 	DpWorkQLen  = 1024
 	DpNSyncPort = 22222
+	DpTiVal     = 20
 )
 
 // MirrDpWorkQ - work queue entry for mirror operation
@@ -384,6 +385,7 @@ type DpH struct {
 	DpHooks  DpHookInterface
 	Peers    []DpPeer
 	RPC      *DpNSync
+	ticker   *time.Ticker
 }
 
 // DpNsyncWorker - Nsync worker
@@ -399,6 +401,64 @@ func DpNsyncWorker(dp *DpH) {
 	http.ListenAndServe(listener, nil)
 }
 
+func (dp *DpH) DpNsyncApply(addOp bool, cti *DpCtInfo) int {
+	var reply int
+	var call *rpc.Call
+	timeout := 2 * time.Second
+	for idx := range mh.dp.Peers {
+		pe := &mh.dp.Peers[idx]
+		if pe.Client == nil {
+			return -1
+		}
+		if addOp {
+			call = pe.Client.Go("DpNsync.DpWorkOnCtAdd", *cti, &reply, make(chan *rpc.Call, 1))
+		} else {
+			call = pe.Client.Go("DpNsync.DpWorkOnCtDel", *cti, &reply, make(chan *rpc.Call, 1))
+		}
+		select {
+		case <-time.After(timeout):
+			tk.LogIt(tk.LogDebug, "[WARN] rpc call timeout(%v)\n", timeout)
+			pe.Client.Close()
+			pe.Client = nil
+			return -1
+		case resp := <-call.Done:
+			if resp != nil && resp.Error != nil {
+				pe.Client.Close()
+				pe.Client = nil
+				tk.LogIt(tk.LogDebug, "[WARN] rpc call failed(%s)\n", resp.Error)
+				return -1
+			}
+		}
+	}
+	return 0
+}
+
+// dpTicker - this ticker routine runs every DpTiVal seconds
+func dpTicker() {
+	for {
+		if mh.dp == nil {
+			continue
+		}
+		select {
+		case t := <-mh.dp.ticker.C:
+			tk.LogIt(tk.LogDebug, "DPTick at %v\n", t)
+			for idx := range mh.dp.Peers {
+				pe := &mh.dp.Peers[idx]
+				if pe.Client == nil {
+					cStr := fmt.Sprintf("%s:%d", pe.Peer.String(), DpNSyncPort)
+					conn, err := net.DialTimeout("tcp", cStr, 2*time.Second)
+					if err != nil {
+						tk.LogIt(tk.LogError, "Could not connect to %s\n", cStr)
+					} else {
+						tk.LogIt(tk.LogError, "Connected to %s\n", cStr)
+						pe.Client = rpc.NewClient(conn)
+					}
+				}
+			}
+		}
+	}
+}
+
 // DpBrokerInit - initialize the DP broker subsystem
 func DpBrokerInit(dph DpHookInterface) *DpH {
 	nDp := new(DpH)
@@ -408,23 +468,27 @@ func DpBrokerInit(dph DpHookInterface) *DpH {
 	nDp.ToFinCh = make(chan int)
 	nDp.DpHooks = dph
 	nDp.RPC = new(DpNSync)
+	nDp.ticker = time.NewTicker(DpTiVal * time.Second)
 
 	go DpWorker(nDp, nDp.ToFinCh, nDp.ToDpCh)
 	go DpNsyncWorker(nDp)
+	go dpTicker()
 
 	return nDp
 }
 
 // DpWorkOnCtAdd - Add a CT entry from remote
-func (n *DpNSync) DpWorkOnCtAdd(cti *DpCtInfo, ret *int) error {
-	r := mh.dp.DpHooks.DpCtAdd(cti)
+func (n *DpNSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
+	fmt.Printf("Entering CT Add")
+	r := mh.dp.DpHooks.DpCtAdd(&cti)
 	*ret = r
 	return nil
 }
 
 // DpWorkOnCtDelete - Delete a CT entry from remote
-func (n *DpNSync) DpWorkOnCtDelete(cti *DpCtInfo, ret *int) error {
-	r := mh.dp.DpHooks.DpCtDel(cti)
+func (n *DpNSync) DpWorkOnCtDelete(cti DpCtInfo, ret *int) error {
+	fmt.Printf("Entering CT Del")
+	r := mh.dp.DpHooks.DpCtDel(&cti)
 	*ret = r
 	return nil
 }
@@ -551,7 +615,6 @@ func (dp *DpH) DpWorkOnFw(fWq *FwDpWorkQ) DpRetT {
 
 // DpWorkOnPeerOp - routine to work on a peer request for clustering
 func (dp *DpH) DpWorkOnPeerOp(pWq *PeerDpWorkQ) DpRetT {
-	var err error
 	if pWq.Work == DpCreate {
 		var newPeer DpPeer
 		for _, pe := range dp.Peers {
@@ -561,10 +624,13 @@ func (dp *DpH) DpWorkOnPeerOp(pWq *PeerDpWorkQ) DpRetT {
 		}
 		newPeer.Peer = pWq.PeerIP
 		cStr := fmt.Sprintf("%s:%d", newPeer.Peer.String(), DpNSyncPort)
-		newPeer.Client, err = rpc.DialHTTP("tcp", cStr)
+
+		conn, err := net.DialTimeout("tcp", cStr, 5*time.Second)
 		if err != nil {
 			tk.LogIt(tk.LogError, "Could not connect to %s\n", cStr)
-			newPeer.Client = nil
+		} else {
+			tk.LogIt(tk.LogError, "Connected to %s\n", cStr)
+			newPeer.Client = rpc.NewClient(conn)
 		}
 		dp.Peers = append(dp.Peers, newPeer)
 	} else if pWq.Work == DpRemove {

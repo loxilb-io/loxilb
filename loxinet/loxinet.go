@@ -18,6 +18,7 @@ package loxinet
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"sync"
 	"time"
@@ -64,6 +65,7 @@ func (mh *loxiNetH) NodeWalker(b string) {
 
 // loxiNetTicker - this ticker routine runs every LOXINET_TIVAL seconds
 func loxiNetTicker() {
+	var i int = 0
 	for {
 		select {
 		case <-mh.tDone:
@@ -72,7 +74,17 @@ func loxiNetTicker() {
 			tk.LogIt(-1, "Tick at %v\n", t)
 			// Do any housekeeping activities for security zones
 			mh.zn.ZoneTicker()
+			if i == 0 {
+				status := DpStatusT(0)
+				pwq := new(PeerDpWorkQ)
+				pwq.Work = DpCreate
+				pwq.PeerIP = net.ParseIP("172.17.0.7")
+				pwq.Status = &status
+				mh.dp.ToDpCh <- pwq
+				fmt.Printf("Added a cluster peer\n")
+			}
 		}
+		i++
 	}
 }
 

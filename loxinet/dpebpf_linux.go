@@ -1415,7 +1415,7 @@ func goMapNotiHandler(m *mapNoti) {
 		return
 	}
 
-	fmt.Printf("goMapNotiHandler %v\n", m.addop)
+	//fmt.Printf("goMapNotiHandler %v\n", m.addop)
 
 	act = &tact.ctd
 
@@ -1463,9 +1463,10 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 		if cti != nil {
 			delete(mh.dpEbpf.ctMap, mapKey)
 		} else {
-			tk.LogIt(tk.LogInfo, "[CT] %v not found\n", cti)
+			//tk.LogIt(tk.LogInfo, "[CT] %v not found\n", mapKey)
 			return
 		}
+		mh.dp.DpNsyncApply(false, cti)
 		op = "delete"
 	} else {
 		mh.dpEbpf.ctMap[cti.Key()] = cti
@@ -1500,8 +1501,9 @@ func dpCTMapChkUpdates() {
 				mh.dpEbpf.ctMap[goCtEnt.Key()] = goCtEnt
 				ctStr := goCtEnt.String()
 				tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", goCtEnt.LTs.Format(time.UnixDate), "update", ctStr)
-				cti.NSync = true
-				cti.NTs = time.Now()
+				if goCtEnt.CState == "est" {
+					mh.dp.DpNsyncApply(true, goCtEnt)
+				}
 			}
 		} else {
 			var b uint64
@@ -1522,7 +1524,7 @@ func dpCTMapChkUpdates() {
 			}
 		}
 		if cti.NSync == true &&
-			time.Duration(tc.Sub(cti.NTs).Seconds()) >= time.Duration(30) {
+			time.Duration(tc.Sub(cti.NTs).Seconds()) >= time.Duration(20) {
 			tk.LogIt(tk.LogInfo, "[CT] SYNC - %s\n", cti.String())
 			cti.NSync = false
 		}
