@@ -900,9 +900,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 	return 0
 }
 
-func convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtInfo {
-	ct := new(DpCtInfo)
-
+func (ct *DpCtInfo) convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtInfo {
 	if ctKey.v6 == 0 {
 		ct.DIP = tk.NltoIP(uint32(ctKey.daddr[0]))
 		ct.SIP = tk.NltoIP(uint32(ctKey.saddr[0]))
@@ -912,10 +910,31 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtI
 	}
 	ct.Dport = tk.Ntohs(uint16(ctKey.dport))
 	ct.Sport = tk.Ntohs(uint16(ctKey.sport))
-	ct.Packets = uint64(ctDat.pb.packets)
-	ct.Bytes = uint64(ctDat.pb.bytes)
 
 	p := uint8(ctKey.l4proto)
+	switch {
+	case p == 1 || p == 58:
+		if p == 1 {
+			ct.Proto = "icmp"
+		} else {
+			ct.Proto = "icmp6"
+		}
+	case p == 6:
+		ct.Proto = "tcp"
+	case p == 17:
+		ct.Proto = "udp"
+	case p == 132:
+		ct.Proto = "sctp"
+	default:
+		ct.Proto = fmt.Sprintf("%d", p)
+	}
+
+	if ctDat == nil {
+		ct.CAct = "n/a"
+		ct.CState = "n/a"
+		return ct
+	}
+
 	switch {
 	case p == 1 || p == 58:
 		if p == 1 {
@@ -1002,6 +1021,9 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtI
 	default:
 		ct.Proto = fmt.Sprintf("%d", p)
 	}
+
+	ct.Packets = uint64(ctDat.pb.packets)
+	ct.Bytes = uint64(ctDat.pb.bytes)
 
 	if ctDat.xi.nat_flags == C.LLB_NAT_DST ||
 		ctDat.xi.nat_flags == C.LLB_NAT_SRC {
@@ -1106,7 +1128,8 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 
 			if act.dir == C.CT_DIR_IN || act.dir == C.CT_DIR_OUT {
 				var b, p uint64
-				goCt4Ent := convDPCt2GoObj(ctKey, act)
+				goCt4Ent := new(DpCtInfo)
+				goCt4Ent.convDPCt2GoObj(ctKey, act)
 				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_ACL_STATS_MAP), C.uint(tact.ca.cidx), C.int(1),
 					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
 				if ret == 0 {
@@ -1404,71 +1427,84 @@ func (e *DpEbpfH) DpFwRuleDel(w *FwDpWorkQ) int {
 
 //export goMapNotiHandler
 func goMapNotiHandler(m *mapNoti) {
-	var tact *C.struct_dp_acl_tact
-	var act *C.struct_dp_ct_dat
 
 	ctKey := (*C.struct_dp_ct_key)(unsafe.Pointer(m.key))
-	tact = (*C.struct_dp_acl_tact)(unsafe.Pointer(m.val))
 
 	// Only connection oriented protocols
 	if ctKey.l4proto != 6 && ctKey.l4proto != 132 {
 		return
 	}
 
-	//fmt.Printf("goMapNotiHandler %v\n", m.addop)
-
-	act = &tact.ctd
-
-	goCtEnt := convDPCt2GoObj(ctKey, act)
+	goCtEnt := new(DpCtInfo)
 	goCtEnt.PKey = C.GoBytes(unsafe.Pointer(m.key), m.key_len)
-	goCtEnt.LTs = time.Now()
-
 	if m.addop != 0 {
-		mh.mtx.Lock()
-		r := mh.zr.Rules.GetNatLbRuleByID(uint32(act.rid))
-		mh.mtx.Unlock()
-
-		if r == nil {
-			return
-		}
-		goCtEnt.ServiceIP = r.tuples.l3Dst.addr.IP
-		goCtEnt.L4ServPort = r.tuples.l4Dst.val
-		goCtEnt.BlockNum = r.tuples.pref
-		if r.tuples.l4Prot.val == 6 {
-			goCtEnt.ServProto = "tcp"
-		} else if r.tuples.l4Prot.val == 132 {
-			goCtEnt.ServProto = "sctp"
-		} else {
-			return
-		}
-
 		// No value in delete op
 		goCtEnt.PVal = C.GoBytes(unsafe.Pointer(m.val), m.val_len)
 	}
 
-	// fmt.Println(goCtEnt)
 	mh.dpEbpf.ToMapCh <- goCtEnt
 }
 
 func dpCTMapNotifierWorker(cti *DpCtInfo) {
-	op := "update"
+	var tact *C.struct_dp_acl_tact
+	var act *C.struct_dp_ct_dat
+	var addOp bool
+	var opStr string
+
+	ctKey := (*C.struct_dp_ct_key)(unsafe.Pointer(&cti.PKey[0]))
+	if len(cti.PVal) != 0 {
+		tact = (*C.struct_dp_acl_tact)(unsafe.Pointer(&cti.PVal[0]))
+		act = &tact.ctd
+		addOp = true
+		opStr = "Add"
+	} else {
+		addOp = false
+		tact = nil
+		act = nil
+		opStr = "Delete"
+	}
+
+	cti.convDPCt2GoObj(ctKey, act)
+	cti.LTs = time.Now()
+
+	if addOp {
+		// Need to completely initialize the cti
+		mh.mtx.Lock()
+		r := mh.zr.Rules.GetNatLbRuleByID(uint32(act.rid))
+		mh.mtx.Unlock()
+		if r == nil {
+			return
+		}
+		cti.ServiceIP = r.tuples.l3Dst.addr.IP
+		cti.L4ServPort = r.tuples.l4Dst.val
+		cti.BlockNum = r.tuples.pref
+		if r.tuples.l4Prot.val == 6 {
+			cti.ServProto = "tcp"
+		} else if r.tuples.l4Prot.val == 132 {
+			cti.ServProto = "sctp"
+		} else {
+			return
+		}
+	}
 
 	mh.dpEbpf.mtx.Lock()
 	defer mh.dpEbpf.mtx.Unlock()
 
 	mapKey := cti.Key()
 
-	if len(cti.PVal) == 0 {
+	if addOp == false {
 		cti = mh.dpEbpf.ctMap[mapKey]
-		if cti != nil {
-			cti.Deleted = true
-			cti.NSync = true
-			cti.NTs = time.Now()
-		} else {
-			//tk.LogIt(tk.LogInfo, "[CT] %v not found\n", mapKey)
+		if cti == nil {
 			return
 		}
-		op = "delete"
+		cti.Deleted = true
+		cti.NSync = true
+		cti.NTs = time.Now()
+		// Immediately notify for delete
+		ret := mh.dp.DpNsyncRpc(false, cti)
+		if ret == 0 {
+			delete(mh.dpEbpf.ctMap, cti.Key())
+		}
 	} else {
 		cte := mh.dpEbpf.ctMap[cti.Key()]
 		if cte != nil {
@@ -1484,7 +1520,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 		}
 	}
 
-	tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", cti.LTs.Format(time.UnixDate), op, cti.String())
+	tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", cti.LTs.Format(time.RFC822Z), opStr, cti.String())
 }
 
 func dpCTMapChkUpdates() {
@@ -1497,14 +1533,16 @@ func dpCTMapChkUpdates() {
 	fd := C.llb_map2fd(C.LL_DP_ACL_MAP)
 
 	for _, cti := range mh.dpEbpf.ctMap {
-		fmt.Printf("CT-check %s:%s:%v\n", cti.Key(), cti.CState, cti.NSync)
+		fmt.Printf("[CT] check %s:%s:%v\n", cti.Key(), cti.CState, cti.NSync)
 		if cti.CState != "est" {
 			if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
+				delete(mh.dpEbpf.ctMap, cti.Key())
 				continue
 			}
 
 			act = &tact.ctd
-			goCtEnt := convDPCt2GoObj((*C.struct_dp_ct_key)(unsafe.Pointer(&cti.PKey[0])), act)
+			goCtEnt := new(DpCtInfo)
+			goCtEnt.convDPCt2GoObj((*C.struct_dp_ct_key)(unsafe.Pointer(&cti.PKey[0])), act)
 			goCtEnt.LTs = time.Now()
 
 			if goCtEnt.CState != cti.CState ||
@@ -1521,7 +1559,7 @@ func dpCTMapChkUpdates() {
 				delete(mh.dpEbpf.ctMap, cti.Key())
 				mh.dpEbpf.ctMap[goCtEnt.Key()] = goCtEnt
 				ctStr := goCtEnt.String()
-				tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", goCtEnt.LTs.Format(time.UnixDate), "update", ctStr)
+				tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", goCtEnt.LTs.Format(time.RFC822Z), "update", ctStr)
 				if goCtEnt.CState == "est" {
 					goCtEnt.NSync = true
 					goCtEnt.NTs = time.Now()
@@ -1548,7 +1586,7 @@ func dpCTMapChkUpdates() {
 		}
 		if cti.NSync == true &&
 			time.Duration(tc.Sub(cti.NTs).Seconds()) >= time.Duration(10) {
-			tk.LogIt(tk.LogInfo, "[CT] SYNC - %s\n", cti.String())
+			tk.LogIt(tk.LogInfo, "[NSYNC] - %s\n", cti.String())
 
 			ret := 0
 			if cti.Deleted {
