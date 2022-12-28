@@ -1466,7 +1466,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 			//tk.LogIt(tk.LogInfo, "[CT] %v not found\n", mapKey)
 			return
 		}
-		mh.dp.DpNsyncApply(false, cti)
+		mh.dp.DpNsyncRpc(false, cti)
 		op = "delete"
 	} else {
 		mh.dpEbpf.ctMap[cti.Key()] = cti
@@ -1502,7 +1502,7 @@ func dpCTMapChkUpdates() {
 				ctStr := goCtEnt.String()
 				tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", goCtEnt.LTs.Format(time.UnixDate), "update", ctStr)
 				if goCtEnt.CState == "est" {
-					mh.dp.DpNsyncApply(true, goCtEnt)
+					mh.dp.DpNsyncRpc(true, goCtEnt)
 				}
 			}
 		} else {

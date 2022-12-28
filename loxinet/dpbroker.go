@@ -420,7 +420,7 @@ func dialHTTPPath(network, address, path string) (*rpc.Client, error) {
 	}
 }
 
-func (dp *DpH) DpNsyncApply(addOp bool, cti *DpCtInfo) int {
+func (dp *DpH) DpNsyncRpc(addOp bool, cti *DpCtInfo) int {
 	var reply int
 	timeout := 2 * time.Second
 	for idx := range mh.dp.Peers {
