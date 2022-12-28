@@ -332,7 +332,7 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 				goto NhExist
 			}
 		}
-		tk.LogIt(tk.LogError, "nh add - %s:%s exists\n", Addr.String(), Zone)
+		tk.LogIt(-1, "nh add - %s:%s exists\n", Addr.String(), Zone)
 		return NeighExistsErr, errors.New("nh exists")
 	}
 
