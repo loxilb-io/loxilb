@@ -1461,15 +1461,27 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 	if len(cti.PVal) == 0 {
 		cti = mh.dpEbpf.ctMap[mapKey]
 		if cti != nil {
-			delete(mh.dpEbpf.ctMap, mapKey)
+			cti.Deleted = true
+			cti.NSync = true
+			cti.NTs = time.Now()
 		} else {
 			//tk.LogIt(tk.LogInfo, "[CT] %v not found\n", mapKey)
 			return
 		}
-		mh.dp.DpNsyncRpc(false, cti)
 		op = "delete"
 	} else {
+		cte := mh.dpEbpf.ctMap[cti.Key()]
+		if cte != nil {
+			if cte.CState == cti.CState && cte.CAct == cti.CAct {
+				return
+			}
+			delete(mh.dpEbpf.ctMap, cti.Key())
+		}
 		mh.dpEbpf.ctMap[cti.Key()] = cti
+		if cti.CState == "est" {
+			cti.NSync = true
+			cti.NTs = time.Now()
+		}
 	}
 
 	tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", cti.LTs.Format(time.UnixDate), op, cti.String())
@@ -1485,7 +1497,7 @@ func dpCTMapChkUpdates() {
 	fd := C.llb_map2fd(C.LL_DP_ACL_MAP)
 
 	for _, cti := range mh.dpEbpf.ctMap {
-		fmt.Printf("CT-check %s:%s\n", cti.Key(), cti.CState)
+		fmt.Printf("CT-check %s:%s:%v\n", cti.Key(), cti.CState, cti.NSync)
 		if cti.CState != "est" {
 			if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
 				continue
@@ -1511,8 +1523,10 @@ func dpCTMapChkUpdates() {
 				ctStr := goCtEnt.String()
 				tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", goCtEnt.LTs.Format(time.UnixDate), "update", ctStr)
 				if goCtEnt.CState == "est" {
-					mh.dp.DpNsyncRpc(true, goCtEnt)
+					goCtEnt.NSync = true
+					goCtEnt.NTs = time.Now()
 				}
+				continue
 			}
 		} else {
 			var b uint64
@@ -1523,7 +1537,7 @@ func dpCTMapChkUpdates() {
 				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_ACL_STATS_MAP), C.uint(ptact.ca.cidx), C.int(0),
 					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
 				if ret == 0 {
-					if cti.Packets != p {
+					if cti.Packets < p {
 						cti.Bytes = b
 						cti.Packets = p
 						cti.NSync = true
@@ -1533,9 +1547,24 @@ func dpCTMapChkUpdates() {
 			}
 		}
 		if cti.NSync == true &&
-			time.Duration(tc.Sub(cti.NTs).Seconds()) >= time.Duration(20) {
+			time.Duration(tc.Sub(cti.NTs).Seconds()) >= time.Duration(10) {
 			tk.LogIt(tk.LogInfo, "[CT] SYNC - %s\n", cti.String())
-			cti.NSync = false
+
+			ret := 0
+			if cti.Deleted {
+				ret = mh.dp.DpNsyncRpc(false, cti)
+			} else {
+				ret = mh.dp.DpNsyncRpc(true, cti)
+			}
+			if ret == 0 {
+				cti.NSync = false
+
+				if cti.Deleted {
+					delete(mh.dpEbpf.ctMap, cti.Key())
+					// This is a strange fix
+					C.llb_del_map_elem(C.LL_DP_ACL_MAP, unsafe.Pointer(&cti.PKey[0]))
+				}
+			}
 		}
 	}
 }
@@ -1589,6 +1618,9 @@ func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
 	mapKey := w.Key()
 	cti := new(DpCtInfo)
 	*cti = *w
+	cti.NSync = false
+	cti.NTs = time.Now()
+	cti.LTs = cti.NTs
 
 	mh.dpEbpf.ctMap[mapKey] = cti
 

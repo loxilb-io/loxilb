@@ -296,6 +296,7 @@ type DpCtInfo struct {
 	CAct    string
 	Packets uint64
 	Bytes   uint64
+	Deleted bool
 	PKey    []byte
 	PVal    []byte
 	LTs     time.Time
