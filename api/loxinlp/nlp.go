@@ -924,9 +924,9 @@ func AddNeigh(neigh nlp.Neigh, link nlp.Link) int {
 			tk.LogIt(tk.LogError, "[NLP] NH %v mac %v dev %v add failed %v\n", neigh.IP.String(), mac,
 				name, err)
 
-		} else {
+		} /*else {
 			tk.LogIt(tk.LogInfo, "[NLP] NH %v mac %v dev %v added\n", neigh.IP.String(), mac, name)
-		}
+		} */
 	} else if neigh.Family == unix.AF_BRIDGE {
 
 		if len(neigh.HardwareAddr) == 0 {
