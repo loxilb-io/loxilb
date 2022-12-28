@@ -1533,7 +1533,7 @@ func dpCTMapChkUpdates() {
 	fd := C.llb_map2fd(C.LL_DP_ACL_MAP)
 
 	for _, cti := range mh.dpEbpf.ctMap {
-		fmt.Printf("[CT] check %s:%s:%v\n", cti.Key(), cti.CState, cti.NSync)
+		// tk.LogIt(tk.LogDebug, "[CT] check %s:%s:%v\n", cti.Key(), cti.CState, cti.NSync)
 		if cti.CState != "est" {
 			if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
 				delete(mh.dpEbpf.ctMap, cti.Key())
@@ -1586,7 +1586,7 @@ func dpCTMapChkUpdates() {
 		}
 		if cti.NSync == true &&
 			time.Duration(tc.Sub(cti.NTs).Seconds()) >= time.Duration(10) {
-			tk.LogIt(tk.LogInfo, "[NSYNC] - %s\n", cti.String())
+			tk.LogIt(tk.LogDebug, "[CT] Sync - %s\n", cti.String())
 
 			ret := 0
 			if cti.Deleted {
