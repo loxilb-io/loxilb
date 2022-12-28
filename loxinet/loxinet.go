@@ -18,15 +18,14 @@ package loxinet
 
 import (
 	"fmt"
-	"net"
-	"os"
-	"sync"
-	"time"
-
 	apiserver "github.com/loxilb-io/loxilb/api"
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
+	"net"
+	"os"
+	"sync"
+	"time"
 )
 
 // string constant representing root security zone
@@ -78,10 +77,9 @@ func loxiNetTicker() {
 				status := DpStatusT(0)
 				pwq := new(PeerDpWorkQ)
 				pwq.Work = DpCreate
-				pwq.PeerIP = net.ParseIP("172.17.0.7")
+				pwq.PeerIP = net.ParseIP("127.0.0.1")
 				pwq.Status = &status
 				mh.dp.ToDpCh <- pwq
-				fmt.Printf("Added a cluster peer\n")
 			}
 		}
 		i++

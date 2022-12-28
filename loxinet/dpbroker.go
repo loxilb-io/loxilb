@@ -17,6 +17,8 @@
 package loxinet
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -75,9 +77,9 @@ const (
 
 // maximum dp work queue lengths
 const (
-	DpWorkQLen  = 1024
-	DpNSyncPort = 22222
-	DpTiVal     = 20
+	DpWorkQLen = 1024
+	NSyncPort  = 22222
+	DpTiVal    = 20
 )
 
 // MirrDpWorkQ - work queue entry for mirror operation
@@ -307,7 +309,7 @@ type DpCtInfo struct {
 	BlockNum   uint16
 }
 
-type DpNSync struct {
+type NSync struct {
 	// For peer to peer RPC
 }
 
@@ -384,40 +386,68 @@ type DpH struct {
 	ToFinCh  chan int
 	DpHooks  DpHookInterface
 	Peers    []DpPeer
-	RPC      *DpNSync
-	ticker   *time.Ticker
+	RPC      *NSync
 }
 
-// DpNsyncWorker - Nsync worker
-func DpNsyncWorker(dp *DpH) {
-	rpc.Register(dp.RPC)
-	rpc.HandleHTTP()
+// dialHTTPPath connects to an HTTP RPC server
+// at the specified network address and path.
+// This is based on rpc package's DialHTTPPath but with added timeout
+func dialHTTPPath(network, address, path string) (*rpc.Client, error) {
+	var connected = "200 Connected to Go RPC"
+	timeOut := 2 * time.Second
 
-	http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
-		io.WriteString(res, "loxilb-nsync\n")
-	})
+	conn, err := net.DialTimeout(network, address, timeOut)
+	if err != nil {
+		return nil, err
+	}
+	io.WriteString(conn, "CONNECT "+path+" HTTP/1.0\n\n")
 
-	listener := fmt.Sprintf(":%d", DpNSyncPort)
-	http.ListenAndServe(listener, nil)
+	// Require successful HTTP response
+	// before switching to RPC protocol.
+	resp, err := http.ReadResponse(bufio.NewReader(conn), &http.Request{Method: "CONNECT"})
+	if err == nil && resp.Status == connected {
+		return rpc.NewClient(conn), nil
+	}
+	if err == nil {
+		err = errors.New("unexpected HTTP response: " + resp.Status)
+	}
+	conn.Close()
+	return nil, &net.OpError{
+		Op:   "dial-http",
+		Net:  network + " " + address,
+		Addr: nil,
+		Err:  err,
+	}
 }
 
 func (dp *DpH) DpNsyncApply(addOp bool, cti *DpCtInfo) int {
 	var reply int
-	var call *rpc.Call
 	timeout := 2 * time.Second
 	for idx := range mh.dp.Peers {
 		pe := &mh.dp.Peers[idx]
 		if pe.Client == nil {
-			return -1
+			cStr := fmt.Sprintf("%s:%d", pe.Peer.String(), NSyncPort)
+			pe.Client, _ = dialHTTPPath("tcp", cStr, rpc.DefaultRPCPath)
+			if pe.Client == nil {
+				return -1
+			}
+			tk.LogIt(tk.LogInfo, "RPC - %s :Connected\n", cStr)
 		}
+
+		rpcCallStr := ""
 		if addOp {
-			call = pe.Client.Go("DpNsync.DpWorkOnCtAdd", *cti, &reply, make(chan *rpc.Call, 1))
+			rpcCallStr = "NSync.DpWorkOnCtAdd"
 		} else {
-			call = pe.Client.Go("DpNsync.DpWorkOnCtDel", *cti, &reply, make(chan *rpc.Call, 1))
+			rpcCallStr = "NSync.DpWorkOnCtDelete"
 		}
+		var req int
+		req = 1
+
+		fmt.Println("RPC REQ")
+		call := pe.Client.Go(rpcCallStr, req, &reply, make(chan *rpc.Call, 1))
 		select {
 		case <-time.After(timeout):
-			tk.LogIt(tk.LogDebug, "[WARN] rpc call timeout(%v)\n", timeout)
+			tk.LogIt(tk.LogError, "rpc call timeout(%v)\n", timeout)
 			pe.Client.Close()
 			pe.Client = nil
 			return -1
@@ -425,38 +455,14 @@ func (dp *DpH) DpNsyncApply(addOp bool, cti *DpCtInfo) int {
 			if resp != nil && resp.Error != nil {
 				pe.Client.Close()
 				pe.Client = nil
-				tk.LogIt(tk.LogDebug, "[WARN] rpc call failed(%s)\n", resp.Error)
+				tk.LogIt(tk.LogError, "rpc call failed(%s)\n", resp.Error)
 				return -1
 			}
 		}
+		fmt.Println("RPC DONE")
 	}
-	return 0
-}
 
-// dpTicker - this ticker routine runs every DpTiVal seconds
-func dpTicker() {
-	for {
-		if mh.dp == nil {
-			continue
-		}
-		select {
-		case t := <-mh.dp.ticker.C:
-			tk.LogIt(tk.LogDebug, "DPTick at %v\n", t)
-			for idx := range mh.dp.Peers {
-				pe := &mh.dp.Peers[idx]
-				if pe.Client == nil {
-					cStr := fmt.Sprintf("%s:%d", pe.Peer.String(), DpNSyncPort)
-					conn, err := net.DialTimeout("tcp", cStr, 2*time.Second)
-					if err != nil {
-						tk.LogIt(tk.LogError, "Could not connect to %s\n", cStr)
-					} else {
-						tk.LogIt(tk.LogError, "Connected to %s\n", cStr)
-						pe.Client = rpc.NewClient(conn)
-					}
-				}
-			}
-		}
-	}
+	return 0
 }
 
 // DpBrokerInit - initialize the DP broker subsystem
@@ -467,29 +473,26 @@ func DpBrokerInit(dph DpHookInterface) *DpH {
 	nDp.FromDpCh = make(chan interface{}, DpWorkQLen)
 	nDp.ToFinCh = make(chan int)
 	nDp.DpHooks = dph
-	nDp.RPC = new(DpNSync)
-	nDp.ticker = time.NewTicker(DpTiVal * time.Second)
+	nDp.RPC = new(NSync)
 
 	go DpWorker(nDp, nDp.ToFinCh, nDp.ToDpCh)
-	go DpNsyncWorker(nDp)
-	go dpTicker()
 
 	return nDp
 }
 
 // DpWorkOnCtAdd - Add a CT entry from remote
-func (n *DpNSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
-	fmt.Printf("Entering CT Add")
-	r := mh.dp.DpHooks.DpCtAdd(&cti)
-	*ret = r
+func (n *NSync) DpWorkOnCtAdd(cval int, ret *int) error {
+	fmt.Printf("Entering CT Add\n")
+	//r := mh.dp.DpHooks.DpCtAdd(&cti)
+	*ret = 0
 	return nil
 }
 
 // DpWorkOnCtDelete - Delete a CT entry from remote
-func (n *DpNSync) DpWorkOnCtDelete(cti DpCtInfo, ret *int) error {
-	fmt.Printf("Entering CT Del")
-	r := mh.dp.DpHooks.DpCtDel(&cti)
-	*ret = r
+func (n *NSync) DpWorkOnCtDelete(cti int, ret *int) error {
+	fmt.Printf("Entering CT Del\n")
+	//r := mh.dp.DpHooks.DpCtDel(&cti)
+	*ret = 0
 	return nil
 }
 
@@ -623,23 +626,18 @@ func (dp *DpH) DpWorkOnPeerOp(pWq *PeerDpWorkQ) DpRetT {
 			}
 		}
 		newPeer.Peer = pWq.PeerIP
-		cStr := fmt.Sprintf("%s:%d", newPeer.Peer.String(), DpNSyncPort)
-
-		conn, err := net.DialTimeout("tcp", cStr, 5*time.Second)
-		if err != nil {
-			tk.LogIt(tk.LogError, "Could not connect to %s\n", cStr)
-		} else {
-			tk.LogIt(tk.LogError, "Connected to %s\n", cStr)
-			newPeer.Client = rpc.NewClient(conn)
-		}
 		dp.Peers = append(dp.Peers, newPeer)
+		tk.LogIt(tk.LogInfo, "Added cluster-peer %s\n", newPeer.Peer.String())
+		return 0
 	} else if pWq.Work == DpRemove {
-		for idx, pe := range dp.Peers {
+		for idx := range dp.Peers {
+			pe := &dp.Peers[idx]
 			if pe.Peer.Equal(pWq.PeerIP) {
 				if pe.Client != nil {
 					pe.Client.Close()
 				}
 				dp.Peers = append(dp.Peers[:idx], dp.Peers[idx+1:]...)
+				tk.LogIt(tk.LogInfo, "Deleted cluster-peer %s\n", pWq.PeerIP.String())
 				return 0
 			}
 		}
