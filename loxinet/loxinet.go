@@ -58,6 +58,7 @@ type loxiNetH struct {
 	wg     sync.WaitGroup
 	bgp    *GoBgpH
 	has    *CIStateH
+	logger *tk.Logger
 }
 
 // NodeWalker - an implementation of node walker interface
@@ -85,7 +86,7 @@ func loxiNetInit() {
 
 	// Initialize logger and specify the log file
 	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
-	tk.LogItInit(logfile, tk.LogDebug, true)
+	mh.logger = tk.LogItInit(logfile, tk.LogDebug, true)
 
 	mh.tDone = make(chan bool)
 	mh.ticker = time.NewTicker(LoxinetTiVal * time.Second)

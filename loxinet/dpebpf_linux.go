@@ -1520,7 +1520,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 		}
 	}
 
-	tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", cti.LTs.Format(time.RFC822Z), opStr, cti.String())
+	tk.LogIt(tk.LogInfo, "[CT] %s - %s\n", opStr, cti.String())
 }
 
 func dpCTMapChkUpdates() {
@@ -1559,7 +1559,7 @@ func dpCTMapChkUpdates() {
 				delete(mh.dpEbpf.ctMap, cti.Key())
 				mh.dpEbpf.ctMap[goCtEnt.Key()] = goCtEnt
 				ctStr := goCtEnt.String()
-				tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", goCtEnt.LTs.Format(time.RFC822Z), "update", ctStr)
+				tk.LogIt(tk.LogInfo, "[CT] %s - %s\n", "update", ctStr)
 				if goCtEnt.CState == "est" {
 					goCtEnt.NSync = true
 					goCtEnt.NTs = time.Now()
