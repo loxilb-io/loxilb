@@ -63,6 +63,8 @@ func HAInit() *CIStateH {
 	ci.State = cmn.CIStateNotDefined
 	ci.StateStr = "NOT_DEFINED"
 	nHh.ClusterMap["default"] = ci
+
+	nHh.NodeMap = make(map[string]*ClusterNode)
 	return nHh
 }
 
@@ -111,6 +113,7 @@ func (h *CIStateH) ClusterNodeAdd(node cmn.CluserNodeMod) (int, error) {
 	}
 
 	cNode = new(ClusterNode)
+	cNode.Addr = node.Addr
 	h.NodeMap[node.Addr.String()] = cNode
 
 	cNode.DP(DpCreate)
@@ -141,6 +144,7 @@ func (cn *ClusterNode) DP(work DpWorkT) int {
 	pwq.PeerIP = cn.Addr
 
 	pwq.Status = &cn.Status
+
 	mh.dp.ToDpCh <- pwq
 
 	return 0

@@ -18,13 +18,17 @@ package loxinet
 
 import (
 	"fmt"
-	apiserver "github.com/loxilb-io/loxilb/api"
-	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
-	opts "github.com/loxilb-io/loxilb/options"
-	tk "github.com/loxilb-io/loxilib"
+	"net"
 	"os"
+	"strings"
 	"sync"
 	"time"
+
+	apiserver "github.com/loxilb-io/loxilb/api"
+	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
+	cmn "github.com/loxilb-io/loxilb/common"
+	opts "github.com/loxilb-io/loxilb/options"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 // string constant representing root security zone
@@ -119,6 +123,18 @@ func loxiNetInit() {
 	if opts.Opts.NoApi == false {
 		apiserver.RegisterAPIHooks(NetAPIInit())
 		go apiserver.RunAPIServer()
+	}
+
+	// Add cluster nodes if specified
+	if opts.Opts.ClusterNodes != "none" {
+		cNodes := strings.Split(opts.Opts.ClusterNodes, ",")
+		for _, cNode := range cNodes {
+			addr := net.ParseIP(cNode)
+			if addr == nil {
+				continue
+			}
+			mh.has.ClusterNodeAdd(cmn.CluserNodeMod{Addr: addr})
+		}
 	}
 }
 
