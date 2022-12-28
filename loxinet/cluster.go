@@ -21,6 +21,7 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 
 	"errors"
+	"net"
 )
 
 // error codes for HA state
@@ -35,10 +36,16 @@ type ClusterInstance struct {
 	StateStr string
 }
 
+type ClusterNode struct {
+	Addr   net.IP
+	Status DpStatusT
+}
+
 // CIStateH - HA context handler
 type CIStateH struct {
 	ClusterMap map[string]ClusterInstance
 	StateMap   map[string]int
+	NodeMap    map[string]*ClusterNode
 }
 
 // HAInit - routine to initialize HA context
@@ -92,4 +99,49 @@ func (h *CIStateH) CIStateUpdate(ham cmn.HASMod) (int, error) {
 		tk.LogIt(tk.LogError, "[HA] Invalid State: %s\n", ham.State)
 		return ci.State, errors.New("Invalid HA state")
 	}
+}
+
+// ClusterNodeAdd - routine to update cluster nodes
+func (h *CIStateH) ClusterNodeAdd(node cmn.CluserNodeMod) (int, error) {
+
+	cNode := h.NodeMap[node.Addr.String()]
+
+	if cNode != nil {
+		return -1, errors.New("Exisitng Cnode")
+	}
+
+	cNode = new(ClusterNode)
+	h.NodeMap[node.Addr.String()] = cNode
+
+	cNode.DP(DpCreate)
+
+	return 0, nil
+}
+
+// ClusterNodeDelete - routine to delete cluster node
+func (h *CIStateH) ClusterNodeDelete(node cmn.CluserNodeMod) (int, error) {
+
+	cNode := h.NodeMap[node.Addr.String()]
+
+	if cNode == nil {
+		return -1, errors.New("No such Cnode")
+	}
+
+	delete(h.NodeMap, node.Addr.String())
+
+	cNode.DP(DpRemove)
+	return 0, nil
+}
+
+// DP - sync state of cluster-node entity to data-path
+func (cn *ClusterNode) DP(work DpWorkT) int {
+
+	pwq := new(PeerDpWorkQ)
+	pwq.Work = work
+	pwq.PeerIP = cn.Addr
+
+	pwq.Status = &cn.Status
+	mh.dp.ToDpCh <- pwq
+
+	return 0
 }

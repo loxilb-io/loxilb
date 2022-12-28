@@ -1618,11 +1618,23 @@ func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
 	mapKey := w.Key()
 	cti := new(DpCtInfo)
 	*cti = *w
-	cti.NSync = false
-	cti.NTs = time.Now()
-	cti.LTs = cti.NTs
 
-	mh.dpEbpf.ctMap[mapKey] = cti
+	cte := mh.dpEbpf.ctMap[mapKey]
+	if cte != nil {
+		if cte.CState != cti.CState ||
+			cte.CAct != cti.CAct {
+			delete(mh.dpEbpf.ctMap, mapKey)
+			mh.dpEbpf.ctMap[mapKey] = cti
+			cte = cti
+		}
+	} else {
+		mh.dpEbpf.ctMap[mapKey] = cti
+		cte = cti
+	}
+
+	cte.NSync = false
+	cte.NTs = time.Now()
+	cte.LTs = cti.NTs
 
 	ret := C.llb_add_map_elem(C.LL_DP_ACL_MAP, unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&cti.PVal[0]))
 	if ret != 0 {
