@@ -131,6 +131,7 @@ type DpEbpfH struct {
 	ticker  *time.Ticker
 	tDone   chan bool
 	tbN     int
+	CtSync  bool
 	ToMapCh chan interface{}
 	ToFinCh chan int
 	mtx     sync.RWMutex
@@ -169,6 +170,16 @@ func dpEbpfTicker() {
 			C.llb_collect_map_stats(C.int(C.LL_DP_ACL_STATS_MAP))
 			C.llb_age_map_entries(C.LL_DP_CT_MAP)
 			C.llb_age_map_entries(C.LL_DP_FCV4_MAP)
+
+			// This means around 30s from start
+			if sel == 2 {
+				if !mh.dpEbpf.CtSync {
+					ret := mh.dp.DpNsyncRpc(DpSyncGet, nil)
+					if ret == 0 {
+						mh.dpEbpf.CtSync = true
+					}
+				}
+			}
 			dpCTMapChkUpdates()
 			mh.dpEbpf.tbN++
 		}
@@ -1501,7 +1512,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 		cti.NSync = true
 		cti.NTs = time.Now()
 		// Immediately notify for delete
-		ret := mh.dp.DpNsyncRpc(false, cti)
+		ret := mh.dp.DpNsyncRpc(DpSyncDelete, cti)
 		if ret == 0 {
 			delete(mh.dpEbpf.ctMap, cti.Key())
 		}
@@ -1590,9 +1601,9 @@ func dpCTMapChkUpdates() {
 
 			ret := 0
 			if cti.Deleted {
-				ret = mh.dp.DpNsyncRpc(false, cti)
+				ret = mh.dp.DpNsyncRpc(DpSyncDelete, cti)
 			} else {
-				ret = mh.dp.DpNsyncRpc(true, cti)
+				ret = mh.dp.DpNsyncRpc(DpSyncAdd, cti)
 			}
 			if ret == 0 {
 				cti.NSync = false
@@ -1706,4 +1717,18 @@ func (e *DpEbpfH) DpCtDel(w *DpCtInfo) int {
 	C.llb_del_map_elem(C.LL_DP_ACL_MAP, unsafe.Pointer(&w.PKey[0]))
 
 	return 0
+}
+
+// DpCtGetAsync - routine to work on a ebpf ct get async request
+func (e *DpEbpfH) DpCtGetAsync() {
+
+	mh.dpEbpf.mtx.Lock()
+	defer mh.dpEbpf.mtx.Unlock()
+
+	for _, cte := range mh.dpEbpf.ctMap {
+		if cte.CState == "est" {
+			cte.NSync = true
+			cte.NTs = time.Now()
+		}
+	}
 }

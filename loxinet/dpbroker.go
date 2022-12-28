@@ -329,6 +329,16 @@ type UlClDpWorkQ struct {
 	TTeID  uint32
 }
 
+// DpSyncOpT - Sync Operation type
+type DpSyncOpT uint8
+
+// Sync Operation type codes
+const (
+	DpSyncAdd DpSyncOpT = iota + 1
+	DpSyncDelete
+	DpSyncGet
+)
+
 // Key - outputs a key string for given DpCtInfo pointer
 func (ct *DpCtInfo) Key() string {
 	str := fmt.Sprintf("%s%s%d%d%s", ct.DIP.String(), ct.SIP.String(), ct.Dport, ct.Sport, ct.Proto)
@@ -373,6 +383,7 @@ type DpHookInterface interface {
 	DpTableGet(w *TableDpWorkQ) (DpRetT, error)
 	DpCtAdd(w *DpCtInfo) int
 	DpCtDel(w *DpCtInfo) int
+	DpCtGetAsync()
 }
 
 type DpPeer struct {
@@ -421,7 +432,7 @@ func dialHTTPPath(network, address, path string) (*rpc.Client, error) {
 	}
 }
 
-func (dp *DpH) DpNsyncRpc(addOp bool, cti *DpCtInfo) int {
+func (dp *DpH) DpNsyncRpc(op DpSyncOpT, cti *DpCtInfo) int {
 	var reply int
 	timeout := 2 * time.Second
 	for idx := range mh.dp.Peers {
@@ -432,17 +443,30 @@ func (dp *DpH) DpNsyncRpc(addOp bool, cti *DpCtInfo) int {
 			if pe.Client == nil {
 				return -1
 			}
-			tk.LogIt(tk.LogInfo, "RPC - %s :Connected\n", cStr)
+			tk.LogIt(tk.LogInfo, "NSync RPC - %s :Connected\n", cStr)
 		}
 
 		rpcCallStr := ""
-		if addOp {
+		if op == DpSyncAdd {
 			rpcCallStr = "NSync.DpWorkOnCtAdd"
-		} else {
+		} else if op == DpSyncDelete {
 			rpcCallStr = "NSync.DpWorkOnCtDelete"
+		} else if op == DpSyncGet {
+			rpcCallStr = "NSync.DpWorkOnCtGet"
+		} else {
+			return -1
 		}
 
-		call := pe.Client.Go(rpcCallStr, *cti, &reply, make(chan *rpc.Call, 1))
+		var call *rpc.Call
+		if op == DpSyncAdd || op == DpSyncDelete  {
+			if cti == nil {
+				return -1
+			}
+			call = pe.Client.Go(rpcCallStr, *cti, &reply, make(chan *rpc.Call, 1))
+		} else {
+			async := 1
+			call = pe.Client.Go(rpcCallStr, async, &reply, make(chan *rpc.Call, 1))
+		}
 		select {
 		case <-time.After(timeout):
 			tk.LogIt(tk.LogError, "rpc call timeout(%v)\n", timeout)
@@ -456,6 +480,7 @@ func (dp *DpH) DpNsyncRpc(addOp bool, cti *DpCtInfo) int {
 				tk.LogIt(tk.LogError, "rpc call failed(%s)\n", resp.Error)
 				return -1
 			}
+			return reply
 		}
 	}
 
@@ -490,6 +515,14 @@ func (n *NSync) DpWorkOnCtDelete(cti DpCtInfo, ret *int) error {
 	tk.LogIt(tk.LogDebug, "RPC -  CT Del %s\n", cti.Key())
 	r := mh.dp.DpHooks.DpCtDel(&cti)
 	*ret = r
+	return nil
+}
+
+// DpWorkOnCtGet - Get all CT entries asynchronously
+func (n *NSync) DpWorkOnCtGet(async int, ret *int) error {
+	tk.LogIt(tk.LogDebug, "RPC -  CT Get %d\n", async)
+	mh.dp.DpHooks.DpCtGetAsync()
+	*ret = 0
 	return nil
 }
 
