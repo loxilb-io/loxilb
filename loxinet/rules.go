@@ -245,6 +245,7 @@ type ruleTable struct {
 	tableType  ruleTType
 	tableMatch ruleTMatch
 	eMap       map[string]*ruleEnt
+	rArr       [RtMaximumLbs]*ruleEnt
 	pMap       []*ruleEnt
 	HwMark     *tk.Counter
 }
@@ -748,6 +749,48 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool) {
 	}
 }
 
+// GetNatLbRuleByID - Get a NAT rule by its identifier
+func (R *RuleH) GetNatLbRuleByID(ruleID uint32) *ruleEnt {
+	if ruleID < RtMaximumLbs {
+		return R.Tables[RtLB].rArr[ruleID]
+	}
+
+	return nil
+}
+
+// GetNatLbRuleByServArgs - Get a NAT rule by its service args
+func (R *RuleH) GetNatLbRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
+	var ipProto uint8
+	service := ""
+	if tk.IsNetIPv4(serv.ServIP) {
+		service = serv.ServIP + "/32"
+	} else {
+		service = serv.ServIP + "/128"
+	}
+	_, sNetAddr, err := net.ParseCIDR(service)
+	if err != nil {
+		return nil
+	}
+
+	if serv.Proto == "tcp" {
+		ipProto = 6
+	} else if serv.Proto == "udp" {
+		ipProto = 17
+	} else if serv.Proto == "icmp" {
+		ipProto = 1
+	} else if serv.Proto == "sctp" {
+		ipProto = 132
+	} else {
+		return nil
+	}
+
+	l4prot := rule8Tuple{ipProto, 0xff}
+	l3dst := ruleIPTuple{*sNetAddr}
+	l4dst := rule16Tuple{serv.ServPort, 0xffff}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
+	return R.Tables[RtLB].eMap[rt.ruleKey()]
+}
+
 // AddNatLbRule - Add a service LB nat rule. The service details are passed in serv argument,
 // and end-point information is passed in the slice servEndPoints. On success,
 // it will return 0 and nil error, else appropriate return code and error string will be set
@@ -921,6 +964,9 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	tk.LogIt(tk.LogDebug, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
 	R.Tables[RtLB].eMap[rt.ruleKey()] = r
+	if r.ruleNum < RtMaximumLbs {
+		R.Tables[RtLB].rArr[r.ruleNum] = r
+	}
 
 	r.DP(DpCreate)
 
@@ -972,6 +1018,9 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	R.modNatEpHost(rule, eEps, false)
 
 	delete(R.Tables[RtLB].eMap, rt.ruleKey())
+	if rule.ruleNum < RtMaximumLbs {
+		R.Tables[RtLB].rArr[rule.ruleNum] = nil
+	}
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
 

@@ -18,12 +18,15 @@ package loxinet
 
 import (
 	"fmt"
+	"net"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
 	apiserver "github.com/loxilb-io/loxilb/api"
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
+	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
 )
@@ -104,7 +107,7 @@ func loxiNetInit() {
 		tk.LogIt(tk.LogError, "root zone not found\n")
 		return
 	}
-	
+
 	// Initialize goBgp client
 	if opts.Opts.Bgp {
 		mh.bgp = GoBgpInit()
@@ -115,11 +118,23 @@ func loxiNetInit() {
 		nlp.NlpRegister(NetAPIInit())
 		nlp.NlpInit()
 	}
-	
+
 	// Initialize and spawn the api server subsystem
 	if opts.Opts.NoApi == false {
 		apiserver.RegisterAPIHooks(NetAPIInit())
 		go apiserver.RunAPIServer()
+	}
+
+	// Add cluster nodes if specified
+	if opts.Opts.ClusterNodes != "none" {
+		cNodes := strings.Split(opts.Opts.ClusterNodes, ",")
+		for _, cNode := range cNodes {
+			addr := net.ParseIP(cNode)
+			if addr == nil {
+				continue
+			}
+			mh.has.ClusterNodeAdd(cmn.CluserNodeMod{Addr: addr})
+		}
 	}
 }
 
