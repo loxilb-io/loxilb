@@ -440,11 +440,9 @@ func (dp *DpH) DpNsyncRpc(addOp bool, cti *DpCtInfo) int {
 		} else {
 			rpcCallStr = "NSync.DpWorkOnCtDelete"
 		}
-		var req int
-		req = 1
 
 		fmt.Println("RPC REQ")
-		call := pe.Client.Go(rpcCallStr, req, &reply, make(chan *rpc.Call, 1))
+		call := pe.Client.Go(rpcCallStr, *cti, &reply, make(chan *rpc.Call, 1))
 		select {
 		case <-time.After(timeout):
 			tk.LogIt(tk.LogError, "rpc call timeout(%v)\n", timeout)
@@ -481,18 +479,18 @@ func DpBrokerInit(dph DpHookInterface) *DpH {
 }
 
 // DpWorkOnCtAdd - Add a CT entry from remote
-func (n *NSync) DpWorkOnCtAdd(cval int, ret *int) error {
-	fmt.Printf("Entering CT Add\n")
-	//r := mh.dp.DpHooks.DpCtAdd(&cti)
-	*ret = 0
+func (n *NSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
+	fmt.Printf("RPC - CT Add %v\n", cti.PKey)
+	r := mh.dp.DpHooks.DpCtAdd(&cti)
+	*ret = r
 	return nil
 }
 
 // DpWorkOnCtDelete - Delete a CT entry from remote
-func (n *NSync) DpWorkOnCtDelete(cti int, ret *int) error {
-	fmt.Printf("Entering CT Del\n")
-	//r := mh.dp.DpHooks.DpCtDel(&cti)
-	*ret = 0
+func (n *NSync) DpWorkOnCtDelete(cti DpCtInfo, ret *int) error {
+	fmt.Printf("RPC -  CT Del %v\n", cti.PKey)
+	r := mh.dp.DpHooks.DpCtDel(&cti)
+	*ret = r
 	return nil
 }
 

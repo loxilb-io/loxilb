@@ -77,9 +77,10 @@ func loxiNetTicker() {
 				status := DpStatusT(0)
 				pwq := new(PeerDpWorkQ)
 				pwq.Work = DpCreate
-				pwq.PeerIP = net.ParseIP("127.0.0.1")
+				pwq.PeerIP = net.ParseIP("172.17.0.7")
+				//pwq.PeerIP = net.ParseIP("127.0.0.1")
 				pwq.Status = &status
-				mh.dp.ToDpCh <- pwq
+				//mh.dp.ToDpCh <- pwq
 			}
 		}
 		i++

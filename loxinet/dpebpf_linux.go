@@ -1485,6 +1485,7 @@ func dpCTMapChkUpdates() {
 	fd := C.llb_map2fd(C.LL_DP_ACL_MAP)
 
 	for _, cti := range mh.dpEbpf.ctMap {
+		fmt.Printf("CT-check %s:%s\n", cti.Key(), cti.CState)
 		if cti.CState != "est" {
 			if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
 				continue
@@ -1497,7 +1498,15 @@ func dpCTMapChkUpdates() {
 			if goCtEnt.CState != cti.CState ||
 				goCtEnt.CAct != cti.CState {
 				goCtEnt.PKey = cti.PKey
+				// Key will remain the same but value might change
 				goCtEnt.PVal = C.GoBytes(unsafe.Pointer(&tact), C.sizeof_struct_dp_acl_tact)
+
+				// Copy rule associations
+				goCtEnt.ServiceIP = cti.ServiceIP
+				goCtEnt.L4ServPort = cti.L4ServPort
+				goCtEnt.BlockNum = cti.BlockNum
+				goCtEnt.ServProto = cti.ServProto
+				delete(mh.dpEbpf.ctMap, cti.Key())
 				mh.dpEbpf.ctMap[goCtEnt.Key()] = goCtEnt
 				ctStr := goCtEnt.String()
 				tk.LogIt(tk.LogInfo, "[CT] %s: %s - %s\n", goCtEnt.LTs.Format(time.UnixDate), "update", ctStr)
@@ -1564,8 +1573,8 @@ func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
 	r := mh.zr.Rules.GetNatLbRuleByServArgs(serv)
 	mh.mtx.Unlock()
 
-	if r == nil || len(w.PVal) == 0 || len(w.PKey) == 0 {
-		tk.LogIt(tk.LogDebug, "Invalid CT op - %v", w)
+	if r == nil || len(w.PVal) == 0 || len(w.PKey) == 0 || w.CState != "est" {
+		tk.LogIt(tk.LogDebug, "Invalid CT op/No LB - %v\n", serv)
 		return EbpfErrCtAdd
 	}
 
@@ -1585,7 +1594,7 @@ func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
 
 	ret := C.llb_add_map_elem(C.LL_DP_ACL_MAP, unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&cti.PVal[0]))
 	if ret != 0 {
-		mh.dpEbpf.ctMap[mapKey] = nil
+		delete(mh.dpEbpf.ctMap, mapKey)
 		tk.LogIt(tk.LogError, "ctInfo (%s) rpc add error\n", cti.String())
 		return EbpfErrCtAdd
 	}
@@ -1606,11 +1615,13 @@ func (e *DpEbpfH) DpCtDel(w *DpCtInfo) int {
 	mapKey := w.Key()
 	cti := mh.dpEbpf.ctMap[mapKey]
 	if cti == nil {
+		tk.LogIt(tk.LogError, "ctInfo-key (%v) not present\n", mapKey)
 		return EbpfErrCtDel
+	} else {
+		delete(mh.dpEbpf.ctMap, mapKey)
 	}
 
-	mh.dpEbpf.ctMap[mapKey] = nil
-	C.llb_del_map_elem(C.LL_DP_ACL_MAP, unsafe.Pointer(&cti.PKey[0]))
+	C.llb_del_map_elem(C.LL_DP_ACL_MAP, unsafe.Pointer(&w.PKey[0]))
 
 	return 0
 }
