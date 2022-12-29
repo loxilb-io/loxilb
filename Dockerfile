@@ -1,6 +1,5 @@
 # Download base image ubuntu 20.04
 FROM ubuntu:20.04
-ARG BPFTOOL=/usr/sbin/bpftool
 
 # LABEL about the loxilb image
 LABEL description="This is loxilb official Docker Image"
