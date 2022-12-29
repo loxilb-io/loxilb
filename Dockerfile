@@ -27,6 +27,9 @@ RUN wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
     DESTDIR=build make install && cd - && \
     cd iproute2-main/ &&  export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:`pwd`/libbpf/src/ && LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && cp -f tc/tc /usr/local/sbin/ntc && cd - && cd iproute2-main/libbpf/src/ && make install && cd - && rm -fr main.zip iproute2-main
 
+# Build bpftool
+RUN git clone --recurse-submodules https://github.com/libbpf/bpftool.git && cd bpftool/src/ && make clean && 	make -j $(nproc) && cp -f ./bpftool /usr/local/sbin/bpftool && cd - && rm -fr bpftool
+
 # Install loxicmd
 RUN git clone https://github.com/loxilb-io/loxicmd.git && cd loxicmd && go get . && make && cp ./loxicmd /usr/local/sbin/loxicmd && cd - && rm -fr loxicmd
 
