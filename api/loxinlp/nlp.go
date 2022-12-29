@@ -924,9 +924,9 @@ func AddNeigh(neigh nlp.Neigh, link nlp.Link) int {
 			tk.LogIt(tk.LogError, "[NLP] NH %v mac %v dev %v add failed %v\n", neigh.IP.String(), mac,
 				name, err)
 
-		} else {
+		} /*else {
 			tk.LogIt(tk.LogInfo, "[NLP] NH %v mac %v dev %v added\n", neigh.IP.String(), mac, name)
-		}
+		} */
 	} else if neigh.Family == unix.AF_BRIDGE {
 
 		if len(neigh.HardwareAddr) == 0 {
@@ -1395,7 +1395,7 @@ var nNl *NlH
 func LbSessionGet(done bool) int {
 
 	if done {
-		
+
 		tk.LogIt(tk.LogInfo, "[NLP] LbSessionGet Start\n")
 		if _, err := os.Stat("/etc/loxilb/lbconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
@@ -1484,8 +1484,8 @@ func NlpInit() *NlH {
 
 	go NLWorker(nNl)
 	tk.LogIt(tk.LogInfo, "[NLP] NLP Subscription done\n")
-	
+
 	go LbSessionGet(done)
-	
+
 	return nNl
 }

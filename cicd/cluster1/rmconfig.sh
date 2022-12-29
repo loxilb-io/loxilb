@@ -15,6 +15,8 @@ disconnect_docker_hosts r2 ep1
 disconnect_docker_hosts r2 ep2
 disconnect_docker_hosts r2 ep3
 
+delete_docker_host ka_llb1
+delete_docker_host ka_llb2
 delete_docker_host llb1
 delete_docker_host llb2
 delete_docker_host user

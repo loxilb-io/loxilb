@@ -18,12 +18,15 @@ package loxinet
 
 import (
 	"fmt"
+	"net"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
 	apiserver "github.com/loxilb-io/loxilb/api"
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
+	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
 )
@@ -55,6 +58,7 @@ type loxiNetH struct {
 	wg     sync.WaitGroup
 	bgp    *GoBgpH
 	has    *CIStateH
+	logger *tk.Logger
 }
 
 // NodeWalker - an implementation of node walker interface
@@ -80,9 +84,14 @@ var mh loxiNetH
 
 func loxiNetInit() {
 
+	clusterMode := false
+	if opts.Opts.ClusterNodes != "none" {
+		clusterMode = true
+	}
+
 	// Initialize logger and specify the log file
 	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
-	tk.LogItInit(logfile, tk.LogDebug, true)
+	mh.logger = tk.LogItInit(logfile, tk.LogDebug, true)
 
 	mh.tDone = make(chan bool)
 	mh.ticker = time.NewTicker(LoxinetTiVal * time.Second)
@@ -90,7 +99,7 @@ func loxiNetInit() {
 	go loxiNetTicker()
 
 	// Initialize the ebpf datapath subsystem
-	mh.dpEbpf = DpEbpfInit()
+	mh.dpEbpf = DpEbpfInit(clusterMode)
 	mh.dp = DpBrokerInit(mh.dpEbpf)
 
 	// Initialize the security zone subsystem
@@ -104,7 +113,7 @@ func loxiNetInit() {
 		tk.LogIt(tk.LogError, "root zone not found\n")
 		return
 	}
-	
+
 	// Initialize goBgp client
 	if opts.Opts.Bgp {
 		mh.bgp = GoBgpInit()
@@ -115,11 +124,23 @@ func loxiNetInit() {
 		nlp.NlpRegister(NetAPIInit())
 		nlp.NlpInit()
 	}
-	
+
 	// Initialize and spawn the api server subsystem
 	if opts.Opts.NoApi == false {
 		apiserver.RegisterAPIHooks(NetAPIInit())
 		go apiserver.RunAPIServer()
+	}
+
+	// Add cluster nodes if specified
+	if clusterMode {
+		cNodes := strings.Split(opts.Opts.ClusterNodes, ",")
+		for _, cNode := range cNodes {
+			addr := net.ParseIP(cNode)
+			if addr == nil {
+				continue
+			}
+			mh.has.ClusterNodeAdd(cmn.CluserNodeMod{Addr: addr})
+		}
 	}
 }
 

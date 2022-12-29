@@ -46,5 +46,5 @@ RUN git clone --recurse-submodules https://github.com/loxilb-io/loxilb  /root/lo
  
 ENTRYPOINT ["/root/loxilb-io/loxilb/loxilb"]
 
-# Expose Port for loxicmd
-EXPOSE 11111
+# Expose Ports
+EXPOSE 11111 22222

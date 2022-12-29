@@ -556,12 +556,18 @@ type SessionUlClMod struct {
 	Args UlClArg `json:"ulclArgument"`
 }
 
-// SessionUlClMod - information related to a ulcl filter
+// HASMod - information related to a cluster HA instance
 type HASMod struct {
 	// Instance - Cluster Instance
 	Instance string `json:"instance"`
 	// State - current HA state
 	State string `json:"haState"`
+}
+
+// ClusterNodeMod - information related to a cluster node instance
+type CluserNodeMod struct {
+	// Instance - Cluster Instance
+	Addr net.IP `json:"Addr"`
 }
 
 const (

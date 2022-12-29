@@ -36,6 +36,7 @@ package loxinet
 #include "../loxilb-ebpf/kernel/loxilb_libdp.h"
 int bpf_map_get_next_key(int fd, const void *key, void *next_key);
 int bpf_map_lookup_elem(int fd, const void *key, void *value);
+extern void goMapNotiHandler(struct ll_dp_map_notif *);
 #cgo CFLAGS:  -I./../loxilb-ebpf/libbpf/src/ -I./../loxilb-ebpf/common
 #cgo LDFLAGS: -L. -L/lib64 -L./../loxilb-ebpf/kernel -L./../loxilb-ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=/lib64/ -lloxilbdp -lbpf -lelf -lz
 */
@@ -44,6 +45,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"sync"
 	"syscall"
 	"time"
 	"unsafe"
@@ -80,6 +82,8 @@ const (
 	EbpfErrMirrDel
 	EbpfErrFwAdd
 	EbpfErrFwDel
+	EbpfErrCtAdd
+	EbpfErrCtDel
 	EbpfErrWqUnk
 )
 
@@ -119,13 +123,19 @@ type (
 	mirrTact    C.struct_dp_mirr_tact
 	fw4Ent      C.struct_dp_fwv4_ent
 	portAct     C.struct_dp_rdr_act
+	mapNoti     C.struct_ll_dp_map_notif
 )
 
 // DpEbpfH - context container
 type DpEbpfH struct {
-	ticker *time.Ticker
-	tDone  chan bool
-	tbN    int
+	ticker  *time.Ticker
+	tDone   chan bool
+	tbN     int
+	CtSync  bool
+	ToMapCh chan interface{}
+	ToFinCh chan int
+	mtx     sync.RWMutex
+	ctMap   map[string]*DpCtInfo
 }
 
 // dpEbpfTicker - this ticker routine runs every DpEbpfLinuxTiVal seconds
@@ -160,14 +170,33 @@ func dpEbpfTicker() {
 			C.llb_collect_map_stats(C.int(C.LL_DP_ACL_STATS_MAP))
 			C.llb_age_map_entries(C.LL_DP_CT_MAP)
 			C.llb_age_map_entries(C.LL_DP_FCV4_MAP)
+
+			// This means around 30s from start
+			if sel == 2 {
+				if !mh.dpEbpf.CtSync {
+					ret := mh.dp.DpNsyncRpc(DpSyncGet, nil)
+					if ret == 0 {
+						mh.dpEbpf.CtSync = true
+					}
+				}
+			}
+			dpCTMapChkUpdates()
 			mh.dpEbpf.tbN++
 		}
 	}
 }
 
 // DpEbpfInit - initialize the ebpf dp subsystem
-func DpEbpfInit() *DpEbpfH {
-	C.loxilb_main()
+func DpEbpfInit(clusterEn bool) *DpEbpfH {
+	var cfg C.struct_ebpfcfg
+
+	if clusterEn {
+		cfg.have_mtrace = 1
+	} else {
+		cfg.have_mtrace = 0
+	}
+
+	C.loxilb_main(&cfg)
 
 	// Make sure to unload eBPF programs at init time
 	ifList, err := net.Interfaces()
@@ -189,9 +218,13 @@ func DpEbpfInit() *DpEbpfH {
 
 	ne := new(DpEbpfH)
 	ne.tDone = make(chan bool)
+	ne.ToMapCh = make(chan interface{}, DpWorkQLen)
+	ne.ToFinCh = make(chan int)
 	ne.ticker = time.NewTicker(DpEbpfLinuxTiVal * time.Second)
+	ne.ctMap = make(map[string]*DpCtInfo)
 
 	go dpEbpfTicker()
+	go dpMapNotifierWorker(ne.ToFinCh, ne.ToMapCh)
 
 	return ne
 }
@@ -886,9 +919,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 	return 0
 }
 
-func convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtInfo {
-	ct := new(DpCtInfo)
-
+func (ct *DpCtInfo) convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtInfo {
 	if ctKey.v6 == 0 {
 		ct.DIP = tk.NltoIP(uint32(ctKey.daddr[0]))
 		ct.SIP = tk.NltoIP(uint32(ctKey.saddr[0]))
@@ -898,10 +929,31 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtI
 	}
 	ct.Dport = tk.Ntohs(uint16(ctKey.dport))
 	ct.Sport = tk.Ntohs(uint16(ctKey.sport))
-	ct.Packets = uint64(ctDat.pb.packets)
-	ct.Bytes = uint64(ctDat.pb.bytes)
 
 	p := uint8(ctKey.l4proto)
+	switch {
+	case p == 1 || p == 58:
+		if p == 1 {
+			ct.Proto = "icmp"
+		} else {
+			ct.Proto = "icmp6"
+		}
+	case p == 6:
+		ct.Proto = "tcp"
+	case p == 17:
+		ct.Proto = "udp"
+	case p == 132:
+		ct.Proto = "sctp"
+	default:
+		ct.Proto = fmt.Sprintf("%d", p)
+	}
+
+	if ctDat == nil {
+		ct.CAct = "n/a"
+		ct.CState = "n/a"
+		return ct
+	}
+
 	switch {
 	case p == 1 || p == 58:
 		if p == 1 {
@@ -988,6 +1040,9 @@ func convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtI
 	default:
 		ct.Proto = fmt.Sprintf("%d", p)
 	}
+
+	ct.Packets = uint64(ctDat.pb.packets)
+	ct.Bytes = uint64(ctDat.pb.bytes)
 
 	if ctDat.xi.nat_flags == C.LLB_NAT_DST ||
 		ctDat.xi.nat_flags == C.LLB_NAT_SRC {
@@ -1092,7 +1147,8 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 
 			if act.dir == C.CT_DIR_IN || act.dir == C.CT_DIR_OUT {
 				var b, p uint64
-				goCt4Ent := convDPCt2GoObj(ctKey, act)
+				goCt4Ent := new(DpCtInfo)
+				goCt4Ent.convDPCt2GoObj(ctKey, act)
 				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_ACL_STATS_MAP), C.uint(tact.ca.cidx), C.int(1),
 					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
 				if ret == 0 {
@@ -1386,4 +1442,307 @@ func (e *DpEbpfH) DpFwRuleAdd(w *FwDpWorkQ) int {
 // DpFwRuleDel - routine to work on a ebpf fw delete request
 func (e *DpEbpfH) DpFwRuleDel(w *FwDpWorkQ) int {
 	return e.DpFwRuleMod(w)
+}
+
+//export goMapNotiHandler
+func goMapNotiHandler(m *mapNoti) {
+
+	ctKey := (*C.struct_dp_ct_key)(unsafe.Pointer(m.key))
+
+	// Only connection oriented protocols
+	if ctKey.l4proto != 6 && ctKey.l4proto != 132 {
+		return
+	}
+
+	goCtEnt := new(DpCtInfo)
+	goCtEnt.PKey = C.GoBytes(unsafe.Pointer(m.key), m.key_len)
+	if m.addop != 0 {
+		// No value in delete op
+		goCtEnt.PVal = C.GoBytes(unsafe.Pointer(m.val), m.val_len)
+	}
+
+	mh.dpEbpf.ToMapCh <- goCtEnt
+}
+
+func dpCTMapNotifierWorker(cti *DpCtInfo) {
+	var tact *C.struct_dp_acl_tact
+	var act *C.struct_dp_ct_dat
+	var addOp bool
+	var opStr string
+
+	ctKey := (*C.struct_dp_ct_key)(unsafe.Pointer(&cti.PKey[0]))
+	if len(cti.PVal) != 0 {
+		tact = (*C.struct_dp_acl_tact)(unsafe.Pointer(&cti.PVal[0]))
+		act = &tact.ctd
+		addOp = true
+		opStr = "Add"
+	} else {
+		addOp = false
+		tact = nil
+		act = nil
+		opStr = "Delete"
+	}
+
+	cti.convDPCt2GoObj(ctKey, act)
+	cti.LTs = time.Now()
+
+	if addOp {
+		// Need to completely initialize the cti
+		mh.mtx.Lock()
+		r := mh.zr.Rules.GetNatLbRuleByID(uint32(act.rid))
+		mh.mtx.Unlock()
+		if r == nil {
+			return
+		}
+		cti.ServiceIP = r.tuples.l3Dst.addr.IP
+		cti.L4ServPort = r.tuples.l4Dst.val
+		cti.BlockNum = r.tuples.pref
+		if r.tuples.l4Prot.val == 6 {
+			cti.ServProto = "tcp"
+		} else if r.tuples.l4Prot.val == 132 {
+			cti.ServProto = "sctp"
+		} else {
+			return
+		}
+	}
+
+	mh.dpEbpf.mtx.Lock()
+	defer mh.dpEbpf.mtx.Unlock()
+
+	mapKey := cti.Key()
+
+	if addOp == false {
+		cti = mh.dpEbpf.ctMap[mapKey]
+		if cti == nil {
+			return
+		}
+		cti.Deleted = true
+		cti.NSync = true
+		cti.NTs = time.Now()
+		// Immediately notify for delete
+		ret := mh.dp.DpNsyncRpc(DpSyncDelete, cti)
+		if ret == 0 {
+			delete(mh.dpEbpf.ctMap, cti.Key())
+			// This is a strange fix - Sometimes loxilb runs as multiple docker
+			// instances in the same host. So, the map tracing infra can send notifications
+			// generated by other instances here. Depending on the timing, it is possible
+			// that the original deleter gets notified after it is handled in the remote
+			// instance. This is to handle such special cases.
+			C.llb_del_map_elem(C.LL_DP_ACL_MAP, unsafe.Pointer(&cti.PKey[0]))
+		}
+	} else {
+		cte := mh.dpEbpf.ctMap[cti.Key()]
+		if cte != nil {
+			if cte.CState == cti.CState && cte.CAct == cti.CAct {
+				return
+			}
+			delete(mh.dpEbpf.ctMap, cti.Key())
+		}
+		mh.dpEbpf.ctMap[cti.Key()] = cti
+		if cti.CState == "est" {
+			cti.NSync = true
+			cti.NTs = time.Now()
+		}
+	}
+
+	tk.LogIt(tk.LogInfo, "[CT] %s - %s\n", opStr, cti.String())
+}
+
+func dpCTMapChkUpdates() {
+	mh.dpEbpf.mtx.Lock()
+	defer mh.dpEbpf.mtx.Unlock()
+	var tact C.struct_dp_acl_tact
+	var act *C.struct_dp_ct_dat
+
+	tc := time.Now()
+	fd := C.llb_map2fd(C.LL_DP_ACL_MAP)
+
+	for _, cti := range mh.dpEbpf.ctMap {
+		// tk.LogIt(tk.LogDebug, "[CT] check %s:%s:%v\n", cti.Key(), cti.CState, cti.NSync)
+		if cti.CState != "est" {
+			if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
+				delete(mh.dpEbpf.ctMap, cti.Key())
+				continue
+			}
+
+			act = &tact.ctd
+			goCtEnt := new(DpCtInfo)
+			goCtEnt.convDPCt2GoObj((*C.struct_dp_ct_key)(unsafe.Pointer(&cti.PKey[0])), act)
+			goCtEnt.LTs = time.Now()
+
+			if goCtEnt.CState != cti.CState ||
+				goCtEnt.CAct != cti.CState {
+				goCtEnt.PKey = cti.PKey
+				// Key will remain the same but value might change
+				goCtEnt.PVal = C.GoBytes(unsafe.Pointer(&tact), C.sizeof_struct_dp_acl_tact)
+
+				// Copy rule associations
+				goCtEnt.ServiceIP = cti.ServiceIP
+				goCtEnt.L4ServPort = cti.L4ServPort
+				goCtEnt.BlockNum = cti.BlockNum
+				goCtEnt.ServProto = cti.ServProto
+				delete(mh.dpEbpf.ctMap, cti.Key())
+				mh.dpEbpf.ctMap[goCtEnt.Key()] = goCtEnt
+				ctStr := goCtEnt.String()
+				tk.LogIt(tk.LogInfo, "[CT] %s - %s\n", "update", ctStr)
+				if goCtEnt.CState == "est" {
+					goCtEnt.NSync = true
+					goCtEnt.NTs = time.Now()
+				}
+				continue
+			}
+		} else {
+			var b uint64
+			var p uint64
+
+			if len(cti.PVal) > 0 && cti.NSync == false {
+				ptact := (*C.struct_dp_acl_tact)(unsafe.Pointer(&cti.PVal[0]))
+				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_ACL_STATS_MAP), C.uint(ptact.ca.cidx), C.int(0),
+					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
+				if ret == 0 {
+					if cti.Packets < p {
+						cti.Bytes = b
+						cti.Packets = p
+						cti.NSync = true
+						cti.NTs = time.Now()
+					}
+				}
+			}
+		}
+		if cti.NSync == true &&
+			time.Duration(tc.Sub(cti.NTs).Seconds()) >= time.Duration(10) {
+			tk.LogIt(tk.LogDebug, "[CT] Sync - %s\n", cti.String())
+
+			ret := 0
+			if cti.Deleted {
+				ret = mh.dp.DpNsyncRpc(DpSyncDelete, cti)
+			} else {
+				ret = mh.dp.DpNsyncRpc(DpSyncAdd, cti)
+			}
+			if ret == 0 {
+				cti.NSync = false
+
+				if cti.Deleted {
+					delete(mh.dpEbpf.ctMap, cti.Key())
+					// This is a strange fix - See comment above
+					C.llb_del_map_elem(C.LL_DP_ACL_MAP, unsafe.Pointer(&cti.PKey[0]))
+				}
+			}
+		}
+	}
+}
+
+// dpMapNotifierWorker - Work on any map notifications
+func dpMapNotifierWorker(f chan int, ch chan interface{}) {
+	for {
+		for n := 0; n < DpWorkQLen; n++ {
+			select {
+			case m := <-ch:
+				switch mq := m.(type) {
+				case *DpCtInfo:
+					dpCTMapNotifierWorker(mq)
+				}
+			case <-f:
+				return
+			default:
+				continue
+			}
+		}
+		time.Sleep(2000 * time.Millisecond)
+	}
+}
+
+// DpCtAdd - routine to work on a ebpf ct add request
+func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
+	var serv cmn.LbServiceArg
+
+	serv.ServIP = w.ServiceIP.String()
+	serv.Proto = w.ServProto
+	serv.ServPort = w.L4ServPort
+	serv.BlockNum = w.BlockNum
+
+	mh.mtx.Lock()
+	r := mh.zr.Rules.GetNatLbRuleByServArgs(serv)
+	mh.mtx.Unlock()
+
+	if r == nil || len(w.PVal) == 0 || len(w.PKey) == 0 || w.CState != "est" {
+		tk.LogIt(tk.LogDebug, "Invalid CT op/No LB - %v\n", serv)
+		return EbpfErrCtAdd
+	}
+
+	// Fix few things
+	ptact := (*C.struct_dp_acl_tact)(unsafe.Pointer(&w.PVal[0]))
+	ptact.ctd.rid = C.uint(r.ruleNum) // Race-condition here
+	ptact.lts = C.get_os_nsecs()
+
+	mh.dpEbpf.mtx.Lock()
+	defer mh.dpEbpf.mtx.Unlock()
+
+	mapKey := w.Key()
+	cti := new(DpCtInfo)
+	*cti = *w
+
+	cte := mh.dpEbpf.ctMap[mapKey]
+	if cte != nil {
+		if cte.CState != cti.CState ||
+			cte.CAct != cti.CAct {
+			delete(mh.dpEbpf.ctMap, mapKey)
+			mh.dpEbpf.ctMap[mapKey] = cti
+			cte = cti
+		}
+	} else {
+		mh.dpEbpf.ctMap[mapKey] = cti
+		cte = cti
+	}
+
+	cte.NSync = false
+	cte.NTs = time.Now()
+	cte.LTs = cti.NTs
+
+	ret := C.llb_add_map_elem(C.LL_DP_ACL_MAP, unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&cti.PVal[0]))
+	if ret != 0 {
+		delete(mh.dpEbpf.ctMap, mapKey)
+		tk.LogIt(tk.LogError, "ctInfo (%s) rpc add error\n", cti.String())
+		return EbpfErrCtAdd
+	}
+
+	return 0
+}
+
+// DpCtDel - routine to work on a ebpf ct delete request
+func (e *DpEbpfH) DpCtDel(w *DpCtInfo) int {
+	mh.dpEbpf.mtx.Lock()
+	defer mh.dpEbpf.mtx.Unlock()
+
+	if len(w.PKey) == 0 {
+		tk.LogIt(tk.LogDebug, "Invalid CT op - %v", w)
+		return EbpfErrCtDel
+	}
+
+	mapKey := w.Key()
+	cti := mh.dpEbpf.ctMap[mapKey]
+	if cti == nil {
+		tk.LogIt(tk.LogError, "ctInfo-key (%v) not present\n", mapKey)
+		return EbpfErrCtDel
+	} else {
+		delete(mh.dpEbpf.ctMap, mapKey)
+	}
+
+	C.llb_del_map_elem(C.LL_DP_ACL_MAP, unsafe.Pointer(&w.PKey[0]))
+
+	return 0
+}
+
+// DpCtGetAsync - routine to work on a ebpf ct get async request
+func (e *DpEbpfH) DpCtGetAsync() {
+
+	mh.dpEbpf.mtx.Lock()
+	defer mh.dpEbpf.mtx.Unlock()
+
+	for _, cte := range mh.dpEbpf.ctMap {
+		if cte.CState == "est" {
+			cte.NSync = true
+			cte.NTs = time.Now()
+		}
+	}
 }

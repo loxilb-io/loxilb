@@ -18,11 +18,15 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+	"net/rpc"
+	"os"
+	"os/exec"
+
 	"github.com/jessevdk/go-flags"
 	ln "github.com/loxilb-io/loxilb/loxinet"
 	opts "github.com/loxilb-io/loxilb/options"
-	"os"
-	"os/exec"
 )
 
 // utility variables
@@ -48,7 +52,21 @@ func fileCreate(fname string) int {
 	return 0
 }
 
-var version string = "0.7.8"
+// loxiSyncMain - NSync subsystem init
+func loxiSyncMain() {
+	rpcObj := new(ln.NSync)
+	rpc.Register(rpcObj)
+	rpc.HandleHTTP()
+
+	http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
+		io.WriteString(res, "loxilb-nsync\n")
+	})
+
+	listener := fmt.Sprintf(":%d", ln.NSyncPort)
+	http.ListenAndServe(listener, nil)
+}
+
+var version string = "0.7.9"
 var buildInfo string = ""
 
 func main() {
@@ -78,5 +96,6 @@ func main() {
 		}
 	}
 
+	go loxiSyncMain()
 	ln.Main()
 }

@@ -17,8 +17,13 @@
 package loxinet
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
+	"io"
 	"net"
+	"net/http"
+	"net/rpc"
 	"time"
 
 	cmn "github.com/loxilb-io/loxilb/common"
@@ -73,6 +78,8 @@ const (
 // maximum dp work queue lengths
 const (
 	DpWorkQLen = 1024
+	NSyncPort  = 22222
+	DpTiVal    = 20
 )
 
 // MirrDpWorkQ - work queue entry for mirror operation
@@ -192,6 +199,13 @@ type PolDpWorkQ struct {
 	Status *DpStatusT
 }
 
+// PeerDpWorkQ - work queue entry for peer association
+type PeerDpWorkQ struct {
+	Work   DpWorkT
+	PeerIP net.IP
+	Status *DpStatusT
+}
+
 // FwOpT - type of firewall operation
 type FwOpT uint8
 
@@ -282,6 +296,22 @@ type DpCtInfo struct {
 	CAct    string
 	Packets uint64
 	Bytes   uint64
+	Deleted bool
+	PKey    []byte
+	PVal    []byte
+	LTs     time.Time
+	NTs     time.Time
+	NSync   bool
+
+	// LB Association Data
+	ServiceIP  net.IP
+	ServProto  string
+	L4ServPort uint16
+	BlockNum   uint16
+}
+
+type NSync struct {
+	// For peer to peer RPC
 }
 
 // UlClDpWorkQ - work queue entry for ul-cl filter related operation
@@ -299,9 +329,26 @@ type UlClDpWorkQ struct {
 	TTeID  uint32
 }
 
+// DpSyncOpT - Sync Operation type
+type DpSyncOpT uint8
+
+// Sync Operation type codes
+const (
+	DpSyncAdd DpSyncOpT = iota + 1
+	DpSyncDelete
+	DpSyncGet
+)
+
 // Key - outputs a key string for given DpCtInfo pointer
 func (ct *DpCtInfo) Key() string {
 	str := fmt.Sprintf("%s%s%d%d%s", ct.DIP.String(), ct.SIP.String(), ct.Dport, ct.Sport, ct.Proto)
+	return str
+}
+
+// String - stringify the given DpCtInfo
+func (ct *DpCtInfo) String() string {
+	str := fmt.Sprintf("%s:%d->%s:%d (%s), ", ct.SIP.String(), ct.Sport, ct.DIP.String(), ct.Dport, ct.Proto)
+	str += fmt.Sprintf("%s:%s [%v:%v]", ct.CState, ct.CAct, ct.Packets, ct.Bytes)
 	return str
 }
 
@@ -334,6 +381,14 @@ type DpHookInterface interface {
 	DpUlClAdd(w *UlClDpWorkQ) int
 	DpUlClDel(w *UlClDpWorkQ) int
 	DpTableGet(w *TableDpWorkQ) (DpRetT, error)
+	DpCtAdd(w *DpCtInfo) int
+	DpCtDel(w *DpCtInfo) int
+	DpCtGetAsync()
+}
+
+type DpPeer struct {
+	Peer   net.IP
+	Client *rpc.Client
 }
 
 // DpH - datapath context container
@@ -342,6 +397,133 @@ type DpH struct {
 	FromDpCh chan interface{}
 	ToFinCh  chan int
 	DpHooks  DpHookInterface
+	Peers    []DpPeer
+	RPC      *NSync
+}
+
+// dialHTTPPath connects to an HTTP RPC server
+// at the specified network address and path.
+// This is based on rpc package's DialHTTPPath but with added timeout
+func dialHTTPPath(network, address, path string) (*rpc.Client, error) {
+	var connected = "200 Connected to Go RPC"
+	timeOut := 2 * time.Second
+
+	conn, err := net.DialTimeout(network, address, timeOut)
+	if err != nil {
+		return nil, err
+	}
+	io.WriteString(conn, "CONNECT "+path+" HTTP/1.0\n\n")
+
+	// Require successful HTTP response
+	// before switching to RPC protocol.
+	resp, err := http.ReadResponse(bufio.NewReader(conn), &http.Request{Method: "CONNECT"})
+	if err == nil && resp.Status == connected {
+		return rpc.NewClient(conn), nil
+	}
+	if err == nil {
+		err = errors.New("unexpected HTTP response: " + resp.Status)
+	}
+	conn.Close()
+	return nil, &net.OpError{
+		Op:   "dial-http",
+		Net:  network + " " + address,
+		Addr: nil,
+		Err:  err,
+	}
+}
+
+func (dp *DpH) DpNsyncRpc(op DpSyncOpT, cti *DpCtInfo) int {
+	var reply int
+	timeout := 2 * time.Second
+	for idx := range mh.dp.Peers {
+		pe := &mh.dp.Peers[idx]
+		if pe.Client == nil {
+			cStr := fmt.Sprintf("%s:%d", pe.Peer.String(), NSyncPort)
+			pe.Client, _ = dialHTTPPath("tcp", cStr, rpc.DefaultRPCPath)
+			if pe.Client == nil {
+				return -1
+			}
+			tk.LogIt(tk.LogInfo, "NSync RPC - %s :Connected\n", cStr)
+		}
+
+		rpcCallStr := ""
+		if op == DpSyncAdd {
+			rpcCallStr = "NSync.DpWorkOnCtAdd"
+		} else if op == DpSyncDelete {
+			rpcCallStr = "NSync.DpWorkOnCtDelete"
+		} else if op == DpSyncGet {
+			rpcCallStr = "NSync.DpWorkOnCtGet"
+		} else {
+			return -1
+		}
+
+		var call *rpc.Call
+		if op == DpSyncAdd || op == DpSyncDelete {
+			if cti == nil {
+				return -1
+			}
+			call = pe.Client.Go(rpcCallStr, *cti, &reply, make(chan *rpc.Call, 1))
+		} else {
+			async := 1
+			call = pe.Client.Go(rpcCallStr, async, &reply, make(chan *rpc.Call, 1))
+		}
+		select {
+		case <-time.After(timeout):
+			tk.LogIt(tk.LogError, "rpc call timeout(%v)\n", timeout)
+			pe.Client.Close()
+			pe.Client = nil
+			return -1
+		case resp := <-call.Done:
+			if resp != nil && resp.Error != nil {
+				pe.Client.Close()
+				pe.Client = nil
+				tk.LogIt(tk.LogError, "rpc call failed(%s)\n", resp.Error)
+				return -1
+			}
+			return reply
+		}
+	}
+
+	return 0
+}
+
+// DpBrokerInit - initialize the DP broker subsystem
+func DpBrokerInit(dph DpHookInterface) *DpH {
+	nDp := new(DpH)
+
+	nDp.ToDpCh = make(chan interface{}, DpWorkQLen)
+	nDp.FromDpCh = make(chan interface{}, DpWorkQLen)
+	nDp.ToFinCh = make(chan int)
+	nDp.DpHooks = dph
+	nDp.RPC = new(NSync)
+
+	go DpWorker(nDp, nDp.ToFinCh, nDp.ToDpCh)
+
+	return nDp
+}
+
+// DpWorkOnCtAdd - Add a CT entry from remote
+func (n *NSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
+	tk.LogIt(tk.LogDebug, "RPC - CT Add %s\n", cti.Key())
+	r := mh.dp.DpHooks.DpCtAdd(&cti)
+	*ret = r
+	return nil
+}
+
+// DpWorkOnCtDelete - Delete a CT entry from remote
+func (n *NSync) DpWorkOnCtDelete(cti DpCtInfo, ret *int) error {
+	tk.LogIt(tk.LogDebug, "RPC -  CT Del %s\n", cti.Key())
+	r := mh.dp.DpHooks.DpCtDel(&cti)
+	*ret = r
+	return nil
+}
+
+// DpWorkOnCtGet - Get all CT entries asynchronously
+func (n *NSync) DpWorkOnCtGet(async int, ret *int) error {
+	tk.LogIt(tk.LogDebug, "RPC -  CT Get %d\n", async)
+	mh.dp.DpHooks.DpCtGetAsync()
+	*ret = 0
+	return nil
 }
 
 // DpWorkOnPort - routine to work on a port work queue request
@@ -464,6 +646,36 @@ func (dp *DpH) DpWorkOnFw(fWq *FwDpWorkQ) DpRetT {
 	return DpWqUnkErr
 }
 
+// DpWorkOnPeerOp - routine to work on a peer request for clustering
+func (dp *DpH) DpWorkOnPeerOp(pWq *PeerDpWorkQ) DpRetT {
+	if pWq.Work == DpCreate {
+		var newPeer DpPeer
+		for _, pe := range dp.Peers {
+			if pe.Peer.Equal(pWq.PeerIP) {
+				return DpCreateErr
+			}
+		}
+		newPeer.Peer = pWq.PeerIP
+		dp.Peers = append(dp.Peers, newPeer)
+		tk.LogIt(tk.LogInfo, "Added cluster-peer %s\n", newPeer.Peer.String())
+		return 0
+	} else if pWq.Work == DpRemove {
+		for idx := range dp.Peers {
+			pe := &dp.Peers[idx]
+			if pe.Peer.Equal(pWq.PeerIP) {
+				if pe.Client != nil {
+					pe.Client.Close()
+				}
+				dp.Peers = append(dp.Peers[:idx], dp.Peers[idx+1:]...)
+				tk.LogIt(tk.LogInfo, "Deleted cluster-peer %s\n", pWq.PeerIP.String())
+				return 0
+			}
+		}
+	}
+
+	return DpWqUnkErr
+}
+
 // DpWorkSingle - routine to work on a single dp work queue request
 func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 	var ret DpRetT
@@ -492,6 +704,8 @@ func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 		ret, _ = dp.DpWorkOnTableOp(mq)
 	case *FwDpWorkQ:
 		ret = dp.DpWorkOnFw(mq)
+	case *PeerDpWorkQ:
+		ret = dp.DpWorkOnPeerOp(mq)
 	default:
 		tk.LogIt(tk.LogError, "unexpected type %T\n", mq)
 		ret = DpWqUnkErr
@@ -514,20 +728,6 @@ func DpWorker(dp *DpH, f chan int, ch chan interface{}) {
 		}
 		time.Sleep(1000 * time.Millisecond)
 	}
-}
-
-// DpBrokerInit - initialize the DP broker subsystem
-func DpBrokerInit(dph DpHookInterface) *DpH {
-	nDp := new(DpH)
-
-	nDp.ToDpCh = make(chan interface{}, DpWorkQLen)
-	nDp.FromDpCh = make(chan interface{}, DpWorkQLen)
-	nDp.ToFinCh = make(chan int)
-	nDp.DpHooks = dph
-
-	go DpWorker(nDp, nDp.ToFinCh, nDp.ToDpCh)
-
-	return nDp
 }
 
 // DpMapGetCt4 - get DP conntrack information as a map
