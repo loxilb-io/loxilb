@@ -53,12 +53,6 @@ jobs:
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/lbtimeout/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
              cd cicd/sctpfullnat/
              ./config.sh
              ./validation.sh
@@ -66,12 +60,6 @@ jobs:
              cd -
       - run: |
              cd cicd/nat66tcp/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/lb6timeout/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
@@ -111,4 +99,16 @@ jobs:
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
-             cd -          
+             cd -
+      - run: |
+             cd cicd/lbtimeout/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/lb6timeout/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
