@@ -458,7 +458,7 @@ func (dp *DpH) DpNsyncRpc(op DpSyncOpT, cti *DpCtInfo) int {
 		}
 
 		var call *rpc.Call
-		if op == DpSyncAdd || op == DpSyncDelete  {
+		if op == DpSyncAdd || op == DpSyncDelete {
 			if cti == nil {
 				return -1
 			}
