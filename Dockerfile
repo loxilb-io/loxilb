@@ -13,7 +13,7 @@ RUN apt update
 # Install loxilb related packages
 RUN apt install -y clang llvm libelf-dev gcc-multilib libpcap-dev vim net-tools \
     elfutils dwarves git libbsd-dev bridge-utils wget arping unzip build-essential \
-    bison flex sudo iproute2 pkg-config tcpdump iputils-ping linux-tools-$(uname -r) && \
+    bison flex sudo iproute2 pkg-config tcpdump iputils-ping && \
     rm -rf /var/lib/apt/lists/* && \
     apt clean
 
@@ -38,9 +38,15 @@ RUN mkdir -p /opt/loxilb
 RUN mkdir -p /opt/loxilb/cert/
 RUN mkdir -p /root/loxilb-io/loxilb/
 
+# Copy bpftool from host
+COPY `which bpftool` /usr/local/sbin/bpftool
+
 # Install loxilb
 RUN git clone --recurse-submodules https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && cd /root/loxilb-io/loxilb/ && go get . && make && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && cp api/certification/* /opt/loxilb/cert/ && cd -
 #RUN /usr/local/sbin/mkllb_bpffs
+
+# Remove bpftool
+RUN rm /usr/local/sbin/bpftool
 
 #RUN cd /root/loxilb-io/loxilb/ && make test
  
