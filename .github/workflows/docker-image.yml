@@ -40,7 +40,7 @@ jobs:
       
     - name: Build the loxilb Docker image with given tag
       if: github.event.inputs.tagName != ''
-      run: docker build . --tag ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }} 
+      run: docker build . --tag ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }} --build-arg BPFTOOL="$(readlink -f /usr/lib/linux-tools/$(uname -r)/bpftool)"
       
     - name: Run the loxilb docker image to check
       run: docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
