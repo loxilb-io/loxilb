@@ -31,7 +31,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - run: sudo apt-get update
-    - run: sudo apt -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iproute2
+    - run: sudo apt -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-5.15.0-1023-azure elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iproute2
     - run: which bpftool
     - run: bpftool version
 
