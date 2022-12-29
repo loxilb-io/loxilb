@@ -33,6 +33,7 @@ jobs:
         
     - run: sudo apt-get update
     - run: sudo apt -y install clang llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r)
+    - run: cp -f "$(readlink -f /usr/lib/linux-tools/$(uname -r)/bpftool)" .
 
     - name: Build the latest loxilb Docker image
       if: github.event.inputs.tagName == ''
