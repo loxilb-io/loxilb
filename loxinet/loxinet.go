@@ -84,6 +84,11 @@ var mh loxiNetH
 
 func loxiNetInit() {
 
+	clusterMode := false
+	if opts.Opts.ClusterNodes != "none" {
+		clusterMode = true
+	}
+
 	// Initialize logger and specify the log file
 	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
 	mh.logger = tk.LogItInit(logfile, tk.LogDebug, true)
@@ -94,7 +99,7 @@ func loxiNetInit() {
 	go loxiNetTicker()
 
 	// Initialize the ebpf datapath subsystem
-	mh.dpEbpf = DpEbpfInit()
+	mh.dpEbpf = DpEbpfInit(clusterMode)
 	mh.dp = DpBrokerInit(mh.dpEbpf)
 
 	// Initialize the security zone subsystem
@@ -127,7 +132,7 @@ func loxiNetInit() {
 	}
 
 	// Add cluster nodes if specified
-	if opts.Opts.ClusterNodes != "none" {
+	if clusterMode {
 		cNodes := strings.Split(opts.Opts.ClusterNodes, ",")
 		for _, cNode := range cNodes {
 			addr := net.ParseIP(cNode)

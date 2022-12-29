@@ -187,8 +187,16 @@ func dpEbpfTicker() {
 }
 
 // DpEbpfInit - initialize the ebpf dp subsystem
-func DpEbpfInit() *DpEbpfH {
-	C.loxilb_main()
+func DpEbpfInit(clusterEn bool) *DpEbpfH {
+	var cfg C.struct_ebpfcfg
+
+	if clusterEn {
+		cfg.have_mtrace = 1
+	} else {
+		cfg.have_mtrace = 0
+	}
+
+	C.loxilb_main(&cfg)
 
 	// Make sure to unload eBPF programs at init time
 	ifList, err := net.Interfaces()
