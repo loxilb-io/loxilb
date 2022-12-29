@@ -1661,6 +1661,35 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 #----------------------------------------------
+# End-Point State
+#----------------------------------------------
+  '/config/endpoint/all':
+    get:
+      summary: Get End-Points State in loxilb
+      description: Get End-Points State in loxilb
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              Attr:
+                type: array
+                items:
+                  $ref: '#/definitions/EndPointState'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+#----------------------------------------------
 # Firewall Configuration
 #----------------------------------------------
   '/config/firewall/all':
@@ -1885,7 +1914,89 @@ paths:
           description: Maintanence mode
           schema:
             $ref: '#/definitions/Error'
-            
+#----------------------------------------------
+# LoxiLB Operational Config
+#----------------------------------------------
+  '/config/params':
+    post:
+      summary: Set Operational parameters of LoxiLB
+      description: Set Operational parameters of LoxiLB
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes for setting state
+          schema:
+            $ref: '#/definitions/OperParams'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+    get:
+      summary: Get Operational params of LoxiLB
+      description: Get Operational params of LoxiLB
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/OperParams'
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
 
 #----------------------------------------------
 # Schema definitions
@@ -2552,7 +2663,41 @@ definitions:
       sync:
         type: integer
         description: Sync - sync state
-                
+
+  EndPointState:
+    type: object
+    properties:
+      hostName:
+        type: string
+        description: Host name
+      description:
+        type: string
+        description: Host Description
+      inactiveReTries:
+        type: integer
+        description: Number of inactive retries
+      probeType:
+        type: string
+        description: Type of probe used
+      probeDuration:
+        type: integer
+        description: How frequently to probe in seconds
+      probePort:
+        type: integer
+        description: The l4port to probe on
+      minDelay:
+        type: string
+        description: Minimum delay seen for endpoint
+      avgDelay:
+        type: string
+        description: Average delay seen for endpoint
+      maxDelay:
+        type: string
+        description: Maximum delay seen for endpoint
+      currState:
+        type: string
+        description: Current state of this endpoint
+
   FirewallOptionEntry:
     type: object
     properties:
@@ -2614,3 +2759,9 @@ definitions:
       opts:
         $ref: '#/definitions/FirewallOptionEntry'       
 
+  OperParams:
+    type: object
+    properties:
+      logLevel:
+        type: string
+        description: Set level to debug,info,error,warning,notice,critical,emergency,alert

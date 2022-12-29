@@ -39,7 +39,6 @@ func (*NetAPIStruct) NetMirrorGet() ([]cmn.MirrGetMod, error) {
 	// There is no locking requirement for this operation
 	ret, _ := mh.zr.Mirrs.MirrGet()
 	return ret, nil
-
 }
 
 // NetMirrorAdd - Add a mirror in loxinet
@@ -443,5 +442,17 @@ func (*NetAPIStruct) NetEpHostDel(fm *cmn.EndPointMod) (int, error) {
 // NetEpHostGet - Get LB end-points from loxinet
 func (*NetAPIStruct) NetEpHostGet() ([]cmn.EndPointMod, error) {
 	ret, err := mh.zr.Rules.GetEpHosts()
+	return ret, err
+}
+
+// NetParamSet - Set operational params of loxinet
+func (*NetAPIStruct) NetParamSet(param cmn.ParamMod) (int, error) {
+	ret, err := mh.LogLevelSet(param.LogLevel)
+	return ret, err
+}
+
+// NetParamGet - Get operational params of loxinet
+func (*NetAPIStruct) NetParamGet(param *cmn.ParamMod) (int, error) {
+	ret, err := mh.LogLevelGet(&param.LogLevel)
 	return ret, err
 }

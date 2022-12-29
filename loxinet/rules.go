@@ -1256,6 +1256,11 @@ func (R *RuleH) GetEpHosts() ([]cmn.EndPointMod, error) {
 		ret.MinDelay = fmt.Sprintf("%v", data.minDelay)
 		ret.AvgDelay = fmt.Sprintf("%v", data.avgDelay)
 		ret.MaxDelay = fmt.Sprintf("%v", data.maxDelay)
+		if data.inactive {
+			ret.CurrState = "nok"
+		} else {
+			ret.CurrState = "ok"
+		}
 
 		// Append to slice
 		res = append(res, ret)

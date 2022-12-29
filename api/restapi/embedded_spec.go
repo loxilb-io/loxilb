@@ -181,6 +181,46 @@ func init() {
         }
       }
     },
+    "/config/endpoint/all": {
+      "get": {
+        "description": "Get End-Points State in loxilb",
+        "summary": "Get End-Points State in loxilb",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "Attr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/EndPointState"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/fdb": {
       "post": {
         "description": "Assign FDB in the device",
@@ -1279,6 +1319,127 @@ func init() {
             "name": "if_name",
             "in": "path",
             "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/params": {
+      "get": {
+        "description": "Get Operational params of LoxiLB",
+        "summary": "Get Operational params of LoxiLB",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/OperParams"
+            }
+          },
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Set Operational parameters of LoxiLB",
+        "summary": "Set Operational parameters of LoxiLB",
+        "parameters": [
+          {
+            "description": "Attributes for setting state",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OperParams"
+            }
           }
         ],
         "responses": {
@@ -2821,6 +2982,51 @@ func init() {
         }
       }
     },
+    "EndPointState": {
+      "type": "object",
+      "properties": {
+        "avgDelay": {
+          "description": "Average delay seen for endpoint",
+          "type": "string"
+        },
+        "currState": {
+          "description": "Current state of this endpoint",
+          "type": "string"
+        },
+        "description": {
+          "description": "Host Description",
+          "type": "string"
+        },
+        "hostName": {
+          "description": "Host name",
+          "type": "string"
+        },
+        "inactiveReTries": {
+          "description": "Number of inactive retries",
+          "type": "integer"
+        },
+        "maxDelay": {
+          "description": "Maximum delay seen for endpoint",
+          "type": "string"
+        },
+        "minDelay": {
+          "description": "Minimum delay seen for endpoint",
+          "type": "string"
+        },
+        "probeDuration": {
+          "description": "How frequently to probe in seconds",
+          "type": "integer"
+        },
+        "probePort": {
+          "description": "The l4port to probe on",
+          "type": "integer"
+        },
+        "probeType": {
+          "description": "Type of probe used",
+          "type": "string"
+        }
+      }
+    },
     "Error": {
       "type": "object",
       "properties": {
@@ -3203,6 +3409,15 @@ func init() {
         },
         "macAddress": {
           "description": "MAC address to neighbor",
+          "type": "string"
+        }
+      }
+    },
+    "OperParams": {
+      "type": "object",
+      "properties": {
+        "debugLevel": {
+          "description": "Set level to debug,info,error,warning,notice,critical,emergency,alert",
           "type": "string"
         }
       }
@@ -3855,6 +4070,46 @@ func init() {
         }
       }
     },
+    "/config/endpoint/all": {
+      "get": {
+        "description": "Get End-Points State in loxilb",
+        "summary": "Get End-Points State in loxilb",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "Attr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/EndPointState"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/fdb": {
       "post": {
         "description": "Assign FDB in the device",
@@ -4953,6 +5208,127 @@ func init() {
             "name": "if_name",
             "in": "path",
             "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/params": {
+      "get": {
+        "description": "Get Operational params of LoxiLB",
+        "summary": "Get Operational params of LoxiLB",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/OperParams"
+            }
+          },
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Set Operational parameters of LoxiLB",
+        "summary": "Set Operational parameters of LoxiLB",
+        "parameters": [
+          {
+            "description": "Attributes for setting state",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OperParams"
+            }
           }
         ],
         "responses": {
@@ -6495,6 +6871,51 @@ func init() {
         }
       }
     },
+    "EndPointState": {
+      "type": "object",
+      "properties": {
+        "avgDelay": {
+          "description": "Average delay seen for endpoint",
+          "type": "string"
+        },
+        "currState": {
+          "description": "Current state of this endpoint",
+          "type": "string"
+        },
+        "description": {
+          "description": "Host Description",
+          "type": "string"
+        },
+        "hostName": {
+          "description": "Host name",
+          "type": "string"
+        },
+        "inactiveReTries": {
+          "description": "Number of inactive retries",
+          "type": "integer"
+        },
+        "maxDelay": {
+          "description": "Maximum delay seen for endpoint",
+          "type": "string"
+        },
+        "minDelay": {
+          "description": "Minimum delay seen for endpoint",
+          "type": "string"
+        },
+        "probeDuration": {
+          "description": "How frequently to probe in seconds",
+          "type": "integer"
+        },
+        "probePort": {
+          "description": "The l4port to probe on",
+          "type": "integer"
+        },
+        "probeType": {
+          "description": "Type of probe used",
+          "type": "string"
+        }
+      }
+    },
     "Error": {
       "type": "object",
       "properties": {
@@ -7008,6 +7429,15 @@ func init() {
         },
         "macAddress": {
           "description": "MAC address to neighbor",
+          "type": "string"
+        }
+      }
+    },
+    "OperParams": {
+      "type": "object",
+      "properties": {
+        "debugLevel": {
+          "description": "Set level to debug,info,error,warning,notice,critical,emergency,alert",
           "type": "string"
         }
       }

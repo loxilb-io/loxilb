@@ -17,6 +17,7 @@
 package loxinet
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -66,6 +67,68 @@ func (mh *loxiNetH) NodeWalker(b string) {
 	tk.LogIt(tk.LogDebug, "%s\n", b)
 }
 
+func logString2Level(logStr string) tk.LogLevelT {
+	logLevel := tk.LogDebug
+	switch opts.Opts.LogLevel {
+	case "info":
+		logLevel = tk.LogInfo
+	case "error":
+		logLevel = tk.LogError
+	case "notice":
+		logLevel = tk.LogNotice
+	case "warning":
+		logLevel = tk.LogWarning
+	case "alert":
+		logLevel = tk.LogAlert
+	case "critical":
+		logLevel = tk.LogCritical
+	case "emergency":
+		logLevel = tk.LogEmerg
+	default:
+		logLevel = tk.LogDebug
+	}
+	return logLevel
+}
+
+// LogLevelSet - Set Log Level
+func (mh *loxiNetH) LogLevelSet(lvl string) (int, error) {
+	logLevel := logString2Level(lvl)
+
+	if mh.logger != nil {
+		mh.logger.LogItSetLevel(logLevel)
+	}
+	return 0, nil
+}
+
+// LogLevelGet - Get Log Level
+func (mh *loxiNetH) LogLevelGet(lvl *string) (int, error) {
+	logLevel := "n/a"
+	switch mh.logger.CurrLogLevel {
+	case tk.LogDebug:
+		logLevel = "debug"
+	case tk.LogInfo:
+		logLevel = "info"
+	case tk.LogError:
+		logLevel = "error"
+	case tk.LogNotice:
+		logLevel = "notice"
+	case tk.LogWarning:
+		logLevel = "warning"
+	case tk.LogAlert:
+		logLevel = "alert"
+	case tk.LogCritical:
+		logLevel = "critical"
+	case tk.LogEmerg:
+		logLevel = "emergency"
+	default:
+		*lvl = logLevel
+		return -1, errors.New("unknown log level")
+	}
+
+	*lvl = logLevel
+	return 0, nil
+}
+
 // loxiNetTicker - this ticker routine runs every LOXINET_TIVAL seconds
 func loxiNetTicker() {
 	for {
@@ -91,7 +154,8 @@ func loxiNetInit() {
 
 	// Initialize logger and specify the log file
 	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
-	mh.logger = tk.LogItInit(logfile, tk.LogDebug, true)
+	logLevel := logString2Level(opts.Opts.LogLevel)
+	mh.logger = tk.LogItInit(logfile, logLevel, true)
 
 	mh.tDone = make(chan bool)
 	mh.ticker = time.NewTicker(LoxinetTiVal * time.Second)
