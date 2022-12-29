@@ -66,7 +66,7 @@ func loxiSyncMain() {
 	http.ListenAndServe(listener, nil)
 }
 
-var version string = "0.7.8"
+var version string = "0.7.9"
 var buildInfo string = ""
 
 func main() {
