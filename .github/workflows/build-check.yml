@@ -30,10 +30,6 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - run: sudo apt-get update
-    - run: sudo apt -y install clang llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iproute2
-    - run: BPFTOOL=`which bpftool`
-    - run: echo $(BPFTOOL)
 
     - name: Build the loxilb Docker image
       run: |
