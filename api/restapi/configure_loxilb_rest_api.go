@@ -141,6 +141,13 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.PostConfigFirewallHandler = operations.PostConfigFirewallHandlerFunc(handler.ConfigPostFW)
 	api.DeleteConfigFirewallHandler = operations.DeleteConfigFirewallHandlerFunc(handler.ConfigDeleteFW)
 
+	// EndPoint
+	api.GetConfigEndpointAllHandler = operations.GetConfigEndpointAllHandlerFunc(handler.ConfigGetEndPoint)
+
+	// Params
+	api.PostConfigParamsHandler = operations.PostConfigParamsHandlerFunc(handler.ConfigPostParams)
+	api.GetConfigParamsHandler = operations.GetConfigParamsHandlerFunc(handler.ConfigGetParams)
+
 	api.PreServerShutdown = func() {}
 
 	api.ServerShutdown = func() {

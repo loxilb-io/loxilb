@@ -400,10 +400,10 @@ type EndPointMod struct {
 	// Name - hostname in CIDR
 	Name string `json:"hostName"`
 	// Desc - host specific description
-	Desc string `json:"Description"`
+	Desc string `json:"description"`
 	// InActTries - No. of inactive probes to mark
 	// an end-point inactive
-	InActTries int `json:"inactiveTries"`
+	InActTries int `json:"inactiveReTries"`
 	// ProbeType - Type of probe : "icmp","connect-tcp", "connect-udp", "connect-sctp", "http"
 	ProbeType string `json:"probeType"`
 	// ProbeReq - Request string in case of http probe
@@ -420,6 +420,8 @@ type EndPointMod struct {
 	AvgDelay string `json:"avgDelay"`
 	// MaxDelay - Max delay in this end-point
 	MaxDelay string `json:"maxDelay"`
+	// CurrState - Current state of this end-point
+	CurrState string `json:"currState"`
 }
 
 // EpSelect - Selection method of load-balancer end-point
@@ -526,6 +528,12 @@ type SessTun struct {
 	TeID uint32 `json:"TeID"`
 	// Addr - tunnel ip addr of remote-end
 	Addr net.IP `json:"tunnelIP"`
+}
+
+// ParamMod - Info related to a operational parameters
+type ParamMod struct {
+	// LogLevel - log level of loxilb
+	LogLevel string `json:"logLevel"`
 }
 
 // Equal - check if two session tunnel entries are equal
@@ -733,4 +741,6 @@ type NetHookInterface interface {
 	NetEpHostAdd(fm *EndPointMod) (int, error)
 	NetEpHostDel(fm *EndPointMod) (int, error)
 	NetEpHostGet() ([]EndPointMod, error)
+	NetParamSet(param ParamMod) (int, error)
+	NetParamGet(param *ParamMod) (int, error)
 }

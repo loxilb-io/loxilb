@@ -93,6 +93,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		GetConfigConntrackAllHandler: GetConfigConntrackAllHandlerFunc(func(params GetConfigConntrackAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigConntrackAll has not yet been implemented")
 		}),
+		GetConfigEndpointAllHandler: GetConfigEndpointAllHandlerFunc(func(params GetConfigEndpointAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigEndpointAll has not yet been implemented")
+		}),
 		GetConfigFdbAllHandler: GetConfigFdbAllHandlerFunc(func(params GetConfigFdbAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigFdbAll has not yet been implemented")
 		}),
@@ -110,6 +113,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		}),
 		GetConfigNeighborAllHandler: GetConfigNeighborAllHandlerFunc(func(params GetConfigNeighborAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigNeighborAll has not yet been implemented")
+		}),
+		GetConfigParamsHandler: GetConfigParamsHandlerFunc(func(params GetConfigParamsParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigParams has not yet been implemented")
 		}),
 		GetConfigPolicyAllHandler: GetConfigPolicyAllHandlerFunc(func(params GetConfigPolicyAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigPolicyAll has not yet been implemented")
@@ -161,6 +167,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		}),
 		PostConfigNeighborHandler: PostConfigNeighborHandlerFunc(func(params PostConfigNeighborParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigNeighbor has not yet been implemented")
+		}),
+		PostConfigParamsHandler: PostConfigParamsHandlerFunc(func(params PostConfigParamsParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigParams has not yet been implemented")
 		}),
 		PostConfigPolicyHandler: PostConfigPolicyHandlerFunc(func(params PostConfigPolicyParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigPolicy has not yet been implemented")
@@ -256,6 +265,8 @@ type LoxilbRestAPIAPI struct {
 	GetConfigCistateAllHandler GetConfigCistateAllHandler
 	// GetConfigConntrackAllHandler sets the operation handler for the get config conntrack all operation
 	GetConfigConntrackAllHandler GetConfigConntrackAllHandler
+	// GetConfigEndpointAllHandler sets the operation handler for the get config endpoint all operation
+	GetConfigEndpointAllHandler GetConfigEndpointAllHandler
 	// GetConfigFdbAllHandler sets the operation handler for the get config fdb all operation
 	GetConfigFdbAllHandler GetConfigFdbAllHandler
 	// GetConfigFirewallAllHandler sets the operation handler for the get config firewall all operation
@@ -268,6 +279,8 @@ type LoxilbRestAPIAPI struct {
 	GetConfigMirrorAllHandler GetConfigMirrorAllHandler
 	// GetConfigNeighborAllHandler sets the operation handler for the get config neighbor all operation
 	GetConfigNeighborAllHandler GetConfigNeighborAllHandler
+	// GetConfigParamsHandler sets the operation handler for the get config params operation
+	GetConfigParamsHandler GetConfigParamsHandler
 	// GetConfigPolicyAllHandler sets the operation handler for the get config policy all operation
 	GetConfigPolicyAllHandler GetConfigPolicyAllHandler
 	// GetConfigPortAllHandler sets the operation handler for the get config port all operation
@@ -302,6 +315,8 @@ type LoxilbRestAPIAPI struct {
 	PostConfigMirrorHandler PostConfigMirrorHandler
 	// PostConfigNeighborHandler sets the operation handler for the post config neighbor operation
 	PostConfigNeighborHandler PostConfigNeighborHandler
+	// PostConfigParamsHandler sets the operation handler for the post config params operation
+	PostConfigParamsHandler PostConfigParamsHandler
 	// PostConfigPolicyHandler sets the operation handler for the post config policy operation
 	PostConfigPolicyHandler PostConfigPolicyHandler
 	// PostConfigRouteHandler sets the operation handler for the post config route operation
@@ -446,6 +461,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.GetConfigConntrackAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigConntrackAllHandler")
 	}
+	if o.GetConfigEndpointAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigEndpointAllHandler")
+	}
 	if o.GetConfigFdbAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigFdbAllHandler")
 	}
@@ -463,6 +481,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.GetConfigNeighborAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigNeighborAllHandler")
+	}
+	if o.GetConfigParamsHandler == nil {
+		unregistered = append(unregistered, "GetConfigParamsHandler")
 	}
 	if o.GetConfigPolicyAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigPolicyAllHandler")
@@ -514,6 +535,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.PostConfigNeighborHandler == nil {
 		unregistered = append(unregistered, "PostConfigNeighborHandler")
+	}
+	if o.PostConfigParamsHandler == nil {
+		unregistered = append(unregistered, "PostConfigParamsHandler")
 	}
 	if o.PostConfigPolicyHandler == nil {
 		unregistered = append(unregistered, "PostConfigPolicyHandler")
@@ -698,6 +722,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
+	o.handlers["GET"]["/config/endpoint/all"] = NewGetConfigEndpointAll(o.context, o.GetConfigEndpointAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
 	o.handlers["GET"]["/config/fdb/all"] = NewGetConfigFdbAll(o.context, o.GetConfigFdbAllHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
@@ -719,6 +747,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/config/neighbor/all"] = NewGetConfigNeighborAll(o.context, o.GetConfigNeighborAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/config/params"] = NewGetConfigParams(o.context, o.GetConfigParamsHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -787,6 +819,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/config/neighbor"] = NewPostConfigNeighbor(o.context, o.PostConfigNeighborHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/params"] = NewPostConfigParams(o.context, o.PostConfigParamsHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
