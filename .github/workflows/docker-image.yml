@@ -32,7 +32,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
         
     - run: sudo apt-get update
-    - run: sudo apt -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r)
+    - run: sudo apt -y install clang llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r)
 
     - name: Build the latest loxilb Docker image
       if: github.event.inputs.tagName == ''
