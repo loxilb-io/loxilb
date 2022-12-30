@@ -42,6 +42,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
+		DeleteConfigEndpointHandler: DeleteConfigEndpointHandlerFunc(func(params DeleteConfigEndpointParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigEndpoint has not yet been implemented")
+		}),
 		DeleteConfigFdbMacAddressDevIfNameHandler: DeleteConfigFdbMacAddressDevIfNameHandlerFunc(func(params DeleteConfigFdbMacAddressDevIfNameParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigFdbMacAddressDevIfName has not yet been implemented")
 		}),
@@ -150,6 +153,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		PostConfigCistateHandler: PostConfigCistateHandlerFunc(func(params PostConfigCistateParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigCistate has not yet been implemented")
 		}),
+		PostConfigEndpointHandler: PostConfigEndpointHandlerFunc(func(params PostConfigEndpointParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigEndpoint has not yet been implemented")
+		}),
 		PostConfigFdbHandler: PostConfigFdbHandlerFunc(func(params PostConfigFdbParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigFdb has not yet been implemented")
 		}),
@@ -231,6 +237,8 @@ type LoxilbRestAPIAPI struct {
 	//   - application/json
 	JSONProducer runtime.Producer
 
+	// DeleteConfigEndpointHandler sets the operation handler for the delete config endpoint operation
+	DeleteConfigEndpointHandler DeleteConfigEndpointHandler
 	// DeleteConfigFdbMacAddressDevIfNameHandler sets the operation handler for the delete config fdb mac address dev if name operation
 	DeleteConfigFdbMacAddressDevIfNameHandler DeleteConfigFdbMacAddressDevIfNameHandler
 	// DeleteConfigFirewallHandler sets the operation handler for the delete config firewall operation
@@ -303,6 +311,8 @@ type LoxilbRestAPIAPI struct {
 	GetStatusProcessHandler GetStatusProcessHandler
 	// PostConfigCistateHandler sets the operation handler for the post config cistate operation
 	PostConfigCistateHandler PostConfigCistateHandler
+	// PostConfigEndpointHandler sets the operation handler for the post config endpoint operation
+	PostConfigEndpointHandler PostConfigEndpointHandler
 	// PostConfigFdbHandler sets the operation handler for the post config fdb operation
 	PostConfigFdbHandler PostConfigFdbHandler
 	// PostConfigFirewallHandler sets the operation handler for the post config firewall operation
@@ -410,6 +420,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.DeleteConfigEndpointHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigEndpointHandler")
+	}
 	if o.DeleteConfigFdbMacAddressDevIfNameHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigFdbMacAddressDevIfNameHandler")
 	}
@@ -517,6 +530,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.PostConfigCistateHandler == nil {
 		unregistered = append(unregistered, "PostConfigCistateHandler")
+	}
+	if o.PostConfigEndpointHandler == nil {
+		unregistered = append(unregistered, "PostConfigEndpointHandler")
 	}
 	if o.PostConfigFdbHandler == nil {
 		unregistered = append(unregistered, "PostConfigFdbHandler")
@@ -651,6 +667,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/config/endpoint"] = NewDeleteConfigEndpoint(o.context, o.DeleteConfigEndpointHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
@@ -795,6 +815,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/config/cistate"] = NewPostConfigCistate(o.context, o.PostConfigCistateHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/endpoint"] = NewPostConfigEndpoint(o.context, o.PostConfigEndpointHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

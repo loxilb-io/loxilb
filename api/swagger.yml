@@ -19,7 +19,7 @@ info:
 schemes:
   - http
   - https
-host: "0.0.0.0:8090"
+host: "0.0.0.0:11111"
 basePath: /netlox/v1
 produces:
   - application/json
@@ -1689,6 +1689,90 @@ paths:
           description: Maintanence mode
           schema:
             $ref: '#/definitions/Error'
+
+  '/config/endpoint':
+    post:
+      summary: Adds a LB endpoint for monitoring
+      description: Adds a LB endpoint for monitoring
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes of end point
+          schema:
+            $ref: '#/definitions/EndPoint'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict.
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
+    delete:
+      summary: Delete an LB end-point from monitoring
+      description: Delete an LB end-point from monitoring
+      parameters:
+        - name: hostName
+          in: query
+          type: string
+          description: Hostname in CIDR
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
 #----------------------------------------------
 # Firewall Configuration
 #----------------------------------------------
@@ -2697,6 +2781,31 @@ definitions:
       currState:
         type: string
         description: Current state of this endpoint
+
+  EndPoint:
+    type: object
+    properties:
+      hostName:
+        type: string
+        description: Host name in CIDR
+      description:
+        type: string
+        description: Host Description
+      inactiveReTries:
+        type: integer
+        description: Number of inactive retries
+      probeType:
+        type: string
+        description: Type of probe used
+      probeReqUrl:
+        type: string
+        description: URI for http probes
+      probeDuration:
+        type: integer
+        description: How frequently to probe in seconds
+      probePort:
+        type: integer
+        description: The l4port to probe on
 
   FirewallOptionEntry:
     type: object

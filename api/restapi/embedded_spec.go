@@ -34,7 +34,7 @@ func init() {
     "title": "Loxilb Rest API",
     "version": "0.0.1"
   },
-  "host": "0.0.0.0:8090",
+  "host": "0.0.0.0:11111",
   "basePath": "/netlox/v1",
   "paths": {
     "/config/cistate": {
@@ -162,6 +162,129 @@ func init() {
           },
           "401": {
             "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/endpoint": {
+      "post": {
+        "description": "Adds a LB endpoint for monitoring",
+        "summary": "Adds a LB endpoint for monitoring",
+        "parameters": [
+          {
+            "description": "Attributes of end point",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/EndPoint"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete an LB end-point from monitoring",
+        "summary": "Delete an LB end-point from monitoring",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Hostname in CIDR",
+            "name": "hostName",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2982,6 +3105,39 @@ func init() {
         }
       }
     },
+    "EndPoint": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "Host Description",
+          "type": "string"
+        },
+        "hostName": {
+          "description": "Host name in CIDR",
+          "type": "string"
+        },
+        "inactiveReTries": {
+          "description": "Number of inactive retries",
+          "type": "integer"
+        },
+        "probeDuration": {
+          "description": "How frequently to probe in seconds",
+          "type": "integer"
+        },
+        "probePort": {
+          "description": "The l4port to probe on",
+          "type": "integer"
+        },
+        "probeReqUrl": {
+          "description": "URI for http probes",
+          "type": "string"
+        },
+        "probeType": {
+          "description": "Type of probe used",
+          "type": "string"
+        }
+      }
+    },
     "EndPointState": {
       "type": "object",
       "properties": {
@@ -3416,7 +3572,7 @@ func init() {
     "OperParams": {
       "type": "object",
       "properties": {
-        "debugLevel": {
+        "logLevel": {
           "description": "Set level to debug,info,error,warning,notice,critical,emergency,alert",
           "type": "string"
         }
@@ -3923,7 +4079,7 @@ func init() {
     "title": "Loxilb Rest API",
     "version": "0.0.1"
   },
-  "host": "0.0.0.0:8090",
+  "host": "0.0.0.0:11111",
   "basePath": "/netlox/v1",
   "paths": {
     "/config/cistate": {
@@ -4051,6 +4207,129 @@ func init() {
           },
           "401": {
             "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/endpoint": {
+      "post": {
+        "description": "Adds a LB endpoint for monitoring",
+        "summary": "Adds a LB endpoint for monitoring",
+        "parameters": [
+          {
+            "description": "Attributes of end point",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/EndPoint"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete an LB end-point from monitoring",
+        "summary": "Delete an LB end-point from monitoring",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Hostname in CIDR",
+            "name": "hostName",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6867,6 +7146,39 @@ func init() {
         },
         "uptime": {
           "description": "system uptime",
+          "type": "string"
+        }
+      }
+    },
+    "EndPoint": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "Host Description",
+          "type": "string"
+        },
+        "hostName": {
+          "description": "Host name in CIDR",
+          "type": "string"
+        },
+        "inactiveReTries": {
+          "description": "Number of inactive retries",
+          "type": "integer"
+        },
+        "probeDuration": {
+          "description": "How frequently to probe in seconds",
+          "type": "integer"
+        },
+        "probePort": {
+          "description": "The l4port to probe on",
+          "type": "integer"
+        },
+        "probeReqUrl": {
+          "description": "URI for http probes",
+          "type": "string"
+        },
+        "probeType": {
+          "description": "Type of probe used",
           "type": "string"
         }
       }
@@ -7436,7 +7748,7 @@ func init() {
     "OperParams": {
       "type": "object",
       "properties": {
-        "debugLevel": {
+        "logLevel": {
           "description": "Set level to debug,info,error,warning,notice,critical,emergency,alert",
           "type": "string"
         }

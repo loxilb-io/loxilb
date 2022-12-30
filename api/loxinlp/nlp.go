@@ -188,6 +188,27 @@ func applyFWConfig() bool {
 	return true
 }
 
+func applyEPConfig() bool {
+	var resp struct {
+		Attr []cmn.EndPointMod `json:"Attr"`
+	}
+	byteBuf, err := ioutil.ReadFile("/etc/loxilb/EPconfig.txt")
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+
+	// Unmashal to Json
+	if err := json.Unmarshal(byteBuf, &resp); err != nil {
+		fmt.Printf("Error: Failed to unmarshal File: (%s)\n", err.Error())
+		return false
+	}
+	for _, ep := range resp.Attr {
+		hooks.NetEpHostAdd(&ep)
+	}
+	return true
+}
+
 func applyRoutes(name string) {
 	tk.LogIt(tk.LogDebug, "[NLP] Applying Route Config for %s \n", name)
 	command := "loxicmd apply --per-intf " + name + " -r -c /etc/loxilb/ipconfig/"
@@ -1396,7 +1417,15 @@ func LbSessionGet(done bool) int {
 
 	if done {
 
-		tk.LogIt(tk.LogInfo, "[NLP] LbSessionGet Start\n")
+		if _, err := os.Stat("/etc/loxilb/EPconfig.txt"); errors.Is(err, os.ErrNotExist) {
+			if err != nil {
+				tk.LogIt(tk.LogInfo, "[NLP] No EndPoint config file : %s \n", err.Error())
+			}
+		} else {
+			applyEPConfig()
+		}
+		tk.LogIt(tk.LogInfo, "[NLP] EndPoint done\n")
+
 		if _, err := os.Stat("/etc/loxilb/lbconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
 				tk.LogIt(tk.LogInfo, "[NLP] No load balancer config file : %s \n", err.Error())

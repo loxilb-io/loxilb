@@ -19,6 +19,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
+	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
 
@@ -51,4 +52,36 @@ func ConfigGetEndPoint(params operations.GetConfigEndpointAllParams) middleware.
 		result = append(result, &tmpEP)
 	}
 	return operations.NewGetConfigEndpointAllOK().WithPayload(&operations.GetConfigEndpointAllOKBody{Attr: result})
+}
+
+func ConfigPostEndPoint(params operations.PostConfigEndpointParams) middleware.Responder {
+	tk.LogIt(tk.LogDebug, "[API] EndPoint %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+
+	EP := cmn.EndPointMod{}
+	EP.Name = params.Attr.HostName
+	EP.Desc = params.Attr.Description
+	EP.ProbeType = params.Attr.ProbeType
+	EP.InActTries = int(params.Attr.InactiveReTries)
+	EP.ProbeReq = params.Attr.ProbeReqURL
+	EP.ProbeDuration = uint32(params.Attr.ProbeDuration)
+	EP.ProbePort = uint16(params.Attr.ProbePort)
+
+	_, err := ApiHooks.NetEpHostAdd(&EP)
+	if err != nil {
+		return &ResultResponse{Result: err.Error()}
+	}
+	return &ResultResponse{Result: "Success"}
+}
+
+func ConfigDeleteEndPoint(params operations.DeleteConfigEndpointParams) middleware.Responder {
+	tk.LogIt(tk.LogDebug, "[API] EndPoint %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+
+	EP := cmn.EndPointMod{}
+	EP.Name = *params.HostName
+
+	_, err := ApiHooks.NetEpHostDel(&EP)
+	if err != nil {
+		return &ResultResponse{Result: err.Error()}
+	}
+	return &ResultResponse{Result: "Success"}
 }
