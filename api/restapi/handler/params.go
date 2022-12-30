@@ -30,7 +30,7 @@ func ConfigPostParams(params operations.PostConfigParamsParams) middleware.Respo
 	var param cmn.ParamMod
 
 	// Set Param State
-	param.LogLevel = params.Attr.DebugLevel
+	param.LogLevel = params.Attr.LogLevel
 	tk.LogIt(tk.LogDebug, "[API] New LogLevel %s\n", param.LogLevel)
 	_, err := ApiHooks.NetParamSet(param)
 	if err != nil {
@@ -51,7 +51,7 @@ func ConfigGetParams(params operations.GetConfigParamsParams) middleware.Respond
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
-	payload.DebugLevel = param.LogLevel
+	payload.LogLevel = param.LogLevel
 	tk.LogIt(tk.LogDebug, "[API] LogLevel %s\n", param.LogLevel)
 	return operations.NewGetConfigParamsOK().WithPayload(&payload)
 }

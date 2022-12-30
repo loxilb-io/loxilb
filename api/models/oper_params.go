@@ -18,7 +18,7 @@ import (
 type OperParams struct {
 
 	// Set level to debug,info,error,warning,notice,critical,emergency,alert
-	DebugLevel string `json:"debugLevel,omitempty"`
+	LogLevel string `json:"logLevel,omitempty"`
 }
 
 // Validate validates this oper params

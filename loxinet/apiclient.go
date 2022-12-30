@@ -431,11 +431,11 @@ func (*NetAPIStruct) NetEpHostAdd(em *cmn.EndPointMod) (int, error) {
 }
 
 // NetEpHostDel - Delete a LB end-point in loxinet
-func (*NetAPIStruct) NetEpHostDel(fm *cmn.EndPointMod) (int, error) {
+func (*NetAPIStruct) NetEpHostDel(em *cmn.EndPointMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
-	ret, err := mh.zr.Rules.DeleteEpHost(true, fm.Name)
+	ret, err := mh.zr.Rules.DeleteEpHost(true, em.Name)
 	return ret, err
 }
 
