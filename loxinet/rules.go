@@ -738,6 +738,8 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool) {
 		} else {
 			hopts.probeType = HostProbePing
 		}
+
+		// Default
 		hopts.probeType = HostProbePing
 		if doAddOp {
 			if nep.inActive != true {
@@ -1375,6 +1377,32 @@ func (R *RuleH) DeleteEpHost(apiCall bool, hostName string) (int, error) {
 	return 0, nil
 }
 
+func (ep *epHost) transitionState(currState bool, inactThr int) {
+	if currState {
+		if ep.inactive {
+			ep.inactive = false
+			ep.inActTries = 0
+			ep.opts.probeDuration = DflHostProbeTimeout
+			tk.LogIt(tk.LogDebug, "active ep - %s:%s(%v)\n", ep.hostName, ep.opts.probeType, ep.avgDelay)
+		}
+	} else {
+		if ep.inActTries < inactThr {
+			ep.inActTries++
+			if ep.inActTries >= inactThr {
+				ep.inactive = true
+				ep.inActTries = 0
+				tk.LogIt(tk.LogDebug, "inactive ep - %s:%s\n", ep.hostName, ep.opts.probeType)
+			}
+		} else {
+			ep.inActTries++
+			// Inactive eps are moved back
+			if ep.opts.probeDuration < 3*DflHostProbeTimeout {
+				ep.opts.probeDuration += 20
+			}
+		}
+	}
+}
+
 func (ep *epHost) epCheckNow() {
 	var sType string
 
@@ -1390,22 +1418,7 @@ func (ep *epHost) epCheckNow() {
 			sType = "sctp"
 		}
 		sOk := tk.L4ServiceProber(sType, sName)
-		if sOk == false {
-			if ep.inActTries <= ep.opts.inActTryThr {
-				ep.inActTries++
-				if ep.inActTries > ep.opts.inActTryThr {
-					ep.inactive = true
-					ep.inActTries = 0
-					tk.LogIt(tk.LogDebug, "inactive ep - %s:%s\n", sName, ep.opts.probeType)
-				}
-			}
-		} else {
-			if ep.inactive {
-				ep.inactive = false
-				ep.inActTries = 0
-				tk.LogIt(tk.LogDebug, "active ep - %s:%s\n", sName, ep.opts.probeType)
-			}
-		}
+		ep.transitionState(sOk, ep.opts.inActTryThr)
 	} else if ep.opts.probeType == HostProbePing {
 		pinger, err := probing.NewPinger(ep.hostName)
 		if err != nil {
@@ -1441,32 +1454,24 @@ func (ep *epHost) epCheckNow() {
 			ep.avgDelay = stats.AvgRtt
 			ep.minDelay = stats.MinRtt
 			ep.maxDelay = stats.MaxRtt
-			if ep.inactive {
-				ep.inactive = false
-				ep.inActTries = 0
-				ep.opts.probeDuration = DflHostProbeTimeout
-				tk.LogIt(tk.LogDebug, "active ep - %s:%s(%v)\n", sName, ep.opts.probeType, ep.avgDelay)
-			}
+			ep.transitionState(true, 1)
 		} else {
 			ep.avgDelay = time.Duration(0)
 			ep.minDelay = time.Duration(0)
 			ep.maxDelay = time.Duration(0)
-			if ep.inActTries < 1 {
-				ep.inActTries++
-				if ep.inActTries >= 1 {
-					ep.inactive = true
-					ep.inActTries = 0
-					tk.LogIt(tk.LogDebug, "inactive ep - %s:%s\n", sName, ep.opts.probeType)
-				}
-			} else {
-				ep.inActTries++
-				// Inactive eps are moved back
-				if ep.opts.probeDuration < 3*DflHostProbeTimeout {
-					ep.opts.probeDuration += 20
-				}
-			}
+			ep.transitionState(false, 1)
 		}
 		pinger.Stop()
+	} else if ep.opts.probeType == HostProbeHttp {
+		var addr net.IP
+		if addr = net.ParseIP(ep.hostName); addr == nil {
+			// This is already verified
+			return
+		}
+
+		urlStr := fmt.Sprintf("http://%s:%d/%s", addr.String(), ep.opts.probePort, ep.opts.probeReq)
+		sOk := tk.HTTPProber(urlStr)
+		ep.transitionState(sOk, ep.opts.inActTryThr)
 	} else {
 		// TODO
 		ep.inactive = false

@@ -90,9 +90,9 @@ func logString2Level(logStr string) tk.LogLevelT {
 	return logLevel
 }
 
-// LogLevelSet - Set Log Level
-func (mh *loxiNetH) LogLevelSet(lvl string) (int, error) {
-	logLevel := logString2Level(lvl)
+// ParamSet - Set Loxinet Params
+func (mh *loxiNetH) ParamSet(param cmn.ParamMod) (int, error) {
+	logLevel := logString2Level(param.LogLevel)
 
 	if mh.logger != nil {
 		mh.logger.LogItSetLevel(logLevel)
@@ -100,8 +100,8 @@ func (mh *loxiNetH) LogLevelSet(lvl string) (int, error) {
 	return 0, nil
 }
 
-// LogLevelGet - Get Log Level
-func (mh *loxiNetH) LogLevelGet(lvl *string) (int, error) {
+// ParamGet - Get Loxinet Params
+func (mh *loxiNetH) ParamGet(param *cmn.ParamMod) (int, error) {
 	logLevel := "n/a"
 	switch mh.logger.CurrLogLevel {
 	case tk.LogDebug:
@@ -121,11 +121,11 @@ func (mh *loxiNetH) LogLevelGet(lvl *string) (int, error) {
 	case tk.LogEmerg:
 		logLevel = "emergency"
 	default:
-		*lvl = logLevel
+		param.LogLevel = logLevel
 		return -1, errors.New("unknown log level")
 	}
 
-	*lvl = logLevel
+	param.LogLevel = logLevel
 	return 0, nil
 }
 

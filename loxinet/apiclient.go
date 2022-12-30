@@ -447,12 +447,12 @@ func (*NetAPIStruct) NetEpHostGet() ([]cmn.EndPointMod, error) {
 
 // NetParamSet - Set operational params of loxinet
 func (*NetAPIStruct) NetParamSet(param cmn.ParamMod) (int, error) {
-	ret, err := mh.LogLevelSet(param.LogLevel)
+	ret, err := mh.ParamSet(param)
 	return ret, err
 }
 
 // NetParamGet - Get operational params of loxinet
 func (*NetAPIStruct) NetParamGet(param *cmn.ParamMod) (int, error) {
-	ret, err := mh.LogLevelGet(&param.LogLevel)
+	ret, err := mh.ParamGet(param)
 	return ret, err
 }
