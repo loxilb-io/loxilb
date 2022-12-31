@@ -164,6 +164,7 @@ const (
 	HostProbeConnectUdp  = "connect-udp"
 	HostProbeConnectSctp = "connect-sctp"
 	HostProbeHttp        = "http"
+	HostProbeNone        = "none"
 )
 
 type epHostOpts struct {
@@ -1296,7 +1297,8 @@ func validateEpHostOpts(hostName string, args epHostOpts) (int, error) {
 		args.probeType != HostProbeConnectTcp &&
 		args.probeType != HostProbeConnectUdp &&
 		args.probeType != HostProbeConnectSctp &&
-		args.probeType != HostProbeHttp {
+		args.probeType != HostProbeHttp &&
+		args.probeType != HostProbeNone {
 		return RuleArgsErr, errors.New("host-args unknown probe type")
 	}
 
@@ -1320,6 +1322,7 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, desc string, args epHos
 	// Validate hostopts
 	_, err := validateEpHostOpts(hostName, args)
 	if err != nil {
+		tk.LogIt(tk.LogError, "Failed to add EP :%s\n", err)
 		return RuleArgsErr, err
 	}
 
