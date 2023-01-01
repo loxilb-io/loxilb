@@ -98,7 +98,7 @@ spawn_docker_host() {
     elif [[ "$dname" == "llb2" ]]; then
       cluster_opts=" --cluster=172.17.0.2"
     fi
-    mkdir -p /etc/shared/$dname/
+    sudo mkdir -p /etc/shared/$dname/
     docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config --name $dname ghcr.io/loxilb-io/loxilb:latest
     docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts
     if [[ "$ka" == "yes" ]]; then
