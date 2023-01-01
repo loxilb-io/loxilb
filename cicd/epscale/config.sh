@@ -48,4 +48,4 @@ docker cp ./lbconfig.sh llb1:/root/
 sleep 5
 $dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1
 $dexec llb1 chmod 777 /root/lbconfig.sh
-$dexec llb1 /root/lbconfig.sh
+#$dexec llb1 /root/lbconfig.sh
