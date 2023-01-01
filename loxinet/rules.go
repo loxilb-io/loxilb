@@ -79,7 +79,7 @@ const (
 	LbMaxInactiveTimeout     = 24 * 60   // Maximum inactive timeout for established sessions
 	MaxEndPointCheckers      = 4         // Maximum helpers to check endpoint health
 	EndPointCheckerDuration  = 2         // Duration at which ep-helpers will run
-	MAcEndPointSweeps        = 20        // Maximum end-point sweeps per round
+	MaxEndPointSweeps        = 20        // Maximum end-point sweeps per round
 )
 
 type ruleTType uint
@@ -1505,12 +1505,13 @@ func epTicker(R *RuleH, helper int) {
 			tidx := 0
 			for _, host := range R.epMap {
 				if tidx < idx {
+					//tidx++
 					continue
 				}
 				if host.hID == uint8(helper) &&
 					time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(host.opts.probeDuration) {
 					epHosts = append(epHosts, host)
-					if len(epHosts) >= MAcEndPointSweeps {
+					if len(epHosts) >= MaxEndPointSweeps {
 						idx = tidx + 1
 						break
 					}
