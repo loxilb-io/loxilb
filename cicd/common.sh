@@ -98,14 +98,17 @@ spawn_docker_host() {
     elif [[ "$dname" == "llb2" ]]; then
       cluster_opts=" --cluster=172.17.0.2"
     fi
-    sudo mkdir -p /etc/shared/$dname/
-    docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config --name $dname ghcr.io/loxilb-io/loxilb:latest
-    docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts
+
     if [[ "$ka" == "yes" ]]; then
+      sudo mkdir -p /etc/shared/$dname/
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config --name $dname ghcr.io/loxilb-io/loxilb:latest
+      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts
       if [[ ! -z "$kpath" ]]; then
         ka_conf="-v $kpath:/container/service/keepalived/assets/" 
       fi
       docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit --network=container:$dname $ka_conf -v /etc/shared/$dname:/etc/shared --name ka_$dname osixia/keepalived:2.0.20
+    else
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname ghcr.io/loxilb-io/loxilb:latest $bgp_opts
     fi
   elif [[ "$dtype" == "host" ]]; then
     if [[ ! -z "$bpath" ]]; then
