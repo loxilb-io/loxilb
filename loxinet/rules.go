@@ -79,7 +79,7 @@ const (
 	LbMaxInactiveTimeout     = 24 * 60   // Maximum inactive timeout for established sessions
 	MaxEndPointCheckers      = 4         // Maximum helpers to check endpoint health
 	EndPointCheckerDuration  = 2         // Duration at which ep-helpers will run
-	MAcEndPointSweeps        = 50        // Maximum end-point sweeps per round
+	MAcEndPointSweeps        = 20        // Maximum end-point sweeps per round
 )
 
 type ruleTType uint
@@ -1485,6 +1485,9 @@ func (ep *epHost) epCheckNow() {
 func epTicker(R *RuleH, helper int) {
 	epc := R.epCs[helper]
 
+	idx := 0
+	tlen := 0
+
 	for {
 		select {
 		case <-epc.tD:
@@ -1492,22 +1495,41 @@ func epTicker(R *RuleH, helper int) {
 		case t := <-epc.hChk.C:
 			epHosts := make([]*epHost, 0)
 			tk.LogIt(-1, "Tick at %v:%d\n", t, helper)
+
 			R.epMx.Lock()
+			if tlen != len(R.epMap) || idx >= len(R.epMap) {
+				idx = 0
+				tlen = len(R.epMap)
+			}
+			sidx := idx
+			tidx := 0
 			for _, host := range R.epMap {
+				if tidx < idx {
+					continue
+				}
 				if host.hID == uint8(helper) &&
 					time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(host.opts.probeDuration) {
 					epHosts = append(epHosts, host)
 					if len(epHosts) >= MAcEndPointSweeps {
+						idx = tidx + 1
 						break
 					}
 				}
+				tidx++
+			}
+			if sidx == idx {
+				idx = 0
 			}
 			R.epMx.Unlock()
 
+			begin := time.Now()
 			cnt := 0
 			for _, eph := range epHosts {
 				eph.epCheckNow()
 				eph.sT = time.Now()
+				if time.Duration(eph.sT.Sub(begin).Seconds()) >= EndPointCheckerDuration {
+					break
+				}
 				cnt++
 			}
 			epHosts = nil
