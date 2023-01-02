@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo SCENARIO-tcplbdsr
+echo SCENARIO-tcplbdsr2
 $hexec l3ep1 socat -v -T0.05 tcp-l:2020,reuseaddr,fork system:"echo 'server1'; cat" >/dev/null 2>&1 &
 $hexec l3ep2 socat -v -T0.05 tcp-l:2020,reuseaddr,fork system:"echo 'server2'; cat" >/dev/null 2>&1 &
 $hexec l3ep3 socat -v -T0.05 tcp-l:2020,reuseaddr,fork system:"echo 'server3'; cat" >/dev/null 2>&1 &
@@ -25,7 +25,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            echo SCENARIO-tcplbdsr [FAILED]
+            echo SCENARIO-tcplbdsr2 [FAILED]
             exit 1
         fi
     fi
@@ -44,9 +44,9 @@ do
 done
 if [[ $code == 0 ]]
 then
-    echo SCENARIO-tcplbdsr [OK]
+    echo SCENARIO-tcplbdsr2 [OK]
 else
-    echo SCENARIO-tcplbdsr [FAILED]
+    echo SCENARIO-tcplbdsr2 [FAILED]
 fi
 $hexec l3ep1 killall  -9 socat > /dev/null 2>&1
 $hexec l3ep2 killall  -9 socat > /dev/null 2>&1
