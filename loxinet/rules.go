@@ -1487,6 +1487,8 @@ func epTicker(R *RuleH, helper int) {
 
 	idx := 0
 	tlen := 0
+	var run uint32
+	run = 0
 
 	for {
 		select {
@@ -1501,16 +1503,26 @@ func epTicker(R *RuleH, helper int) {
 				idx = 0
 				tlen = len(R.epMap)
 			}
-			sidx := idx
+			if idx > 0 {
+				idx = 0
+				// We restart the sweep from beginning while taking a short break
+				// Due to how goLang range, works we would be sweeping eps mostly randomly
+				R.epMx.Unlock()
+				break
+			}
 			tidx := 0
 			for _, host := range R.epMap {
-				if tidx < idx {
-					//tidx++
-					continue
-				}
-				if host.hID == uint8(helper) &&
-					time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(host.opts.probeDuration) {
-					epHosts = append(epHosts, host)
+
+				if host.hID == uint8(helper) {
+					if run%2 == 0 {
+						if (host.opts.probeType == HostProbePing && host.avgDelay == 0) || host.inactive {
+							epHosts = append(epHosts, host)
+						}
+					} else {
+						if time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(host.opts.probeDuration) {
+							epHosts = append(epHosts, host)
+						}
+					}
 					if len(epHosts) >= MaxEndPointSweeps {
 						idx = tidx + 1
 						break
@@ -1518,20 +1530,16 @@ func epTicker(R *RuleH, helper int) {
 				}
 				tidx++
 			}
-			if sidx == idx {
-				idx = 0
-			}
 			R.epMx.Unlock()
+			run++
 
 			begin := time.Now()
-			cnt := 0
 			for _, eph := range epHosts {
 				eph.epCheckNow()
 				eph.sT = time.Now()
 				if time.Duration(eph.sT.Sub(begin).Seconds()) >= EndPointCheckerDuration {
 					break
 				}
-				cnt++
 			}
 			epHosts = nil
 		}
