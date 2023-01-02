@@ -20,8 +20,11 @@ import (
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 
+	"bufio"
 	"errors"
+	"fmt"
 	"net"
+	"os"
 )
 
 // error codes for HA state
@@ -59,10 +62,43 @@ func HAInit() *CIStateH {
 	nHh.StateMap["NOT_DEFINED"] = cmn.CIStateNotDefined
 
 	nHh.ClusterMap = make(map[string]ClusterInstance)
-	var ci ClusterInstance
-	ci.State = cmn.CIStateNotDefined
-	ci.StateStr = "NOT_DEFINED"
-	nHh.ClusterMap["default"] = ci
+
+	clusterStateFile := "/etc/shared/keepalive.state"
+	rf, err := os.Open(clusterStateFile)
+	if err == nil {
+
+		fsc := bufio.NewScanner(rf)
+		fsc.Split(bufio.ScanLines)
+
+		for fsc.Scan() {
+			var inst string
+			var state string
+			// Format style -
+			// INSTANCE default is in BACKUP state
+			fmt.Println(fsc.Text())
+			_, err = fmt.Sscanf(fsc.Text(), "INSTANCE %s is in %s state", &inst, &state)
+			if err != nil {
+				continue
+			}
+
+			tk.LogIt(tk.LogInfo, "instance %s - state %s\n", inst, state)
+
+			ciState := nHh.StateMap[state]
+			if ciState != cmn.CIStateMaster && ciState != cmn.CIStateBackup {
+				continue
+			}
+
+			ci := ClusterInstance{State: ciState, StateStr: state}
+			nHh.ClusterMap[inst] = ci
+		}
+
+		rf.Close()
+	} else {
+		var ci ClusterInstance
+		ci.State = cmn.CIStateNotDefined
+		ci.StateStr = "NOT_DEFINED"
+		nHh.ClusterMap["default"] = ci
+	}
 
 	nHh.NodeMap = make(map[string]*ClusterNode)
 	return nHh

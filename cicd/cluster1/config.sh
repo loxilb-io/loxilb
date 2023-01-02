@@ -19,7 +19,6 @@ echo "#########################################"
 echo "Connecting and configuring  hosts"
 echo "#########################################"
 
-
 connect_docker_hosts user r1
 connect_docker_hosts r1 llb1
 connect_docker_hosts r1 llb2
