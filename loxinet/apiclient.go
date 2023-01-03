@@ -381,14 +381,11 @@ func (*NetAPIStruct) NetCIStateMod(hm *cmn.HASMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
-	state, err := mh.has.CIStateUpdate(*hm)
+	_, err := mh.has.CIStateUpdate(*hm)
 	if err != nil {
 		return -1, err
 	}
 
-	if mh.bgp != nil {
-		mh.bgp.UpdateCIState(state)
-	}
 	return 0, nil
 }
 
