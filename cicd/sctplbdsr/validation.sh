@@ -14,13 +14,14 @@ waitCount=0
 while [ $j -le 2 ]
 do
     res=$($hexec l3h1 socat -T10 - SCTP:${ep[j]}:2020)
-    #echo $res
+    echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
         echo "$res UP"
         j=$(( $j + 1 ))
     else
         echo "Waiting for ${servArr[j]}(${ep[j]})"
+        ping ${servArr[j]} -c 4
         waitCount=$(( $waitCount + 1 ))
         if [[ $waitCount == 10 ]];
         then
