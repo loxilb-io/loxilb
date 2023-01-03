@@ -63,14 +63,17 @@ spawn_docker_host() {
       shift 2
       ;;
     -k | --with-ka )
-      if [[ "$2" == "yes" ]]; then
+      ka="in"
+      if [[ "$2" == "out" ]]; then
           ka=$2
       fi
       shift 2
       ;;
     -d | --ka-config )
       kpath="$2"
-      ka="yes"
+      if [[ -z ${ka+x} ]]; then
+        ka="in"
+      fi
       shift 2
       ;;
     -*|--*)
@@ -99,14 +102,24 @@ spawn_docker_host() {
       cluster_opts=" --cluster=172.17.0.2"
     fi
 
-    if [[ "$ka" == "yes" ]]; then
+    if [[ ! -z ${ka+x} ]]; then
       sudo mkdir -p /etc/shared/$dname/
-      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config --name $dname ghcr.io/loxilb-io/loxilb:latest
-      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts
-      if [[ ! -z "$kpath" ]]; then
-        ka_conf="-v $kpath:/container/service/keepalived/assets/" 
+      if [[ "$ka" == "in" ]];then
+        ka_opts="-k"
+        if [[ ! -z "$kpath" ]]; then
+            ka_conf="-v $kpath:/etc/keepalived/" 
+        fi
       fi
-      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit --network=container:$dname $ka_conf -v /etc/shared/$dname:/etc/shared --name ka_$dname osixia/keepalived:2.0.20
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config $ka_conf --name $dname ghcr.io/loxilb-io/loxilb:latest
+      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $ka_opts
+
+      if [[ "$ka" == "out" ]];then
+        if [[ ! -z "$kpath" ]]; then
+            ka_conf="-v $kpath:/container/service/keepalived/assets/" 
+        fi
+
+        docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit --network=container:$dname $ka_conf -v /etc/shared/$dname:/etc/shared --name ka_$dname osixia/keepalived:2.0.20
+      fi
     else
       docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname ghcr.io/loxilb-io/loxilb:latest $bgp_opts
     fi

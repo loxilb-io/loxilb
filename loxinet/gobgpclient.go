@@ -389,10 +389,11 @@ func GoBgpInit() *GoBgpH {
 }
 
 func (gbh *GoBgpH) goBgpSpawn() {
-	if _, err := os.Stat("/etc/gobgp/gobgp_loxilb.yaml"); errors.Is(err, os.ErrNotExist) {
-		return
-	}
 	for {
+		if _, err := os.Stat("/etc/gobgp/gobgp_loxilb.yaml"); errors.Is(err, os.ErrNotExist) {
+			time.Sleep(1000 * time.Millisecond)
+			continue
+		}
 		command := "gobgpd -t yaml -f /etc/gobgp/gobgp_loxilb.yaml"
 		cmd := exec.Command("bash", "-c", command)
 		err := cmd.Run()
