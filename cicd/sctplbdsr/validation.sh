@@ -1,9 +1,9 @@
 #!/bin/bash
 source ../common.sh
 echo SCENARIO-sctplbdsr
-$hexec l3ep1 socat -v -T0.05 sctp-l:2020,reuseaddr,fork system:"echo 'server1'; cat" >/dev/null 2>&1 &
-$hexec l3ep2 socat -v -T0.05 sctp-l:2020,reuseaddr,fork system:"echo 'server2'; cat" >/dev/null 2>&1 &
-$hexec l3ep3 socat -v -T0.05 sctp-l:2020,reuseaddr,fork system:"echo 'server3'; cat" >/dev/null 2>&1 &
+$hexec l3ep1 socat -v -T2 sctp-l:2020,reuseaddr,fork system:"echo 'server1'; cat" >/dev/null 2>&1 &
+$hexec l3ep2 socat -v -T2 sctp-l:2020,reuseaddr,fork system:"echo 'server2'; cat" >/dev/null 2>&1 &
+$hexec l3ep3 socat -v -T2 sctp-l:2020,reuseaddr,fork system:"echo 'server3'; cat" >/dev/null 2>&1 &
 
 sleep 5
 code=0
@@ -21,7 +21,7 @@ do
         j=$(( $j + 1 ))
     else
         echo "Waiting for ${servArr[j]}(${ep[j]})"
-        ping ${servArr[j]} -c 4
+        ping ${ep[j]} -c 4
         waitCount=$(( $waitCount + 1 ))
         if [[ $waitCount == 10 ]];
         then
