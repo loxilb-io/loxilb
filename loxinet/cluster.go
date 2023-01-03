@@ -42,6 +42,10 @@ const (
 	CIStateErr
 )
 
+const (
+	CIDefault = "default"
+)
+
 type ClusterInstance struct {
 	State    int
 	StateStr string
@@ -213,15 +217,25 @@ func CIInit(spawnKa bool) *CIStateH {
 
 	// nCIh.CISync(false)
 
-	if _, ok := nCIh.ClusterMap["default"]; !ok {
+	if _, ok := nCIh.ClusterMap[CIDefault]; !ok {
 		var ci ClusterInstance
 		ci.State = cmn.CIStateNotDefined
 		ci.StateStr = "NOT_DEFINED"
-		nCIh.ClusterMap["default"] = ci
+		nCIh.ClusterMap[CIDefault] = ci
 	}
 
 	nCIh.NodeMap = make(map[string]*ClusterNode)
 	return nCIh
+}
+
+// CIStateGetInst - routine to get HA state
+func (h *CIStateH) CIStateGetInst(inst string) (string, error) {
+
+	if ci, ok := h.ClusterMap[inst]; ok {
+		return ci.StateStr, nil
+	}
+
+	return "NOT_DEFINED", errors.New("Not found")
 }
 
 // CIStateGet - routine to get HA state

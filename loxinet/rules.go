@@ -234,6 +234,7 @@ type ruleEnt struct {
 	ruleNum int
 	Sync    DpStatusT
 	tuples  ruleTuples
+	CI      string
 	ActChk  bool
 	BGP     bool
 	sT      time.Time
@@ -961,6 +962,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	r.sT = time.Now()
 	r.iTo = serv.InactiveTimeout
 	r.BGP = serv.Bgp
+	r.CI = CIDefault
 
 	R.modNatEpHost(r, natActs.endPoints, true)
 
