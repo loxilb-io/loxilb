@@ -1,9 +1,9 @@
 #!/bin/bash
 source ../common.sh
 echo SCENARIO-sctplbdsr
-$hexec l3ep1 socat -v -T2 sctp-l:2020,reuseaddr,fork system:"echo 'server1'; cat" >/dev/null 2>&1 &
-$hexec l3ep2 socat -v -T2 sctp-l:2020,reuseaddr,fork system:"echo 'server2'; cat" >/dev/null 2>&1 &
-$hexec l3ep3 socat -v -T2 sctp-l:2020,reuseaddr,fork system:"echo 'server3'; cat" >/dev/null 2>&1 &
+$hexec l3ep1 socat -v -T0.05 sctp-l:2020,reuseaddr,fork,bind=31.31.31.1 system:"echo 'server1'; cat" >/dev/null 2>&1 &
+$hexec l3ep2 socat -v -T0.05 sctp-l:2020,reuseaddr,fork,bind=32.32.32.1 system:"echo 'server2'; cat" >/dev/null 2>&1 &
+$hexec l3ep3 socat -v -T0.05 sctp-l:2020,reuseaddr,fork,bind=33.33.33.1 system:"echo 'server3'; cat" >/dev/null 2>&1 &
 
 sleep 5
 code=0
@@ -23,7 +23,7 @@ do
         echo "Waiting for ${servArr[j]}(${ep[j]})"
         docker exec -t sw1 tcpdump -i esw1l3h1 &
         sleep 3
-        ping ${ep[j]} -c 4
+        ping ${ep[j]} -c 4 -I 10.10.10.1
         waitCount=$(( $waitCount + 1 ))
         if [[ $waitCount == 10 ]];
         then
@@ -34,6 +34,17 @@ do
     fi
     sleep 1
 done
+
+sudo killall -9 socat 2>&1 >> /dev/null
+wait 2> /dev/null
+wait 2> /dev/null
+wait 2> /dev/null
+
+$hexec l3ep1 socat -v -T0.05 sctp-l:2020,reuseaddr,fork,bind=20.20.20.1 system:"echo 'server1'; cat" >/dev/null 2>&1 &
+$hexec l3ep2 socat -v -T0.05 sctp-l:2020,reuseaddr,fork,bind=20.20.20.1 system:"echo 'server2'; cat" >/dev/null 2>&1 &
+$hexec l3ep3 socat -v -T0.05 sctp-l:2020,reuseaddr,fork,bind=20.20.20.1 system:"echo 'server3'; cat" >/dev/null 2>&1 &
+
+sleep 5
 
 nid=0
 for j in {0..2}
@@ -67,7 +78,7 @@ then
 else
     echo SCENARIO-sctplbdsr [FAILED]
 fi
-$hexec l3ep1 killall  -9 socat > /dev/null 2>&1
-$hexec l3ep2 killall  -9 socat > /dev/null 2>&1
-$hexec l3ep3 killall  -9 socat > /dev/null 2>&1
+
+sudo killall -9 socat 2>&1 >> /dev/null
+
 exit $code
