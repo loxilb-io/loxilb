@@ -294,6 +294,7 @@ type DpCtInfo struct {
 	Proto   string
 	CState  string
 	CAct    string
+	CI      string
 	Packets uint64
 	Bytes   uint64
 	Deleted bool
@@ -432,6 +433,25 @@ func dialHTTPPath(network, address, path string) (*rpc.Client, error) {
 	}
 }
 
+func (dp *DpH) DpNsyncRpcReset() int {
+	for idx := range mh.dp.Peers {
+		pe := &mh.dp.Peers[idx]
+		if pe.Client != nil {
+			pe.Client.Close()
+			pe.Client = nil
+		}
+		if pe.Client == nil {
+			cStr := fmt.Sprintf("%s:%d", pe.Peer.String(), NSyncPort)
+			pe.Client, _ = dialHTTPPath("tcp", cStr, rpc.DefaultRPCPath)
+			if pe.Client == nil {
+				return -1
+			}
+			tk.LogIt(tk.LogInfo, "NSync RPC - %s :Reset\n", cStr)
+		}
+	}
+	return 0
+}
+
 func (dp *DpH) DpNsyncRpc(op DpSyncOpT, cti *DpCtInfo) int {
 	var reply int
 	timeout := 2 * time.Second
@@ -461,6 +481,11 @@ func (dp *DpH) DpNsyncRpc(op DpSyncOpT, cti *DpCtInfo) int {
 		if op == DpSyncAdd || op == DpSyncDelete {
 			if cti == nil {
 				return -1
+			}
+			// FIXME - There is a race condition here
+			cIState, _ := mh.has.CIStateGetInst(cti.CI)
+			if cIState != "MASTER" {
+				return 0
 			}
 			call = pe.Client.Go(rpcCallStr, *cti, &reply, make(chan *rpc.Call, 1))
 		} else {
@@ -523,6 +548,9 @@ func (n *NSync) DpWorkOnCtGet(async int, ret *int) error {
 	tk.LogIt(tk.LogDebug, "RPC -  CT Get %d\n", async)
 	mh.dp.DpHooks.DpCtGetAsync()
 	*ret = 0
+
+	// Most likely need to reset reverse rpc channel
+	mh.dp.DpNsyncRpcReset()
 	return nil
 }
 

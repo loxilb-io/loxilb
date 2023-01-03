@@ -1495,6 +1495,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 		cti.ServiceIP = r.tuples.l3Dst.addr.IP
 		cti.L4ServPort = r.tuples.l4Dst.val
 		cti.BlockNum = r.tuples.pref
+		cti.CI = r.CI
 		if r.tuples.l4Prot.val == 6 {
 			cti.ServProto = "tcp"
 		} else if r.tuples.l4Prot.val == 132 {
@@ -1579,6 +1580,7 @@ func dpCTMapChkUpdates() {
 				goCtEnt.L4ServPort = cti.L4ServPort
 				goCtEnt.BlockNum = cti.BlockNum
 				goCtEnt.ServProto = cti.ServProto
+				goCtEnt.CI = cti.CI
 				delete(mh.dpEbpf.ctMap, cti.Key())
 				mh.dpEbpf.ctMap[goCtEnt.Key()] = goCtEnt
 				ctStr := goCtEnt.String()
