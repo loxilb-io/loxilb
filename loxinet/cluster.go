@@ -25,6 +25,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/exec"
+	"time"
 )
 
 // error codes for HA state
@@ -46,22 +48,57 @@ type ClusterNode struct {
 
 // CIStateH - HA context handler
 type CIStateH struct {
+	SpawnKa    bool
 	ClusterMap map[string]ClusterInstance
 	StateMap   map[string]int
 	NodeMap    map[string]*ClusterNode
 }
 
-// HAInit - routine to initialize HA context
-func HAInit() *CIStateH {
-	var nHh = new(CIStateH)
-	nHh.StateMap = make(map[string]int)
-	nHh.StateMap["MASTER"] = cmn.CIStateMaster
-	nHh.StateMap["BACKUP"] = cmn.CIStateBackup
-	nHh.StateMap["FAULT"] = cmn.CIStateConflict
-	nHh.StateMap["STOP"] = cmn.CIStateNotDefined
-	nHh.StateMap["NOT_DEFINED"] = cmn.CIStateNotDefined
+func kaSpawn() {
+	command := "sudo pkill keepalived"
+	cmd := exec.Command("bash", "-c", command)
+	err := cmd.Run()
+	if err != nil {
+		tk.LogIt(tk.LogError,"Error in stoping KA:%s", err)
+	}
+	for {
+		if _, err := os.Stat("/etc/keepalived/keepalived.conf"); errors.Is(err, os.ErrNotExist) {
+			time.Sleep(1000 * time.Millisecond)
+			continue
+		}
 
-	nHh.ClusterMap = make(map[string]ClusterInstance)
+		if _, err2 := os.Stat( "/var/run/keepalived.pid"); errors.Is(err2, os.ErrNotExist) {
+			tk.LogIt(tk.LogError,"KA Dead, need to restart\n")
+		} else {
+			time.Sleep(1000 * time.Millisecond)
+			continue
+		}
+		command = "sudo keepalived -f /etc/keepalived/keepalived.conf"
+		cmd = exec.Command("bash", "-c", command)
+		err = cmd.Run()
+		if err != nil {
+			tk.LogIt(tk.LogError,"Error in starting KA:%s\n", err)
+		}
+		time.Sleep(2000 * time.Millisecond)
+		tk.LogIt(tk.LogInfo,"KA spawned\n")
+	}
+}
+
+
+// HAInit - routine to initialize HA context
+func CIInit(spawnKa bool) *CIStateH {
+	var nCIh = new(CIStateH)
+	nCIh.StateMap = make(map[string]int)
+	nCIh.StateMap["MASTER"] = cmn.CIStateMaster
+	nCIh.StateMap["BACKUP"] = cmn.CIStateBackup
+	nCIh.StateMap["FAULT"] = cmn.CIStateConflict
+	nCIh.StateMap["STOP"] = cmn.CIStateNotDefined
+	nCIh.StateMap["NOT_DEFINED"] = cmn.CIStateNotDefined
+	nCIh.SpawnKa = spawnKa
+	nCIh.ClusterMap = make(map[string]ClusterInstance)
+	if spawnKa {
+		go kaSpawn()
+	}
 
 	clusterStateFile := "/etc/shared/keepalive.state"
 	rf, err := os.Open(clusterStateFile)
@@ -83,13 +120,13 @@ func HAInit() *CIStateH {
 
 			tk.LogIt(tk.LogInfo, "instance %s - state %s\n", inst, state)
 
-			ciState := nHh.StateMap[state]
+			ciState := nCIh.StateMap[state]
 			if ciState != cmn.CIStateMaster && ciState != cmn.CIStateBackup {
 				continue
 			}
 
 			ci := ClusterInstance{State: ciState, StateStr: state}
-			nHh.ClusterMap[inst] = ci
+			nCIh.ClusterMap[inst] = ci
 		}
 
 		rf.Close()
@@ -97,11 +134,11 @@ func HAInit() *CIStateH {
 		var ci ClusterInstance
 		ci.State = cmn.CIStateNotDefined
 		ci.StateStr = "NOT_DEFINED"
-		nHh.ClusterMap["default"] = ci
+		nCIh.ClusterMap["default"] = ci
 	}
 
-	nHh.NodeMap = make(map[string]*ClusterNode)
-	return nHh
+	nCIh.NodeMap = make(map[string]*ClusterNode)
+	return nCIh
 }
 
 // CIStateGet - routine to get HA state
@@ -132,6 +169,14 @@ func (h *CIStateH) CIStateUpdate(ham cmn.HASMod) (int, error) {
 		ci.StateStr = ham.State
 		ci.State = h.StateMap[ham.State]
 		h.ClusterMap[ham.Instance] = ci
+		if h.SpawnKa && ham.State == "FAULT" {
+			command := "sudo pkill keepalived"
+			cmd := exec.Command("bash", "-c", command)
+			err := cmd.Run()
+			if err != nil {
+				tk.LogIt(tk.LogError,"Error in stoping KA:%s", err)
+			}
+		}
 		return ci.State, nil
 	} else {
 		tk.LogIt(tk.LogError, "[HA] Invalid State: %s\n", ham.State)
