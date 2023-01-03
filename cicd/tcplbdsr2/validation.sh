@@ -1,9 +1,9 @@
 #!/bin/bash
 source ../common.sh
 echo SCENARIO-tcplbdsr2
-$hexec l3ep1 socat -v -T0.05 sctp-l:2020,reuseaddr,fork system:"echo 'server1'; cat" >/dev/null 2>&1 &
-$hexec l3ep2 socat -v -T0.05 sctp-l:2020,reuseaddr,fork system:"echo 'server2'; cat" >/dev/null 2>&1 &
-$hexec l3ep3 socat -v -T0.05 sctp-l:2020,reuseaddr,fork system:"echo 'server3'; cat" >/dev/null 2>&1 &
+$hexec l3ep1 socat -v -T0.05 tcp-l:2020,reuseaddr,fork system:"echo 'server1'; cat" >/dev/null 2>&1 &
+$hexec l3ep2 socat -v -T0.05 tcp-l:2020,reuseaddr,fork system:"echo 'server2'; cat" >/dev/null 2>&1 &
+$hexec l3ep3 socat -v -T0.05 tcp-l:2020,reuseaddr,fork system:"echo 'server3'; cat" >/dev/null 2>&1 &
 
 sleep 5
 code=0
@@ -13,7 +13,7 @@ j=0
 waitCount=0
 while [ $j -le 2 ]
 do
-    res=$($hexec l3h1 socat -T10 - SCTP:${ep[j]}:2020)
+    res=$($hexec l3h1 socat -T10 - TCP:${ep[j]}:2020)
     #echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
@@ -34,7 +34,7 @@ done
 
 for j in {0..2}
 do
-    res=$($hexec l3h1 socat -T10 - SCTP:20.20.20.1:2020)
+    res=$($hexec l3h1 socat -T10 - TCP:20.20.20.1:2020)
     echo $res
     if [[ $res != "${servArr[j]}" ]]
     then
