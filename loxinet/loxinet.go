@@ -171,7 +171,7 @@ func loxiNetInit() {
 
 	// Add a root zone by default
 	mh.zn.ZoneAdd(RootZone)
-	mh.has = HAInit()
+	mh.has = CIInit(opts.Opts.Ka)
 	mh.zr, _ = mh.zn.Zonefind(RootZone)
 	if mh.zr == nil {
 		tk.LogIt(tk.LogError, "root zone not found\n")
