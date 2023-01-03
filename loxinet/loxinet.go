@@ -139,6 +139,7 @@ func loxiNetTicker() {
 			tk.LogIt(-1, "Tick at %v\n", t)
 			// Do any housekeeping activities for security zones
 			mh.zn.ZoneTicker()
+			mh.has.CITicker()
 		}
 	}
 }
