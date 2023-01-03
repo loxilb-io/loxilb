@@ -21,6 +21,8 @@ do
         j=$(( $j + 1 ))
     else
         echo "Waiting for ${servArr[j]}(${ep[j]})"
+        docker exec -t sw1 tcpdump -i esw1l3h1 &
+        sleep 3
         ping ${ep[j]} -c 4
         waitCount=$(( $waitCount + 1 ))
         if [[ $waitCount == 10 ]];
