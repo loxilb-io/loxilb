@@ -34,6 +34,11 @@ const (
 )
 
 const (
+	// CIDefault - Default CI Instance name
+	CIDefault = "default"
+)
+
+const (
 	// HighLocalPref - High local preference for advertising BGP route(Default or Master)
 	HighLocalPref = 101
 	// LowLocalPref - Low local preference for advertising BGP route(Backup)
@@ -570,6 +575,8 @@ type HASMod struct {
 	Instance string `json:"instance"`
 	// State - current HA state
 	State string `json:"haState"`
+	// Vip - Instance virtual IP address
+	Vip net.IP `json:"Addr"`
 }
 
 // ClusterNodeMod - information related to a cluster node instance

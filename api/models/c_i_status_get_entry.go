@@ -28,6 +28,9 @@ type CIStatusGetEntry struct {
 	// Sync - sync state
 	// Required: true
 	Sync *int64 `json:"sync"`
+
+	// Instance Virtual IP address
+	Vip string `json:"vip,omitempty"`
 }
 
 // Validate validates this c i status get entry

@@ -6,7 +6,7 @@ import (
 
 var Opts struct {
 	Bgp               bool           `short:"b" long:"bgp" description:"Connect and Sync with GoBGP server"`
-	Ka                bool           `short:"k" long:"ka" description:"Spawn Keepalive"`
+	Ka                string         `short:"k" long:"ka" description:"One of in,out"`
 	Version           bool           `short:"v" long:"version" description:"Show loxilb version"`
 	NoApi             bool           `short:"a" long:"api" description:"Run Rest API server"`
 	NoNlp             bool           `short:"n" long:"nonlp" description:"Do not register with nlp"`

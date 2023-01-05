@@ -257,7 +257,7 @@ func (*NetAPIStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
 	ret, err := mh.zr.Rules.AddNatLbRule(lm.Serv, lm.Eps[:])
 	if err == nil && lm.Serv.Bgp {
 		if mh.bgp != nil {
-			mh.bgp.AddBGPRule(lm.Serv.ServIP)
+			mh.bgp.AddBGPRule("default", lm.Serv.ServIP)
 		} else {
 			tk.LogIt(tk.LogDebug, "loxilb BGP mode is disable \n")
 		}
@@ -273,7 +273,7 @@ func (*NetAPIStruct) NetLbRuleDel(lm *cmn.LbRuleMod) (int, error) {
 	ret, err := mh.zr.Rules.DeleteNatLbRule(lm.Serv)
 	if lm.Serv.Bgp {
 		if mh.bgp != nil {
-			mh.bgp.DelBGPRule(lm.Serv.ServIP)
+			mh.bgp.DelBGPRule("default", lm.Serv.ServIP)
 		} else {
 			tk.LogIt(tk.LogDebug, "loxilb BGP mode is disable \n")
 		}

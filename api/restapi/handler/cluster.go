@@ -20,7 +20,7 @@ import (
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
-
+	"net"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -37,6 +37,7 @@ func ConfigGetCIState(params operations.GetConfigCistateAllParams) middleware.Re
 		var tempResult models.CIStatusGetEntry
 		tempResult.Instance = h.Instance
 		tempResult.State = h.State
+		tempResult.Vip = h.Vip.String()
 		result = append(result, &tempResult)
 	}
 
@@ -51,7 +52,9 @@ func ConfigPostCIState(params operations.PostConfigCistateParams) middleware.Res
 	// Set HA State
 	hasMod.Instance = params.Attr.Instance
 	hasMod.State = params.Attr.State
-	tk.LogIt(tk.LogDebug, "[API] Instance %s New HA State : %v\n", hasMod.Instance, hasMod.State)
+	hasMod.Vip = net.ParseIP(params.Attr.Vip)
+	tk.LogIt(tk.LogDebug, "[API] Instance %s New HA State : %v, VIP: %s\n", 
+		hasMod.Instance, hasMod.State, hasMod.Vip)
 	_, err := ApiHooks.NetCIStateMod(&hasMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)

@@ -61,6 +61,14 @@ const (
 	BGPDisconnected
 )
 
+// goCI - Cluster Instance context
+type goCI struct {
+	name string
+	hastate int
+	vip net.IP
+	rules   map[string]bool
+}
+
 // GoBgpH - context container
 type GoBgpH struct {
 	eventCh chan goBgpEvent
@@ -69,9 +77,8 @@ type GoBgpH struct {
 	client  api.GobgpApiClient
 	mtx     sync.RWMutex
 	state   goBgpState
-	rules   map[string]bool
 	noNlp   bool
-	hastate int
+	ciMap   map[string]*goCI
 }
 
 func (gbh *GoBgpH) getPathAttributeString(nlri bgp.AddrPrefixInterface, attrs []bgp.PathAttributeInterface) string {
@@ -380,7 +387,7 @@ func GoBgpInit() *GoBgpH {
 
 	gbh.eventCh = make(chan goBgpEvent, cmn.RuWorkQLen)
 	gbh.host = "127.0.0.1:50051"
-	gbh.rules = make(map[string]bool)
+	gbh.ciMap = make(map[string]*goCI)
 	gbh.state = BGPDisconnected
 	go gbh.goBgpSpawn()
 	go gbh.goBgpConnect(gbh.host)
@@ -447,14 +454,24 @@ func (gbh *GoBgpH) goBgpConnect(host string) {
 }
 
 // AddBGPRule - add a bgp rule in goBGP
-func (gbh *GoBgpH) AddBGPRule(IP string) {
+func (gbh *GoBgpH) AddBGPRule(instance string, IP string) {
 	var pref uint32
 	gbh.mtx.Lock()
-	if !gbh.rules[IP] {
-		gbh.rules[IP] = true
+	ci := gbh.ciMap[instance]
+	if ci == nil {
+		ci = new(goCI)
+		ci.rules = make(map[string]bool)
+		ci.name = instance
+		ci.hastate = cmn.CIStateBackup
+		ci.vip = net.IPv4zero
+		gbh.ciMap[instance] = ci;
+	}
+
+	if !ci.rules[IP] {
+		ci.rules[IP] = true
 	}
 	if gbh.state == BGPConnected {
-		if gbh.hastate == cmn.CIStateBackup {
+		if ci.hastate == cmn.CIStateBackup {
 			pref = cmn.LowLocalPref
 		} else {
 			pref = cmn.HighLocalPref
@@ -466,15 +483,21 @@ func (gbh *GoBgpH) AddBGPRule(IP string) {
 }
 
 // DelBGPRule - delete a bgp rule in goBGP
-func (gbh *GoBgpH) DelBGPRule(IP string) {
+func (gbh *GoBgpH) DelBGPRule(instance string, IP string) {
 	var pref uint32
 	gbh.mtx.Lock()
-	if gbh.rules[IP] {
-		gbh.rules[IP] = false
+	ci := gbh.ciMap[instance]
+	if ci == nil {
+		tk.LogIt(tk.LogError, "[GoBGP] Del BGP Rule - Invalid instance %s\n", instance)
+		return
+	}
+
+	if ci.rules[IP] {
+		ci.rules[IP] = false
 	}
 
 	if gbh.state == BGPConnected {
-		if gbh.hastate == cmn.CIStateBackup {
+		if ci.hastate == cmn.CIStateBackup {
 			pref = cmn.LowLocalPref
 		} else {
 			pref = cmn.HighLocalPref
@@ -550,15 +573,25 @@ func (gbh *GoBgpH) AddCurrentBgpRoutesToIPRoute() error {
 	return nil
 }
 
-func (gbh *GoBgpH) advertiseAllRoutes() {
+func (gbh *GoBgpH) advertiseAllRoutes(instance string) {
 	var pref uint32
-	if gbh.hastate == cmn.CIStateBackup {
+	ci := gbh.ciMap[instance]
+	if ci == nil {
+		tk.LogIt(tk.LogError, "[GoBGP] Instance %s is invalid\n", instance)
+		return
+	}
+	if ci.hastate == cmn.CIStateBackup {
 		pref = cmn.LowLocalPref
 	} else {
 		pref = cmn.HighLocalPref
 	}
-	for ip, valid := range gbh.rules {
-		tk.LogIt(tk.LogDebug, "[GoBGP] connected BGP rules ip %s is valied(%v)\n", ip, valid)
+
+	if !ci.vip.IsUnspecified() {
+		gbh.AdvertiseRoute(ci.vip.String(), 32, "0.0.0.0", pref)
+	}
+
+	for ip, valid := range ci.rules {
+		tk.LogIt(tk.LogDebug, "[GoBGP] connected BGP rules ip %s is valid(%v)\n", ip, valid)
 		if valid {
 			gbh.AdvertiseRoute(ip, 32, "0.0.0.0", pref)
 		}
@@ -568,7 +601,11 @@ func (gbh *GoBgpH) advertiseAllRoutes() {
 func (gbh *GoBgpH) getGoBgpRoutes() {
 	gbh.mtx.Lock()
 
-	gbh.advertiseAllRoutes()
+	for ciname, ci  := range gbh.ciMap {
+		if ci != nil {
+			gbh.advertiseAllRoutes(ciname)
+		}
+	}
 
 	if err := gbh.AddCurrentBgpRoutesToIPRoute(); err != nil {
 		tk.LogIt(tk.LogError, "[GoBGP] AddCurrentBgpRoutesToIpRoute() return err: %s\n", err.Error())
@@ -612,8 +649,17 @@ func (gbh *GoBgpH) goBgpMonitor() {
 	}
 }
 
-func (gbh *GoBgpH) UpdateCIState(state int) {
-	gbh.hastate = state
-	gbh.advertiseAllRoutes()
-	tk.LogIt(tk.LogNotice, "[BGP] HA state updated : %d\n", state)
+func (gbh *GoBgpH) UpdateCIState(instance string, state int, vip net.IP) {
+	ci := gbh.ciMap[instance]
+	if ci == nil {
+		ci = new(goCI)
+		ci.rules = make(map[string]bool)
+	}
+	ci.name = instance
+	ci.hastate = state
+	ci.vip = vip
+	gbh.ciMap[instance] = ci
+
+	gbh.advertiseAllRoutes(instance)
+	tk.LogIt(tk.LogNotice, "[BGP] Instance %s(%v) HA state updated : %d\n", instance, vip, state)
 }

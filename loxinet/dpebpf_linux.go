@@ -749,6 +749,7 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		} else if w.NatType == DpDnat || w.NatType == DpFullNat {
 			dat.ca.act_type = C.DP_SET_DNAT
 		} else {
+			tk.LogIt(tk.LogDebug, "[DP] LB rule %s add[NOK] - EbpfErrNat4Add\n", w.ServiceIP.String())
 			return EbpfErrNat4Add
 		}
 
@@ -810,9 +811,10 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 			unsafe.Pointer(dat))
 
 		if ret != 0 {
+			tk.LogIt(tk.LogDebug, "[DP] LB rule %s add[NOK]\n", w.ServiceIP.String())
 			return EbpfErrTmacAdd
 		}
-
+		tk.LogIt(tk.LogDebug, "[DP] LB rule %s add[OK]\n", w.ServiceIP.String())
 		return 0
 	} else if w.Work == DpRemove {
 		C.llb_del_map_elem(C.LL_DP_NAT_MAP, unsafe.Pointer(key))
