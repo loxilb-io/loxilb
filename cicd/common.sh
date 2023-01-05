@@ -105,7 +105,7 @@ spawn_docker_host() {
     if [[ ! -z ${ka+x} ]]; then
       sudo mkdir -p /etc/shared/$dname/
       if [[ "$ka" == "in" ]];then
-        ka_opts="-k"
+        ka_opts="-k in"
         if [[ ! -z "$kpath" ]]; then
             ka_conf="-v $kpath:/etc/keepalived/" 
         fi
@@ -114,6 +114,7 @@ spawn_docker_host() {
       docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $ka_opts
 
       if [[ "$ka" == "out" ]];then
+        ka_opts="-k out"
         if [[ ! -z "$kpath" ]]; then
             ka_conf="-v $kpath:/container/service/keepalived/assets/" 
         fi
