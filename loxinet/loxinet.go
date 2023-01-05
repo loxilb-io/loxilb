@@ -90,6 +90,20 @@ func logString2Level(logStr string) tk.LogLevelT {
 	return logLevel
 }
 
+func kaString2Mode(kaStr string) (bool,bool) {
+	spawnKa := false
+	kaMode := false
+	switch opts.Opts.Ka {
+	case "in" :
+		spawnKa = true
+		kaMode = true
+	case "out" :
+		spawnKa = false
+		kaMode = true
+	}
+	return spawnKa, kaMode
+}
+
 // ParamSet - Set Loxinet Params
 func (mh *loxiNetH) ParamSet(param cmn.ParamMod) (int, error) {
 	logLevel := logString2Level(param.LogLevel)
@@ -157,6 +171,7 @@ func loxiNetInit() {
 	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
 	logLevel := logString2Level(opts.Opts.LogLevel)
 	mh.logger = tk.LogItInit(logfile, logLevel, true)
+	spawnKa, kaMode := kaString2Mode(opts.Opts.Ka)
 
 	mh.tDone = make(chan bool)
 	mh.ticker = time.NewTicker(LoxinetTiVal * time.Second)
@@ -172,7 +187,7 @@ func loxiNetInit() {
 
 	// Add a root zone by default
 	mh.zn.ZoneAdd(RootZone)
-	mh.has = CIInit(opts.Opts.Ka)
+
 	mh.zr, _ = mh.zn.Zonefind(RootZone)
 	if mh.zr == nil {
 		tk.LogIt(tk.LogError, "root zone not found\n")
@@ -183,7 +198,7 @@ func loxiNetInit() {
 	if opts.Opts.Bgp {
 		mh.bgp = GoBgpInit()
 	}
-
+	
 	// Initialize the nlp subsystem
 	if opts.Opts.NoNlp == false {
 		nlp.NlpRegister(NetAPIInit())
@@ -196,6 +211,7 @@ func loxiNetInit() {
 		go apiserver.RunAPIServer()
 	}
 
+	mh.has = CIInit(spawnKa, kaMode)
 	// Add cluster nodes if specified
 	if clusterMode {
 		cNodes := strings.Split(opts.Opts.ClusterNodes, ",")

@@ -22,6 +22,9 @@ type CIStatusEntry struct {
 
 	// Current Cluster Instance State
 	State string `json:"state,omitempty"`
+
+	// Instance Virtual IP address
+	Vip string `json:"vip,omitempty"`
 }
 
 // Validate validates this c i status entry

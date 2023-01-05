@@ -962,7 +962,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	r.sT = time.Now()
 	r.iTo = serv.InactiveTimeout
 	r.BGP = serv.Bgp
-	r.CI = CIDefault
+	r.CI = cmn.CIDefault
 
 	R.modNatEpHost(r, natActs.endPoints, true)
 
@@ -1812,7 +1812,20 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 
 				ep.RIP = sip
 			} else {
-				ep.RIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
+				if !mh.has.IsCIKAMode() {
+				 ep.RIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
+				} else {
+					vip, err := mh.has.CIVipGet(r.CI)
+					if err == nil {
+						tk.LogIt(tk.LogDebug, "vip for %s: %s\n", r.CI, vip.String())
+						ep.RIP = vip
+					} else {
+						tk.LogIt(tk.LogError, "[DP] vip for %s not found \n", r.CI)
+						r.Sync = DpCreateErr
+						return -1
+					}
+				}
+				tk.LogIt(tk.LogDebug, "suitable source for %s: %s\n", ep.XIP.String(), ep.RIP.String())
 			}
 		}
 	} else {

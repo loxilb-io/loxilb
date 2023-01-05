@@ -42,13 +42,10 @@ const (
 	CIStateErr
 )
 
-const (
-	CIDefault = "default"
-)
-
 type ClusterInstance struct {
 	State    int
 	StateStr string
+	Vip      net.IP
 }
 
 type ClusterNode struct {
@@ -59,6 +56,7 @@ type ClusterNode struct {
 // CIStateH - Cluster context handler
 type CIStateH struct {
 	SpawnKa    bool
+	kaMode     bool
 	ClusterMap map[string]ClusterInstance
 	StateMap   map[string]int
 	NodeMap    map[string]*ClusterNode
@@ -152,9 +150,10 @@ func (ci *CIStateH) CISync(doNotify bool) {
 		for fsc.Scan() {
 			var inst string
 			var state string
+			var vip string
 			// Format style -
 			// INSTANCE default is in BACKUP state
-			_, err = fmt.Sscanf(fsc.Text(), "INSTANCE %s is in %s state", &inst, &state)
+			_, err = fmt.Sscanf(fsc.Text(), "INSTANCE %s is in %s state, vip %s", &inst, &state, &vip)
 			if err != nil {
 				continue
 			}
@@ -174,9 +173,10 @@ func (ci *CIStateH) CISync(doNotify bool) {
 			}
 
 			if notify && doNotify {
-				tk.LogIt(tk.LogInfo, "ci-change instance %s - state %s\n", inst, state)
+				tk.LogIt(tk.LogInfo, "ci-change instance %s - state %s vip %s\n", inst, state, vip)
 				sm.Instance = inst
 				sm.State = state
+				sm.Vip = net.ParseIP(vip)
 				ci.CIStateUpdate(sm)
 			} else {
 				if ciState != cmn.CIStateMaster && ciState != cmn.CIStateBackup {
@@ -200,7 +200,7 @@ func (ci *CIStateH) CITicker() {
 }
 
 // CIInit - routine to initialize Cluster context
-func CIInit(spawnKa bool) *CIStateH {
+func CIInit(spawnKa bool, kaMode bool) *CIStateH {
 	var nCIh = new(CIStateH)
 	nCIh.StateMap = make(map[string]int)
 	nCIh.StateMap["MASTER"] = cmn.CIStateMaster
@@ -209,6 +209,7 @@ func CIInit(spawnKa bool) *CIStateH {
 	nCIh.StateMap["STOP"] = cmn.CIStateNotDefined
 	nCIh.StateMap["NOT_DEFINED"] = cmn.CIStateNotDefined
 	nCIh.SpawnKa = spawnKa
+	nCIh.kaMode = kaMode
 	nCIh.ClusterMap = make(map[string]ClusterInstance)
 
 	if spawnKa {
@@ -217,11 +218,15 @@ func CIInit(spawnKa bool) *CIStateH {
 
 	// nCIh.CISync(false)
 
-	if _, ok := nCIh.ClusterMap[CIDefault]; !ok {
+	if _, ok := nCIh.ClusterMap[cmn.CIDefault]; !ok {
 		var ci ClusterInstance
 		ci.State = cmn.CIStateNotDefined
 		ci.StateStr = "NOT_DEFINED"
-		nCIh.ClusterMap[CIDefault] = ci
+		ci.Vip = net.IPv4zero
+		nCIh.ClusterMap[cmn.CIDefault] = ci
+		if mh.bgp != nil {
+			mh.bgp.UpdateCIState(cmn.CIDefault, ci.State, ci.Vip)
+		}
 	}
 
 	nCIh.NodeMap = make(map[string]*ClusterNode)
@@ -246,16 +251,34 @@ func (h *CIStateH) CIStateGet() ([]cmn.HASMod, error) {
 		var temp cmn.HASMod
 		temp.Instance = i
 		temp.State = s.StateStr
+		temp.Vip = s.Vip
 		res = append(res, temp)
 	}
 	return res, nil
+}
+
+// CIVipGet - routine to get HA state
+func (h *CIStateH) CIVipGet(inst string) (net.IP, error) {
+	if ci, ok := h.ClusterMap[inst]; ok {
+		if !ci.Vip.IsUnspecified() {
+			return ci.Vip, nil
+		}
+	}
+	return net.IPv4zero, errors.New("Not found")
+}
+
+// IsCIKAMode - routine to get HA state
+func (h *CIStateH) IsCIKAMode() bool {
+	return h.kaMode
 }
 
 // CIStateUpdate - routine to update cluster state
 func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 
 	if _, ok := h.ClusterMap[cm.Instance]; !ok {
-		h.ClusterMap[cm.Instance] = ClusterInstance{cmn.CIStateNotDefined, "NOT_DEFINED"}
+		h.ClusterMap[cm.Instance] = ClusterInstance{State: cmn.CIStateNotDefined, 
+													StateStr: "NOT_DEFINED", 
+													Vip: net.IPv4zero}
 		tk.LogIt(tk.LogDebug, "[CLUSTER] New Instance %s created\n", cm.Instance)
 	}
 
@@ -266,9 +289,11 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 	}
 
 	if _, ok := h.StateMap[cm.State]; ok {
-		tk.LogIt(tk.LogDebug, "[CLUSTER] Instance %s Current State %s Updated State: %s\n", cm.Instance, ci.StateStr, cm.State)
+		tk.LogIt(tk.LogDebug, "[CLUSTER] Instance %s Current State %s Updated State: %s VIP : %s\n", 
+			cm.Instance, ci.StateStr, cm.State, cm.Vip.String())
 		ci.StateStr = cm.State
 		ci.State = h.StateMap[cm.State]
+		ci.Vip = cm.Vip
 		h.ClusterMap[cm.Instance] = ci
 		if h.SpawnKa && cm.State == "FAULT" {
 			command := "sudo pkill keepalived"
@@ -279,7 +304,7 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 			}
 		}
 		if mh.bgp != nil {
-			mh.bgp.UpdateCIState(ci.State)
+			mh.bgp.UpdateCIState(cm.Instance, ci.State, ci.Vip)
 		}
 		return ci.State, nil
 	} else {
