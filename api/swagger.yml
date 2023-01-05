@@ -2731,6 +2731,9 @@ definitions:
       state:
         type: string
         description: Current Cluster Instance State 
+      vip:
+        type: string
+        description: Instance Virtual IP address  
       
 
   CIStatusGetEntry:
@@ -2743,7 +2746,10 @@ definitions:
         description: Instance name
       state:
         type: string
-        description: Current Cluster Instance State     
+        description: Current Cluster Instance State
+      vip:
+        type: string
+        description: Instance Virtual IP address  
       sync:
         type: integer
         description: Sync - sync state
