@@ -63,9 +63,9 @@ const (
 
 // goCI - Cluster Instance context
 type goCI struct {
-	name string
+	name    string
 	hastate int
-	vip net.IP
+	vip     net.IP
 	rules   map[string]bool
 }
 
@@ -403,17 +403,25 @@ func (gbh *GoBgpH) goBgpSpawn() {
 		tk.LogIt(tk.LogError, "Error in stopping gpbgp:%s", err)
 	}
 	for {
-		if _, err := os.Stat("/etc/gobgp/gobgp_loxilb.yaml"); errors.Is(err, os.ErrNotExist) {
-			time.Sleep(1000 * time.Millisecond)
-			continue
+		cfgOpts := ""
+
+		if _, err := os.Stat("/etc/gobgp/gobgp.conf"); errors.Is(err, os.ErrNotExist) {
+			if _, err := os.Stat("/etc/gobgp/gobgp_loxilb.yaml"); errors.Is(err, os.ErrNotExist) {
+				time.Sleep(2000 * time.Millisecond)
+				continue
+			}
+			cfgOpts = "-t yaml -f /etc/gobgp/gobgp_loxilb.yaml"
+		} else {
+			cfgOpts = "-f /etc/gobgp/gobgp.conf"
 		}
-		command := "gobgpd -t yaml -f /etc/gobgp/gobgp_loxilb.yaml"
+
+		command := fmt.Sprintf("gobgpd %s", cfgOpts)
 		cmd := exec.Command("bash", "-c", command)
 		err := cmd.Run()
 		if err != nil {
 			fmt.Println(err)
 		}
-		time.Sleep(1000 * time.Millisecond)
+		time.Sleep(3000 * time.Millisecond)
 	}
 }
 
@@ -464,7 +472,7 @@ func (gbh *GoBgpH) AddBGPRule(instance string, IP string) {
 		ci.name = instance
 		ci.hastate = cmn.CIStateBackup
 		ci.vip = net.IPv4zero
-		gbh.ciMap[instance] = ci;
+		gbh.ciMap[instance] = ci
 	}
 
 	if !ci.rules[IP] {
@@ -601,7 +609,7 @@ func (gbh *GoBgpH) advertiseAllRoutes(instance string) {
 func (gbh *GoBgpH) getGoBgpRoutes() {
 	gbh.mtx.Lock()
 
-	for ciname, ci  := range gbh.ciMap {
+	for ciname, ci := range gbh.ciMap {
 		if ci != nil {
 			gbh.advertiseAllRoutes(ciname)
 		}

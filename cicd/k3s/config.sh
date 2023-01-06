@@ -94,8 +94,8 @@ config_docker_host --host1 ep3 --host2 r2 --ptype vlan --id 33 --addr 33.33.33.1
 
 ##Pod networks
 $hexec r1 ip route add 20.20.20.1/32 via 11.11.11.11
-add_route llb1 1.1.1.0/24 11.11.11.254
-add_route llb2 1.1.1.0/24 11.11.11.254
+#add_route llb1 1.1.1.0/24 11.11.11.254
+#add_route llb2 1.1.1.0/24 11.11.11.254
 
 sleep 1
 ##Create LB rule

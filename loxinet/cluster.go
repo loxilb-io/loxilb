@@ -276,9 +276,9 @@ func (h *CIStateH) IsCIKAMode() bool {
 func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 
 	if _, ok := h.ClusterMap[cm.Instance]; !ok {
-		h.ClusterMap[cm.Instance] = ClusterInstance{State: cmn.CIStateNotDefined, 
-													StateStr: "NOT_DEFINED", 
-													Vip: net.IPv4zero}
+		h.ClusterMap[cm.Instance] = ClusterInstance{State: cmn.CIStateNotDefined,
+			StateStr: "NOT_DEFINED",
+			Vip:      net.IPv4zero}
 		tk.LogIt(tk.LogDebug, "[CLUSTER] New Instance %s created\n", cm.Instance)
 	}
 
@@ -289,7 +289,7 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 	}
 
 	if _, ok := h.StateMap[cm.State]; ok {
-		tk.LogIt(tk.LogDebug, "[CLUSTER] Instance %s Current State %s Updated State: %s VIP : %s\n", 
+		tk.LogIt(tk.LogDebug, "[CLUSTER] Instance %s Current State %s Updated State: %s VIP : %s\n",
 			cm.Instance, ci.StateStr, cm.State, cm.Vip.String())
 		ci.StateStr = cm.State
 		ci.State = h.StateMap[cm.State]
