@@ -495,12 +495,16 @@ func (dp *DpH) DpNsyncRpc(op DpSyncOpT, cti *DpCtInfo) int {
 		select {
 		case <-time.After(timeout):
 			tk.LogIt(tk.LogError, "rpc call timeout(%v)\n", timeout)
-			pe.Client.Close()
+			if pe.Client != nil {
+				pe.Client.Close()
+			}
 			pe.Client = nil
 			return -1
 		case resp := <-call.Done:
 			if resp != nil && resp.Error != nil {
-				pe.Client.Close()
+				if pe.Client != nil {
+					pe.Client.Close()
+				}
 				pe.Client = nil
 				tk.LogIt(tk.LogError, "rpc call failed(%s)\n", resp.Error)
 				return -1
