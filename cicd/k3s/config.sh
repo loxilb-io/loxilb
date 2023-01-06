@@ -11,7 +11,7 @@ spawn_docker_host --dock-type loxilb --dock-name llb2 --with-bgp yes --bgp-confi
 spawn_docker_host --dock-type host --dock-name ep1
 spawn_docker_host --dock-type host --dock-name ep2
 spawn_docker_host --dock-type host --dock-name ep3
-spawn_docker_host --dock-type host --dock-name r1
+spawn_docker_host --dock-type host --dock-name r1 --with-bgp yes --bgp-config $(pwd)/quagga_config1
 spawn_docker_host --dock-type host --dock-name r2 --with-bgp yes --bgp-config $(pwd)/quagga_config
 spawn_docker_host --dock-type host --dock-name user
 

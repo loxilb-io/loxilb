@@ -9,3 +9,6 @@ neighbors:
     - config:
         neighbor-address: 12.12.12.254
         peer-as: 64512
+    - config:
+        neighbor-address: 11.11.11.254
+        peer-as: 64511
