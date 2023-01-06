@@ -1,0 +1,14 @@
+global:
+    config:
+        as: 64512
+        router-id: 10.10.10.2
+neighbors:
+    - config:
+        neighbor-address: 10.10.10.254
+        peer-as: 64512
+    - config:
+        neighbor-address: 14.14.14.254
+        peer-as: 64512
+    - config:
+        neighbor-address: 11.11.11.254
+        peer-as: 64511

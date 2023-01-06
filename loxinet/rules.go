@@ -1813,7 +1813,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 				ep.RIP = sip
 			} else {
 				if !mh.has.IsCIKAMode() {
-				 ep.RIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
+					ep.RIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
 				} else {
 					vip, err := mh.has.CIVipGet(r.CI)
 					if err == nil {

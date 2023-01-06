@@ -90,14 +90,14 @@ func logString2Level(logStr string) tk.LogLevelT {
 	return logLevel
 }
 
-func kaString2Mode(kaStr string) (bool,bool) {
+func kaString2Mode(kaStr string) (bool, bool) {
 	spawnKa := false
 	kaMode := false
 	switch opts.Opts.Ka {
-	case "in" :
+	case "in":
 		spawnKa = true
 		kaMode = true
-	case "out" :
+	case "out":
 		spawnKa = false
 		kaMode = true
 	}
@@ -198,7 +198,7 @@ func loxiNetInit() {
 	if opts.Opts.Bgp {
 		mh.bgp = GoBgpInit()
 	}
-	
+
 	// Initialize the nlp subsystem
 	if opts.Opts.NoNlp == false {
 		nlp.NlpRegister(NetAPIInit())
