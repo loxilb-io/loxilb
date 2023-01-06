@@ -6,6 +6,10 @@ echo "#########################################"
 
 source ../common.sh
 
+sudo kubectl delete -f nginx-svc-lb.yml >> /dev/null 2>&1
+sudo kubectl delete -f nginx.yml >> /dev/null 2>&1
+sudo kubectl delete -f loxi-ccm.yaml >> /dev/null 2>&1
+
 disconnect_docker_hosts user r1
 disconnect_docker_hosts r1 llb1
 disconnect_docker_hosts r1 llb2
@@ -27,10 +31,6 @@ delete_docker_host ep2
 delete_docker_host ep3
 sudo ip link del esysllb1
 sudo ip link del esysllb2
-
-sudo kubectl delete -f nginx-svc-lb.yml >> /dev/null 2>&1
-sudo kubectl delete -f nginx.yml >> /dev/null 2>&1
-sudo kubectl delete -f loxi-ccm.yaml >> /dev/null 2>&1
 
 # If k3s setup exists, remove it
 if [[ -f "/usr/local/bin/k3s-uninstall.sh" ]]; then
