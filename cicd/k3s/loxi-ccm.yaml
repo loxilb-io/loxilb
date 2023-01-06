@@ -26,7 +26,8 @@ metadata:
 data:
   loxiccmConfigs: |
     apiServerURL: 
-    - "http://12.12.12.1:11112"
+    - "http://12.12.12.1:11111"
+    - "http://14.14.14.1:11111"
     externalCIDR: "123.123.123.0/24"
     setBGP: true
 ---
