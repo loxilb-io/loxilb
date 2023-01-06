@@ -26,7 +26,7 @@ done
 ## Any routing updates  ??
 sleep 30
 
-#echo $extIP
+echo $extIP
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:80) 
 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
