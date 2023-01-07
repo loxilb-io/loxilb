@@ -172,7 +172,7 @@ func dpEbpfTicker() {
 			// This means around 30s from start
 			if sel == 2 {
 				if !mh.dpEbpf.CtSync {
-					ret := mh.dp.DpNsyncRpc(DpSyncGet, nil)
+					ret := mh.dp.DpXsyncRpc(DpSyncGet, nil)
 					if ret == 0 {
 						mh.dpEbpf.CtSync = true
 					}
@@ -1518,10 +1518,10 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 			return
 		}
 		cti.Deleted = true
-		cti.NSync = true
+		cti.XSync = true
 		cti.NTs = time.Now()
 		// Immediately notify for delete
-		ret := mh.dp.DpNsyncRpc(DpSyncDelete, cti)
+		ret := mh.dp.DpXsyncRpc(DpSyncDelete, cti)
 		if ret == 0 {
 			delete(mh.dpEbpf.ctMap, cti.Key())
 			// This is a strange fix - Sometimes loxilb runs as multiple docker
@@ -1541,7 +1541,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 		}
 		mh.dpEbpf.ctMap[cti.Key()] = cti
 		if cti.CState == "est" {
-			cti.NSync = true
+			cti.XSync = true
 			cti.NTs = time.Now()
 		}
 	}
@@ -1559,7 +1559,7 @@ func dpCTMapChkUpdates() {
 	fd := C.llb_map2fd(C.LL_DP_CT_MAP)
 
 	for _, cti := range mh.dpEbpf.ctMap {
-		// tk.LogIt(tk.LogDebug, "[CT] check %s:%s:%v\n", cti.Key(), cti.CState, cti.NSync)
+		// tk.LogIt(tk.LogDebug, "[CT] check %s:%s:%v\n", cti.Key(), cti.CState, cti.XSync)
 		if cti.CState != "est" {
 			if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
 				delete(mh.dpEbpf.ctMap, cti.Key())
@@ -1588,7 +1588,7 @@ func dpCTMapChkUpdates() {
 				ctStr := goCtEnt.String()
 				tk.LogIt(tk.LogInfo, "[CT] %s - %s\n", "update", ctStr)
 				if goCtEnt.CState == "est" {
-					goCtEnt.NSync = true
+					goCtEnt.XSync = true
 					goCtEnt.NTs = time.Now()
 				}
 				continue
@@ -1606,7 +1606,7 @@ func dpCTMapChkUpdates() {
 				cti.LTs = tc
 			}
 
-			if len(cti.PVal) > 0 && cti.NSync == false {
+			if len(cti.PVal) > 0 && cti.XSync == false {
 				ptact := (*C.struct_dp_ct_tact)(unsafe.Pointer(&cti.PVal[0]))
 				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_CT_STATS_MAP), C.uint(ptact.ca.cidx), C.int(0),
 					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
@@ -1614,25 +1614,25 @@ func dpCTMapChkUpdates() {
 					if cti.Packets < p {
 						cti.Bytes = b
 						cti.Packets = p
-						cti.NSync = true
+						cti.XSync = true
 						cti.NTs = tc
 						cti.LTs = tc
 					}
 				}
 			}
 		}
-		if cti.NSync == true &&
+		if cti.XSync == true &&
 			time.Duration(tc.Sub(cti.NTs).Seconds()) >= time.Duration(10) {
 			tk.LogIt(tk.LogDebug, "[CT] Sync - %s\n", cti.String())
 
 			ret := 0
 			if cti.Deleted {
-				ret = mh.dp.DpNsyncRpc(DpSyncDelete, cti)
+				ret = mh.dp.DpXsyncRpc(DpSyncDelete, cti)
 			} else {
-				ret = mh.dp.DpNsyncRpc(DpSyncAdd, cti)
+				ret = mh.dp.DpXsyncRpc(DpSyncAdd, cti)
 			}
 			if ret == 0 {
-				cti.NSync = false
+				cti.XSync = false
 
 				if cti.Deleted {
 					delete(mh.dpEbpf.ctMap, cti.Key())
@@ -1707,7 +1707,7 @@ func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
 		cte = cti
 	}
 
-	cte.NSync = false
+	cte.XSync = false
 	cte.NTs = time.Now()
 	cte.LTs = cti.NTs
 
@@ -1753,7 +1753,7 @@ func (e *DpEbpfH) DpCtGetAsync() {
 
 	for _, cte := range mh.dpEbpf.ctMap {
 		if cte.CState == "est" {
-			cte.NSync = true
+			cte.XSync = true
 			cte.NTs = time.Now()
 		}
 	}
