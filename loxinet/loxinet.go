@@ -42,6 +42,12 @@ const (
 	LoxinetTiVal = 10
 )
 
+// utility variables
+const (
+	MkfsScript     = "/usr/local/sbin/mkllb_bpffs"
+	BpfFsCheckFile = "/opt/loxilb/dp/bpf/intf_map"
+)
+
 // IterIntf - interface implementation to iterate various loxinet
 // subsystems entitities
 type IterIntf interface {
@@ -60,6 +66,7 @@ type loxiNetH struct {
 	bgp    *GoBgpH
 	has    *CIStateH
 	logger *tk.Logger
+	ready  bool
 }
 
 // NodeWalker - an implementation of node walker interface
@@ -161,7 +168,7 @@ func loxiNetTicker() {
 var mh loxiNetH
 
 func loxiNetInit() {
-
+	spawnKa, kaMode := kaString2Mode(opts.Opts.Ka)
 	clusterMode := false
 	if opts.Opts.ClusterNodes != "none" {
 		clusterMode = true
@@ -171,7 +178,14 @@ func loxiNetInit() {
 	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
 	logLevel := logString2Level(opts.Opts.LogLevel)
 	mh.logger = tk.LogItInit(logfile, logLevel, true)
-	spawnKa, kaMode := kaString2Mode(opts.Opts.Ka)
+
+	// It is important to make sure loxilb's eBPF filesystem
+	// is in place and mounted to make sure maps are pinned properly
+	if FileExists(BpfFsCheckFile) == false {
+		if FileExists(MkfsScript) {
+			RunCommand(MkfsScript, true)
+		}
+	}
 
 	mh.tDone = make(chan bool)
 	mh.ticker = time.NewTicker(LoxinetTiVal * time.Second)
@@ -223,6 +237,7 @@ func loxiNetInit() {
 			mh.has.ClusterNodeAdd(cmn.CluserNodeMod{Addr: addr})
 		}
 	}
+	mh.ready = true
 }
 
 // loxiNetRun - This routine will not return

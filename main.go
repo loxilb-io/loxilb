@@ -27,12 +27,6 @@ import (
 	"os"
 )
 
-// utility variables
-const (
-	MkfsScript     = "/usr/local/sbin/mkllb_bpffs"
-	BpfFsCheckFile = "/opt/loxilb/dp/bpf/intf_map"
-)
-
 // loxiXsyncMain - State Sync subsystem init
 func loxiXsyncMain() {
 	rpcObj := new(ln.XSync)
@@ -63,14 +57,6 @@ func main() {
 	if opts.Opts.Version {
 		fmt.Printf("loxilb version: %s %s\n", version, buildInfo)
 		os.Exit(0)
-	}
-
-	// It is important to make sure loxilb's eBPF filesystem
-	// is in place and mounted to make sure maps are pinned properly
-	if ln.FileExists(BpfFsCheckFile) == false {
-		if ln.FileExists(MkfsScript) {
-			ln.RunCommand(MkfsScript, true)
-		}
 	}
 
 	go loxiXsyncMain()

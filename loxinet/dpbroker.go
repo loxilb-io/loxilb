@@ -533,6 +533,9 @@ func DpBrokerInit(dph DpHookInterface) *DpH {
 
 // DpWorkOnCtAdd - Add a CT entry from remote
 func (xs *XSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
+	if !mh.ready {
+		return errors.New("Not-Ready")
+	}
 	tk.LogIt(tk.LogDebug, "RPC - CT Add %s\n", cti.Key())
 	r := mh.dp.DpHooks.DpCtAdd(&cti)
 	*ret = r
@@ -541,6 +544,9 @@ func (xs *XSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
 
 // DpWorkOnCtDelete - Delete a CT entry from remote
 func (xs *XSync) DpWorkOnCtDelete(cti DpCtInfo, ret *int) error {
+	if !mh.ready {
+		return errors.New("Not-Ready")
+	}
 	tk.LogIt(tk.LogDebug, "RPC -  CT Del %s\n", cti.Key())
 	r := mh.dp.DpHooks.DpCtDel(&cti)
 	*ret = r
@@ -549,6 +555,9 @@ func (xs *XSync) DpWorkOnCtDelete(cti DpCtInfo, ret *int) error {
 
 // DpWorkOnCtGet - Get all CT entries asynchronously
 func (xs *XSync) DpWorkOnCtGet(async int, ret *int) error {
+	if !mh.ready {
+		return errors.New("Not-Ready")
+	}
 	tk.LogIt(tk.LogDebug, "RPC -  CT Get %d\n", async)
 	mh.dp.DpHooks.DpCtGetAsync()
 	*ret = 0
