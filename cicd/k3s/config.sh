@@ -133,7 +133,7 @@ sudo kubectl taint nodes --all node.cloudprovider.kubernetes.io/uninitialized=fa
 sleep 5
 
 # Start loxi-ccm as k3s daemonset
-sudo kubectl apply -f loxi-ccm.yaml
+sudo kubectl apply -f https://github.com/loxilb-io/loxi-ccm/raw/master/manifests/loxi-ccm-k3s.yaml
 
 # Start nginx pods and services for test
 sudo kubectl apply -f nginx.yml
