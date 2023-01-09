@@ -78,7 +78,7 @@ const (
 // maximum dp work queue lengths
 const (
 	DpWorkQLen = 1024
-	NSyncPort  = 22222
+	XSyncPort  = 22222
 	DpTiVal    = 20
 )
 
@@ -302,7 +302,7 @@ type DpCtInfo struct {
 	PVal    []byte
 	LTs     time.Time
 	NTs     time.Time
-	NSync   bool
+	XSync   bool
 
 	// LB Association Data
 	ServiceIP  net.IP
@@ -311,7 +311,7 @@ type DpCtInfo struct {
 	BlockNum   uint16
 }
 
-type NSync struct {
+type XSync struct {
 	// For peer to peer RPC
 }
 
@@ -399,7 +399,7 @@ type DpH struct {
 	ToFinCh  chan int
 	DpHooks  DpHookInterface
 	Peers    []DpPeer
-	RPC      *NSync
+	RPC      *XSync
 }
 
 // dialHTTPPath connects to an HTTP RPC server
@@ -433,7 +433,7 @@ func dialHTTPPath(network, address, path string) (*rpc.Client, error) {
 	}
 }
 
-func (dp *DpH) DpNsyncRpcReset() int {
+func (dp *DpH) DpXsyncRpcReset() int {
 	for idx := range mh.dp.Peers {
 		pe := &mh.dp.Peers[idx]
 		if pe.Client != nil {
@@ -441,38 +441,38 @@ func (dp *DpH) DpNsyncRpcReset() int {
 			pe.Client = nil
 		}
 		if pe.Client == nil {
-			cStr := fmt.Sprintf("%s:%d", pe.Peer.String(), NSyncPort)
+			cStr := fmt.Sprintf("%s:%d", pe.Peer.String(), XSyncPort)
 			pe.Client, _ = dialHTTPPath("tcp", cStr, rpc.DefaultRPCPath)
 			if pe.Client == nil {
 				return -1
 			}
-			tk.LogIt(tk.LogInfo, "NSync RPC - %s :Reset\n", cStr)
+			tk.LogIt(tk.LogInfo, "XSync RPC - %s :Reset\n", cStr)
 		}
 	}
 	return 0
 }
 
-func (dp *DpH) DpNsyncRpc(op DpSyncOpT, cti *DpCtInfo) int {
+func (dp *DpH) DpXsyncRpc(op DpSyncOpT, cti *DpCtInfo) int {
 	var reply int
 	timeout := 2 * time.Second
 	for idx := range mh.dp.Peers {
 		pe := &mh.dp.Peers[idx]
 		if pe.Client == nil {
-			cStr := fmt.Sprintf("%s:%d", pe.Peer.String(), NSyncPort)
+			cStr := fmt.Sprintf("%s:%d", pe.Peer.String(), XSyncPort)
 			pe.Client, _ = dialHTTPPath("tcp", cStr, rpc.DefaultRPCPath)
 			if pe.Client == nil {
 				return -1
 			}
-			tk.LogIt(tk.LogInfo, "NSync RPC - %s :Connected\n", cStr)
+			tk.LogIt(tk.LogInfo, "XSync RPC - %s :Connected\n", cStr)
 		}
 
 		rpcCallStr := ""
 		if op == DpSyncAdd {
-			rpcCallStr = "NSync.DpWorkOnCtAdd"
+			rpcCallStr = "XSync.DpWorkOnCtAdd"
 		} else if op == DpSyncDelete {
-			rpcCallStr = "NSync.DpWorkOnCtDelete"
+			rpcCallStr = "XSync.DpWorkOnCtDelete"
 		} else if op == DpSyncGet {
-			rpcCallStr = "NSync.DpWorkOnCtGet"
+			rpcCallStr = "XSync.DpWorkOnCtGet"
 		} else {
 			return -1
 		}
@@ -495,12 +495,16 @@ func (dp *DpH) DpNsyncRpc(op DpSyncOpT, cti *DpCtInfo) int {
 		select {
 		case <-time.After(timeout):
 			tk.LogIt(tk.LogError, "rpc call timeout(%v)\n", timeout)
-			pe.Client.Close()
+			if pe.Client != nil {
+				pe.Client.Close()
+			}
 			pe.Client = nil
 			return -1
 		case resp := <-call.Done:
 			if resp != nil && resp.Error != nil {
-				pe.Client.Close()
+				if pe.Client != nil {
+					pe.Client.Close()
+				}
 				pe.Client = nil
 				tk.LogIt(tk.LogError, "rpc call failed(%s)\n", resp.Error)
 				return -1
@@ -520,7 +524,7 @@ func DpBrokerInit(dph DpHookInterface) *DpH {
 	nDp.FromDpCh = make(chan interface{}, DpWorkQLen)
 	nDp.ToFinCh = make(chan int)
 	nDp.DpHooks = dph
-	nDp.RPC = new(NSync)
+	nDp.RPC = new(XSync)
 
 	go DpWorker(nDp, nDp.ToFinCh, nDp.ToDpCh)
 
@@ -528,7 +532,10 @@ func DpBrokerInit(dph DpHookInterface) *DpH {
 }
 
 // DpWorkOnCtAdd - Add a CT entry from remote
-func (n *NSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
+func (xs *XSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
+	if !mh.ready {
+		return errors.New("Not-Ready")
+	}
 	tk.LogIt(tk.LogDebug, "RPC - CT Add %s\n", cti.Key())
 	r := mh.dp.DpHooks.DpCtAdd(&cti)
 	*ret = r
@@ -536,7 +543,10 @@ func (n *NSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
 }
 
 // DpWorkOnCtDelete - Delete a CT entry from remote
-func (n *NSync) DpWorkOnCtDelete(cti DpCtInfo, ret *int) error {
+func (xs *XSync) DpWorkOnCtDelete(cti DpCtInfo, ret *int) error {
+	if !mh.ready {
+		return errors.New("Not-Ready")
+	}
 	tk.LogIt(tk.LogDebug, "RPC -  CT Del %s\n", cti.Key())
 	r := mh.dp.DpHooks.DpCtDel(&cti)
 	*ret = r
@@ -544,13 +554,16 @@ func (n *NSync) DpWorkOnCtDelete(cti DpCtInfo, ret *int) error {
 }
 
 // DpWorkOnCtGet - Get all CT entries asynchronously
-func (n *NSync) DpWorkOnCtGet(async int, ret *int) error {
+func (xs *XSync) DpWorkOnCtGet(async int, ret *int) error {
+	if !mh.ready {
+		return errors.New("Not-Ready")
+	}
 	tk.LogIt(tk.LogDebug, "RPC -  CT Get %d\n", async)
 	mh.dp.DpHooks.DpCtGetAsync()
 	*ret = 0
 
 	// Most likely need to reset reverse rpc channel
-	mh.dp.DpNsyncRpcReset()
+	mh.dp.DpXsyncRpcReset()
 	return nil
 }
 

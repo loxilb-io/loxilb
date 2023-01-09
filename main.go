@@ -18,51 +18,26 @@ package main
 
 import (
 	"fmt"
+	"github.com/jessevdk/go-flags"
+	ln "github.com/loxilb-io/loxilb/loxinet"
+	opts "github.com/loxilb-io/loxilb/options"
 	"io"
 	"net/http"
 	"net/rpc"
 	"os"
-	"os/exec"
-
-	"github.com/jessevdk/go-flags"
-	ln "github.com/loxilb-io/loxilb/loxinet"
-	opts "github.com/loxilb-io/loxilb/options"
 )
 
-// utility variables
-const (
-	MkfsScript     = "/usr/local/sbin/mkllb_bpffs"
-	BpfFsCheckFile = "/opt/loxilb/dp/bpf/intf_map"
-)
-
-func fileExists(fname string) bool {
-	info, err := os.Stat(fname)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
-}
-
-func fileCreate(fname string) int {
-	file, e := os.Create(fname)
-	if e != nil {
-		return -1
-	}
-	file.Close()
-	return 0
-}
-
-// loxiSyncMain - NSync subsystem init
-func loxiSyncMain() {
-	rpcObj := new(ln.NSync)
+// loxiXsyncMain - State Sync subsystem init
+func loxiXsyncMain() {
+	rpcObj := new(ln.XSync)
 	rpc.Register(rpcObj)
 	rpc.HandleHTTP()
 
 	http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
-		io.WriteString(res, "loxilb-nsync\n")
+		io.WriteString(res, "loxilb-xsync\n")
 	})
 
-	listener := fmt.Sprintf(":%d", ln.NSyncPort)
+	listener := fmt.Sprintf(":%d", ln.XSyncPort)
 	http.ListenAndServe(listener, nil)
 }
 
@@ -84,18 +59,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	// It is important to make sure loxilb's eBPF filesystem
-	// is in place and mounted to make sure maps are pinned properly
-	if fileExists(BpfFsCheckFile) == false {
-		if fileExists(MkfsScript) {
-			_, err := exec.Command("/bin/bash", MkfsScript).Output()
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-		}
-	}
-
-	go loxiSyncMain()
+	go loxiXsyncMain()
 	ln.Main()
 }

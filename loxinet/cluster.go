@@ -22,16 +22,11 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 
 	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
-	"net/http"
 	"os"
 	"os/exec"
-	"strconv"
-	"syscall"
 	"time"
 )
 
@@ -40,6 +35,12 @@ const (
 	CIErrBase = iota - 90000
 	CIModErr
 	CIStateErr
+)
+
+// Config related constants
+const (
+	KAConfigFile = "/etc/keepalived/keepalived.conf"
+	KAPidFile    = "/var/run/keepalived.pid"
 )
 
 type ClusterInstance struct {
@@ -62,75 +63,31 @@ type CIStateH struct {
 	NodeMap    map[string]*ClusterNode
 }
 
-func isAPIActive(url string) bool {
-	timeout := time.Duration(1 * time.Second)
-	client := http.Client{Timeout: timeout}
-	_, e := client.Get(url)
-	return e == nil
-}
-
-func readKaPID(pf string) int {
-
-	d, err := ioutil.ReadFile(pf)
-	if err != nil {
-		return 0
-	}
-
-	pid, err := strconv.Atoi(string(bytes.TrimSpace(d)))
-	if err != nil {
-		return 0
-	}
-
-	p, err1 := os.FindProcess(int(pid))
-	if err1 != nil {
-		return 0
-	}
-
-	err = p.Signal(syscall.Signal(0))
-	if err != nil {
-		return 0
-	}
-
-	return pid
-}
-
 func kaSpawn() {
 	url := fmt.Sprintf("http://127.0.0.1:%d/config/params", opts.Opts.Port)
 	for true {
-		if isAPIActive(url) == true {
+		if IsLoxiAPIActive(url) == true {
 			break
 		}
 		tk.LogIt(tk.LogDebug, "KA - waiting for API server\n")
 		time.Sleep(1 * time.Second)
 	}
 
-	command := "sudo pkill keepalived"
-	cmd := exec.Command("bash", "-c", command)
-	err := cmd.Run()
-	if err != nil {
-		tk.LogIt(tk.LogError, "Error in stopping KA:%s\n", err)
-	}
+	RunCommand("sudo pkill keepalived", false)
 	for {
-		if _, err := os.Stat("/etc/keepalived/keepalived.conf"); errors.Is(err, os.ErrNotExist) {
+		if exists := FileExists(KAConfigFile); !exists {
 			time.Sleep(2000 * time.Millisecond)
 			continue
 		}
 
-		if _, err2 := os.Stat("/var/run/keepalived.pid"); errors.Is(err2, os.ErrNotExist) {
-			tk.LogIt(tk.LogError, "KA Dead, need to restart\n")
-		} else {
-			pid := readKaPID("/var/run/keepalived.pid")
-			if pid != 0 {
-				time.Sleep(5000 * time.Millisecond)
-				continue
-			}
+		pid := ReadPIDFile(KAPidFile)
+		if pid != 0 {
+			time.Sleep(5000 * time.Millisecond)
+			continue
 		}
-		command = "sudo keepalived -f /etc/keepalived/keepalived.conf"
-		cmd = exec.Command("bash", "-c", command)
-		err = cmd.Run()
-		if err != nil {
-			tk.LogIt(tk.LogError, "Error in starting KA:%s\n", err)
-		}
+
+		command := fmt.Sprintf("sudo keepalived -f %s", KAConfigFile)
+		RunCommand(command, false)
 		time.Sleep(2000 * time.Millisecond)
 		tk.LogIt(tk.LogInfo, "KA spawned\n")
 	}
