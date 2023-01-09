@@ -6,8 +6,8 @@ echo "#########################################"
 echo "Spawning all hosts"
 echo "#########################################"
 
-spawn_docker_host --dock-type loxilb --dock-name llb1 --with-ka yes --ka-config $(pwd)/keepalived_config
-spawn_docker_host --dock-type loxilb --dock-name llb2 --with-ka yes --ka-config $(pwd)/keepalived_config
+spawn_docker_host --dock-type loxilb --dock-name llb1 --with-ka out --ka-config $(pwd)/keepalived_config
+spawn_docker_host --dock-type loxilb --dock-name llb2 --with-ka out --ka-config $(pwd)/keepalived_config
 spawn_docker_host --dock-type host --dock-name ep1
 spawn_docker_host --dock-type host --dock-name ep2
 spawn_docker_host --dock-type host --dock-name ep3
