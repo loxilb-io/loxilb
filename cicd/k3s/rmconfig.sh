@@ -8,7 +8,7 @@ source ../common.sh
 
 sudo kubectl delete -f nginx-svc-lb.yml >> /dev/null 2>&1
 sudo kubectl delete -f nginx.yml >> /dev/null 2>&1
-sudo kubectl delete -f loxi-ccm.yaml >> /dev/null 2>&1
+sudo kubectl delete -f https://github.com/loxilb-io/loxi-ccm/raw/master/manifests/loxi-ccm-k3s.yaml >> /dev/null 2>&1
 
 disconnect_docker_hosts user r1
 disconnect_docker_hosts r1 llb1

@@ -113,8 +113,7 @@ if [[ -f "/usr/local/bin/k3s-uninstall.sh" ]]; then
 fi
 
 # Install k3s without external cloud-manager and disabled servicelb
-curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external
-"   sh -
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" sh -
 
 sleep 10
 
@@ -125,6 +124,7 @@ sudo kubectl get pods
 sudo apt install bird2 --yes
 
 sudo cp -f bird_config/bird.conf /etc/bird/bird.conf
+sudo chown bird:bird /var/log/bird.log
 sudo systemctl restart bird
 
 # Remove taints in k3s if any (usually happens if started without cloud-manager) 
@@ -133,7 +133,7 @@ sudo kubectl taint nodes --all node.cloudprovider.kubernetes.io/uninitialized=fa
 sleep 5
 
 # Start loxi-ccm as k3s daemonset
-sudo kubectl apply -f loxi-ccm.yaml
+sudo kubectl apply -f https://github.com/loxilb-io/loxi-ccm/raw/master/manifests/loxi-ccm-k3s.yaml
 
 # Start nginx pods and services for test
 sudo kubectl apply -f nginx.yml
