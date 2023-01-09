@@ -113,8 +113,7 @@ if [[ -f "/usr/local/bin/k3s-uninstall.sh" ]]; then
 fi
 
 # Install k3s without external cloud-manager and disabled servicelb
-curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external
-"   sh -
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" sh -
 
 sleep 10
 
@@ -125,6 +124,7 @@ sudo kubectl get pods
 sudo apt install bird2 --yes
 
 sudo cp -f bird_config/bird.conf /etc/bird/bird.conf
+sudo chown bird:bird /var/log/bird.log
 sudo systemctl restart bird
 
 # Remove taints in k3s if any (usually happens if started without cloud-manager) 
