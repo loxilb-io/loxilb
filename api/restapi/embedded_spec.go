@@ -3008,6 +3008,10 @@ func init() {
         "state": {
           "description": "Current Cluster Instance State",
           "type": "string"
+        },
+        "vip": {
+          "description": "Instance Virtual IP address",
+          "type": "string"
         }
       }
     },
@@ -3028,6 +3032,10 @@ func init() {
         "sync": {
           "description": "Sync - sync state",
           "type": "integer"
+        },
+        "vip": {
+          "description": "Instance Virtual IP address",
+          "type": "string"
         }
       }
     },
@@ -7053,6 +7061,10 @@ func init() {
         "state": {
           "description": "Current Cluster Instance State",
           "type": "string"
+        },
+        "vip": {
+          "description": "Instance Virtual IP address",
+          "type": "string"
         }
       }
     },
@@ -7073,6 +7085,10 @@ func init() {
         "sync": {
           "description": "Sync - sync state",
           "type": "integer"
+        },
+        "vip": {
+          "description": "Instance Virtual IP address",
+          "type": "string"
         }
       }
     },
