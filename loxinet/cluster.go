@@ -252,12 +252,12 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 		ci.State = h.StateMap[cm.State]
 		ci.Vip = cm.Vip
 		h.ClusterMap[cm.Instance] = ci
-		if h.SpawnKa && cm.State == "FAULT" {
-			command := "sudo pkill keepalived"
+		if h.SpawnKa && (cm.State == "FAULT" || cm.State == "STOP") {
+			command := "sudo pkill -9 keepalived"
 			cmd := exec.Command("bash", "-c", command)
 			err := cmd.Run()
 			if err != nil {
-				tk.LogIt(tk.LogError, "Error in stoping KA:%s", err)
+				tk.LogIt(tk.LogError, "Error in KA stop:%s", err)
 			}
 		}
 		if mh.bgp != nil {
