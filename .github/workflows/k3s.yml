@@ -1,4 +1,4 @@
-name: Test-k3s-CI
+name: K3s-Sanity-CI
 on:
  schedule:
  # Runs "At 11:00 UTC every day-of-week"
