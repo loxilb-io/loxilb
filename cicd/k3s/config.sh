@@ -107,39 +107,52 @@ sleep 60
 
 # K3s setup
 
-# If k3s setup exists, remove it
-if [[ -f "/usr/local/bin/k3s-uninstall.sh" ]]; then
-  /usr/local/bin/k3s-uninstall.sh
+if [ "$1" ]; then
+  KUBECONFIG="$1"
 fi
 
-# Install k3s without external cloud-manager and disabled servicelb
-curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" sh -
+# If k3s setup exists, skip installation
+if [[ -f "/usr/local/bin/k3s-uninstall.sh" ]]; then
+  echo "K3s exists"
+  sleep 10
+else
+  echo "Start K3s installation"
 
-sleep 10
+  # Install k3s without external cloud-manager and disabled servicelb
+  curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" K3S_KUBECONFIG_MODE="644" sh -
 
-# Check kubectl works
-sudo kubectl get pods
+  sleep 10
+
+  # Check kubectl works
+  kubectl $KUBECONFIG get pods -A
+
+  # Remove taints in k3s if any (usually happens if started without cloud-manager)
+  kubectl $KUBECONFIG taint nodes --all node.cloudprovider.kubernetes.io/uninitialized=false:NoSchedule-
+
+  # Start loxi-ccm as k3s daemonset
+  kubectl $KUBECONFIG apply -f https://github.com/loxilb-io/loxi-ccm/raw/master/manifests/loxi-ccm-k3s.yaml
+
+  echo "End K3s installation"
+fi
 
 # Install Bird to work with k3s
 sudo apt install bird2 --yes
 
+sleep 5
+
 sudo cp -f bird_config/bird.conf /etc/bird/bird.conf
+if [ ! -f  /var/log/bird.log ]; then
+  sudo touch /var/log/bird.log
+fi
 sudo chown bird:bird /var/log/bird.log
 sudo systemctl restart bird
 
-# Remove taints in k3s if any (usually happens if started without cloud-manager) 
-sudo kubectl taint nodes --all node.cloudprovider.kubernetes.io/uninitialized=false:NoSchedule-
-
-sleep 5
-
-# Start loxi-ccm as k3s daemonset
-sudo kubectl apply -f https://github.com/loxilb-io/loxi-ccm/raw/master/manifests/loxi-ccm-k3s.yaml
-
+sleep 10
 # Start nginx pods and services for test
-sudo kubectl apply -f nginx.yml
-sudo kubectl apply -f nginx-svc-lb.yml
+kubectl $KUBECONFIG apply -f nginx.yml
+kubectl $KUBECONFIG apply -f nginx-svc-lb.yml
 
 sleep 5 
 
 # External LB service must be created by now
-sudo kubectl get svc
+kubectl $KUBECONFIG get svc
