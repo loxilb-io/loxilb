@@ -402,6 +402,8 @@ func (gbh *GoBgpH) goBgpSpawn() {
 	if err != nil {
 		tk.LogIt(tk.LogError, "Error in stopping gpbgp:%s", err)
 	}
+	// We need some cool-off period for loxilb to self sync-up in the cluster
+	time.Sleep(GoBGPInitTiVal * time.Second)
 	for {
 		cfgOpts := ""
 
@@ -440,8 +442,7 @@ func (gbh *GoBgpH) goBgpConnect(host string) {
 				gbh.mtx.Lock()
 				r, err := gbh.client.GetBgp(context.TODO(), &api.GetBgpRequest{})
 				if err != nil {
-
-					tk.LogIt(tk.LogNotice, "BGP session %s not ready. Will Retry!\n", gbh.host)
+					//tk.LogIt(tk.LogNotice, "BGP session %s not ready. Will Retry!\n", gbh.host)
 					gbh.mtx.Unlock()
 					time.Sleep(2000 * time.Millisecond)
 					continue

@@ -73,7 +73,11 @@ func kaSpawn() {
 		time.Sleep(1 * time.Second)
 	}
 
+	RunCommand("rm -f /etc/shared/keepalive.state", false)
 	RunCommand("sudo pkill keepalived", false)
+	// We need some cool-off period for loxilb to self sync-up in the cluster
+	time.Sleep(KAInitTiVal * time.Second)
+
 	for {
 		if exists := FileExists(KAConfigFile); !exists {
 			time.Sleep(2000 * time.Millisecond)
