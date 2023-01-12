@@ -396,7 +396,7 @@ func GoBgpInit() *GoBgpH {
 }
 
 func (gbh *GoBgpH) goBgpSpawn() {
-	command := "sudo pkill gobgpd"
+	command := "pkill gobgpd"
 	cmd := exec.Command("bash", "-c", command)
 	err := cmd.Run()
 	if err != nil {
