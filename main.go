@@ -18,27 +18,31 @@ package main
 
 import (
 	"fmt"
-	"github.com/jessevdk/go-flags"
-	ln "github.com/loxilb-io/loxilb/loxinet"
-	opts "github.com/loxilb-io/loxilb/options"
 	"io"
 	"net/http"
 	"net/rpc"
 	"os"
+	"time"
+
+	"github.com/jessevdk/go-flags"
+	ln "github.com/loxilb-io/loxilb/loxinet"
+	opts "github.com/loxilb-io/loxilb/options"
 )
 
 // loxiXsyncMain - State Sync subsystem init
 func loxiXsyncMain() {
-	rpcObj := new(ln.XSync)
-	rpc.Register(rpcObj)
-	rpc.HandleHTTP()
+	for {
+		rpcObj := new(ln.XSync)
+		rpc.Register(rpcObj)
+		rpc.HandleHTTP()
 
-	http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
-		io.WriteString(res, "loxilb-xsync\n")
-	})
+		http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
+			io.WriteString(res, "loxilb-xsync\n")
+		})
 
-	listener := fmt.Sprintf(":%d", ln.XSyncPort)
-	http.ListenAndServe(listener, nil)
+		listener := fmt.Sprintf(":%d", ln.XSyncPort)
+		http.ListenAndServe(listener, nil)
+	}
 }
 
 var version string = "0.7.9"
@@ -60,5 +64,8 @@ func main() {
 	}
 
 	go loxiXsyncMain()
+	// Need for time for RPC Handler to be up
+	time.Sleep(2 * time.Second)
+
 	ln.Main()
 }

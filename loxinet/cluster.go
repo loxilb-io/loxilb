@@ -74,7 +74,7 @@ func kaSpawn() {
 	}
 
 	RunCommand("rm -f /etc/shared/keepalive.state", false)
-	RunCommand("sudo pkill keepalived", false)
+	RunCommand("pkill keepalived", false)
 	// We need some cool-off period for loxilb to self sync-up in the cluster
 	time.Sleep(KAInitTiVal * time.Second)
 
@@ -90,10 +90,16 @@ func kaSpawn() {
 			continue
 		}
 
-		command := fmt.Sprintf("sudo keepalived -f %s", KAConfigFile)
-		RunCommand(command, false)
+		tk.LogIt(tk.LogInfo, "KA spawning\n")
+		cmd := exec.Command("/usr/sbin/keepalived", "-f", KAConfigFile, "-n")
+		err := cmd.Run()
+		if err != nil {
+			tk.LogIt(tk.LogError, "Error in running KA:%s\n", err)
+		} else {
+			tk.LogIt(tk.LogInfo, "KA found dead. Reaping\n")
+			cmd.Wait()
+		}
 		time.Sleep(2000 * time.Millisecond)
-		tk.LogIt(tk.LogInfo, "KA spawned\n")
 	}
 }
 
@@ -257,12 +263,7 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 		ci.Vip = cm.Vip
 		h.ClusterMap[cm.Instance] = ci
 		if h.SpawnKa && (cm.State == "FAULT" || cm.State == "STOP") {
-			command := "sudo pkill -9 keepalived"
-			cmd := exec.Command("bash", "-c", command)
-			err := cmd.Run()
-			if err != nil {
-				tk.LogIt(tk.LogError, "Error in KA stop:%s", err)
-			}
+			RunCommand("pkill keepalived", false)
 		}
 		if mh.bgp != nil {
 			mh.bgp.UpdateCIState(cm.Instance, ci.State, ci.Vip)
