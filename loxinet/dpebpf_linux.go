@@ -130,6 +130,7 @@ type (
 type DpEbpfH struct {
 	ticker  *time.Ticker
 	tDone   chan bool
+	ctBcast chan bool
 	tbN     int
 	CtSync  bool
 	ToMapCh chan interface{}
@@ -155,6 +156,10 @@ func dpEbpfTicker() {
 		select {
 		case <-mh.dpEbpf.tDone:
 			return
+		case <-mh.dpEbpf.ctBcast:
+			tk.LogIt(tk.LogDebug, "CTBCAST\n")
+			dpCTMapBcast()
+			continue
 		case t := <-mh.dpEbpf.ticker.C:
 			sel := mh.dpEbpf.tbN % tLen
 			tk.LogIt(-1, "DP Tick at for selector %v:%d\n", t, sel)
@@ -169,13 +174,12 @@ func dpEbpfTicker() {
 			C.llb_age_map_entries(C.LL_DP_CT_MAP)
 			C.llb_age_map_entries(C.LL_DP_FCV4_MAP)
 
-			// This means around 30s from start
-			if sel == 2 {
-				if !mh.dpEbpf.CtSync {
-					ret := mh.dp.DpXsyncRpc(DpSyncGet, nil)
-					if ret == 0 {
-						mh.dpEbpf.CtSync = true
-					}
+			// This means around 10s from start
+			if !mh.dpEbpf.CtSync {
+				tk.LogIt(tk.LogDebug, "Ask SYNC\n")
+				ret := mh.dp.DpXsyncRpc(DpSyncGet, nil)
+				if ret == 0 {
+					mh.dpEbpf.CtSync = true
 				}
 			}
 			dpCTMapChkUpdates()
@@ -218,6 +222,7 @@ func DpEbpfInit(clusterEn bool) *DpEbpfH {
 	ne.tDone = make(chan bool)
 	ne.ToMapCh = make(chan interface{}, DpWorkQLen)
 	ne.ToFinCh = make(chan int)
+	ne.ctBcast = make(chan bool)
 	ne.ticker = time.NewTicker(DpEbpfLinuxTiVal * time.Second)
 	ne.ctMap = make(map[string]*DpCtInfo)
 
@@ -1450,7 +1455,7 @@ func goMapNotiHandler(m *mapNoti) {
 	ctKey := (*C.struct_dp_ct_key)(unsafe.Pointer(m.key))
 
 	// Only connection oriented protocols
-	if ctKey.l4proto != 6 && ctKey.l4proto != 132 {
+	if mh.dpEbpf == nil || (ctKey.l4proto != 6 && ctKey.l4proto != 132) {
 		return
 	}
 
@@ -1547,6 +1552,23 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 	}
 
 	tk.LogIt(tk.LogInfo, "[CT] %s - %s\n", opStr, cti.String())
+}
+
+func dpCTMapBcast() {
+	mh.dpEbpf.mtx.Lock()
+	defer mh.dpEbpf.mtx.Unlock()
+
+	for _, cti := range mh.dpEbpf.ctMap {
+		if !cti.Deleted && cti.CState == "est" {
+			ret := mh.dp.DpXsyncRpc(DpSyncBcast, cti)
+			if ret == 0 {
+				cti.XSync = false
+			} else {
+				cti.XSync = true
+				cti.NTs = time.Now()
+			}
+		}
+	}
 }
 
 func dpCTMapChkUpdates() {
@@ -1748,13 +1770,15 @@ func (e *DpEbpfH) DpCtDel(w *DpCtInfo) int {
 // DpCtGetAsync - routine to work on a ebpf ct get async request
 func (e *DpEbpfH) DpCtGetAsync() {
 
-	mh.dpEbpf.mtx.Lock()
-	defer mh.dpEbpf.mtx.Unlock()
+	e.ctBcast <- true
 
-	for _, cte := range mh.dpEbpf.ctMap {
-		if cte.CState == "est" {
-			cte.XSync = true
-			cte.NTs = time.Now()
-		}
-	}
+	//	mh.dpEbpf.mtx.Lock()
+	//	defer mh.dpEbpf.mtx.Unlock()
+
+	//	for _, cte := range mh.dpEbpf.ctMap {
+	//		if cte.CState == "est" {
+	//			cte.XSync = true
+	//			cte.NTs = time.Now()
+	//		}
+	//	}
 }

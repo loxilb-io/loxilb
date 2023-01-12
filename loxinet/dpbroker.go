@@ -338,6 +338,7 @@ const (
 	DpSyncAdd DpSyncOpT = iota + 1
 	DpSyncDelete
 	DpSyncGet
+	DpSyncBcast
 )
 
 // Key - outputs a key string for given DpCtInfo pointer
@@ -467,7 +468,7 @@ func (dp *DpH) DpXsyncRpc(op DpSyncOpT, cti *DpCtInfo) int {
 		}
 
 		rpcCallStr := ""
-		if op == DpSyncAdd {
+		if op == DpSyncAdd || op == DpSyncBcast {
 			rpcCallStr = "XSync.DpWorkOnCtAdd"
 		} else if op == DpSyncDelete {
 			rpcCallStr = "XSync.DpWorkOnCtDelete"
@@ -478,14 +479,16 @@ func (dp *DpH) DpXsyncRpc(op DpSyncOpT, cti *DpCtInfo) int {
 		}
 
 		var call *rpc.Call
-		if op == DpSyncAdd || op == DpSyncDelete {
+		if op == DpSyncAdd || op == DpSyncDelete || op == DpSyncBcast {
 			if cti == nil {
 				return -1
 			}
-			// FIXME - There is a race condition here
-			cIState, _ := mh.has.CIStateGetInst(cti.CI)
-			if cIState != "MASTER" {
-				return 0
+			if op != DpSyncBcast {
+				// FIXME - There is a race condition here
+				cIState, _ := mh.has.CIStateGetInst(cti.CI)
+				if cIState != "MASTER" {
+					return 0
+				}
 			}
 			call = pe.Client.Go(rpcCallStr, *cti, &reply, make(chan *rpc.Call, 1))
 		} else {
@@ -558,12 +561,14 @@ func (xs *XSync) DpWorkOnCtGet(async int, ret *int) error {
 	if !mh.ready {
 		return errors.New("Not-Ready")
 	}
+
+	// Most likely need to reset reverse rpc channel
+	mh.dp.DpXsyncRpcReset()
+
 	tk.LogIt(tk.LogDebug, "RPC -  CT Get %d\n", async)
 	mh.dp.DpHooks.DpCtGetAsync()
 	*ret = 0
 
-	// Most likely need to reset reverse rpc channel
-	mh.dp.DpXsyncRpcReset()
 	return nil
 }
 
