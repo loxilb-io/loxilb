@@ -157,7 +157,7 @@ func dpEbpfTicker() {
 		case <-mh.dpEbpf.tDone:
 			return
 		case <-mh.dpEbpf.ctBcast:
-			tk.LogIt(tk.LogDebug, "CTBCAST\n")
+			tk.LogIt(tk.LogDebug, "CT Bcast\n")
 			dpCTMapBcast()
 			continue
 		case t := <-mh.dpEbpf.ticker.C:
