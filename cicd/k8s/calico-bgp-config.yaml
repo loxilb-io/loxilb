@@ -1,0 +1,25 @@
+apiVersion: projectcalico.org/v3
+kind: BGPConfiguration
+metadata:
+  name: default
+spec:
+  logSeverityScreen: Info
+  nodeToNodeMeshEnabled: true
+  asNumber: 64512
+---
+apiVersion: projectcalico.org/v3
+kind: BGPPeer
+metadata:
+  name: my-global-peers1
+spec:
+  peerIP: 192.168.59.101
+  asNumber: 64512
+---
+apiVersion: projectcalico.org/v3
+kind: BGPPeer
+metadata:
+  name: my-global-peers2
+spec:
+  peerIP: 192.168.59.111
+  asNumber: 64512
+
