@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loxiccm-config
+  namespace: kube-system
+data:
+  loxiccmConfigs: |
+    apiServerURL: 
+    - "http://192.168.59.101:11111"
+    - "http://192.168.59.111:11111"
+    externalCIDR: "123.123.123.0/24"
+    setBGP: true
+    setLBMode: 2
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    k8s-app: loxi-cloud-controller-manager
+  name: loxi-cloud-controller-manager
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      k8s-app: loxi-cloud-controller-manager
+  template:
+    metadata:
+      labels:
+        k8s-app: loxi-cloud-controller-manager
+    spec:
+      serviceAccountName: loxi-cloud-controller-manager
+      containers:
+        - name: loxi-cloud-controller-manager
+          imagePullPolicy: Always
+          # for in-tree providers we use k8s.gcr.io/cloud-controller-manager
+          # this can be replaced with any other image for out-of-tree providers
+          image: eyes852/loxi-ccm:betav1
+          command:
+            - /bin/loxi-cloud-controller-manager
+          args:
+            - --v=1
+            - --cloud-provider=netlox
+            # - --cluster-name=kubernetes-2
+            - --use-service-account-credentials
+            # - --address=127.0.0.1
+            - --leader-elect-resource-name=loxi-cloud-controller-manager
+            # these flags will vary for every cloud provider
+            #- --cloud-config=""
+            #- --leader-elect=true
+            #- --allocate-node-cidrs=true
+            #- --configure-cloud-routes=true
+            #- --cluster-cidr=172.17.0.0/16
+          #volumeMounts:
+          #  - name: loxilb-config
+          #    mountPath: /etc/loxilb
+          #    readOnly: true
+          env:
+            - name: LOXICCM_CONFIG
+              valueFrom:
+                configMapKeyRef:
+                  name: loxiccm-config
+                  key: loxiccmConfigs
+      tolerations:
+        # this is required so CCM can bootstrap itself
+        - key: node.cloudprovider.kubernetes.io/uninitialized
+          value: "true"
+          effect: NoSchedule
+        # this is to have the daemonset runnable on master nodes
+        # the taint may vary depending on your cluster setup
+        - key: node-role.kubernetes.io/control-plane
+          effect: NoSchedule
+      # this is to restrict CCM to only run on master nodes
+      # the node selector may vary depending on your cluster setup
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      #volumes:
+      #  - name: loxilb-config
+      #    configMap:
+      #      name: loxilb-config
+

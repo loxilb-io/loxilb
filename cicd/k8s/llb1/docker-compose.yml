@@ -1,0 +1,39 @@
+version: "2.4"
+services:
+        loxilb:
+                container_name: loxilb
+                image: ghcr.io/loxilb-io/loxilb:latest
+                command: "-b -k in --host=0.0.0.0 --cluster=192.168.59.111"
+                restart: always
+                privileged: true
+                user: root
+                volumes:
+                        - /dev/log:/dev/log
+                        - /etc/shared/llb1:/etc/shared
+                        - /home/loxilb/llb1/llb1_gobgp_config/gobgp_loxilb.yaml:/etc/gobgp/gobgp_loxilb.yaml
+                        - /home/loxilb/llb1/keepalived_config/:/etc/keepalived/
+                networks:
+                        mynet:
+                        llbnet:
+                                ipv4_address: 192.168.58.101
+                        llbnet2:
+                                ipv4_address: 192.168.59.101
+networks:
+         mynet:
+                 driver: bridge
+         llbnet:
+                 driver: macvlan
+                 driver_opts:
+                         parent: enp0s9
+                 ipam:
+                         config:
+                                 - subnet : 192.168.58.0/24
+                                   gateway : 192.168.58.1
+         llbnet2:
+                 driver: macvlan
+                 driver_opts:
+                         parent: enp0s8
+                 ipam:
+                         config:
+                                 - subnet : 192.168.59.0/24
+                                   gateway : 192.168.59.1
