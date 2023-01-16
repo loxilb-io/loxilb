@@ -21,8 +21,10 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/signal"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	apiserver "github.com/loxilb-io/loxilb/api"
@@ -64,6 +66,7 @@ type loxiNetH struct {
 	mtx    sync.RWMutex
 	ticker *time.Ticker
 	tDone  chan bool
+	sigCh  chan os.Signal
 	wg     sync.WaitGroup
 	bgp    *GoBgpH
 	has    *CIStateH
@@ -158,6 +161,15 @@ func loxiNetTicker() {
 		select {
 		case <-mh.tDone:
 			return
+		case <-mh.sigCh:
+			var ws syscall.WaitStatus
+			var ru syscall.Rusage
+			wpid := 1
+			try := 0
+			for wpid >= 0 && try < 100 {
+				wpid, _ = syscall.Wait4(-1, &ws, syscall.WNOHANG, &ru)
+				try++
+			}
 		case t := <-mh.ticker.C:
 			tk.LogIt(-1, "Tick at %v\n", t)
 			// Do any housekeeping activities for security zones
@@ -188,6 +200,9 @@ func loxiNetInit() {
 			RunCommand(MkfsScript, true)
 		}
 	}
+
+	mh.sigCh = make(chan os.Signal, 5)
+	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD)
 
 	mh.tDone = make(chan bool)
 	mh.ticker = time.NewTicker(LoxinetTiVal * time.Second)
