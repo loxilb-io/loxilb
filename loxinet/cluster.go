@@ -40,7 +40,8 @@ const (
 // Config related constants
 const (
 	KAConfigFile = "/etc/keepalived/keepalived.conf"
-	KAPidFile    = "/var/run/keepalived.pid"
+	KAPidFile1   = "/var/run/keepalived.pid"
+	KAPidFile2   = "/var/run/vrrp.pid"
 )
 
 type ClusterInstance struct {
@@ -84,7 +85,7 @@ func kaSpawn() {
 			continue
 		}
 
-		pid := ReadPIDFile(KAPidFile)
+		pid := ReadPIDFile(KAPidFile1)
 		if pid != 0 {
 			time.Sleep(5000 * time.Millisecond)
 			continue
@@ -99,6 +100,12 @@ func kaSpawn() {
 			tk.LogIt(tk.LogInfo, "KA found dead. Reaping\n")
 			cmd.Wait()
 		}
+
+		rmf := fmt.Sprintf("rm -f %s", KAPidFile1)
+		RunCommand(rmf, false)
+		rmf = fmt.Sprintf("rm -f %s", KAPidFile2)
+		RunCommand(rmf, false)
+
 		time.Sleep(2000 * time.Millisecond)
 	}
 }
