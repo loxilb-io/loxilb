@@ -53,7 +53,7 @@ jobs:
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/k8slb/
+             cd cicd/k8slbsim/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh

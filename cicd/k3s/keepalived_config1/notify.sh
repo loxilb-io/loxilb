@@ -1,4 +1,7 @@
 #!/bin/bash
+logfile=/var/log/notify.log
+exec > $logfile 2>&1
+set -x
 declare -A vip
 vip["default"]="11.11.11.11"
 echo $1 $2 is in $3 state vip ${vip[$2]}> /etc/shared/keepalive.state
