@@ -72,6 +72,7 @@ type loxiNetH struct {
 	has    *CIStateH
 	logger *tk.Logger
 	ready  bool
+	self   int
 }
 
 // NodeWalker - an implementation of node walker interface
@@ -201,6 +202,7 @@ func loxiNetInit() {
 		}
 	}
 
+	mh.self = opts.Opts.ClusterSelf
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD)
 
