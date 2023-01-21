@@ -206,11 +206,6 @@ func loxiNetInit() {
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD)
 
-	mh.tDone = make(chan bool)
-	mh.ticker = time.NewTicker(LoxinetTiVal * time.Second)
-	mh.wg.Add(1)
-	go loxiNetTicker()
-
 	// Initialize the ebpf datapath subsystem
 	mh.dpEbpf = DpEbpfInit(clusterMode)
 	mh.dp = DpBrokerInit(mh.dpEbpf)
@@ -220,11 +215,17 @@ func loxiNetInit() {
 
 	// Add a root zone by default
 	mh.zn.ZoneAdd(RootZone)
-
 	mh.zr, _ = mh.zn.Zonefind(RootZone)
 	if mh.zr == nil {
 		tk.LogIt(tk.LogError, "root zone not found\n")
 		return
+	}
+
+	// Initialize and spawn the api server subsystem
+	if opts.Opts.NoApi == false {
+		apiserver.RegisterAPIHooks(NetAPIInit())
+		go apiserver.RunAPIServer()
+		apiserver.WaitAPIServerReady()
 	}
 
 	// Initialize goBgp client
@@ -236,12 +237,6 @@ func loxiNetInit() {
 	if opts.Opts.NoNlp == false {
 		nlp.NlpRegister(NetAPIInit())
 		nlp.NlpInit()
-	}
-
-	// Initialize and spawn the api server subsystem
-	if opts.Opts.NoApi == false {
-		apiserver.RegisterAPIHooks(NetAPIInit())
-		go apiserver.RunAPIServer()
 	}
 
 	mh.has = CIInit(spawnKa, kaMode)
@@ -256,6 +251,12 @@ func loxiNetInit() {
 			mh.has.ClusterNodeAdd(cmn.CluserNodeMod{Addr: addr})
 		}
 	}
+
+	mh.tDone = make(chan bool)
+	mh.ticker = time.NewTicker(LoxinetTiVal * time.Second)
+	mh.wg.Add(1)
+	go loxiNetTicker()
+
 	mh.ready = true
 }
 

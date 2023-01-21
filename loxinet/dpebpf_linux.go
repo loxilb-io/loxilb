@@ -1621,6 +1621,7 @@ func dpCTMapChkUpdates() {
 
 			// Make sure CT shadow entries are in sync
 			if time.Duration(tc.Sub(cti.LTs).Seconds()) >= time.Duration(30*60) {
+				tk.LogIt(tk.LogInfo, "[CT] out-of-sync %s:%s:%v\n", cti.Key(), cti.CState, cti.XSync)
 				if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
 					delete(mh.dpEbpf.ctMap, cti.Key())
 					continue
@@ -1632,8 +1633,9 @@ func dpCTMapChkUpdates() {
 				ptact := (*C.struct_dp_ct_tact)(unsafe.Pointer(&cti.PVal[0]))
 				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_CT_STATS_MAP), C.uint(ptact.ca.cidx), C.int(0),
 					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
+
 				if ret == 0 {
-					if cti.Packets < p {
+					if cti.Packets != p {
 						cti.Bytes = b
 						cti.Packets = p
 						cti.XSync = true
