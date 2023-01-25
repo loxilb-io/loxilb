@@ -98,7 +98,6 @@ func kaSpawn() {
 			tk.LogIt(tk.LogError, "Error in running KA:%s\n", err)
 		} else {
 			tk.LogIt(tk.LogInfo, "KA found dead. Reaping\n")
-			cmd.Wait()
 		}
 
 		rmf := fmt.Sprintf("rm -f %s", KAPidFile1)
@@ -173,6 +172,13 @@ func (ci *CIStateH) CITicker() {
 	mh.mtx.Unlock()
 }
 
+// CISpawn - Spawn CI application
+func (ci *CIStateH) CISpawn() {
+	if ci.SpawnKa {
+		go kaSpawn()
+	}
+}
+
 // CIInit - routine to initialize Cluster context
 func CIInit(spawnKa bool, kaMode bool) *CIStateH {
 	var nCIh = new(CIStateH)
@@ -185,11 +191,6 @@ func CIInit(spawnKa bool, kaMode bool) *CIStateH {
 	nCIh.SpawnKa = spawnKa
 	nCIh.kaMode = kaMode
 	nCIh.ClusterMap = make(map[string]ClusterInstance)
-
-	if spawnKa {
-		go kaSpawn()
-	}
-
 	// nCIh.CISync(false)
 
 	if _, ok := nCIh.ClusterMap[cmn.CIDefault]; !ok {

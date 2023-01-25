@@ -31,6 +31,9 @@ import (
 
 // loxiXsyncMain - State Sync subsystem init
 func loxiXsyncMain() {
+	if opts.Opts.ClusterNodes == "none" {
+		return
+	}
 	for {
 		rpcObj := new(ln.XSync)
 		rpc.Register(rpcObj)
