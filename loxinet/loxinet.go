@@ -221,24 +221,7 @@ func loxiNetInit() {
 		return
 	}
 
-	// Initialize and spawn the api server subsystem
-	if opts.Opts.NoApi == false {
-		apiserver.RegisterAPIHooks(NetAPIInit())
-		go apiserver.RunAPIServer()
-		apiserver.WaitAPIServerReady()
-	}
-
-	// Initialize goBgp client
-	if opts.Opts.Bgp {
-		mh.bgp = GoBgpInit()
-	}
-
-	// Initialize the nlp subsystem
-	if opts.Opts.NoNlp == false {
-		nlp.NlpRegister(NetAPIInit())
-		nlp.NlpInit()
-	}
-
+	// Initialize the clustering subsystem
 	mh.has = CIInit(spawnKa, kaMode)
 	// Add cluster nodes if specified
 	if clusterMode {
@@ -252,6 +235,28 @@ func loxiNetInit() {
 		}
 	}
 
+	// Initialize goBgp client
+	if opts.Opts.Bgp {
+		mh.bgp = GoBgpInit()
+	}
+
+	// Initialize and spawn the api server subsystem
+	if opts.Opts.NoApi == false {
+		apiserver.RegisterAPIHooks(NetAPIInit())
+		go apiserver.RunAPIServer()
+		apiserver.WaitAPIServerReady()
+	}
+
+	// Initialize the nlp subsystem
+	if opts.Opts.NoNlp == false {
+		nlp.NlpRegister(NetAPIInit())
+		nlp.NlpInit()
+	}
+
+	// Spawn CI maintenance application
+	mh.has.CISpawn()
+
+	// Initialize the loxinet global ticker(s)
 	mh.tDone = make(chan bool)
 	mh.ticker = time.NewTicker(LoxinetTiVal * time.Second)
 	mh.wg.Add(1)

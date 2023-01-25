@@ -53,7 +53,7 @@ config_docker_host --host1 llb2 --host2 l3e3 --ptype phy --addr 27.27.27.254/24
 $dexec llb1 ip route add 25.25.25.0/24 via 10.10.10.56 dev ellb1llb2
 $dexec llb1 ip route add 26.26.26.0/24 via 10.10.10.56 dev ellb1llb2
 $dexec llb1 ip route add 27.27.27.0/24 via 10.10.10.56 dev ellb1llb2
-$dexec llb1 ip route add 88.88.88.88/32 via 10.10.10.56 dev ellb1llb2
+$dexec llb1 ip route add 88.88.88.88/32 via 50.50.50.2 dev ellb1llb2
 
 $dexec llb2 ip route add 31.31.31.0/24 via 10.10.10.59 dev ellb2llb1
 $dexec llb2 ip route add 32.32.32.0/24 via 10.10.10.59 dev ellb2llb1
