@@ -18,6 +18,7 @@ package loxinet
 
 import (
 	"bytes"
+	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
 	"io/ioutil"
 	"net/http"
@@ -28,6 +29,13 @@ import (
 	"time"
 )
 
+// IterIntf - interface implementation to iterate various loxinet
+// subsystems entitities
+type IterIntf interface {
+	NodeWalker(b string)
+}
+
+// FileExists - Check if file exists
 func FileExists(fname string) bool {
 	info, err := os.Stat(fname)
 	if os.IsNotExist(err) {
@@ -36,6 +44,7 @@ func FileExists(fname string) bool {
 	return !info.IsDir()
 }
 
+// FileCreate - Create a file
 func FileCreate(fname string) int {
 	file, e := os.Create(fname)
 	if e != nil {
@@ -45,6 +54,7 @@ func FileCreate(fname string) int {
 	return 0
 }
 
+// IsLoxiAPIActive - Check if API url is active
 func IsLoxiAPIActive(url string) bool {
 	timeout := time.Duration(1 * time.Second)
 	client := http.Client{Timeout: timeout}
@@ -52,6 +62,7 @@ func IsLoxiAPIActive(url string) bool {
 	return e == nil
 }
 
+// ReadPIDFile - Read a PID file
 func ReadPIDFile(pf string) int {
 
 	if exists := FileExists(pf); !exists {
@@ -81,6 +92,7 @@ func ReadPIDFile(pf string) int {
 	return pid
 }
 
+// RunCommand - Run a bash command
 func RunCommand(command string, isFatal bool) (int, error) {
 	cmd := exec.Command("bash", "-c", command)
 	err := cmd.Run()
@@ -93,4 +105,43 @@ func RunCommand(command string, isFatal bool) (int, error) {
 	}
 
 	return 0, nil
+}
+
+// LogString2Level - Convert log level in string to LogLevelT
+func LogString2Level(logStr string) tk.LogLevelT {
+	logLevel := tk.LogDebug
+	switch opts.Opts.LogLevel {
+	case "info":
+		logLevel = tk.LogInfo
+	case "error":
+		logLevel = tk.LogError
+	case "notice":
+		logLevel = tk.LogNotice
+	case "warning":
+		logLevel = tk.LogWarning
+	case "alert":
+		logLevel = tk.LogAlert
+	case "critical":
+		logLevel = tk.LogCritical
+	case "emergency":
+		logLevel = tk.LogEmerg
+	default:
+		logLevel = tk.LogDebug
+	}
+	return logLevel
+}
+
+// KAString2Mode - Convert ka mode in string opts to spawn/KAMode
+func KAString2Mode(kaStr string) (bool, bool) {
+	spawnKa := false
+	kaMode := false
+	switch opts.Opts.Ka {
+	case "in":
+		spawnKa = true
+		kaMode = true
+	case "out":
+		spawnKa = false
+		kaMode = true
+	}
+	return spawnKa, kaMode
 }

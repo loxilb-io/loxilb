@@ -45,10 +45,10 @@ func RegisterAPIHooks(hooks cmn.NetHookInterface) {
 func WaitAPIServerReady() {
 	for {
 		if ApiReady {
-			time.Sleep(2*time.Second)
+			time.Sleep(2 * time.Second)
 			return
 		}
-		time.Sleep(1*time.Second)
+		time.Sleep(1 * time.Second)
 	}
 }
 

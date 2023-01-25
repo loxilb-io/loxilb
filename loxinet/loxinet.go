@@ -19,6 +19,11 @@ package loxinet
 import (
 	"errors"
 	"fmt"
+	apiserver "github.com/loxilb-io/loxilb/api"
+	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
+	cmn "github.com/loxilb-io/loxilb/common"
+	opts "github.com/loxilb-io/loxilb/options"
+	tk "github.com/loxilb-io/loxilib"
 	"net"
 	"os"
 	"os/signal"
@@ -26,12 +31,6 @@ import (
 	"sync"
 	"syscall"
 	"time"
-
-	apiserver "github.com/loxilb-io/loxilb/api"
-	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
-	cmn "github.com/loxilb-io/loxilb/common"
-	opts "github.com/loxilb-io/loxilb/options"
-	tk "github.com/loxilb-io/loxilib"
 )
 
 // string constant representing root security zone
@@ -51,12 +50,6 @@ const (
 	MkfsScript     = "/usr/local/sbin/mkllb_bpffs"
 	BpfFsCheckFile = "/opt/loxilb/dp/bpf/intf_map"
 )
-
-// IterIntf - interface implementation to iterate various loxinet
-// subsystems entitities
-type IterIntf interface {
-	NodeWalker(b string)
-}
 
 type loxiNetH struct {
 	dpEbpf *DpEbpfH
@@ -80,46 +73,9 @@ func (mh *loxiNetH) NodeWalker(b string) {
 	tk.LogIt(tk.LogDebug, "%s\n", b)
 }
 
-func logString2Level(logStr string) tk.LogLevelT {
-	logLevel := tk.LogDebug
-	switch opts.Opts.LogLevel {
-	case "info":
-		logLevel = tk.LogInfo
-	case "error":
-		logLevel = tk.LogError
-	case "notice":
-		logLevel = tk.LogNotice
-	case "warning":
-		logLevel = tk.LogWarning
-	case "alert":
-		logLevel = tk.LogAlert
-	case "critical":
-		logLevel = tk.LogCritical
-	case "emergency":
-		logLevel = tk.LogEmerg
-	default:
-		logLevel = tk.LogDebug
-	}
-	return logLevel
-}
-
-func kaString2Mode(kaStr string) (bool, bool) {
-	spawnKa := false
-	kaMode := false
-	switch opts.Opts.Ka {
-	case "in":
-		spawnKa = true
-		kaMode = true
-	case "out":
-		spawnKa = false
-		kaMode = true
-	}
-	return spawnKa, kaMode
-}
-
 // ParamSet - Set Loxinet Params
 func (mh *loxiNetH) ParamSet(param cmn.ParamMod) (int, error) {
-	logLevel := logString2Level(param.LogLevel)
+	logLevel := LogString2Level(param.LogLevel)
 
 	if mh.logger != nil {
 		mh.logger.LogItSetLevel(logLevel)
@@ -183,7 +139,7 @@ func loxiNetTicker() {
 var mh loxiNetH
 
 func loxiNetInit() {
-	spawnKa, kaMode := kaString2Mode(opts.Opts.Ka)
+	spawnKa, kaMode := KAString2Mode(opts.Opts.Ka)
 	clusterMode := false
 	if opts.Opts.ClusterNodes != "none" {
 		clusterMode = true
@@ -191,7 +147,7 @@ func loxiNetInit() {
 
 	// Initialize logger and specify the log file
 	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
-	logLevel := logString2Level(opts.Opts.LogLevel)
+	logLevel := LogString2Level(opts.Opts.LogLevel)
 	mh.logger = tk.LogItInit(logfile, logLevel, true)
 
 	// It is important to make sure loxilb's eBPF filesystem
@@ -207,7 +163,7 @@ func loxiNetInit() {
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD)
 
 	// Initialize the ebpf datapath subsystem
-	mh.dpEbpf = DpEbpfInit(clusterMode)
+	mh.dpEbpf = DpEbpfInit(clusterMode, mh.self)
 	mh.dp = DpBrokerInit(mh.dpEbpf)
 
 	// Initialize the security zone subsystem
@@ -223,8 +179,8 @@ func loxiNetInit() {
 
 	// Initialize the clustering subsystem
 	mh.has = CIInit(spawnKa, kaMode)
-	// Add cluster nodes if specified
 	if clusterMode {
+		// Add cluster nodes if specified
 		cNodes := strings.Split(opts.Opts.ClusterNodes, ",")
 		for _, cNode := range cNodes {
 			addr := net.ParseIP(cNode)

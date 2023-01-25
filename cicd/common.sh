@@ -97,9 +97,9 @@ spawn_docker_host() {
       fi
     fi
     if [[ "$dname" == "llb1" ]]; then
-      cluster_opts=" --cluster=172.17.0.3"
+      cluster_opts=" --cluster=172.17.0.3 --self=0"
     elif [[ "$dname" == "llb2" ]]; then
-      cluster_opts=" --cluster=172.17.0.2"
+      cluster_opts=" --cluster=172.17.0.2 --self=1"
     fi
 
     if [[ ! -z ${ka+x} ]]; then
