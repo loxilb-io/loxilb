@@ -64,7 +64,7 @@ func main() {
 	}
 
 	go loxiXsyncMain()
-	// Need for time for RPC Handler to be up
+	// Need some time for RPC Handler to be up
 	time.Sleep(2 * time.Second)
 
 	ln.Main()
