@@ -66,12 +66,6 @@ jobs:
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/nat64tcp/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
              cd cicd/wrrtcplb1/
              ./config.sh
              ./validation.sh
@@ -109,6 +103,12 @@ jobs:
              cd -
       - run: |
              cd cicd/lb6timeout/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/nat64tcp/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
