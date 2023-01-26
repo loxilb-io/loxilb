@@ -32,6 +32,9 @@ do
     sleep 1
 done
 
+res=$($hexec l3h1 curl -s --max-time 20 '[2001::1]:2020')
+sleep 4
+
 nid=0
 for i in {1..4}
 do
@@ -61,6 +64,7 @@ do
     sleep 1
 done
 done
+sudo pkill -9 node
 if [[ $code == 0 ]]
 then
     echo nat64tcp [OK]

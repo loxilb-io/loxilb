@@ -64,6 +64,7 @@ $hexec llb1 ip -6 addr add 3ffe::2/64 dev ellb1l3h1
 $hexec llb1 ip -6 addr add 4ffe::2/64 dev ellb1l3ep1
 $hexec llb1 ip -6 addr add 5ffe::2/64 dev ellb1l3ep2
 $hexec llb1 ip -6 addr add 6ffe::2/64 dev ellb1l3ep3
+$hexec llb1 ip addr add 2001::1/32 dev lo
 
-sleep 10
 $dexec llb1 loxicmd create lb 2001::1 --tcp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1
+sleep 10
