@@ -409,6 +409,13 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 		return NeighNoEntErr, errors.New("no-nh error")
 	}
 
+	var mask net.IPMask
+	if tk.IsNetIPv4(Addr.String()) {
+		mask = net.CIDRMask(32, 32)
+	} else {
+		mask = net.CIDRMask(128, 128)
+	}
+
 	// Delete related L2 Pair entry if needed
 	port := ne.OifPort
 	if port != nil && port.IsSlavePort() == false && port.IsLeafPort() == true && ne.Resolved {
@@ -428,7 +435,6 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 	}
 
 	// Delete the host specific to this NH
-	mask := net.CIDRMask(32, 32)
 	ipnet := net.IPNet{IP: Addr, Mask: mask}
 	_, err := n.Zone.Rt.RtDelete(ipnet, Zone)
 	if err != nil {
