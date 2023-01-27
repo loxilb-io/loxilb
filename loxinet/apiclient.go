@@ -259,7 +259,7 @@ func (*NetAPIStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
 		if mh.bgp != nil {
 			mh.bgp.AddBGPRule("default", lm.Serv.ServIP)
 		} else {
-			tk.LogIt(tk.LogDebug, "loxilb BGP mode is disable \n")
+			tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
 		}
 	}
 	return ret, err
@@ -275,7 +275,7 @@ func (*NetAPIStruct) NetLbRuleDel(lm *cmn.LbRuleMod) (int, error) {
 		if mh.bgp != nil {
 			mh.bgp.DelBGPRule("default", lm.Serv.ServIP)
 		} else {
-			tk.LogIt(tk.LogDebug, "loxilb BGP mode is disable \n")
+			tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
 		}
 	}
 	return ret, err

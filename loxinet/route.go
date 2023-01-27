@@ -339,7 +339,7 @@ func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 	//}
 
 	var tR *tk.TrieRoot
-	if tk.IsNetIPv4(string(Dst.IP)) {
+	if tk.IsNetIPv4(Dst.IP.String()) {
 		tR = r.Trie4
 	} else {
 		tR = r.Trie6

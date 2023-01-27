@@ -20,7 +20,7 @@ jobs:
         with:
              go-version: '>=1.17.0'
       - run: sudo apt-get update
-      - run: sudo apt -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iproute2
+      - run: sudo apt -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev elfutils dwarves git linux-tools-$(uname -r) libbsd-dev bridge-utils unzip build-essential bison flex iproute2
       - run: |
             git clone https://github.com/loxilb-io/iproute2 iproute2-main
             cd iproute2-main/libbpf/src/
@@ -36,6 +36,7 @@ jobs:
       - run: docker pull ghcr.io/loxilb-io/loxilb:latest
       - run: docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
       - run: pwd && ls && sudo -E env "PATH=$PATH" make docker-cp
+      - run: docker exec -dit loxilb mkllb_bpffs
       - run: id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"` && docker commit $id ghcr.io/loxilb-io/loxilb:latest
       - run: docker stop loxilb && docker rm loxilb
       - run: |

@@ -189,7 +189,7 @@ func dpEbpfTicker() {
 }
 
 // DpEbpfInit - initialize the ebpf dp subsystem
-func DpEbpfInit(clusterEn bool) *DpEbpfH {
+func DpEbpfInit(clusterEn bool, nodeNum int) *DpEbpfH {
 	var cfg C.struct_ebpfcfg
 
 	if clusterEn {
@@ -197,6 +197,7 @@ func DpEbpfInit(clusterEn bool) *DpEbpfH {
 	} else {
 		cfg.have_mtrace = 0
 	}
+	cfg.nodenum = C.int(nodeNum)
 
 	C.loxilb_main(&cfg)
 
