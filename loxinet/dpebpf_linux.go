@@ -89,7 +89,8 @@ const (
 
 // constants
 const (
-	DpEbpfLinuxTiVal = 10
+	DpEbpfLinuxTiVal     = 10
+	ctiDeleteSyncRetries = 4
 )
 
 // ebpf table related defines in go
@@ -176,7 +177,7 @@ func dpEbpfTicker() {
 
 			// This means around 10s from start
 			if !mh.dpEbpf.CtSync {
-				tk.LogIt(tk.LogDebug, "Ask SYNC\n")
+				tk.LogIt(tk.LogDebug, "Get xsync()\n")
 				ret := mh.dp.DpXsyncRpc(DpSyncGet, nil)
 				if ret == 0 {
 					mh.dpEbpf.CtSync = true
@@ -1523,7 +1524,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 		if cti == nil {
 			return
 		}
-		cti.Deleted = true
+		cti.Deleted = 1
 		cti.XSync = true
 		cti.NTs = time.Now()
 		// Immediately notify for delete
@@ -1559,16 +1560,29 @@ func dpCTMapBcast() {
 	mh.dpEbpf.mtx.Lock()
 	defer mh.dpEbpf.mtx.Unlock()
 
+	var (
+		tot int
+		rok int
+	)
+
 	for _, cti := range mh.dpEbpf.ctMap {
-		if !cti.Deleted && cti.CState == "est" {
+		if cti.Deleted <= 0 && cti.CState == "est" {
+			tot++
 			ret := mh.dp.DpXsyncRpc(DpSyncBcast, cti)
 			if ret == 0 {
+				rok++
 				cti.XSync = false
 			} else {
 				cti.XSync = true
 				cti.NTs = time.Now()
 			}
 		}
+	}
+	if tot == rok {
+		cti := new(DpCtInfo)
+		cti.Proto = "xsync"
+		cti.Sport = uint16(mh.self)
+		mh.dp.DpXsyncRpc(DpSyncBcast, cti)
 	}
 }
 
@@ -1651,15 +1665,16 @@ func dpCTMapChkUpdates() {
 			tk.LogIt(tk.LogDebug, "[CT] Sync - %s\n", cti.String())
 
 			ret := 0
-			if cti.Deleted {
+			if cti.Deleted > 0 {
 				ret = mh.dp.DpXsyncRpc(DpSyncDelete, cti)
+				cti.Deleted++
 			} else {
 				ret = mh.dp.DpXsyncRpc(DpSyncAdd, cti)
 			}
-			if ret == 0 {
+			if ret == 0 || cti.Deleted > ctiDeleteSyncRetries {
 				cti.XSync = false
 
-				if cti.Deleted {
+				if cti.Deleted > 0 {
 					delete(mh.dpEbpf.ctMap, cti.Key())
 					// This is a strange fix - See comment above
 					C.llb_del_map_elem(C.LL_DP_CT_MAP, unsafe.Pointer(&cti.PKey[0]))
