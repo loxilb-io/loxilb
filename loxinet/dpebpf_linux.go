@@ -1635,7 +1635,7 @@ func dpCTMapChkUpdates() {
 			var p uint64
 
 			// Make sure CT shadow entries are in sync
-			if time.Duration(tc.Sub(cti.LTs).Seconds()) >= time.Duration(30*60) {
+			if time.Duration(tc.Sub(cti.LTs).Seconds()) >= time.Duration(5*60) {
 				tk.LogIt(tk.LogInfo, "[CT] out-of-sync %s:%s:%v\n", cti.Key(), cti.CState, cti.XSync)
 				if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
 					delete(mh.dpEbpf.ctMap, cti.Key())

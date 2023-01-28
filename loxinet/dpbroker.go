@@ -607,7 +607,7 @@ func (xs *XSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
 		r := XSync{RemoteID: int(cti.Sport), RPCState: true}
 		mh.dp.Remotes = append(mh.dp.Remotes, r)
 
-		tk.LogIt(tk.LogDebug, "RPC - xsync from %v\n", cti.Sport)
+		tk.LogIt(tk.LogDebug, "RPC - CT Xsync Remote-%v\n", cti.Sport)
 
 		*ret = 0
 		return nil
