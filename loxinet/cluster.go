@@ -76,6 +76,7 @@ func kaSpawn() {
 
 	RunCommand("rm -f /etc/shared/keepalive.state", false)
 	RunCommand("pkill keepalived", false)
+	mh.dp.WaitXsyncReady("ka")
 	// We need some cool-off period for loxilb to self sync-up in the cluster
 	time.Sleep(KAInitTiVal * time.Second)
 
