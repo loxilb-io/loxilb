@@ -1645,6 +1645,9 @@ func dpCTMapChkUpdates() {
 			}
 
 			if len(cti.PVal) > 0 && cti.XSync == false {
+				if time.Duration(tc.Sub(cti.NTs).Seconds()) < time.Duration(60) {
+					continue
+				}
 				ptact := (*C.struct_dp_ct_tact)(unsafe.Pointer(&cti.PVal[0]))
 				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_CT_STATS_MAP), C.uint(ptact.ca.cidx), C.int(0),
 					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
