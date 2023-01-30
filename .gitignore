@@ -42,6 +42,14 @@
 *.idb
 *.pdb
 
+# Temporary files
+*.tmp
+*.back
+*.bck
+
+# Local IDE files
+.vscode/
+
 # Kernel Module Compile Results
 *.mod*
 *.cmd
