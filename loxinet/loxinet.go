@@ -41,8 +41,8 @@ const (
 // constants
 const (
 	LoxinetTiVal   = 10
-	GoBGPInitTiVal = 20
-	KAInitTiVal    = 30
+	GoBGPInitTiVal = 5
+	KAInitTiVal    = 35
 )
 
 // utility variables

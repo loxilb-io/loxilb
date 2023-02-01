@@ -400,8 +400,9 @@ func (gbh *GoBgpH) goBgpSpawn() {
 	cmd := exec.Command("bash", "-c", command)
 	err := cmd.Run()
 	if err != nil {
-		tk.LogIt(tk.LogError, "Error in stopping gpbgp:%s", err)
+		tk.LogIt(tk.LogError, "Error in stopping gpbgp:%s\n", err)
 	}
+	mh.dp.WaitXsyncReady("bgp")
 	// We need some cool-off period for loxilb to self sync-up in the cluster
 	time.Sleep(GoBGPInitTiVal * time.Second)
 	for {
@@ -644,7 +645,7 @@ func (gbh *GoBgpH) processBgpEvent(e goBgpEvent) {
 }
 
 func (gbh *GoBgpH) goBgpMonitor() {
-	tk.LogIt(tk.LogNotice, "\n\n\n\nBGP Monitor start *******************\n")
+	tk.LogIt(tk.LogNotice, "******************* BGP Monitor start *******************\n")
 	for {
 		for n := 0; n < cmn.RuWorkQLen; n++ {
 			select {

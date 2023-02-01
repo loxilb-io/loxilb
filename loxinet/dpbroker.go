@@ -298,7 +298,7 @@ type DpCtInfo struct {
 	CI      string
 	Packets uint64
 	Bytes   uint64
-	Deleted bool
+	Deleted int
 	PKey    []byte
 	PVal    []byte
 	LTs     time.Time
@@ -313,6 +313,8 @@ type DpCtInfo struct {
 }
 
 type XSync struct {
+	RemoteID int
+	RPCState bool
 	// For peer to peer RPC
 }
 
@@ -400,9 +402,10 @@ type DpH struct {
 	FromDpCh chan interface{}
 	ToFinCh  chan int
 	DpHooks  DpHookInterface
-	syncMtx  sync.RWMutex
+	SyncMtx  sync.RWMutex
 	Peers    []DpPeer
 	RPC      *XSync
+	Remotes  []XSync
 }
 
 // dialHTTPPath connects to an HTTP RPC server
@@ -437,8 +440,8 @@ func dialHTTPPath(network, address, path string) (*rpc.Client, error) {
 }
 
 func (dp *DpH) DpXsyncRpcReset() int {
-	dp.syncMtx.Lock()
-	defer dp.syncMtx.Unlock()
+	dp.SyncMtx.Lock()
+	defer dp.SyncMtx.Unlock()
 	for idx := range mh.dp.Peers {
 		pe := &mh.dp.Peers[idx]
 		if pe.Client != nil {
@@ -457,76 +460,113 @@ func (dp *DpH) DpXsyncRpcReset() int {
 	return 0
 }
 
+func (dp *DpH) DpXsyncInSync() bool {
+	dp.SyncMtx.Lock()
+	defer dp.SyncMtx.Unlock()
+
+	if len(dp.Remotes) >= len(mh.has.NodeMap) {
+		return true
+	}
+	return false
+}
+
+func (dp *DpH) WaitXsyncReady(who string) {
+	begin := time.Now()
+	for {
+		if dp.DpXsyncInSync() {
+			return
+		}
+		if time.Duration(time.Now().Sub(begin).Seconds()) >= 90 {
+			return
+		}
+		tk.LogIt(tk.LogDebug, "%s:waiting for Xsync..\n", who)
+		time.Sleep(2 * time.Second)
+	}
+}
+
 func (dp *DpH) DpXsyncRpc(op DpSyncOpT, cti *DpCtInfo) int {
 	var reply int
 	timeout := 2 * time.Second
-	dp.syncMtx.Lock()
-	defer dp.syncMtx.Unlock()
+	dp.SyncMtx.Lock()
+	defer dp.SyncMtx.Unlock()
+
+	if len(mh.has.NodeMap) != len(mh.dp.Peers) {
+		return -1
+	}
+
+	rpcRetries := 0
+	rpcErr := false
 
 	for idx := range mh.dp.Peers {
+	restartRPC:
 		pe := &mh.dp.Peers[idx]
-		for retry := 0; retry < 2; retry++ {
+		if pe.Client == nil {
+			cStr := fmt.Sprintf("%s:%d", pe.Peer.String(), XSyncPort)
+			var err error
+			pe.Client, err = dialHTTPPath("tcp", cStr, rpc.DefaultRPCPath)
 			if pe.Client == nil {
-				cStr := fmt.Sprintf("%s:%d", pe.Peer.String(), XSyncPort)
-				var err error
-				pe.Client, err = dialHTTPPath("tcp", cStr, rpc.DefaultRPCPath)
-				if pe.Client == nil {
-					tk.LogIt(tk.LogInfo, "XSync RPC - %s :Fail(%s)\n", cStr, err)
-					return -1
-				}
-				tk.LogIt(tk.LogInfo, "XSync RPC - %s :Connected\n", cStr)
+				tk.LogIt(tk.LogInfo, "XSync RPC - %s :Fail(%s)\n", cStr, err)
+				rpcErr = true
+				continue
 			}
+			tk.LogIt(tk.LogInfo, "XSync RPC - %s :Connected\n", cStr)
+		}
 
-			rpcCallStr := ""
-			if op == DpSyncAdd || op == DpSyncBcast {
-				rpcCallStr = "XSync.DpWorkOnCtAdd"
-			} else if op == DpSyncDelete {
-				rpcCallStr = "XSync.DpWorkOnCtDelete"
-			} else if op == DpSyncGet {
-				rpcCallStr = "XSync.DpWorkOnCtGet"
-			} else {
+		reply = 0
+		rpcCallStr := ""
+		if op == DpSyncAdd || op == DpSyncBcast {
+			rpcCallStr = "XSync.DpWorkOnCtAdd"
+		} else if op == DpSyncDelete {
+			rpcCallStr = "XSync.DpWorkOnCtDelete"
+		} else if op == DpSyncGet {
+			rpcCallStr = "XSync.DpWorkOnCtGet"
+		} else {
+			return -1
+		}
+
+		var call *rpc.Call
+		if op == DpSyncAdd || op == DpSyncDelete || op == DpSyncBcast {
+			if cti == nil {
 				return -1
 			}
-
-			var call *rpc.Call
-			if op == DpSyncAdd || op == DpSyncDelete || op == DpSyncBcast {
-				if cti == nil {
-					return -1
+			if op != DpSyncBcast {
+				// FIXME - There is a race condition here
+				cIState, _ := mh.has.CIStateGetInst(cti.CI)
+				if cIState != "MASTER" {
+					return 0
 				}
-				if op != DpSyncBcast {
-					// FIXME - There is a race condition here
-					cIState, _ := mh.has.CIStateGetInst(cti.CI)
-					if cIState != "MASTER" {
-						return 0
-					}
-				}
-				call = pe.Client.Go(rpcCallStr, *cti, &reply, make(chan *rpc.Call, 1))
-			} else {
-				async := 1
-				call = pe.Client.Go(rpcCallStr, async, &reply, make(chan *rpc.Call, 1))
 			}
-			select {
-			case <-time.After(timeout):
-				tk.LogIt(tk.LogError, "rpc call timeout(%v)\n", timeout)
-				if pe.Client != nil {
-					pe.Client.Close()
-				}
-				pe.Client = nil
-				break
-			case resp := <-call.Done:
-				if resp != nil && resp.Error != nil {
-					if pe.Client != nil {
-						pe.Client.Close()
-					}
-					pe.Client = nil
-					tk.LogIt(tk.LogError, "rpc call failed(%s)\n", resp.Error)
-					break
-				}
-				return reply
+			call = pe.Client.Go(rpcCallStr, *cti, &reply, make(chan *rpc.Call, 1))
+		} else {
+			async := 1
+			call = pe.Client.Go(rpcCallStr, async, &reply, make(chan *rpc.Call, 1))
+		}
+		select {
+		case <-time.After(timeout):
+			tk.LogIt(tk.LogError, "rpc call timeout(%v)\n", timeout)
+			if pe.Client != nil {
+				pe.Client.Close()
+			}
+			pe.Client = nil
+			rpcRetries++
+			if rpcRetries < 2 {
+				goto restartRPC
+			}
+			rpcErr = true
+		case resp := <-call.Done:
+			if resp != nil && resp.Error != nil {
+				tk.LogIt(tk.LogError, "rpc call failed(%s)\n", resp.Error)
+				rpcErr = true
+			}
+			if reply != 0 {
+				rpcErr = true
 			}
 		}
 	}
 
+	if rpcErr {
+		return -1
+	}
 	return 0
 }
 
@@ -550,6 +590,29 @@ func (xs *XSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
 	if !mh.ready {
 		return errors.New("Not-Ready")
 	}
+
+	if cti.Proto == "xsync" {
+		mh.dp.SyncMtx.Lock()
+		defer mh.dp.SyncMtx.Unlock()
+
+		for idx := range mh.dp.Remotes {
+			r := &mh.dp.Remotes[idx]
+			if r.RemoteID == int(cti.Sport) {
+				r.RPCState = true
+				*ret = 0
+				return nil
+			}
+		}
+
+		r := XSync{RemoteID: int(cti.Sport), RPCState: true}
+		mh.dp.Remotes = append(mh.dp.Remotes, r)
+
+		tk.LogIt(tk.LogDebug, "RPC - CT Xsync Remote-%v\n", cti.Sport)
+
+		*ret = 0
+		return nil
+	}
+
 	tk.LogIt(tk.LogDebug, "RPC - CT Add %s\n", cti.Key())
 	r := mh.dp.DpHooks.DpCtAdd(&cti)
 	*ret = r
