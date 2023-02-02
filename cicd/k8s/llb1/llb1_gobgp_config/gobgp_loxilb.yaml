@@ -6,6 +6,7 @@ global:
     config:
       export-policy-list:
         - set-next-hop-self
+        - drop-vip
         - set-next-hop-vip
 neighbors:
   - config:
@@ -24,6 +25,10 @@ neighbors:
       neighbor-address: 192.168.58.2
       peer-as: 65001
 defined-sets:
+  prefix-sets:
+      prefix-set-name: vip
+      prefix-list:
+          - ip-prefix: 192.168.58.150/32
   neighbor-sets:
     - neighbor-set-name: int
       neighbor-info-list:
@@ -43,6 +48,15 @@ policy-definitions:
         actions:
           bgp-actions:
             set-next-hop: 192.168.59.101
+  - name: drop-vip
+    statements:
+      - conditions:
+          match-prefix-set:
+            prefix-set: vip
+          match-neighbor-set:
+            neighbor-set: ext
+        actions:
+           route-disposition: reject-route
   - name: set-next-hop-vip
     statements:
       - conditions:
