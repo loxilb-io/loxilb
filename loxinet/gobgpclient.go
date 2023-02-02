@@ -215,13 +215,13 @@ func (gbh *GoBgpH) syncRoute(p *api.Path, showIdentifier bgp.BGPAddPathMode) err
 	}
 
 	if p.GetIsWithdraw() {
-		tk.LogIt(tk.LogDebug, "[GoBGP] ip route delete %s via %s", route.Dst.String(), route.Gw.String())
+		tk.LogIt(tk.LogDebug, "[GoBGP] ip route delete %s via %s\n", route.Dst.String(), route.Gw.String())
 		if err := nlp.RouteDel(route); err != nil {
 			tk.LogIt(tk.LogError, "[GoBGP] failed to ip route delete. err: %s\n", err.Error())
 			return err
 		}
 	} else {
-		tk.LogIt(tk.LogDebug, "[GoBGP] ip route add %s via %s", route.Dst.String(), route.Gw.String())
+		tk.LogIt(tk.LogDebug, "[GoBGP] ip route add %s via %s\n", route.Dst.String(), route.Gw.String())
 		if err := nlp.RouteAdd(route); err != nil {
 			tk.LogIt(tk.LogError, "[GoBGP] failed to ip route add. err: %s\n", err.Error())
 			return err
@@ -290,8 +290,8 @@ func (gbh *GoBgpH) GetRoutes(client api.GobgpApiClient) int {
 }
 
 // AdvertiseRoute - advertise a new route using goBGP
-func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string, pref uint32) int {
-
+func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string, pref uint32, ipv4 bool) int {
+	var apiFamily *api.Family
 	// add routes
 	//tk.LogIt(tk.LogDebug, "\n\n\n Advertising Route : %v via %v\n\n\n", rtPrefix, nh)
 	nlri, _ := apb.New(&api.IPAddressPrefix{
@@ -311,6 +311,12 @@ func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string, pref uin
 		LocalPref: pref,
 	})
 
+	if ipv4 == true {
+		apiFamily = &api.Family{Afi: api.Family_AFI_IP, Safi: api.Family_SAFI_UNICAST}
+	} else {
+		apiFamily = &api.Family{Afi: api.Family_AFI_IP6, Safi: api.Family_SAFI_UNICAST}
+	}
+
 	/*
 		a3, _ := apb.New(&api.AsPathAttribute{
 				Segments: []*api.AsSegment{
@@ -328,7 +334,7 @@ func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string, pref uin
 
 	_, err := gbh.client.AddPath(context.Background(), &api.AddPathRequest{
 		Path: &api.Path{
-			Family: &api.Family{Afi: api.Family_AFI_IP, Safi: api.Family_SAFI_UNICAST},
+			Family: apiFamily,
 			Nlri:   nlri,
 			Pattrs: attrs,
 		},
@@ -486,7 +492,11 @@ func (gbh *GoBgpH) AddBGPRule(instance string, IP string) {
 		} else {
 			pref = cmn.HighLocalPref
 		}
-		gbh.AdvertiseRoute(IP, 32, "0.0.0.0", pref)
+		if net.ParseIP(IP).To4() != nil {
+			gbh.AdvertiseRoute(IP, 32, "0.0.0.0", pref, true)
+		} else {
+			gbh.AdvertiseRoute(IP, 128, "::", pref, false)
+		}
 	}
 
 	gbh.mtx.Unlock()
@@ -512,7 +522,11 @@ func (gbh *GoBgpH) DelBGPRule(instance string, IP string) {
 		} else {
 			pref = cmn.HighLocalPref
 		}
-		gbh.DelAdvertiseRoute(IP, 32, "0.0.0.0", pref)
+		if net.ParseIP(IP).To4() != nil {
+			gbh.DelAdvertiseRoute(IP, 32, "0.0.0.0", pref)
+		} else {
+			gbh.DelAdvertiseRoute(IP, 128, "::", pref)
+		}
 	}
 	gbh.mtx.Unlock()
 }
@@ -546,7 +560,7 @@ func (gbh *GoBgpH) AddCurrentBgpRoutesToIPRoute() error {
 	for _, r := range rib {
 		_, dstIPN, err := net.ParseCIDR(r.GetPrefix())
 		if err != nil {
-			return fmt.Errorf("%s is invalid prefix", r.GetPrefix())
+			return fmt.Errorf("%s is invalid prefix\n", r.GetPrefix())
 		}
 
 		var nlpRoute *nlp.Route
@@ -597,13 +611,17 @@ func (gbh *GoBgpH) advertiseAllRoutes(instance string) {
 	}
 
 	if !ci.vip.IsUnspecified() {
-		gbh.AdvertiseRoute(ci.vip.String(), 32, "0.0.0.0", pref)
+		gbh.AdvertiseRoute(ci.vip.String(), 32, "0.0.0.0", pref, true)
 	}
 
 	for ip, valid := range ci.rules {
 		tk.LogIt(tk.LogDebug, "[GoBGP] connected BGP rules ip %s is valid(%v)\n", ip, valid)
 		if valid {
-			gbh.AdvertiseRoute(ip, 32, "0.0.0.0", pref)
+			if net.ParseIP(ip).To4() != nil {
+				gbh.AdvertiseRoute(ip, 32, "0.0.0.0", pref, true)
+			} else {
+				gbh.AdvertiseRoute(ip, 128, "::", pref, false)
+			}
 		}
 	}
 }
