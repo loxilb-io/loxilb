@@ -681,16 +681,18 @@ func (tep *NeighTunEp) DP(work DpWorkT) int {
 	neighWq.TunNh = true
 	neighWq.TunID = tep.tunID
 
-	for i := 0; i < 6; i++ {
-		neighWq.DstAddr[i] = uint8(ne.Attr.HardwareAddr[i])
-	}
-
-	if ne.OifPort != nil {
+	if tep.tunID != 0 {
 		for i := 0; i < 6; i++ {
-			neighWq.SrcAddr[i] = uint8(ne.OifPort.HInfo.MacAddr[i])
+			neighWq.DstAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 		}
-		neighWq.BD = ne.OifPort.L2.Vid
 
+		if ne.OifPort != nil {
+			for i := 0; i < 6; i++ {
+				neighWq.SrcAddr[i] = uint8(ne.OifPort.HInfo.MacAddr[i])
+			}
+			neighWq.BD = ne.OifPort.L2.Vid
+
+		}
 	}
 
 	mh.dp.ToDpCh <- neighWq

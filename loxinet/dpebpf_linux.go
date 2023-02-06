@@ -110,6 +110,7 @@ type (
 	nhDat       C.struct_dp_nh_tact
 	rtL2NhAct   C.struct_dp_rt_l2nh_act
 	rtVxL2NhAct C.struct_dp_rt_l2vxnh_act
+	rtL3TunAct  C.struct_dp_rt_l3tun_act
 	rt4Key      C.struct_dp_rtv4_key
 	rt6Key      C.struct_dp_rtv6_key
 	rtDat       C.struct_dp_rt_tact
@@ -564,6 +565,7 @@ func (e *DpEbpfH) DpRouterMacDel(w *RouterMacDpWorkQ) int {
 func DpNextHopMod(w *NextHopDpWorkQ) int {
 	var act *rtL2NhAct
 	var vxAct *rtVxL2NhAct
+	var l3t *rtL3TunAct
 
 	key := new(nhKey)
 	key.nh_num = C.uint(w.NextHopNum)
@@ -576,22 +578,36 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 		} else {
 			if w.TunNh {
 				tk.LogIt(tk.LogDebug, "Setting tunNh %x\n", key.nh_num)
-				dat.ca.act_type = C.DP_SET_NEIGH_VXLAN
-				vxAct = (*rtVxL2NhAct)(getPtrOffset(unsafe.Pointer(dat),
-					C.sizeof_struct_dp_cmn_act))
+				if w.TunID != 0 {
+					dat.ca.act_type = C.DP_SET_NEIGH_VXLAN
+					vxAct = (*rtVxL2NhAct)(getPtrOffset(unsafe.Pointer(dat),
+						C.sizeof_struct_dp_cmn_act))
 
-				ipAddr := tk.IPtonl(w.RIP)
-				vxAct.l3t.rip = C.uint(ipAddr)
-				vxAct.l3t.sip = C.uint(tk.IPtonl(w.SIP))
-				tid := ((w.TunID << 8) & 0xffffff00)
-				vxAct.l3t.tid = C.uint(tk.Htonl(tid))
+					ipAddr := tk.IPtonl(w.RIP)
+					vxAct.l3t.rip = C.uint(ipAddr)
+					vxAct.l3t.sip = C.uint(tk.IPtonl(w.SIP))
+					tid := ((w.TunID << 8) & 0xffffff00)
+					vxAct.l3t.tid = C.uint(tk.Htonl(tid))
 
-				tk.LogIt(tk.LogDebug, "rip 0x%x sip 0x%x 0x%x\n", vxAct.l3t.sip, vxAct.l3t.rip, vxAct.l3t.tid)
+					tk.LogIt(tk.LogDebug, "l2t rip 0x%x sip 0x%x 0x%x\n", vxAct.l3t.sip, vxAct.l3t.rip, vxAct.l3t.tid)
 
-				act = (*rtL2NhAct)(&vxAct.l2nh)
-				C.memcpy(unsafe.Pointer(&act.dmac[0]), unsafe.Pointer(&w.DstAddr[0]), 6)
-				C.memcpy(unsafe.Pointer(&act.smac[0]), unsafe.Pointer(&w.SrcAddr[0]), 6)
-				act.bd = C.ushort(w.BD)
+					act = (*rtL2NhAct)(&vxAct.l2nh)
+					C.memcpy(unsafe.Pointer(&act.dmac[0]), unsafe.Pointer(&w.DstAddr[0]), 6)
+					C.memcpy(unsafe.Pointer(&act.smac[0]), unsafe.Pointer(&w.SrcAddr[0]), 6)
+					act.bd = C.ushort(w.BD)
+				} else {
+					dat.ca.act_type = C.DP_SET_NEIGH_IPIP_TUN
+					l3t = (*rtL3TunAct)(getPtrOffset(unsafe.Pointer(dat),
+						C.sizeof_struct_dp_cmn_act))
+
+					ipAddr := tk.IPtonl(w.RIP)
+					l3t.rip = C.uint(ipAddr)
+					l3t.sip = C.uint(tk.IPtonl(w.SIP))
+					l3t.tid = C.uint(0)
+
+					tk.LogIt(tk.LogDebug, "l3t rip 0x%x sip 0x%x 0x%x\n", l3t.sip, l3t.rip, l3t.tid)
+
+				}
 			} else {
 				dat.ca.act_type = C.DP_SET_NEIGH_L2
 				act = (*rtL2NhAct)(getPtrOffset(unsafe.Pointer(dat),
