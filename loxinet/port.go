@@ -91,6 +91,8 @@ type PortHwInfo struct {
 	Master  string
 	Real    string
 	TunID   uint32
+	TunSrc  net.IP
+	TunDst  net.IP
 }
 
 // PortLayer3Info - layer3 information related to an interface
@@ -344,7 +346,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
 		zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
-			PortHwInfo{vMac, true, true, 9000, "", "", 0})
+			PortHwInfo{vMac, true, true, 9000, "", "", 0, nil, nil})
 	case cmn.PortBond:
 		p.L2.IsPvid = true
 		p.L2.Vid = rid + BondIDB
@@ -352,7 +354,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
 		zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
-			PortHwInfo{vMac, true, true, 9000, "", "", 0})
+			PortHwInfo{vMac, true, true, 9000, "", "", 0, nil, nil})
 	case cmn.PortWg:
 		p.L2.IsPvid = true
 		p.L2.Vid = rid + WgIDB
@@ -360,7 +362,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
 		zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
-			PortHwInfo{vMac, true, true, 9000, "", "", 0})
+			PortHwInfo{vMac, true, true, 9000, "", "", 0, nil, nil})
 	case cmn.PortVti:
 		p.L2.IsPvid = true
 		p.L2.Vid = rid + VtIDB
@@ -368,7 +370,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
 		zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
-			PortHwInfo{vMac, true, true, 9000, "", "", 0})
+			PortHwInfo{vMac, true, true, 9000, "", "", 0, nil, nil})
 	case cmn.PortVxlanBr:
 		if p.SInfo.PortReal != nil {
 			p.SInfo.PortReal.SInfo.PortOvl = p
@@ -1012,4 +1014,12 @@ func (p *Port) IsSlavePort() bool {
 		return false
 	}
 	return true
+}
+
+// IsL3TunPort - check if the port is of L3Tun type
+func (p *Port) IsL3TunPort() bool {
+	if p.SInfo.PortType&(cmn.PortVti|cmn.PortWg) != 0 {
+		return true
+	}
+	return false
 }

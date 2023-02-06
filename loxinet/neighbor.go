@@ -234,9 +234,53 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 		ne.Type &= ^NhRecursive
 		ne.tFdb = nil
 		ne.RHwMark = 0
+	} else if !port.IsL3TunPort() && ne.Type&NhRecursive != 0 ||
+		port.IsL3TunPort() && ne.Type&NhRecursive == 0 {
+		ne.Resolved = false
+		ne.Type &= ^NhRecursive
+		ne.RHwMark = 0
 	}
 
 	if ne.Resolved == true {
+
+		if port.IsL3TunPort() {
+			err, pDstNet, tDat := n.Zone.Rt.Trie4.FindTrie(port.HInfo.TunDst.String())
+			if err == 0 && pDstNet != nil {
+				switch rtn := tDat.(type) {
+				case *Neigh:
+					if rtn == nil {
+						ne.Resolved = false
+						ne.RHwMark = 0
+						return false
+					}
+				default:
+					ne.Resolved = false
+					ne.RHwMark = 0
+					return false
+				}
+				if nh, ok := tDat.(*Neigh); ok && !nh.Inactive {
+					rt := n.Zone.Rt.RtFind(*pDstNet, n.Zone.Name)
+					if rt == nil {
+						ne.Resolved = false
+						ne.RHwMark = 0
+						return false
+					}
+					if ne.RHwMark != nh.HwMark {
+						n.NeighDelAllTunEP(ne)
+						ret, _ := n.NeighAddTunEP(ne, port.HInfo.TunDst, port.HInfo.TunID, DpTunIPIP, true)
+						if ret == 0 {
+							rt.RtDepObjs = append(rt.RtDepObjs, ne)
+							ne.RHwMark = nh.HwMark
+							ne.Resolved = true
+							ne.Type |= NhRecursive
+						}
+						return true
+					}
+				}
+			}
+			return false
+		}
+
 		mac := [6]uint8{attr.HardwareAddr[0],
 			attr.HardwareAddr[1],
 			attr.HardwareAddr[2],
@@ -302,8 +346,8 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 		return NeighOifErr, errors.New("nh-oif error")
 	}
 
-	// Special case to handle IpinIP Secure VTIs
-	if port.SInfo.PortType&(cmn.PortVti|cmn.PortWg) != 0 {
+	// Special case to handle IpinIP VTIs
+	if port.IsL3TunPort() {
 		Attr.HardwareAddr, _ = net.ParseMAC("00:11:22:33:44:55")
 	}
 

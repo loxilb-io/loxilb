@@ -35,7 +35,7 @@ func TestLoxinet(t *testing.T) {
 
 	ifmac := [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x6}
 	_, err := mh.zr.Ports.PortAdd("hs0", 12, cmn.PortReal, RootZone,
-		PortHwInfo{ifmac, true, true, 1500, "", "", 0},
+		PortHwInfo{ifmac, true, true, 1500, "", "", 0, nil, nil},
 		PortLayer2Info{false, 10})
 
 	if err != nil {
@@ -49,7 +49,7 @@ func TestLoxinet(t *testing.T) {
 
 	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x7}
 	_, err = mh.zr.Ports.PortAdd("bond1", 15, cmn.PortBond, RootZone,
-		PortHwInfo{ifmac, true, true, 1500, "", "", 0},
+		PortHwInfo{ifmac, true, true, 1500, "", "", 0, nil, nil},
 		PortLayer2Info{false, 10})
 
 	if err != nil {
@@ -62,14 +62,14 @@ func TestLoxinet(t *testing.T) {
 	}
 
 	_, err = mh.zr.Ports.PortAdd("hs1", 15, cmn.PortReal, RootZone,
-		PortHwInfo{ifmac, true, true, 1500, "", "", 0},
+		PortHwInfo{ifmac, true, true, 1500, "", "", 0, nil, nil},
 		PortLayer2Info{false, 10})
 	if err != nil {
 		t.Errorf("failed to add port hs1")
 	}
 
 	_, err = mh.zr.Ports.PortAdd("hs1", 15, cmn.PortBondSif, RootZone,
-		PortHwInfo{ifmac, true, true, 1500, "bond1", "", 0},
+		PortHwInfo{ifmac, true, true, 1500, "bond1", "", 0, nil, nil},
 		PortLayer2Info{false, 10})
 	if err != nil {
 		t.Errorf("failed to add port hs1 to bond1")
@@ -77,7 +77,7 @@ func TestLoxinet(t *testing.T) {
 
 	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x8}
 	_, err = mh.zr.Ports.PortAdd("hs2", 100, cmn.PortReal, RootZone,
-		PortHwInfo{ifmac, true, true, 1500, "", "", 0},
+		PortHwInfo{ifmac, true, true, 1500, "", "", 0, nil, nil},
 		PortLayer2Info{false, 10})
 	if err != nil {
 		t.Errorf("failed to add port %s", "hs2")
@@ -85,7 +85,7 @@ func TestLoxinet(t *testing.T) {
 
 	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x8}
 	_, err = mh.zr.Ports.PortAdd("hs4", 400, cmn.PortReal, RootZone,
-		PortHwInfo{ifmac, true, true, 1500, "", "", 0},
+		PortHwInfo{ifmac, true, true, 1500, "", "", 0, nil, nil},
 		PortLayer2Info{false, 10})
 	if err != nil {
 		t.Errorf("failed to add port %s", "hs4")
@@ -93,7 +93,7 @@ func TestLoxinet(t *testing.T) {
 
 	ifmac = [6]byte{0xde, 0xdc, 0x1f, 0x62, 0x60, 0x55}
 	_, err = mh.zr.Ports.PortAdd("vxlan4", 20, cmn.PortVxlanBr, RootZone,
-		PortHwInfo{ifmac, true, true, 1500, "", "hs4", 4},
+		PortHwInfo{ifmac, true, true, 1500, "", "hs4", 4, nil, nil},
 		PortLayer2Info{false, 0})
 	if err != nil {
 		t.Errorf("failed to add port %s", "vxlan4")
@@ -101,14 +101,14 @@ func TestLoxinet(t *testing.T) {
 
 	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0xa}
 	_, err = mh.zr.Vlans.VlanAdd(100, "vlan100", RootZone, 124,
-		PortHwInfo{ifmac, true, true, 1500, "", "", 0})
+		PortHwInfo{ifmac, true, true, 1500, "", "", 0, nil, nil})
 	if err != nil {
 		t.Errorf("failed to add port %s", "vlan100")
 	}
 
 	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0xa}
 	_, err = mh.zr.Vlans.VlanAdd(4, "vlan4", RootZone, 126,
-		PortHwInfo{ifmac, true, true, 1500, "", "", 0})
+		PortHwInfo{ifmac, true, true, 1500, "", "", 0, nil, nil})
 	if err != nil {
 		t.Errorf("failed to add port %s", "vlan4")
 	}
@@ -173,7 +173,7 @@ func TestLoxinet(t *testing.T) {
 
 	ifmac = [6]byte{0x1, 0x2, 0x3, 0x4, 0x5, 0xa}
 	_, err = mh.zr.Vlans.VlanAdd(100, "vlan100", RootZone, 124,
-		PortHwInfo{ifmac, true, true, 1500, "", "", 0})
+		PortHwInfo{ifmac, true, true, 1500, "", "", 0, nil, nil})
 	if err != nil {
 		t.Errorf("failed to add port %s", "vlan100")
 	}

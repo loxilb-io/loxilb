@@ -129,6 +129,7 @@ const (
 	DpTunGre
 	DpTunGtp
 	DpTunStt
+	DpTunIPIP
 )
 
 // RouterMacDpWorkQ - work queue entry for rt-mac operation

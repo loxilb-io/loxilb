@@ -58,23 +58,27 @@ const (
 
 const (
 	// PortReal - Base port type
-	PortReal = 0x1
+	PortReal = 1 << iota
 	// PortBondSif - Bond slave port type
-	PortBondSif = 0x2
+	PortBondSif
 	// PortBond - Bond port type
-	PortBond = 0x4
+	PortBond
 	// PortVlanSif - Vlan slave port type
-	PortVlanSif = 0x8
+	PortVlanSif
 	// PortVlanBr - Vlan Br port type
-	PortVlanBr = 0x10
+	PortVlanBr
 	// PortVxlanSif - Vxlan slave port type
-	PortVxlanSif = 0x20
+	PortVxlanSif
 	// PortVxlanBr - Vxlan br port type
-	PortVxlanBr = 0x40
+	PortVxlanBr
 	// PortWg - Wireguard port type
-	PortWg = 0x80
+	PortWg
 	// PortVti - Vti port type
-	PortVti = 0x100
+	PortVti
+	// PortIPTun - IPInIP port type
+	PortIPTun
+	// PortGre - GRE port type
+	PortGre
 )
 
 // PortProp - Defines auxiliary port properties
@@ -208,6 +212,10 @@ type PortMod struct {
 	Real string
 	// TunID - tunnel info if any
 	TunID int
+	// TunSrc - tunnel source
+	TunSrc net.IP
+	// TunDst - tunnel dest
+	TunDst net.IP
 }
 
 // VlanMod - Info about a vlan

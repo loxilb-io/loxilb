@@ -309,6 +309,8 @@ func (rt *Rt) rtClearDeps() {
 			f.FdbTun.rt = nil
 			f.FdbTun.nh = nil
 			f.unReach = true
+		} else if ne, ok := obj.(*Neigh); ok {
+			ne.Type &= ^NhRecursive
 		}
 	}
 }
