@@ -1018,7 +1018,7 @@ func (p *Port) IsSlavePort() bool {
 
 // IsL3TunPort - check if the port is of L3Tun type
 func (p *Port) IsL3TunPort() bool {
-	if p.SInfo.PortType&(cmn.PortVti|cmn.PortWg) != 0 {
+	if p.SInfo.PortType&(cmn.PortVti|cmn.PortWg|cmn.PortIPTun) != 0 {
 		return true
 	}
 	return false
