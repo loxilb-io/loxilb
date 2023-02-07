@@ -109,7 +109,7 @@ type (
 	nhKey      C.struct_dp_nh_key
 	nhDat      C.struct_dp_nh_tact
 	rtL2NhAct  C.struct_dp_rt_l2nh_act
-	rtTunNhAct C.struct_dp_rt_l2vxnh_act
+	rtTunNhAct C.struct_dp_rt_tunnh_act
 	rt4Key     C.struct_dp_rtv4_key
 	rt6Key     C.struct_dp_rtv6_key
 	rtDat      C.struct_dp_rt_tact
@@ -579,7 +579,7 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 				if w.TunID != 0 {
 					dat.ca.act_type = C.DP_SET_NEIGH_VXLAN
 				} else {
-					dat.ca.act_type = C.DP_SET_NEIGH_IPIP_TUN
+					dat.ca.act_type = C.DP_SET_NEIGH_IPIP
 				}
 				tunAct = (*rtTunNhAct)(getPtrOffset(unsafe.Pointer(dat),
 					C.sizeof_struct_dp_cmn_act))
@@ -590,7 +590,7 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 				tid := ((w.TunID << 8) & 0xffffff00)
 				tunAct.l3t.tid = C.uint(tk.Htonl(tid))
 
-				tk.LogIt(tk.LogDebug, "l2t rip 0x%x sip 0x%x 0x%x\n", tunAct.l3t.sip, tunAct.l3t.rip, tunAct.l3t.tid)
+				tk.LogIt(tk.LogDebug, "rip 0x%x sip 0x%x 0x%x\n", tunAct.l3t.sip, tunAct.l3t.rip, tunAct.l3t.tid)
 
 				act = (*rtL2NhAct)(&tunAct.l2nh)
 				C.memcpy(unsafe.Pointer(&act.dmac[0]), unsafe.Pointer(&w.DstAddr[0]), 6)
