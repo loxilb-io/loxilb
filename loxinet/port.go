@@ -466,6 +466,7 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 	}
 
 	p.DP(DpRemove)
+	zone := mh.zn.GetPortZone(p.Name)
 
 	switch p.SInfo.PortType {
 	case cmn.PortVxlanBr:
@@ -476,7 +477,6 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 	case cmn.PortBond:
 	case cmn.PortWg:
 	case cmn.PortVti:
-		zone := mh.zn.GetPortZone(p.Name)
 		if zone != nil {
 			zone.Vlans.VlanDelete(p.L2.Vid)
 		}
@@ -492,6 +492,12 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 	delete(P.portOmap, p.SInfo.OsID)
 	delete(P.portSmap, name)
 	P.portImap[rid] = nil
+
+	if zone != nil {
+		zone.Rt.RtDeleteByPort(p.Name)
+		zone.Nh.NeighDeleteByPort(p.Name)
+		zone.L3.IfaDeleteAll(p.Name)
+	}
 
 	return 0, nil
 }

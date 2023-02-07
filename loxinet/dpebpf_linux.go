@@ -575,7 +575,7 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 			dat.ca.act_type = C.DP_SET_TOCP
 		} else {
 			if w.TunNh {
-				tk.LogIt(tk.LogDebug, "Setting tunNh %x\n", key.nh_num)
+				tk.LogIt(tk.LogDebug, "Setting tunNh 0x%x\n", key.nh_num)
 				if w.TunID != 0 {
 					dat.ca.act_type = C.DP_SET_NEIGH_VXLAN
 				} else {
@@ -589,8 +589,6 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 				tunAct.l3t.sip = C.uint(tk.IPtonl(w.SIP))
 				tid := ((w.TunID << 8) & 0xffffff00)
 				tunAct.l3t.tid = C.uint(tk.Htonl(tid))
-
-				tk.LogIt(tk.LogDebug, "rip 0x%x sip 0x%x 0x%x\n", tunAct.l3t.sip, tunAct.l3t.rip, tunAct.l3t.tid)
 
 				act = (*rtL2NhAct)(&tunAct.l2nh)
 				C.memcpy(unsafe.Pointer(&act.dmac[0]), unsafe.Pointer(&w.DstAddr[0]), 6)
@@ -611,7 +609,6 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 			unsafe.Pointer(key),
 			unsafe.Pointer(dat))
 		if ret != 0 {
-			tk.LogIt(tk.LogDebug, "Failed to add\n")
 			return EbpfErrNhAdd
 		}
 		return 0

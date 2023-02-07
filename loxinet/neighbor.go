@@ -42,7 +42,7 @@ const (
 // constants
 const (
 	NeighAts       = 10
-	MaxSysNeigh    = 4096
+	MaxSysNeigh    = 3 * 1024
 	MaxTunnelNeigh = 1024
 )
 
@@ -135,7 +135,8 @@ func (n *NeighH) Activate(ne *Neigh) {
 
 	ret, Sip := n.Zone.L3.IfaSelect(ne.OifPort.Name, ne.Addr, true)
 	if ret != 0 {
-		fmt.Printf("Failed to select l3 ifa select")
+		tk.LogIt(tk.LogDebug, "Failed to select l3 ifa select\n")
+		return
 	}
 
 	tk.ArpPing(ne.Addr, Sip, ne.OifPort.Name)
@@ -147,7 +148,7 @@ func (n *NeighH) Activate(ne *Neigh) {
 func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTunT, sync bool) (int, *NeighTunEp) {
 	// FIXME - Need to be able to support multiple overlays with same entry
 	port := ne.OifPort
-	if port == nil || port.SInfo.PortOvl == nil {
+	if port == nil || (port.SInfo.PortOvl == nil && !port.IsL3TunPort()) {
 		return -1, nil
 	}
 
@@ -160,7 +161,11 @@ func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTu
 	}
 	e, sIP := n.Zone.L3.IfaSelect(port.Name, rIP, false)
 	if e != 0 {
-		return -1, nil
+		if port.IsL3TunPort() {
+			sIP = port.HInfo.TunSrc
+		} else {
+			return -1, nil
+		}
 	}
 
 	tep := new(NeighTunEp)
@@ -234,11 +239,6 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 		ne.Type &= ^NhRecursive
 		ne.tFdb = nil
 		ne.RHwMark = 0
-	} else if !port.IsL3TunPort() && ne.Type&NhRecursive != 0 ||
-		port.IsL3TunPort() && ne.Type&NhRecursive == 0 {
-		ne.Resolved = false
-		ne.Type &= ^NhRecursive
-		ne.RHwMark = 0
 	}
 
 	if ne.Resolved == true {
@@ -265,12 +265,12 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 						ne.RHwMark = 0
 						return false
 					}
-					if ne.RHwMark != nh.HwMark {
+					if ne.RHwMark == 0 {
 						n.NeighDelAllTunEP(ne)
-						ret, _ := n.NeighAddTunEP(ne, port.HInfo.TunDst, port.HInfo.TunID, DpTunIPIP, true)
+						ret, tep := n.NeighAddTunEP(ne, port.HInfo.TunDst, port.HInfo.TunID, DpTunIPIP, true)
 						if ret == 0 {
 							rt.RtDepObjs = append(rt.RtDepObjs, ne)
-							ne.RHwMark = nh.HwMark
+							ne.RHwMark = tep.HwMark
 							ne.Resolved = true
 							ne.Type |= NhRecursive
 						}
@@ -515,6 +515,14 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 	return 0, nil
 }
 
+func (n *NeighH) NeighDeleteByPort(port string) {
+	for _, ne := range n.NeighMap {
+		if ne.OifPort.Name == port {
+			n.NeighDelete(ne.Addr, ne.Key.Zone)
+		}
+	}
+}
+
 // NeighFind - Find a neighbor entry
 func (n *NeighH) NeighFind(Addr net.IP, Zone string) (*Neigh, int) {
 	key := NeighKey{Addr.String(), Zone}
@@ -636,6 +644,8 @@ func (ne *Neigh) DP(work DpWorkT) int {
 	if ne.Type&NhRecursive == NhRecursive {
 		f := ne.tFdb
 		if f != nil && f.FdbTun.ep != nil {
+			neighWq.NNextHopNum = ne.RHwMark
+		} else if ne.OifPort != nil && ne.OifPort.IsL3TunPort() {
 			neighWq.NNextHopNum = ne.RHwMark
 		} else {
 			neighWq.Resolved = false
