@@ -1372,7 +1372,7 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, desc string, args epHos
 	ep.hostName = hostName
 	ep.desc = desc
 	ep.opts = args
-	ep.inactive = true
+	
 	if apiCall != true {
 		ep.ruleCount = 1
 	}
