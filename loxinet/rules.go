@@ -17,6 +17,7 @@
 package loxinet
 
 import (
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,7 +25,7 @@ import (
 	"sort"
 	"sync"
 	"time"
-
+	"io/ioutil"
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 	probing "github.com/prometheus-community/pro-bing"
@@ -164,6 +165,7 @@ const (
 	HostProbeConnectUdp  = "connect-udp"
 	HostProbeConnectSctp = "connect-sctp"
 	HostProbeHttp        = "http"
+	HostProbeHttps       = "https"
 	HostProbeNone        = "none"
 )
 
@@ -288,6 +290,7 @@ type RuleH struct {
 	wg     sync.WaitGroup
 	lepHID uint8
 	epMx   sync.RWMutex
+	rootCAPool *x509.CertPool
 }
 
 // RulesInit - initialize the Rules subsystem
@@ -314,7 +317,20 @@ func RulesInit(zone *Zone) *RuleH {
 		nRh.epCs[i].hChk = time.NewTicker(EndPointCheckerDuration * time.Second)
 		go epTicker(nRh, i)
 	}
-	nRh.wg.Add(MaxEndPointCheckers)
+	nRh.rootCAPool = x509.NewCertPool()
+	rootCACertile := "/opt/loxilb/cert/rootCACert.pem"
+	if exists := FileExists(rootCACertile); exists {
+		
+		rootCA, err := ioutil.ReadFile(rootCACertile)
+		if err != nil {
+			tk.LogIt(tk.LogError,"RootCA cert load failed : %v\n", err)
+		} else {
+			nRh.rootCAPool.AppendCertsFromPEM(rootCA)
+			tk.LogIt(tk.LogError, "RootCA cert loaded\n")
+		}
+    }
+
+	nRh.wg.Add(MaxEndPointCheckers) 
 
 	return nRh
 }
@@ -1300,6 +1316,7 @@ func validateEpHostOpts(hostName string, args epHostOpts) (int, error) {
 		args.probeType != HostProbeConnectUdp &&
 		args.probeType != HostProbeConnectSctp &&
 		args.probeType != HostProbeHttp &&
+		args.probeType != HostProbeHttps &&
 		args.probeType != HostProbeNone {
 		return RuleArgsErr, errors.New("host-args unknown probe type")
 	}
@@ -1310,7 +1327,7 @@ func validateEpHostOpts(hostName string, args epHostOpts) (int, error) {
 		args.probePort == 0 {
 		return RuleArgsErr, errors.New("host-args unknown probe port")
 	}
-
+	
 	return 0, nil
 }
 
@@ -1327,7 +1344,20 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, desc string, args epHos
 		tk.LogIt(tk.LogError, "Failed to add EP :%s\n", err)
 		return RuleArgsErr, err
 	}
-
+	// Load CA cert into pool
+	if args.probeType == HostProbeHttps {
+		rootCACertile := "/opt/loxilb/cert/"+hostName+"/rootCACert.pem"
+		if exists := FileExists(rootCACertile); exists {
+			rootCA, err := ioutil.ReadFile(rootCACertile)
+			if err != nil {
+				tk.LogIt(tk.LogError,"RootCA cert load failed : %v", err)
+				return RuleArgsErr, errors.New("rootCA cert load failed\n")
+			} else {
+				R.rootCAPool.AppendCertsFromPEM(rootCA)
+				tk.LogIt(tk.LogDebug, "RootCA cert loaded for %s\n",hostName)
+			}
+	    }
+	}
 	ep := R.epMap[hostName]
 	if ep != nil {
 		if apiCall {
@@ -1342,6 +1372,7 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, desc string, args epHos
 	ep.hostName = hostName
 	ep.desc = desc
 	ep.opts = args
+	
 	if apiCall != true {
 		ep.ruleCount = 1
 	}
@@ -1408,7 +1439,7 @@ func (ep *epHost) transitionState(currState bool, inactThr int) {
 	}
 }
 
-func (ep *epHost) epCheckNow() {
+func (R *RuleH) epCheckNow(ep *epHost) {
 	var sType string
 
 	sName := fmt.Sprintf("%s:%d", ep.hostName, ep.opts.probePort)
@@ -1477,6 +1508,17 @@ func (ep *epHost) epCheckNow() {
 		urlStr := fmt.Sprintf("http://%s:%d/%s", addr.String(), ep.opts.probePort, ep.opts.probeReq)
 		sOk := tk.HTTPProber(urlStr)
 		ep.transitionState(sOk, ep.opts.inActTryThr)
+	}  else if ep.opts.probeType == HostProbeHttps {
+		var addr net.IP
+		if addr = net.ParseIP(ep.hostName); addr == nil {
+			// This is already verified
+			return
+		}
+
+		urlStr := fmt.Sprintf("https://%s:%d/%s", addr.String(), ep.opts.probePort, ep.opts.probeReq)
+		sOk := HTTPSProber(urlStr, R.rootCAPool, ep.opts.probeResp)
+		//tk.LogIt(tk.LogDebug, "[PROBE] https ep - URL[%s:%s] Resp[%s] %v\n", ep.hostName, urlStr, ep.opts.probeResp, sOk)
+		ep.transitionState(sOk, ep.opts.inActTryThr)
 	} else {
 		// TODO
 		ep.inactive = false
@@ -1537,7 +1579,7 @@ func epTicker(R *RuleH, helper int) {
 
 			begin := time.Now()
 			for _, eph := range epHosts {
-				eph.epCheckNow()
+				R.epCheckNow(eph)
 				eph.sT = time.Now()
 				if time.Duration(eph.sT.Sub(begin).Seconds()) >= EndPointCheckerDuration {
 					break

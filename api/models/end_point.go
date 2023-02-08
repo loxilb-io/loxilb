@@ -32,8 +32,11 @@ type EndPoint struct {
 	// The l4port to probe on
 	ProbePort int64 `json:"probePort,omitempty"`
 
-	// URI for http probes
-	ProbeReqURL string `json:"probeReqUrl,omitempty"`
+	// URI for http/https probes
+	ProbeReq string `json:"probeReq,omitempty"`
+
+	// Response for http/https probes
+	ProbeResp string `json:"probeResp,omitempty"`
 
 	// Type of probe used
 	ProbeType string `json:"probeType,omitempty"`

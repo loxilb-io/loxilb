@@ -70,7 +70,7 @@ func (o *GetConfigEndpointAll) ServeHTTP(rw http.ResponseWriter, r *http.Request
 type GetConfigEndpointAllOKBody struct {
 
 	// attr
-	Attr []*models.EndPointState `json:"Attr"`
+	Attr []*models.EndPointGetEntry `json:"Attr"`
 }
 
 // Validate validates this get config endpoint all o k body

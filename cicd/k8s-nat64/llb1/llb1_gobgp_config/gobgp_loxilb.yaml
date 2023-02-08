@@ -8,6 +8,7 @@ global:
         - set-next-hop-self
         - drop-vip
         - set-next-hop-vip
+        - set-next-hop-vip6
 neighbors:
   - config:
       neighbor-address: 192.168.59.211
@@ -24,6 +25,10 @@ neighbors:
   - config:
       neighbor-address: 192.168.58.2
       peer-as: 65001
+  - config:
+      neighbor-address: 2001::2
+      peer-as: 65001
+
 defined-sets:
   prefix-sets:
       prefix-set-name: vip
@@ -39,6 +44,9 @@ defined-sets:
     - neighbor-set-name: ext
       neighbor-info-list:
         - 192.168.58.2
+    - neighbor-set-name: ext6
+      neighbor-info-list:
+        - 2001::2
 policy-definitions:
   - name: set-next-hop-self
     statements:
@@ -68,3 +76,11 @@ policy-definitions:
         actions:
           bgp-actions:
             set-next-hop: 192.168.58.150
+  - name: set-next-hop-vip6
+    statements:
+      - conditions:
+          match-neighbor-set:
+            neighbor-set: ext6
+        actions:
+          bgp-actions:
+            set-next-hop: 2001::150

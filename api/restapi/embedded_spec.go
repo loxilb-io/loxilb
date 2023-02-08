@@ -317,7 +317,7 @@ func init() {
                 "Attr": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/EndPointState"
+                    "$ref": "#/definitions/EndPointGetEntry"
                   }
                 }
               }
@@ -3136,8 +3136,12 @@ func init() {
           "description": "The l4port to probe on",
           "type": "integer"
         },
-        "probeReqUrl": {
-          "description": "URI for http probes",
+        "probeReq": {
+          "description": "URI for http/https probes",
+          "type": "string"
+        },
+        "probeResp": {
+          "description": "Response for http/https probes",
           "type": "string"
         },
         "probeType": {
@@ -3146,7 +3150,7 @@ func init() {
         }
       }
     },
-    "EndPointState": {
+    "EndPointGetEntry": {
       "type": "object",
       "properties": {
         "avgDelay": {
@@ -3184,6 +3188,14 @@ func init() {
         "probePort": {
           "description": "The l4port to probe on",
           "type": "integer"
+        },
+        "probeReq": {
+          "description": "URI for http/https probes",
+          "type": "string"
+        },
+        "probeResp": {
+          "description": "Response for http/https probes",
+          "type": "string"
         },
         "probeType": {
           "description": "Type of probe used",
@@ -4370,7 +4382,7 @@ func init() {
                 "Attr": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/EndPointState"
+                    "$ref": "#/definitions/EndPointGetEntry"
                   }
                 }
               }
@@ -7189,8 +7201,12 @@ func init() {
           "description": "The l4port to probe on",
           "type": "integer"
         },
-        "probeReqUrl": {
-          "description": "URI for http probes",
+        "probeReq": {
+          "description": "URI for http/https probes",
+          "type": "string"
+        },
+        "probeResp": {
+          "description": "Response for http/https probes",
           "type": "string"
         },
         "probeType": {
@@ -7199,7 +7215,7 @@ func init() {
         }
       }
     },
-    "EndPointState": {
+    "EndPointGetEntry": {
       "type": "object",
       "properties": {
         "avgDelay": {
@@ -7237,6 +7253,14 @@ func init() {
         "probePort": {
           "description": "The l4port to probe on",
           "type": "integer"
+        },
+        "probeReq": {
+          "description": "URI for http/https probes",
+          "type": "string"
+        },
+        "probeResp": {
+          "description": "Response for http/https probes",
+          "type": "string"
         },
         "probeType": {
           "description": "Type of probe used",

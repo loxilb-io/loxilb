@@ -9,36 +9,43 @@ global:
         - drop-vip
         - set-next-hop-vip
 neighbors:
-    - config:
-        neighbor-address: 192.168.59.211
-        peer-as: 64512
-    - config:
-        neighbor-address: 192.168.59.212
-        peer-as: 64512
-    - config:
-        neighbor-address: 192.168.59.213
-        peer-as: 64512
-    - config:
-        neighbor-address: 192.168.59.214
-        peer-as: 64512
-    - config:
-        neighbor-address: 192.168.58.2
-        peer-as: 65001
+  - config:
+      neighbor-address: 192.168.59.211
+      peer-as: 64512
+  - config:
+      neighbor-address: 192.168.59.212
+      peer-as: 64512
+  - config:
+      neighbor-address: 192.168.59.213
+      peer-as: 64512
+  - config:
+      neighbor-address: 192.168.59.214
+      peer-as: 64512
+  - config:
+      neighbor-address: 192.168.58.2
+      peer-as: 65001
+  - config:
+      neighbor-address: 2001::2
+      peer-as: 65001
+
 defined-sets:
-    prefix-sets:
+  prefix-sets:
       prefix-set-name: vip
       prefix-list:
           - ip-prefix: 192.168.58.150/32
-    neighbor-sets:
-      - neighbor-set-name: ext
-        neighbor-info-list: 
-            - 192.168.58.2
-      - neighbor-set-name: int
-        neighbor-info-list:
-            - 192.168.59.211
-            - 192.168.59.212
-            - 192.168.59.213
-            - 192.168.59.214
+  neighbor-sets:
+    - neighbor-set-name: int
+      neighbor-info-list:
+        - 192.168.59.211
+        - 192.168.59.212
+        - 192.168.59.213
+        - 192.168.59.214
+    - neighbor-set-name: ext
+      neighbor-info-list:
+        - 192.168.58.2
+    - neighbor-set-name: ext6
+      neighbor-info-list:
+        - 2001::2
 policy-definitions:
    - name: set-next-hop-self
      statements:
@@ -68,3 +75,11 @@ policy-definitions:
            actions:
                bgp-actions:
                   set-next-hop: 192.168.58.150
+   - name: set-next-hop-vip6
+     statements:
+      - conditions:
+          match-neighbor-set:
+            neighbor-set: ext6
+        actions:
+          bgp-actions:
+            set-next-hop: 2001::150
