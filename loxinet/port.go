@@ -112,6 +112,7 @@ type PortSwInfo struct {
 	PortActive bool
 	PortReal   *Port
 	PortOvl    *Port
+	SessMark   int
 	BpfLoaded  bool
 }
 
@@ -209,7 +210,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		p.HInfo.Link = hwi.Link
 		p.HInfo.State = hwi.State
 		p.HInfo.Mtu = hwi.Mtu
-		if bytes.Equal(hwi.MacAddr[:], p.HInfo.MacAddr[:]) == false {
+		if !p.IsL3TunPort() && bytes.Equal(hwi.MacAddr[:], p.HInfo.MacAddr[:]) == false {
 			p.HInfo.MacAddr = hwi.MacAddr
 			p.DP(DpCreate)
 		}
@@ -379,6 +380,13 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		}
 		p.L2.IsPvid = true
 		p.L2.Vid = int(p.HInfo.TunID)
+	case cmn.PortIPTun:
+		p.SInfo.SessMark, err = zn.Sess.HwMark.GetCounter()
+		if err != nil {
+			tk.LogIt(tk.LogError, "port add - %s sess-alloc fail\n", name)
+			p.SInfo.SessMark = 0
+		}
+		p.L2 = l2i
 	default:
 		tk.LogIt(tk.LogDebug, "port add - %s isPvid %v\n", name, p.L2.IsPvid)
 		p.L2 = l2i
@@ -480,7 +488,8 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 		if zone != nil {
 			zone.Vlans.VlanDelete(p.L2.Vid)
 		}
-		break
+	case cmn.PortIPTun:
+		zone.Sess.HwMark.PutCounter(p.SInfo.SessMark)
 	}
 
 	p.SInfo.PortReal = nil
@@ -877,6 +886,24 @@ func (p *Port) DP(work DpWorkT) int {
 	zn, zoneNum := mh.zn.Zonefind(p.Zone)
 	if zoneNum < 0 {
 		return -1
+	}
+
+	// If it is a IP-in-IP tunnel, we add a session entry
+	// to decapsulate the tunnel
+	if p.SInfo.PortType == cmn.PortIPTun {
+		ipts := new(UlClDpWorkQ)
+		ipts.Work = work
+		ipts.MDip = p.HInfo.TunDst
+		ipts.MSip = p.HInfo.TunSrc
+		ipts.mTeID = 1
+		ipts.Zone = zoneNum
+		ipts.HwMark = p.SInfo.SessMark
+		ipts.Type = DpTunIPIP
+		ipts.Qfi = 0
+		ipts.TTeID = 0
+
+		mh.dp.ToDpCh <- ipts
+		return 0
 	}
 
 	// When a vxlan interface is created

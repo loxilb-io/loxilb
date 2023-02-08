@@ -1190,7 +1190,12 @@ func (e *DpEbpfH) DpUlClMod(w *UlClDpWorkQ) int {
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_sess_tact)
 
 		if key.teid != 0 {
-			dat.ca.act_type = C.DP_SET_RM_GTP
+			if w.Type == DpTunIPIP {
+				dat.ca.act_type = C.DP_SET_RM_IPIP
+			} else {
+				dat.ca.act_type = C.DP_SET_RM_GTP
+			}
+
 			dat.ca.cidx = C.uint(w.HwMark)
 			dat.qfi = C.uchar(w.Qfi)
 		} else {

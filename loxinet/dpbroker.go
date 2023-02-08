@@ -332,6 +332,7 @@ type UlClDpWorkQ struct {
 	TDip   net.IP
 	TSip   net.IP
 	TTeID  uint32
+	Type   DpTunT
 }
 
 // DpSyncOpT - Sync Operation type
