@@ -1439,7 +1439,7 @@ func (ep *epHost) transitionState(currState bool, inactThr int) {
 	}
 }
 
-func (ep *epHost) epCheckNow(R *RuleH) {
+func (R *RuleH) epCheckNow(ep *epHost) {
 	var sType string
 
 	sName := fmt.Sprintf("%s:%d", ep.hostName, ep.opts.probePort)
@@ -1579,7 +1579,7 @@ func epTicker(R *RuleH, helper int) {
 
 			begin := time.Now()
 			for _, eph := range epHosts {
-				eph.epCheckNow(R)
+				R.epCheckNow(eph)
 				eph.sT = time.Now()
 				if time.Duration(eph.sT.Sub(begin).Seconds()) >= EndPointCheckerDuration {
 					break
