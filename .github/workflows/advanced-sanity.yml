@@ -114,4 +114,10 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - run: |
+             cd cicd/tcplbhash/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
       - run: echo ${{ github.event.inputs.userInput }}
