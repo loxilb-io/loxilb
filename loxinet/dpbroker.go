@@ -129,6 +129,7 @@ const (
 	DpTunGre
 	DpTunGtp
 	DpTunStt
+	DpTunIPIP
 )
 
 // RouterMacDpWorkQ - work queue entry for rt-mac operation
@@ -149,6 +150,7 @@ type NextHopDpWorkQ struct {
 	Status      *DpStatusT
 	TunNh       bool
 	TunID       uint32
+	TunType     DpTunT
 	RIP         net.IP
 	SIP         net.IP
 	NNextHopNum int
@@ -331,6 +333,7 @@ type UlClDpWorkQ struct {
 	TDip   net.IP
 	TSip   net.IP
 	TTeID  uint32
+	Type   DpTunT
 }
 
 // DpSyncOpT - Sync Operation type

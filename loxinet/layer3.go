@@ -203,6 +203,26 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 	return L3AddrErr, errors.New("no such ifa")
 }
 
+// IfaDeleteAll - Deletes all interface IP address (primary or secondary) and de-associate from Obj
+// Obj can be anything but usually it is the name of a valid interface
+func (l3 *L3H) IfaDeleteAll(Obj string) (int, error) {
+
+	key := IfaKey{Obj}
+	ifa := l3.IfaMap[key]
+
+	if ifa != nil {
+		for _, ifaEnt := range ifa.Ifas {
+			ones, _ := ifaEnt.IfaNet.Mask.Size()
+			cidr := fmt.Sprintf("%s/%d", ifaEnt.IfaAddr.String(), ones)
+			l3.IfaDelete(Obj, cidr)
+		}
+		ifa.Ifas = nil
+		delete(l3.IfaMap, key)
+	}
+
+	return 0, nil
+}
+
 // IfaSelect - Given any ip address, select optimal ip address from Obj's ifa list
 // This is useful to determine source ip address when sending traffic
 // to the given ip address

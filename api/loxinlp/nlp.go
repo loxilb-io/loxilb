@@ -785,6 +785,8 @@ func ModLink(link nlp.Link, add bool) int {
 	real := ""
 	pType := cmn.PortReal
 	tunId := 0
+	tunSrc := net.IPv4zero
+	tunDst := net.IPv4zero
 
 	if strings.Contains(name, "ipsec") || strings.Contains(name, "vti") {
 		pType = cmn.PortVti
@@ -805,6 +807,19 @@ func ModLink(link nlp.Link, add bool) int {
 	} else if _, ok := link.(*nlp.Bond); ok {
 		pType = cmn.PortBond
 		tk.LogIt(tk.LogInfo, "[NLP] Bond %v, %s\n", name, mod)
+	} else if iptun, ok := link.(*nlp.Iptun); ok {
+		pType = cmn.PortIPTun
+		if iptun.Remote == nil || iptun.Local == nil {
+			return -1
+		}
+
+		if iptun.Remote.IsUnspecified() || iptun.Local.IsUnspecified() {
+			return -1
+		}
+		tunId = 1 // Just needed internally
+		tunDst = iptun.Remote
+		tunSrc = iptun.Local
+		tk.LogIt(tk.LogInfo, "[NLP] IPTun %v (%s:%s), %s\n", name, tunSrc.String(), tunDst.String(), mod)
 	} else if master != "" {
 		pType = cmn.PortBondSif
 	}
@@ -812,7 +827,7 @@ func ModLink(link nlp.Link, add bool) int {
 	if add {
 		ret, err = hooks.NetPortAdd(&cmn.PortMod{Dev: name, LinkIndex: idx, Ptype: pType, MacAddr: ifMac,
 			Link: linkState, State: state, Mtu: mtu, Master: master, Real: real,
-			TunID: tunId})
+			TunID: tunId, TunDst: tunDst, TunSrc: tunSrc})
 		if err != nil {
 			tk.LogIt(tk.LogError, "[NLP] Port %v, %v, %v, %v add failed\n", name, ifMac, state, mtu)
 			fmt.Println(err)

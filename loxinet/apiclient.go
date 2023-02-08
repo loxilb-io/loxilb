@@ -75,7 +75,7 @@ func (*NetAPIStruct) NetPortAdd(pm *cmn.PortMod) (int, error) {
 
 	ret, err := mh.zr.Ports.PortAdd(pm.Dev, pm.LinkIndex, pm.Ptype, RootZone,
 		PortHwInfo{pm.MacAddr, pm.Link, pm.State, pm.Mtu, pm.Master, pm.Real,
-			uint32(pm.TunID)}, PortLayer2Info{false, 0})
+			uint32(pm.TunID), pm.TunSrc, pm.TunDst}, PortLayer2Info{false, 0})
 
 	return ret, err
 }
@@ -104,7 +104,7 @@ func (*NetAPIStruct) NetVlanAdd(vm *cmn.VlanMod) (int, error) {
 	defer mh.mtx.Unlock()
 
 	ret, err := mh.zr.Vlans.VlanAdd(vm.Vid, vm.Dev, RootZone, vm.LinkIndex,
-		PortHwInfo{vm.MacAddr, vm.Link, vm.State, vm.Mtu, "", "", vm.TunID})
+		PortHwInfo{vm.MacAddr, vm.Link, vm.State, vm.Mtu, "", "", vm.TunID, nil, nil})
 	if ret == VlanExistsErr {
 		ret = 0
 	}

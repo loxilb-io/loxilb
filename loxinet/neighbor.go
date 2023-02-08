@@ -42,7 +42,7 @@ const (
 // constants
 const (
 	NeighAts       = 10
-	MaxSysNeigh    = 4096
+	MaxSysNeigh    = 3 * 1024
 	MaxTunnelNeigh = 1024
 )
 
@@ -90,6 +90,7 @@ type Neigh struct {
 	Resolved bool
 	HwMark   int
 	RHwMark  int
+	RecNh    *Neigh
 	tFdb     *FdbEnt
 	TunEps   []*NeighTunEp
 	Type     NhType
@@ -135,7 +136,8 @@ func (n *NeighH) Activate(ne *Neigh) {
 
 	ret, Sip := n.Zone.L3.IfaSelect(ne.OifPort.Name, ne.Addr, true)
 	if ret != 0 {
-		fmt.Printf("Failed to select l3 ifa select")
+		tk.LogIt(tk.LogDebug, "Failed to select l3 ifa select\n")
+		return
 	}
 
 	tk.ArpPing(ne.Addr, Sip, ne.OifPort.Name)
@@ -144,10 +146,10 @@ func (n *NeighH) Activate(ne *Neigh) {
 }
 
 // NeighAddTunEP - Add tun-ep to a neighbor
-func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTunT, sync bool) (int, *NeighTunEp) {
+func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, sIP net.IP, tunID uint32, tunType DpTunT, sync bool) (int, *NeighTunEp) {
 	// FIXME - Need to be able to support multiple overlays with same entry
 	port := ne.OifPort
-	if port == nil || port.SInfo.PortOvl == nil {
+	if port == nil || (port.SInfo.PortOvl == nil && tunType != DpTunIPIP) {
 		return -1, nil
 	}
 
@@ -158,9 +160,13 @@ func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTu
 			return 0, tep
 		}
 	}
-	e, sIP := n.Zone.L3.IfaSelect(port.Name, rIP, false)
-	if e != 0 {
-		return -1, nil
+	if sIP == nil {
+		e := 0
+		e, sIP = n.Zone.L3.IfaSelect(port.Name, rIP, false)
+		if e != 0 {
+			tk.LogIt(tk.LogError, "%s:ifa select error\n", port.Name)
+			return -1, nil
+		}
 	}
 
 	tep := new(NeighTunEp)
@@ -237,6 +243,46 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 	}
 
 	if ne.Resolved == true {
+
+		if port.IsL3TunPort() {
+			err, pDstNet, tDat := n.Zone.Rt.Trie4.FindTrie(port.HInfo.TunDst.String())
+			if err == 0 && pDstNet != nil {
+				switch rtn := tDat.(type) {
+				case *Neigh:
+					if rtn == nil {
+						ne.Resolved = false
+						ne.RHwMark = 0
+						return false
+					}
+				default:
+					ne.Resolved = false
+					ne.RHwMark = 0
+					return false
+				}
+				if nh, ok := tDat.(*Neigh); ok && !nh.Inactive {
+					rt := n.Zone.Rt.RtFind(*pDstNet, n.Zone.Name)
+					if rt == nil {
+						ne.Resolved = false
+						ne.RHwMark = 0
+						return false
+					}
+					if ne.RHwMark == 0 || ne.RecNh == nil || ne.RecNh != nh {
+						tk.LogIt(tk.LogDebug, "IPTun-NH for %s:%s\n", port.HInfo.TunDst.String(), nh.Key.NhString)
+						ret, tep := n.NeighAddTunEP(nh, port.HInfo.TunDst, port.HInfo.TunSrc, port.HInfo.TunID, DpTunIPIP, true)
+						if ret == 0 {
+							rt.RtDepObjs = append(rt.RtDepObjs, nh)
+							ne.RHwMark = tep.HwMark
+							ne.Resolved = true
+							ne.RecNh = nh
+							ne.Type |= NhRecursive
+						}
+						return true
+					}
+				}
+			}
+			return false
+		}
+
 		mac := [6]uint8{attr.HardwareAddr[0],
 			attr.HardwareAddr[1],
 			attr.HardwareAddr[2],
@@ -302,8 +348,8 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 		return NeighOifErr, errors.New("nh-oif error")
 	}
 
-	// Special case to handle IpinIP Secure VTIs
-	if port.SInfo.PortType&(cmn.PortVti|cmn.PortWg) != 0 {
+	// Special case to handle IpinIP VTIs
+	if port.IsL3TunPort() {
 		Attr.HardwareAddr, _ = net.ParseMAC("00:11:22:33:44:55")
 	}
 
@@ -471,6 +517,14 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 	return 0, nil
 }
 
+func (n *NeighH) NeighDeleteByPort(port string) {
+	for _, ne := range n.NeighMap {
+		if ne.OifPort.Name == port {
+			n.NeighDelete(ne.Addr, ne.Key.Zone)
+		}
+	}
+}
+
 // NeighFind - Find a neighbor entry
 func (n *NeighH) NeighFind(Addr net.IP, Zone string) (*Neigh, int) {
 	key := NeighKey{Addr.String(), Zone}
@@ -593,6 +647,8 @@ func (ne *Neigh) DP(work DpWorkT) int {
 		f := ne.tFdb
 		if f != nil && f.FdbTun.ep != nil {
 			neighWq.NNextHopNum = ne.RHwMark
+		} else if ne.OifPort != nil && ne.OifPort.IsL3TunPort() {
+			neighWq.NNextHopNum = ne.RHwMark
 		} else {
 			neighWq.Resolved = false
 		}
@@ -636,17 +692,20 @@ func (tep *NeighTunEp) DP(work DpWorkT) int {
 	neighWq.SIP = tep.sIP
 	neighWq.TunNh = true
 	neighWq.TunID = tep.tunID
+	neighWq.TunType = tep.tunType
 
-	for i := 0; i < 6; i++ {
-		neighWq.DstAddr[i] = uint8(ne.Attr.HardwareAddr[i])
-	}
-
-	if ne.OifPort != nil {
+	if tep.tunID != 0 || tep.tunType == DpTunIPIP {
 		for i := 0; i < 6; i++ {
-			neighWq.SrcAddr[i] = uint8(ne.OifPort.HInfo.MacAddr[i])
+			neighWq.DstAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 		}
-		neighWq.BD = ne.OifPort.L2.Vid
 
+		if ne.OifPort != nil {
+			for i := 0; i < 6; i++ {
+				neighWq.SrcAddr[i] = uint8(ne.OifPort.HInfo.MacAddr[i])
+			}
+			neighWq.BD = ne.OifPort.L2.Vid
+
+		}
 	}
 
 	mh.dp.ToDpCh <- neighWq

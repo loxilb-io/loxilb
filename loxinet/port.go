@@ -91,6 +91,8 @@ type PortHwInfo struct {
 	Master  string
 	Real    string
 	TunID   uint32
+	TunSrc  net.IP
+	TunDst  net.IP
 }
 
 // PortLayer3Info - layer3 information related to an interface
@@ -110,6 +112,7 @@ type PortSwInfo struct {
 	PortActive bool
 	PortReal   *Port
 	PortOvl    *Port
+	SessMark   int
 	BpfLoaded  bool
 }
 
@@ -207,7 +210,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		p.HInfo.Link = hwi.Link
 		p.HInfo.State = hwi.State
 		p.HInfo.Mtu = hwi.Mtu
-		if bytes.Equal(hwi.MacAddr[:], p.HInfo.MacAddr[:]) == false {
+		if !p.IsL3TunPort() && bytes.Equal(hwi.MacAddr[:], p.HInfo.MacAddr[:]) == false {
 			p.HInfo.MacAddr = hwi.MacAddr
 			p.DP(DpCreate)
 		}
@@ -344,7 +347,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
 		zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
-			PortHwInfo{vMac, true, true, 9000, "", "", 0})
+			PortHwInfo{vMac, true, true, 9000, "", "", 0, nil, nil})
 	case cmn.PortBond:
 		p.L2.IsPvid = true
 		p.L2.Vid = rid + BondIDB
@@ -352,7 +355,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
 		zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
-			PortHwInfo{vMac, true, true, 9000, "", "", 0})
+			PortHwInfo{vMac, true, true, 9000, "", "", 0, nil, nil})
 	case cmn.PortWg:
 		p.L2.IsPvid = true
 		p.L2.Vid = rid + WgIDB
@@ -360,7 +363,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
 		zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
-			PortHwInfo{vMac, true, true, 9000, "", "", 0})
+			PortHwInfo{vMac, true, true, 9000, "", "", 0, nil, nil})
 	case cmn.PortVti:
 		p.L2.IsPvid = true
 		p.L2.Vid = rid + VtIDB
@@ -368,7 +371,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
 		zn.Vlans.VlanAdd(p.L2.Vid, vstr, zone, -1,
-			PortHwInfo{vMac, true, true, 9000, "", "", 0})
+			PortHwInfo{vMac, true, true, 9000, "", "", 0, nil, nil})
 	case cmn.PortVxlanBr:
 		if p.SInfo.PortReal != nil {
 			p.SInfo.PortReal.SInfo.PortOvl = p
@@ -377,6 +380,13 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		}
 		p.L2.IsPvid = true
 		p.L2.Vid = int(p.HInfo.TunID)
+	case cmn.PortIPTun:
+		p.SInfo.SessMark, err = zn.Sess.HwMark.GetCounter()
+		if err != nil {
+			tk.LogIt(tk.LogError, "port add - %s sess-alloc fail\n", name)
+			p.SInfo.SessMark = 0
+		}
+		p.L2 = l2i
 	default:
 		tk.LogIt(tk.LogDebug, "port add - %s isPvid %v\n", name, p.L2.IsPvid)
 		p.L2 = l2i
@@ -464,6 +474,7 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 	}
 
 	p.DP(DpRemove)
+	zone := mh.zn.GetPortZone(p.Name)
 
 	switch p.SInfo.PortType {
 	case cmn.PortVxlanBr:
@@ -474,11 +485,11 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 	case cmn.PortBond:
 	case cmn.PortWg:
 	case cmn.PortVti:
-		zone := mh.zn.GetPortZone(p.Name)
 		if zone != nil {
 			zone.Vlans.VlanDelete(p.L2.Vid)
 		}
-		break
+	case cmn.PortIPTun:
+		zone.Sess.HwMark.PutCounter(p.SInfo.SessMark)
 	}
 
 	p.SInfo.PortReal = nil
@@ -490,6 +501,12 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 	delete(P.portOmap, p.SInfo.OsID)
 	delete(P.portSmap, name)
 	P.portImap[rid] = nil
+
+	if zone != nil {
+		zone.Rt.RtDeleteByPort(p.Name)
+		zone.Nh.NeighDeleteByPort(p.Name)
+		zone.L3.IfaDeleteAll(p.Name)
+	}
 
 	return 0, nil
 }
@@ -871,6 +888,24 @@ func (p *Port) DP(work DpWorkT) int {
 		return -1
 	}
 
+	// If it is a IP-in-IP tunnel, we add a session entry
+	// to decapsulate the tunnel
+	if p.SInfo.PortType == cmn.PortIPTun {
+		ipts := new(UlClDpWorkQ)
+		ipts.Work = work
+		ipts.MDip = p.HInfo.TunSrc
+		ipts.MSip = p.HInfo.TunDst
+		ipts.mTeID = 0
+		ipts.Zone = zoneNum
+		ipts.HwMark = p.SInfo.SessMark
+		ipts.Type = DpTunIPIP
+		ipts.Qfi = 0
+		ipts.TTeID = 0
+
+		mh.dp.ToDpCh <- ipts
+		return 0
+	}
+
 	// When a vxlan interface is created
 	if p.SInfo.PortType == cmn.PortVxlanBr {
 		// Do nothing
@@ -1012,4 +1047,12 @@ func (p *Port) IsSlavePort() bool {
 		return false
 	}
 	return true
+}
+
+// IsL3TunPort - check if the port is of L3Tun type
+func (p *Port) IsL3TunPort() bool {
+	if p.SInfo.PortType&(cmn.PortVti|cmn.PortWg|cmn.PortIPTun) != 0 {
+		return true
+	}
+	return false
 }

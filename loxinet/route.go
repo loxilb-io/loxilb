@@ -309,6 +309,10 @@ func (rt *Rt) rtClearDeps() {
 			f.FdbTun.rt = nil
 			f.FdbTun.nh = nil
 			f.unReach = true
+		} else if ne, ok := obj.(*Neigh); ok {
+			ne.Type &= ^NhRecursive
+			ne.RHwMark = 0
+			ne.Resolved = false
 		}
 	}
 }
@@ -357,6 +361,25 @@ func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 
 	tk.LogIt(tk.LogDebug, "rt deleted - %s:%s\n", Dst.String(), Zone)
 
+	return 0, nil
+}
+
+// RtDeleteByPort - Delete a route which has specified port association
+func (r *RtH) RtDeleteByPort(port string) (int, error) {
+	for _, rte := range r.RtMap {
+		if rte.Attr.HostRoute {
+			continue
+		}
+		_, dst, err := net.ParseCIDR(rte.Key.RtCidr)
+		if err != nil {
+			continue
+		}
+		for _, nh := range rte.NextHops {
+			if nh.OifPort.Name == port {
+				r.RtDelete(*dst, r.Zone.Name)
+			}
+		}
+	}
 	return 0, nil
 }
 

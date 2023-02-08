@@ -152,7 +152,7 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 					unRch = true
 					tk.LogIt(tk.LogDebug, "fdb tun rtlookup %s no-rt\n", attr.Dst.String())
 				} else {
-					ret, tep := zone.Nh.NeighAddTunEP(nh, attr.Dst, p.HInfo.TunID, DpTunVxlan, true)
+					ret, tep := zone.Nh.NeighAddTunEP(nh, attr.Dst, nil, p.HInfo.TunID, DpTunVxlan, true)
 					if ret == 0 {
 						rt.RtDepObjs = append(rt.RtDepObjs, f)
 						f.FdbTun.rt = rt

@@ -18,6 +18,8 @@ package loxinet
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
 	"io/ioutil"
@@ -27,8 +29,6 @@ import (
 	"strconv"
 	"syscall"
 	"time"
-	"crypto/x509"
-	"crypto/tls"
 )
 
 // IterIntf - interface implementation to iterate various loxinet
@@ -148,7 +148,6 @@ func KAString2Mode(kaStr string) (bool, bool) {
 	return spawnKa, kaMode
 }
 
-
 // HTTPSProber - Do a https probe for given url
 // returns true/false depending on whether probing was successful
 func HTTPSProber(urls string, certPool *x509.CertPool, resp string) bool {
@@ -158,11 +157,11 @@ func HTTPSProber(urls string, certPool *x509.CertPool, resp string) bool {
 
 	timeout := time.Duration(2 * time.Second)
 	client := http.Client{Timeout: timeout,
-						  Transport: &http.Transport{
-							IdleConnTimeout: 5 * time.Second,
-  						    TLSClientConfig: &tls.Config{RootCAs: certPool,},},
-						 }
-    if req, err = http.NewRequest(http.MethodGet, urls, nil); err != nil {
+		Transport: &http.Transport{
+			IdleConnTimeout: 5 * time.Second,
+			TLSClientConfig: &tls.Config{RootCAs: certPool}},
+	}
+	if req, err = http.NewRequest(http.MethodGet, urls, nil); err != nil {
 		return false
 	}
 

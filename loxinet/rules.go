@@ -21,14 +21,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
+	probing "github.com/prometheus-community/pro-bing"
+	"io/ioutil"
 	"net"
 	"sort"
 	"sync"
 	"time"
-	"io/ioutil"
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
-	probing "github.com/prometheus-community/pro-bing"
 )
 
 // error codes
@@ -282,14 +282,14 @@ type epChecker struct {
 
 // RuleH - context container
 type RuleH struct {
-	Zone   *Zone
-	Cfg    RuleCfg
-	Tables [RtMax]ruleTable
-	epMap  map[string]*epHost
-	epCs   [MaxEndPointCheckers]epChecker
-	wg     sync.WaitGroup
-	lepHID uint8
-	epMx   sync.RWMutex
+	Zone       *Zone
+	Cfg        RuleCfg
+	Tables     [RtMax]ruleTable
+	epMap      map[string]*epHost
+	epCs       [MaxEndPointCheckers]epChecker
+	wg         sync.WaitGroup
+	lepHID     uint8
+	epMx       sync.RWMutex
 	rootCAPool *x509.CertPool
 }
 
@@ -320,17 +320,17 @@ func RulesInit(zone *Zone) *RuleH {
 	nRh.rootCAPool = x509.NewCertPool()
 	rootCACertile := "/opt/loxilb/cert/rootCACert.pem"
 	if exists := FileExists(rootCACertile); exists {
-		
+
 		rootCA, err := ioutil.ReadFile(rootCACertile)
 		if err != nil {
-			tk.LogIt(tk.LogError,"RootCA cert load failed : %v\n", err)
+			tk.LogIt(tk.LogError, "RootCA cert load failed : %v\n", err)
 		} else {
 			nRh.rootCAPool.AppendCertsFromPEM(rootCA)
 			tk.LogIt(tk.LogError, "RootCA cert loaded\n")
 		}
-    }
+	}
 
-	nRh.wg.Add(MaxEndPointCheckers) 
+	nRh.wg.Add(MaxEndPointCheckers)
 
 	return nRh
 }
@@ -1327,7 +1327,7 @@ func validateEpHostOpts(hostName string, args epHostOpts) (int, error) {
 		args.probePort == 0 {
 		return RuleArgsErr, errors.New("host-args unknown probe port")
 	}
-	
+
 	return 0, nil
 }
 
@@ -1346,17 +1346,17 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, desc string, args epHos
 	}
 	// Load CA cert into pool
 	if args.probeType == HostProbeHttps {
-		rootCACertile := "/opt/loxilb/cert/"+hostName+"/rootCACert.pem"
+		rootCACertile := "/opt/loxilb/cert/" + hostName + "/rootCACert.pem"
 		if exists := FileExists(rootCACertile); exists {
 			rootCA, err := ioutil.ReadFile(rootCACertile)
 			if err != nil {
-				tk.LogIt(tk.LogError,"RootCA cert load failed : %v", err)
+				tk.LogIt(tk.LogError, "RootCA cert load failed : %v", err)
 				return RuleArgsErr, errors.New("rootCA cert load failed\n")
 			} else {
 				R.rootCAPool.AppendCertsFromPEM(rootCA)
-				tk.LogIt(tk.LogDebug, "RootCA cert loaded for %s\n",hostName)
+				tk.LogIt(tk.LogDebug, "RootCA cert loaded for %s\n", hostName)
 			}
-	    }
+		}
 	}
 	ep := R.epMap[hostName]
 	if ep != nil {
@@ -1372,7 +1372,7 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, desc string, args epHos
 	ep.hostName = hostName
 	ep.desc = desc
 	ep.opts = args
-	
+
 	if apiCall != true {
 		ep.ruleCount = 1
 	}
@@ -1508,7 +1508,7 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 		urlStr := fmt.Sprintf("http://%s:%d/%s", addr.String(), ep.opts.probePort, ep.opts.probeReq)
 		sOk := tk.HTTPProber(urlStr)
 		ep.transitionState(sOk, ep.opts.inActTryThr)
-	}  else if ep.opts.probeType == HostProbeHttps {
+	} else if ep.opts.probeType == HostProbeHttps {
 		var addr net.IP
 		if addr = net.ParseIP(ep.hostName); addr == nil {
 			// This is already verified

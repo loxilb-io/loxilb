@@ -95,36 +95,36 @@ const (
 
 // ebpf table related defines in go
 type (
-	sActValue   C.struct_dp_cmn_act
-	intfMapKey  C.struct_intf_key
-	intfMapDat  C.struct_dp_intf_tact
-	intfSetIfi  C.struct_dp_intf_tact_set_ifi
-	sMacKey     C.struct_dp_smac_key
-	dMacKey     C.struct_dp_dmac_key
-	dMacMapDat  C.struct_dp_dmac_tact
-	l2VlanAct   C.struct_dp_l2vlan_act
-	tMacKey     C.struct_dp_tmac_key
-	tMacDat     C.struct_dp_tmac_tact
-	rtNhAct     C.struct_dp_rt_nh_act
-	nhKey       C.struct_dp_nh_key
-	nhDat       C.struct_dp_nh_tact
-	rtL2NhAct   C.struct_dp_rt_l2nh_act
-	rtVxL2NhAct C.struct_dp_rt_l2vxnh_act
-	rt4Key      C.struct_dp_rtv4_key
-	rt6Key      C.struct_dp_rtv6_key
-	rtDat       C.struct_dp_rt_tact
-	rtL3NhAct   C.struct_dp_rt_nh_act
-	natKey      C.struct_dp_nat_key
-	natActs     C.struct_dp_nat_tacts
-	nxfrmAct    C.struct_mf_xfrm_inf
-	sess4Key    C.struct_dp_sess4_key
-	sessAct     C.struct_dp_sess_tact
-	polTact     C.struct_dp_pol_tact
-	polAct      C.struct_dp_policer_act
-	mirrTact    C.struct_dp_mirr_tact
-	fw4Ent      C.struct_dp_fwv4_ent
-	portAct     C.struct_dp_rdr_act
-	mapNoti     C.struct_ll_dp_map_notif
+	sActValue  C.struct_dp_cmn_act
+	intfMapKey C.struct_intf_key
+	intfMapDat C.struct_dp_intf_tact
+	intfSetIfi C.struct_dp_intf_tact_set_ifi
+	sMacKey    C.struct_dp_smac_key
+	dMacKey    C.struct_dp_dmac_key
+	dMacMapDat C.struct_dp_dmac_tact
+	l2VlanAct  C.struct_dp_l2vlan_act
+	tMacKey    C.struct_dp_tmac_key
+	tMacDat    C.struct_dp_tmac_tact
+	rtNhAct    C.struct_dp_rt_nh_act
+	nhKey      C.struct_dp_nh_key
+	nhDat      C.struct_dp_nh_tact
+	rtL2NhAct  C.struct_dp_rt_l2nh_act
+	rtTunNhAct C.struct_dp_rt_tunnh_act
+	rt4Key     C.struct_dp_rtv4_key
+	rt6Key     C.struct_dp_rtv6_key
+	rtDat      C.struct_dp_rt_tact
+	rtL3NhAct  C.struct_dp_rt_nh_act
+	natKey     C.struct_dp_nat_key
+	natActs    C.struct_dp_nat_tacts
+	nxfrmAct   C.struct_mf_xfrm_inf
+	sess4Key   C.struct_dp_sess4_key
+	sessAct    C.struct_dp_sess_tact
+	polTact    C.struct_dp_pol_tact
+	polAct     C.struct_dp_policer_act
+	mirrTact   C.struct_dp_mirr_tact
+	fw4Ent     C.struct_dp_fwv4_ent
+	portAct    C.struct_dp_rdr_act
+	mapNoti    C.struct_ll_dp_map_notif
 )
 
 // DpEbpfH - context container
@@ -563,7 +563,7 @@ func (e *DpEbpfH) DpRouterMacDel(w *RouterMacDpWorkQ) int {
 // DpNextHopMod - routine to work on a ebpf next-hop change request
 func DpNextHopMod(w *NextHopDpWorkQ) int {
 	var act *rtL2NhAct
-	var vxAct *rtVxL2NhAct
+	var tunAct *rtTunNhAct
 
 	key := new(nhKey)
 	key.nh_num = C.uint(w.NextHopNum)
@@ -575,20 +575,22 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 			dat.ca.act_type = C.DP_SET_TOCP
 		} else {
 			if w.TunNh {
-				tk.LogIt(tk.LogDebug, "Setting tunNh %x\n", key.nh_num)
-				dat.ca.act_type = C.DP_SET_NEIGH_VXLAN
-				vxAct = (*rtVxL2NhAct)(getPtrOffset(unsafe.Pointer(dat),
+				tk.LogIt(tk.LogDebug, "Setting tunNh 0x%x\n", key.nh_num)
+				if w.TunType == DpTunIPIP {
+					dat.ca.act_type = C.DP_SET_NEIGH_IPIP
+				} else {
+					dat.ca.act_type = C.DP_SET_NEIGH_VXLAN
+				}
+				tunAct = (*rtTunNhAct)(getPtrOffset(unsafe.Pointer(dat),
 					C.sizeof_struct_dp_cmn_act))
 
 				ipAddr := tk.IPtonl(w.RIP)
-				vxAct.l3t.rip = C.uint(ipAddr)
-				vxAct.l3t.sip = C.uint(tk.IPtonl(w.SIP))
+				tunAct.l3t.rip = C.uint(ipAddr)
+				tunAct.l3t.sip = C.uint(tk.IPtonl(w.SIP))
 				tid := ((w.TunID << 8) & 0xffffff00)
-				vxAct.l3t.tid = C.uint(tk.Htonl(tid))
+				tunAct.l3t.tid = C.uint(tk.Htonl(tid))
 
-				tk.LogIt(tk.LogDebug, "rip 0x%x sip 0x%x 0x%x\n", vxAct.l3t.sip, vxAct.l3t.rip, vxAct.l3t.tid)
-
-				act = (*rtL2NhAct)(&vxAct.l2nh)
+				act = (*rtL2NhAct)(&tunAct.l2nh)
 				C.memcpy(unsafe.Pointer(&act.dmac[0]), unsafe.Pointer(&w.DstAddr[0]), 6)
 				C.memcpy(unsafe.Pointer(&act.smac[0]), unsafe.Pointer(&w.SrcAddr[0]), 6)
 				act.bd = C.ushort(w.BD)
@@ -1187,8 +1189,13 @@ func (e *DpEbpfH) DpUlClMod(w *UlClDpWorkQ) int {
 		dat := new(sessAct)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_sess_tact)
 
-		if key.teid != 0 {
-			dat.ca.act_type = C.DP_SET_RM_GTP
+		if key.teid != 0 || w.Type == DpTunIPIP {
+			if w.Type == DpTunIPIP {
+				dat.ca.act_type = C.DP_SET_RM_IPIP
+			} else {
+				dat.ca.act_type = C.DP_SET_RM_GTP
+			}
+
 			dat.ca.cidx = C.uint(w.HwMark)
 			dat.qfi = C.uchar(w.Qfi)
 		} else {
