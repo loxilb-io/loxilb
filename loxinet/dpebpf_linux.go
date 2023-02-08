@@ -1189,7 +1189,7 @@ func (e *DpEbpfH) DpUlClMod(w *UlClDpWorkQ) int {
 		dat := new(sessAct)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_sess_tact)
 
-		if key.teid != 0 {
+		if key.teid != 0 || w.Type == DpTunIPIP {
 			if w.Type == DpTunIPIP {
 				dat.ca.act_type = C.DP_SET_RM_IPIP
 			} else {

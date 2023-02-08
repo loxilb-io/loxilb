@@ -893,9 +893,9 @@ func (p *Port) DP(work DpWorkT) int {
 	if p.SInfo.PortType == cmn.PortIPTun {
 		ipts := new(UlClDpWorkQ)
 		ipts.Work = work
-		ipts.MDip = p.HInfo.TunDst
-		ipts.MSip = p.HInfo.TunSrc
-		ipts.mTeID = 1
+		ipts.MDip = p.HInfo.TunSrc
+		ipts.MSip = p.HInfo.TunDst
+		ipts.mTeID = 0
 		ipts.Zone = zoneNum
 		ipts.HwMark = p.SInfo.SessMark
 		ipts.Type = DpTunIPIP
