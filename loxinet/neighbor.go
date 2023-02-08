@@ -145,10 +145,10 @@ func (n *NeighH) Activate(ne *Neigh) {
 }
 
 // NeighAddTunEP - Add tun-ep to a neighbor
-func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTunT, sync bool) (int, *NeighTunEp) {
+func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, sIP net.IP, tunID uint32, tunType DpTunT, sync bool) (int, *NeighTunEp) {
 	// FIXME - Need to be able to support multiple overlays with same entry
 	port := ne.OifPort
-	if port == nil || (port.SInfo.PortOvl == nil && !port.IsL3TunPort()) {
+	if port == nil || (port.SInfo.PortOvl == nil && tunType != DpTunIPIP) {
 		return -1, nil
 	}
 
@@ -159,11 +159,11 @@ func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, tunID uint32, tunType DpTu
 			return 0, tep
 		}
 	}
-	e, sIP := n.Zone.L3.IfaSelect(port.Name, rIP, false)
-	if e != 0 {
-		if port.IsL3TunPort() {
-			sIP = port.HInfo.TunSrc
-		} else {
+	if sIP == nil {
+		e := 0
+		e, sIP = n.Zone.L3.IfaSelect(port.Name, rIP, false)
+		if e != 0 {
+			tk.LogIt(tk.LogError, "%s:ifa select error\n", port.Name)
 			return -1, nil
 		}
 	}
@@ -266,10 +266,10 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 						return false
 					}
 					if ne.RHwMark == 0 {
-						n.NeighDelAllTunEP(ne)
-						ret, tep := n.NeighAddTunEP(ne, port.HInfo.TunDst, port.HInfo.TunID, DpTunIPIP, true)
+						tk.LogIt(tk.LogDebug, "IPTun-NH for %s:%s\n", port.HInfo.TunDst.String(), nh.Key.NhString)
+						ret, tep := n.NeighAddTunEP(nh, port.HInfo.TunDst, port.HInfo.TunSrc, port.HInfo.TunID, DpTunIPIP, true)
 						if ret == 0 {
-							rt.RtDepObjs = append(rt.RtDepObjs, ne)
+							rt.RtDepObjs = append(rt.RtDepObjs, nh)
 							ne.RHwMark = tep.HwMark
 							ne.Resolved = true
 							ne.Type |= NhRecursive
