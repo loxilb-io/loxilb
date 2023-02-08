@@ -16,7 +16,8 @@ import (
 // DeleteConfigIpv4addressIPAddressNoContentCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressNoContent
 const DeleteConfigIpv4addressIPAddressNoContentCode int = 204
 
-/*DeleteConfigIpv4addressIPAddressNoContent OK
+/*
+DeleteConfigIpv4addressIPAddressNoContent OK
 
 swagger:response deleteConfigIpv4addressIpAddressNoContent
 */
@@ -40,7 +41,8 @@ func (o *DeleteConfigIpv4addressIPAddressNoContent) WriteResponse(rw http.Respon
 // DeleteConfigIpv4addressIPAddressBadRequestCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressBadRequest
 const DeleteConfigIpv4addressIPAddressBadRequestCode int = 400
 
-/*DeleteConfigIpv4addressIPAddressBadRequest Malformed arguments for API call
+/*
+DeleteConfigIpv4addressIPAddressBadRequest Malformed arguments for API call
 
 swagger:response deleteConfigIpv4addressIpAddressBadRequest
 */
@@ -84,7 +86,8 @@ func (o *DeleteConfigIpv4addressIPAddressBadRequest) WriteResponse(rw http.Respo
 // DeleteConfigIpv4addressIPAddressUnauthorizedCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressUnauthorized
 const DeleteConfigIpv4addressIPAddressUnauthorizedCode int = 401
 
-/*DeleteConfigIpv4addressIPAddressUnauthorized Invalid authentication credentials
+/*
+DeleteConfigIpv4addressIPAddressUnauthorized Invalid authentication credentials
 
 swagger:response deleteConfigIpv4addressIpAddressUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *DeleteConfigIpv4addressIPAddressUnauthorized) WriteResponse(rw http.Res
 // DeleteConfigIpv4addressIPAddressForbiddenCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressForbidden
 const DeleteConfigIpv4addressIPAddressForbiddenCode int = 403
 
-/*DeleteConfigIpv4addressIPAddressForbidden Capacity insufficient
+/*
+DeleteConfigIpv4addressIPAddressForbidden Capacity insufficient
 
 swagger:response deleteConfigIpv4addressIpAddressForbidden
 */
@@ -172,7 +176,8 @@ func (o *DeleteConfigIpv4addressIPAddressForbidden) WriteResponse(rw http.Respon
 // DeleteConfigIpv4addressIPAddressNotFoundCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressNotFound
 const DeleteConfigIpv4addressIPAddressNotFoundCode int = 404
 
-/*DeleteConfigIpv4addressIPAddressNotFound Resource not found
+/*
+DeleteConfigIpv4addressIPAddressNotFound Resource not found
 
 swagger:response deleteConfigIpv4addressIpAddressNotFound
 */
@@ -216,7 +221,8 @@ func (o *DeleteConfigIpv4addressIPAddressNotFound) WriteResponse(rw http.Respons
 // DeleteConfigIpv4addressIPAddressConflictCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressConflict
 const DeleteConfigIpv4addressIPAddressConflictCode int = 409
 
-/*DeleteConfigIpv4addressIPAddressConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+DeleteConfigIpv4addressIPAddressConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response deleteConfigIpv4addressIpAddressConflict
 */
@@ -260,7 +266,8 @@ func (o *DeleteConfigIpv4addressIPAddressConflict) WriteResponse(rw http.Respons
 // DeleteConfigIpv4addressIPAddressInternalServerErrorCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressInternalServerError
 const DeleteConfigIpv4addressIPAddressInternalServerErrorCode int = 500
 
-/*DeleteConfigIpv4addressIPAddressInternalServerError Internal service error
+/*
+DeleteConfigIpv4addressIPAddressInternalServerError Internal service error
 
 swagger:response deleteConfigIpv4addressIpAddressInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *DeleteConfigIpv4addressIPAddressInternalServerError) WriteResponse(rw h
 // DeleteConfigIpv4addressIPAddressServiceUnavailableCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressServiceUnavailable
 const DeleteConfigIpv4addressIPAddressServiceUnavailableCode int = 503
 
-/*DeleteConfigIpv4addressIPAddressServiceUnavailable Maintanence mode
+/*
+DeleteConfigIpv4addressIPAddressServiceUnavailable Maintanence mode
 
 swagger:response deleteConfigIpv4addressIpAddressServiceUnavailable
 */

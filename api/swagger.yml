@@ -2837,6 +2837,9 @@ definitions:
       allow:
         type: boolean
         description: Allow any matching rule
+      record:
+        type: boolean
+        description: Record or dump for matching rule
       redirectPortName:
         type: string
         description: Redirect any matching rule

@@ -26,6 +26,9 @@ type FirewallOptionEntry struct {
 	// Set a fwmark for any matching rule
 	FwMark int64 `json:"fwMark,omitempty"`
 
+	// Record or dump for matching rule
+	Record bool `json:"record,omitempty"`
+
 	// Redirect any matching rule
 	Redirect bool `json:"redirect,omitempty"`
 

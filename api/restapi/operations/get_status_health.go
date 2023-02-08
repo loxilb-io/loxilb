@@ -36,12 +36,12 @@ func NewGetStatusHealth(ctx *middleware.Context, handler GetStatusHealthHandler)
 	return &GetStatusHealth{Context: ctx, Handler: handler}
 }
 
-/* GetStatusHealth swagger:route GET /status/health getStatusHealth
+/*
+	GetStatusHealth swagger:route GET /status/health getStatusHealth
 
-Get health info in the device
+# Get health info in the device
 
 Get a health information in the device or system.
-
 */
 type GetStatusHealth struct {
 	Context *middleware.Context
