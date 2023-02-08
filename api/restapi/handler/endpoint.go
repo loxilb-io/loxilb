@@ -70,7 +70,7 @@ func ConfigPostEndPoint(params operations.PostConfigEndpointParams) middleware.R
 	EP.ProbeResp = params.Attr.ProbeResp
 	EP.ProbeDuration = uint32(params.Attr.ProbeDuration)
 	EP.ProbePort = uint16(params.Attr.ProbePort)
-	
+
 	_, err := ApiHooks.NetEpHostAdd(&EP)
 	if err != nil {
 		return &ResultResponse{Result: err.Error()}

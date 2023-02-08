@@ -90,6 +90,7 @@ type Neigh struct {
 	Resolved bool
 	HwMark   int
 	RHwMark  int
+	RecNh    *Neigh
 	tFdb     *FdbEnt
 	TunEps   []*NeighTunEp
 	Type     NhType
@@ -265,13 +266,14 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 						ne.RHwMark = 0
 						return false
 					}
-					if ne.RHwMark == 0 {
+					if ne.RHwMark == 0 || ne.RecNh == nil || ne.RecNh != nh {
 						tk.LogIt(tk.LogDebug, "IPTun-NH for %s:%s\n", port.HInfo.TunDst.String(), nh.Key.NhString)
 						ret, tep := n.NeighAddTunEP(nh, port.HInfo.TunDst, port.HInfo.TunSrc, port.HInfo.TunID, DpTunIPIP, true)
 						if ret == 0 {
 							rt.RtDepObjs = append(rt.RtDepObjs, nh)
 							ne.RHwMark = tep.HwMark
 							ne.Resolved = true
+							ne.RecNh = nh
 							ne.Type |= NhRecursive
 						}
 						return true
