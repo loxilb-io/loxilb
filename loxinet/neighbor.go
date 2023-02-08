@@ -691,7 +691,7 @@ func (tep *NeighTunEp) DP(work DpWorkT) int {
 	neighWq.TunNh = true
 	neighWq.TunID = tep.tunID
 
-	if tep.tunID != 0 {
+	if tep.tunID != 0 || tep.tunType == DpTunIPIP {
 		for i := 0; i < 6; i++ {
 			neighWq.DstAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 		}
