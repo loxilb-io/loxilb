@@ -576,10 +576,10 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 		} else {
 			if w.TunNh {
 				tk.LogIt(tk.LogDebug, "Setting tunNh 0x%x\n", key.nh_num)
-				if w.TunID != 0 {
-					dat.ca.act_type = C.DP_SET_NEIGH_VXLAN
-				} else {
+				if w.TunType == DpTunIPIP {
 					dat.ca.act_type = C.DP_SET_NEIGH_IPIP
+				} else {
+					dat.ca.act_type = C.DP_SET_NEIGH_VXLAN
 				}
 				tunAct = (*rtTunNhAct)(getPtrOffset(unsafe.Pointer(dat),
 					C.sizeof_struct_dp_cmn_act))

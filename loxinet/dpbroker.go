@@ -150,6 +150,7 @@ type NextHopDpWorkQ struct {
 	Status      *DpStatusT
 	TunNh       bool
 	TunID       uint32
+	TunType     DpTunT
 	RIP         net.IP
 	SIP         net.IP
 	NNextHopNum int

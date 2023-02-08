@@ -690,6 +690,7 @@ func (tep *NeighTunEp) DP(work DpWorkT) int {
 	neighWq.SIP = tep.sIP
 	neighWq.TunNh = true
 	neighWq.TunID = tep.tunID
+	neighWq.TunType = tep.tunType
 
 	if tep.tunID != 0 || tep.tunType == DpTunIPIP {
 		for i := 0; i < 6; i++ {

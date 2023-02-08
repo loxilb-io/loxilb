@@ -785,8 +785,8 @@ func ModLink(link nlp.Link, add bool) int {
 	real := ""
 	pType := cmn.PortReal
 	tunId := 0
-	tunSrc := net.IP{0, 0, 0, 0}
-	tunDst := net.IP{0, 0, 0, 0}
+	tunSrc := net.IPv4zero
+	tunDst := net.IPv4zero
 
 	if strings.Contains(name, "ipsec") || strings.Contains(name, "vti") {
 		pType = cmn.PortVti
@@ -809,9 +809,17 @@ func ModLink(link nlp.Link, add bool) int {
 		tk.LogIt(tk.LogInfo, "[NLP] Bond %v, %s\n", name, mod)
 	} else if iptun, ok := link.(*nlp.Iptun); ok {
 		pType = cmn.PortIPTun
+		if iptun.Remote == nil || iptun.Local == nil {
+			return -1
+		}
+
+		if iptun.Remote.IsUnspecified() || iptun.Local.IsUnspecified() {
+			return -1
+		}
+		tunId = 1 // Just needed internally
 		tunDst = iptun.Remote
 		tunSrc = iptun.Local
-		tk.LogIt(tk.LogInfo, "[NLP] IPTun %v, %s\n", name, mod)
+		tk.LogIt(tk.LogInfo, "[NLP] IPTun %v (%s:%s), %s\n", name, tunSrc.String(), tunDst.String(), mod)
 	} else if master != "" {
 		pType = cmn.PortBondSif
 	}
