@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: iperf-service
+spec:
+  externalTrafficPolicy: Local
+  loadBalancerClass: loxilb.io/loxilb
+  selector:
+    what: perf-test
+  ports:
+    - port: 55001
+      targetPort: 5001
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: iperf1
+  labels:
+    what: perf-test
+spec:
+  containers:
+    - name: iperf
+      image: eyes852/ubuntu-iperf-test:0.5
+      command:
+        - iperf
+        - "-s"
+      ports:
+        - containerPort: 5001
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: iperf2
+  labels:
+    what: perf-test
+spec:
+  containers:
+    - name: iperf
+      image: eyes852/ubuntu-iperf-test:0.5
+      command:
+        - iperf
+        - "-s"
+      ports:
+        - containerPort: 5001

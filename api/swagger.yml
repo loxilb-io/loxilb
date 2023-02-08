@@ -1676,7 +1676,7 @@ paths:
               Attr:
                 type: array
                 items:
-                  $ref: '#/definitions/EndPointState'
+                  $ref: '#/definitions/EndPointGetEntry'
         '401':
           description: Invalid authentication credentials
           schema:
@@ -2754,7 +2754,7 @@ definitions:
         type: integer
         description: Sync - sync state
 
-  EndPointState:
+  EndPointGetEntry:
     type: object
     properties:
       hostName:
@@ -2769,6 +2769,12 @@ definitions:
       probeType:
         type: string
         description: Type of probe used
+      probeReq:
+        type: string
+        description: URI for http/https probes
+      probeResp:
+        type: string
+        description: Response for http/https probes
       probeDuration:
         type: integer
         description: How frequently to probe in seconds
@@ -2803,9 +2809,12 @@ definitions:
       probeType:
         type: string
         description: Type of probe used
-      probeReqUrl:
+      probeReq:
         type: string
-        description: URI for http probes
+        description: URI for http/https probes
+      probeResp:
+        type: string
+        description: Response for http/https probes
       probeDuration:
         type: integer
         description: How frequently to probe in seconds

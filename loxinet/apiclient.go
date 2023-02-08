@@ -422,7 +422,6 @@ func (*NetAPIStruct) NetEpHostAdd(em *cmn.EndPointMod) (int, error) {
 		probeReq: em.ProbeReq, probeResp: em.ProbeResp,
 		probeDuration: em.ProbeDuration, probePort: em.ProbePort,
 	}
-
 	ret, err := mh.zr.Rules.AddEpHost(true, em.Name, em.Desc, epArgs)
 	return ret, err
 }

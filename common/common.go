@@ -417,7 +417,7 @@ type EndPointMod struct {
 	// InActTries - No. of inactive probes to mark
 	// an end-point inactive
 	InActTries int `json:"inactiveReTries"`
-	// ProbeType - Type of probe : "icmp","connect-tcp", "connect-udp", "connect-sctp", "http"
+	// ProbeType - Type of probe : "icmp","connect-tcp", "connect-udp", "connect-sctp", "http", "https"
 	ProbeType string `json:"probeType"`
 	// ProbeReq - Request string in case of http probe
 	ProbeReq string `json:"probeReq"`
