@@ -3300,6 +3300,10 @@ func init() {
           "description": "Set a fwmark for any matching rule",
           "type": "integer"
         },
+        "record": {
+          "description": "Record or dump for matching rule",
+          "type": "boolean"
+        },
         "redirect": {
           "description": "Redirect any matching rule",
           "type": "boolean"
@@ -7364,6 +7368,10 @@ func init() {
         "fwMark": {
           "description": "Set a fwmark for any matching rule",
           "type": "integer"
+        },
+        "record": {
+          "description": "Record or dump for matching rule",
+          "type": "boolean"
         },
         "redirect": {
           "description": "Redirect any matching rule",

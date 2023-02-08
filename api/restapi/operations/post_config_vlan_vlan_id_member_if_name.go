@@ -29,12 +29,12 @@ func NewPostConfigVlanVlanIDMemberIfName(ctx *middleware.Context, handler PostCo
 	return &PostConfigVlanVlanIDMemberIfName{Context: ctx, Handler: handler}
 }
 
-/* PostConfigVlanVlanIDMemberIfName swagger:route POST /config/vlan/{vlan_id}/member/{if_name} postConfigVlanVlanIdMemberIfName
+/*
+	PostConfigVlanVlanIDMemberIfName swagger:route POST /config/vlan/{vlan_id}/member/{if_name} postConfigVlanVlanIdMemberIfName
 
-Add a physical port to a vlan interface
+# Add a physical port to a vlan interface
 
 Add a member to interface Vlan{vlan_id}. If the vlan interface does not exist on LoxiLB it returns a '404' error. If such a member is already present on this Vlan interface the API returns '409' sub-code 0. If the vlan_id passed is less than 2 or greater than 4094 the API will respond with error '400'. If attr with tagging mode is provided it will be honored in config, if not, the default tagging mode will be set to 'untagged'. Vlan members may be tagged or untagged, but, the Vlan member port may be untagged in only one Vlan interface, deviations from this will cause the API to return '409' sub-code 0.
-
 */
 type PostConfigVlanVlanIDMemberIfName struct {
 	Context *middleware.Context

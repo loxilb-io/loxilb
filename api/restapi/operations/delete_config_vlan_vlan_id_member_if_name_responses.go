@@ -16,7 +16,8 @@ import (
 // DeleteConfigVlanVlanIDMemberIfNameNoContentCode is the HTTP code returned for type DeleteConfigVlanVlanIDMemberIfNameNoContent
 const DeleteConfigVlanVlanIDMemberIfNameNoContentCode int = 204
 
-/*DeleteConfigVlanVlanIDMemberIfNameNoContent OK
+/*
+DeleteConfigVlanVlanIDMemberIfNameNoContent OK
 
 swagger:response deleteConfigVlanVlanIdMemberIfNameNoContent
 */
@@ -40,7 +41,8 @@ func (o *DeleteConfigVlanVlanIDMemberIfNameNoContent) WriteResponse(rw http.Resp
 // DeleteConfigVlanVlanIDMemberIfNameBadRequestCode is the HTTP code returned for type DeleteConfigVlanVlanIDMemberIfNameBadRequest
 const DeleteConfigVlanVlanIDMemberIfNameBadRequestCode int = 400
 
-/*DeleteConfigVlanVlanIDMemberIfNameBadRequest Malformed arguments for API call
+/*
+DeleteConfigVlanVlanIDMemberIfNameBadRequest Malformed arguments for API call
 
 swagger:response deleteConfigVlanVlanIdMemberIfNameBadRequest
 */
@@ -84,7 +86,8 @@ func (o *DeleteConfigVlanVlanIDMemberIfNameBadRequest) WriteResponse(rw http.Res
 // DeleteConfigVlanVlanIDMemberIfNameUnauthorizedCode is the HTTP code returned for type DeleteConfigVlanVlanIDMemberIfNameUnauthorized
 const DeleteConfigVlanVlanIDMemberIfNameUnauthorizedCode int = 401
 
-/*DeleteConfigVlanVlanIDMemberIfNameUnauthorized Invalid authentication credentials
+/*
+DeleteConfigVlanVlanIDMemberIfNameUnauthorized Invalid authentication credentials
 
 swagger:response deleteConfigVlanVlanIdMemberIfNameUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *DeleteConfigVlanVlanIDMemberIfNameUnauthorized) WriteResponse(rw http.R
 // DeleteConfigVlanVlanIDMemberIfNameNotFoundCode is the HTTP code returned for type DeleteConfigVlanVlanIDMemberIfNameNotFound
 const DeleteConfigVlanVlanIDMemberIfNameNotFoundCode int = 404
 
-/*DeleteConfigVlanVlanIDMemberIfNameNotFound Vlan interface is not defined/Vlan member is not found on this Vlan interface
+/*
+DeleteConfigVlanVlanIDMemberIfNameNotFound Vlan interface is not defined/Vlan member is not found on this Vlan interface
 
 swagger:response deleteConfigVlanVlanIdMemberIfNameNotFound
 */
@@ -172,7 +176,8 @@ func (o *DeleteConfigVlanVlanIDMemberIfNameNotFound) WriteResponse(rw http.Respo
 // DeleteConfigVlanVlanIDMemberIfNameInternalServerErrorCode is the HTTP code returned for type DeleteConfigVlanVlanIDMemberIfNameInternalServerError
 const DeleteConfigVlanVlanIDMemberIfNameInternalServerErrorCode int = 500
 
-/*DeleteConfigVlanVlanIDMemberIfNameInternalServerError Internal service error
+/*
+DeleteConfigVlanVlanIDMemberIfNameInternalServerError Internal service error
 
 swagger:response deleteConfigVlanVlanIdMemberIfNameInternalServerError
 */
@@ -216,7 +221,8 @@ func (o *DeleteConfigVlanVlanIDMemberIfNameInternalServerError) WriteResponse(rw
 // DeleteConfigVlanVlanIDMemberIfNameServiceUnavailableCode is the HTTP code returned for type DeleteConfigVlanVlanIDMemberIfNameServiceUnavailable
 const DeleteConfigVlanVlanIDMemberIfNameServiceUnavailableCode int = 503
 
-/*DeleteConfigVlanVlanIDMemberIfNameServiceUnavailable Maintanence mode
+/*
+DeleteConfigVlanVlanIDMemberIfNameServiceUnavailable Maintanence mode
 
 swagger:response deleteConfigVlanVlanIdMemberIfNameServiceUnavailable
 */

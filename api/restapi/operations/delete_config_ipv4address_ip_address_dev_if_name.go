@@ -29,12 +29,12 @@ func NewDeleteConfigIpv4addressIPAddressDevIfName(ctx *middleware.Context, handl
 	return &DeleteConfigIpv4addressIPAddressDevIfName{Context: ctx, Handler: handler}
 }
 
-/* DeleteConfigIpv4addressIPAddressDevIfName swagger:route DELETE /config/ipv4address/{ip_address}/dev/{if_name} deleteConfigIpv4addressIpAddressDevIfName
+/*
+	DeleteConfigIpv4addressIPAddressDevIfName swagger:route DELETE /config/ipv4address/{ip_address}/dev/{if_name} deleteConfigIpv4addressIpAddressDevIfName
+
+# Delete IPv4 addresses in the device
 
 Delete IPv4 addresses in the device
-
-Delete IPv4 addresses in the device
-
 */
 type DeleteConfigIpv4addressIPAddressDevIfName struct {
 	Context *middleware.Context

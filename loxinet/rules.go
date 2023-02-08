@@ -212,6 +212,7 @@ type ruleFwOpt struct {
 	rdrMirr string
 	rdrPort string
 	fwMark  uint32
+	record  bool
 }
 
 type ruleFwOpts struct {
@@ -1089,6 +1090,7 @@ func (R *RuleH) GetFwRule() ([]cmn.FwRuleMod, error) {
 			ret.Opts.Trap = true
 		}
 		ret.Opts.Mark = fwOpts.opt.fwMark
+		ret.Opts.Record = fwOpts.opt.record
 
 		// Make FwRule
 		res = append(res, ret)
@@ -1161,6 +1163,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	/* Default is drop */
 	fwOpts.op = RtActDrop
 	fwOpts.opt.fwMark = fwOptArgs.Mark
+	fwOpts.opt.record = fwOptArgs.Record
 
 	if fwOptArgs.Allow {
 		r.act.actType = RtActFwd
@@ -1948,6 +1951,7 @@ func (r *ruleEnt) Fw2DP(work DpWorkT) int {
 			nWork.FwType = DpFwDrop
 		}
 		nWork.FwVal2 = at.opt.fwMark
+		nWork.FwRecord = at.opt.record
 	default:
 		return -1
 	}

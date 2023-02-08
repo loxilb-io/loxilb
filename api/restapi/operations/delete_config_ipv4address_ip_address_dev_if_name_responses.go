@@ -16,7 +16,8 @@ import (
 // DeleteConfigIpv4addressIPAddressDevIfNameNoContentCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressDevIfNameNoContent
 const DeleteConfigIpv4addressIPAddressDevIfNameNoContentCode int = 204
 
-/*DeleteConfigIpv4addressIPAddressDevIfNameNoContent OK
+/*
+DeleteConfigIpv4addressIPAddressDevIfNameNoContent OK
 
 swagger:response deleteConfigIpv4addressIpAddressDevIfNameNoContent
 */
@@ -40,7 +41,8 @@ func (o *DeleteConfigIpv4addressIPAddressDevIfNameNoContent) WriteResponse(rw ht
 // DeleteConfigIpv4addressIPAddressDevIfNameBadRequestCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressDevIfNameBadRequest
 const DeleteConfigIpv4addressIPAddressDevIfNameBadRequestCode int = 400
 
-/*DeleteConfigIpv4addressIPAddressDevIfNameBadRequest Malformed arguments for API call
+/*
+DeleteConfigIpv4addressIPAddressDevIfNameBadRequest Malformed arguments for API call
 
 swagger:response deleteConfigIpv4addressIpAddressDevIfNameBadRequest
 */
@@ -84,7 +86,8 @@ func (o *DeleteConfigIpv4addressIPAddressDevIfNameBadRequest) WriteResponse(rw h
 // DeleteConfigIpv4addressIPAddressDevIfNameUnauthorizedCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressDevIfNameUnauthorized
 const DeleteConfigIpv4addressIPAddressDevIfNameUnauthorizedCode int = 401
 
-/*DeleteConfigIpv4addressIPAddressDevIfNameUnauthorized Invalid authentication credentials
+/*
+DeleteConfigIpv4addressIPAddressDevIfNameUnauthorized Invalid authentication credentials
 
 swagger:response deleteConfigIpv4addressIpAddressDevIfNameUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *DeleteConfigIpv4addressIPAddressDevIfNameUnauthorized) WriteResponse(rw
 // DeleteConfigIpv4addressIPAddressDevIfNameForbiddenCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressDevIfNameForbidden
 const DeleteConfigIpv4addressIPAddressDevIfNameForbiddenCode int = 403
 
-/*DeleteConfigIpv4addressIPAddressDevIfNameForbidden Capacity insufficient
+/*
+DeleteConfigIpv4addressIPAddressDevIfNameForbidden Capacity insufficient
 
 swagger:response deleteConfigIpv4addressIpAddressDevIfNameForbidden
 */
@@ -172,7 +176,8 @@ func (o *DeleteConfigIpv4addressIPAddressDevIfNameForbidden) WriteResponse(rw ht
 // DeleteConfigIpv4addressIPAddressDevIfNameNotFoundCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressDevIfNameNotFound
 const DeleteConfigIpv4addressIPAddressDevIfNameNotFoundCode int = 404
 
-/*DeleteConfigIpv4addressIPAddressDevIfNameNotFound Resource not found
+/*
+DeleteConfigIpv4addressIPAddressDevIfNameNotFound Resource not found
 
 swagger:response deleteConfigIpv4addressIpAddressDevIfNameNotFound
 */
@@ -216,7 +221,8 @@ func (o *DeleteConfigIpv4addressIPAddressDevIfNameNotFound) WriteResponse(rw htt
 // DeleteConfigIpv4addressIPAddressDevIfNameConflictCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressDevIfNameConflict
 const DeleteConfigIpv4addressIPAddressDevIfNameConflictCode int = 409
 
-/*DeleteConfigIpv4addressIPAddressDevIfNameConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+/*
+DeleteConfigIpv4addressIPAddressDevIfNameConflict Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
 
 swagger:response deleteConfigIpv4addressIpAddressDevIfNameConflict
 */
@@ -260,7 +266,8 @@ func (o *DeleteConfigIpv4addressIPAddressDevIfNameConflict) WriteResponse(rw htt
 // DeleteConfigIpv4addressIPAddressDevIfNameInternalServerErrorCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressDevIfNameInternalServerError
 const DeleteConfigIpv4addressIPAddressDevIfNameInternalServerErrorCode int = 500
 
-/*DeleteConfigIpv4addressIPAddressDevIfNameInternalServerError Internal service error
+/*
+DeleteConfigIpv4addressIPAddressDevIfNameInternalServerError Internal service error
 
 swagger:response deleteConfigIpv4addressIpAddressDevIfNameInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *DeleteConfigIpv4addressIPAddressDevIfNameInternalServerError) WriteResp
 // DeleteConfigIpv4addressIPAddressDevIfNameServiceUnavailableCode is the HTTP code returned for type DeleteConfigIpv4addressIPAddressDevIfNameServiceUnavailable
 const DeleteConfigIpv4addressIPAddressDevIfNameServiceUnavailableCode int = 503
 
-/*DeleteConfigIpv4addressIPAddressDevIfNameServiceUnavailable Maintanence mode
+/*
+DeleteConfigIpv4addressIPAddressDevIfNameServiceUnavailable Maintanence mode
 
 swagger:response deleteConfigIpv4addressIpAddressDevIfNameServiceUnavailable
 */

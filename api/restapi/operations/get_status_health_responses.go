@@ -16,7 +16,8 @@ import (
 // GetStatusHealthOKCode is the HTTP code returned for type GetStatusHealthOK
 const GetStatusHealthOKCode int = 200
 
-/*GetStatusHealthOK OK
+/*
+GetStatusHealthOK OK
 
 swagger:response getStatusHealthOK
 */
@@ -60,7 +61,8 @@ func (o *GetStatusHealthOK) WriteResponse(rw http.ResponseWriter, producer runti
 // GetStatusHealthUnauthorizedCode is the HTTP code returned for type GetStatusHealthUnauthorized
 const GetStatusHealthUnauthorizedCode int = 401
 
-/*GetStatusHealthUnauthorized Invalid authentication credentials
+/*
+GetStatusHealthUnauthorized Invalid authentication credentials
 
 swagger:response getStatusHealthUnauthorized
 */
@@ -104,7 +106,8 @@ func (o *GetStatusHealthUnauthorized) WriteResponse(rw http.ResponseWriter, prod
 // GetStatusHealthInternalServerErrorCode is the HTTP code returned for type GetStatusHealthInternalServerError
 const GetStatusHealthInternalServerErrorCode int = 500
 
-/*GetStatusHealthInternalServerError Internal service error
+/*
+GetStatusHealthInternalServerError Internal service error
 
 swagger:response getStatusHealthInternalServerError
 */
@@ -148,7 +151,8 @@ func (o *GetStatusHealthInternalServerError) WriteResponse(rw http.ResponseWrite
 // GetStatusHealthServiceUnavailableCode is the HTTP code returned for type GetStatusHealthServiceUnavailable
 const GetStatusHealthServiceUnavailableCode int = 503
 
-/*GetStatusHealthServiceUnavailable Maintanence mode
+/*
+GetStatusHealthServiceUnavailable Maintanence mode
 
 swagger:response getStatusHealthServiceUnavailable
 */

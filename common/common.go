@@ -369,6 +369,8 @@ type FwOptArg struct {
 	Drop bool `json:"drop"`
 	// Trap - Trap anything matching rule
 	Trap bool `json:"trap"`
+	// Record - Record packets matching rule
+	Record bool `json:"record"`
 	// Redirect - Redirect any matching rule
 	Rdr     bool   `json:"redirect"`
 	RdrPort string `json:"redirectPortName"`

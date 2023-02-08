@@ -16,7 +16,8 @@ import (
 // PostConfigVlanVlanIDMemberIfNameNoContentCode is the HTTP code returned for type PostConfigVlanVlanIDMemberIfNameNoContent
 const PostConfigVlanVlanIDMemberIfNameNoContentCode int = 204
 
-/*PostConfigVlanVlanIDMemberIfNameNoContent OK
+/*
+PostConfigVlanVlanIDMemberIfNameNoContent OK
 
 swagger:response postConfigVlanVlanIdMemberIfNameNoContent
 */
@@ -40,7 +41,8 @@ func (o *PostConfigVlanVlanIDMemberIfNameNoContent) WriteResponse(rw http.Respon
 // PostConfigVlanVlanIDMemberIfNameBadRequestCode is the HTTP code returned for type PostConfigVlanVlanIDMemberIfNameBadRequest
 const PostConfigVlanVlanIDMemberIfNameBadRequestCode int = 400
 
-/*PostConfigVlanVlanIDMemberIfNameBadRequest Malformed arguments for API call
+/*
+PostConfigVlanVlanIDMemberIfNameBadRequest Malformed arguments for API call
 
 swagger:response postConfigVlanVlanIdMemberIfNameBadRequest
 */
@@ -84,7 +86,8 @@ func (o *PostConfigVlanVlanIDMemberIfNameBadRequest) WriteResponse(rw http.Respo
 // PostConfigVlanVlanIDMemberIfNameUnauthorizedCode is the HTTP code returned for type PostConfigVlanVlanIDMemberIfNameUnauthorized
 const PostConfigVlanVlanIDMemberIfNameUnauthorizedCode int = 401
 
-/*PostConfigVlanVlanIDMemberIfNameUnauthorized Invalid authentication credentials
+/*
+PostConfigVlanVlanIDMemberIfNameUnauthorized Invalid authentication credentials
 
 swagger:response postConfigVlanVlanIdMemberIfNameUnauthorized
 */
@@ -128,7 +131,8 @@ func (o *PostConfigVlanVlanIDMemberIfNameUnauthorized) WriteResponse(rw http.Res
 // PostConfigVlanVlanIDMemberIfNameForbiddenCode is the HTTP code returned for type PostConfigVlanVlanIDMemberIfNameForbidden
 const PostConfigVlanVlanIDMemberIfNameForbiddenCode int = 403
 
-/*PostConfigVlanVlanIDMemberIfNameForbidden Capacity insufficient
+/*
+PostConfigVlanVlanIDMemberIfNameForbidden Capacity insufficient
 
 swagger:response postConfigVlanVlanIdMemberIfNameForbidden
 */
@@ -172,7 +176,8 @@ func (o *PostConfigVlanVlanIDMemberIfNameForbidden) WriteResponse(rw http.Respon
 // PostConfigVlanVlanIDMemberIfNameNotFoundCode is the HTTP code returned for type PostConfigVlanVlanIDMemberIfNameNotFound
 const PostConfigVlanVlanIDMemberIfNameNotFoundCode int = 404
 
-/*PostConfigVlanVlanIDMemberIfNameNotFound Vlan interface is not defined
+/*
+PostConfigVlanVlanIDMemberIfNameNotFound Vlan interface is not defined
 
 swagger:response postConfigVlanVlanIdMemberIfNameNotFound
 */
@@ -216,7 +221,8 @@ func (o *PostConfigVlanVlanIDMemberIfNameNotFound) WriteResponse(rw http.Respons
 // PostConfigVlanVlanIDMemberIfNameConflictCode is the HTTP code returned for type PostConfigVlanVlanIDMemberIfNameConflict
 const PostConfigVlanVlanIDMemberIfNameConflictCode int = 409
 
-/*PostConfigVlanVlanIDMemberIfNameConflict Resource Conflict. VLAN member already exists on this VLAN interface OR Vlan member is being added to 2nd Vlan inteface as an untagged member.
+/*
+PostConfigVlanVlanIDMemberIfNameConflict Resource Conflict. VLAN member already exists on this VLAN interface OR Vlan member is being added to 2nd Vlan inteface as an untagged member.
 
 swagger:response postConfigVlanVlanIdMemberIfNameConflict
 */
@@ -260,7 +266,8 @@ func (o *PostConfigVlanVlanIDMemberIfNameConflict) WriteResponse(rw http.Respons
 // PostConfigVlanVlanIDMemberIfNameInternalServerErrorCode is the HTTP code returned for type PostConfigVlanVlanIDMemberIfNameInternalServerError
 const PostConfigVlanVlanIDMemberIfNameInternalServerErrorCode int = 500
 
-/*PostConfigVlanVlanIDMemberIfNameInternalServerError Internal service error
+/*
+PostConfigVlanVlanIDMemberIfNameInternalServerError Internal service error
 
 swagger:response postConfigVlanVlanIdMemberIfNameInternalServerError
 */
@@ -304,7 +311,8 @@ func (o *PostConfigVlanVlanIDMemberIfNameInternalServerError) WriteResponse(rw h
 // PostConfigVlanVlanIDMemberIfNameServiceUnavailableCode is the HTTP code returned for type PostConfigVlanVlanIDMemberIfNameServiceUnavailable
 const PostConfigVlanVlanIDMemberIfNameServiceUnavailableCode int = 503
 
-/*PostConfigVlanVlanIDMemberIfNameServiceUnavailable Maintanence mode
+/*
+PostConfigVlanVlanIDMemberIfNameServiceUnavailable Maintanence mode
 
 swagger:response postConfigVlanVlanIdMemberIfNameServiceUnavailable
 */
