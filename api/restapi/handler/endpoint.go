@@ -32,16 +32,20 @@ func ConfigGetEndPoint(params operations.GetConfigEndpointAllParams) middleware.
 		tk.LogIt(tk.LogDebug, "[API] Error : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
-	var result []*models.EndPointState
-	result = make([]*models.EndPointState, 0)
+	var result []*models.EndPointGetEntry
+	result = make([]*models.EndPointGetEntry, 0)
 	for _, ep := range res {
-		var tmpEP models.EndPointState
+		var tmpEP models.EndPointGetEntry
 
 		// Service Arg match
 		tmpEP.HostName = ep.Name
 		tmpEP.Description = ep.Desc
 		tmpEP.InactiveReTries = int64(ep.InActTries)
 		tmpEP.ProbeType = ep.ProbeType
+		tmpEP.ProbeReq = ep.ProbeReq
+		tmpEP.ProbeResp = ep.ProbeResp
+		tmpEP.ProbeDuration = int64(ep.ProbeDuration)
+		tmpEP.ProbePort = int64(ep.ProbePort)
 		tmpEP.MinDelay = ep.MinDelay
 		tmpEP.AvgDelay = ep.AvgDelay
 		tmpEP.MaxDelay = ep.MaxDelay
@@ -55,17 +59,18 @@ func ConfigGetEndPoint(params operations.GetConfigEndpointAllParams) middleware.
 }
 
 func ConfigPostEndPoint(params operations.PostConfigEndpointParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] EndPoint %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] EndPoint %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	EP := cmn.EndPointMod{}
 	EP.Name = params.Attr.HostName
 	EP.Desc = params.Attr.Description
 	EP.ProbeType = params.Attr.ProbeType
 	EP.InActTries = int(params.Attr.InactiveReTries)
-	EP.ProbeReq = params.Attr.ProbeReqURL
+	EP.ProbeReq = params.Attr.ProbeReq
+	EP.ProbeResp = params.Attr.ProbeResp
 	EP.ProbeDuration = uint32(params.Attr.ProbeDuration)
 	EP.ProbePort = uint16(params.Attr.ProbePort)
-
+	
 	_, err := ApiHooks.NetEpHostAdd(&EP)
 	if err != nil {
 		return &ResultResponse{Result: err.Error()}
@@ -74,7 +79,7 @@ func ConfigPostEndPoint(params operations.PostConfigEndpointParams) middleware.R
 }
 
 func ConfigDeleteEndPoint(params operations.DeleteConfigEndpointParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] EndPoint %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] EndPoint %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	EP := cmn.EndPointMod{}
 	EP.Name = *params.HostName

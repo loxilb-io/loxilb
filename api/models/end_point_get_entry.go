@@ -12,10 +12,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// EndPointState end point state
+// EndPointGetEntry end point get entry
 //
-// swagger:model EndPointState
-type EndPointState struct {
+// swagger:model EndPointGetEntry
+type EndPointGetEntry struct {
 
 	// Average delay seen for endpoint
 	AvgDelay string `json:"avgDelay,omitempty"`
@@ -44,22 +44,28 @@ type EndPointState struct {
 	// The l4port to probe on
 	ProbePort int64 `json:"probePort,omitempty"`
 
+	// URI for http/https probes
+	ProbeReq string `json:"probeReq,omitempty"`
+
+	// Response for http/https probes
+	ProbeResp string `json:"probeResp,omitempty"`
+
 	// Type of probe used
 	ProbeType string `json:"probeType,omitempty"`
 }
 
-// Validate validates this end point state
-func (m *EndPointState) Validate(formats strfmt.Registry) error {
+// Validate validates this end point get entry
+func (m *EndPointGetEntry) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this end point state based on context it is used
-func (m *EndPointState) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this end point get entry based on context it is used
+func (m *EndPointGetEntry) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *EndPointState) MarshalBinary() ([]byte, error) {
+func (m *EndPointGetEntry) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -67,8 +73,8 @@ func (m *EndPointState) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *EndPointState) UnmarshalBinary(b []byte) error {
-	var res EndPointState
+func (m *EndPointGetEntry) UnmarshalBinary(b []byte) error {
+	var res EndPointGetEntry
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
