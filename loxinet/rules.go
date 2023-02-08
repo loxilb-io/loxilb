@@ -1516,7 +1516,7 @@ func (ep *epHost) epCheckNow(R *RuleH) {
 		}
 
 		urlStr := fmt.Sprintf("https://%s:%d/%s", addr.String(), ep.opts.probePort, ep.opts.probeReq)
-		sOk := tk.HTTPSProber(urlStr, R.rootCAPool, ep.opts.probeResp)
+		sOk := HTTPSProber(urlStr, R.rootCAPool, ep.opts.probeResp)
 		//tk.LogIt(tk.LogDebug, "[PROBE] https ep - URL[%s:%s] Resp[%s] %v\n", ep.hostName, urlStr, ep.opts.probeResp, sOk)
 		ep.transitionState(sOk, ep.opts.inActTryThr)
 	} else {

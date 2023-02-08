@@ -27,6 +27,8 @@ import (
 	"strconv"
 	"syscall"
 	"time"
+	"crypto/x509"
+	"crypto/tls"
 )
 
 // IterIntf - interface implementation to iterate various loxinet
@@ -144,4 +146,38 @@ func KAString2Mode(kaStr string) (bool, bool) {
 		kaMode = true
 	}
 	return spawnKa, kaMode
+}
+
+
+// HTTPSProber - Do a https probe for given url
+// returns true/false depending on whether probing was successful
+func HTTPSProber(urls string, certPool *x509.CertPool, resp string) bool {
+	var err error
+	var req *http.Request
+	var res *http.Response
+
+	timeout := time.Duration(2 * time.Second)
+	client := http.Client{Timeout: timeout,
+						  Transport: &http.Transport{
+							IdleConnTimeout: 5 * time.Second,
+  						    TLSClientConfig: &tls.Config{RootCAs: certPool,},},
+						 }
+    if req, err = http.NewRequest(http.MethodGet, urls, nil); err != nil {
+		return false
+	}
+
+	res, err = client.Do(req)
+	if err != nil || res.StatusCode != 200 {
+		return false
+	}
+	defer res.Body.Close()
+	if resp != "" {
+		data, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return false
+		}
+		return string(data) == resp
+	}
+
+	return true
 }
