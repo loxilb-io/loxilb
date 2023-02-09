@@ -1,0 +1,72 @@
+global:
+  config:
+        as: 64512
+        router-id: 11.11.11.2
+  apply-policy:
+    config:
+      export-policy-list:
+        - set-next-hop-self-ext
+        - set-next-hop-self-int1
+        - set-next-hop-self-int2
+        - set-next-hop-self-int3
+neighbors:
+    - config:
+        neighbor-address: 11.11.11.254
+        peer-as: 65001
+    - config:
+        neighbor-address: 31.31.31.1
+        peer-as: 64512
+    - config:
+        neighbor-address: 32.32.32.1
+        peer-as: 64512
+    - config:
+        neighbor-address: 33.33.33.1
+        peer-as: 64512
+defined-sets:
+  neighbor-sets:
+    - neighbor-set-name: ext
+      neighbor-info-list:
+        - 11.11.11.254
+    - neighbor-set-name: int1
+      neighbor-info-list:
+        - 31.31.31.1
+    - neighbor-set-name: int2
+      neighbor-info-list:
+        - 32.32.32.1
+    - neighbor-set-name: int3
+      neighbor-info-list:
+        - 33.33.33.1
+policy-definitions:
+  - name: set-next-hop-self-ext
+    statements:
+      - conditions:
+          match-neighbor-set:
+            neighbor-set: ext
+        actions:
+          bgp-actions:
+            set-next-hop: 11.11.11.2
+  - name: set-next-hop-self-int1
+    statements:
+      - conditions:
+          match-neighbor-set:
+            neighbor-set: int1
+        actions:
+          bgp-actions:
+            set-next-hop: 31.31.31.254
+  - name: set-next-hop-self-int2
+    statements:
+      - conditions:
+          match-neighbor-set:
+            neighbor-set: int2
+        actions:
+          bgp-actions:
+            set-next-hop: 32.32.32.254
+  - name: set-next-hop-self-int3
+    statements:
+      - conditions:
+          match-neighbor-set:
+            neighbor-set: int3
+        actions:
+          bgp-actions:
+            set-next-hop: 33.33.33.254
+            
