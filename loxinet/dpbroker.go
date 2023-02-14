@@ -87,7 +87,7 @@ const (
 type MirrDpWorkQ struct {
 	Work      DpWorkT
 	Name      string
-	HwMark    int
+	Mark      int
 	MiPortNum int
 	MiBD      int
 	Status    *DpStatusT
@@ -163,20 +163,20 @@ type NextHopDpWorkQ struct {
 
 // RouteDpWorkQ - work queue entry for rt operation
 type RouteDpWorkQ struct {
-	Work     DpWorkT
-	Status   *DpStatusT
-	ZoneNum  int
-	Dst      net.IPNet
-	RtType   int
-	RtHwMark int
-	NHwMark  int
+	Work    DpWorkT
+	Status  *DpStatusT
+	ZoneNum int
+	Dst     net.IPNet
+	RtType  int
+	RtMark  int
+	NMark   int
 }
 
 // StatDpWorkQ - work queue entry for stat operation
 type StatDpWorkQ struct {
 	Work        DpWorkT
 	Name        string
-	HwMark      uint32
+	Mark        uint32
 	Packets     *uint64
 	Bytes       *uint64
 	DropPackets *uint64
@@ -192,7 +192,7 @@ type TableDpWorkQ struct {
 type PolDpWorkQ struct {
 	Work   DpWorkT
 	Name   string
-	HwMark int
+	Mark   int
 	Cir    uint64
 	Pir    uint64
 	Cbs    uint64
@@ -234,7 +234,7 @@ type FwDpWorkQ struct {
 	Port     uint16
 	Pref     uint16
 	Proto    uint8
-	HwMark   int
+	Mark     int
 	FwType   FwOpT
 	FwVal1   uint16
 	FwVal2   uint32
@@ -282,7 +282,7 @@ type NatDpWorkQ struct {
 	BlockNum  uint16
 	DsrMode   bool
 	Proto     uint8
-	HwMark    int
+	Mark      int
 	NatType   NatT
 	EpSel     NatSel
 	InActTo   uint64
@@ -330,7 +330,7 @@ type UlClDpWorkQ struct {
 	mTeID  uint32
 	Zone   int
 	Qfi    uint8
-	HwMark int
+	Mark   int
 	TDip   net.IP
 	TSip   net.IP
 	TTeID  uint32

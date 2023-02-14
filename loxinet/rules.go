@@ -234,7 +234,7 @@ type ruleStat struct {
 
 type ruleEnt struct {
 	zone    *Zone
-	ruleNum int
+	ruleNum uint64
 	Sync    DpStatusT
 	tuples  ruleTuples
 	CI      string
@@ -252,7 +252,7 @@ type ruleTable struct {
 	eMap       map[string]*ruleEnt
 	rArr       [RtMaximumLbs]*ruleEnt
 	pMap       []*ruleEnt
-	HwMark     *tk.Counter
+	Mark       *tk.Counter
 }
 
 type ruleTableType uint
@@ -306,12 +306,12 @@ func RulesInit(zone *Zone) *RuleH {
 	nRh.Tables[RtFw].tableMatch = RmMax - 1
 	nRh.Tables[RtFw].tableType = RtMf
 	nRh.Tables[RtFw].eMap = make(map[string]*ruleEnt)
-	nRh.Tables[RtFw].HwMark = tk.NewCounter(1, RtMaximumFw4s)
+	nRh.Tables[RtFw].Mark = tk.NewCounter(1, RtMaximumFw4s)
 
 	nRh.Tables[RtLB].tableMatch = RmL3Dst | RmL4Dst | RmL4Prot
 	nRh.Tables[RtLB].tableType = RtEm
 	nRh.Tables[RtLB].eMap = make(map[string]*ruleEnt)
-	nRh.Tables[RtLB].HwMark = tk.NewCounter(1, RtMaximumLbs)
+	nRh.Tables[RtLB].Mark = tk.NewCounter(1, RtMaximumLbs)
 
 	for i := 0; i < MaxEndPointCheckers; i++ {
 		nRh.epCs[i].tD = make(chan bool)
@@ -971,7 +971,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		r.ActChk = serv.Monitor
 	}
 	r.act.action = &natActs
-	r.ruleNum, err = R.Tables[RtLB].HwMark.GetCounter()
+	r.ruleNum, err = R.Tables[RtLB].Mark.GetCounter()
 	if err != nil {
 		tk.LogIt(tk.LogError, "nat lb-rule - %s:%s hwm error\n", eRule.tuples.String(), eRule.act.String())
 		return RuleAllocErr, errors.New("rule-hwm error")
@@ -1034,7 +1034,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 		return RuleNotExistsErr, errors.New("no-rule error")
 	}
 
-	defer R.Tables[RtLB].HwMark.PutCounter(rule.ruleNum)
+	defer R.Tables[RtLB].Mark.PutCounter(rule.ruleNum)
 
 	eEps := rule.act.action.(*ruleNatActs).endPoints
 	R.modNatEpHost(rule, eEps, false)
@@ -1181,7 +1181,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	}
 
 	r.act.action = &fwOpts
-	r.ruleNum, err = R.Tables[RtFw].HwMark.GetCounter()
+	r.ruleNum, err = R.Tables[RtFw].Mark.GetCounter()
 	if err != nil {
 		tk.LogIt(tk.LogError, "fw-rule - %s:%s mark error\n", eFw.tuples.String(), eFw.act.String())
 		return RuleAllocErr, errors.New("rule-mark error")
@@ -1251,7 +1251,7 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 		return RuleNotExistsErr, errors.New("no-rule error")
 	}
 
-	defer R.Tables[RtFw].HwMark.PutCounter(rule.ruleNum)
+	defer R.Tables[RtFw].Mark.PutCounter(rule.ruleNum)
 
 	delete(R.Tables[RtFw].eMap, rt.ruleKey())
 
@@ -1738,7 +1738,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.ServiceIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
 	nWork.L4Port = r.tuples.l4Dst.val
 	nWork.Proto = r.tuples.l4Prot.val
-	nWork.HwMark = r.ruleNum
+	nWork.Mark = int(r.ruleNum)
 	nWork.BlockNum = r.tuples.pref
 	nWork.InActTo = uint64(r.iTo)
 
@@ -1927,7 +1927,7 @@ func (r *ruleEnt) Fw2DP(work DpWorkT) int {
 		nWork.Port = uint16(port.PortNo)
 	}
 	nWork.Proto = r.tuples.l4Prot.val
-	nWork.HwMark = r.ruleNum
+	nWork.Mark = int(r.ruleNum)
 	nWork.Pref = r.tuples.pref
 
 	switch at := r.act.action.(type) {
@@ -1982,7 +1982,7 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 	if work == DpStatsGet {
 		nStat := new(StatDpWorkQ)
 		nStat.Work = work
-		nStat.HwMark = uint32(r.ruleNum)
+		nStat.Mark = uint32(r.ruleNum)
 		if isNat == true {
 			nStat.Name = MapNameNat4
 		} else {

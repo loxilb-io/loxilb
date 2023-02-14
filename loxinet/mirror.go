@@ -67,7 +67,7 @@ type MirrEntry struct {
 	Key   MirrKey
 	Info  cmn.MirrInfo
 	Zone  *Zone
-	HwNum int
+	HwNum uint64
 	Stats PolStats
 	Sync  DpStatusT
 	MObjs []MirrObjInfo
@@ -77,7 +77,7 @@ type MirrEntry struct {
 type MirrH struct {
 	MirrMap map[MirrKey]*MirrEntry
 	Zone    *Zone
-	HwMark  *tk.Counter
+	Mark    *tk.Counter
 }
 
 // MirrInit - Initialize the mirror subsytem
@@ -85,7 +85,7 @@ func MirrInit(zone *Zone) *MirrH {
 	var nMh = new(MirrH)
 	nMh.MirrMap = make(map[MirrKey]*MirrEntry)
 	nMh.Zone = zone
-	nMh.HwMark = tk.NewCounter(1, MaxMirrors)
+	nMh.Mark = tk.NewCounter(1, MaxMirrors)
 	return nMh
 }
 
@@ -181,7 +181,7 @@ func (M *MirrH) MirrAdd(name string, mInfo cmn.MirrInfo, mObjArgs cmn.MirrObj) (
 	m.Key.Name = name
 	m.Info = mInfo
 	m.Zone = M.Zone
-	m.HwNum, _ = M.HwMark.GetCounter()
+	m.HwNum, _ = M.Mark.GetCounter()
 	if m.HwNum < 0 {
 		return MirrAllocErr, errors.New("mirr-alloc error")
 	}
@@ -293,7 +293,7 @@ func (mObjInfo *MirrObjInfo) MirrObj2DP(work DpWorkT) int {
 
 	if work == DpCreate {
 		_, err := mObjInfo.Parent.Zone.Ports.PortUpdateProp(port.Name, cmn.PortPropSpan,
-			mObjInfo.Parent.Zone.Name, true, mObjInfo.Parent.HwNum)
+			mObjInfo.Parent.Zone.Name, true, int(mObjInfo.Parent.HwNum))
 		if err != nil {
 			mObjInfo.Sync = 1
 			return -1
@@ -318,7 +318,7 @@ func (m *MirrEntry) DP(work DpWorkT) int {
 
 	mwq := new(MirrDpWorkQ)
 	mwq.Work = work
-	mwq.HwMark = m.HwNum
+	mwq.Mark = int(m.HwNum)
 	if work == DpCreate {
 		port := m.Zone.Ports.PortFindByName(m.Info.MirrPort)
 		if port == nil {

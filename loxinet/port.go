@@ -112,7 +112,7 @@ type PortSwInfo struct {
 	PortActive bool
 	PortReal   *Port
 	PortOvl    *Port
-	SessMark   int
+	SessMark   uint64
 	BpfLoaded  bool
 }
 
@@ -141,10 +141,10 @@ type PortsH struct {
 	portSmap   map[string]*Port
 	portOmap   map[int]*Port
 	portNotifs []PortEventIntf
-	portHwMark *tk.Counter
-	bondHwMark *tk.Counter
-	wGHwMark   *tk.Counter
-	vtiHwMark  *tk.Counter
+	portMark   *tk.Counter
+	bondMark   *tk.Counter
+	wGMark     *tk.Counter
+	vtiMark    *tk.Counter
 }
 
 // PortInit - Initialize the port subsystem
@@ -153,10 +153,10 @@ func PortInit() *PortsH {
 	nllp.portImap = make([]*Port, MaxInterfaces)
 	nllp.portSmap = make(map[string]*Port)
 	nllp.portOmap = make(map[int]*Port)
-	nllp.portHwMark = tk.NewCounter(1, MaxInterfaces)
-	nllp.bondHwMark = tk.NewCounter(1, MaxBondInterfaces)
-	nllp.wGHwMark = tk.NewCounter(1, MaxWgInterfaces)
-	nllp.vtiHwMark = tk.NewCounter(1, MaxVtiInterfaces)
+	nllp.portMark = tk.NewCounter(1, MaxInterfaces)
+	nllp.bondMark = tk.NewCounter(1, MaxBondInterfaces)
+	nllp.wGMark = tk.NewCounter(1, MaxWgInterfaces)
+	nllp.vtiMark = tk.NewCounter(1, MaxVtiInterfaces)
 	return nllp
 }
 
@@ -298,20 +298,20 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		return PortExistsErr, errors.New("port exists")
 	}
 
-	var rid int
+	var rid uint64
 	var err error
 
 	if ptype == cmn.PortBond {
-		rid, err = P.bondHwMark.GetCounter()
+		rid, err = P.bondMark.GetCounter()
 	} else if ptype == cmn.PortWg {
-		rid, err = P.wGHwMark.GetCounter()
+		rid, err = P.wGMark.GetCounter()
 	} else if ptype == cmn.PortVti {
-		rid, err = P.vtiHwMark.GetCounter()
+		rid, err = P.vtiMark.GetCounter()
 	} else {
-		rid, err = P.portHwMark.GetCounter()
+		rid, err = P.portMark.GetCounter()
 	}
 	if err != nil {
-		tk.LogIt(tk.LogError, "port add - %s hwmark error\n", name)
+		tk.LogIt(tk.LogError, "port add - %s mark error\n", name)
 		return PortCounterErr, err
 	}
 
@@ -331,7 +331,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 	p.Name = name
 	p.Zone = zone
 	p.HInfo = hwi
-	p.PortNo = rid
+	p.PortNo = int(rid)
 	p.SInfo.PortActive = true
 	p.SInfo.OsID = osid
 	p.SInfo.PortType = ptype
@@ -342,7 +342,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 	switch ptype {
 	case cmn.PortReal:
 		p.L2.IsPvid = true
-		p.L2.Vid = rid + RealPortIDB
+		p.L2.Vid = int(rid) + RealPortIDB
 
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
@@ -350,7 +350,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 			PortHwInfo{vMac, true, true, 9000, "", "", 0, nil, nil})
 	case cmn.PortBond:
 		p.L2.IsPvid = true
-		p.L2.Vid = rid + BondIDB
+		p.L2.Vid = int(rid) + BondIDB
 
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
@@ -358,7 +358,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 			PortHwInfo{vMac, true, true, 9000, "", "", 0, nil, nil})
 	case cmn.PortWg:
 		p.L2.IsPvid = true
-		p.L2.Vid = rid + WgIDB
+		p.L2.Vid = int(rid) + WgIDB
 
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
@@ -366,7 +366,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 			PortHwInfo{vMac, true, true, 9000, "", "", 0, nil, nil})
 	case cmn.PortVti:
 		p.L2.IsPvid = true
-		p.L2.Vid = rid + VtIDB
+		p.L2.Vid = int(rid) + VtIDB
 
 		/* We create an vlan BD to keep things in sync */
 		vstr := fmt.Sprintf("vlan%d", p.L2.Vid)
@@ -381,7 +381,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		p.L2.IsPvid = true
 		p.L2.Vid = int(p.HInfo.TunID)
 	case cmn.PortIPTun:
-		p.SInfo.SessMark, err = zn.Sess.HwMark.GetCounter()
+		p.SInfo.SessMark, err = zn.Sess.Mark.GetCounter()
 		if err != nil {
 			tk.LogIt(tk.LogError, "port add - %s sess-alloc fail\n", name)
 			p.SInfo.SessMark = 0
@@ -489,7 +489,7 @@ func (P *PortsH) PortDel(name string, ptype int) (int, error) {
 			zone.Vlans.VlanDelete(p.L2.Vid)
 		}
 	case cmn.PortIPTun:
-		zone.Sess.HwMark.PutCounter(p.SInfo.SessMark)
+		zone.Sess.Mark.PutCounter(p.SInfo.SessMark)
 	}
 
 	p.SInfo.PortReal = nil
@@ -897,7 +897,7 @@ func (p *Port) DP(work DpWorkT) int {
 		ipts.MSip = p.HInfo.TunDst
 		ipts.mTeID = 0
 		ipts.Zone = zoneNum
-		ipts.HwMark = p.SInfo.SessMark
+		ipts.Mark = int(p.SInfo.SessMark)
 		ipts.Type = DpTunIPIP
 		ipts.Qfi = 0
 		ipts.TTeID = 0

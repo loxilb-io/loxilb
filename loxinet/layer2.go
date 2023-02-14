@@ -361,7 +361,7 @@ func (f *FdbEnt) DP(work DpWorkT) int {
 	}
 
 	if f.FdbTun.nh != nil {
-		l2Wq.NhNum = f.FdbTun.nh.HwMark
+		l2Wq.NhNum = int(f.FdbTun.nh.Mark)
 	}
 
 	for i := 0; i < 6; i++ {
@@ -396,7 +396,7 @@ func (f *FdbEnt) DP(work DpWorkT) int {
 		rmWq.TunID = f.Port.HInfo.TunID
 		rmWq.TunType = DpTunVxlan
 		rmWq.BD = f.Port.L2.Vid
-		rmWq.NhNum = f.FdbTun.ep.HwMark
+		rmWq.NhNum = int(f.FdbTun.ep.Mark)
 		mh.dp.ToDpCh <- rmWq
 	}
 

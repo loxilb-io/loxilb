@@ -85,11 +85,12 @@ func (z *ZoneH) ZoneAdd(name string) (int, error) {
 
 	zone = new(Zone)
 
-	zone.ZoneNum, err = z.ZoneMark.GetCounter()
+	zNum, err := z.ZoneMark.GetCounter()
 	if err != nil {
 		return ZoneNumberErr, errors.New("zone number err")
 	}
 
+	zone.ZoneNum = int(zNum)
 	zone.Name = name
 	zone.Ports = PortInit()
 	zone.Vlans = VlanInit(zone)

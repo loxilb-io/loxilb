@@ -75,7 +75,7 @@ type NeighTunEp struct {
 	rIP      net.IP
 	tunID    uint32
 	tunType  DpTunT
-	HwMark   int
+	Mark     uint64
 	Parent   *Neigh
 	Inactive bool
 	Sync     DpStatusT
@@ -88,8 +88,8 @@ type Neigh struct {
 	Attr     NeighAttr
 	Inactive bool
 	Resolved bool
-	HwMark   int
-	RHwMark  int
+	Mark     uint64
+	RMark    uint64
 	RecNh    *Neigh
 	tFdb     *FdbEnt
 	TunEps   []*NeighTunEp
@@ -179,7 +179,7 @@ func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, sIP net.IP, tunID uint32, 
 	if err != nil {
 		return -1, nil
 	}
-	tep.HwMark = idx
+	tep.Mark = idx
 	tep.Parent = ne
 
 	ne.TunEps = append(ne.TunEps, tep)
@@ -206,7 +206,7 @@ func (n *NeighH) NeighDelAllTunEP(ne *Neigh) int {
 	var i int = 0
 	for _, tep := range ne.TunEps {
 		tep.DP(DpRemove)
-		n.NeighTID.PutCounter(tep.HwMark)
+		n.NeighTID.PutCounter(tep.Mark)
 		tep.Inactive = true
 		ne.NeighRemoveTunEP(i)
 		i++
@@ -239,7 +239,7 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 		ne.Resolved = false
 		ne.Type &= ^NhRecursive
 		ne.tFdb = nil
-		ne.RHwMark = 0
+		ne.RMark = 0
 	}
 
 	if ne.Resolved == true {
@@ -251,27 +251,27 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 				case *Neigh:
 					if rtn == nil {
 						ne.Resolved = false
-						ne.RHwMark = 0
+						ne.RMark = 0
 						return false
 					}
 				default:
 					ne.Resolved = false
-					ne.RHwMark = 0
+					ne.RMark = 0
 					return false
 				}
 				if nh, ok := tDat.(*Neigh); ok && !nh.Inactive {
 					rt := n.Zone.Rt.RtFind(*pDstNet, n.Zone.Name)
 					if rt == nil {
 						ne.Resolved = false
-						ne.RHwMark = 0
+						ne.RMark = 0
 						return false
 					}
-					if ne.RHwMark == 0 || ne.RecNh == nil || ne.RecNh != nh {
+					if ne.RMark == 0 || ne.RecNh == nil || ne.RecNh != nh {
 						tk.LogIt(tk.LogDebug, "IPTun-NH for %s:%s\n", port.HInfo.TunDst.String(), nh.Key.NhString)
 						ret, tep := n.NeighAddTunEP(nh, port.HInfo.TunDst, port.HInfo.TunSrc, port.HInfo.TunID, DpTunIPIP, true)
 						if ret == 0 {
 							rt.RtDepObjs = append(rt.RtDepObjs, nh)
-							ne.RHwMark = tep.HwMark
+							ne.RMark = tep.Mark
 							ne.Resolved = true
 							ne.RecNh = nh
 							ne.Type |= NhRecursive
@@ -296,20 +296,20 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 			if hasTun {
 				ne.tFdb = nil
 				ne.Resolved = false
-				ne.RHwMark = 0
+				ne.RMark = 0
 			}
 		} else {
 			if f.FdbAttr.FdbType == cmn.FdbTun {
 				if f.unReach || f.FdbTun.ep == nil {
 					ne.Resolved = false
-					ne.RHwMark = 0
+					ne.RMark = 0
 				} else {
 					if ne.tFdb != f {
 						ne.tFdb = f
-						ne.RHwMark = f.FdbTun.ep.HwMark
+						ne.RMark = f.FdbTun.ep.Mark
 						chg = true
-					} else if ne.RHwMark != f.FdbTun.ep.HwMark {
-						ne.RHwMark = f.FdbTun.ep.HwMark
+					} else if ne.RMark != f.FdbTun.ep.Mark {
+						ne.RMark = f.FdbTun.ep.Mark
 						chg = true
 					}
 					ne.Type |= NhRecursive
@@ -336,7 +336,7 @@ func (n *NeighH) NeighGet() ([]cmn.NeighMod, error) {
 
 // NeighAdd - add a neigh entry
 func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error) {
-	var idx int
+	var idx uint64
 	var err error
 	key := NeighKey{Addr.String(), Zone}
 	zeroHwAddr, _ := net.ParseMAC("00:00:00:00:00:00")
@@ -384,7 +384,7 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 
 	idx, err = n.NeighID.GetCounter()
 	if err != nil {
-		tk.LogIt(tk.LogError, "neigh add - %s:%s no hwmarks\n", Addr.String(), Zone)
+		tk.LogIt(tk.LogError, "neigh add - %s:%s no marks\n", Addr.String(), Zone)
 		return NeighRangeErr, errors.New("nh-hwm error")
 	}
 
@@ -394,7 +394,7 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 	ne.Addr = Addr
 	ne.Attr = Attr
 	ne.OifPort = port
-	ne.HwMark = idx
+	ne.Mark = idx
 	ne.Type |= NhNormal
 	ne.NhRtm = make(map[RtKey]*Rt)
 	ne.Inactive = false
@@ -440,7 +440,7 @@ NhExist:
 
 	n.Activate(ne)
 
-	tk.LogIt(tk.LogDebug, "neigh added - %s:%s (%v)\n", Addr.String(), Zone, ne.HwMark)
+	tk.LogIt(tk.LogDebug, "neigh added - %s:%s (%v)\n", Addr.String(), Zone, ne.Mark)
 
 	return 0, nil
 }
@@ -502,10 +502,10 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 	}
 
 	n.NeighDelAllTunEP(ne)
-	n.NeighID.PutCounter(ne.HwMark)
+	n.NeighID.PutCounter(ne.Mark)
 
 	ne.tFdb = nil
-	ne.HwMark = -1
+	ne.Mark = ^uint64(0)
 	ne.OifPort = nil
 	ne.Inactive = true
 	ne.Resolved = false
@@ -577,9 +577,9 @@ func (n *NeighH) NeighUnPairRt(ne *Neigh, rt *Rt) int {
 // Neigh2String - stringify a neighbor
 func Neigh2String(ne *Neigh, it IterIntf) {
 
-	nhBuf := fmt.Sprintf("%16s: %s (R:%v) Oif %8s HwMark %d",
+	nhBuf := fmt.Sprintf("%16s: %s (R:%v) Oif %8s Mark %d",
 		ne.Key.NhString, ne.Attr.HardwareAddr.String(),
-		ne.Resolved, ne.OifPort.Name, ne.HwMark)
+		ne.Resolved, ne.OifPort.Name, ne.Mark)
 
 	it.NodeWalker(nhBuf)
 }
@@ -646,15 +646,15 @@ func (ne *Neigh) DP(work DpWorkT) int {
 	if ne.Type&NhRecursive == NhRecursive {
 		f := ne.tFdb
 		if f != nil && f.FdbTun.ep != nil {
-			neighWq.NNextHopNum = ne.RHwMark
+			neighWq.NNextHopNum = int(ne.RMark)
 		} else if ne.OifPort != nil && ne.OifPort.IsL3TunPort() {
-			neighWq.NNextHopNum = ne.RHwMark
+			neighWq.NNextHopNum = int(ne.RMark)
 		} else {
 			neighWq.Resolved = false
 		}
-		neighWq.NextHopNum = ne.HwMark
+		neighWq.NextHopNum = int(ne.Mark)
 	} else {
-		neighWq.NextHopNum = ne.HwMark
+		neighWq.NextHopNum = int(ne.Mark)
 	}
 
 	for i := 0; i < 6; i++ {
@@ -686,7 +686,7 @@ func (tep *NeighTunEp) DP(work DpWorkT) int {
 	neighWq := new(NextHopDpWorkQ)
 	neighWq.Work = work
 	neighWq.Status = &tep.Sync
-	neighWq.NextHopNum = tep.HwMark
+	neighWq.NextHopNum = int(tep.Mark)
 	neighWq.Resolved = ne.Resolved
 	neighWq.RIP = tep.rIP
 	neighWq.SIP = tep.sIP
