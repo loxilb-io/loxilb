@@ -51,22 +51,18 @@ policy-definitions:
           match-neighbor-set:
             neighbor-set: int1
         actions:
-          bgp-actions:
-            set-next-hop: 31.31.31.254
+            route-disposition: reject-route
   - name: set-next-hop-self-int2
     statements:
       - conditions:
           match-neighbor-set:
             neighbor-set: int2
         actions:
-          bgp-actions:
-            set-next-hop: 32.32.32.254
+            route-disposition: reject-route
   - name: set-next-hop-self-int3
     statements:
       - conditions:
           match-neighbor-set:
             neighbor-set: int3
         actions:
-          bgp-actions:
-            set-next-hop: 33.33.33.254
-            
+            route-disposition: reject-route

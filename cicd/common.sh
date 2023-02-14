@@ -122,7 +122,8 @@ spawn_docker_host() {
         docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit --network=container:$dname $ka_conf -v /etc/shared/$dname:/etc/shared --name ka_$dname osixia/keepalived:2.0.20
       fi
     else
-      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname ghcr.io/loxilb-io/loxilb:latest $bgp_opts
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname ghcr.io/loxilb-io/loxilb:latest $bgp_opts
+      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts
     fi
   elif [[ "$dtype" == "host" ]]; then
     if [[ ! -z "$bpath" ]]; then

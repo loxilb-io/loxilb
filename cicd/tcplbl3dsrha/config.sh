@@ -13,6 +13,7 @@ spawn_docker_host --dock-type loxilb --dock-name llb2 --with-bgp yes --bgp-confi
 spawn_docker_host --dock-type host --dock-name ep1 --with-bgp yes --bgp-config $(pwd)/quagga_config2
 spawn_docker_host --dock-type host --dock-name ep2 --with-bgp yes --bgp-config $(pwd)/quagga_config3
 spawn_docker_host --dock-type host --dock-name ep3 --with-bgp yes --bgp-config $(pwd)/quagga_config4
+spawn_docker_host --dock-type host --dock-name r2
 spawn_docker_host --dock-type host --dock-name user
 
 echo "#########################################"
@@ -28,10 +29,17 @@ connect_docker_hosts llb1 ep3
 connect_docker_hosts llb2 ep1
 connect_docker_hosts llb2 ep2
 connect_docker_hosts llb2 ep3
+connect_docker_hosts ep1 r2
+connect_docker_hosts ep2 r2
+connect_docker_hosts ep3 r2
+connect_docker_hosts r1 r2
 
 #node1 config
 config_docker_host --host1 user --host2 r1 --ptype phy --addr 1.1.1.1/24 --gw 1.1.1.254
 config_docker_host --host1 r1 --host2 user --ptype phy --addr 1.1.1.254/24
+
+config_docker_host --host1 r1 --host2 r2 --ptype phy --addr 2.2.2.1/24
+config_docker_host --host1 r2 --host2 r1 --ptype phy --addr 2.2.2.2/24 --gw 2.2.2.1
 
 create_docker_host_vlan --host1 r1 --host2 llb1 --id 11 --ptype untagged
 create_docker_host_vlan --host1 llb1 --host2 r1 --id 11 --ptype untagged
@@ -70,6 +78,19 @@ create_docker_host_vlan --host1 ep3 --host2 llb1 --id 33 --ptype untagged
 create_docker_host_vlan --host1 ep3 --host2 llb2 --id 33 --ptype untagged
 config_docker_host --host1 ep3 --host2 r2 --ptype vlan --id 33 --addr 33.33.33.1/24
 
+create_docker_host_vlan --host1 r2 --host2 ep1 --id 3 --ptype untagged
+create_docker_host_vlan --host1 r2 --host2 ep2 --id 3 --ptype untagged
+create_docker_host_vlan --host1 r2 --host2 ep3 --id 3 --ptype untagged
+config_docker_host --host1 r2 --host2 ep1 --ptype vlan --id 3 --addr 3.3.3.254/24
+
+create_docker_host_vlan --host1 ep1 --host2 r2 --id 3 --ptype untagged
+config_docker_host --host1 ep1 --host2 r2 --ptype vlan --id 3 --addr 3.3.3.1/24 --gw 3.3.3.254
+
+create_docker_host_vlan --host1 ep2 --host2 r2 --id 3 --ptype untagged
+config_docker_host --host1 ep2 --host2 r2 --ptype vlan --id 3 --addr 3.3.3.2/24 --gw 3.3.3.254
+
+create_docker_host_vlan --host1 ep3 --host2 r2 --id 3 --ptype untagged
+config_docker_host --host1 ep3 --host2 r2 --ptype vlan --id 3 --addr 3.3.3.3/24 --gw 3.3.3.254
 
 #IPinIP Config 
 $hexec llb1 ip link add name ipip11 type ipip local 31.31.31.253 remote 31.31.31.1
