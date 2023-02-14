@@ -64,8 +64,8 @@ type UlClStats struct {
 type UlClInf struct {
 	Addr   net.IP
 	Qfi    uint8
-	NumUl  int
-	NumDl  int
+	NumUl  uint64
+	NumDl  uint64
 	Status DpStatusT
 	Stats  UlClStats
 	uSess  *UserSess
@@ -85,7 +85,7 @@ type UserSess struct {
 type SessH struct {
 	UserMap map[UserKey]*UserSess
 	Zone    *Zone
-	HwMark  *tk.Counter
+	Mark    *tk.Counter
 }
 
 // SessInit - routine to initialize session context
@@ -93,7 +93,7 @@ func SessInit(zone *Zone) *SessH {
 	var nUh = new(SessH)
 	nUh.UserMap = make(map[UserKey]*UserSess)
 	nUh.Zone = zone
-	nUh.HwMark = tk.NewCounter(1, MaximumUlCls)
+	nUh.Mark = tk.NewCounter(1, MaximumUlCls)
 	return nUh
 }
 
@@ -206,14 +206,14 @@ func (s *SessH) UlClAddCls(user string, cls cmn.UlClArg) (int, error) {
 	}
 
 	ulcl = new(UlClInf)
-	ulcl.NumUl, _ = s.HwMark.GetCounter()
+	ulcl.NumUl, _ = s.Mark.GetCounter()
 	if ulcl.NumUl < 0 {
 		return SessUlClNumErr, errors.New("ulcl-ulhwm error")
 	}
-	ulcl.NumDl, _ = s.HwMark.GetCounter()
+	ulcl.NumDl, _ = s.Mark.GetCounter()
 	if ulcl.NumDl < 0 {
-		s.HwMark.PutCounter(ulcl.NumUl)
-		ulcl.NumUl = -1
+		s.Mark.PutCounter(ulcl.NumUl)
+		ulcl.NumUl = ^uint64(0)
 		return SessUlClNumErr, errors.New("ulcl-dlhwm error")
 	}
 
@@ -250,7 +250,7 @@ func (s *SessH) UlClDeleteCls(user string, cls cmn.UlClArg) (int, error) {
 
 	ulcl.DP(DpRemove)
 
-	s.HwMark.PutCounter(ulcl.NumUl)
+	s.Mark.PutCounter(ulcl.NumUl)
 	delete(us.UlCl, cls.Addr.String())
 
 	return 0, nil
@@ -311,7 +311,7 @@ func (ulcl *UlClInf) DP(work DpWorkT) int {
 	if work == DpStatsGet {
 		uStat := new(StatDpWorkQ)
 		uStat.Work = work
-		uStat.HwMark = uint32(ulcl.NumUl)
+		uStat.Mark = uint32(ulcl.NumUl)
 		uStat.Name = MapNameULCL
 		uStat.Bytes = &ulcl.Stats.UlBytes
 		uStat.Packets = &ulcl.Stats.UlBytes
@@ -320,7 +320,7 @@ func (ulcl *UlClInf) DP(work DpWorkT) int {
 
 		dStat := new(StatDpWorkQ)
 		dStat.Work = work
-		dStat.HwMark = uint32(ulcl.NumDl)
+		dStat.Mark = uint32(ulcl.NumDl)
 		dStat.Name = MapNameULCL
 		dStat.Bytes = &ulcl.Stats.DlBytes
 		dStat.Packets = &ulcl.Stats.DlBytes
@@ -337,7 +337,7 @@ func (ulcl *UlClInf) DP(work DpWorkT) int {
 	ucn.MSip = ulcl.uSess.Addr
 	ucn.mTeID = ulcl.uSess.CnTun.TeID
 	ucn.Zone = ulcl.uSess.Zone
-	ucn.HwMark = ulcl.NumUl
+	ucn.Mark = int(ulcl.NumUl)
 	ucn.Qfi = ulcl.Qfi
 	ucn.TTeID = 0
 
@@ -350,7 +350,7 @@ func (ulcl *UlClInf) DP(work DpWorkT) int {
 	ucn.MDip = ulcl.uSess.Addr
 	ucn.mTeID = 0
 	ucn.Zone = ulcl.uSess.Zone
-	ucn.HwMark = ulcl.NumDl
+	ucn.Mark = int(ulcl.NumDl)
 	ucn.Qfi = ulcl.Qfi
 	ucn.TDip = ulcl.uSess.AnTun.Addr
 	ucn.TSip = ulcl.uSess.CnTun.Addr

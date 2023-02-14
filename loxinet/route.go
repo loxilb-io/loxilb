@@ -89,7 +89,7 @@ type Rt struct {
 	Dead      bool
 	Sync      DpStatusT
 	ZoneNum   int
-	HwMark    int
+	Mark      uint64
 	Stat      RtStat
 	NhAttr    []RtNhAttr
 	NextHops  []*Neigh
@@ -98,11 +98,11 @@ type Rt struct {
 
 // RtH - context container
 type RtH struct {
-	RtMap  map[RtKey]*Rt
-	Trie4  *tk.TrieRoot
-	Trie6  *tk.TrieRoot
-	Zone   *Zone
-	HwMark *tk.Counter
+	RtMap map[RtKey]*Rt
+	Trie4 *tk.TrieRoot
+	Trie6 *tk.TrieRoot
+	Zone  *Zone
+	Mark  *tk.Counter
 }
 
 // RtInit - Initialize the route subsystem
@@ -112,7 +112,7 @@ func RtInit(zone *Zone) *RtH {
 	nRt.Trie4 = tk.TrieInit(false)
 	nRt.Trie6 = tk.TrieInit(false)
 	nRt.Zone = zone
-	nRt.HwMark = tk.NewCounter(1, MaxSysRoutes)
+	nRt.Mark = tk.NewCounter(1, MaxSysRoutes)
 	return nRt
 }
 
@@ -153,7 +153,7 @@ func (r *RtH) RouteGet() ([]cmn.RouteGet, error) {
 			// TODO : Current multiple gw not showing. So I added as a static code
 			tmpRt.Gw = r2.NhAttr[0].NhAddr.String()
 		}
-		tmpRt.HardwareMark = r2.HwMark
+		tmpRt.HardwareMark = int(r2.Mark)
 		tmpRt.Protocol = r2.Attr.Protocol
 		tmpRt.Statistic.Bytes = int(r2.Stat.Bytes)
 		tmpRt.Statistic.Packets = int(r2.Stat.Packets)
@@ -284,8 +284,8 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 		return RtTrieAddErr, errors.New("RT Trie Err")
 	}
 
-	// If we cant allocate HwMark, we don't care
-	rt.HwMark, _ = r.HwMark.GetCounter()
+	// If we cant allocate Mark, we don't care
+	rt.Mark, _ = r.Mark.GetCounter()
 
 	r.RtMap[rt.Key] = rt
 
@@ -311,7 +311,7 @@ func (rt *Rt) rtClearDeps() {
 			f.unReach = true
 		} else if ne, ok := obj.(*Neigh); ok {
 			ne.Type &= ^NhRecursive
-			ne.RHwMark = 0
+			ne.RMark = 0
 			ne.Resolved = false
 		}
 	}
@@ -355,7 +355,7 @@ func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 	}
 
 	delete(r.RtMap, rt.Key)
-	defer r.HwMark.PutCounter(rt.HwMark)
+	defer r.Mark.PutCounter(rt.Mark)
 
 	rt.DP(DpRemove)
 
@@ -402,8 +402,8 @@ func Rt2String(rt *Rt) string {
 	if rt.TFlags&RtTypeHost == RtTypeHost {
 		tStr += fmt.Sprintf(",Host")
 	}
-	if rt.HwMark > 0 {
-		tStr += fmt.Sprintf(" HwMark %d", rt.HwMark)
+	if rt.Mark > 0 {
+		tStr += fmt.Sprintf(" Mark %d", rt.Mark)
 	}
 
 	var rtBuf string
@@ -453,12 +453,12 @@ func (r *RtH) RoutesTicker() {
 	r.RoutesSync()
 }
 
-// RtGetNhHwMark - get the rt-entry's neighbor identifier
-func (rt *Rt) RtGetNhHwMark() int {
+// RtGetNhMark - get the rt-entry's neighbor identifier
+func (rt *Rt) RtGetNhMark() uint64 {
 	if len(rt.NextHops) > 0 {
-		return rt.NextHops[0].HwMark
+		return rt.NextHops[0].Mark
 	}
-	return -1
+	return ^uint64(0)
 }
 
 // DP - Sync state of route entities to data-path
@@ -473,7 +473,7 @@ func (rt *Rt) DP(work DpWorkT) int {
 	if work == DpStatsGet {
 		nStat := new(StatDpWorkQ)
 		nStat.Work = work
-		nStat.HwMark = uint32(rt.HwMark)
+		nStat.Mark = uint32(rt.Mark)
 		nStat.Name = "RT4"
 		nStat.Bytes = &rt.Stat.Bytes
 		nStat.Packets = &rt.Stat.Packets
@@ -488,8 +488,8 @@ func (rt *Rt) DP(work DpWorkT) int {
 	rtWq.ZoneNum = rt.ZoneNum
 	rtWq.Dst = *rtNet
 	rtWq.RtType = rt.TFlags
-	rtWq.RtHwMark = rt.HwMark
-	rtWq.NHwMark = rt.RtGetNhHwMark()
+	rtWq.RtMark = int(rt.Mark)
+	rtWq.NMark = int(rt.RtGetNhMark())
 
 	mh.dp.ToDpCh <- rtWq
 

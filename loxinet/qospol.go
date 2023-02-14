@@ -70,7 +70,7 @@ type PolEntry struct {
 	Key   PolKey
 	Info  cmn.PolInfo
 	Zone  *Zone
-	HwNum int
+	HwNum uint64
 	Stats PolStats
 	Sync  DpStatusT
 	PObjs []PolObjInfo
@@ -80,7 +80,7 @@ type PolEntry struct {
 type PolH struct {
 	PolMap map[PolKey]*PolEntry
 	Zone   *Zone
-	HwMark *tk.Counter
+	Mark   *tk.Counter
 }
 
 // PolInit - initialize the policer subsystem
@@ -88,7 +88,7 @@ func PolInit(zone *Zone) *PolH {
 	var nPh = new(PolH)
 	nPh.PolMap = make(map[PolKey]*PolEntry)
 	nPh.Zone = zone
-	nPh.HwMark = tk.NewCounter(1, MaxPols)
+	nPh.Mark = tk.NewCounter(1, MaxPols)
 	return nPh
 }
 
@@ -180,7 +180,7 @@ func (P *PolH) PolAdd(pName string, pInfo cmn.PolInfo, pObjArgs cmn.PolObj) (int
 	p.Key.PolName = pName
 	p.Info = pInfo
 	p.Zone = P.Zone
-	p.HwNum, _ = P.HwMark.GetCounter()
+	p.HwNum, _ = P.Mark.GetCounter()
 	if p.HwNum < 0 {
 		return PolAllocErr, errors.New("pol-alloc error")
 	}
@@ -292,7 +292,7 @@ func (pObjInfo *PolObjInfo) PolObj2DP(work DpWorkT) int {
 
 	if work == DpCreate {
 		_, err := pObjInfo.Parent.Zone.Ports.PortUpdateProp(port.Name, cmn.PortPropPol,
-			pObjInfo.Parent.Zone.Name, true, pObjInfo.Parent.HwNum)
+			pObjInfo.Parent.Zone.Name, true, int(pObjInfo.Parent.HwNum))
 		if err != nil {
 			pObjInfo.Sync = 1
 			return -1
@@ -313,7 +313,7 @@ func (p *PolEntry) DP(work DpWorkT) int {
 	if work == DpStatsGet {
 		nStat := new(StatDpWorkQ)
 		nStat.Work = work
-		nStat.HwMark = uint32(p.HwNum)
+		nStat.Mark = uint32(p.HwNum)
 		nStat.Name = MapNameIpol
 		nStat.Packets = &p.Stats.PacketsOk
 		nStat.DropPackets = &p.Stats.PacketsNok
@@ -325,7 +325,7 @@ func (p *PolEntry) DP(work DpWorkT) int {
 
 	pwq := new(PolDpWorkQ)
 	pwq.Work = work
-	pwq.HwMark = p.HwNum
+	pwq.Mark = int(p.HwNum)
 	pwq.Color = p.Info.ColorAware
 	pwq.Cir = p.Info.CommittedInfoRate
 	pwq.Pir = p.Info.PeakInfoRate

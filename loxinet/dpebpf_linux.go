@@ -690,17 +690,17 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 		dat := new(rtDat)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_rt_tact)
 
-		if w.NHwMark >= 0 {
+		if w.NMark >= 0 {
 			dat.ca.act_type = C.DP_SET_RT_NHNUM
 			act = (*rtL3NhAct)(getPtrOffset(unsafe.Pointer(dat),
 				C.sizeof_struct_dp_cmn_act))
-			act.nh_num = C.ushort(w.NHwMark)
+			act.nh_num = C.ushort(w.NMark)
 		} else {
 			dat.ca.act_type = C.DP_SET_TOCP
 		}
 
-		if w.RtHwMark > 0 {
-			dat.ca.cidx = C.uint(w.RtHwMark)
+		if w.RtMark > 0 {
+			dat.ca.cidx = C.uint(w.RtMark)
 		}
 
 		ret := C.llb_add_map_elem(mapNum,
@@ -713,8 +713,8 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 	} else if w.Work == DpRemove {
 		C.llb_del_map_elem(mapNum, unsafe.Pointer(key))
 
-		if w.RtHwMark > 0 {
-			C.llb_clear_map_stats(mapSnum, C.uint(w.RtHwMark))
+		if w.RtMark > 0 {
+			C.llb_clear_map_stats(mapSnum, C.uint(w.RtMark))
 		}
 		return 0
 	}
@@ -776,7 +776,7 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		default:
 			dat.sel_type = C.NAT_LB_SEL_RR
 		}
-		dat.ca.cidx = C.uint(w.HwMark)
+		dat.ca.cidx = C.uint(w.Mark)
 		if w.DsrMode {
 			dat.ca.oaux = 1
 		}
@@ -887,7 +887,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 
 		for _, t := range tbl {
 
-			ret := C.llb_fetch_map_stats_cached(C.int(t), C.uint(w.HwMark), C.int(sync),
+			ret := C.llb_fetch_map_stats_cached(C.int(t), C.uint(w.Mark), C.int(sync),
 				(unsafe.Pointer(&b)), unsafe.Pointer(&p))
 			if ret != 0 {
 				return EbpfErrTmacAdd
@@ -899,7 +899,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 
 		for _, t := range polTbl {
 
-			ret := C.llb_fetch_pol_map_stats(C.int(t), C.uint(w.HwMark), (unsafe.Pointer(&p)), unsafe.Pointer(&b))
+			ret := C.llb_fetch_pol_map_stats(C.int(t), C.uint(w.Mark), (unsafe.Pointer(&p)), unsafe.Pointer(&b))
 			if ret != 0 {
 				return EbpfErrTmacAdd
 			}
@@ -921,7 +921,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 		}
 	} else if w.Work == DpStatsClr {
 		for _, t := range tbl {
-			C.llb_clear_map_stats(C.int(t), C.uint(w.HwMark))
+			C.llb_clear_map_stats(C.int(t), C.uint(w.Mark))
 		}
 	}
 
@@ -1196,11 +1196,11 @@ func (e *DpEbpfH) DpUlClMod(w *UlClDpWorkQ) int {
 				dat.ca.act_type = C.DP_SET_RM_GTP
 			}
 
-			dat.ca.cidx = C.uint(w.HwMark)
+			dat.ca.cidx = C.uint(w.Mark)
 			dat.qfi = C.uchar(w.Qfi)
 		} else {
 			dat.ca.act_type = C.DP_SET_ADD_GTP
-			dat.ca.cidx = C.uint(w.HwMark)
+			dat.ca.cidx = C.uint(w.Mark)
 			dat.qfi = C.uchar(w.Qfi)
 			dat.rip = C.uint(tk.IPtonl(w.TDip))
 			dat.sip = C.uint(tk.IPtonl(w.TSip))
@@ -1235,7 +1235,7 @@ func (e *DpEbpfH) DpUlClDel(w *UlClDpWorkQ) int {
 
 // DpPolMod - routine to work on a ebpf policer change request
 func (e *DpEbpfH) DpPolMod(w *PolDpWorkQ) int {
-	key := C.uint(w.HwMark)
+	key := C.uint(w.Mark)
 
 	if w.Work == DpCreate {
 		dat := new(polTact)
@@ -1302,7 +1302,7 @@ func (e *DpEbpfH) DpPolDel(w *PolDpWorkQ) int {
 
 // DpMirrMod - routine to work on a ebpf mirror modify request
 func (e *DpEbpfH) DpMirrMod(w *MirrDpWorkQ) int {
-	key := C.uint(w.HwMark)
+	key := C.uint(w.Mark)
 
 	if w.Work == DpCreate {
 		dat := new(mirrTact)
@@ -1413,7 +1413,7 @@ func (e *DpEbpfH) DpFwRuleMod(w *FwDpWorkQ) int {
 		fwe.k.zone.valid = C.ushort(0xffff)
 	}
 
-	fwe.fwa.ca.cidx = C.uint(w.HwMark)
+	fwe.fwa.ca.cidx = C.uint(w.Mark)
 	fwe.fwa.ca.oaux = C.ushort(w.Pref) // Overloaded field
 
 	if w.Work == DpCreate {
