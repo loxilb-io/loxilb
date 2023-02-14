@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo SCENARIO-tcplbl3dsr
+echo SCENARIO-tcplbl3dsrha
 $hexec ep1 socat -v -T0.05 tcp-l:8080,reuseaddr,fork system:"echo 'server1'; cat" >/dev/null 2>&1 &
 $hexec ep2 socat -v -T0.05 tcp-l:8080,reuseaddr,fork system:"echo 'server2'; cat" >/dev/null 2>&1 &
 $hexec ep3 socat -v -T0.05 tcp-l:8080,reuseaddr,fork system:"echo 'server3'; cat" >/dev/null 2>&1 &
@@ -26,7 +26,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            echo SCENARIO-tcplbl3dsr [FAILED]
+            echo SCENARIO-tcplbl3dsrha [FAILED]
             exit 1
         fi
     fi
@@ -39,8 +39,7 @@ do
 for j in {0..2}
 do
     #res=$($hexec user curl --local-port 55001 --max-time 10 -s 20.20.20.1:2020)
-    #res=$($hexec user socat -T60 - TCP:20.20.20.1:8080,sp=15402,reuseaddr)
-    res=$($hexec user socat -T60 - TCP:20.20.20.1:8080)
+    res=$($hexec user socat -T60 - TCP:20.20.20.1:8080,sp=15402,reuseaddr)
     echo $res
     if [[ $exp == "" ]]
     then
@@ -55,9 +54,9 @@ done
 done
 if [[ $code == 0 ]]
 then
-    echo SCENARIO-tcplbl3dsr [OK]
+    echo SCENARIO-tcplbl3dsrha [OK]
 else
-    echo SCENARIO-tcplbl3dsr [FAILED]
+    echo SCENARIO-tcplbl3dsrha [FAILED]
 fi
 sudo pkill -9 socat 2>&1 > /dev/null
 exit $code
