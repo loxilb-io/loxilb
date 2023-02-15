@@ -17,7 +17,7 @@ echo "Connecting and configuring  hosts"
 echo "#########################################"
 
 
-connect_docker_hosts l3h1 llb1
+connect_docker_hosts l3h1 llb1 8000
 connect_docker_hosts l3ep1 llb1
 connect_docker_hosts l3ep2 llb1
 connect_docker_hosts l3ep3 llb1

@@ -20,7 +20,7 @@ echo "#########################################"
 echo "Connecting and configuring  hosts"
 echo "#########################################"
 
-connect_docker_hosts user r1
+connect_docker_hosts user r1 8000
 connect_docker_hosts r1 llb1
 connect_docker_hosts r1 llb2
 connect_docker_hosts llb1 ep1
@@ -134,7 +134,7 @@ $hexec ep1 ip link set dev ipip12 up
 $hexec ep1 ip addr add 45.45.2.2/24 dev ipip12
 
 #$hexec ep1 ip route add 10.10.10.0/24 dev ipip0
-$hexec ep1 ip addr add 56.56.56.1/32 dev lo
+#$hexec ep1 ip addr add 56.56.56.1/32 dev lo
 $hexec ep1 ip addr add 20.20.20.1/32 dev lo
 
 $hexec ep2 ip link add name ipip21 type ipip local 32.32.32.1 remote 32.32.32.253
@@ -146,7 +146,7 @@ $hexec ep2 ip link set dev ipip22 up
 $hexec ep2 ip addr add 46.46.2.1/24 dev ipip22
 
 #$hexec ep2 ip route add 10.10.10.0/24 dev ipip0
-$hexec ep2 ip addr add 57.57.57.1/32 dev lo
+#$hexec ep2 ip addr add 57.57.57.1/32 dev lo
 $hexec ep2 ip addr add 20.20.20.1/32 dev lo
 
 $hexec ep3 ip link add name ipip31 type ipip local 33.33.33.1 remote 33.33.33.253
@@ -157,7 +157,7 @@ $hexec ep3 ip link set dev ipip32 up
 $hexec ep3 ip addr add 47.47.2.1/24 dev ipip32
 
 #$hexec ep3 ip route add 10.10.10.0/24 dev ipip0
-$hexec ep3 ip addr add 58.58.58.1/32 dev lo
+#$hexec ep3 ip addr add 58.58.58.1/32 dev lo
 $hexec ep3 ip addr add 20.20.20.1/32 dev lo
 
 
