@@ -179,13 +179,20 @@ delete_docker_host() {
 ## Connects two docker hosts
 ## arg1 - hostname1 
 ## arg2 - hostname2 
+## arg3 - mtu
 connect_docker_hosts() {
   link1=e$1$2
   link2=e$2$1
+
+  mtu="9000"
+  if [[ $# -gt 2 ]]; then
+    mtu=$3
+  fi
+
   #echo $link1 $link2
   sudo ip -n $1 link add $link1 type veth peer name $link2 netns $2
-  sudo ip -n $1 link set $link1 mtu 9000 up
-  sudo ip -n $2 link set $link2 mtu 9000 up
+  sudo ip -n $1 link set $link1 mtu $mtu up
+  sudo ip -n $2 link set $link2 mtu $mtu up
 }
 
 ## arg1 - hostname1 
