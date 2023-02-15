@@ -1,7 +1,7 @@
 [![eBPF Emerging Project](https://img.shields.io/badge/ebpf.io-Emerging--App-success)](https://ebpf.io/projects#loxilb) [![Go Report Card](https://goreportcard.com/badge/github.com/loxilb-io/loxilb)](https://goreportcard.com/report/github.com/loxilb-io/loxilb) ![build workflow](https://github.com/loxilb-io/loxilb/actions/workflows/docker-image.yml/badge.svg) ![sanity workflow](https://github.com/loxilb-io/loxilb/actions/workflows/basic-sanity.yml/badge.svg) ![apache](https://img.shields.io/badge/license-Apache-blue.svg) [![Info][docs-shield]][docs-url]
 ## What is loxilb
 
-loxilb is a cloud-native "edge" load-balancer stack built from grounds up using eBPF at its core. loxilb aims to provide the following :
+loxilb is an open source hyper-scale software load-balancer for cloud-native workloads. It uses eBPF as its core-engine and is based on Golang. It is designed primarily to support on-premise, edge and public-cloud Kubernetes cluster deployments, but it should work equally well as a standalone load-balancer. loxilb aims to provide the following :
 
 - Service type external load-balancer for kubernetes
 - L4/NAT stateful loadbalancer
