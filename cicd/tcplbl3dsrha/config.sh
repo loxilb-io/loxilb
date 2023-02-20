@@ -10,9 +10,9 @@ spawn_docker_host --dock-type host --dock-name r1 --with-bgp yes --bgp-config $(
 
 spawn_docker_host --dock-type loxilb --dock-name llb1 --with-bgp yes --bgp-config $(pwd)/llb1_gobgp_config
 spawn_docker_host --dock-type loxilb --dock-name llb2 --with-bgp yes --bgp-config $(pwd)/llb2_gobgp_config
-spawn_docker_host --dock-type host --dock-name ep1 --with-bgp yes --bgp-config $(pwd)/quagga_config2
-spawn_docker_host --dock-type host --dock-name ep2 --with-bgp yes --bgp-config $(pwd)/quagga_config3
-spawn_docker_host --dock-type host --dock-name ep3 --with-bgp yes --bgp-config $(pwd)/quagga_config4
+spawn_docker_host --dock-type host --dock-name ep1 
+spawn_docker_host --dock-type host --dock-name ep2 
+spawn_docker_host --dock-type host --dock-name ep3
 spawn_docker_host --dock-type host --dock-name r2
 spawn_docker_host --dock-type host --dock-name user
 
@@ -134,7 +134,7 @@ $hexec ep1 ip link set dev ipip12 up
 $hexec ep1 ip addr add 45.45.2.2/24 dev ipip12
 
 #$hexec ep1 ip route add 10.10.10.0/24 dev ipip0
-#$hexec ep1 ip addr add 56.56.56.1/32 dev lo
+$hexec ep1 ip addr add 56.56.56.1/32 dev lo
 $hexec ep1 ip addr add 20.20.20.1/32 dev lo
 
 $hexec ep2 ip link add name ipip21 type ipip local 32.32.32.1 remote 32.32.32.253
@@ -146,7 +146,7 @@ $hexec ep2 ip link set dev ipip22 up
 $hexec ep2 ip addr add 46.46.2.1/24 dev ipip22
 
 #$hexec ep2 ip route add 10.10.10.0/24 dev ipip0
-#$hexec ep2 ip addr add 57.57.57.1/32 dev lo
+$hexec ep2 ip addr add 57.57.57.1/32 dev lo
 $hexec ep2 ip addr add 20.20.20.1/32 dev lo
 
 $hexec ep3 ip link add name ipip31 type ipip local 33.33.33.1 remote 33.33.33.253
@@ -157,7 +157,7 @@ $hexec ep3 ip link set dev ipip32 up
 $hexec ep3 ip addr add 47.47.2.1/24 dev ipip32
 
 #$hexec ep3 ip route add 10.10.10.0/24 dev ipip0
-#$hexec ep3 ip addr add 58.58.58.1/32 dev lo
+$hexec ep3 ip addr add 58.58.58.1/32 dev lo
 $hexec ep3 ip addr add 20.20.20.1/32 dev lo
 
 
@@ -168,5 +168,9 @@ $hexec ep3 ip addr add 20.20.20.1/32 dev lo
 
 sleep 5
 ##Create LB rule
-create_lb_rule llb1 20.20.20.1 --select=hash --tcp=8080:8080 --endpoints=56.56.56.1:1,57.57.57.1:1,58.58.58.1:1 --mode=dsr
-create_lb_rule llb2 20.20.20.1 --select=hash --tcp=8080:8080 --endpoints=56.56.56.1:1,57.57.57.1:1,58.58.58.1:1 --mode=dsr
+create_lb_rule llb1 20.20.20.1 --select=hash --tcp=8080:8080 --endpoints=56.56.56.1:1,57.57.57.1:1,58.58.58.1:1 --mode=dsr --bgp
+create_lb_rule llb2 20.20.20.1 --select=hash --tcp=8080:8080 --endpoints=56.56.56.1:1,57.57.57.1:1,58.58.58.1:1 --mode=dsr --bgp
+
+sleep 2
+$dexec llb1 loxicmd save --lb
+$dexec llb2 loxicmd save --lb
