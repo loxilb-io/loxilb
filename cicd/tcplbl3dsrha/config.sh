@@ -121,7 +121,7 @@ $hexec llb2 ip route add 57.57.57.0/24 via 46.46.2.1
 $hexec llb2 ip link add name ipip23 type ipip local 33.33.33.254 remote 33.33.33.1
 $hexec llb2 ip link set dev ipip23 up
 $hexec llb2 ip addr add 47.47.3.254/24 dev ipip23
-$hexec llb2 ip route add 58.58.58.0/24 via 47.47.3.1
+$hexec llb2 ip route add 58.58.58.0/24 via 47.47.2.1
 
 
 
