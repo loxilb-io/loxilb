@@ -44,7 +44,7 @@ config_docker_host --host1 r2 --host2 r1 --ptype phy --addr 2.2.2.2/24 --gw 2.2.
 create_docker_host_vlan --host1 r1 --host2 llb1 --id 11 --ptype untagged
 create_docker_host_vlan --host1 llb1 --host2 r1 --id 11 --ptype untagged
 
-config_docker_host --host1 r1 --host2 llb1 --ptype vlan --id 11 --addr 11.11.11.254/24 --gw 11.11.11.11
+config_docker_host --host1 r1 --host2 llb1 --ptype vlan --id 11 --addr 11.11.11.254/24
 config_docker_host --host1 llb1 --host2 r1 --ptype vlan --id 11 --addr 11.11.11.1/24
 
 create_docker_host_vlan --host1 r1 --host2 llb2 --id 11 --ptype untagged
@@ -162,7 +162,6 @@ $hexec ep3 ip addr add 20.20.20.1/32 dev lo
 
 
 ##Pod networks
-#$hexec r1 ip route add 20.20.20.1/32 via 11.11.11.11
 #add_route llb1 1.1.1.0/24 11.11.11.254
 #add_route llb2 1.1.1.0/24 11.11.11.254
 
