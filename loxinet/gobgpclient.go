@@ -543,6 +543,9 @@ func (gbh *GoBgpH) AddCurrentBgpRoutesToIPRoute() error {
 		Family:    ipv4UC,
 	})
 	if err != nil {
+		gbh.eventCh <- goBgpEvent{
+			EventType: bgpDisconnected,
+		}
 		return err
 	}
 
@@ -621,6 +624,12 @@ func (gbh *GoBgpH) advertiseAllRoutes(instance string) {
 				gbh.AdvertiseRoute(ip, 32, "0.0.0.0", pref, true)
 			} else {
 				gbh.AdvertiseRoute(ip, 128, "::", pref, false)
+			}
+		} else {
+			if net.ParseIP(ip).To4() != nil {
+				gbh.DelAdvertiseRoute(ip, 32, "0.0.0.0", pref)
+			} else {
+				gbh.DelAdvertiseRoute(ip, 128, "::", pref)
 			}
 		}
 	}
