@@ -150,7 +150,7 @@ func KAString2Mode(kaStr string) (bool, bool) {
 
 // HTTPSProber - Do a https probe for given url
 // returns true/false depending on whether probing was successful
-func HTTPSProber(urls string, certPool *x509.CertPool, resp string) bool {
+func HTTPSProber(urls string, cert tls.Certificate, certPool *x509.CertPool, resp string) bool {
 	var err error
 	var req *http.Request
 	var res *http.Response
@@ -159,14 +159,17 @@ func HTTPSProber(urls string, certPool *x509.CertPool, resp string) bool {
 	client := http.Client{Timeout: timeout,
 		Transport: &http.Transport{
 			IdleConnTimeout: 5 * time.Second,
-			TLSClientConfig: &tls.Config{RootCAs: certPool}},
+			TLSClientConfig: &tls.Config{Certificates: []tls.Certificate{cert},
+									     RootCAs: certPool}},
 	}
 	if req, err = http.NewRequest(http.MethodGet, urls, nil); err != nil {
+		tk.LogIt(tk.LogError, "unable to create http request: %s\n", err)
 		return false
 	}
 
 	res, err = client.Do(req)
 	if err != nil || res.StatusCode != 200 {
+		tk.LogIt(tk.LogError, "unable to create http request: %s\n", err)
 		return false
 	}
 	defer res.Body.Close()

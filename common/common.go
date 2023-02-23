@@ -46,6 +46,20 @@ const (
 )
 
 const (
+	// CertPath - SSL certificates path
+	CertPath 		= "/opt/loxilb/cert/"
+	
+	// CACertFileName - loxilb CA cert file
+	CACertFileName 	= "rootCA.crt"
+
+	// PrivateCertName - loxilb private certificate name
+	PrivateCertName 		= "server.crt"
+
+	// PrivateKeyName - loxilb private key name
+	PrivateKeyName			= "server.key"
+)
+
+const (
 	// AuWorkqLen - Address worker channel depth
 	AuWorkqLen = 1024
 	// LuWorkQLen - Link worker channel depth
