@@ -113,3 +113,9 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - run: |
+             cd cicd/httpsep/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -

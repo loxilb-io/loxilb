@@ -18,6 +18,7 @@ package loxinet
 
 import (
 	"crypto/x509"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -292,6 +293,7 @@ type RuleH struct {
 	lepHID     uint8
 	epMx       sync.RWMutex
 	rootCAPool *x509.CertPool
+	tlsCert    tls.Certificate
 }
 
 // RulesInit - initialize the Rules subsystem
@@ -319,7 +321,9 @@ func RulesInit(zone *Zone) *RuleH {
 		go epTicker(nRh, i)
 	}
 	nRh.rootCAPool = x509.NewCertPool()
-	rootCACertile := "/opt/loxilb/cert/rootCACert.pem"
+	rootCACertile := cmn.CertPath+cmn.CACertFileName
+
+	// Check if there exist a common CA certificate
 	if exists := FileExists(rootCACertile); exists {
 
 		rootCA, err := ioutil.ReadFile(rootCACertile)
@@ -331,6 +335,20 @@ func RulesInit(zone *Zone) *RuleH {
 		}
 	}
 
+	certFile := cmn.CertPath + cmn.PrivateCertName
+	keyFile := cmn.CertPath + cmn.PrivateKeyName
+
+	certExists := FileExists(certFile)
+	keyExists := FileExists(keyFile)
+
+	if certExists == true && keyExists == true {
+		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+		if err != nil {
+			tk.LogIt(tk.LogError, "Error loading loxilb certificate %s and key file %s", 
+			certFile, keyFile)
+		}
+		nRh.tlsCert = cert
+	}
 	nRh.wg.Add(MaxEndPointCheckers)
 
 	return nRh
@@ -1349,7 +1367,8 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, desc string, args epHos
 	}
 	// Load CA cert into pool
 	if args.probeType == HostProbeHttps {
-		rootCACertile := "/opt/loxilb/cert/" + hostName + "/rootCACert.pem"
+		// Check if there exist a CA certificate particularily for this EP
+		rootCACertile := cmn.CertPath + hostName + "/" + cmn.CACertFileName
 		if exists := FileExists(rootCACertile); exists {
 			rootCA, err := ioutil.ReadFile(rootCACertile)
 			if err != nil {
@@ -1519,7 +1538,7 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 		}
 
 		urlStr := fmt.Sprintf("https://%s:%d/%s", addr.String(), ep.opts.probePort, ep.opts.probeReq)
-		sOk := HTTPSProber(urlStr, R.rootCAPool, ep.opts.probeResp)
+		sOk := HTTPSProber(urlStr, R.tlsCert, R.rootCAPool, ep.opts.probeResp)
 		//tk.LogIt(tk.LogDebug, "[PROBE] https ep - URL[%s:%s] Resp[%s] %v\n", ep.hostName, urlStr, ep.opts.probeResp, sOk)
 		ep.transitionState(sOk, ep.opts.inActTryThr)
 	} else {
