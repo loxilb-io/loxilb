@@ -1,6 +1,5 @@
 #!/bin/bash
 count=$1
-rm perf*
 for ((i=1,port=12866;i<=count;i++,port++))
 do
     # Enter the server IP address after -H.
@@ -18,3 +17,4 @@ do
  total=`echo "$total + $a" | bc`
 done
 echo $total
+rm -fr perf*
