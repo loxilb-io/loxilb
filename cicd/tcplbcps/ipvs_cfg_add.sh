@@ -3,7 +3,7 @@
 pkill -9 loxilb
 for iface in $(ifconfig | cut -d ' ' -f1| tr ':' '\n' | awk NF)
 do
-  ntc filter del dev $iface ingress >> dev/null 2>&1;
+  ntc filter del dev $iface ingress >> /dev/null 2>&1;
 done
 
 ip addr add 20.20.20.1/32 dev lo
