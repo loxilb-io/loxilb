@@ -35,11 +35,10 @@ config_docker_host --host1 llb1 --host2 l3ep2 --ptype phy --addr 32.32.32.254/24
 config_docker_host --host1 llb1 --host2 l3ep3 --ptype phy --addr 33.33.33.254/24
 
 sleep 5
-for ((i=1,port=12865;i<=150;i++,port++))
-do  
-  create_lb_rule llb1 20.20.20.1 --tcp=$port:$port  --endpoints=31.31.31.1:1
-done
-#create_lb_rule llb1 20.20.20.1 --tcp=8080:8080 --endpoints=31.31.31.1:1 --mode=dsr
-#create_lb_rule llb1 20.20.20.1 --tcp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1
 
 $hexec l3ep1 netserver -4 -p 12865
+
+docker cp llb_cfg_add.sh llb1:/root/
+docker cp llb_cfg_del.sh llb1:/root/
+docker cp ipvs_cfg_add.sh llb1:/root/
+docker cp ipvs_cfg_del.sh llb1:/root/
