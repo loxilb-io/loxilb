@@ -17,8 +17,8 @@
 package loxinet
 
 import (
-	"crypto/x509"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -321,7 +321,7 @@ func RulesInit(zone *Zone) *RuleH {
 		go epTicker(nRh, i)
 	}
 	nRh.rootCAPool = x509.NewCertPool()
-	rootCACertile := cmn.CertPath+cmn.CACertFileName
+	rootCACertile := cmn.CertPath + cmn.CACertFileName
 
 	// Check if there exist a common CA certificate
 	if exists := FileExists(rootCACertile); exists {
@@ -344,8 +344,8 @@ func RulesInit(zone *Zone) *RuleH {
 	if certExists == true && keyExists == true {
 		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 		if err != nil {
-			tk.LogIt(tk.LogError, "Error loading loxilb certificate %s and key file %s", 
-			certFile, keyFile)
+			tk.LogIt(tk.LogError, "Error loading loxilb certificate %s and key file %s",
+				certFile, keyFile)
 		}
 		nRh.tlsCert = cert
 	}

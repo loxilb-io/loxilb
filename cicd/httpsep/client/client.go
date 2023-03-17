@@ -47,7 +47,7 @@ Options:
 		cert, err = tls.LoadX509KeyPair(*pcert, *pkey)
 		if err != nil {
 			log.Fatalf("Error loading client cert file %s and client key file %s", *pcert, *pkey)
-            return
+			return
 		}
 	}
 
@@ -66,7 +66,7 @@ Options:
 	}
 
 	client := http.Client{Transport: t, Timeout: 5 * time.Second}
-    urlStr := "https://" + *host
+	urlStr := "https://" + *host
 	req, err := http.NewRequest(http.MethodGet, urlStr, nil)
 	if err != nil {
 		log.Fatalf("Error creating new http request : %s", err)

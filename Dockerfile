@@ -9,18 +9,21 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 # Update Ubuntu Software repository
 RUN apt update
+RUN apt install -y wget
+
+# Install arch specific packages - golang
+RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo https://go.dev/dl/go1.18.linux-${arch}.tar.gz && wget https://go.dev/dl/go1.18.linux-${arch}.tar.gz && tar -xzf go1.18.linux-${arch}.tar.gz --directory /usr/local/ && rm go1.18.linux-${arch}.tar.gz
+ENV PATH="${PATH}:/usr/local/go/bin"
+
+# Install arch specific packages - gcc-multilib
+RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && if [ "$arch" = "arm64" ] ; then apt install -y gcc-multilib-arm-linux-gnueabihf; else apt install -y  gcc-multilib;fi
 
 # Install loxilb related packages
-RUN apt install -y clang llvm libelf-dev gcc-multilib libpcap-dev vim net-tools \
+RUN apt install -y clang llvm libelf-dev libpcap-dev vim net-tools \
     elfutils dwarves git libbsd-dev bridge-utils wget arping unzip build-essential \
     bison flex sudo iproute2 pkg-config tcpdump iputils-ping keepalived curl && \
     rm -rf /var/lib/apt/lists/* && \
     apt clean
-
-# Install GoLang
-RUN wget https://go.dev/dl/go1.18.linux-amd64.tar.gz && tar -xzf go1.18.linux-amd64.tar.gz --directory /usr/local/
-ENV PATH="${PATH}:/usr/local/go/bin"
-RUN rm go1.18.linux-amd64.tar.gz
 
 RUN wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
     unzip main.zip && cd iproute2-main/libbpf/src/ && mkdir build && \
