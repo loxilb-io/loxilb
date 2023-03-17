@@ -35,10 +35,10 @@ docker-cp-ebpf: build
 	docker cp /opt/loxilb/llb_xdp_main.o $(loxilbid):/opt/loxilb/llb_xdp_main.o
 
 docker: 
-	docker build -t loxilb-io/loxilb:latest .
+	docker build -t ghcr.io/loxilb-io/loxilb:latest .
 
 docker-arm64:
-	docker  buildx build --platform linux/arm64 -t loxilb-io/loxilb:latest-arm64 .
+	docker  buildx build --platform linux/arm64 -t ghcr.io/loxilb-io/loxilb:latest-arm64 .
 
 lint:
 	golangci-lint run --enable-all
