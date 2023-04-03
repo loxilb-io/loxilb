@@ -150,6 +150,9 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.PostConfigParamsHandler = operations.PostConfigParamsHandlerFunc(handler.ConfigPostParams)
 	api.GetConfigParamsHandler = operations.GetConfigParamsHandlerFunc(handler.ConfigGetParams)
 
+	// Prometheus
+	api.GetMetricsHandler = operations.GetMetricsHandlerFunc(handler.ConfigGetPrometheusCounter)
+
 	api.PreServerShutdown = func() {}
 
 	api.ServerShutdown = func() {

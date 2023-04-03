@@ -28,7 +28,12 @@ var ApiHooks cmn.NetHookInterface
 type ResultResponse struct {
 	Result string `json:"result"`
 }
+type CustomResponder func(http.ResponseWriter, runtime.Producer)
 
 func (result *ResultResponse) WriteResponse(w http.ResponseWriter, producer runtime.Producer) {
 	producer.Produce(w, result)
+}
+
+func (c CustomResponder) WriteResponse(w http.ResponseWriter, p runtime.Producer) {
+	c(w, p)
 }

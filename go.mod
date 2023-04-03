@@ -14,11 +14,20 @@ require (
 	github.com/loxilb-io/loxilib v0.8.4
 	github.com/osrg/gobgp/v3 v3.5.0
 	github.com/prometheus-community/pro-bing v0.1.0
+	github.com/prometheus/client_model v0.3.0
 	github.com/vishvananda/netlink v1.1.1-0.20210330154013-f5de75959ad5
 	golang.org/x/net v0.7.0
 	golang.org/x/sys v0.5.0
 	google.golang.org/grpc v1.48.0
 	google.golang.org/protobuf v1.28.1
+)
+
+require (
+	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/prometheus/common v0.37.0 // indirect
+	github.com/prometheus/procfs v0.8.0 // indirect
 )
 
 require (
@@ -33,6 +42,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
+	github.com/prometheus/client_golang v1.14.0
 	github.com/vishvananda/netns v0.0.0-20200728191858-db3c7e526aae // indirect
 	go.mongodb.org/mongo-driver v1.11.1 // indirect
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
