@@ -2083,6 +2083,19 @@ paths:
             $ref: '#/definitions/Error'
 
 #----------------------------------------------
+# LoxiLB Prometheus 
+#----------------------------------------------
+  '/metrics':
+    get:
+      summary: Scrape metrics from the cache
+      responses:
+        '200':
+          description: Metrics in prometheus text format
+          schema:
+            type: string
+
+
+#----------------------------------------------
 # Schema definitions
 #----------------------------------------------
 definitions:

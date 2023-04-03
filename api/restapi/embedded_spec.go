@@ -2884,6 +2884,19 @@ func init() {
         }
       }
     },
+    "/metrics": {
+      "get": {
+        "summary": "Scrape metrics from the cache",
+        "responses": {
+          "200": {
+            "description": "Metrics in prometheus text format",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/status/device": {
       "get": {
         "description": "Get a basic info (linux command \"uptime, hostnamectl\") in the device or system.",
@@ -6948,6 +6961,19 @@ func init() {
             "description": "Maintanence mode",
             "schema": {
               "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "Scrape metrics from the cache",
+        "responses": {
+          "200": {
+            "description": "Metrics in prometheus text format",
+            "schema": {
+              "type": "string"
             }
           }
         }
