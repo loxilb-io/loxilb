@@ -66,6 +66,7 @@ type loxiNetH struct {
 	sigCh  chan os.Signal
 	wg     sync.WaitGroup
 	bgp    *GoBgpH
+	sumDis bool
 	has    *CIStateH
 	logger *tk.Logger
 	ready  bool
@@ -169,6 +170,7 @@ func loxiNetInit() {
 	}
 
 	mh.self = opts.Opts.ClusterSelf
+	mh.sumDis = opts.Opts.CSumDisable
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGHUP)

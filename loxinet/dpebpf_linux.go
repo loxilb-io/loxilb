@@ -813,7 +813,12 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 			nxfa.inactive = 1
 		}
 
-		dat.nxfrm = C.uint(len(w.endPoints))
+		dat.nxfrm = C.ushort(len(w.endPoints))
+		if w.CsumDis {
+			dat.cdis = 1
+		} else {
+			dat.cdis = 0
+		}
 
 		ret := C.llb_add_map_elem(C.LL_DP_NAT_MAP,
 			unsafe.Pointer(key),
