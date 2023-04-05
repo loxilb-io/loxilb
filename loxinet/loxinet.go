@@ -20,8 +20,10 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
+	"runtime/pprof"
 	"strings"
 	"sync"
 	"syscall"
@@ -68,6 +70,7 @@ type loxiNetH struct {
 	logger *tk.Logger
 	ready  bool
 	self   int
+	pFile  *os.File
 }
 
 // NodeWalker - an implementation of node walker interface
@@ -120,14 +123,19 @@ func loxiNetTicker() {
 		select {
 		case <-mh.tDone:
 			return
-		case <-mh.sigCh:
-			var ws syscall.WaitStatus
-			var ru syscall.Rusage
-			wpid := 1
-			try := 0
-			for wpid >= 0 && try < 100 {
-				wpid, _ = syscall.Wait4(-1, &ws, syscall.WNOHANG, &ru)
-				try++
+		case sig := <-mh.sigCh:
+			if sig == syscall.SIGCHLD {
+				var ws syscall.WaitStatus
+				var ru syscall.Rusage
+				wpid := 1
+				try := 0
+				for wpid >= 0 && try < 100 {
+					wpid, _ = syscall.Wait4(-1, &ws, syscall.WNOHANG, &ru)
+					try++
+				}
+			} else if sig == syscall.SIGHUP {
+				fmt.Printf("SIGHUP called\n")
+				pprof.StopCPUProfile()
 			}
 		case t := <-mh.ticker.C:
 			tk.LogIt(-1, "Tick at %v\n", t)
@@ -163,6 +171,22 @@ func loxiNetInit() {
 	mh.self = opts.Opts.ClusterSelf
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD)
+	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGHUP)
+
+	// Check if profiling is enabled
+	if opts.Opts.CPUProfile != "none" {
+		var err error
+		mh.pFile, err = os.Create(opts.Opts.CPUProfile)
+		if err != nil {
+			tk.LogIt(tk.LogNotice, "profile file create failed\n")
+			return
+		}
+		err = pprof.StartCPUProfile(mh.pFile)
+		if err != nil {
+			tk.LogIt(tk.LogNotice, "CPU profiler start failed\n")
+			return
+		}
+	}
 
 	// Initialize the ebpf datapath subsystem
 	mh.dpEbpf = DpEbpfInit(clusterMode, mh.self)
