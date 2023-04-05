@@ -29,6 +29,8 @@ func TestLoxinet(t *testing.T) {
 
 	opts.Opts.NoNlp = true
 	opts.Opts.NoApi = true
+	opts.Opts.CPUProfile = "none"
+	opts.Opts.NoPrometheus = true
 
 	fmt.Printf("LoxiLB Net Unit-Test \n")
 	loxiNetInit()
