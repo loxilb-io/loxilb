@@ -19,11 +19,6 @@ package loxinet
 import (
 	"errors"
 	"fmt"
-	apiserver "github.com/loxilb-io/loxilb/api"
-	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
-	cmn "github.com/loxilb-io/loxilb/common"
-	opts "github.com/loxilb-io/loxilb/options"
-	tk "github.com/loxilb-io/loxilib"
 	"net"
 	_ "net/http/pprof"
 	"os"
@@ -33,6 +28,13 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	apiserver "github.com/loxilb-io/loxilb/api"
+	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
+	prometheus "github.com/loxilb-io/loxilb/api/prometheus"
+	cmn "github.com/loxilb-io/loxilb/common"
+	opts "github.com/loxilb-io/loxilb/options"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 // string constant representing root security zone
@@ -231,6 +233,12 @@ func loxiNetInit() {
 	if opts.Opts.NoNlp == false {
 		nlp.NlpRegister(NetAPIInit())
 		nlp.NlpInit()
+	}
+
+	// Initialize the Prometheus subsystem
+	if opts.Opts.NoPrometheus == false {
+		prometheus.PrometheusRegister(NetAPIInit())
+		prometheus.Init()
 	}
 
 	// Spawn CI maintenance application
