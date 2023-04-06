@@ -281,6 +281,7 @@ type NatDpWorkQ struct {
 	L4Port    uint16
 	BlockNum  uint16
 	DsrMode   bool
+	CsumDis   bool
 	Proto     uint8
 	Mark      int
 	NatType   NatT

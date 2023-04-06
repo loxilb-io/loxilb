@@ -1790,6 +1790,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 		if mode == cmn.LBModeDSR {
 			nWork.DsrMode = true
 		}
+		nWork.CsumDis = mh.sumDis
 		if at.sel == cmn.LbSelPrio {
 			j := 0
 			k := 0
