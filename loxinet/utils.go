@@ -160,7 +160,7 @@ func HTTPSProber(urls string, cert tls.Certificate, certPool *x509.CertPool, res
 		Transport: &http.Transport{
 			IdleConnTimeout: 5 * time.Second,
 			TLSClientConfig: &tls.Config{Certificates: []tls.Certificate{cert},
-									     RootCAs: certPool}},
+				RootCAs: certPool}},
 	}
 	if req, err = http.NewRequest(http.MethodGet, urls, nil); err != nil {
 		tk.LogIt(tk.LogError, "unable to create http request: %s\n", err)

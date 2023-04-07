@@ -19,4 +19,7 @@ var Opts struct {
 	ClusterNodes      string         `long:"cluster" description:"Comma-separated list of cluter-node IP Addresses" default:"none"`
 	ClusterSelf       int            `long:"self" description:"annonation of self in cluster" default:"0"`
 	LogLevel          string         `long:"loglevel" description:"One of debug,info,error,warning,notice,critical,emergency,alert" default:"debug"`
+	CPUProfile        string         `long:"cpuprofile" description:"Enable cpu profiling and specify file to use" default:"none" env:"CPUPROF"`
+	NoPrometheus      bool           `short:"p" long:"nopro" description:" Do not run prometheus thread"`
+	CSumDisable       bool           `long:"disable-csum" description:"Disable checksum update(experimental)"`
 }

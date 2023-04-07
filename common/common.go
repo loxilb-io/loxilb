@@ -47,16 +47,16 @@ const (
 
 const (
 	// CertPath - SSL certificates path
-	CertPath 		= "/opt/loxilb/cert/"
-	
+	CertPath = "/opt/loxilb/cert/"
+
 	// CACertFileName - loxilb CA cert file
-	CACertFileName 	= "rootCA.crt"
+	CACertFileName = "rootCA.crt"
 
 	// PrivateCertName - loxilb private certificate name
-	PrivateCertName 		= "server.crt"
+	PrivateCertName = "server.crt"
 
 	// PrivateKeyName - loxilb private key name
-	PrivateKeyName			= "server.key"
+	PrivateKeyName = "server.key"
 )
 
 const (

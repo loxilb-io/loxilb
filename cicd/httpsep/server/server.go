@@ -1,13 +1,13 @@
 package main
 
-import(
-    "net/http"
-    "fmt"
-    "log"
-	"flag"
-	"io/ioutil"
+import (
 	"crypto/tls"
 	"crypto/x509"
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 )
 
@@ -18,7 +18,7 @@ func main() {
 	authType := tls.NoClientCert
 
 	help := flag.Bool("help", false, "prints help")
-	host := flag.String("host","", "server name")
+	host := flag.String("host", "", "server name")
 	port := flag.String("port", "8080", "The https port, defaults to 9000")
 	cert := flag.String("cert", "", "server's certificate")
 	caCert := flag.String("cacert", "", "Client's CA certificate")
@@ -54,27 +54,27 @@ func main() {
 		authType = tls.RequireAndVerifyClientCert
 	}
 
-    server := &http.Server{
-		Addr:         ":"+*port,
-		TLSConfig:    &tls.Config{
+	server := &http.Server{
+		Addr: ":" + *port,
+		TLSConfig: &tls.Config{
 			ClientAuth: authType,
 			ClientCAs:  caCertPool,
 		},
 	}
 
-    http.HandleFunc("/health", func(res http.ResponseWriter, req *http.Request) {
-        //log.Printf("Received %s request for host %s from IP address %s",
-			//req.Method, req.Host, req.RemoteAddr)
-        resp := fmt.Sprintf("OK")
-        res.Write([]byte(resp))
-        //log.Printf("OK\n")
-    })
+	http.HandleFunc("/health", func(res http.ResponseWriter, req *http.Request) {
+		//log.Printf("Received %s request for host %s from IP address %s",
+		//req.Method, req.Host, req.RemoteAddr)
+		resp := fmt.Sprintf("OK")
+		res.Write([]byte(resp))
+		//log.Printf("OK\n")
+	})
 	http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
-        //log.Printf("Received %s request for host %s from IP address %s",
-			//req.Method, req.Host, req.RemoteAddr)
-        resp := fmt.Sprintf(*host)
-        res.Write([]byte(resp))
-        //log.Printf("OK\n")
-    })
-    server.ListenAndServeTLS(*cert, *key)
+		//log.Printf("Received %s request for host %s from IP address %s",
+		//req.Method, req.Host, req.RemoteAddr)
+		resp := fmt.Sprintf(*host)
+		res.Write([]byte(resp))
+		//log.Printf("OK\n")
+	})
+	server.ListenAndServeTLS(*cert, *key)
 }

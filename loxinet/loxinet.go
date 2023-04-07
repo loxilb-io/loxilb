@@ -19,18 +19,22 @@ package loxinet
 import (
 	"errors"
 	"fmt"
-	apiserver "github.com/loxilb-io/loxilb/api"
-	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
-	cmn "github.com/loxilb-io/loxilb/common"
-	opts "github.com/loxilb-io/loxilb/options"
-	tk "github.com/loxilb-io/loxilib"
 	"net"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
+	"runtime/pprof"
 	"strings"
 	"sync"
 	"syscall"
 	"time"
+
+	apiserver "github.com/loxilb-io/loxilb/api"
+	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
+	prometheus "github.com/loxilb-io/loxilb/api/prometheus"
+	cmn "github.com/loxilb-io/loxilb/common"
+	opts "github.com/loxilb-io/loxilb/options"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 // string constant representing root security zone
@@ -62,10 +66,12 @@ type loxiNetH struct {
 	sigCh  chan os.Signal
 	wg     sync.WaitGroup
 	bgp    *GoBgpH
+	sumDis bool
 	has    *CIStateH
 	logger *tk.Logger
 	ready  bool
 	self   int
+	pFile  *os.File
 }
 
 // NodeWalker - an implementation of node walker interface
@@ -118,14 +124,19 @@ func loxiNetTicker() {
 		select {
 		case <-mh.tDone:
 			return
-		case <-mh.sigCh:
-			var ws syscall.WaitStatus
-			var ru syscall.Rusage
-			wpid := 1
-			try := 0
-			for wpid >= 0 && try < 100 {
-				wpid, _ = syscall.Wait4(-1, &ws, syscall.WNOHANG, &ru)
-				try++
+		case sig := <-mh.sigCh:
+			if sig == syscall.SIGCHLD {
+				var ws syscall.WaitStatus
+				var ru syscall.Rusage
+				wpid := 1
+				try := 0
+				for wpid >= 0 && try < 100 {
+					wpid, _ = syscall.Wait4(-1, &ws, syscall.WNOHANG, &ru)
+					try++
+				}
+			} else if sig == syscall.SIGHUP {
+				fmt.Printf("SIGHUP called\n")
+				pprof.StopCPUProfile()
 			}
 		case t := <-mh.ticker.C:
 			tk.LogIt(-1, "Tick at %v\n", t)
@@ -159,8 +170,25 @@ func loxiNetInit() {
 	}
 
 	mh.self = opts.Opts.ClusterSelf
+	mh.sumDis = opts.Opts.CSumDisable
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD)
+	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGHUP)
+
+	// Check if profiling is enabled
+	if opts.Opts.CPUProfile != "none" {
+		var err error
+		mh.pFile, err = os.Create(opts.Opts.CPUProfile)
+		if err != nil {
+			tk.LogIt(tk.LogNotice, "profile file create failed\n")
+			return
+		}
+		err = pprof.StartCPUProfile(mh.pFile)
+		if err != nil {
+			tk.LogIt(tk.LogNotice, "CPU profiler start failed\n")
+			return
+		}
+	}
 
 	// Initialize the ebpf datapath subsystem
 	mh.dpEbpf = DpEbpfInit(clusterMode, mh.self)
@@ -207,6 +235,12 @@ func loxiNetInit() {
 	if opts.Opts.NoNlp == false {
 		nlp.NlpRegister(NetAPIInit())
 		nlp.NlpInit()
+	}
+
+	// Initialize the Prometheus subsystem
+	if opts.Opts.NoPrometheus == false {
+		prometheus.PrometheusRegister(NetAPIInit())
+		prometheus.Init()
 	}
 
 	// Spawn CI maintenance application

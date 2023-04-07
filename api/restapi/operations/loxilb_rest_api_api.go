@@ -141,6 +141,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		GetConfigVlanAllHandler: GetConfigVlanAllHandlerFunc(func(params GetConfigVlanAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigVlanAll has not yet been implemented")
 		}),
+		GetMetricsHandler: GetMetricsHandlerFunc(func(params GetMetricsParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetMetrics has not yet been implemented")
+		}),
 		GetStatusDeviceHandler: GetStatusDeviceHandlerFunc(func(params GetStatusDeviceParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetStatusDevice has not yet been implemented")
 		}),
@@ -303,6 +306,8 @@ type LoxilbRestAPIAPI struct {
 	GetConfigTunnelVxlanAllHandler GetConfigTunnelVxlanAllHandler
 	// GetConfigVlanAllHandler sets the operation handler for the get config vlan all operation
 	GetConfigVlanAllHandler GetConfigVlanAllHandler
+	// GetMetricsHandler sets the operation handler for the get metrics operation
+	GetMetricsHandler GetMetricsHandler
 	// GetStatusDeviceHandler sets the operation handler for the get status device operation
 	GetStatusDeviceHandler GetStatusDeviceHandler
 	// GetStatusFilesystemHandler sets the operation handler for the get status filesystem operation
@@ -518,6 +523,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.GetConfigVlanAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigVlanAllHandler")
+	}
+	if o.GetMetricsHandler == nil {
+		unregistered = append(unregistered, "GetMetricsHandler")
 	}
 	if o.GetStatusDeviceHandler == nil {
 		unregistered = append(unregistered, "GetStatusDeviceHandler")
@@ -799,6 +807,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/config/vlan/all"] = NewGetConfigVlanAll(o.context, o.GetConfigVlanAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/metrics"] = NewGetMetrics(o.context, o.GetMetricsHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

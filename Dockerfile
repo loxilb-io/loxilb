@@ -9,18 +9,21 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 # Update Ubuntu Software repository
 RUN apt update
+RUN apt install -y wget
+
+# Install arch specific packages - golang
+RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo https://go.dev/dl/go1.18.linux-${arch}.tar.gz && wget https://go.dev/dl/go1.18.linux-${arch}.tar.gz && tar -xzf go1.18.linux-${arch}.tar.gz --directory /usr/local/ && rm go1.18.linux-${arch}.tar.gz
+ENV PATH="${PATH}:/usr/local/go/bin"
+
+# Install arch specific packages - gcc-multilib
+RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && if [ "$arch" = "arm64" ] ; then apt install -y gcc-multilib-arm-linux-gnueabihf; else apt update && apt install -y  gcc-multilib;fi
 
 # Install loxilb related packages
-RUN apt install -y clang llvm libelf-dev gcc-multilib libpcap-dev vim net-tools \
+RUN apt install -y clang llvm libelf-dev libpcap-dev vim net-tools \
     elfutils dwarves git libbsd-dev bridge-utils wget arping unzip build-essential \
-    bison flex sudo iproute2 pkg-config tcpdump iputils-ping keepalived curl && \
+    bison flex sudo iproute2 pkg-config tcpdump iputils-ping keepalived curl bash-completion && \
     rm -rf /var/lib/apt/lists/* && \
     apt clean
-
-# Install GoLang
-RUN wget https://go.dev/dl/go1.18.linux-amd64.tar.gz && tar -xzf go1.18.linux-amd64.tar.gz --directory /usr/local/
-ENV PATH="${PATH}:/usr/local/go/bin"
-RUN rm go1.18.linux-amd64.tar.gz
 
 RUN wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
     unzip main.zip && cd iproute2-main/libbpf/src/ && mkdir build && \
@@ -30,8 +33,12 @@ RUN wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
 # Build bpftool
 RUN git clone --recurse-submodules https://github.com/libbpf/bpftool.git && cd bpftool/src/ && make clean && 	make -j $(nproc) && cp -f ./bpftool /usr/local/sbin/bpftool && cd - && rm -fr bpftool
 
-# Install loxicmd
+# Install loxicmd with autocompletion 
 RUN git clone https://github.com/loxilb-io/loxicmd.git && cd loxicmd && go get . && make && cp ./loxicmd /usr/local/sbin/loxicmd && cd - && rm -fr loxicmd
+RUN /usr/local/sbin/loxicmd completion bash > /etc/bash_completion.d/loxi_completion 
+RUN echo "if [ -f /etc/bash_completion ] && ! shopt -oq posix; then" >> /root/.bashrc && \
+    echo "    . /etc/bash_completion" >> /root/.bashrc && \
+    echo "fi" >> /root/.bashrc
 
 # Install gobgpd
 RUN wget https://github.com/osrg/gobgp/releases/download/v3.5.0/gobgp_3.5.0_linux_amd64.tar.gz && tar -xzf gobgp_3.5.0_linux_amd64.tar.gz &&  mv gobgp* /usr/sbin/ && rm LICENSE README.md
