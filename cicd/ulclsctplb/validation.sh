@@ -1,9 +1,9 @@
 #!/bin/bash
 source ../common.sh
 echo SCENARIO-ulclsctplb
-$hexec l3e1 socat -v -T0.5 sctp-l:8080,bind=25.25.25.1,reuseaddr,fork system:"echo 'server1'; cat" >/dev/null 2>&1 &
-$hexec l3e2 socat -v -T0.5 sctp-l:8080,bind=26.26.26.1,reuseaddr,fork system:"echo 'server2'; cat" >/dev/null 2>&1 &
-$hexec l3e3 socat -v -T0.5 sctp-l:8080,bind=27.27.27.1,reuseaddr,fork system:"echo 'server3'; cat" >/dev/null 2>&1 &
+$hexec l3e1 nohup socat -v -T0.5 sctp-l:8080,bind=25.25.25.1,reuseaddr,fork system:"echo 'server1'; cat" >/dev/null 2>&1 &
+$hexec l3e2 nohup socat -v -T0.5 sctp-l:8080,bind=26.26.26.1,reuseaddr,fork system:"echo 'server2'; cat" >/dev/null 2>&1 &
+$hexec l3e3 nohup socat -v -T0.5 sctp-l:8080,bind=27.27.27.1,reuseaddr,fork system:"echo 'server3'; cat" >/dev/null 2>&1 &
 
 sleep 5
 code=0
@@ -29,7 +29,7 @@ do
             echo "All Servers are not UP"
             echo SCENARIO-ulclsctplb [FAILED]
             #sudo pkill -9 socat 2>&1 > /dev/null
-            #exit 1
+            break
         fi
 
     fi
