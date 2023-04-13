@@ -15,7 +15,8 @@ waitCount=0
 while [ $j -le 2 ]
 do
     #res=$($hexec ue1 curl ${ep[j]}:8080)
-    res=`$hexec ue1 socat -T10 - SCTP:${ep[j]}:8080,bind=${ueIp[1]}`
+    #res=`$hexec ue1 socat -T10 - SCTP:${ep[j]}:8080,bind=${ueIp[1]}`
+    res=`$hexec ue1 socat -T10 - SCTP:${ep[j]}:8080`
     echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
