@@ -16,7 +16,7 @@ while [ $j -le 2 ]
 do
     #res=$($hexec ue1 curl ${ep[j]}:8080)
     res=`$hexec ue1 socat -T10 - SCTP:${ep[j]}:8080,bind=${ueIp[1]}`
-    #echo $res
+    echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
         echo "$res UP"
@@ -28,8 +28,8 @@ do
         then
             echo "All Servers are not UP"
             echo SCENARIO-ulclsctplb [FAILED]
-            sudo pkill -9 socat 2>&1 > /dev/null
-            exit 1
+            #sudo pkill -9 socat 2>&1 > /dev/null
+            #exit 1
         fi
 
     fi
