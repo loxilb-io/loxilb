@@ -1,96 +1,78 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netinet/sctp.h>
 #include <arpa/inet.h>
-#define MAX_BUFFER 1024
-#define MY_PORT_NUM 8080 /* This can be changed to suit the need and should be same in server and client */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
 
-int
-main (int argc, char* argv[])
+#define RECVBUFSIZE     4096
+#define PPID            1234
+
+int main(int argc, char* argv[])
 {
-  int connSock, in, i, ret, flags;
-  struct sockaddr_in servaddr;
-  struct sctp_status status;
-  struct sctp_sndrcvinfo sndrcvinfo;
-  char buffer[MAX_BUFFER + 1];
-  int datalen = 0;
-  fd_set read_fd_set;
 
-  /*Get the input from user*/
-  //printf("Enter data to send: ");
-  //fgets(buffer, MAX_BUFFER, stdin);
-  /* Clear the newline or carriage return from the end*/
-  //buffer[strcspn(buffer, "\r\n")] = 0;
-  /* Sample input */
-  strncpy (buffer, "Hello Server", 12);
-  buffer[12] = '\0';
-  datalen = strlen(buffer);
+        struct sockaddr_in servaddr = {0};
+        struct sockaddr_in laddr = {0};
+        int    sockfd, in, flags;
+        char   *saddr;
+        int    sport;
+        struct sctp_status status = {0};
+        struct sctp_sndrcvinfo sndrcvinfo = {0};
+        struct sctp_event_subscribe events = {0};
+        struct sctp_initmsg initmsg = {0};
+        char   msg[1024]  = {0};
+        char   buff[1024] = {0};
+        socklen_t opt_len;
+        socklen_t slen = (socklen_t) sizeof(struct sockaddr_in);
 
-  connSock = socket (AF_INET, SOCK_STREAM, IPPROTO_SCTP);
 
-  if (connSock == -1)
-  {
-      printf("Socket creation failed\n");
-      perror("socket()");
-      exit(1);
-  }
+        sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
 
-  bzero ((void *) &servaddr, sizeof (servaddr));
-  servaddr.sin_family = AF_INET;
-  servaddr.sin_port = htons (atoi(argv[2]));
-  servaddr.sin_addr.s_addr = inet_addr (argv[1]);
+        laddr.sin_family = AF_INET;
+        laddr.sin_port = 0;
+        laddr.sin_addr.s_addr = inet_addr(argv[1]);
 
-  ret = connect (connSock, (struct sockaddr *) &servaddr, sizeof (servaddr));
+        //bind to local address
+        bind(sockfd, (struct sockaddr *)&laddr, sizeof(struct sockaddr_in));
 
-  if (ret == -1)
-  {
-      printf("Connection failed\n");
-      perror("connect()");
-      close(connSock);
-      exit(1);
-  }
-  FD_ZERO(&read_fd_set);
-  ret = sctp_sendmsg (connSock, (void *) buffer, (size_t) datalen,
-        NULL, 0, 0, 0, 0, 0, 0);
-  if(ret == -1 )
-  {
-    printf("Error in sctp_sendmsg\n");
-    perror("sctp_sendmsg()");
-  }
-  else {
-   //       printf("Successfully sent %d bytes data to server\n", ret);
-          FD_SET(connSock, &read_fd_set);
-          int ret_val = select(FD_SETSIZE, &read_fd_set, NULL, NULL, NULL);
-          if (ret_val >= 0) {
-              if (FD_ISSET(connSock, &read_fd_set)) {
+        //set the association options
+        initmsg.sinit_num_ostreams = 1;
+        setsockopt( sockfd, IPPROTO_SCTP, SCTP_INITMSG, &initmsg,sizeof(initmsg));
 
-                  in = sctp_recvmsg (connSock, buffer, sizeof (buffer),
-                          (struct sockaddr *) NULL, 0, &sndrcvinfo, &flags);
+        saddr = argv[2];
+        sport = atoi(argv[3]);
+        bzero( (void *)&servaddr, sizeof(servaddr) );
+        servaddr.sin_family = AF_INET;
+        servaddr.sin_port = htons(sport);
+        servaddr.sin_addr.s_addr = inet_addr( saddr );
 
-                  if( in == -1)
-                  {
-                    printf("Error in sctp_recvmsg\n");
-                    perror("sctp_recvmsg()");
-                    close(connSock);
-                    return -1;
-                  }
-                  else {
-                    //Add '\0' in case of text data
-                    buffer[in] = '\0';
 
-                    // printf (" Length of Data received: %d\n", in);
-                    printf ("%s", (char *) buffer);
-                  }
-            }
-       }
-  }
+        connect( sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
 
-  close (connSock);
+        opt_len = (socklen_t) sizeof(struct sctp_status);
+        getsockopt(sockfd, IPPROTO_SCTP, SCTP_STATUS, &status, &opt_len);
 
-  return 0;
+        while(1)
+        {
+                strncpy (msg, "hello", strlen("hello"));
+                //printf("Sending msg to server: %s", msg);
+                sctp_sendmsg(sockfd, (const void *)msg, strlen(msg), NULL, 0,htonl(PPID), 0, 0 , 0, 0);
+
+                in = sctp_recvmsg(sockfd, (void*)buff, RECVBUFSIZE, 
+                                  (struct sockaddr *)&servaddr, 
+                                  &slen, &sndrcvinfo, &flags);
+                if (in > 0 && in < RECVBUFSIZE - 1)
+                {
+                        buff[in] = 0;
+                        printf("%s",buff);
+                        break;
+                }
+        } 
+
+        close(sockfd);
+        return 0;
 }
