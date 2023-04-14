@@ -49,7 +49,7 @@ function tcp_validate() {
         then
             echo "All TCP Servers are not UP" >&2
             echo CLUSTER-2 [FAILED] >&2
-            sudo pkill node
+            sudo pkill -9 node 2>&1 > /dev/null
             exit 1
         fi
     fi
@@ -91,9 +91,9 @@ function tcp_validate() {
 }
 
 function sctp_validate() {
-  $hexec ep1 ../common/sctp_server server1 &
-  $hexec ep2 ../common/sctp_server server2 &
-  $hexec ep3 ../common/sctp_server server3 &
+  $hexec ep1 ../common/sctp_server ${ep[0]} 8080 server1 >/dev/null 2>&1 &
+  $hexec ep2 ../common/sctp_server ${ep[1]} 8080 server2 >/dev/null 2>&1 &
+  $hexec ep3 ../common/sctp_server ${ep[2]} 8080 server3 >/dev/null 2>&1 &
 
   sleep 20
 
@@ -107,7 +107,7 @@ function sctp_validate() {
   else
     $hexec r2 ip route list match 20.20.20.1 >&2
     echo "BGP Service Route [NOK]" >&2
-    sudo pkill sctp_server
+    sudo pkill -9 sctp_server  >/dev/null 2&1
     return 1
   fi 
   
@@ -117,7 +117,7 @@ function sctp_validate() {
   waitCount=0
   while [ $j -le 2 ]
   do
-    res=$($hexec user timeout 10 ../common/sctp_client ${ep[j]} 8080)
+    res=$($hexec user timeout 10 ../common/sctp_client 1.1.1.1 ${ep[j]} 8080)
     if [[ $res == "${servArr[j]}" ]]
     then
         echo "$res UP" >&2
@@ -129,6 +129,7 @@ function sctp_validate() {
         then
             echo "All SCTP Servers are not UP" >&2
             echo CLUSTER-2 [FAILED] >&2
+            sudo pkill -9 sctp_server  >/dev/null 2&1
             exit 1
         fi
 
@@ -140,7 +141,7 @@ function sctp_validate() {
   do
   for j in {0..2}
   do
-    res=$($hexec user timeout 10 ../common/sctp_client 20.20.20.1 2020)
+    res=$($hexec user timeout 10 ../common/sctp_client 1.1.1.1 20.20.20.1 2020)
     echo -e $res >&2
     ids=`echo "${res//[!0-9]/}"`
     if [[ $res == *"server"* ]]; then
@@ -165,7 +166,7 @@ function sctp_validate() {
     sleep 1
   done
   done
-  sudo pkill sctp_server
+  sudo pkill -9 sctp_server >/dev/null 2>&1
   echo $code
 }
 
@@ -319,5 +320,5 @@ then
 else
     echo CLUSTER-2 SCTP [FAILED]
 fi
-
+sudo pkill -9 sctp_server >/dev/null 2>&1
 exit $code

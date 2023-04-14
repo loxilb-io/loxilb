@@ -5,20 +5,21 @@ echo SCENARIO-sctplbdsr
 #$hexec l3ep2 socat -v -T0.5 sctp-l:2020,reuseaddr,fork system:"echo 'server2'; cat" >/dev/null 2>&1 &
 #$hexec l3ep3 socat -v -T0.5 sctp-l:2020,reuseaddr,fork system:"echo 'server3'; cat" >/dev/null 2>&1 &
 
-$hexec l3ep1 ./sctp_server server1 &
-$hexec l3ep2 ./sctp_server server2 &
-$hexec l3ep3 ./sctp_server server3 &
+servArr=( "server1" "server2" "server3" )
+ep=( "31.31.31.1" "32.32.32.1" "33.33.33.1" )
+
+$hexec l3ep1 ./sctp_server ${ep[0]} 2020 server1 >/dev/null 2>&1 &
+$hexec l3ep2 ./sctp_server ${ep[1]} 2020 server2 >/dev/null 2>&1 &
+$hexec l3ep3 ./sctp_server ${ep[2]} 2020 server3 >/dev/null 2>&1 &
 
 sleep 5
 code=0
-servArr=( "server1" "server2" "server3" )
-ep=( "31.31.31.1" "32.32.32.1" "33.33.33.1" )
 j=0
 waitCount=0
 while [ $j -le 2 ]
 do
     #res=$($hexec l3h1 socat -T10 - SCTP:${ep[j]}:2020)
-    res=$($hexec l3h1 timeout 10 ../common/sctp_client ${ep[j]} 2020)
+    res=$($hexec l3h1 timeout 10 ../common/sctp_client 10.10.10.1 ${ep[j]} 2020)
     echo $res
     if [[ $res == "${servArr[j]}" ]]
     then

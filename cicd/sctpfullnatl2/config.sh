@@ -37,6 +37,6 @@ create_docker_host_cnbridge --host1 br1 --host2 c1
 ##Create LB rule
 $dexec llb1 loxicmd create lb 10.2.100.85 --sctp=38412:38412 --endpoints=10.2.96.58:1,10.2.89.253:1 --mode=fullnat
 
-#$dexec llb1 bash -c 'for i in /proc/sys/net/ipv4/conf/*/rp_filter; do echo 0 > "$i"; done'
+$dexec llb1 bash -c 'for i in /proc/sys/net/ipv4/conf/*/rp_filter; do echo 0 > "$i"; done'
 
 sleep 10

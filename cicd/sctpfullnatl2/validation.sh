@@ -1,18 +1,18 @@
 #!/bin/bash
 source ../common.sh
 echo SCENARIO-SCTP-FULLNAT
-$hexec ep1 ./server server1 &
-$hexec ep2 ./server server2 &
+servArr=( "server1" "server2" )
+ep=( "10.2.96.58" "10.2.89.253" )
+$hexec ep1 ../common/sctp_server ${ep[0]} 38412 server1 >/dev/null 2>&1 &
+$hexec ep2 ../common/sctp_server ${ep[1]} 38412 server2 >/dev/null 2>&1 &
 
 sleep 5
 code=0
-servArr=( "server1" "server2" )
-ep=( "10.2.96.58" "10.2.89.253" )
 j=0
 waitCount=0
 while [ $j -le 1 ]
 do
-    res=$($hexec c1 ./client ${ep[j]} 38412)
+    res=$($hexec c1 ../common/sctp_client 10.2.9.19 ${ep[j]} 38412)
     #echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
@@ -25,6 +25,7 @@ do
         then
             echo "All Servers are not UP"
             echo SCENARIO-SCTP-FULLNAT [FAILED]
+            sudo pkill -9 -x  sctp_server >/dev/null 2>&1
             exit 1
         fi
 
@@ -36,7 +37,7 @@ for i in {1..4}
 do
 for j in {0..1}
 do
-    res=$($hexec c1 ./client 10.2.100.85 38412)
+    res=$($hexec c1 ../common/sctp_client 10.2.9.19 10.2.100.85 38412)
     echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
@@ -51,6 +52,6 @@ then
 else
     echo SCENARIO-SCTP-FULLNAT [FAILED]
 fi
-sudo pkill -9 -x  server >/dev/null 2>&1
+sudo pkill -9 -x  sctp_server >/dev/null 2>&1
 exit $code
 
