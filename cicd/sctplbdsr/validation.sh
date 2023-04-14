@@ -8,9 +8,9 @@ echo SCENARIO-sctplbdsr
 servArr=( "server1" "server2" "server3" )
 ep=( "31.31.31.1" "32.32.32.1" "33.33.33.1" )
 
-$hexec l3ep1 ./sctp_server ${ep[0]} 2020 server1 >/dev/null 2>&1 &
-$hexec l3ep2 ./sctp_server ${ep[1]} 2020 server2 >/dev/null 2>&1 &
-$hexec l3ep3 ./sctp_server ${ep[2]} 2020 server3 >/dev/null 2>&1 &
+$hexec l3ep1 ../common/sctp_server ${ep[0]} 2020 server1 >/dev/null 2>&1 &
+$hexec l3ep2 ../common/sctp_server ${ep[1]} 2020 server2 >/dev/null 2>&1 &
+$hexec l3ep3 ../common/sctp_server ${ep[2]} 2020 server3 >/dev/null 2>&1 &
 
 sleep 5
 code=0
@@ -32,6 +32,7 @@ do
         then
             echo "All Servers are not UP"
             echo SCENARIO-sctplbdsr [FAILED]
+            sudo pkill -9 sctp_server > /dev/null 2>&1
             exit 1
         fi
     fi
@@ -75,6 +76,6 @@ else
 fi
 
 #sudo killall -9 socat >> /dev/null 2>&1
-sudo killall -9 sctp_server >> /dev/null 2>&1
+sudo pkill -9 sctp_server > /dev/null 2>&1
 
 exit $code
