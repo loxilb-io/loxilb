@@ -171,7 +171,10 @@ func dpEbpfTicker() {
 			C.llb_collect_map_stats(C.int(tbls[sel]))
 
 			// Age any entries related to Conntrack
-			C.llb_collect_map_stats(C.int(C.LL_DP_CT_STATS_MAP))
+			/* No need to fetch all stats in this fashion */
+			//C.llb_collect_map_stats(C.int(C.LL_DP_CT_STATS_MAP))
+
+			/* Per entry stats will be fetched in C.ll_ct_map_ent_has_aged */
 			C.llb_age_map_entries(C.LL_DP_CT_MAP)
 			C.llb_age_map_entries(C.LL_DP_FCV4_MAP)
 
