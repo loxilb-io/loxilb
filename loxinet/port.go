@@ -616,9 +616,17 @@ func (P *PortsH) PortsToGet() ([]cmn.PortDump, error) {
 
 		routed := false
 		var addr4 []string
-		addr4 = append(addr4, zn.L3.IfObjMkString(ports.Name))
+		addr4 = append(addr4, zn.L3.IfObjMkString(ports.Name, true))
 		if len(addr4) > 0 {
 			if addr4[0] != "" {
+				routed = true
+			}
+		}
+
+		var addr6 []string
+		addr6 = append(addr6, zn.L3.IfObjMkString(ports.Name, false))
+		if len(addr6) > 0 {
+			if addr6[0] != "" {
 				routed = true
 			}
 		}
@@ -656,9 +664,10 @@ func (P *PortsH) PortsToGet() ([]cmn.PortDump, error) {
 			L3: cmn.PortLayer3Info{
 				//Routed:     ports.L3.Routed,
 				//Ipv4_addrs: ports.L3.Ipv4_addrs,
+				//Ipv6Addrs: ports.L3.Ipv6Addrs,
 				Ipv4Addrs: addr4,
 				Routed:    routed,
-				Ipv6Addrs: ports.L3.Ipv6Addrs,
+				Ipv6Addrs: addr6,
 			},
 			L2: cmn.PortLayer2Info{
 				IsPvid: ports.L2.IsPvid,
