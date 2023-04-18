@@ -34,11 +34,15 @@ done
 
 for j in {0..2}
 do
-    res=$($hexec l3h1 socat -T10 - TCP:20.20.20.1:2020)
+    res=$($hexec l3h1 socat -T10 - TCP:20.20.20.1:2020,sp=55001,reuseaddr)
     echo $res
-    if [[ $res != "${servArr[j]}" ]]
+    if [[ $exp == "" ]]
     then
-        code=1
+      exp=$res
+    fi
+    if [[ $exp != $res ]]
+    then
+      code=1
     fi
     sleep 1
 done

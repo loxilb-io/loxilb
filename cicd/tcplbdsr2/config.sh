@@ -67,4 +67,4 @@ $hexec l3h1 sysctl net.ipv4.conf.all.rp_filter=0 2>&1 >> /dev/null
 $hexec l3h1 sysctl net.ipv4.conf.vlan11.rp_filter=0 2>&1 >> /dev/null
 
 sleep 5
-$dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:2020 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1 --mode=dsr
+$dexec llb1 loxicmd create lb 20.20.20.1 --select=hash --tcp=2020:2020 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1 --mode=dsr

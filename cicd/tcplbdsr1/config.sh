@@ -39,4 +39,4 @@ $hexec l3ep2 ip addr add 20.20.20.1/32 dev lo
 $hexec l3ep3 ip addr add 20.20.20.1/32 dev lo
 
 sleep 5
-$dexec llb1 loxicmd create lb 20.20.20.1 --tcp=2020:2020 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1 --mode=dsr
+$dexec llb1 loxicmd create lb 20.20.20.1 --select=hash --tcp=2020:2020 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1 --mode=dsr
