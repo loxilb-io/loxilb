@@ -359,28 +359,34 @@ func (l3 *L3H) Ifas2String(it IterIntf) error {
 }
 
 // IfaMkString - Given an ifa return its string representation
-func IfaMkString(ifa *Ifa) string {
+func IfaMkString(ifa *Ifa, v4 bool) string {
 	var str string
 	for _, ifaEnt := range ifa.Ifas {
 		var flagStr string
 		if ifaEnt.Secondary {
-			flagStr = "Secondary"
+			flagStr = "S"
 		} else {
-			flagStr = "Primary"
+			flagStr = "P"
+		}
+		if !v4 && tk.IsNetIPv4(ifaEnt.IfaAddr.String()) {
+			continue
+		}
+		if v4 && tk.IsNetIPv6(ifaEnt.IfaAddr.String()) {
+			continue
 		}
 		plen, _ := ifaEnt.IfaNet.Mask.Size()
-		str = fmt.Sprintf("%s/%d - %s", ifaEnt.IfaAddr.String(), plen, flagStr)
+		str = fmt.Sprintf("%s/%d (%s) ", ifaEnt.IfaAddr.String(), plen, flagStr)
 	}
 
 	return str
 }
 
 // IfObjMkString - given an ifa object, get all its member ifa's string rep
-func (l3 *L3H) IfObjMkString(obj string) string {
+func (l3 *L3H) IfObjMkString(obj string, v4 bool) string {
 	key := IfaKey{obj}
 	ifa := l3.IfaMap[key]
 	if ifa != nil {
-		return IfaMkString(ifa)
+		return IfaMkString(ifa, v4)
 	}
 
 	return ""
