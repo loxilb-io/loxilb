@@ -14,7 +14,8 @@
 
 int main(int argc, char* argv[]) {
 
-       struct sockaddr_in laddr = {0};
+       struct sockaddr_in laddr[10] = {0};
+       int i = 0, error;
        struct sockaddr_in caddr = {0};
        int    sockfd, n, flags;
        struct sctp_sndrcvinfo sinfo = {0};
@@ -22,10 +23,10 @@ int main(int argc, char* argv[]) {
        char recvbuff[RECVBUFSIZE + 1] = {0};
        socklen_t clen;
 
-       char *saddr, *msg;
+       char *saddr, *saddrs, *msg;
        int lport, mlen;
 
-       saddr = argv[1];
+       saddrs = argv[1];
        lport = atoi(argv[2]);
        msg = argv[3];
 
@@ -35,12 +36,52 @@ int main(int argc, char* argv[]) {
 
        setsockopt(sockfd, IPPROTO_SCTP, SCTP_EVENTS, &event,sizeof(struct sctp_event_subscribe));
 
+       const int enable = 1;
+       if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+            perror("setsockopt(SO_REUSEADDR) failed");
+
+       i = 1;
+       if (strstr(saddrs, ",")) {
+            saddr = strtok(saddrs, ",\n");
+            laddr[0].sin_family = AF_INET;
+            laddr[0].sin_port = htons(lport);
+            laddr[0].sin_addr.s_addr = inet_addr(saddr);
+            printf("%s\n", saddr);
+            saddr = strtok(NULL, ",\n");
+            while(saddr != NULL) {
+                printf("%s\n", saddr);
+                laddr[i].sin_family = AF_INET;
+                laddr[i].sin_port = htons(lport);
+                laddr[i].sin_addr.s_addr = inet_addr(saddr);
+                saddr = strtok(NULL, ",\n");
+                i++;
+            }
+       } else {
+            laddr[0].sin_family = AF_INET;
+            laddr[0].sin_port = htons(lport);
+            laddr[0].sin_addr.s_addr = inet_addr(saddrs);
+       }
+#if 0
        laddr.sin_family = AF_INET;
        laddr.sin_port = htons(lport);
        laddr.sin_addr.s_addr = inet_addr(saddr);
+#endif
 
-       bind(sockfd, (struct sockaddr *)&laddr, sizeof(struct sockaddr_in));
+       error = bind(sockfd, (struct sockaddr *)&laddr[0], sizeof(struct sockaddr_in));
+       if (error != 0) {
+		    printf("\n\n\t\t***r: error binding addr:"
+			" %s. ***\n", strerror(errno));
+		    exit(1);
+	   }
 
+       if (i > 1) {
+               error = sctp_bindx(sockfd,(struct sockaddr*) &laddr[1], i - 1, SCTP_BINDX_ADD_ADDR);
+               if (error != 0) {
+                       printf("\n\n\t\t***r: error adding addrs:"
+                                       " %s. ***\n", strerror(errno));
+                       exit(1);
+               }
+       }
        listen(sockfd, 1);
 
        while(1)

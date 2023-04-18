@@ -117,7 +117,7 @@ function sctp_validate() {
   waitCount=0
   while [ $j -le 2 ]
   do
-    res=$($hexec user timeout 10 ../common/sctp_client 1.1.1.1 ${ep[j]} 8080)
+    res=$($hexec user timeout 10 ../common/sctp_client 1.1.1.1 0 ${ep[j]} 8080)
     if [[ $res == "${servArr[j]}" ]]
     then
         echo "$res UP" >&2
@@ -141,7 +141,7 @@ function sctp_validate() {
   do
   for j in {0..2}
   do
-    res=$($hexec user timeout 10 ../common/sctp_client 1.1.1.1 20.20.20.1 2020)
+    res=$($hexec user timeout 10 ../common/sctp_client 1.1.1.1 0 20.20.20.1 2020)
     echo -e $res >&2
     ids=`echo "${res//[!0-9]/}"`
     if [[ $res == *"server"* ]]; then

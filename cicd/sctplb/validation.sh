@@ -15,7 +15,7 @@ j=0
 waitCount=0
 while [ $j -le 2 ]
 do
-    res=$($hexec l3h1 timeout 10 ../common/sctp_client 10.10.10.1 ${ep[j]} 8080)
+    res=$($hexec l3h1 timeout 10 ../common/sctp_client 10.10.10.1 0 ${ep[j]} 8080)
     #echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
@@ -40,7 +40,7 @@ for i in {1..4}
 do
 for j in {0..2}
 do
-    res=$($hexec l3h1 timeout 10 ../common/sctp_client 10.10.10.1 20.20.20.1 2020)
+    res=$($hexec l3h1 timeout 10 ../common/sctp_client 10.10.10.1 0 20.20.20.1 2020)
     echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then

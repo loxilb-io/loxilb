@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
         struct sockaddr_in laddr = {0};
         int    sockfd, in, flags;
         char   *saddr;
-        int    sport;
+        int    sport, lport, error = 0;
         struct sctp_status status = {0};
         struct sctp_sndrcvinfo sndrcvinfo = {0};
         struct sctp_event_subscribe events = {0};
@@ -31,20 +31,26 @@ int main(int argc, char* argv[])
 
 
         sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
+        lport = atoi(argv[2]);
 
         laddr.sin_family = AF_INET;
-        laddr.sin_port = 0;
         laddr.sin_addr.s_addr = inet_addr(argv[1]);
+        laddr.sin_port = lport?htons(lport):0;
 
         //bind to local address
-        bind(sockfd, (struct sockaddr *)&laddr, sizeof(struct sockaddr_in));
+        error = bind(sockfd, (struct sockaddr *)&laddr, sizeof(struct sockaddr_in));
+        if (error != 0) {
+            printf("\n\n\t\t***r: error binding addr:"
+            " %s. ***\n", strerror(errno));
+            exit(1);
+       }
 
         //set the association options
         initmsg.sinit_num_ostreams = 1;
         setsockopt( sockfd, IPPROTO_SCTP, SCTP_INITMSG, &initmsg,sizeof(initmsg));
 
-        saddr = argv[2];
-        sport = atoi(argv[3]);
+        saddr = argv[3];
+        sport = atoi(argv[4]);
         bzero( (void *)&servaddr, sizeof(servaddr) );
         servaddr.sin_family = AF_INET;
         servaddr.sin_port = htons(sport);
