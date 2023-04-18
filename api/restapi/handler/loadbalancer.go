@@ -46,6 +46,10 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 		})
 	}
 
+	if lbRules.Serv.Mode == cmn.LBModeDSR && lbRules.Serv.Sel != cmn.LbSelHash {
+		return &ResultResponse{Result: "Error: Only Hash Selection criteria allowed for DSR mode"}
+	}
+
 	tk.LogIt(tk.LogDebug, "[API] lbRules : %v\n", lbRules)
 	_, err := ApiHooks.NetLbRuleAdd(&lbRules)
 	if err != nil {
