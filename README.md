@@ -16,7 +16,7 @@ loxilb is an open source hyper-scale software load-balancer for cloud-native wor
    * Support for QFI and other extension headers
 -  eBPF based data-path forwarding (Dual BSD/GPLv2 license)
    * Complete kernel networking bypass with home-grown stack for advanced features like [Conntrack](https://thermalcircle.de/doku.php?id=blog:linux:connection_tracking_1_modules_and_hooks), QoS etc
-   * Highly scalable with low-latency & high througput 
+   * Highly scalable with low-latency & high throughput 
 -  goLang based control plane components (Apache license)
 -  Seamless integration with goBGP based routing stack
 -  GoLang based easy to use APIs/Interfaces for developers
