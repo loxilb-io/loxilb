@@ -1,0 +1,57 @@
+#!/bin/bash
+source ../common.sh
+echo SCENARIO-SCTP-ONEARM
+servArr=( "server1" "server2" )
+ep=( "10.75.188.218" "10.75.188.220" )
+$hexec ep1 ../common/sctp_server ${ep[0]} 38412 server1 >/dev/null 2>&1 &
+$hexec ep2 ../common/sctp_server ${ep[1]} 38412 server2 >/dev/null 2>&1 &
+
+sleep 5
+code=0
+j=2
+waitCount=0
+while [ $j -le 1 ]
+do
+    res=$($hexec c1 ../common/sctp_client 10.75.191.224 ${ep[j]} 38412)
+    #echo $res
+    if [[ $res == "${servArr[j]}" ]]
+    then
+        echo "$res UP"
+        j=$(( $j + 1 ))
+    else
+        echo "Waiting for ${servArr[j]}(${ep[j]})"
+        waitCount=$(( $waitCount + 1 ))
+        if [[ $waitCount == 10 ]];
+        then
+            echo "All Servers are not UP"
+            echo SCENARIO-SCTP-FULLNAT [FAILED]
+            sudo pkill -9 -x  sctp_server >/dev/null 2>&1
+            exit 1
+        fi
+
+    fi
+    sleep 1
+done
+
+for i in {1..4}
+do
+for j in {0..1}
+do
+    res=$($hexec c1 ../common/sctp_client 10.75.191.224 0 123.123.123.1 38412)
+    echo -e $res
+    if [[ $res != "${servArr[j]}" ]]
+    then
+        code=1
+    fi
+    sleep 1
+done
+done
+if [[ $code == 0 ]]
+then
+    echo SCENARIO-SCTP-ONEARM [OK]
+else
+    echo SCENARIO-SCTP-ONEARM [FAILED]
+fi
+sudo pkill -9 -x  sctp_server >/dev/null 2>&1
+exit $code
+
