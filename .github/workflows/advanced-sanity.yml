@@ -97,6 +97,12 @@ jobs:
              ./rmconfig.sh
              cd -
       - run: |
+             cd cicd/sctponearm/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
              cd cicd/tcplbdsr1/
              ./config.sh
              ./validation.sh
