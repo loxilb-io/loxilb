@@ -243,16 +243,73 @@ func init() {
             }
           }
         }
-      },
+      }
+    },
+    "/config/endpoint/all": {
+      "get": {
+        "description": "Get End-Points State in loxilb",
+        "summary": "Get End-Points State in loxilb",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "Attr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/EndPointGetEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/endpoint/epipaddress/{ip_address}/probetype/{probe_type}/probeport/{probe_port}": {
       "delete": {
         "description": "Delete an LB end-point from monitoring",
         "summary": "Delete an LB end-point from monitoring",
         "parameters": [
           {
             "type": "string",
-            "description": "Hostname in CIDR",
-            "name": "hostName",
-            "in": "query"
+            "description": "Endpoint IP address in CIDR",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "protocol type for probing",
+            "name": "probe_type",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "number",
+            "description": "port on which probing has to done",
+            "name": "probe_port",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {
@@ -285,46 +342,6 @@ func init() {
           },
           "409": {
             "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "500": {
-            "description": "Internal service error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "503": {
-            "description": "Maintanence mode",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
-    },
-    "/config/endpoint/all": {
-      "get": {
-        "description": "Get End-Points State in loxilb",
-        "summary": "Get End-Points State in loxilb",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "Attr": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/EndPointGetEntry"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid authentication credentials",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1068,8 +1085,8 @@ func init() {
     },
     "/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}": {
       "delete": {
-        "description": "Create a new load balancer service with .",
-        "summary": "Create a new Load balancer service",
+        "description": "Delete an existing load balancer service with .",
+        "summary": "Delete an existing Load balancer service",
         "parameters": [
           {
             "type": "string",
@@ -4325,16 +4342,73 @@ func init() {
             }
           }
         }
-      },
+      }
+    },
+    "/config/endpoint/all": {
+      "get": {
+        "description": "Get End-Points State in loxilb",
+        "summary": "Get End-Points State in loxilb",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "Attr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/EndPointGetEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/endpoint/epipaddress/{ip_address}/probetype/{probe_type}/probeport/{probe_port}": {
       "delete": {
         "description": "Delete an LB end-point from monitoring",
         "summary": "Delete an LB end-point from monitoring",
         "parameters": [
           {
             "type": "string",
-            "description": "Hostname in CIDR",
-            "name": "hostName",
-            "in": "query"
+            "description": "Endpoint IP address in CIDR",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "protocol type for probing",
+            "name": "probe_type",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "number",
+            "description": "port on which probing has to done",
+            "name": "probe_port",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {
@@ -4367,46 +4441,6 @@ func init() {
           },
           "409": {
             "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "500": {
-            "description": "Internal service error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "503": {
-            "description": "Maintanence mode",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
-    },
-    "/config/endpoint/all": {
-      "get": {
-        "description": "Get End-Points State in loxilb",
-        "summary": "Get End-Points State in loxilb",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "Attr": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/EndPointGetEntry"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid authentication credentials",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -5150,8 +5184,8 @@ func init() {
     },
     "/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}": {
       "delete": {
-        "description": "Create a new load balancer service with .",
-        "summary": "Create a new Load balancer service",
+        "description": "Delete an existing load balancer service with .",
+        "summary": "Delete an existing Load balancer service",
         "parameters": [
           {
             "type": "string",

@@ -431,7 +431,7 @@ func (*NetAPIStruct) NetEpHostDel(em *cmn.EndPointMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
-	ret, err := mh.zr.Rules.DeleteEpHost(true, em.Name)
+	ret, err := mh.zr.Rules.DeleteEpHost(true, epHostKey{em.Name, em.ProbeType, em.ProbePort})
 	return ret, err
 }
 

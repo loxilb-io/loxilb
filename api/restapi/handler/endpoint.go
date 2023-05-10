@@ -78,11 +78,13 @@ func ConfigPostEndPoint(params operations.PostConfigEndpointParams) middleware.R
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteEndPoint(params operations.DeleteConfigEndpointParams) middleware.Responder {
+func ConfigDeleteEndPoint(params operations.DeleteConfigEndpointEpipaddressIPAddressProbetypeProbeTypeProbeportProbePortParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] EndPoint %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	EP := cmn.EndPointMod{}
-	EP.Name = *params.HostName
+	EP.Name = params.IPAddress
+	EP.ProbeType = params.ProbeType
+	EP.ProbePort = uint16(params.ProbePort)
 
 	_, err := ApiHooks.NetEpHostDel(&EP)
 	if err != nil {

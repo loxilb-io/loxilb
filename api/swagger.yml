@@ -135,8 +135,8 @@ paths:
             $ref: '#/definitions/Error'
   '/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}':
     delete:
-      summary: Create a new Load balancer service
-      description: Create a new load balancer service with .
+      summary: Delete an existing Load balancer service
+      description: Delete an existing load balancer service with .
       parameters:
         - name: ip_address
           in: path
@@ -1733,14 +1733,26 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  '/config/endpoint/epipaddress/{ip_address}/probetype/{probe_type}/probeport/{probe_port}':
     delete:
       summary: Delete an LB end-point from monitoring
       description: Delete an LB end-point from monitoring
       parameters:
-        - name: hostName
-          in: query
+        - name: ip_address
+          in: path
           type: string
-          description: Hostname in CIDR
+          required: true
+          description: Endpoint IP address in CIDR
+        - name: probe_type
+          in: path
+          type: string
+          required: true
+          description: protocol type for probing
+        - name: probe_port
+          in: path
+          type: number
+          required: true
+          description: port on which probing has to done
       responses:
         '204':
           description: OK

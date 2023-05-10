@@ -12,6 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // NewDeleteConfigEndpointParams creates a new DeleteConfigEndpointParams object
@@ -35,6 +36,14 @@ type DeleteConfigEndpointParams struct {
 	  In: query
 	*/
 	HostName *string
+	/*port on which probing has to done
+	  In: query
+	*/
+	ProbePort *int64
+	/*protocol type for probing
+	  In: query
+	*/
+	ProbeType *string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -50,6 +59,16 @@ func (o *DeleteConfigEndpointParams) BindRequest(r *http.Request, route *middlew
 
 	qHostName, qhkHostName, _ := qs.GetOK("hostName")
 	if err := o.bindHostName(qHostName, qhkHostName, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qProbePort, qhkProbePort, _ := qs.GetOK("probePort")
+	if err := o.bindProbePort(qProbePort, qhkProbePort, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qProbeType, qhkProbeType, _ := qs.GetOK("probeType")
+	if err := o.bindProbeType(qProbeType, qhkProbeType, route.Formats); err != nil {
 		res = append(res, err)
 	}
 	if len(res) > 0 {
@@ -72,6 +91,47 @@ func (o *DeleteConfigEndpointParams) bindHostName(rawData []string, hasKey bool,
 		return nil
 	}
 	o.HostName = &raw
+
+	return nil
+}
+
+// bindProbePort binds and validates parameter ProbePort from query.
+func (o *DeleteConfigEndpointParams) bindProbePort(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	value, err := swag.ConvertInt64(raw)
+	if err != nil {
+		return errors.InvalidType("probePort", "query", "int64", raw)
+	}
+	o.ProbePort = &value
+
+	return nil
+}
+
+// bindProbeType binds and validates parameter ProbeType from query.
+func (o *DeleteConfigEndpointParams) bindProbeType(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+	o.ProbeType = &raw
 
 	return nil
 }

@@ -9,11 +9,15 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
+
+	"github.com/go-openapi/swag"
 )
 
 // DeleteConfigEndpointURL generates an URL for the delete config endpoint operation
 type DeleteConfigEndpointURL struct {
-	HostName *string
+	HostName  *string
+	ProbePort *int64
+	ProbeType *string
 
 	_basePath string
 	// avoid unkeyed usage
@@ -55,6 +59,22 @@ func (o *DeleteConfigEndpointURL) Build() (*url.URL, error) {
 	}
 	if hostNameQ != "" {
 		qs.Set("hostName", hostNameQ)
+	}
+
+	var probePortQ string
+	if o.ProbePort != nil {
+		probePortQ = swag.FormatInt64(*o.ProbePort)
+	}
+	if probePortQ != "" {
+		qs.Set("probePort", probePortQ)
+	}
+
+	var probeTypeQ string
+	if o.ProbeType != nil {
+		probeTypeQ = *o.ProbeType
+	}
+	if probeTypeQ != "" {
+		qs.Set("probeType", probeTypeQ)
 	}
 
 	_result.RawQuery = qs.Encode()
