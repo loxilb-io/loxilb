@@ -285,31 +285,35 @@ func init() {
         }
       }
     },
-    "/config/endpoint/epipaddress/{ip_address}/probetype/{probe_type}/probeport/{probe_port}": {
+    "/config/endpoint/epipaddress/{ip_address}": {
       "delete": {
         "description": "Delete an LB end-point from monitoring",
         "summary": "Delete an LB end-point from monitoring",
         "parameters": [
           {
             "type": "string",
-            "description": "Endpoint IP address in CIDR",
+            "description": "Attributes of end point",
             "name": "ip_address",
             "in": "path",
             "required": true
           },
           {
             "type": "string",
-            "description": "protocol type for probing",
+            "description": "Endpoint Identifier",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Probe type",
             "name": "probe_type",
-            "in": "path",
-            "required": true
+            "in": "query"
           },
           {
             "type": "number",
-            "description": "port on which probing has to done",
+            "description": "Probe port",
             "name": "probe_port",
-            "in": "path",
-            "required": true
+            "in": "query"
           }
         ],
         "responses": {
@@ -3146,10 +3150,6 @@ func init() {
     "EndPoint": {
       "type": "object",
       "properties": {
-        "description": {
-          "description": "Host Description",
-          "type": "string"
-        },
         "hostName": {
           "description": "Host name in CIDR",
           "type": "string"
@@ -3157,6 +3157,10 @@ func init() {
         "inactiveReTries": {
           "description": "Number of inactive retries",
           "type": "integer"
+        },
+        "name": {
+          "description": "Endpoint Identifier",
+          "type": "string"
         },
         "probeDuration": {
           "description": "How frequently to probe in seconds",
@@ -3191,10 +3195,6 @@ func init() {
           "description": "Current state of this endpoint",
           "type": "string"
         },
-        "description": {
-          "description": "Host Description",
-          "type": "string"
-        },
         "hostName": {
           "description": "Host name",
           "type": "string"
@@ -3209,6 +3209,10 @@ func init() {
         },
         "minDelay": {
           "description": "Minimum delay seen for endpoint",
+          "type": "string"
+        },
+        "name": {
+          "description": "Endpoint Identifier",
           "type": "string"
         },
         "probeDuration": {
@@ -4384,31 +4388,35 @@ func init() {
         }
       }
     },
-    "/config/endpoint/epipaddress/{ip_address}/probetype/{probe_type}/probeport/{probe_port}": {
+    "/config/endpoint/epipaddress/{ip_address}": {
       "delete": {
         "description": "Delete an LB end-point from monitoring",
         "summary": "Delete an LB end-point from monitoring",
         "parameters": [
           {
             "type": "string",
-            "description": "Endpoint IP address in CIDR",
+            "description": "Attributes of end point",
             "name": "ip_address",
             "in": "path",
             "required": true
           },
           {
             "type": "string",
-            "description": "protocol type for probing",
+            "description": "Endpoint Identifier",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Probe type",
             "name": "probe_type",
-            "in": "path",
-            "required": true
+            "in": "query"
           },
           {
             "type": "number",
-            "description": "port on which probing has to done",
+            "description": "Probe port",
             "name": "probe_port",
-            "in": "path",
-            "required": true
+            "in": "query"
           }
         ],
         "responses": {
@@ -7245,10 +7253,6 @@ func init() {
     "EndPoint": {
       "type": "object",
       "properties": {
-        "description": {
-          "description": "Host Description",
-          "type": "string"
-        },
         "hostName": {
           "description": "Host name in CIDR",
           "type": "string"
@@ -7256,6 +7260,10 @@ func init() {
         "inactiveReTries": {
           "description": "Number of inactive retries",
           "type": "integer"
+        },
+        "name": {
+          "description": "Endpoint Identifier",
+          "type": "string"
         },
         "probeDuration": {
           "description": "How frequently to probe in seconds",
@@ -7290,10 +7298,6 @@ func init() {
           "description": "Current state of this endpoint",
           "type": "string"
         },
-        "description": {
-          "description": "Host Description",
-          "type": "string"
-        },
         "hostName": {
           "description": "Host name",
           "type": "string"
@@ -7308,6 +7312,10 @@ func init() {
         },
         "minDelay": {
           "description": "Minimum delay seen for endpoint",
+          "type": "string"
+        },
+        "name": {
+          "description": "Endpoint Identifier",
           "type": "string"
         },
         "probeDuration": {

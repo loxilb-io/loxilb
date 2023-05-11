@@ -42,8 +42,8 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
-		DeleteConfigEndpointEpipaddressIPAddressProbetypeProbeTypeProbeportProbePortHandler: DeleteConfigEndpointEpipaddressIPAddressProbetypeProbeTypeProbeportProbePortHandlerFunc(func(params DeleteConfigEndpointEpipaddressIPAddressProbetypeProbeTypeProbeportProbePortParams) middleware.Responder {
-			return middleware.NotImplemented("operation DeleteConfigEndpointEpipaddressIPAddressProbetypeProbeTypeProbeportProbePort has not yet been implemented")
+		DeleteConfigEndpointEpipaddressIPAddressHandler: DeleteConfigEndpointEpipaddressIPAddressHandlerFunc(func(params DeleteConfigEndpointEpipaddressIPAddressParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigEndpointEpipaddressIPAddress has not yet been implemented")
 		}),
 		DeleteConfigFdbMacAddressDevIfNameHandler: DeleteConfigFdbMacAddressDevIfNameHandlerFunc(func(params DeleteConfigFdbMacAddressDevIfNameParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigFdbMacAddressDevIfName has not yet been implemented")
@@ -240,8 +240,8 @@ type LoxilbRestAPIAPI struct {
 	//   - application/json
 	JSONProducer runtime.Producer
 
-	// DeleteConfigEndpointEpipaddressIPAddressProbetypeProbeTypeProbeportProbePortHandler sets the operation handler for the delete config endpoint epipaddress IP address probetype probe type probeport probe port operation
-	DeleteConfigEndpointEpipaddressIPAddressProbetypeProbeTypeProbeportProbePortHandler DeleteConfigEndpointEpipaddressIPAddressProbetypeProbeTypeProbeportProbePortHandler
+	// DeleteConfigEndpointEpipaddressIPAddressHandler sets the operation handler for the delete config endpoint epipaddress IP address operation
+	DeleteConfigEndpointEpipaddressIPAddressHandler DeleteConfigEndpointEpipaddressIPAddressHandler
 	// DeleteConfigFdbMacAddressDevIfNameHandler sets the operation handler for the delete config fdb mac address dev if name operation
 	DeleteConfigFdbMacAddressDevIfNameHandler DeleteConfigFdbMacAddressDevIfNameHandler
 	// DeleteConfigFirewallHandler sets the operation handler for the delete config firewall operation
@@ -425,8 +425,8 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
-	if o.DeleteConfigEndpointEpipaddressIPAddressProbetypeProbeTypeProbeportProbePortHandler == nil {
-		unregistered = append(unregistered, "DeleteConfigEndpointEpipaddressIPAddressProbetypeProbeTypeProbeportProbePortHandler")
+	if o.DeleteConfigEndpointEpipaddressIPAddressHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigEndpointEpipaddressIPAddressHandler")
 	}
 	if o.DeleteConfigFdbMacAddressDevIfNameHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigFdbMacAddressDevIfNameHandler")
@@ -678,7 +678,7 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
-	o.handlers["DELETE"]["/config/endpoint/epipaddress/{ip_address}/probetype/{probe_type}/probeport/{probe_port}"] = NewDeleteConfigEndpointEpipaddressIPAddressProbetypeProbeTypeProbeportProbePort(o.context, o.DeleteConfigEndpointEpipaddressIPAddressProbetypeProbeTypeProbeportProbePortHandler)
+	o.handlers["DELETE"]["/config/endpoint/epipaddress/{ip_address}"] = NewDeleteConfigEndpointEpipaddressIPAddress(o.context, o.DeleteConfigEndpointEpipaddressIPAddressHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}

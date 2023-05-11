@@ -38,8 +38,8 @@ func ConfigGetEndPoint(params operations.GetConfigEndpointAllParams) middleware.
 		var tmpEP models.EndPointGetEntry
 
 		// Service Arg match
-		tmpEP.HostName = ep.Name
-		tmpEP.Description = ep.Desc
+		tmpEP.HostName = ep.HostName
+		tmpEP.Name = ep.Name
 		tmpEP.InactiveReTries = int64(ep.InActTries)
 		tmpEP.ProbeType = ep.ProbeType
 		tmpEP.ProbeReq = ep.ProbeReq
@@ -62,8 +62,8 @@ func ConfigPostEndPoint(params operations.PostConfigEndpointParams) middleware.R
 	tk.LogIt(tk.LogDebug, "[API] EndPoint %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	EP := cmn.EndPointMod{}
-	EP.Name = params.Attr.HostName
-	EP.Desc = params.Attr.Description
+	EP.HostName = params.Attr.HostName
+	EP.Name = params.Attr.Name
 	EP.ProbeType = params.Attr.ProbeType
 	EP.InActTries = int(params.Attr.InactiveReTries)
 	EP.ProbeReq = params.Attr.ProbeReq
@@ -78,14 +78,23 @@ func ConfigPostEndPoint(params operations.PostConfigEndpointParams) middleware.R
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteEndPoint(params operations.DeleteConfigEndpointEpipaddressIPAddressProbetypeProbeTypeProbeportProbePortParams) middleware.Responder {
+func ConfigDeleteEndPoint(params operations.DeleteConfigEndpointEpipaddressIPAddressParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] EndPoint %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	EP := cmn.EndPointMod{}
-	EP.Name = params.IPAddress
-	EP.ProbeType = params.ProbeType
-	EP.ProbePort = uint16(params.ProbePort)
+	EP.HostName = params.IPAddress
 
+	if params.Name != nil {
+		EP.Name = *params.Name
+	}
+
+	if params.ProbeType != nil {
+		EP.ProbeType = *params.ProbeType
+	}
+
+	if params.ProbePort != nil {
+		EP.ProbePort = uint16(*params.ProbePort)
+	}
 	_, err := ApiHooks.NetEpHostDel(&EP)
 	if err != nil {
 		return &ResultResponse{Result: err.Error()}

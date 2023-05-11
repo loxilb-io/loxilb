@@ -426,10 +426,10 @@ type FwRuleMod struct {
 
 // EndPointMod - Info related to a end-point entry
 type EndPointMod struct {
-	// Name - hostname in CIDR
-	Name string `json:"hostName"`
-	// Desc - host specific description
-	Desc string `json:"description"`
+	// HostName - hostname in CIDR
+	HostName string `json:"hostName"`
+	//  Name - Endpoint Identifier
+	Name string `json:"name"`
 	// InActTries - No. of inactive probes to mark
 	// an end-point inactive
 	InActTries int `json:"inactiveReTries"`

@@ -144,7 +144,7 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	// EndPoint
 	api.GetConfigEndpointAllHandler = operations.GetConfigEndpointAllHandlerFunc(handler.ConfigGetEndPoint)
 	api.PostConfigEndpointHandler = operations.PostConfigEndpointHandlerFunc(handler.ConfigPostEndPoint)
-	api.DeleteConfigEndpointEpipaddressIPAddressProbetypeProbeTypeProbeportProbePortHandler = operations.DeleteConfigEndpointEpipaddressIPAddressProbetypeProbeTypeProbeportProbePortHandlerFunc(handler.ConfigDeleteEndPoint)
+	api.DeleteConfigEndpointEpipaddressIPAddressHandler = operations.DeleteConfigEndpointEpipaddressIPAddressHandlerFunc(handler.ConfigDeleteEndPoint)
 
 	// Params
 	api.PostConfigParamsHandler = operations.PostConfigParamsHandlerFunc(handler.ConfigPostParams)

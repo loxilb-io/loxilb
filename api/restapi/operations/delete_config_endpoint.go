@@ -30,7 +30,7 @@ func NewDeleteConfigEndpoint(ctx *middleware.Context, handler DeleteConfigEndpoi
 }
 
 /*
-	DeleteConfigEndpoint swagger:route DELETE /config/endpoint deleteConfigEndpoint
+	DeleteConfigEndpoint swagger:route DELETE /config/endpoint/ deleteConfigEndpoint
 
 # Delete an LB end-point from monitoring
 
