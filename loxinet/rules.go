@@ -173,13 +173,13 @@ const (
 )
 
 type epHostOpts struct {
-	inActTryThr   		int
-	probeType     		string
-	probeReq      		string
-	probeResp     		string
-	probeDuration 		uint32
-	currProbeDuration 	uint32
-	probePort     		uint16
+	inActTryThr       int
+	probeType         string
+	probeReq          string
+	probeResp         string
+	probeDuration     uint32
+	currProbeDuration uint32
+	probePort         uint16
 }
 
 type epHost struct {
@@ -287,9 +287,9 @@ type epChecker struct {
 
 // RuleH - context container
 type RuleH struct {
-	Zone       *Zone
-	Cfg        RuleCfg
-	Tables     [RtMax]ruleTable
+	Zone   *Zone
+	Cfg    RuleCfg
+	Tables [RtMax]ruleTable
 	//epMap      map[epHostKey]*epHost
 	epMap      map[string]*epHost
 	epCs       [MaxEndPointCheckers]epChecker
@@ -779,7 +779,7 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool) {
 		} else {
 			hopts.probeType = HostProbePing
 		}
-		
+
 		epKey := makeEPKey(nep.xIP.String(), hopts.probeType, hopts.probePort)
 
 		// Default
@@ -1361,7 +1361,7 @@ func validateEpHostOpts(hostName string, args epHostOpts) (int, error) {
 }
 
 func makeEPKey(hostName string, probeType string, probePort uint16) string {
-	return hostName +"_" + probeType + "_" + strconv.Itoa(int(probePort))
+	return hostName + "_" + probeType + "_" + strconv.Itoa(int(probePort))
 }
 
 // AddEpHost - Add an end-point host
@@ -1469,7 +1469,7 @@ func (ep *epHost) transitionState(currState bool, inactThr int) {
 			ep.inactive = false
 			ep.inActTries = 0
 			ep.opts.currProbeDuration = ep.opts.probeDuration
-			tk.LogIt(tk.LogDebug, "active ep - %s:%s:%d(%v)\n", 
+			tk.LogIt(tk.LogDebug, "active ep - %s:%s:%d(%v)\n",
 				ep.epKey, ep.opts.probeType, ep.opts.probePort, ep.avgDelay)
 		}
 	} else {
@@ -1477,7 +1477,7 @@ func (ep *epHost) transitionState(currState bool, inactThr int) {
 			ep.inActTries++
 			if ep.inActTries >= inactThr {
 				ep.inactive = true
-				tk.LogIt(tk.LogDebug, "inactive ep - %s:%s:%d(next try after %ds)\n", 
+				tk.LogIt(tk.LogDebug, "inactive ep - %s:%s:%d(next try after %ds)\n",
 					ep.epKey, ep.opts.probeType, ep.opts.probePort, ep.opts.currProbeDuration)
 			}
 		} else {
@@ -1486,8 +1486,8 @@ func (ep *epHost) transitionState(currState bool, inactThr int) {
 			if ep.opts.currProbeDuration < 3*DflHostProbeTimeout {
 				ep.opts.currProbeDuration += 20
 			}
-			tk.LogIt(tk.LogDebug, "inactive ep - %s:%s:%d(next try after %ds)\n", 
-			ep.epKey, ep.opts.probeType, ep.opts.probePort, ep.opts.currProbeDuration)
+			tk.LogIt(tk.LogDebug, "inactive ep - %s:%s:%d(next try after %ds)\n",
+				ep.epKey, ep.opts.probeType, ep.opts.probePort, ep.opts.currProbeDuration)
 		}
 	}
 }
@@ -1612,8 +1612,7 @@ func epTicker(R *RuleH, helper int) {
 
 				if host.hID == uint8(helper) {
 					if run%2 == 0 {
-						if (host.opts.probeType == HostProbePing && host.avgDelay == 0) || 
-							(host.inactive && time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(host.opts.currProbeDuration)) {
+						if (host.opts.probeType == HostProbePing && host.avgDelay == 0) || host.inactive {
 							epHosts = append(epHosts, host)
 						}
 					} else {
