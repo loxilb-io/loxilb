@@ -56,10 +56,12 @@ RUN rm -fr /root/loxilb-io/loxilb/.git
 RUN rm -fr /root/loxilb-io/loxilb/.github
 RUN mkdir -p /root/loxilb-io/loxilb/
 RUN cp /usr/local/sbin/loxilb /root/loxilb-io/loxilb/loxilb
-#RUN /usr/local/sbin/mkllb_bpffs
 
-#RUN cd /root/loxilb-io/loxilb/ && make test
- 
+# Optional files, only apply when files exist
+COPY ./loxilb.rep* /root/loxilb-io/loxilb/loxilb
+COPY ./llb_ebpf_main.o.rep* /opt/loxilb/llb_ebpf_main.o
+COPY ./llb_xdp_main.o.rep* /opt/loxilb/llb_xdp_main.o
+
 ENTRYPOINT ["/root/loxilb-io/loxilb/loxilb"]
 
 # Expose Ports
