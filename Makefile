@@ -34,7 +34,20 @@ docker-cp-ebpf: build
 	docker cp /opt/loxilb/llb_ebpf_main.o $(loxilbid):/opt/loxilb/llb_ebpf_main.o
 	docker cp /opt/loxilb/llb_xdp_main.o $(loxilbid):/opt/loxilb/llb_xdp_main.o
 
-docker: 
+docker-rp: build
+	cp loxilb ./loxilb.rep
+	cp /opt/loxilb/llb_ebpf_main.o ./llb_ebpf_main.o.rep
+	cp /opt/loxilb/llb_xdp_main.o ./llb_xdp_main.o.rep
+	$(MAKE) docker
+	rm ./llb_ebpf_main.o.rep ./llb_xdp_main.o.rep ./loxilb.rep
+
+docker-rp-ebpf: build
+	cp /opt/loxilb/llb_ebpf_main.o ./llb_ebpf_main.o.rep
+	cp /opt/loxilb/llb_xdp_main.o ./llb_xdp_main.o.rep
+	$(MAKE) docker
+	rm ./llb_ebpf_main.o.rep ./llb_xdp_main.o.rep
+
+docker:
 	docker build -t ghcr.io/loxilb-io/loxilb:latest .
 
 docker-arm64:
