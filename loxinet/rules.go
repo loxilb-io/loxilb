@@ -22,14 +22,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
-	probing "github.com/prometheus-community/pro-bing"
 	"io/ioutil"
 	"net"
 	"sort"
+	"strconv"
 	"sync"
 	"time"
+
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
+	probing "github.com/prometheus-community/pro-bing"
 )
 
 // error codes
@@ -171,17 +173,18 @@ const (
 )
 
 type epHostOpts struct {
-	inActTryThr   int
-	probeType     string
-	probeReq      string
-	probeResp     string
-	probeDuration uint32
-	probePort     uint16
+	inActTryThr   		int
+	probeType     		string
+	probeReq      		string
+	probeResp     		string
+	probeDuration 		uint32
+	currProbeDuration 	uint32
+	probePort     		uint16
 }
 
 type epHost struct {
+	epKey      string
 	hostName   string
-	desc       string
 	ruleCount  int
 	inactive   bool
 	sT         time.Time
@@ -287,6 +290,7 @@ type RuleH struct {
 	Zone       *Zone
 	Cfg        RuleCfg
 	Tables     [RtMax]ruleTable
+	//epMap      map[epHostKey]*epHost
 	epMap      map[string]*epHost
 	epCs       [MaxEndPointCheckers]epChecker
 	wg         sync.WaitGroup
@@ -775,15 +779,19 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool) {
 		} else {
 			hopts.probeType = HostProbePing
 		}
+		
+		epKey := makeEPKey(nep.xIP.String(), hopts.probeType, hopts.probePort)
 
 		// Default
 		hopts.probeType = HostProbePing
+		hopts.probePort = 0
+
 		if doAddOp {
 			if nep.inActive != true {
-				R.AddEpHost(false, nep.xIP.String(), nep.xIP.String(), hopts)
+				R.AddEpHost(false, nep.xIP.String(), epKey, hopts)
 			}
 		} else {
-			R.DeleteEpHost(false, nep.xIP.String())
+			R.DeleteEpHost(false, epKey, nep.xIP.String(), hopts.probeType, hopts.probePort)
 		}
 	}
 }
@@ -1287,11 +1295,11 @@ func (R *RuleH) GetEpHosts() ([]cmn.EndPointMod, error) {
 	for _, data := range R.epMap {
 		var ret cmn.EndPointMod
 		// Make end-point
-		ret.Name = data.hostName
-		ret.Desc = data.desc
+		ret.HostName = data.hostName
+		ret.Name = data.epKey
 		ret.InActTries = data.opts.inActTryThr
 		ret.ProbeType = data.opts.probeType
-		ret.ProbeDuration = data.opts.probeDuration
+		ret.ProbeDuration = data.opts.currProbeDuration
 		ret.ProbeReq = data.opts.probeReq
 		ret.ProbeResp = data.opts.probeResp
 		ret.ProbePort = data.opts.probePort
@@ -1312,8 +1320,8 @@ func (R *RuleH) GetEpHosts() ([]cmn.EndPointMod, error) {
 }
 
 // IsEpHostActive - Check if end-point is active
-func (R *RuleH) IsEpHostActive(hostName string) bool {
-	ep := R.epMap[hostName]
+func (R *RuleH) IsEpHostActive(epKey string) bool {
+	ep := R.epMap[epKey]
 	if ep == nil {
 		return true // Are we sure ??
 	}
@@ -1352,9 +1360,15 @@ func validateEpHostOpts(hostName string, args epHostOpts) (int, error) {
 	return 0, nil
 }
 
+func makeEPKey(hostName string, probeType string, probePort uint16) string {
+	return hostName +"_" + probeType + "_" + strconv.Itoa(int(probePort))
+}
+
 // AddEpHost - Add an end-point host
+// name, if present will be used as endpoint key
 // It will return 0 and nil error, else appropriate return code and error string will be set
-func (R *RuleH) AddEpHost(apiCall bool, hostName string, desc string, args epHostOpts) (int, error) {
+func (R *RuleH) AddEpHost(apiCall bool, hostName string, name string, args epHostOpts) (int, error) {
+	var epKey string
 
 	R.epMx.Lock()
 	defer R.epMx.Unlock()
@@ -1380,10 +1394,17 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, desc string, args epHos
 			}
 		}
 	}
-	ep := R.epMap[hostName]
+	if name == "" {
+		epKey = makeEPKey(hostName, args.probeType, args.probePort)
+	} else {
+		epKey = name
+	}
+
+	ep := R.epMap[epKey]
 	if ep != nil {
 		if apiCall {
 			ep.opts = args
+			ep.opts.currProbeDuration = ep.opts.probeDuration
 			return 0, nil
 		}
 		ep.ruleCount++
@@ -1391,9 +1412,10 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, desc string, args epHos
 	}
 
 	ep = new(epHost)
+	ep.epKey = epKey
 	ep.hostName = hostName
-	ep.desc = desc
 	ep.opts = args
+	ep.opts.currProbeDuration = ep.opts.probeDuration
 
 	if apiCall != true {
 		ep.ruleCount = 1
@@ -1402,20 +1424,26 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, desc string, args epHos
 	//ep.sT = time.Now()
 	R.lepHID++
 
-	R.epMap[hostName] = ep
+	R.epMap[epKey] = ep
 
-	tk.LogIt(tk.LogDebug, "ep-host added %s:%d\n", hostName, ep.hID)
+	tk.LogIt(tk.LogDebug, "ep-host added %v:%d\n", epKey, ep.hID)
 
 	return 0, nil
 }
 
 // DeleteEpHost - Delete an end-point host
 // It will return 0 and nil error, else appropriate return code and error string will be set
-func (R *RuleH) DeleteEpHost(apiCall bool, hostName string) (int, error) {
+func (R *RuleH) DeleteEpHost(apiCall bool, name string, hostName string, probeType string, probePort uint16) (int, error) {
+	var key string
+
 	R.epMx.Lock()
 	defer R.epMx.Unlock()
-
-	ep := R.epMap[hostName]
+	if name == "" {
+		key = makeEPKey(hostName, probeType, probePort)
+	} else {
+		key = name
+	}
+	ep := R.epMap[key]
 	if ep == nil {
 		return RuleEpNotExistErr, errors.New("host-notfound error")
 	}
@@ -1425,12 +1453,12 @@ func (R *RuleH) DeleteEpHost(apiCall bool, hostName string) (int, error) {
 	}
 
 	if ep.ruleCount > 0 {
-		return 0, nil
+		return RuleEpCountErr, errors.New("LB Rule-referred")
 	}
 
-	delete(R.epMap, ep.hostName)
+	delete(R.epMap, ep.epKey)
 
-	tk.LogIt(tk.LogDebug, "ep-host deleted %s\n", hostName)
+	tk.LogIt(tk.LogDebug, "ep-host deleted %v\n", key)
 
 	return 0, nil
 }
@@ -1440,23 +1468,26 @@ func (ep *epHost) transitionState(currState bool, inactThr int) {
 		if ep.inactive {
 			ep.inactive = false
 			ep.inActTries = 0
-			ep.opts.probeDuration = DflHostProbeTimeout
-			tk.LogIt(tk.LogDebug, "active ep - %s:%s(%v)\n", ep.hostName, ep.opts.probeType, ep.avgDelay)
+			ep.opts.currProbeDuration = ep.opts.probeDuration
+			tk.LogIt(tk.LogDebug, "active ep - %s:%s:%d(%v)\n", 
+				ep.epKey, ep.opts.probeType, ep.opts.probePort, ep.avgDelay)
 		}
 	} else {
 		if ep.inActTries < inactThr {
 			ep.inActTries++
 			if ep.inActTries >= inactThr {
 				ep.inactive = true
-				ep.inActTries = 0
-				tk.LogIt(tk.LogDebug, "inactive ep - %s:%s\n", ep.hostName, ep.opts.probeType)
+				tk.LogIt(tk.LogDebug, "inactive ep - %s:%s:%d(next try after %ds)\n", 
+					ep.epKey, ep.opts.probeType, ep.opts.probePort, ep.opts.currProbeDuration)
 			}
 		} else {
 			ep.inActTries++
 			// Inactive eps are moved back
-			if ep.opts.probeDuration < 3*DflHostProbeTimeout {
-				ep.opts.probeDuration += 20
+			if ep.opts.currProbeDuration < 3*DflHostProbeTimeout {
+				ep.opts.currProbeDuration += 20
 			}
+			tk.LogIt(tk.LogDebug, "inactive ep - %s:%s:%d(next try after %ds)\n", 
+			ep.epKey, ep.opts.probeType, ep.opts.probePort, ep.opts.currProbeDuration)
 		}
 	}
 }
@@ -1581,11 +1612,12 @@ func epTicker(R *RuleH, helper int) {
 
 				if host.hID == uint8(helper) {
 					if run%2 == 0 {
-						if (host.opts.probeType == HostProbePing && host.avgDelay == 0) || host.inactive {
+						if (host.opts.probeType == HostProbePing && host.avgDelay == 0) || 
+							(host.inactive && time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(host.opts.currProbeDuration)) {
 							epHosts = append(epHosts, host)
 						}
 					} else {
-						if time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(host.opts.probeDuration) {
+						if time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(host.opts.currProbeDuration) {
 							epHosts = append(epHosts, host)
 						}
 					}
@@ -1645,7 +1677,7 @@ func (R *RuleH) RulesSync() {
 				} else if rule.tuples.l4Prot.val == 17 {
 					sType = "udp"
 				} else if rule.tuples.l4Prot.val == 1 {
-					sType = "icmp"
+					sType = "ping"
 				} else if rule.tuples.l4Prot.val == 132 {
 					sType = "sctp"
 				} else {
@@ -1653,7 +1685,7 @@ func (R *RuleH) RulesSync() {
 				}
 
 				for idx, n := range na.endPoints {
-					sOk := R.IsEpHostActive(n.xIP.String())
+					sOk := R.IsEpHostActive(makeEPKey(n.xIP.String(), sType, n.xPort))
 					np := &na.endPoints[idx]
 					if sOk == false {
 						if np.noService == false {

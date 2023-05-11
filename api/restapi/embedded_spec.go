@@ -243,15 +243,76 @@ func init() {
             }
           }
         }
-      },
+      }
+    },
+    "/config/endpoint/all": {
+      "get": {
+        "description": "Get End-Points State in loxilb",
+        "summary": "Get End-Points State in loxilb",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "Attr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/EndPointGetEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/endpoint/epipaddress/{ip_address}": {
       "delete": {
         "description": "Delete an LB end-point from monitoring",
         "summary": "Delete an LB end-point from monitoring",
         "parameters": [
           {
             "type": "string",
-            "description": "Hostname in CIDR",
-            "name": "hostName",
+            "description": "Attributes of end point",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Endpoint Identifier",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Probe type",
+            "name": "probe_type",
+            "in": "query"
+          },
+          {
+            "type": "number",
+            "description": "Probe port",
+            "name": "probe_port",
             "in": "query"
           }
         ],
@@ -285,46 +346,6 @@ func init() {
           },
           "409": {
             "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "500": {
-            "description": "Internal service error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "503": {
-            "description": "Maintanence mode",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
-    },
-    "/config/endpoint/all": {
-      "get": {
-        "description": "Get End-Points State in loxilb",
-        "summary": "Get End-Points State in loxilb",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "Attr": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/EndPointGetEntry"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid authentication credentials",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1068,8 +1089,8 @@ func init() {
     },
     "/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}": {
       "delete": {
-        "description": "Create a new load balancer service with .",
-        "summary": "Create a new Load balancer service",
+        "description": "Delete an existing load balancer service with .",
+        "summary": "Delete an existing Load balancer service",
         "parameters": [
           {
             "type": "string",
@@ -3129,10 +3150,6 @@ func init() {
     "EndPoint": {
       "type": "object",
       "properties": {
-        "description": {
-          "description": "Host Description",
-          "type": "string"
-        },
         "hostName": {
           "description": "Host name in CIDR",
           "type": "string"
@@ -3140,6 +3157,10 @@ func init() {
         "inactiveReTries": {
           "description": "Number of inactive retries",
           "type": "integer"
+        },
+        "name": {
+          "description": "Endpoint Identifier",
+          "type": "string"
         },
         "probeDuration": {
           "description": "How frequently to probe in seconds",
@@ -3174,10 +3195,6 @@ func init() {
           "description": "Current state of this endpoint",
           "type": "string"
         },
-        "description": {
-          "description": "Host Description",
-          "type": "string"
-        },
         "hostName": {
           "description": "Host name",
           "type": "string"
@@ -3192,6 +3209,10 @@ func init() {
         },
         "minDelay": {
           "description": "Minimum delay seen for endpoint",
+          "type": "string"
+        },
+        "name": {
+          "description": "Endpoint Identifier",
           "type": "string"
         },
         "probeDuration": {
@@ -4325,15 +4346,76 @@ func init() {
             }
           }
         }
-      },
+      }
+    },
+    "/config/endpoint/all": {
+      "get": {
+        "description": "Get End-Points State in loxilb",
+        "summary": "Get End-Points State in loxilb",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "Attr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/EndPointGetEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/endpoint/epipaddress/{ip_address}": {
       "delete": {
         "description": "Delete an LB end-point from monitoring",
         "summary": "Delete an LB end-point from monitoring",
         "parameters": [
           {
             "type": "string",
-            "description": "Hostname in CIDR",
-            "name": "hostName",
+            "description": "Attributes of end point",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Endpoint Identifier",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Probe type",
+            "name": "probe_type",
+            "in": "query"
+          },
+          {
+            "type": "number",
+            "description": "Probe port",
+            "name": "probe_port",
             "in": "query"
           }
         ],
@@ -4367,46 +4449,6 @@ func init() {
           },
           "409": {
             "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "500": {
-            "description": "Internal service error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          },
-          "503": {
-            "description": "Maintanence mode",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
-    },
-    "/config/endpoint/all": {
-      "get": {
-        "description": "Get End-Points State in loxilb",
-        "summary": "Get End-Points State in loxilb",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "Attr": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/EndPointGetEntry"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid authentication credentials",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -5150,8 +5192,8 @@ func init() {
     },
     "/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}": {
       "delete": {
-        "description": "Create a new load balancer service with .",
-        "summary": "Create a new Load balancer service",
+        "description": "Delete an existing load balancer service with .",
+        "summary": "Delete an existing Load balancer service",
         "parameters": [
           {
             "type": "string",
@@ -7211,10 +7253,6 @@ func init() {
     "EndPoint": {
       "type": "object",
       "properties": {
-        "description": {
-          "description": "Host Description",
-          "type": "string"
-        },
         "hostName": {
           "description": "Host name in CIDR",
           "type": "string"
@@ -7222,6 +7260,10 @@ func init() {
         "inactiveReTries": {
           "description": "Number of inactive retries",
           "type": "integer"
+        },
+        "name": {
+          "description": "Endpoint Identifier",
+          "type": "string"
         },
         "probeDuration": {
           "description": "How frequently to probe in seconds",
@@ -7256,10 +7298,6 @@ func init() {
           "description": "Current state of this endpoint",
           "type": "string"
         },
-        "description": {
-          "description": "Host Description",
-          "type": "string"
-        },
         "hostName": {
           "description": "Host name",
           "type": "string"
@@ -7274,6 +7312,10 @@ func init() {
         },
         "minDelay": {
           "description": "Minimum delay seen for endpoint",
+          "type": "string"
+        },
+        "name": {
+          "description": "Endpoint Identifier",
           "type": "string"
         },
         "probeDuration": {

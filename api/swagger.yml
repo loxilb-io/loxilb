@@ -135,8 +135,8 @@ paths:
             $ref: '#/definitions/Error'
   '/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}':
     delete:
-      summary: Create a new Load balancer service
-      description: Create a new load balancer service with .
+      summary: Delete an existing Load balancer service
+      description: Delete an existing load balancer service with .
       parameters:
         - name: ip_address
           in: path
@@ -1733,14 +1733,31 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  '/config/endpoint/epipaddress/{ip_address}':
     delete:
       summary: Delete an LB end-point from monitoring
       description: Delete an LB end-point from monitoring
       parameters:
-        - name: hostName
+        - name: ip_address
+          in: path
+          type: string
+          required: true
+          description: Attributes of end point
+        - name: name
           in: query
           type: string
-          description: Hostname in CIDR
+          required: false
+          description: Endpoint Identifier
+        - name: probe_type
+          in: query
+          type: string
+          required: false
+          description: Probe type
+        - name: probe_port
+          in: query
+          type: number
+          required: false
+          description: Probe port
       responses:
         '204':
           description: OK
@@ -2773,9 +2790,9 @@ definitions:
       hostName:
         type: string
         description: Host name
-      description:
+      name:
         type: string
-        description: Host Description
+        description: Endpoint Identifier
       inactiveReTries:
         type: integer
         description: Number of inactive retries
@@ -2813,9 +2830,9 @@ definitions:
       hostName:
         type: string
         description: Host name in CIDR
-      description:
+      name:
         type: string
-        description: Host Description
+        description: Endpoint Identifier
       inactiveReTries:
         type: integer
         description: Number of inactive retries

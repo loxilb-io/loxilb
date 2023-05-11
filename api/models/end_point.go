@@ -17,14 +17,14 @@ import (
 // swagger:model EndPoint
 type EndPoint struct {
 
-	// Host Description
-	Description string `json:"description,omitempty"`
-
 	// Host name in CIDR
 	HostName string `json:"hostName,omitempty"`
 
 	// Number of inactive retries
 	InactiveReTries int64 `json:"inactiveReTries,omitempty"`
+
+	// Endpoint Identifier
+	Name string `json:"name,omitempty"`
 
 	// How frequently to probe in seconds
 	ProbeDuration int64 `json:"probeDuration,omitempty"`

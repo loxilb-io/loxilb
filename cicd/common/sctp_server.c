@@ -26,6 +26,10 @@ int main(int argc, char* argv[]) {
        char *saddr, *saddrs, *msg;
        int lport, mlen;
 
+       if (argc < 3) {
+        printf("Usage: %s S.IP1<,S.IP2,...> port msg\n", argv[0]);
+        exit(1);
+       }
        saddrs = argv[1];
        lport = atoi(argv[2]);
        msg = argv[3];

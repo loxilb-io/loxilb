@@ -13,11 +13,7 @@ import (
 
 // DeleteConfigEndpointURL generates an URL for the delete config endpoint operation
 type DeleteConfigEndpointURL struct {
-	HostName *string
-
 	_basePath string
-	// avoid unkeyed usage
-	_ struct{}
 }
 
 // WithBasePath sets the base path for this url builder, only required when it's different from the
@@ -39,25 +35,13 @@ func (o *DeleteConfigEndpointURL) SetBasePath(bp string) {
 func (o *DeleteConfigEndpointURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/config/endpoint"
+	var _path = "/config/endpoint/"
 
 	_basePath := o._basePath
 	if _basePath == "" {
 		_basePath = "/netlox/v1"
 	}
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
-
-	qs := make(url.Values)
-
-	var hostNameQ string
-	if o.HostName != nil {
-		hostNameQ = *o.HostName
-	}
-	if hostNameQ != "" {
-		qs.Set("hostName", hostNameQ)
-	}
-
-	_result.RawQuery = qs.Encode()
 
 	return &_result, nil
 }

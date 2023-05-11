@@ -23,9 +23,6 @@ type EndPointGetEntry struct {
 	// Current state of this endpoint
 	CurrState string `json:"currState,omitempty"`
 
-	// Host Description
-	Description string `json:"description,omitempty"`
-
 	// Host name
 	HostName string `json:"hostName,omitempty"`
 
@@ -37,6 +34,9 @@ type EndPointGetEntry struct {
 
 	// Minimum delay seen for endpoint
 	MinDelay string `json:"minDelay,omitempty"`
+
+	// Endpoint Identifier
+	Name string `json:"name,omitempty"`
 
 	// How frequently to probe in seconds
 	ProbeDuration int64 `json:"probeDuration,omitempty"`
