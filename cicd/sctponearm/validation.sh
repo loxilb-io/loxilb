@@ -8,7 +8,11 @@ $hexec ep2 ../common/sctp_server ${ep[1]} 38412 server2 >/dev/null 2>&1 &
 
 sleep 5
 code=0
-j=0
+
+# Below code checks the client-server connectivity and resolves ARP. 
+# For this test case, We don't want ARP to be resolved, so keeping the code with initial value j=2
+# If someone wants to run the test with ARP resolved then simply do j=0 and execute the script.
+j=2
 waitCount=0
 while [ $j -le 1 ]
 do
