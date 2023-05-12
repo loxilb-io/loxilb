@@ -11,7 +11,6 @@ require (
 	github.com/go-openapi/swag v0.22.3
 	github.com/go-openapi/validate v0.22.0
 	github.com/jessevdk/go-flags v1.5.0
-	github.com/loxilb-io/loxilib v0.8.6
 	github.com/osrg/gobgp/v3 v3.5.0
 	github.com/prometheus-community/pro-bing v0.1.0
 	github.com/prometheus/client_model v0.3.0
@@ -25,7 +24,8 @@ require (
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/loxilb-io/sctp v0.0.0-20230510141333-0e10149b200d // indirect
+	github.com/loxilb-io/loxilib v0.8.8-0.20230512062703-265e0ce4b789 // indirect
+	github.com/loxilb-io/sctp v0.0.0-20230512061258-63a8bc8f1b80 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
