@@ -287,10 +287,9 @@ type epChecker struct {
 
 // RuleH - context container
 type RuleH struct {
-	Zone   *Zone
-	Cfg    RuleCfg
-	Tables [RtMax]ruleTable
-	//epMap      map[epHostKey]*epHost
+	Zone       *Zone
+	Cfg        RuleCfg
+	Tables     [RtMax]ruleTable
 	epMap      map[string]*epHost
 	epCs       [MaxEndPointCheckers]epChecker
 	wg         sync.WaitGroup
