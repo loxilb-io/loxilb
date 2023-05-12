@@ -783,8 +783,10 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool) {
 		epKey := makeEPKey(nep.xIP.String(), hopts.probeType, hopts.probePort)
 
 		// Default
-		hopts.probeType = HostProbePing
-		hopts.probePort = 0
+		if !r.ActChk {
+			hopts.probeType = HostProbePing
+			hopts.probePort = 0
+		}
 
 		if doAddOp {
 			if nep.inActive != true {

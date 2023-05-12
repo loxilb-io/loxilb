@@ -8,11 +8,15 @@ $hexec ep2 ../common/sctp_server ${ep[1]} 38412 server2 >/dev/null 2>&1 &
 
 sleep 5
 code=0
+
+# Below code checks the client-server connectivity and resolves ARP. 
+# For this test case, We don't want ARP to be resolved, so keeping the code with initial value j=2
+# If someone wants to run the test with ARP resolved then simply do j=0 and execute the script.
 j=2
 waitCount=0
 while [ $j -le 1 ]
 do
-    res=$($hexec c1 ../common/sctp_client 10.75.191.224 ${ep[j]} 38412)
+    res=$($hexec c1 timeout 10 ../common/sctp_client 10.75.191.224 0 ${ep[j]} 38412)
     #echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
@@ -24,7 +28,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            echo SCENARIO-SCTP-FULLNAT [FAILED]
+            echo SCENARIO-SCTP-ONEARM [FAILED]
             sudo pkill -9 -x  sctp_server >/dev/null 2>&1
             exit 1
         fi
@@ -37,7 +41,7 @@ for i in {1..4}
 do
 for j in {0..1}
 do
-    res=$($hexec c1 ../common/sctp_client 10.75.191.224 0 123.123.123.1 38412)
+    res=$($hexec c1 timeout 10 ../common/sctp_client 10.75.191.224 0 123.123.123.1 38412)
     echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
