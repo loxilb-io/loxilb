@@ -1478,8 +1478,8 @@ func (ep *epHost) transitionState(currState bool, inactThr int) {
 			ep.inActTries++
 			if ep.inActTries >= inactThr {
 				ep.inactive = true
-				tk.LogIt(tk.LogDebug, "inactive ep - %s:%s:%d(next try after %ds)\n",
-					ep.epKey, ep.opts.probeType, ep.opts.probePort, ep.opts.currProbeDuration)
+				//tk.LogIt(tk.LogDebug, "inactive ep - %s:%s:%d(next try after %ds)\n",
+				//	ep.epKey, ep.opts.probeType, ep.opts.probePort, ep.opts.currProbeDuration)
 			}
 		} else {
 			ep.inActTries++
@@ -1673,13 +1673,13 @@ func (R *RuleH) RulesSync() {
 			switch na := rule.act.action.(type) {
 			case *ruleNatActs:
 				if rule.tuples.l4Prot.val == 6 {
-					sType = "tcp"
+					sType = HostProbeConnectTcp
 				} else if rule.tuples.l4Prot.val == 17 {
-					sType = "udp"
+					sType = HostProbeConnectUdp
 				} else if rule.tuples.l4Prot.val == 1 {
-					sType = "ping"
+					sType = HostProbePing
 				} else if rule.tuples.l4Prot.val == 132 {
-					sType = "sctp"
+					sType = HostProbeConnectSctp
 				} else {
 					break
 				}
