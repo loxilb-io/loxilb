@@ -8,11 +8,11 @@ $hexec ep2 ../common/sctp_server ${ep[1]} 38412 server2 >/dev/null 2>&1 &
 
 sleep 5
 code=0
-j=2
+j=0
 waitCount=0
 while [ $j -le 1 ]
 do
-    res=$($hexec c1 ../common/sctp_client 10.75.191.224 ${ep[j]} 38412)
+    res=$($hexec c1 ../common/sctp_client 10.75.191.224 0 ${ep[j]} 38412)
     #echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
@@ -24,7 +24,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            echo SCENARIO-SCTP-FULLNAT [FAILED]
+            echo SCENARIO-SCTP-ONEARM [FAILED]
             sudo pkill -9 -x  sctp_server >/dev/null 2>&1
             exit 1
         fi
