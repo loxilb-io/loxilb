@@ -12,7 +12,7 @@ code=0
 # Below code checks the client-server connectivity and resolves ARP. 
 # For this test case, We don't want ARP to be resolved, so keeping the code with initial value j=2
 # If someone wants to run the test with ARP resolved then simply do j=0 and execute the script.
-j=2
+j=0
 waitCount=0
 while [ $j -le 1 ]
 do
