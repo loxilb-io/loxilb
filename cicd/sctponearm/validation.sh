@@ -6,9 +6,11 @@ ep=( "10.75.188.218" "10.75.188.220" )
 $hexec ep1 ../common/sctp_server ${ep[0]} 38412 server1 >/dev/null 2>&1 &
 $hexec ep2 ../common/sctp_server ${ep[1]} 38412 server2 >/dev/null 2>&1 &
 
-sleep 5
-code=0
+sleep 60
+$dexec llb1 loxicmd get ep
+sleep 10
 
+code=0
 # Below code checks the client-server connectivity and resolves ARP. 
 # For this test case, We don't want ARP to be resolved, so keeping the code with initial value j=2
 # If someone wants to run the test with ARP resolved then simply do j=0 and execute the script.
