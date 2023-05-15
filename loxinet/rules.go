@@ -22,16 +22,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
+	probing "github.com/prometheus-community/pro-bing"
 	"io/ioutil"
 	"net"
 	"sort"
 	"strconv"
 	"sync"
 	"time"
-
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
-	probing "github.com/prometheus-community/pro-bing"
 )
 
 // error codes
@@ -1477,9 +1476,11 @@ func (ep *epHost) transitionState(currState bool, inactThr int) {
 		if ep.inActTries < inactThr {
 			ep.inActTries++
 			if ep.inActTries >= inactThr {
+				if !ep.inactive {
+					tk.LogIt(tk.LogDebug, "inactive ep - %s:%s:%d(next try after %ds)\n",
+						ep.epKey, ep.opts.probeType, ep.opts.probePort, ep.opts.currProbeDuration)
+				}
 				ep.inactive = true
-				tk.LogIt(tk.LogDebug, "inactive ep - %s:%s:%d(next try after %ds)\n",
-					ep.epKey, ep.opts.probeType, ep.opts.probePort, ep.opts.currProbeDuration)
 			}
 		} else {
 			ep.inActTries++
@@ -1487,14 +1488,15 @@ func (ep *epHost) transitionState(currState bool, inactThr int) {
 			if ep.opts.currProbeDuration < 3*DflHostProbeTimeout {
 				ep.opts.currProbeDuration += 20
 			}
-			tk.LogIt(tk.LogDebug, "inactive ep - %s:%s:%d(next try after %ds)\n",
-				ep.epKey, ep.opts.probeType, ep.opts.probePort, ep.opts.currProbeDuration)
+			//tk.LogIt(tk.LogDebug, "inactive ep - %s:%s:%d(next try after %ds)\n",
+			//	ep.epKey, ep.opts.probeType, ep.opts.probePort, ep.opts.currProbeDuration)
 		}
 	}
 }
 
 func (R *RuleH) epCheckNow(ep *epHost) {
 	var sType string
+	sHint := ""
 
 	sName := fmt.Sprintf("%s:%d", ep.hostName, ep.opts.probePort)
 	if ep.opts.probeType == HostProbeConnectTcp ||
@@ -1506,8 +1508,12 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 			sType = "udp"
 		} else {
 			sType = "sctp"
+			ret, sIP := R.Zone.L3.IfaSelectAny(net.ParseIP(ep.hostName), true)
+			if ret == 0 {
+				sHint = sIP.String()
+			}
 		}
-		sOk := tk.L4ServiceProber(sType, sName)
+		sOk := tk.L4ServiceProber(sType, sName, sHint)
 		ep.transitionState(sOk, ep.opts.inActTryThr)
 	} else if ep.opts.probeType == HostProbePing {
 		pinger, err := probing.NewPinger(ep.hostName)
@@ -1673,13 +1679,13 @@ func (R *RuleH) RulesSync() {
 			switch na := rule.act.action.(type) {
 			case *ruleNatActs:
 				if rule.tuples.l4Prot.val == 6 {
-					sType = "tcp"
+					sType = HostProbeConnectTcp
 				} else if rule.tuples.l4Prot.val == 17 {
-					sType = "udp"
+					sType = HostProbeConnectUdp
 				} else if rule.tuples.l4Prot.val == 1 {
-					sType = "ping"
+					sType = HostProbePing
 				} else if rule.tuples.l4Prot.val == 132 {
-					sType = "sctp"
+					sType = HostProbeConnectSctp
 				} else {
 					break
 				}

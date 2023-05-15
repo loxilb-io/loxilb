@@ -768,6 +768,10 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		// seconds to nanoseconds
 		dat.ito = C.uint64_t(w.InActTo * 1000000000)
 
+		dat.npmhh = 2
+		dat.pmhh[0] = 0x64646464
+		dat.pmhh[1] = 0x65656565
+
 		switch {
 		case w.EpSel == EpRR:
 			dat.sel_type = C.NAT_LB_SEL_RR
@@ -784,10 +788,11 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 			dat.ca.oaux = 1
 		}
 
+
 		nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[0]))
 
 		for _, k := range w.endPoints {
-			nxfa.wprio = C.ushort(k.Weight)
+			nxfa.wprio = C.uchar(k.Weight)
 			nxfa.nat_xport = C.ushort(tk.Htons(k.XPort))
 			if tk.IsNetIPv6(k.XIP.String()) {
 				convNetIP2DPv6Addr(unsafe.Pointer(&nxfa.nat_xip[0]), k.XIP)
