@@ -48,10 +48,17 @@ const (
 	bgpTO
 )
 
+type goBgpRouteInfo struct {
+	nlri 		bgp.AddrPrefixInterface
+	attrs 		[]bgp.PathAttributeInterface
+	withdraw 	bool
+	pathId		uint32
+}
+
 type goBgpEvent struct {
 	EventType goBgpEventType
 	Src       string
-	Data      api.Path
+	Data      goBgpRouteInfo
 	conn      *grpc.ClientConn
 }
 
@@ -119,35 +126,26 @@ func (gbh *GoBgpH) getNextHopFromPathAttributes(attrs []bgp.PathAttributeInterfa
 	return nil
 }
 
-func (gbh *GoBgpH) makeMonitorRouteArgs(p *api.Path, showIdentifier bgp.BGPAddPathMode) []interface{} {
+func (gbh *GoBgpH) makeMonitorRouteArgs(p *goBgpRouteInfo, showIdentifier bgp.BGPAddPathMode) []interface{} {
 	pathStr := make([]interface{}, 0)
 
 	// Title
 	title := "ADDROUTE"
-	if p.IsWithdraw {
+	if p.withdraw {
 		title = "DELROUTE"
 	}
 	pathStr = append(pathStr, title)
 
-	// NLRI
-	// If Add-Path required, append Path Identifier.
-	nlri, _ := apiutil.GetNativeNlri(p)
-	if showIdentifier != bgp.BGP_ADD_PATH_NONE {
-		pathStr = append(pathStr, p.GetIdentifier())
-	}
-	pathStr = append(pathStr, nlri)
-
-	attrs, _ := apiutil.GetNativePathAttributes(p)
 	// Next Hop
 	nexthop := "fictitious"
-	if n := gbh.getNextHopFromPathAttributes(attrs); n != nil {
+	if n := gbh.getNextHopFromPathAttributes(p.attrs); n != nil {
 		nexthop = n.String()
 	}
 	pathStr = append(pathStr, nexthop)
 
 	// AS_PATH
 	aspathstr := func() string {
-		for _, attr := range attrs {
+		for _, attr := range p.attrs {
 			switch a := attr.(type) {
 			case *bgp.PathAttributeAsPath:
 				return bgp.AsPathString(a)
@@ -158,12 +156,12 @@ func (gbh *GoBgpH) makeMonitorRouteArgs(p *api.Path, showIdentifier bgp.BGPAddPa
 	pathStr = append(pathStr, aspathstr)
 
 	// Path Attributes
-	pathStr = append(pathStr, gbh.getPathAttributeString(nlri, attrs))
+	pathStr = append(pathStr, gbh.getPathAttributeString(p.nlri, p.attrs))
 
 	return pathStr
 }
 
-func (gbh *GoBgpH) processRouteSingle(p *api.Path, showIdentifier bgp.BGPAddPathMode) {
+func (gbh *GoBgpH) processRouteSingle(p *goBgpRouteInfo, showIdentifier bgp.BGPAddPathMode) {
 	//pathStr := make([]interface{}, 1)
 
 	pathStr := gbh.makeMonitorRouteArgs(p, showIdentifier)
@@ -182,27 +180,17 @@ func (gbh *GoBgpH) processRouteSingle(p *api.Path, showIdentifier bgp.BGPAddPath
 	}
 }
 
-func (gbh *GoBgpH) syncRoute(p *api.Path, showIdentifier bgp.BGPAddPathMode) error {
+func (gbh *GoBgpH) syncRoute(p *goBgpRouteInfo, showIdentifier bgp.BGPAddPathMode) error {
 	if gbh.noNlp {
 		return nil
 	}
 
-	// NLRI have destination CIDR info
-	nlri, err := apiutil.GetNativeNlri(p)
-	if err != nil {
-		return err
-	}
-	_, dstIPN, err := net.ParseCIDR(nlri.String())
+	_, dstIPN, err := net.ParseCIDR(p.nlri.String())
 	if err != nil {
 		return err
 	}
 
-	// NextHop
-	attrs, err := apiutil.GetNativePathAttributes(p)
-	if err != nil {
-		return err
-	}
-	nexthop := gbh.getNextHopFromPathAttributes(attrs)
+	nexthop := gbh.getNextHopFromPathAttributes(p.attrs)
 
 	// Make netlink route and add
 	route := &nlp.Route{
@@ -214,7 +202,7 @@ func (gbh *GoBgpH) syncRoute(p *api.Path, showIdentifier bgp.BGPAddPathMode) err
 		return nil
 	}
 
-	if p.GetIsWithdraw() {
+	if p.withdraw {
 		tk.LogIt(tk.LogDebug, "[GoBGP] ip route delete %s via %s\n", route.Dst.String(), route.Gw.String())
 		if err := nlp.RouteDel(route); err != nil {
 			tk.LogIt(tk.LogError, "[GoBGP] failed to ip route delete. err: %s\n", err.Error())
@@ -232,12 +220,25 @@ func (gbh *GoBgpH) syncRoute(p *api.Path, showIdentifier bgp.BGPAddPathMode) err
 }
 
 func (gbh *GoBgpH) processRoute(pathList []*api.Path) {
-
+	
 	for _, p := range pathList {
+		// NLRI have destination CIDR info
+		nlri, err := apiutil.GetNativeNlri(p)
+		if err != nil {
+			return
+		}
+		// NextHop
+		attrs, err := apiutil.GetNativePathAttributes(p)
+		if err != nil {
+			return
+		}
+
+		data := goBgpRouteInfo{nlri: nlri, attrs: attrs, withdraw: p.GetIsWithdraw(), pathId: p.GetIdentifier()}
+
 		gbh.eventCh <- goBgpEvent{
 			EventType: bgpRtRecvd,
 			Src:       "",
-			Data:      *p,
+			Data:      data,
 			conn:      &grpc.ClientConn{},
 		}
 	}

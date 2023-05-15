@@ -254,7 +254,7 @@ func (*NetAPIStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
-	ret, err := mh.zr.Rules.AddNatLbRule(lm.Serv, lm.Eps[:])
+	ret, err := mh.zr.Rules.AddNatLbRule(lm.Serv, lm.SecIPs[:], lm.Eps[:])
 	if err == nil && lm.Serv.Bgp {
 		if mh.bgp != nil {
 			mh.bgp.AddBGPRule("default", lm.Serv.ServIP)

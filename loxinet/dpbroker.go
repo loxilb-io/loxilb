@@ -288,6 +288,7 @@ type NatDpWorkQ struct {
 	EpSel     NatSel
 	InActTo   uint64
 	endPoints []NatEP
+	secIP	  []net.IP
 }
 
 // DpCtInfo - representation of a datapath conntrack information

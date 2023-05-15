@@ -22,15 +22,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
-	probing "github.com/prometheus-community/pro-bing"
 	"io/ioutil"
 	"net"
+	"reflect"
 	"sort"
 	"strconv"
 	"sync"
 	"time"
+
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
+	probing "github.com/prometheus-community/pro-bing"
 )
 
 // error codes
@@ -205,6 +207,10 @@ type ruleNatEp struct {
 	Mark       bool
 }
 
+type ruleNatSIP struct {
+	sIP 	   net.IP
+}
+
 type ruleNatActs struct {
 	mode      cmn.LBMode
 	sel       cmn.EpSelect
@@ -246,6 +252,7 @@ type ruleEnt struct {
 	sT      time.Time
 	iTo     uint32
 	act     ruleAct
+	secIP   []ruleNatSIP
 	stat    ruleStat
 }
 
@@ -841,8 +848,9 @@ func (R *RuleH) GetNatLbRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
 // AddNatLbRule - Add a service LB nat rule. The service details are passed in serv argument,
 // and end-point information is passed in the slice servEndPoints. On success,
 // it will return 0 and nil error, else appropriate return code and error string will be set
-func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPointArg) (int, error) {
+func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg, servEndPoints []cmn.LbEndPointArg) (int, error) {
 	var natActs ruleNatActs
+	var nSecIP []ruleNatSIP
 	var ipProto uint8
 
 	// Validate service args
@@ -886,6 +894,32 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		return RuleUnknownServiceErr, errors.New("malformed-proto error")
 	}
 
+	if serv.Proto != "sctp" && len(servSecIPs) > 0 {
+		return RuleArgsErr, errors.New("secondaryIP-args error")
+	}
+
+	if len(servSecIPs) > 3 {
+		return RuleArgsErr, errors.New("secondaryIP-args len error")
+	}
+
+	for _, k := range servSecIPs {
+		pNetAddr := net.ParseIP(k.SecIP)
+		if pNetAddr == nil {
+			return RuleUnknownServiceErr, errors.New("malformed-secIP error")
+		}
+		if tk.IsNetIPv4(serv.ServIP) && tk.IsNetIPv6(k.SecIP) {
+			return RuleUnknownServiceErr, errors.New("malformed-secIP nat46 error")
+		}
+		sip := ruleNatSIP{pNetAddr}
+		nSecIP = append(nSecIP, sip)
+	}
+	
+	sort.SliceStable(nSecIP, func(i, j int) bool {
+		a := tk.IPtonl(nSecIP[i].sIP)
+		b := tk.IPtonl(nSecIP[j].sIP)
+		return a < b
+	})
+
 	natActs.sel = serv.Sel
 	natActs.mode = cmn.LBMode(serv.Mode)
 
@@ -922,6 +956,9 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	eRule := R.Tables[RtLB].eMap[rt.ruleKey()]
 
 	if eRule != nil {
+		if !reflect.DeepEqual(eRule.secIP, nSecIP) {
+			return RuleUnknownServiceErr, errors.New("secIP modify error")
+		}
 		// If a NAT rule already exists, we try not reschuffle the order of the end-points.
 		// We will try to append the new end-points at the end, while marking any other end-points
 		// not in the new list as inactive
@@ -996,6 +1033,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 		// lb end-point health monitoring
 		r.ActChk = serv.Monitor
 	}
+	r.secIP = nSecIP
 	r.act.action = &natActs
 	r.ruleNum, err = R.Tables[RtLB].Mark.GetCounter()
 	if err != nil {
@@ -1798,7 +1836,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.Mark = int(r.ruleNum)
 	nWork.BlockNum = r.tuples.pref
 	nWork.InActTo = uint64(r.iTo)
-
+	
 	if r.act.actType == RtActDnat {
 		nWork.NatType = DpDnat
 	} else if r.act.actType == RtActSnat {
@@ -1810,6 +1848,10 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	}
 
 	mode := cmn.LBModeDefault
+
+	for _, sip := range r.secIP {
+		nWork.secIP = append(nWork.secIP, sip.sIP)
+	}
 
 	switch at := r.act.action.(type) {
 	case *ruleNatActs:

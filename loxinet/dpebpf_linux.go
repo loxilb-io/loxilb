@@ -768,9 +768,13 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		// seconds to nanoseconds
 		dat.ito = C.uint64_t(w.InActTo * 1000000000)
 
-		dat.npmhh = 2
+		/*dat.npmhh = 2
 		dat.pmhh[0] = 0x64646464
-		dat.pmhh[1] = 0x65656565
+		dat.pmhh[1] = 0x65656565*/
+		for i, k := range w.secIP {
+			dat.pmhh[i] = C.uint(tk.IPtonl(k))
+		}
+		dat.npmhh = C.uchar(len(w.secIP))
 
 		switch {
 		case w.EpSel == EpRR:

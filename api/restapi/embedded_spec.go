@@ -3455,6 +3455,18 @@ func init() {
             }
           }
         },
+        "secondaryIPs": {
+          "description": "Secondary IPs in for multi-homed SCTP service",
+          "type": "array",
+          "items": {
+            "properties": {
+              "endpointIP": {
+                "description": "IP address for externel access",
+                "type": "string"
+              }
+            }
+          }
+        },
         "serviceArguments": {
           "type": "object",
           "properties": {
@@ -7541,6 +7553,13 @@ func init() {
             "$ref": "#/definitions/LoadbalanceEntryEndpointsItems0"
           }
         },
+        "secondaryIPs": {
+          "description": "Secondary IPs in for multi-homed SCTP service",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LoadbalanceEntrySecondaryIPsItems0"
+          }
+        },
         "serviceArguments": {
           "type": "object",
           "properties": {
@@ -7604,6 +7623,14 @@ func init() {
         "weight": {
           "description": "Weight for the load balancing",
           "type": "integer"
+        }
+      }
+    },
+    "LoadbalanceEntrySecondaryIPsItems0": {
+      "properties": {
+        "endpointIP": {
+          "description": "IP address for externel access",
+          "type": "string"
         }
       }
     },

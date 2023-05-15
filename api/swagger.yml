@@ -2178,7 +2178,14 @@ definitions:
             type: integer
             format: int32
             description: value for inactivity timeout (in seconds)
-            
+      secondaryIPs:
+        type: array
+        description: Secondary IPs in for multi-homed SCTP service
+        items:
+          properties:
+            endpointIP:
+              type: string
+              description: IP address for externel access      
       endpoints:
         type: array
         description: values of End point servers
