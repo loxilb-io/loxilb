@@ -1588,7 +1588,7 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 				sHint = sIP.String()
 			}
 		}
-		sOk := tk.L4ServiceProber(sType, sName, sHint)
+		sOk := tk.L4ServiceProber(sType, sName, sHint, ep.opts.probeReq, ep.opts.probeResp)
 		ep.transitionState(sOk, ep.opts.inActTryThr)
 	} else if ep.opts.probeType == HostProbePing {
 		pinger, err := probing.NewPinger(ep.hostName)
