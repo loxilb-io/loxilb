@@ -73,7 +73,7 @@ type goCI struct {
 	name    string
 	hastate int
 	vip     net.IP
-	rules   map[string]bool
+	rules   map[string]int
 }
 
 // GoBgpH - context container
@@ -477,16 +477,15 @@ func (gbh *GoBgpH) AddBGPRule(instance string, IP string) {
 	ci := gbh.ciMap[instance]
 	if ci == nil {
 		ci = new(goCI)
-		ci.rules = make(map[string]bool)
+		ci.rules = make(map[string]int)
 		ci.name = instance
 		ci.hastate = cmn.CIStateBackup
 		ci.vip = net.IPv4zero
 		gbh.ciMap[instance] = ci
 	}
 
-	if !ci.rules[IP] {
-		ci.rules[IP] = true
-	}
+	ci.rules[IP]++
+	
 	if gbh.state == BGPConnected {
 		if ci.hastate == cmn.CIStateBackup {
 			pref = cmn.LowLocalPref
@@ -513,11 +512,11 @@ func (gbh *GoBgpH) DelBGPRule(instance string, IP string) {
 		return
 	}
 
-	if ci.rules[IP] {
-		ci.rules[IP] = false
+	if ci.rules[IP] > 0 {
+		ci.rules[IP]--
 	}
 
-	if gbh.state == BGPConnected {
+	if gbh.state == BGPConnected && ci.rules[IP] == 0 {
 		if ci.hastate == cmn.CIStateBackup {
 			pref = cmn.LowLocalPref
 		} else {
@@ -618,9 +617,9 @@ func (gbh *GoBgpH) advertiseAllRoutes(instance string) {
 		gbh.AdvertiseRoute(ci.vip.String(), 32, "0.0.0.0", pref, true)
 	}
 
-	for ip, valid := range ci.rules {
-		tk.LogIt(tk.LogDebug, "[GoBGP] connected BGP rules ip %s is valid(%v)\n", ip, valid)
-		if valid {
+	for ip, count := range ci.rules {
+		tk.LogIt(tk.LogDebug, "[GoBGP] connected BGP rules ip %s ref count(%d)\n", ip, count)
+		if count > 0 {
 			if net.ParseIP(ip).To4() != nil {
 				gbh.AdvertiseRoute(ip, 32, "0.0.0.0", pref, true)
 			} else {
@@ -691,7 +690,7 @@ func (gbh *GoBgpH) UpdateCIState(instance string, state int, vip net.IP) {
 	ci := gbh.ciMap[instance]
 	if ci == nil {
 		ci = new(goCI)
-		ci.rules = make(map[string]bool)
+		ci.rules = make(map[string]int)
 	}
 	ci.name = instance
 	ci.hastate = state

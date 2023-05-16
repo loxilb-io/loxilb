@@ -3460,7 +3460,7 @@ func init() {
           "type": "array",
           "items": {
             "properties": {
-              "endpointIP": {
+              "secondaryIP": {
                 "description": "IP address for externel access",
                 "type": "string"
               }
@@ -7628,7 +7628,7 @@ func init() {
     },
     "LoadbalanceEntrySecondaryIPsItems0": {
       "properties": {
-        "endpointIP": {
+        "secondaryIP": {
           "description": "IP address for externel access",
           "type": "string"
         }

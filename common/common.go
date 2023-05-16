@@ -516,7 +516,7 @@ type LbEndPointArg struct {
 // LbSecIpArg - Secondary IP
 type LbSecIpArg struct {
 	// SecIP - Secondary IP address
-	SecIP string `json:"secIP"`
+	SecIP string `json:"secondaryIP"`
 }
 
 // LbRuleMod - Info related to a load-balancer entry
@@ -524,7 +524,7 @@ type LbRuleMod struct {
 	// Serv - service argument of type LbServiceArg
 	Serv LbServiceArg `json:"serviceArguments"`
 	// SecIPs - Secondary IPs for SCTP multi-homed service
-	SecIPs []LbSecIpArg `json:"secIPs"`
+	SecIPs []LbSecIpArg `json:"secondaryIPs"`
 	// Eps - slice containing LbEndPointArg
 	Eps []LbEndPointArg `json:"endpoints"`
 }

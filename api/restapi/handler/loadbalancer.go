@@ -41,7 +41,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	if lbRules.Serv.Proto == "sctp" {
 		for _, data := range params.Attr.SecondaryIPs {
 			lbRules.SecIPs = append(lbRules.SecIPs, cmn.LbSecIpArg{
-				SecIP:   data.EndpointIP,
+				SecIP:   data.SecondaryIP,
 			})
 		}
 	}
@@ -120,6 +120,12 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 
 		tmpLB.ServiceArguments = &tmpSvc
 
+		for _, sip := range lb.SecIPs {
+			tmpSIP := new(models.LoadbalanceEntrySecondaryIPsItems0)
+			tmpSIP.SecondaryIP = sip.SecIP
+			tmpLB.SecondaryIPs = append(tmpLB.SecondaryIPs, tmpSIP)
+		}
+
 		// Endpoints match
 		for _, ep := range lb.Eps {
 			tmpEp := new(models.LoadbalanceEntryEndpointsItems0)
@@ -129,6 +135,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 			tmpEp.State = ep.State
 			tmpLB.Endpoints = append(tmpLB.Endpoints, tmpEp)
 		}
+
 
 		result = append(result, &tmpLB)
 	}

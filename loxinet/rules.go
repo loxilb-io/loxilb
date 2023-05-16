@@ -719,6 +719,10 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.Bgp = data.BGP
 		ret.Serv.BlockNum = data.tuples.pref
 
+		for _, sip := range data.secIP {
+			ret.SecIPs = append(ret.SecIPs, cmn.LbSecIpArg{SecIP: sip.sIP.String()})
+		}
+		
 		// Make Endpoints
 		tmpEp := data.act.action.(*ruleNatActs).endPoints
 		for _, ep := range tmpEp {

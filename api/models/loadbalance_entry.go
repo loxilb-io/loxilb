@@ -270,7 +270,7 @@ func (m *LoadbalanceEntryEndpointsItems0) UnmarshalBinary(b []byte) error {
 type LoadbalanceEntrySecondaryIPsItems0 struct {
 
 	// IP address for externel access
-	EndpointIP string `json:"endpointIP,omitempty"`
+	SecondaryIP string `json:"secondaryIP,omitempty"`
 }
 
 // Validate validates this loadbalance entry secondary i ps items0

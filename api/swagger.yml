@@ -2183,7 +2183,7 @@ definitions:
         description: Secondary IPs in for multi-homed SCTP service
         items:
           properties:
-            endpointIP:
+            secondaryIP:
               type: string
               description: IP address for externel access      
       endpoints:
