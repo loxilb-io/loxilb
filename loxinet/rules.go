@@ -849,6 +849,39 @@ func (R *RuleH) GetNatLbRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
 	return R.Tables[RtLB].eMap[rt.ruleKey()]
 }
 
+// GetNatLbRuleSecIPs - Get secondary IPs for SCTP NAT rule by its service args
+func (R *RuleH) GetNatLbRuleSecIPs(serv cmn.LbServiceArg) []string {
+	var ipProto uint8
+	var ips []string
+	service := ""
+	if tk.IsNetIPv4(serv.ServIP) {
+		service = serv.ServIP + "/32"
+	} else {
+		service = serv.ServIP + "/128"
+	}
+	_, sNetAddr, err := net.ParseCIDR(service)
+	if err != nil {
+		return nil
+	}
+
+	if serv.Proto == "sctp" {
+		ipProto = 132
+	} else {
+		return nil
+	}
+
+	l4prot := rule8Tuple{ipProto, 0xff}
+	l3dst := ruleIPTuple{*sNetAddr}
+	l4dst := rule16Tuple{serv.ServPort, 0xffff}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
+	if R.Tables[RtLB].eMap[rt.ruleKey()] != nil {
+		for _,ip := range R.Tables[RtLB].eMap[rt.ruleKey()].secIP {
+			ips = append(ips, ip.sIP.String())
+		}
+	}
+	return ips
+}
+
 // AddNatLbRule - Add a service LB nat rule. The service details are passed in serv argument,
 // and end-point information is passed in the slice servEndPoints. On success,
 // it will return 0 and nil error, else appropriate return code and error string will be set

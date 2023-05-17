@@ -136,6 +136,13 @@ func (gbh *GoBgpH) makeMonitorRouteArgs(p *goBgpRouteInfo, showIdentifier bgp.BG
 	}
 	pathStr = append(pathStr, title)
 
+	// NLRI
+	// If Add-Path required, append Path Identifier.
+	if showIdentifier != bgp.BGP_ADD_PATH_NONE {
+		pathStr = append(pathStr, p.pathId)
+	}
+	pathStr = append(pathStr, p.nlri)
+
 	// Next Hop
 	nexthop := "fictitious"
 	if n := gbh.getNextHopFromPathAttributes(p.attrs); n != nil {
@@ -176,7 +183,7 @@ func (gbh *GoBgpH) processRouteSingle(p *goBgpRouteInfo, showIdentifier bgp.BGPA
 	tk.LogIt(tk.LogInfo, format, pathStr...)
 
 	if err := gbh.syncRoute(p, showIdentifier); err != nil {
-		tk.LogIt(tk.LogError, " failed to"+format, pathStr...)
+		tk.LogIt(tk.LogError, " failed to "+format, pathStr...)
 	}
 }
 
@@ -190,6 +197,7 @@ func (gbh *GoBgpH) syncRoute(p *goBgpRouteInfo, showIdentifier bgp.BGPAddPathMod
 		return err
 	}
 
+	// NextHop
 	nexthop := gbh.getNextHopFromPathAttributes(p.attrs)
 
 	// Make netlink route and add
@@ -471,7 +479,7 @@ func (gbh *GoBgpH) goBgpConnect(host string) {
 }
 
 // AddBGPRule - add a bgp rule in goBGP
-func (gbh *GoBgpH) AddBGPRule(instance string, IP string) {
+func (gbh *GoBgpH) AddBGPRule(instance string, IP []string) {
 	var pref uint32
 	gbh.mtx.Lock()
 	ci := gbh.ciMap[instance]
@@ -484,18 +492,20 @@ func (gbh *GoBgpH) AddBGPRule(instance string, IP string) {
 		gbh.ciMap[instance] = ci
 	}
 
-	ci.rules[IP]++
-	
-	if gbh.state == BGPConnected {
-		if ci.hastate == cmn.CIStateBackup {
-			pref = cmn.LowLocalPref
-		} else {
-			pref = cmn.HighLocalPref
-		}
-		if net.ParseIP(IP).To4() != nil {
-			gbh.AdvertiseRoute(IP, 32, "0.0.0.0", pref, true)
-		} else {
-			gbh.AdvertiseRoute(IP, 128, "::", pref, false)
+	for _, ip := range IP {
+		ci.rules[ip]++
+		
+		if gbh.state == BGPConnected {
+			if ci.hastate == cmn.CIStateBackup {
+				pref = cmn.LowLocalPref
+			} else {
+				pref = cmn.HighLocalPref
+			}
+			if net.ParseIP(ip).To4() != nil {
+				gbh.AdvertiseRoute(ip, 32, "0.0.0.0", pref, true)
+			} else {
+				gbh.AdvertiseRoute(ip, 128, "::", pref, false)
+			}
 		}
 	}
 
@@ -503,29 +513,32 @@ func (gbh *GoBgpH) AddBGPRule(instance string, IP string) {
 }
 
 // DelBGPRule - delete a bgp rule in goBGP
-func (gbh *GoBgpH) DelBGPRule(instance string, IP string) {
+func (gbh *GoBgpH) DelBGPRule(instance string, IP []string) {
 	var pref uint32
 	gbh.mtx.Lock()
 	ci := gbh.ciMap[instance]
 	if ci == nil {
 		tk.LogIt(tk.LogError, "[GoBGP] Del BGP Rule - Invalid instance %s\n", instance)
+		gbh.mtx.Unlock()
 		return
 	}
 
-	if ci.rules[IP] > 0 {
-		ci.rules[IP]--
-	}
-
-	if gbh.state == BGPConnected && ci.rules[IP] == 0 {
-		if ci.hastate == cmn.CIStateBackup {
-			pref = cmn.LowLocalPref
-		} else {
-			pref = cmn.HighLocalPref
+	for _, ip := range IP {
+		if ci.rules[ip] > 0 {
+			ci.rules[ip]--
 		}
-		if net.ParseIP(IP).To4() != nil {
-			gbh.DelAdvertiseRoute(IP, 32, "0.0.0.0", pref)
-		} else {
-			gbh.DelAdvertiseRoute(IP, 128, "::", pref)
+		if gbh.state == BGPConnected && ci.rules[ip] == 0 {
+			if ci.hastate == cmn.CIStateBackup {
+				pref = cmn.LowLocalPref
+			} else {
+				pref = cmn.HighLocalPref
+			}
+			if net.ParseIP(ip).To4() != nil {
+				gbh.DelAdvertiseRoute(ip, 32, "0.0.0.0", pref)
+			} else {
+				gbh.DelAdvertiseRoute(ip, 128, "::", pref)
+			}
+			tk.LogIt(tk.LogDebug, "[GoBGP] Del BGP Rule %s\n", ip)
 		}
 	}
 	gbh.mtx.Unlock()
