@@ -119,7 +119,8 @@ else
   echo "Start K3s installation"
 
   # Install k3s without external cloud-manager and disabled servicelb
-  curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" K3S_KUBECONFIG_MODE="644" sh -
+  curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.22.9+k3s1 INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" K3S_KUBECONFIG_MODE="644" sh -
+  #curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" K3S_KUBECONFIG_MODE="644" sh -
 
   sleep 10
 
@@ -153,6 +154,12 @@ kubectl $KUBECONFIG apply -f nginx.yml
 kubectl $KUBECONFIG apply -f nginx-svc-lb.yml
 
 sleep 5 
+
+# Start nginx pods and services for test(using kube-loxilb)
+kubectl $KUBECONFIG apply -f kube-loxilb.yml
+kubectl $KUBECONFIG apply -f nginx-svc-lb1.yml
+
+sleep 10
 
 # External LB service must be created by now
 kubectl $KUBECONFIG get svc
