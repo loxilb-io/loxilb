@@ -50,3 +50,23 @@ else
   $dexec r1 ip route
   exit 1
 fi
+
+out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
+
+if [[ ${out} == *"Welcome to nginx"* ]]; then
+  echo "cluster-k3s (kube-loxilb) [OK]"
+else
+  echo "cluster-k3s (kube-loxilb) [FAILED]"
+  ## Dump some debug info
+  echo "llb1 lb-info"
+  $dexec llb1 loxicmd get lb
+  echo "llb1 route-info"
+  $dexec llb1 ip route
+  echo "llb2 lb-info"
+  $dexec llb2 loxicmd get lb
+  echo "llb2 route-info"
+  $dexec llb2 ip route
+  echo "r1 route-info"
+  $dexec r1 ip route
+  exit 1
+fi
