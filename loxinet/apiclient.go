@@ -428,7 +428,7 @@ func (*NetAPIStruct) NetEpHostAdd(em *cmn.EndPointMod) (int, error) {
 		probeReq: em.ProbeReq, probeResp: em.ProbeResp,
 		probeDuration: em.ProbeDuration, probePort: em.ProbePort,
 	}
-	ret, err := mh.zr.Rules.AddEpHost(true, em.HostName, em.Name, epArgs)
+	ret, err := mh.zr.Rules.AddEPHost(true, em.HostName, em.Name, epArgs)
 	return ret, err
 }
 
@@ -437,7 +437,7 @@ func (*NetAPIStruct) NetEpHostDel(em *cmn.EndPointMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
-	ret, err := mh.zr.Rules.DeleteEpHost(true, em.Name, em.HostName, em.ProbeType, em.ProbePort)
+	ret, err := mh.zr.Rules.DeleteEPHost(true, em.Name, em.HostName, em.ProbeType, em.ProbePort)
 	return ret, err
 }
 
