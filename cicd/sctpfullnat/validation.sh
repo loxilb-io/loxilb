@@ -7,7 +7,8 @@ ep=( "10.0.3.10" "10.0.3.11" )
 $hexec ep1 ../common/sctp_server ${ep[0]} 38412 server1 >/dev/null 2>&1 &
 $hexec ep2 ../common/sctp_server ${ep[1]} 38412 server2 >/dev/null 2>&1 &
 
-sleep 5
+sleep 20
+
 code=0
 j=0
 waitCount=0
