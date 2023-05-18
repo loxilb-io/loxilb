@@ -902,7 +902,7 @@ func (R *RuleH) syncEPHostState2Rule(rule *ruleEnt, checkNow bool) bool {
 			}
 
 			for idx, n := range na.endPoints {
-				sOk := R.IsEpHostActive(makeEPKey(n.xIP.String(), sType, n.xPort))
+				sOk := R.IsEPHostActive(makeEPKey(n.xIP.String(), sType, n.xPort))
 				np := &na.endPoints[idx]
 				if sOk == false {
 					if np.noService == false {
@@ -1127,10 +1127,6 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 	r.CI = cmn.CIDefault
 
 	R.modNatEpHost(r, natActs.endPoints, true)
-
-	if r.ActChk {
-		R.syncEPHostState2Rule(r, true)
-	}
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
@@ -1552,12 +1548,6 @@ func (R *RuleH) AddEPHost(apiCall bool, hostName string, name string, args epHos
 	R.lepHID++
 
 	R.epMap[epKey] = ep
-
-	// Liveness check upfront
-	// SCTP connect can block
-	if ep.opts.probeType != HostProbeConnectSctp {
-		R.epCheckNow(ep)
-	}
 
 	tk.LogIt(tk.LogDebug, "ep-host added %v:%d\n", epKey, ep.hID)
 
