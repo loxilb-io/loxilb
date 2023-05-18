@@ -9,7 +9,7 @@ sleep 5
 code=0
 servArr=( "server1" "server2" "server3" )
 ep=( "100.100.100.2" "100.100.100.3" "100.100.100.4" )
-j=0
+j=3
 waitCount=0
 while [ $j -le 2 ]
 do
