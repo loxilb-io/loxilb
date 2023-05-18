@@ -624,7 +624,7 @@ func (a *ruleAct) String() string {
 			for _, n := range na.endPoints {
 				ks += fmt.Sprintf("eip-%s,ep-%d,w-%d,",
 					n.xIP.String(), n.xPort, n.weight)
-				if n.inActive {
+				if n.inActive || n.noService {
 					ks += fmt.Sprintf("dead|")
 				} else {
 					ks += fmt.Sprintf("alive|")
@@ -838,6 +838,49 @@ func (R *RuleH) GetNatLbRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
 	return R.Tables[RtLB].eMap[rt.ruleKey()]
 }
 
+func (R *RuleH) syncEPHostState2Rule(rule *ruleEnt, checkNow bool) bool {
+	var sType string
+	rChg := false
+	if checkNow || time.Duration(time.Now().Sub(rule.sT).Seconds()) >= time.Duration(R.Cfg.RuleInactChkTime) {
+		switch na := rule.act.action.(type) {
+		case *ruleNatActs:
+			if rule.tuples.l4Prot.val == 6 {
+				sType = HostProbeConnectTcp
+			} else if rule.tuples.l4Prot.val == 17 {
+				sType = HostProbeConnectUdp
+			} else if rule.tuples.l4Prot.val == 1 {
+				sType = HostProbePing
+			} else if rule.tuples.l4Prot.val == 132 {
+				sType = HostProbeConnectSctp
+			} else {
+				return rChg
+			}
+
+			for idx, n := range na.endPoints {
+				sOk := R.IsEpHostActive(makeEPKey(n.xIP.String(), sType, n.xPort))
+				np := &na.endPoints[idx]
+				if sOk == false {
+					if np.noService == false {
+						np.noService = true
+						rChg = true
+						tk.LogIt(tk.LogDebug, "nat lb-rule service-down ep - %s:%s\n", sType, n.xIP.String())
+					}
+				} else {
+					if n.noService {
+						np.noService = false
+						np.inActTries = 0
+						rChg = true
+						tk.LogIt(tk.LogDebug, "nat lb-rule service-up ep - %s:%s\n", sType, n.xIP.String())
+					}
+				}
+			}
+			rule.sT = time.Now()
+		}
+	}
+
+	return rChg
+}
+
 // AddNatLbRule - Add a service LB nat rule. The service details are passed in serv argument,
 // and end-point information is passed in the slice servEndPoints. On success,
 // it will return 0 and nil error, else appropriate return code and error string will be set
@@ -1008,6 +1051,10 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	r.CI = cmn.CIDefault
 
 	R.modNatEpHost(r, natActs.endPoints, true)
+
+	if r.ActChk {
+		R.syncEPHostState2Rule(r, true)
+	}
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
@@ -1428,6 +1475,9 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, name string, args epHos
 
 	R.epMap[epKey] = ep
 
+	// Liveness check upfront
+	R.epCheckNow(ep)
+
 	tk.LogIt(tk.LogDebug, "ep-host added %v:%d\n", epKey, ep.hID)
 
 	return 0, nil
@@ -1656,9 +1706,6 @@ func epTicker(R *RuleH, helper int) {
 // 1. Syncs rule statistics counts
 // 2. Check health of lb-rule end-points
 func (R *RuleH) RulesSync() {
-	var sType string
-	var rChg bool
-	now := time.Now()
 	for _, rule := range R.Tables[RtLB].eMap {
 		ruleKeys := rule.tuples.String()
 		ruleActs := rule.act.String()
@@ -1674,46 +1721,7 @@ func (R *RuleH) RulesSync() {
 			continue
 		}
 
-		rChg = false
-
-		// Check if we need to check health of LB endpoints
-		if time.Duration(now.Sub(rule.sT).Seconds()) >= time.Duration(R.Cfg.RuleInactChkTime) {
-			switch na := rule.act.action.(type) {
-			case *ruleNatActs:
-				if rule.tuples.l4Prot.val == 6 {
-					sType = HostProbeConnectTcp
-				} else if rule.tuples.l4Prot.val == 17 {
-					sType = HostProbeConnectUdp
-				} else if rule.tuples.l4Prot.val == 1 {
-					sType = HostProbePing
-				} else if rule.tuples.l4Prot.val == 132 {
-					sType = HostProbeConnectSctp
-				} else {
-					break
-				}
-
-				for idx, n := range na.endPoints {
-					sOk := R.IsEpHostActive(makeEPKey(n.xIP.String(), sType, n.xPort))
-					np := &na.endPoints[idx]
-					if sOk == false {
-						if np.noService == false {
-							np.noService = true
-							rChg = true
-							tk.LogIt(tk.LogDebug, "nat lb-rule service-down ep - %s:%s\n", sType, n.xIP.String())
-						}
-					} else {
-						if n.noService {
-							np.noService = false
-							np.inActTries = 0
-							rChg = true
-							tk.LogIt(tk.LogDebug, "nat lb-rule service-up ep - %s:%s\n", sType, n.xIP.String())
-						}
-					}
-				}
-			}
-			rule.sT = now
-		}
-
+		rChg := R.syncEPHostState2Rule(rule, false)
 		if rChg {
 			tk.LogIt(tk.LogDebug, "nat lb-Rule updated %d:%s,%s\n", rule.ruleNum, ruleKeys, ruleActs)
 			rule.DP(DpCreate)
