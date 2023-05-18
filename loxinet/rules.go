@@ -1554,7 +1554,10 @@ func (R *RuleH) AddEPHost(apiCall bool, hostName string, name string, args epHos
 	R.epMap[epKey] = ep
 
 	// Liveness check upfront
-	R.epCheckNow(ep)
+	// SCTP connect can block
+	if ep.opts.probeType != HostProbeConnectSctp {
+		R.epCheckNow(ep)
+	}
 
 	tk.LogIt(tk.LogDebug, "ep-host added %v:%d\n", epKey, ep.hID)
 
