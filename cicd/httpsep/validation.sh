@@ -17,7 +17,7 @@ function health() {
     $hexec l3ep2 ./server/server -host server2 -key 32.32.32.1/key.pem -cert 32.32.32.1/cert.pem -cacert minica.pem $opt &
     $hexec l3ep3 ./server/server -host server3 -key 33.33.33.1/key.pem -cert 33.33.33.1/cert.pem -cacert minica.pem $opt &
 
-    sleep 10
+    sleep 30
     code=0
     j=0
     waitCount=0
