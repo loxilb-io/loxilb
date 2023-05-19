@@ -1418,7 +1418,7 @@ func (R *RuleH) GetEpHosts() ([]cmn.EndPointMod, error) {
 		ret.Name = data.epKey
 		ret.InActTries = data.opts.inActTryThr
 		ret.ProbeType = data.opts.probeType
-		ret.ProbeDuration = data.opts.currProbeDuration
+		ret.ProbeDuration = data.opts.probeDuration
 		ret.ProbeReq = data.opts.probeReq
 		ret.ProbeResp = data.opts.probeResp
 		ret.ProbePort = data.opts.probePort
