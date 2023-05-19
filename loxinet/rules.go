@@ -77,6 +77,7 @@ const (
 	MaxDflLbaInactiveTries   = 100       // Max number of inactive tries before LB arm is turned off
 	DflLbaCheckTimeout       = 10        // Default timeout for checking LB arms
 	DflHostProbeTimeout      = 60        // Default probe timeout for end-point host
+	InitHostProbeTimeout     = 15        // Initial probe timeout for end-point host
 	MaxHostProbeTime         = 24 * 3600 // Max possible host health check duration
 	LbDefaultInactiveTimeout = 4 * 60    // Default inactive timeout for established sessions
 	LbMaxInactiveTimeout     = 24 * 60   // Maximum inactive timeout for established sessions
@@ -1469,7 +1470,7 @@ func (R *RuleH) AddEPHost(apiCall bool, hostName string, name string, args epHos
 		ep.ruleCount = 1
 	}
 	ep.hID = R.lepHID % MaxEndPointCheckers
-	//ep.sT = time.Now()
+	ep.sT = time.Now()
 	R.lepHID++
 
 	R.epMap[epKey] = ep
@@ -1674,11 +1675,13 @@ func epTicker(R *RuleH, helper int) {
 				if host.hID == uint8(helper) {
 
 					if run%2 == 0 {
-						if (host.opts.probeType == HostProbePing && host.avgDelay == 0) || host.inactive || host.initProberOn {
+						if (host.opts.probeType == HostProbePing && host.avgDelay == 0) || host.inactive ||
+							(host.initProberOn && time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(InitHostProbeTimeout)) {
 							epHosts = append(epHosts, host)
 						}
 					} else {
-						if host.initProberOn || time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(host.opts.currProbeDuration) {
+						if (host.initProberOn && time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(InitHostProbeTimeout)) ||
+							time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(host.opts.currProbeDuration) {
 							epHosts = append(epHosts, host)
 						}
 					}
