@@ -75,8 +75,9 @@ const (
 	MaxNatEndPoints          = 16
 	DflLbaInactiveTries      = 2         // Default number of inactive tries before LB arm is turned off
 	MaxDflLbaInactiveTries   = 100       // Max number of inactive tries before LB arm is turned off
-	DflLbaCheckTimeout       = 15        // Default timeout for checking LB arms
+	DflLbaCheckTimeout       = 10        // Default timeout for checking LB arms
 	DflHostProbeTimeout      = 60        // Default probe timeout for end-point host
+	InitHostProbeTimeout     = 15        // Initial probe timeout for end-point host
 	MaxHostProbeTime         = 24 * 3600 // Max possible host health check duration
 	LbDefaultInactiveTimeout = 4 * 60    // Default inactive timeout for established sessions
 	LbMaxInactiveTimeout     = 24 * 60   // Maximum inactive timeout for established sessions
@@ -182,17 +183,18 @@ type epHostOpts struct {
 }
 
 type epHost struct {
-	epKey      string
-	hostName   string
-	ruleCount  int
-	inactive   bool
-	sT         time.Time
-	avgDelay   time.Duration
-	minDelay   time.Duration
-	maxDelay   time.Duration
-	hID        uint8
-	inActTries int
-	opts       epHostOpts
+	epKey        string
+	hostName     string
+	ruleCount    int
+	inactive     bool
+	initProberOn bool
+	sT           time.Time
+	avgDelay     time.Duration
+	minDelay     time.Duration
+	maxDelay     time.Duration
+	hID          uint8
+	inActTries   int
+	opts         epHostOpts
 }
 
 type ruleNatEp struct {
@@ -624,7 +626,7 @@ func (a *ruleAct) String() string {
 			for _, n := range na.endPoints {
 				ks += fmt.Sprintf("eip-%s,ep-%d,w-%d,",
 					n.xIP.String(), n.xPort, n.weight)
-				if n.inActive {
+				if n.inActive || n.noService {
 					ks += fmt.Sprintf("dead|")
 				} else {
 					ks += fmt.Sprintf("alive|")
@@ -788,10 +790,10 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool) {
 
 		if doAddOp {
 			if nep.inActive != true {
-				R.AddEpHost(false, nep.xIP.String(), epKey, hopts)
+				R.AddEPHost(false, nep.xIP.String(), epKey, hopts)
 			}
 		} else {
-			R.DeleteEpHost(false, epKey, nep.xIP.String(), hopts.probeType, hopts.probePort)
+			R.DeleteEPHost(false, epKey, nep.xIP.String(), hopts.probeType, hopts.probePort)
 		}
 	}
 }
@@ -836,6 +838,49 @@ func (R *RuleH) GetNatLbRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
 	return R.Tables[RtLB].eMap[rt.ruleKey()]
+}
+
+func (R *RuleH) syncEPHostState2Rule(rule *ruleEnt, checkNow bool) bool {
+	var sType string
+	rChg := false
+	if checkNow || time.Duration(time.Now().Sub(rule.sT).Seconds()) >= time.Duration(R.Cfg.RuleInactChkTime) {
+		switch na := rule.act.action.(type) {
+		case *ruleNatActs:
+			if rule.tuples.l4Prot.val == 6 {
+				sType = HostProbeConnectTcp
+			} else if rule.tuples.l4Prot.val == 17 {
+				sType = HostProbeConnectUdp
+			} else if rule.tuples.l4Prot.val == 1 {
+				sType = HostProbePing
+			} else if rule.tuples.l4Prot.val == 132 {
+				sType = HostProbeConnectSctp
+			} else {
+				return rChg
+			}
+
+			for idx, n := range na.endPoints {
+				sOk := R.IsEPHostActive(makeEPKey(n.xIP.String(), sType, n.xPort))
+				np := &na.endPoints[idx]
+				if sOk == false {
+					if np.noService == false {
+						np.noService = true
+						rChg = true
+						tk.LogIt(tk.LogDebug, "nat lb-rule service-down ep - %s:%s\n", sType, n.xIP.String())
+					}
+				} else {
+					if n.noService {
+						np.noService = false
+						np.inActTries = 0
+						rChg = true
+						tk.LogIt(tk.LogDebug, "nat lb-rule service-up ep - %s:%s\n", sType, n.xIP.String())
+					}
+				}
+			}
+			rule.sT = time.Now()
+		}
+	}
+
+	return rChg
 }
 
 // AddNatLbRule - Add a service LB nat rule. The service details are passed in serv argument,
@@ -1321,8 +1366,8 @@ func (R *RuleH) GetEpHosts() ([]cmn.EndPointMod, error) {
 	return res, nil
 }
 
-// IsEpHostActive - Check if end-point is active
-func (R *RuleH) IsEpHostActive(epKey string) bool {
+// IsEPHostActive - Check if end-point is active
+func (R *RuleH) IsEPHostActive(epKey string) bool {
 	ep := R.epMap[epKey]
 	if ep == nil {
 		return true // Are we sure ??
@@ -1331,7 +1376,7 @@ func (R *RuleH) IsEpHostActive(epKey string) bool {
 	return !ep.inactive
 }
 
-func validateEpHostOpts(hostName string, args epHostOpts) (int, error) {
+func validateEPHostOpts(hostName string, args epHostOpts) (int, error) {
 	// Validate hostopts
 	if net.ParseIP(hostName) == nil {
 		return RuleArgsErr, errors.New("host-parse error")
@@ -1366,17 +1411,17 @@ func makeEPKey(hostName string, probeType string, probePort uint16) string {
 	return hostName + "_" + probeType + "_" + strconv.Itoa(int(probePort))
 }
 
-// AddEpHost - Add an end-point host
+// AddEPHost - Add an end-point host
 // name, if present will be used as endpoint key
 // It will return 0 and nil error, else appropriate return code and error string will be set
-func (R *RuleH) AddEpHost(apiCall bool, hostName string, name string, args epHostOpts) (int, error) {
+func (R *RuleH) AddEPHost(apiCall bool, hostName string, name string, args epHostOpts) (int, error) {
 	var epKey string
 
 	R.epMx.Lock()
 	defer R.epMx.Unlock()
 
 	// Validate hostopts
-	_, err := validateEpHostOpts(hostName, args)
+	_, err := validateEPHostOpts(hostName, args)
 	if err != nil {
 		tk.LogIt(tk.LogError, "Failed to add EP :%s\n", err)
 		return RuleArgsErr, err
@@ -1407,6 +1452,7 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, name string, args epHos
 		if apiCall {
 			ep.opts = args
 			ep.opts.currProbeDuration = ep.opts.probeDuration
+			ep.initProberOn = true
 			return 0, nil
 		}
 		ep.ruleCount++
@@ -1417,13 +1463,14 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, name string, args epHos
 	ep.epKey = epKey
 	ep.hostName = hostName
 	ep.opts = args
+	ep.initProberOn = true
 	ep.opts.currProbeDuration = ep.opts.probeDuration
 
 	if apiCall != true {
 		ep.ruleCount = 1
 	}
 	ep.hID = R.lepHID % MaxEndPointCheckers
-	//ep.sT = time.Now()
+	ep.sT = time.Now()
 	R.lepHID++
 
 	R.epMap[epKey] = ep
@@ -1433,9 +1480,9 @@ func (R *RuleH) AddEpHost(apiCall bool, hostName string, name string, args epHos
 	return 0, nil
 }
 
-// DeleteEpHost - Delete an end-point host
+// DeleteEPHost - Delete an end-point host
 // It will return 0 and nil error, else appropriate return code and error string will be set
-func (R *RuleH) DeleteEpHost(apiCall bool, name string, hostName string, probeType string, probePort uint16) (int, error) {
+func (R *RuleH) DeleteEPHost(apiCall bool, name string, hostName string, probeType string, probePort uint16) (int, error) {
 	var key string
 
 	R.epMx.Lock()
@@ -1465,7 +1512,7 @@ func (R *RuleH) DeleteEpHost(apiCall bool, name string, hostName string, probeTy
 	return 0, nil
 }
 
-func (ep *epHost) transitionState(currState bool, inactThr int) {
+func (ep *epHost) transitionEPState(currState bool, inactThr int) {
 	if currState {
 		if ep.inactive {
 			ep.inactive = false
@@ -1500,6 +1547,12 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 	var sType string
 	sHint := ""
 
+	inActTryThr := ep.opts.inActTryThr
+	if ep.initProberOn {
+		inActTryThr = 1
+		ep.initProberOn = false
+	}
+
 	sName := fmt.Sprintf("%s:%d", ep.hostName, ep.opts.probePort)
 	if ep.opts.probeType == HostProbeConnectTcp ||
 		ep.opts.probeType == HostProbeConnectUdp ||
@@ -1516,7 +1569,7 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 			}
 		}
 		sOk := tk.L4ServiceProber(sType, sName, sHint, ep.opts.probeReq, ep.opts.probeResp)
-		ep.transitionState(sOk, ep.opts.inActTryThr)
+		ep.transitionEPState(sOk, inActTryThr)
 	} else if ep.opts.probeType == HostProbePing {
 		pinger, err := probing.NewPinger(ep.hostName)
 		if err != nil {
@@ -1552,12 +1605,12 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 			ep.avgDelay = stats.AvgRtt
 			ep.minDelay = stats.MinRtt
 			ep.maxDelay = stats.MaxRtt
-			ep.transitionState(true, 1)
+			ep.transitionEPState(true, 1)
 		} else {
 			ep.avgDelay = time.Duration(0)
 			ep.minDelay = time.Duration(0)
 			ep.maxDelay = time.Duration(0)
-			ep.transitionState(false, 1)
+			ep.transitionEPState(false, 1)
 		}
 		pinger.Stop()
 	} else if ep.opts.probeType == HostProbeHttp {
@@ -1569,7 +1622,7 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 
 		urlStr := fmt.Sprintf("http://%s:%d/%s", addr.String(), ep.opts.probePort, ep.opts.probeReq)
 		sOk := tk.HTTPProber(urlStr)
-		ep.transitionState(sOk, ep.opts.inActTryThr)
+		ep.transitionEPState(sOk, inActTryThr)
 	} else if ep.opts.probeType == HostProbeHttps {
 		var addr net.IP
 		if addr = net.ParseIP(ep.hostName); addr == nil {
@@ -1580,7 +1633,7 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 		urlStr := fmt.Sprintf("https://%s:%d/%s", addr.String(), ep.opts.probePort, ep.opts.probeReq)
 		sOk := HTTPSProber(urlStr, R.tlsCert, R.rootCAPool, ep.opts.probeResp)
 		//tk.LogIt(tk.LogDebug, "[PROBE] https ep - URL[%s:%s] Resp[%s] %v\n", ep.hostName, urlStr, ep.opts.probeResp, sOk)
-		ep.transitionState(sOk, ep.opts.inActTryThr)
+		ep.transitionEPState(sOk, inActTryThr)
 	} else {
 		// TODO
 		ep.inactive = false
@@ -1620,12 +1673,15 @@ func epTicker(R *RuleH, helper int) {
 			for _, host := range R.epMap {
 
 				if host.hID == uint8(helper) {
+
 					if run%2 == 0 {
-						if (host.opts.probeType == HostProbePing && host.avgDelay == 0) || host.inactive {
+						if (host.opts.probeType == HostProbePing && host.avgDelay == 0) || host.inactive ||
+							(host.initProberOn && time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(InitHostProbeTimeout)) {
 							epHosts = append(epHosts, host)
 						}
 					} else {
-						if time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(host.opts.currProbeDuration) {
+						if (host.initProberOn && time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(InitHostProbeTimeout)) ||
+							time.Duration(t.Sub(host.sT).Seconds()) >= time.Duration(host.opts.currProbeDuration) {
 							epHosts = append(epHosts, host)
 						}
 					}
@@ -1656,9 +1712,6 @@ func epTicker(R *RuleH, helper int) {
 // 1. Syncs rule statistics counts
 // 2. Check health of lb-rule end-points
 func (R *RuleH) RulesSync() {
-	var sType string
-	var rChg bool
-	now := time.Now()
 	for _, rule := range R.Tables[RtLB].eMap {
 		ruleKeys := rule.tuples.String()
 		ruleActs := rule.act.String()
@@ -1674,46 +1727,7 @@ func (R *RuleH) RulesSync() {
 			continue
 		}
 
-		rChg = false
-
-		// Check if we need to check health of LB endpoints
-		if time.Duration(now.Sub(rule.sT).Seconds()) >= time.Duration(R.Cfg.RuleInactChkTime) {
-			switch na := rule.act.action.(type) {
-			case *ruleNatActs:
-				if rule.tuples.l4Prot.val == 6 {
-					sType = HostProbeConnectTcp
-				} else if rule.tuples.l4Prot.val == 17 {
-					sType = HostProbeConnectUdp
-				} else if rule.tuples.l4Prot.val == 1 {
-					sType = HostProbePing
-				} else if rule.tuples.l4Prot.val == 132 {
-					sType = HostProbeConnectSctp
-				} else {
-					break
-				}
-
-				for idx, n := range na.endPoints {
-					sOk := R.IsEpHostActive(makeEPKey(n.xIP.String(), sType, n.xPort))
-					np := &na.endPoints[idx]
-					if sOk == false {
-						if np.noService == false {
-							np.noService = true
-							rChg = true
-							tk.LogIt(tk.LogDebug, "nat lb-rule service-down ep - %s:%s\n", sType, n.xIP.String())
-						}
-					} else {
-						if n.noService {
-							np.noService = false
-							np.inActTries = 0
-							rChg = true
-							tk.LogIt(tk.LogDebug, "nat lb-rule service-up ep - %s:%s\n", sType, n.xIP.String())
-						}
-					}
-				}
-			}
-			rule.sT = now
-		}
-
+		rChg := R.syncEPHostState2Rule(rule, false)
 		if rChg {
 			tk.LogIt(tk.LogDebug, "nat lb-Rule updated %d:%s,%s\n", rule.ruleNum, ruleKeys, ruleActs)
 			rule.DP(DpCreate)
