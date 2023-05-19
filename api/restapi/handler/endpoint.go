@@ -49,7 +49,6 @@ func ConfigGetEndPoint(params operations.GetConfigEndpointAllParams) middleware.
 		tmpEP.MinDelay = ep.MinDelay
 		tmpEP.AvgDelay = ep.AvgDelay
 		tmpEP.MaxDelay = ep.MaxDelay
-		tmpEP.ProbeDuration = int64(ep.ProbeDuration)
 		tmpEP.CurrState = ep.CurrState
 		tmpEP.ProbePort = int64(ep.ProbePort)
 
