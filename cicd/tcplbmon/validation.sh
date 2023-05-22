@@ -5,7 +5,7 @@ $hexec l3ep1 node ./server1.js &
 $hexec l3ep2 node ./server2.js &
 $hexec l3ep3 node ./server3.js &
 
-sleep 5
+sleep 15
 code=0
 servArr=( "server1" "server2" "server3" )
 ep=( "31.31.31.1" "32.32.32.1" "33.33.33.1" )
@@ -57,13 +57,14 @@ else
 fi
 
 $hexec l3ep1 ip addr del 31.31.31.1/24 dev el3ep1llb1
-sleep 45
+echo "Waiting 140s...."
+sleep 140
+$dexec llb1 loxicmd get ep
 
 for j in {0..5}
 do
     res=$($hexec l3h1 curl --max-time 10 -s 20.20.20.1:2020)
-    echo $res
-    if [[ $res == "server1" ]] && [[ $res != "" ]] 
+    if [[ $res == "server1" ]] && [[ "empty"$res == "empty" ]] 
     then
         code=1
     fi
@@ -71,12 +72,48 @@ do
 done
 if [[ $code == 0 ]]
 then
-    echo SCENARIO-tcplbmon [OK]
+    echo SCENARIO-tcplbmon p2 [OK]
 else
-    echo SCENARIO-tcplbmon [FAILED]
+    echo SCENARIO-tcplbmon p2 [FAILED]
+    $hexec l3ep1 killall -9 node > /dev/null 2>&1
+    $hexec l3ep2 killall -9 node > /dev/null 2>&1
+    $hexec l3ep3 killall -9 node > /dev/null 2>&1
+    exit $code
 fi
+
+$hexec l3ep1 ip addr add 31.31.31.1/24 dev el3ep1llb1
+$hexec l3ep1 ip route add default via 31.31.31.254
+$hexec l3ep1 killall -9 node > /dev/null 2>&1
+$hexec l3ep2 killall -9 node > /dev/null 2>&1
+$hexec l3ep3 killall -9 node > /dev/null 2>&1
+$hexec l3ep1 node ./server1.js &
+$hexec l3ep2 node ./server2.js &
+$hexec l3ep3 node ./server3.js &
+sleep 30
+$dexec llb1 loxicmd get ep
+
+for i in {1..4}
+do
+for j in {0..2}
+do
+    res=$($hexec l3h1 curl --max-time 10 -s 20.20.20.1:2020)
+    echo $res
+    if [[ $res != "${servArr[j]}" ]]
+    then
+        code=1
+    fi
+    sleep 1
+done
+done
+if [[ $code == 0 ]]
+then
+    echo SCENARIO-tcplbmon p3 [OK]
+else
+    echo SCENARIO-tcplbmon p3 [FAILED]
+    exit $code
+fi
+
 $hexec l3ep1 killall -9 node > /dev/null 2>&1
 $hexec l3ep2 killall -9 node > /dev/null 2>&1
 $hexec l3ep3 killall -9 node > /dev/null 2>&1
 exit $code
-
