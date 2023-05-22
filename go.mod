@@ -11,13 +11,13 @@ require (
 	github.com/go-openapi/swag v0.22.3
 	github.com/go-openapi/validate v0.22.0
 	github.com/jessevdk/go-flags v1.5.0
-	github.com/loxilb-io/loxilib v0.8.8-0.20230515061719-1b8e69d35274
+	github.com/loxilb-io/loxilib v0.8.8-0.20230522072824-40657d491e9b
 	github.com/osrg/gobgp/v3 v3.5.0
 	github.com/prometheus-community/pro-bing v0.1.0
 	github.com/prometheus/client_model v0.3.0
 	github.com/vishvananda/netlink v1.1.1-0.20210330154013-f5de75959ad5
-	golang.org/x/net v0.7.0
-	golang.org/x/sys v0.5.0
+	golang.org/x/net v0.10.0
+	golang.org/x/sys v0.8.0
 	google.golang.org/grpc v1.48.0
 	google.golang.org/protobuf v1.28.1
 )
@@ -47,7 +47,7 @@ require (
 	github.com/vishvananda/netns v0.0.0-20200728191858-db3c7e526aae // indirect
 	go.mongodb.org/mongo-driver v1.11.6 // indirect
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
-	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
