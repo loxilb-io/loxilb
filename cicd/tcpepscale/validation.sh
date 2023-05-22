@@ -1,11 +1,13 @@
 #!/bin/bash
 source ../common.sh
-echo SCENARIO-epscale
+echo SCENARIO-tcpepscale
 $hexec l3ep1 socat -v -T0.05 tcp-l:8080,reuseaddr,fork system:"echo 'server1'; cat" >/dev/null 2>&1 &
 $hexec l3ep2 socat -v -T0.05 tcp-l:8080,reuseaddr,fork system:"echo 'server2'; cat" >/dev/null 2>&1 &
 $hexec l3ep3 socat -v -T0.05 tcp-l:8080,reuseaddr,fork system:"echo 'server3'; cat" >/dev/null 2>&1 &
 
-sleep 5
+sleep 140
+echo "Inactive endpoints"
+$dexec llb1 loxicmd get ep | grep nok | wc -l
 code=0
 servArr=( "server1" "server2" "server3" )
 ep=( "31.31.31.1" "32.32.32.1" "33.33.33.1" )
@@ -25,7 +27,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            echo SCENARIO-epscale [FAILED]
+            echo SCENARIO-tcpepscale [FAILED]
             exit 1
         fi
     fi
@@ -44,9 +46,9 @@ do
 done
 if [[ $code == 0 ]]
 then
-    echo SCENARIO-epscale [OK]
+    echo SCENARIO-tcpepscale [OK]
 else
-    echo SCENARIO-epscale [FAILED]
+    echo SCENARIO-tcpepscale [FAILED]
 fi
 $hexec l3ep1 killall  -9 socat > /dev/null 2>&1
 $hexec l3ep2 killall  -9 socat > /dev/null 2>&1
