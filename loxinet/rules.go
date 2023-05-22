@@ -165,9 +165,9 @@ const (
 // possible types of end-point probe
 const (
 	HostProbePing        = "ping"
-	HostProbeConnectTcp  = "connect-tcp"
-	HostProbeConnectUdp  = "connect-udp"
-	HostProbeConnectSctp = "connect-sctp"
+	HostProbeConnectTcp  = "tcp"
+	HostProbeConnectUdp  = "udp"
+	HostProbeConnectSctp = "sctp"
 	HostProbeHttp        = "http"
 	HostProbeHttps       = "https"
 	HostProbeNone        = "none"
