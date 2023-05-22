@@ -72,7 +72,7 @@ func main() {
 	http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
 		//log.Printf("Received %s request for host %s from IP address %s",
 		//req.Method, req.Host, req.RemoteAddr)
-		resp := fmt.Sprintf("%s:%s",req.Proto,*host)
+		resp := fmt.Sprintf("%s:%s", req.Proto, *host)
 		res.Write([]byte(resp))
 		//log.Printf("OK\n")
 	})
