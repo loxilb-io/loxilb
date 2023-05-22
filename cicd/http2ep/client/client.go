@@ -5,12 +5,12 @@ import (
 	"crypto/x509"
 	"flag"
 	"fmt"
+	"golang.org/x/net/http2"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"time"
-    "golang.org/x/net/http2"
 )
 
 func main() {
@@ -67,29 +67,29 @@ Options:
 	}
 
 	client := http.Client{Transport: t, Timeout: 5 * time.Second}
-    for i:=1; i <= 2; i++ {
-	urlStr := "https://" + *host
-	req, err := http.NewRequest(http.MethodGet, urlStr, nil)
-	if err != nil {
-		log.Fatalf("Error creating new http request : %s", err)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		switch e := err.(type) {
-		case *url.Error:
-			log.Fatalf("url.Error : %s", e)
-		default:
-			log.Fatalf("Unexpected error : %s", err)
+	for i := 1; i <= 2; i++ {
+		urlStr := "https://" + *host
+		req, err := http.NewRequest(http.MethodGet, urlStr, nil)
+		if err != nil {
+			log.Fatalf("Error creating new http request : %s", err)
 		}
-	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
-	if err != nil {
-		log.Fatalf("Error in reading resp: %s", err)
-	}
+		resp, err := client.Do(req)
+		if err != nil {
+			switch e := err.(type) {
+			case *url.Error:
+				log.Fatalf("url.Error : %s", e)
+			default:
+				log.Fatalf("Unexpected error : %s", err)
+			}
+		}
 
-	fmt.Printf("%s ", body)
-    }
+		body, err := ioutil.ReadAll(resp.Body)
+		defer resp.Body.Close()
+		if err != nil {
+			log.Fatalf("Error in reading resp: %s", err)
+		}
+
+		fmt.Printf("%s ", body)
+	}
 }

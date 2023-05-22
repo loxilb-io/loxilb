@@ -1561,6 +1561,10 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 			sType = "tcp"
 		} else if ep.opts.probeType == HostProbeConnectUdp {
 			sType = "udp"
+			ret, sIP := R.Zone.L3.IfaSelectAny(net.ParseIP(ep.hostName), true)
+			if ret == 0 {
+				sHint = sIP.String()
+			}
 		} else {
 			sType = "sctp"
 			ret, sIP := R.Zone.L3.IfaSelectAny(net.ParseIP(ep.hostName), true)
