@@ -1033,7 +1033,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servEndPoints []cmn.LbEndPoi
 	// but it certain cases like stand-alone mode, loxilb can do its own
 	// lb end-point health monitoring
 	r.ActChk = serv.Monitor
-	
+
 	r.act.action = &natActs
 	r.ruleNum, err = R.Tables[RtLB].Mark.GetCounter()
 	if err != nil {
