@@ -1,9 +1,9 @@
 #!/bin/bash
 source ../common.sh
 echo SCENARIO-tcptunlb
-$hexec l3e1 node ./server1.js &
-$hexec l3e2 node ./server2.js &
-$hexec l3e3 node ./server3.js &
+$hexec l3e1 node ../common/tcp_server.js server1 &
+$hexec l3e2 node ../common/tcp_server.js server2 &
+$hexec l3e3 node ../common/tcp_server.js server3 &
 
 sleep 10
 code=0
@@ -27,6 +27,7 @@ do
         then
             echo "All Servers are not UP"
             echo SCENARIO-tcptunlb [FAILED]
+            sudo pkill node
             exit 1
         fi
     fi
@@ -66,5 +67,6 @@ then
 else
     echo SCENARIO-tcptunlb [FAILED]
 fi
+sudo pkill node
 exit $code
 

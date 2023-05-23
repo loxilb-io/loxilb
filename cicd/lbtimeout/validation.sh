@@ -1,9 +1,9 @@
 #!/bin/bash
 source ../common.sh
 echo LB-TIMEOUT
-$hexec l3ep1 node ./server1.js &
-$hexec l3ep2 node ./server2.js &
-$hexec l3ep3 node ./server3.js &
+$hexec l3ep1 node ../common/tcp_server.js server1 &
+$hexec l3ep2 node ../common/tcp_server.js server2 &
+$hexec l3ep3 node ../common/tcp_server.js server3 &
 
 sleep 5
 code=0
@@ -26,6 +26,7 @@ do
         then
             echo "All Servers are not UP"
             echo LB-TIMEOUT[FAILED]
+            sudo pkill node
             exit 1
         fi
     fi
@@ -46,6 +47,7 @@ then
     echo $SERVICE is UP
 else
     echo $SERVICE is DOWN
+    sudo pkill node
     exit 1
 fi
 
@@ -65,5 +67,6 @@ fi
 sudo killall -9 iperf >> /dev/null 2>&1
 sudo kill -9 $ncpid >> /dev/null 2>&1
 sudo killall -9 nc >> /dev/null 2>&1
+sudo killall -9 node >> /dev/null 2>&1
 sudo rm -f nohup.out
 exit $code

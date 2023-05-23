@@ -1,9 +1,9 @@
 #!/bin/bash
 source ../common.sh
 echo "SCENARIO nat66tcp"
-$hexec l3ep1 node ./server1.js &
-$hexec l3ep2 node ./server2.js &
-$hexec l3ep3 node ./server3.js &
+$hexec l3ep1 node ../common/tcp_server.js server1 &
+$hexec l3ep2 node ../common/tcp_server.js server2 &
+$hexec l3ep3 node ../common/tcp_server.js server3 &
 
 sleep 5
 code=0
@@ -26,6 +26,7 @@ do
         then
             echo "All Servers are not UP"
             echo nat66tcp [FAILED]
+            sudo pkill node
             exit 1
         fi
     fi
@@ -67,5 +68,6 @@ then
 else
     echo nat66tcp [FAILED]
 fi
+sudo pkill node
 exit $code
 

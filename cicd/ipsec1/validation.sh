@@ -1,8 +1,8 @@
 #!/bin/bash
 source ../common.sh
 echo IPSEC-1
-$hexec rh1 node ./server1.js &
-$hexec rh2 node ./server2.js &
+$hexec rh1 node ../common/tcp_server.js server1 &
+$hexec rh2 node ../common/tcp_server.js server2 &
 
 sleep 10
 llb1_rx1=`$hexec llb1 ifconfig vti100 | grep "RX packets" | cut -d " " -f 11`
@@ -50,6 +50,7 @@ then
    fi
 else
     echo "IPSEC-1 [FAILED]"
+    sudo pkill node
     exit $code
 fi
 
@@ -71,6 +72,7 @@ do
         then
             echo "All Servers are not UP"
             echo IPSEC-1 [FAILED]
+            sudo pkill node
             exit 1
         fi
     fi
@@ -110,5 +112,6 @@ then
 else
     echo IPSEC-1 [FAILED]
 fi
+sudo pkill node
 exit $code
 

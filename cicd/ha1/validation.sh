@@ -3,9 +3,9 @@ source ../common.sh
 echo HA-1
 
 function myfunc() {
-$hexec ep1 node ./server1.js &
-$hexec ep2 node ./server2.js &
-$hexec ep3 node ./server3.js &
+$hexec ep1 node ../common/tcp_server.js server1 &
+$hexec ep2 node ../common/tcp_server.js server2 &
+$hexec ep3 node ../common/tcp_server.js server3 &
 
 sleep 30
 
@@ -29,6 +29,7 @@ do
         then
             echo "All Servers are not UP" >&2
             echo HA-1 [FAILED] >&2
+            sudo pkill node
             exit 1
         fi
     fi
@@ -48,6 +49,7 @@ do
     sleep 1
 done
 done
+sudo pkill node
 echo $code
 }
 
