@@ -50,7 +50,10 @@ then
     echo ONEARM-L2 [OK]
 else
     $dexec llb1 loxicmd get ct
+    $dexec llb1 loxicmd get lb -o wide
+    $dexec llb1 loxicmd get ep -o wide
     $dexec llb1 loxicmd get port
+    $dexec llb1 ip neigh
     echo ONEARM-L2 [FAILED]
 fi
 exit $code

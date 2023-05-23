@@ -1,9 +1,9 @@
 #!/bin/bash
 source ../common.sh
 echo SCENARIO-tcplb
-$hexec l3ep1 node ./server1.js &
-$hexec l3ep2 node ./server2.js &
-$hexec l3ep3 node ./server3.js &
+$hexec l3ep1 node ../common/tcp_server.js server1 &
+$hexec l3ep2 node ../common/tcp_server.js server2 &
+$hexec l3ep3 node ../common/tcp_server.js server3 &
 
 sleep 5
 code=0
@@ -26,6 +26,7 @@ do
         then
             echo "All Servers are not UP"
             echo SCENARIO-tcplb [FAILED]
+            sudo killall -9 node 2>&1 > /dev/null
             exit 1
         fi
     fi
@@ -51,5 +52,6 @@ then
 else
     echo SCENARIO-tcplb [FAILED]
 fi
+sudo killall -9 node 2>&1 > /dev/null
 exit $code
 
