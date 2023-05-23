@@ -30,10 +30,6 @@ func main() {
 	buffer := make([]byte, 1024)
 	count := 0
 	for {
-		if count == 5 {
-			return
-		}
-
 		_, addr, err := connection.ReadFromUDP(buffer)
 		//fmt.Print("-> ", string(buffer[0:n-1]))
 		count++
