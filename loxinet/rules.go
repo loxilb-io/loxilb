@@ -792,12 +792,6 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool) {
 
 		epKey := makeEPKey(nep.xIP.String(), hopts.probeType, hopts.probePort)
 
-		// Default
-		if !r.ActChk {
-			hopts.probeType = HostProbePing
-			hopts.probePort = 0
-		}
-
 		if doAddOp {
 			if nep.inActive != true {
 				R.AddEPHost(false, nep.xIP.String(), epKey, hopts)
@@ -1105,16 +1099,14 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 	r.zone = R.Zone
 	if serv.Mode == cmn.LBModeFullNAT || serv.Mode == cmn.LBModeOneArm {
 		r.act.actType = RtActFullNat
-		// For full-nat mode, it is necessary to do own lb end-point health monitoring
-		r.ActChk = true
 	} else {
 		r.act.actType = RtActDnat
-		// Per LB end-point health-check is supposed to be handled at CCM,
-		// but it certain cases like stand-alone mode, loxilb can do its own
-		// lb end-point health monitoring
-		r.ActChk = serv.Monitor
 	}
 	r.secIP = nSecIP
+	// Per LB end-point health-check is supposed to be handled at CCM,
+	// but it certain cases like stand-alone mode, loxilb can do its own
+	// lb end-point health monitoring
+	r.ActChk = serv.Monitor
 	r.act.action = &natActs
 	r.ruleNum, err = R.Tables[RtLB].Mark.GetCounter()
 	if err != nil {
