@@ -1,9 +1,9 @@
 #!/bin/bash
 source ../common.sh
 echo SCENARIO-tcplbmon
-$hexec l3ep1 node ./server1.js &
-$hexec l3ep2 node ./server2.js &
-$hexec l3ep3 node ./server3.js &
+$hexec l3ep1 node ../common/tcp_server.js server1 &
+$hexec l3ep2 node ../common/tcp_server.js server2 &
+$hexec l3ep3 node ../common/tcp_server.js server3 &
 
 sleep 15
 code=0
@@ -25,6 +25,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
+            sudo killall -9 node 2>&1 > /dev/null
             echo SCENARIO-tcplbmon [FAILED]
             exit 1
         fi
@@ -50,9 +51,9 @@ then
     echo SCENARIO-tcplbmon p1 [OK]
 else
     echo SCENARIO-tcplbmon p1 [FAILED]
-    $hexec l3ep1 killall -9 node > /dev/null 2>&1
-    $hexec l3ep2 killall -9 node > /dev/null 2>&1
-    $hexec l3ep3 killall -9 node > /dev/null 2>&1
+    $hexec l3ep1 killall -9 node 2>&1 > /dev/null
+    $hexec l3ep2 killall -9 node 2>&1 > /dev/null
+    $hexec l3ep3 killall -9 node 2>&1 > /dev/null
     exit $code
 fi
 
@@ -75,20 +76,16 @@ then
     echo SCENARIO-tcplbmon p2 [OK]
 else
     echo SCENARIO-tcplbmon p2 [FAILED]
-    $hexec l3ep1 killall -9 node > /dev/null 2>&1
-    $hexec l3ep2 killall -9 node > /dev/null 2>&1
-    $hexec l3ep3 killall -9 node > /dev/null 2>&1
+    sudo killall -9 node 2>&1 > /dev/null
     exit $code
 fi
 
 $hexec l3ep1 ip addr add 31.31.31.1/24 dev el3ep1llb1
 $hexec l3ep1 ip route add default via 31.31.31.254
-$hexec l3ep1 killall -9 node > /dev/null 2>&1
-$hexec l3ep2 killall -9 node > /dev/null 2>&1
-$hexec l3ep3 killall -9 node > /dev/null 2>&1
-$hexec l3ep1 node ./server1.js &
-$hexec l3ep2 node ./server2.js &
-$hexec l3ep3 node ./server3.js &
+sudo killall -9 node 2>&1 > /dev/null
+$hexec l3ep1 node ../common/tcp_server.js server1 &
+$hexec l3ep2 node ../common/tcp_server.js server2 &
+$hexec l3ep3 node ../common/tcp_server.js server3 &
 sleep 30
 $dexec llb1 loxicmd get ep
 
@@ -110,10 +107,7 @@ then
     echo SCENARIO-tcplbmon p3 [OK]
 else
     echo SCENARIO-tcplbmon p3 [FAILED]
-    exit $code
 fi
 
-$hexec l3ep1 killall -9 node > /dev/null 2>&1
-$hexec l3ep2 killall -9 node > /dev/null 2>&1
-$hexec l3ep3 killall -9 node > /dev/null 2>&1
+sudo killall -9 node 2>&1 > /dev/null
 exit $code
