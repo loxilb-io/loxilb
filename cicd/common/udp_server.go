@@ -38,7 +38,7 @@ func main() {
 		_, err = connection.WriteToUDP(data, addr)
 		if err != nil {
 			fmt.Println(err)
-			return
+			continue
 		}
 	}
 }
