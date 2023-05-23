@@ -1,9 +1,9 @@
 #!/bin/bash
 source ../common.sh
 echo ONEARM-L2
-$hexec l2ep1 node ./server1.js &
-$hexec l2ep2 node ./server2.js &
-$hexec l2ep3 node ./server3.js &
+$hexec l2ep1 node ../common/tcp_server.js server1 &
+$hexec l2ep2 node ../common/tcp_server.js server2 &
+$hexec l2ep3 node ../common/tcp_server.js server3 &
 
 sleep 5
 code=0
@@ -26,6 +26,7 @@ do
         then
             echo "All Servers are not UP"
             echo ONEARM-L2 [FAILED]
+            sudo pkill node
             exit 1
         fi
     fi
@@ -50,7 +51,11 @@ then
     echo ONEARM-L2 [OK]
 else
     $dexec llb1 loxicmd get ct
+    $dexec llb1 loxicmd get lb -o wide
+    $dexec llb1 loxicmd get ep -o wide
     $dexec llb1 loxicmd get port
+    $dexec llb1 ip neigh
     echo ONEARM-L2 [FAILED]
 fi
+sudo pkill node
 exit $code

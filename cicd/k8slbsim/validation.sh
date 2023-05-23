@@ -1,9 +1,9 @@
 #!/bin/bash
 source ../common.sh
 echo SCENARIO-k8slb
-$hexec n1p1 node ./server1.js &
-$hexec n2p1 node ./server2.js &
-$hexec n3p1 node ./server3.js &
+$hexec n1p1 node ../common/tcp_server.js server1 &
+$hexec n2p1 node ../common/tcp_server.js server2 &
+$hexec n3p1 node ../common/tcp_server.js server3 &
 
 sleep 5
 code=0
@@ -26,6 +26,7 @@ do
         then
             echo "All Servers are not UP"
             echo SCENARIO-k8slb [FAILED]
+            sudo pkill node
             exit 1
         fi
     fi
@@ -51,5 +52,6 @@ then
 else
     echo SCENARIO-k8slb [FAILED]
 fi
+sudo pkill node
 exit $code
 
