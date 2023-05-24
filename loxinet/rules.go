@@ -208,7 +208,7 @@ type ruleNatEp struct {
 }
 
 type ruleNatSIP struct {
-	sIP 	   net.IP
+	sIP net.IP
 }
 
 type ruleNatActs struct {
@@ -722,7 +722,7 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		for _, sip := range data.secIP {
 			ret.SecIPs = append(ret.SecIPs, cmn.LbSecIpArg{SecIP: sip.sIP.String()})
 		}
-		
+
 		// Make Endpoints
 		tmpEp := data.act.action.(*ruleNatActs).endPoints
 		for _, ep := range tmpEp {
@@ -875,7 +875,7 @@ func (R *RuleH) GetNatLbRuleSecIPs(serv cmn.LbServiceArg) []string {
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
 	if R.Tables[RtLB].eMap[rt.ruleKey()] != nil {
-		for _,ip := range R.Tables[RtLB].eMap[rt.ruleKey()].secIP {
+		for _, ip := range R.Tables[RtLB].eMap[rt.ruleKey()].secIP {
 			ips = append(ips, ip.sIP.String())
 		}
 	}
@@ -950,7 +950,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 		sip := ruleNatSIP{pNetAddr}
 		nSecIP = append(nSecIP, sip)
 	}
-	
+
 	sort.SliceStable(nSecIP, func(i, j int) bool {
 		a := tk.IPtonl(nSecIP[i].sIP)
 		b := tk.IPtonl(nSecIP[j].sIP)
@@ -1873,7 +1873,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.Mark = int(r.ruleNum)
 	nWork.BlockNum = r.tuples.pref
 	nWork.InActTo = uint64(r.iTo)
-	
+
 	if r.act.actType == RtActDnat {
 		nWork.NatType = DpDnat
 	} else if r.act.actType == RtActSnat {

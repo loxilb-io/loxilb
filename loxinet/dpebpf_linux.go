@@ -792,7 +792,6 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 			dat.ca.oaux = 1
 		}
 
-
 		nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[0]))
 
 		for _, k := range w.endPoints {
@@ -1665,9 +1664,11 @@ func dpCTMapChkUpdates() {
 			if time.Duration(tc.Sub(cti.LTs).Seconds()) >= time.Duration(5*60) {
 				tk.LogIt(tk.LogInfo, "[CT] out-of-sync %s:%s:%v\n", cti.Key(), cti.CState, cti.XSync)
 				if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
+					tk.LogIt(tk.LogInfo, "[CT] out-of-sync not found %s:%s:%v\n", cti.Key(), cti.CState, cti.XSync)
 					delete(mh.dpEbpf.ctMap, cti.Key())
 					continue
 				}
+				cti.PVal = C.GoBytes(unsafe.Pointer(&tact), C.sizeof_struct_dp_ct_tact)
 				cti.LTs = tc
 			}
 

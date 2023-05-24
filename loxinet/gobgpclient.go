@@ -49,10 +49,10 @@ const (
 )
 
 type goBgpRouteInfo struct {
-	nlri 		bgp.AddrPrefixInterface
-	attrs 		[]bgp.PathAttributeInterface
-	withdraw 	bool
-	pathId		uint32
+	nlri     bgp.AddrPrefixInterface
+	attrs    []bgp.PathAttributeInterface
+	withdraw bool
+	pathId   uint32
 }
 
 type goBgpEvent struct {
@@ -228,7 +228,7 @@ func (gbh *GoBgpH) syncRoute(p *goBgpRouteInfo, showIdentifier bgp.BGPAddPathMod
 }
 
 func (gbh *GoBgpH) processRoute(pathList []*api.Path) {
-	
+
 	for _, p := range pathList {
 		// NLRI have destination CIDR info
 		nlri, err := apiutil.GetNativeNlri(p)
@@ -494,7 +494,7 @@ func (gbh *GoBgpH) AddBGPRule(instance string, IP []string) {
 
 	for _, ip := range IP {
 		ci.rules[ip]++
-		
+
 		if gbh.state == BGPConnected {
 			if ci.hastate == cmn.CIStateBackup {
 				pref = cmn.LowLocalPref

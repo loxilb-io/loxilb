@@ -258,7 +258,7 @@ func (*NetAPIStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
 	if err == nil && lm.Serv.Bgp {
 		if mh.bgp != nil {
 			ips = append(ips, lm.Serv.ServIP)
-			for _,ip := range lm.SecIPs {
+			for _, ip := range lm.SecIPs {
 				ips = append(ips, ip.SecIP)
 			}
 			mh.bgp.AddBGPRule("default", ips)
