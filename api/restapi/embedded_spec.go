@@ -7607,6 +7607,14 @@ func init() {
         }
       }
     },
+    "LoadbalanceEntrySecondaryIPsItems0": {
+      "properties": {
+        "secondaryIP": {
+          "description": "IP address for externel access",
+          "type": "string"
+        }
+      }
+    },
     "LoadbalanceEntryServiceArguments": {
       "type": "object",
       "properties": {

@@ -768,6 +768,14 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		// seconds to nanoseconds
 		dat.ito = C.uint64_t(w.InActTo * 1000000000)
 
+		/*dat.npmhh = 2
+		dat.pmhh[0] = 0x64646464
+		dat.pmhh[1] = 0x65656565*/
+		for i, k := range w.secIP {
+			dat.pmhh[i] = C.uint(tk.IPtonl(k))
+		}
+		dat.npmhh = C.uchar(len(w.secIP))
+
 		switch {
 		case w.EpSel == EpRR:
 			dat.sel_type = C.NAT_LB_SEL_RR
@@ -787,7 +795,7 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[0]))
 
 		for _, k := range w.endPoints {
-			nxfa.wprio = C.ushort(k.Weight)
+			nxfa.wprio = C.uchar(k.Weight)
 			nxfa.nat_xport = C.ushort(tk.Htons(k.XPort))
 			if tk.IsNetIPv6(k.XIP.String()) {
 				convNetIP2DPv6Addr(unsafe.Pointer(&nxfa.nat_xip[0]), k.XIP)
@@ -1656,9 +1664,11 @@ func dpCTMapChkUpdates() {
 			if time.Duration(tc.Sub(cti.LTs).Seconds()) >= time.Duration(5*60) {
 				tk.LogIt(tk.LogInfo, "[CT] out-of-sync %s:%s:%v\n", cti.Key(), cti.CState, cti.XSync)
 				if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
+					tk.LogIt(tk.LogInfo, "[CT] out-of-sync not found %s:%s:%v\n", cti.Key(), cti.CState, cti.XSync)
 					delete(mh.dpEbpf.ctMap, cti.Key())
 					continue
 				}
+				cti.PVal = C.GoBytes(unsafe.Pointer(&tact), C.sizeof_struct_dp_ct_tact)
 				cti.LTs = tc
 			}
 
@@ -1666,14 +1676,18 @@ func dpCTMapChkUpdates() {
 				if time.Duration(tc.Sub(cti.NTs).Seconds()) < time.Duration(60) {
 					continue
 				}
+				if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
+					tk.LogIt(tk.LogInfo, "[CT] ent not found %s\n", cti.Key())
+					delete(mh.dpEbpf.ctMap, cti.Key())
+					continue
+				}
 				ptact := (*C.struct_dp_ct_tact)(unsafe.Pointer(&cti.PVal[0]))
 				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_CT_STATS_MAP), C.uint(ptact.ca.cidx), C.int(0),
 					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
-
 				if ret == 0 {
-					if cti.Packets != p {
-						cti.Bytes = b
-						cti.Packets = p
+					if cti.Packets != p+uint64(tact.ctd.pb.packets) {
+						cti.Bytes = b + uint64(tact.ctd.pb.bytes)
+						cti.Packets = p + uint64(tact.ctd.pb.packets)
 						cti.XSync = true
 						cti.NTs = tc
 						cti.LTs = tc

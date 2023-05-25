@@ -38,6 +38,14 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv.Mode = cmn.LBMode(params.Attr.ServiceArguments.Mode)
 	lbRules.Serv.InactiveTimeout = uint32(params.Attr.ServiceArguments.InactiveTimeOut)
 
+	if lbRules.Serv.Proto == "sctp" {
+		for _, data := range params.Attr.SecondaryIPs {
+			lbRules.SecIPs = append(lbRules.SecIPs, cmn.LbSecIpArg{
+				SecIP: data.SecondaryIP,
+			})
+		}
+	}
+
 	for _, data := range params.Attr.Endpoints {
 		lbRules.Eps = append(lbRules.Eps, cmn.LbEndPointArg{
 			EpIP:   data.EndpointIP,
@@ -111,6 +119,12 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tmpSvc.Monitor = lb.Serv.Monitor
 
 		tmpLB.ServiceArguments = &tmpSvc
+
+		for _, sip := range lb.SecIPs {
+			tmpSIP := new(models.LoadbalanceEntrySecondaryIPsItems0)
+			tmpSIP.SecondaryIP = sip.SecIP
+			tmpLB.SecondaryIPs = append(tmpLB.SecondaryIPs, tmpSIP)
+		}
 
 		// Endpoints match
 		for _, ep := range lb.Eps {
