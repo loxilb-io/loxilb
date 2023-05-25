@@ -1676,14 +1676,18 @@ func dpCTMapChkUpdates() {
 				if time.Duration(tc.Sub(cti.NTs).Seconds()) < time.Duration(60) {
 					continue
 				}
+				if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
+					tk.LogIt(tk.LogInfo, "[CT] ent not found %s\n", cti.Key())
+					delete(mh.dpEbpf.ctMap, cti.Key())
+					continue
+				}
 				ptact := (*C.struct_dp_ct_tact)(unsafe.Pointer(&cti.PVal[0]))
 				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_CT_STATS_MAP), C.uint(ptact.ca.cidx), C.int(0),
 					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
-
 				if ret == 0 {
-					if cti.Packets != p {
-						cti.Bytes = b
-						cti.Packets = p
+					if cti.Packets != p+uint64(tact.ctd.pb.packets) {
+						cti.Bytes = b + uint64(tact.ctd.pb.bytes)
+						cti.Packets = p + uint64(tact.ctd.pb.packets)
 						cti.XSync = true
 						cti.NTs = tc
 						cti.LTs = tc
