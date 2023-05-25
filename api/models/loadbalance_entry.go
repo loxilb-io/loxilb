@@ -22,6 +22,9 @@ type LoadbalanceEntry struct {
 	// values of End point servers
 	Endpoints []*LoadbalanceEntryEndpointsItems0 `json:"endpoints"`
 
+	// Secondary IPs in for multi-homed SCTP service
+	SecondaryIPs []*LoadbalanceEntrySecondaryIPsItems0 `json:"secondaryIPs"`
+
 	// service arguments
 	ServiceArguments *LoadbalanceEntryServiceArguments `json:"serviceArguments,omitempty"`
 }
@@ -31,6 +34,10 @@ func (m *LoadbalanceEntry) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateEndpoints(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateSecondaryIPs(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -70,6 +77,32 @@ func (m *LoadbalanceEntry) validateEndpoints(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *LoadbalanceEntry) validateSecondaryIPs(formats strfmt.Registry) error {
+	if swag.IsZero(m.SecondaryIPs) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.SecondaryIPs); i++ {
+		if swag.IsZero(m.SecondaryIPs[i]) { // not required
+			continue
+		}
+
+		if m.SecondaryIPs[i] != nil {
+			if err := m.SecondaryIPs[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("secondaryIPs" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("secondaryIPs" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 func (m *LoadbalanceEntry) validateServiceArguments(formats strfmt.Registry) error {
 	if swag.IsZero(m.ServiceArguments) { // not required
 		return nil
@@ -97,6 +130,10 @@ func (m *LoadbalanceEntry) ContextValidate(ctx context.Context, formats strfmt.R
 		res = append(res, err)
 	}
 
+	if err := m.contextValidateSecondaryIPs(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateServiceArguments(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -117,6 +154,26 @@ func (m *LoadbalanceEntry) contextValidateEndpoints(ctx context.Context, formats
 					return ve.ValidateName("endpoints" + "." + strconv.Itoa(i))
 				} else if ce, ok := err.(*errors.CompositeError); ok {
 					return ce.ValidateName("endpoints" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *LoadbalanceEntry) contextValidateSecondaryIPs(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.SecondaryIPs); i++ {
+
+		if m.SecondaryIPs[i] != nil {
+			if err := m.SecondaryIPs[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("secondaryIPs" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("secondaryIPs" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -200,6 +257,43 @@ func (m *LoadbalanceEntryEndpointsItems0) MarshalBinary() ([]byte, error) {
 // UnmarshalBinary interface implementation
 func (m *LoadbalanceEntryEndpointsItems0) UnmarshalBinary(b []byte) error {
 	var res LoadbalanceEntryEndpointsItems0
+	if err := swag.ReadJSON(b, &res); err != nil {
+		return err
+	}
+	*m = res
+	return nil
+}
+
+// LoadbalanceEntrySecondaryIPsItems0 loadbalance entry secondary i ps items0
+//
+// swagger:model LoadbalanceEntrySecondaryIPsItems0
+type LoadbalanceEntrySecondaryIPsItems0 struct {
+
+	// IP address for externel access
+	SecondaryIP string `json:"secondaryIP,omitempty"`
+}
+
+// Validate validates this loadbalance entry secondary i ps items0
+func (m *LoadbalanceEntrySecondaryIPsItems0) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate validates this loadbalance entry secondary i ps items0 based on context it is used
+func (m *LoadbalanceEntrySecondaryIPsItems0) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	return nil
+}
+
+// MarshalBinary interface implementation
+func (m *LoadbalanceEntrySecondaryIPsItems0) MarshalBinary() ([]byte, error) {
+	if m == nil {
+		return nil, nil
+	}
+	return swag.WriteJSON(m)
+}
+
+// UnmarshalBinary interface implementation
+func (m *LoadbalanceEntrySecondaryIPsItems0) UnmarshalBinary(b []byte) error {
+	var res LoadbalanceEntrySecondaryIPsItems0
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

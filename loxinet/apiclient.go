@@ -253,11 +253,15 @@ func (*NetAPIStruct) NetRouteDel(rm *cmn.RouteMod) (int, error) {
 func (*NetAPIStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
-
-	ret, err := mh.zr.Rules.AddNatLbRule(lm.Serv, lm.Eps[:])
+	var ips []string
+	ret, err := mh.zr.Rules.AddNatLbRule(lm.Serv, lm.SecIPs[:], lm.Eps[:])
 	if err == nil && lm.Serv.Bgp {
 		if mh.bgp != nil {
-			mh.bgp.AddBGPRule("default", lm.Serv.ServIP)
+			ips = append(ips, lm.Serv.ServIP)
+			for _, ip := range lm.SecIPs {
+				ips = append(ips, ip.SecIP)
+			}
+			mh.bgp.AddBGPRule("default", ips)
 		} else {
 			tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
 		}
@@ -270,10 +274,12 @@ func (*NetAPIStruct) NetLbRuleDel(lm *cmn.LbRuleMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
+	ips := mh.zr.Rules.GetNatLbRuleSecIPs(lm.Serv)
 	ret, err := mh.zr.Rules.DeleteNatLbRule(lm.Serv)
 	if lm.Serv.Bgp {
 		if mh.bgp != nil {
-			mh.bgp.DelBGPRule("default", lm.Serv.ServIP)
+			ips = append(ips, lm.Serv.ServIP)
+			mh.bgp.DelBGPRule("default", ips)
 		} else {
 			tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
 		}
