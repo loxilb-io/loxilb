@@ -72,7 +72,6 @@ else
 fi
 
 out=$($hexec user ../common/udp_client $extIP 55003)
-echo $out
 if [[ ${out} == *"Client"* ]]; then
   echo cluster-k3s udp [OK]
 else
