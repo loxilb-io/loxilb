@@ -8,7 +8,7 @@ on:
       testName:
         description: 'Test Run-Name'     
         required: true
-        default: 'k3s'
+        default: 'k3s-calico'
 jobs:
   build:
     name: k3s-calico-sanity
