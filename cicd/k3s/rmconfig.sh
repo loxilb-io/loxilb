@@ -10,6 +10,7 @@ fi
 
 source ../common.sh
 
+sudo kubectl $KUBECONFIG delete -f udp-svc-lb.yml >> /dev/null 2>&1
 sudo kubectl $KUBECONFIG delete -f nginx-svc-lb1.yml >> /dev/null 2>&1
 sudo kubectl $KUBECONFIG delete -f kube-loxilb.yml >> /dev/null 2>&1
 sudo kubectl $KUBECONFIG delete -f nginx-svc-lb.yml >> /dev/null 2>&1

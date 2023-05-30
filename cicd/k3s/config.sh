@@ -159,7 +159,8 @@ sleep 5
 kubectl $KUBECONFIG apply -f kube-loxilb.yml
 sleep 15
 kubectl $KUBECONFIG apply -f nginx-svc-lb1.yml
-
+sleep 10
+kubectl $KUBECONFIG apply -f udp-svc-lb.yml
 sleep 30
 
 # External LB service must be created by now

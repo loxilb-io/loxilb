@@ -70,3 +70,12 @@ else
   $dexec r1 ip route
   exit 1
 fi
+
+out=$($hexec user ../common/udp_client $extIP 55003)
+echo $out
+if [[ ${out} == *"Client"* ]]; then
+  echo cluster-k3s udp [OK]
+else
+  echo cluster-k3s udp [FAILED]
+fi
+exit
