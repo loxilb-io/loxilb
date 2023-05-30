@@ -23,6 +23,8 @@ jobs:
       - run: |
          sleep 10
          kubectl "${{ env.KUBECONFIG }}" create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.0/manifests/tigera-operator.yaml
+      - run: |
+         sleep 10
          kubectl "${{ env.KUBECONFIG }}" create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.0/manifests/custom-resources.yaml
       - run: |
          sleep 10
