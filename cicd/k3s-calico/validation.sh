@@ -77,4 +77,12 @@ if [[ ${out} == *"Client"* ]]; then
 else
   echo calico-k3s udp [FAILED]
 fi
+
+out=$($hexec user ../common/sctp_client 1.1.1.1 20110 $extIP 55004)
+if [[ ${out} == *"server1"* ]]; then
+  echo calico-k3s sctp [OK]
+else
+  echo calico-k3s sctp [FAILED]
+fi
+
 exit
