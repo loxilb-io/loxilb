@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo cluster-k3s
+echo calico-k3s
 
 if [ "$1" ]; then
   KUBECONFIG="$1"
@@ -34,9 +34,9 @@ echo $extIP
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:80) 
 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
-  echo cluster-k3s [OK]
+  echo calico-k3s [OK]
 else
-  echo cluster-k3s [FAILED]
+  echo calico-k3s [FAILED]
   ## Dump some debug info
   echo "llb1 lb-info"
   $dexec llb1 loxicmd get lb
@@ -54,9 +54,9 @@ fi
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
-  echo "cluster-k3s (kube-loxilb) [OK]"
+  echo "calico-k3s (kube-loxilb) [OK]"
 else
-  echo "cluster-k3s (kube-loxilb) [FAILED]"
+  echo "calico-k3s (kube-loxilb) [FAILED]"
   ## Dump some debug info
   echo "llb1 lb-info"
   $dexec llb1 loxicmd get lb
@@ -73,8 +73,16 @@ fi
 
 out=$($hexec user ../common/udp_client $extIP 55003)
 if [[ ${out} == *"Client"* ]]; then
-  echo cluster-k3s udp [OK]
+  echo calico-k3s udp [OK]
 else
-  echo cluster-k3s udp [FAILED]
+  echo calico-k3s udp [FAILED]
 fi
+
+out=$($hexec user ../common/sctp_client 1.1.1.1 20110 $extIP 55004)
+if [[ ${out} == *"server1"* ]]; then
+  echo calico-k3s sctp [OK]
+else
+  echo calico-k3s sctp [FAILED]
+fi
+
 exit
