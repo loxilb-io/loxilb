@@ -1,0 +1,45 @@
+apiVersion: k0s.k0sproject.io/v1beta1
+kind: ClusterConfig
+metadata:
+  creationTimestamp: null
+  name: k0s
+spec:
+  api:
+    address: 192.169.20.59
+    k0sApiPort: 9443
+    port: 6443
+    sans:
+    - 192.169.20.59
+    tunneledNetworkingMode: false
+  controllerManager: {}
+  extensions:
+    helm:
+      charts: null
+      concurrencyLevel: 5
+      repositories: null
+    storage:
+      create_default_storage_class: false
+      type: external_storage
+  installConfig:
+    users:
+      etcdUser: etcd
+      kineUser: kube-apiserver
+      konnectivityUser: konnectivity-server
+      kubeAPIserverUser: kube-apiserver
+      kubeSchedulerUser: kube-scheduler
+  konnectivity:
+    adminPort: 8133
+    agentPort: 8132
+  network:
+    provider: custom
+    podCIDR: 10.244.0.0/16
+    serviceCIDR: 10.96.0.0/12
+  scheduler: {}
+  storage:
+    etcd:
+      externalCluster: null
+      peerAddress: 192.168.20.58
+    type: etcd
+  telemetry:
+    enabled: true
+status: {}
