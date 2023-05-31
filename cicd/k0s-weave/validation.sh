@@ -11,7 +11,7 @@ IFS=' '
 
 for((i=0; i<120; i++))
 do
-  extLB=$(sudo k0s kubectl $KUBECONFIG get svc | grep "udp-lb1")
+  extLB=$(sudo k0s kubectl get svc | grep "udp-lb1")
   read -a strarr <<< "$extLB"
   len=${#strarr[*]}
   if [[ $((len)) -lt 6 ]]; then

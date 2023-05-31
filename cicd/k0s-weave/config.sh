@@ -121,14 +121,15 @@ else
   # Install k0s 
   sudo ip addr add 192.169.20.59/32 dev lo
   sudo curl -sSLf https://get.k0s.sh | sudo sh
-  sudo k0s install controller --enable-worker -c k0s.yaml
+  sudo k0s install controller --enable-worker 
+  #sudo k0s install controller --enable-worker -c k0s.yaml
   sudo k0s start
 
   sleep 30
   sudo k0s kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
 
   # Check kubectl works
-  sudo k0s kubectl $KUBECONFIG get pods -A
+  sudo k0s kubectl get pods -A
 
   # Remove taints in k0s if any (usually happens if started without cloud-manager)
   sudo k0s kubectl taint nodes --all node-role.kubernetes.io/master:NoSchedule-
@@ -151,13 +152,13 @@ sudo systemctl restart bird
 sleep 30
 
 # Start nginx pods and services for test(using kube-loxilb)
-sudo k0s kubectl $KUBECONFIG apply -f kube-loxilb.yml
+sudo k0s kubectl apply -f kube-loxilb.yml
 sleep 15
-sudo k0s kubectl $KUBECONFIG apply -f nginx-svc-lb1.yml
+sudo k0s kubectl apply -f nginx-svc-lb1.yml
 sleep 15
-sudo k0s kubectl $KUBECONFIG apply -f udp-svc-lb.yml
+sudo k0s kubectl apply -f udp-svc-lb.yml
 
 sleep 30
 
 # External LB service must be created by now
-sudo k0s kubectl $KUBECONFIG get svc
+sudo k0s kubectl get svc

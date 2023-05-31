@@ -10,9 +10,9 @@ fi
 
 source ../common.sh
 
-sudo k0s kubectl $KUBECONFIG delete -f nginx-svc-lb1.yml >> /dev/null 2>&1
-sudo k0s kubectl $KUBECONFIG delete -f udp-svc-lb.yml >> /dev/null 2>&1
-sudo k0s kubectl $KUBECONFIG delete -f kube-loxilb.yml >> /dev/null 2>&1
+sudo k0s kubectl delete -f nginx-svc-lb1.yml >> /dev/null 2>&1
+sudo k0s kubectl delete -f udp-svc-lb.yml >> /dev/null 2>&1
+sudo k0s kubectl delete -f kube-loxilb.yml >> /dev/null 2>&1
 
 disconnect_docker_hosts user r1
 disconnect_docker_hosts r1 llb1
