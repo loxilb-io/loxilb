@@ -1620,6 +1620,10 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 	}
 
 	sName := fmt.Sprintf("%s:%d", ep.hostName, ep.opts.probePort)
+	if tk.IsNetIPv6(ep.hostName) {
+		sName = fmt.Sprintf("[%s]:%d", ep.hostName, ep.opts.probePort)
+	}
+
 	if ep.opts.probeType == HostProbeConnectTcp ||
 		ep.opts.probeType == HostProbeConnectUdp ||
 		ep.opts.probeType == HostProbeConnectSctp {
