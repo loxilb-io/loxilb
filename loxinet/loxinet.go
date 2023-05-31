@@ -19,22 +19,22 @@ package loxinet
 import (
 	"errors"
 	"fmt"
-	"net"
-	_ "net/http/pprof"
-	"os"
-	"os/signal"
-	"runtime/pprof"
-	"strings"
-	"sync"
-	"syscall"
-	"time"
-
 	apiserver "github.com/loxilb-io/loxilb/api"
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
 	prometheus "github.com/loxilb-io/loxilb/api/prometheus"
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
+	"net"
+	_ "net/http/pprof"
+	"os"
+	"os/signal"
+	"runtime/debug"
+	"runtime/pprof"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
 )
 
 // string constant representing root security zone
@@ -160,6 +160,13 @@ func loxiNetInit() {
 	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
 	logLevel := LogString2Level(opts.Opts.LogLevel)
 	mh.logger = tk.LogItInit(logfile, logLevel, true)
+
+	// Stack trace logger
+	defer func() {
+		if e := recover(); e != nil {
+			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
+		}
+	}()
 
 	// It is important to make sure loxilb's eBPF filesystem
 	// is in place and mounted to make sure maps are pinned properly
