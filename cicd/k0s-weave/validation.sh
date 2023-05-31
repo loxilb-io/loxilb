@@ -11,7 +11,7 @@ IFS=' '
 
 for((i=0; i<120; i++))
 do
-  extLB=$(sudo k0s kubectl $KUBECONFIG get svc | grep "udp-lb1")
+  extLB=$(sudo k0s kubectl get svc | grep "udp-lb1")
   read -a strarr <<< "$extLB"
   len=${#strarr[*]}
   if [[ $((len)) -lt 6 ]]; then
@@ -31,13 +31,7 @@ done
 sleep 30
 
 echo $extIP
-
-out=$($hexec user ../common/udp_client $extIP 55003)
-if [[ ${out} == *"Client"* ]]; then
-  echo "cluster-k0s (udp) [OK]"
-else
-  echo "cluster-k0s (udp) [FAILED]"
-fi
+sudo k0s kubectl get endpoints -A
 
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
@@ -56,4 +50,11 @@ else
   echo "r1 route-info"
   $dexec r1 ip route
   exit 1
+fi
+
+out=$($hexec user ../common/udp_client $extIP 55003)
+if [[ ${out} == *"Client"* ]]; then
+  echo "cluster-k0s (udp) [OK]"
+else
+  echo "cluster-k0s (udp) [FAILED]"
 fi
