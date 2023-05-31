@@ -18,11 +18,12 @@ jobs:
         with:
           submodules: recursive
       - run: sudo ip addr add 192.169.20.59/32 dev lo
+      - run: sudo swapoff -a
       - run: sudo curl -sSLf https://get.k0s.sh | sudo sh
       - run: sudo k0s install controller --enable-worker -c cicd/k0s-weave/k0s.yaml
       - run: sudo k0s start
       - run: |
-         sleep 120
+         sleep 150
          sudo k0s kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
       - run: |
          sleep 60
