@@ -23,10 +23,10 @@ jobs:
       - run: sudo k0s start
       - run: |
          sleep 120
-         k0s kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+         sudo k0s kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
       - run: |
          sleep 60
-         k0s kubectl get pods -
+         sudo k0s kubectl get pods -
       - run: |
          sleep 10
          sudo k0s kubectl taint nodes --all node-role.kubernetes.io/master:NoSchedule-
