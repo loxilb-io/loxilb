@@ -1,0 +1,41 @@
+name: K0s-Weave-Sanity-CI
+on:
+ schedule:
+ # Runs "At 11:00 UTC every day-of-week"
+ - cron: '0 11 * * *'
+ workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'k0s-weave'
+jobs:
+  build:
+    name: k0s-weave-sanity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - run: sudo ip addr add 192.169.20.59/32 dev lo
+      - run: sudo curl -sSLf https://get.k0s.sh | sudo sh
+      - run: sudo k0s install controller --enable-worker -c cicd/k0s-weave/k0s.yaml
+      - run: sudo k0s start
+      - run: |
+         sleep 30
+         sudo k0s kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+      - run: |
+         sleep 60
+         sudo k0s kubectl get pods -
+      - run: |
+         sleep 10
+         sudo k0s kubectl taint nodes --all node-role.kubernetes.io/master:NoSchedule-
+         sleep 60
+         sudo k0s kubectl get nodes
+         sudo k0s kubectl get pods -A
+      - run: |
+         cd cicd/k0s-weave/
+         ./config.sh
+         ./validation.sh
+         ./rmconfig.sh
+         cd -
