@@ -22,11 +22,11 @@ jobs:
       - run: sudo k0s install controller --enable-worker -c cicd/k0s-weave/k0s.yaml
       - run: sudo k0s start
       - run: |
-         sleep 30
-         sudo k0s kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+         sleep 120
+         k0s kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
       - run: |
          sleep 60
-         sudo k0s kubectl get pods -
+         k0s kubectl get pods -
       - run: |
          sleep 10
          sudo k0s kubectl taint nodes --all node-role.kubernetes.io/master:NoSchedule-
