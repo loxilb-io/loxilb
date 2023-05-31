@@ -31,6 +31,7 @@ done
 sleep 30
 
 echo $extIP
+sudo k0s kubectl get endpoints -A
 
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
