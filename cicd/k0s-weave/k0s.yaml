@@ -38,7 +38,7 @@ spec:
   storage:
     etcd:
       externalCluster: null
-      peerAddress: 192.168.20.58
+      peerAddress: 192.169.20.59
     type: etcd
   telemetry:
     enabled: true
