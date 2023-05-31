@@ -25,17 +25,17 @@ jobs:
       - run: sudo k0s install controller --enable-worker -c cicd/k0s-weave/k0s.yaml
       - run: sudo k0s start
       - run: |
-         sleep 150
-         sudo k0s kubectl "${{ env.KUBECONFIG }}" apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+         sleep 120
+         sudo k0s kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
       - run: |
          sleep 60
-         sudo k0s kubectl "${{ env.KUBECONFIG }}" get pods -
+         sudo k0s kubectl get pods -
       - run: |
          sleep 10
-         sudo k0s kubectl "${{ env.KUBECONFIG }}" taint nodes --all node-role.kubernetes.io/master:NoSchedule-
+         sudo k0s kubectl taint nodes --all node-role.kubernetes.io/master:NoSchedule-
          sleep 60
-         sudo k0s kubectl "${{ env.KUBECONFIG }}" get nodes
-         sudo k0s kubectl "${{ env.KUBECONFIG }}" get pods -A
+         sudo k0s kubectl get nodes
+         sudo k0s kubectl get pods -A
       - run: |
          cd cicd/k0s-weave/
          ./config.sh
