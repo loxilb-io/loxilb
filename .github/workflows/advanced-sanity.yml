@@ -138,4 +138,10 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - run: |
+             cd cicd/nat66sctp/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
       - run: echo ${{ github.event.inputs.userInput }}
