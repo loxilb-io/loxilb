@@ -32,13 +32,6 @@ sleep 30
 
 echo $extIP
 
-out=$($hexec user ../common/udp_client $extIP 55003)
-if [[ ${out} == *"Client"* ]]; then
-  echo "cluster-k0s (udp) [OK]"
-else
-  echo "cluster-k0s (udp) [FAILED]"
-fi
-
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
   echo "cluster-k0s (tcp) [OK]"
@@ -56,4 +49,11 @@ else
   echo "r1 route-info"
   $dexec r1 ip route
   exit 1
+fi
+
+out=$($hexec user ../common/udp_client $extIP 55003)
+if [[ ${out} == *"Client"* ]]; then
+  echo "cluster-k0s (udp) [OK]"
+else
+  echo "cluster-k0s (udp) [FAILED]"
 fi
