@@ -11,7 +11,7 @@ require (
 	github.com/go-openapi/swag v0.22.3
 	github.com/go-openapi/validate v0.22.0
 	github.com/jessevdk/go-flags v1.5.0
-	github.com/loxilb-io/loxilib v0.8.8-0.20230522072824-40657d491e9b
+	github.com/loxilb-io/loxilib v0.8.8-0.20230531161727-0b99321ae61d
 	github.com/osrg/gobgp/v3 v3.5.0
 	github.com/prometheus-community/pro-bing v0.1.0
 	github.com/prometheus/client_model v0.3.0
