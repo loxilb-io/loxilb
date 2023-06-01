@@ -35,9 +35,9 @@ sudo k0s kubectl get endpoints -A
 
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
-  echo "cluster-k0s (tcp) [OK]"
+  echo "cluster-k0s (tcp)  [OK]"
 else
-  echo "cluster-k0s (tcp) [FAILED]"
+  echo "cluster-k0s (tcp)  [FAILED]"
   ## Dump some debug info
   echo "llb1 lb-info"
   $dexec llb1 loxicmd get lb
@@ -54,7 +54,15 @@ fi
 
 out=$($hexec user ../common/udp_client $extIP 55003)
 if [[ ${out} == *"Client"* ]]; then
-  echo "cluster-k0s (udp) [OK]"
+  echo "cluster-k0s (udp)  [OK]"
 else
-  echo "cluster-k0s (udp) [FAILED]"
+  echo "cluster-k0s (udp)  [FAILED]"
 fi
+
+out=$($hexec user ../common/sctp_client 1.1.1.1 20110 $extIP 55004)
+if [[ ${out} == *"server1"* ]]; then
+  echo "cluster-k0s (sctp) [OK]"
+else
+  echo "cluster-k0s (sctp) [FAILED]"
+fi
+
