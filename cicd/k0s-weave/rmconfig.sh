@@ -12,6 +12,7 @@ source ../common.sh
 
 sudo k0s kubectl delete -f nginx-svc-lb1.yml >> /dev/null 2>&1
 sudo k0s kubectl delete -f udp-svc-lb.yml >> /dev/null 2>&1
+sudo k0s kubectl delete -f sctp-svc-lb.yml >> /dev/null 2>&1
 sudo k0s kubectl delete -f kube-loxilb.yml >> /dev/null 2>&1
 
 disconnect_docker_hosts user r1

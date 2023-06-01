@@ -157,8 +157,12 @@ sleep 15
 sudo k0s kubectl apply -f nginx-svc-lb1.yml
 sleep 15
 sudo k0s kubectl apply -f udp-svc-lb.yml
-
+sleep 15
+sudo k0s kubectl apply -f sctp-svc-lb.yml
 sleep 30
 
 # External LB service must be created by now
 sudo k0s kubectl get svc
+
+# Route back to user
+sudo ip route add 1.1.1.1/32 via 12.12.12.1
