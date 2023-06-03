@@ -89,7 +89,7 @@ else
     echo "Expected : $exp"
     echo "Received : $res"
     echo "BFP trace -- "
-    timeout 5 sudo cat  /sys/kernel/debug/tracing/trace_pipe
+    sudo timeout 5 cat  /sys/kernel/debug/tracing/trace_pipe
     echo "BFP trace -- "
     exit 1
 fi
