@@ -11,7 +11,7 @@ spec:
   selector:
     what: sctp-test
   ports:
-    - port: 55002
+    - port: 55003
       protocol: SCTP
       targetPort: 9999
   type: LoadBalancer

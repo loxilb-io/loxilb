@@ -149,11 +149,6 @@ sudo chown bird:bird /var/log/bird.log
 sudo systemctl restart bird
 
 sleep 10
-# Start nginx pods and services for test
-kubectl $KUBECONFIG apply -f nginx.yml
-kubectl $KUBECONFIG apply -f nginx-svc-lb.yml
-
-sleep 5 
 
 # Start nginx pods and services for test(using kube-loxilb)
 kubectl $KUBECONFIG apply -f kube-loxilb.yml
