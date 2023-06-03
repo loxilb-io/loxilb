@@ -176,7 +176,7 @@ $dexec llb2 loxicmd get lb -o wide
 
 echo "llb1: bpf dump"
 echo "****************************"
-docker exec -it llb1 bpftool map dump pinned /opt/loxilb/dp/bpf/nat_map | grep npmhh
+docker exec -i llb1 bpftool map dump pinned /opt/loxilb/dp/bpf/nat_map | grep npmhh
 echo "llb2: bpf dump"
 echo "****************************"
-docker exec -it llb2 bpftool map dump pinned /opt/loxilb/dp/bpf/nat_map | grep npmhh
+docker exec -i llb2 bpftool map dump pinned /opt/loxilb/dp/bpf/nat_map | grep npmhh

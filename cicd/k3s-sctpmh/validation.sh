@@ -88,5 +88,7 @@ else
     echo "cluster-k3s SCTP Multihoming service sctp-lb1 (kube-loxilb) [NOK]"
     echo "Expected : $exp"
     echo "Received : $res"
+    echo "BFP trace"
+    timeout 5 cat   /sys/kernel/debug/tracing/trace_pipe
     exit 1
 fi
