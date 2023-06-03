@@ -91,8 +91,10 @@ else
     ## Dump some debug info
     echo "llb1 lb-info"
     $dexec llb1 loxicmd get lb
-    echo "llb1 eb-info"
+    echo "llb1 ep-info"
     $dexec llb1 loxicmd get ep
+    echo "llb1 bpf-info"
+    $dexec llb1 ntc filter show dev eth0 ingress
     echo "llb1 route-info"
     $dexec llb1 ip route
     echo "llb2 lb-info"
