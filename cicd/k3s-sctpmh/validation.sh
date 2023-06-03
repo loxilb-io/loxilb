@@ -110,3 +110,5 @@ else
     echo "BFP trace -- "
     exit 1
 fi
+
+sleep 5000
