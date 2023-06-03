@@ -4,7 +4,6 @@ metadata:
   name: sctp-lb1
   annotations:
     loxilb.io/num-secondary-networks: "2"
-    loxilb.io/liveness: "yes"
     loxilb.io/lbmode: "fullnat"
 spec:
   loadBalancerClass: loxilb.io/loxilb
