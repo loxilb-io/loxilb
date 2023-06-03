@@ -97,6 +97,17 @@ $hexec r1 ip route add 20.20.20.1/32 via 11.11.11.11
 #add_route llb1 1.1.1.0/24 11.11.11.254
 #add_route llb2 1.1.1.0/24 11.11.11.254
 
+# Route back to user
+sudo ip route add 11.11.11.0/24 via 12.12.12.1
+
+# Change default route in llb1
+$hexec llb1 ip route del default 
+$hexec llb1 ip route add default via 12.12.12.254
+
+# Change default route in llb2
+$hexec llb2 ip route del default 
+$hexec llb2 ip route add default via 14.14.14.254
+
 sleep 1
 ##Create LB rule
 create_lb_rule llb1 20.20.20.1 --tcp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1 --mode=fullnat --bgp
@@ -174,5 +185,4 @@ $dexec llb1 loxicmd get lb -o wide
 echo "llb2: loxicmd get lb -o wide"
 $dexec llb2 loxicmd get lb -o wide
 
-# Route back to user
-sudo ip route add 11.11.11.0/24 via 12.12.12.1
+
