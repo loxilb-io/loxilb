@@ -88,8 +88,21 @@ else
     echo "cluster-k3s SCTP Multihoming service sctp-lb1 (kube-loxilb) [NOK]"
     echo "Expected : $exp"
     echo "Received : $res"
+    ## Dump some debug info
+    echo "llb1 lb-info"
+    $dexec llb1 loxicmd get lb
+    echo "llb1 route-info"
+    $dexec llb1 ip route
+    echo "llb2 lb-info"
+    $dexec llb2 loxicmd get lb
+    echo "llb2 route-info"
+    $dexec llb2 ip route
+    echo "r1 route-info"
+    $dexec r1 ip route
+
     echo "BFP trace -- "
     sudo timeout 5 cat  /sys/kernel/debug/tracing/trace_pipe
+    sudo killall -9 cat
     echo "BFP trace -- "
     exit 1
 fi
