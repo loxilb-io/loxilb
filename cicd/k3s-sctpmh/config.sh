@@ -156,9 +156,9 @@ sleep 15
 kubectl $KUBECONFIG apply -f nginx-svc-lb1.yml
 
 #Build sctp-server image locally
-docker build -t loxilb-io/sctp-server .
-docker save --output sctp-server.tar loxilb-io/sctp-server
-sudo k3s ctr images import ./sctp-server.tar
+#docker build -t loxilb-io/sctp-server .
+#docker save --output sctp-server.tar loxilb-io/sctp-server
+#sudo k3s ctr images import ./sctp-server.tar
 kubectl $KUBECONFIG apply -f sctp-svc-lb.yml
 
 sleep 30
