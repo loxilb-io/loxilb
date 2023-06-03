@@ -99,6 +99,8 @@ else
     $dexec llb2 ip route
     echo "r1 route-info"
     $dexec r1 ip route
+    echo "system route-info"
+    ip route
 
     echo "BFP trace -- "
     sudo timeout 5 cat  /sys/kernel/debug/tracing/trace_pipe
