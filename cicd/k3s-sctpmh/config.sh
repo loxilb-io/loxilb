@@ -172,7 +172,7 @@ kubectl $KUBECONFIG apply -f nginx-svc-lb1.yml
 #sudo k3s ctr images import ./sctp-server.tar
 kubectl $KUBECONFIG apply -f sctp-svc-lb.yml
 
-sleep 150
+sleep 40
 
 # External LB service must be created by now
 echo "kubectl $KUBECONFIG get svc"
