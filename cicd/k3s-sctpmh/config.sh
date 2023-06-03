@@ -174,9 +174,5 @@ $dexec llb1 loxicmd get lb -o wide
 echo "llb2: loxicmd get lb -o wide"
 $dexec llb2 loxicmd get lb -o wide
 
-echo "llb1: bpf dump"
-echo "****************************"
-docker exec -i llb1 bpftool map dump pinned /opt/loxilb/dp/bpf/nat_map | grep npmhh
-echo "llb2: bpf dump"
-echo "****************************"
-docker exec -i llb2 bpftool map dump pinned /opt/loxilb/dp/bpf/nat_map | grep npmhh
+# Route back to user
+sudo ip route add 11.11.11.0/24 via 12.12.12.1
