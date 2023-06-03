@@ -172,7 +172,7 @@ kubectl $KUBECONFIG apply -f nginx-svc-lb1.yml
 #sudo k3s ctr images import ./sctp-server.tar
 kubectl $KUBECONFIG apply -f sctp-svc-lb.yml
 
-sleep 40
+sleep 50
 
 # External LB service must be created by now
 echo "kubectl $KUBECONFIG get svc"
@@ -182,7 +182,9 @@ kubectl $KUBECONFIG get svc
 echo "llb1: loxicmd get lb -o wide"
 echo "****************************"
 $dexec llb1 loxicmd get lb -o wide
+$dexec llb1 cat /etc/shared/keepalive.state
 echo "llb2: loxicmd get lb -o wide"
 $dexec llb2 loxicmd get lb -o wide
+$dexec llb2 cat /etc/shared/keepalive.state
 
 
