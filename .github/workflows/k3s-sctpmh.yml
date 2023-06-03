@@ -14,6 +14,8 @@ jobs:
     name: k3s-sctpmh-sanity
     runs-on: ubuntu-latest
     steps:
+      - run: sudo apt-get update
+      - run: sudo apt -y install bridge-utils iproute2 lksctp-tools iputils-ping
       - run: |
          echo "KUBECONFIG=--kubeconfig=/etc/rancher/k3s/k3s.yaml" >> $GITHUB_ENV
       - uses: actions/checkout@v2
