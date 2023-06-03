@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     name: k3s-sctpmh-sanity
-    runs-on: self-hosted
+    runs-on: ubuntu-20.04
     steps:
       - run: |
            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
