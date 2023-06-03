@@ -12,9 +12,13 @@ on:
 jobs:
   build:
     name: k3s-sctpmh-sanity
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
-      - run: sudo apt-get update
+      - run: |
+           curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+           sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu  $(lsb_release -cs)  stable"
+           sudo apt-get update
+           sudo apt-get install docker-ce
       - run: sudo apt -y install bridge-utils iproute2 lksctp-tools iputils-ping
       - run: |
          echo "KUBECONFIG=--kubeconfig=/etc/rancher/k3s/k3s.yaml" >> $GITHUB_ENV

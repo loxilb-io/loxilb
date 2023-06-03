@@ -4,14 +4,13 @@ metadata:
   name: sctp-lb1
   annotations:
     loxilb.io/num-secondary-networks: "2"
-    loxilb.io/liveness: "yes"
     loxilb.io/lbmode: "fullnat"
 spec:
   loadBalancerClass: loxilb.io/loxilb
   selector:
     what: sctp-test
   ports:
-    - port: 55002
+    - port: 55003
       protocol: SCTP
       targetPort: 9999
   type: LoadBalancer
@@ -25,8 +24,8 @@ metadata:
 spec:
   containers:
     - name: sctp-test
-      image: loxilb-io/sctp-server:latest
-      imagePullPolicy: Never
+      image: loxilbio/sctp-darn:latest
+      imagePullPolicy: Always
       #command: ["/bin/sh", "-ec", "while :; do echo '.'; sleep 6 ; done"]
       command: ["sctp_darn","-H", "0.0.0.0","-P", "9999", "-l"]
       ports:

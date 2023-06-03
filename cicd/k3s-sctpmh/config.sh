@@ -97,6 +97,17 @@ $hexec r1 ip route add 20.20.20.1/32 via 11.11.11.11
 #add_route llb1 1.1.1.0/24 11.11.11.254
 #add_route llb2 1.1.1.0/24 11.11.11.254
 
+# Route back to user
+sudo ip route add 11.11.11.0/24 via 12.12.12.1
+
+# Change default route in llb1
+$hexec llb1 ip route del default 
+$hexec llb1 ip route add default via 12.12.12.254
+
+# Change default route in llb2
+$hexec llb2 ip route del default 
+$hexec llb2 ip route add default via 14.14.14.254
+
 sleep 1
 ##Create LB rule
 create_lb_rule llb1 20.20.20.1 --tcp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1 --mode=fullnat --bgp
@@ -149,11 +160,6 @@ sudo chown bird:bird /var/log/bird.log
 sudo systemctl restart bird
 
 sleep 10
-# Start nginx pods and services for test
-kubectl $KUBECONFIG apply -f nginx.yml
-kubectl $KUBECONFIG apply -f nginx-svc-lb.yml
-
-sleep 5 
 
 # Start nginx pods and services for test(using kube-loxilb)
 kubectl $KUBECONFIG apply -f kube-loxilb.yml
@@ -161,12 +167,12 @@ sleep 15
 kubectl $KUBECONFIG apply -f nginx-svc-lb1.yml
 
 #Build sctp-server image locally
-docker build -t loxilb-io/sctp-server .
-docker save --output sctp-server.tar loxilb-io/sctp-server
-sudo k3s ctr images import ./sctp-server.tar
+#docker build -t loxilb-io/sctp-server .
+#docker save --output sctp-server.tar loxilb-io/sctp-server
+#sudo k3s ctr images import ./sctp-server.tar
 kubectl $KUBECONFIG apply -f sctp-svc-lb.yml
 
-sleep 30
+sleep 50
 
 # External LB service must be created by now
 echo "kubectl $KUBECONFIG get svc"
@@ -176,5 +182,9 @@ kubectl $KUBECONFIG get svc
 echo "llb1: loxicmd get lb -o wide"
 echo "****************************"
 $dexec llb1 loxicmd get lb -o wide
+$dexec llb1 cat /etc/shared/keepalive.state
 echo "llb2: loxicmd get lb -o wide"
 $dexec llb2 loxicmd get lb -o wide
+$dexec llb2 cat /etc/shared/keepalive.state
+
+

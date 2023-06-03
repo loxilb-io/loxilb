@@ -46,7 +46,7 @@ fi
 
 sudo apt-get remove bird2 --yes
 docker image rm loxilb-io/sctp-server
-sudo rm -rf sctp-server.tar
+docker images -a | grep "loxilb-io" | awk '{print $3}' | xargs docker rmi
 echo "#########################################"
 echo "Removed testbed"
 echo "#########################################"
