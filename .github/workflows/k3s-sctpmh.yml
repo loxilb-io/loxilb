@@ -19,7 +19,6 @@ jobs:
            sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu  $(lsb_release -cs)  stable"
            sudo apt-get update
            sudo apt-get install docker-ce
-      - run: docker images -a | grep "loxilb-io" | awk '{print $3}' | xargs docker rmi
       - run: sudo apt -y install bridge-utils iproute2 lksctp-tools iputils-ping
       - run: |
          echo "KUBECONFIG=--kubeconfig=/etc/rancher/k3s/k3s.yaml" >> $GITHUB_ENV
@@ -40,6 +39,9 @@ jobs:
       - run: |
          cd cicd/k3s-sctpmh/
          ./config.sh "${{ env.KUBECONFIG }}"
+         echo "bpf dump"
+         docker exec -dt llb1 bpftool map dump pinned /opt/loxilb/dp/bpf/nat_map | grep npmhh
+         echo "bpf dump done"
          ./validation.sh "${{ env.KUBECONFIG }}"
          ./rmconfig.sh "${{ env.KUBECONFIG }}"
          cd -
