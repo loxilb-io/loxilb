@@ -39,9 +39,6 @@ jobs:
       - run: |
          cd cicd/k3s-sctpmh/
          ./config.sh "${{ env.KUBECONFIG }}"
-         echo "bpf dump"
-         docker exec -dt llb1 bpftool map dump pinned /opt/loxilb/dp/bpf/nat_map | grep npmhh
-         echo "bpf dump done"
          ./validation.sh "${{ env.KUBECONFIG }}"
          ./rmconfig.sh "${{ env.KUBECONFIG }}"
          cd -
