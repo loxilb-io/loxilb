@@ -123,7 +123,6 @@ spawn_docker_host() {
       fi
     else
       docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname ghcr.io/loxilb-io/loxilb:latest $bgp_opts
-      docker exec -dt $dname mkllb_bpffs
       docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts
     fi
   elif [[ "$dtype" == "host" ]]; then
