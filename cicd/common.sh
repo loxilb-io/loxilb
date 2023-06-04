@@ -11,6 +11,12 @@ hexec="sudo ip netns exec "
 dexec="sudo docker exec -i "
 hns="sudo ip netns "
 hexist="$vrn$hn"
+lxdocker="ghcr.io/loxilb-io/loxilb:latest"
+var=$(lsb_release -r | cut -f2)
+echo $var
+if [[ $var == *"22.04"* ]];then
+  lxdocker="ghcr.io/loxilb-io/loxilb:latestU22"
+fi
 
 loxilbs=()
 
@@ -23,7 +29,7 @@ get_docker_pid() {
 ## Pull all necessary dockers for testbed
 pull_dockers() {
   ## loxilb docker
-  docker pull ghcr.io/loxilb-io/loxilb:latest
+  docker pull $lxdocker
   ## Host docker 
   docker pull eyes852/ubuntu-iperf-test:0.5
   ## BGP host docker
@@ -110,7 +116,7 @@ spawn_docker_host() {
             ka_conf="-v $kpath:/etc/keepalived/" 
         fi
       fi
-      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config $ka_conf --name $dname ghcr.io/loxilb-io/loxilb:latest
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config $ka_conf --name $dname $lxdocker
       docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $ka_opts
 
       if [[ "$ka" == "out" ]];then
@@ -122,7 +128,7 @@ spawn_docker_host() {
         docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit --network=container:$dname $ka_conf -v /etc/shared/$dname:/etc/shared --name ka_$dname osixia/keepalived:2.0.20
       fi
     else
-      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname ghcr.io/loxilb-io/loxilb:latest $bgp_opts
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname $lxdocker $bgp_opts
       docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts
     fi
   elif [[ "$dtype" == "host" ]]; then
