@@ -13,7 +13,6 @@ hns="sudo ip netns "
 hexist="$vrn$hn"
 lxdocker="ghcr.io/loxilb-io/loxilb:latest"
 var=$(lsb_release -r | cut -f2)
-echo $var
 if [[ $var == *"22.04"* ]];then
   lxdocker="ghcr.io/loxilb-io/loxilb:latestU22"
 fi
@@ -535,6 +534,12 @@ function create_lb_rule() {
   args=( "${args[@]/$1}" )
   echo "$1: loxicmd create lb ${args[*]}"
   $dexec $1 loxicmd create lb ${args[*]}
+
+  hook=$($dexec llb1 ntc filter show dev eth0 ingress | grep tc_packet_hook)
+  if [[ $hook != *"tc_packet_hook"* ]]; then
+    echo "ERROR : No hook point found";
+    exit 1
+  fi
 }
 
 #Arg1: host name
