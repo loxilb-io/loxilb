@@ -11,6 +11,11 @@ hexec="sudo ip netns exec "
 dexec="sudo docker exec -i "
 hns="sudo ip netns "
 hexist="$vrn$hn"
+lxdocker="ghcr.io/loxilb-io/loxilb:latest"
+var=$(lsb_release -r | cut -f2)
+if [[ $var == *"22.04"* ]];then
+  lxdocker="ghcr.io/loxilb-io/loxilb:latestU22"
+fi
 
 loxilbs=()
 
@@ -23,7 +28,7 @@ get_docker_pid() {
 ## Pull all necessary dockers for testbed
 pull_dockers() {
   ## loxilb docker
-  docker pull ghcr.io/loxilb-io/loxilb:latest
+  docker pull $lxdocker
   ## Host docker 
   docker pull eyes852/ubuntu-iperf-test:0.5
   ## BGP host docker
@@ -110,7 +115,7 @@ spawn_docker_host() {
             ka_conf="-v $kpath:/etc/keepalived/" 
         fi
       fi
-      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config $ka_conf --name $dname ghcr.io/loxilb-io/loxilb:latest
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config $ka_conf --name $dname $lxdocker
       docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $ka_opts
 
       if [[ "$ka" == "out" ]];then
@@ -122,7 +127,7 @@ spawn_docker_host() {
         docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit --network=container:$dname $ka_conf -v /etc/shared/$dname:/etc/shared --name ka_$dname osixia/keepalived:2.0.20
       fi
     else
-      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname ghcr.io/loxilb-io/loxilb:latest $bgp_opts
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname $lxdocker $bgp_opts
       docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts
     fi
   elif [[ "$dtype" == "host" ]]; then
@@ -529,6 +534,12 @@ function create_lb_rule() {
   args=( "${args[@]/$1}" )
   echo "$1: loxicmd create lb ${args[*]}"
   $dexec $1 loxicmd create lb ${args[*]}
+
+  hook=$($dexec llb1 ntc filter show dev eth0 ingress | grep tc_packet_hook)
+  if [[ $hook != *"tc_packet_hook"* ]]; then
+    echo "ERROR : No hook point found";
+    exit 1
+  fi
 }
 
 #Arg1: host name
