@@ -25,6 +25,7 @@ jobs:
       - run: sudo ip addr add 192.169.20.59/32 dev lo
       - run: sudo swapoff -a
       - run: |
+             sudo mkdir -p /opt/cni/bin/
              git clone https://github.com/containernetworking/plugins.git
              cd plugins
              ./build_linux.sh
