@@ -23,6 +23,7 @@ jobs:
       - run: |
          echo "KUBECONFIG=/var/lib/k0s/pki/admin.conf" >> $GITHUB_ENV
       - run: sudo ip addr add 192.169.20.59/32 dev lo
+      - run: sudo apt-get -y install lksctp-tools
       - run: sudo swapoff -a
       - run: |
              sudo mkdir -p /opt/cni/bin/
