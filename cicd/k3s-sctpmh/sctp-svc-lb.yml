@@ -5,6 +5,7 @@ metadata:
   annotations:
     loxilb.io/num-secondary-networks: "2"
     loxilb.io/lbmode: "fullnat"
+    loxilb.io/liveness: "yes"
 spec:
   externalTrafficPolicy: Local
   loadBalancerClass: loxilb.io/loxilb
