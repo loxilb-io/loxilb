@@ -7,7 +7,7 @@ metadata:
     loxilb.io/lbmode: "fullnat"
     loxilb.io/liveness: "yes"
 spec:
-  externalTrafficPolicy: Local
+  #externalTrafficPolicy: Local
   loadBalancerClass: loxilb.io/loxilb
   selector:
     what: sctp-test
