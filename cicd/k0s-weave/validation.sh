@@ -37,6 +37,10 @@ echo "SVC List"
 sudo k0s kubectl get svc
 echo "Pod List"
 sudo k0s kubectl get pods -A
+echo "LB List"
+$dexec llb1 loxicmd get lb -o wide
+echo "EP List"
+$dexec llb1 loxicmd get ep -o wide
 
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
