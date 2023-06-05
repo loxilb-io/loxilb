@@ -89,6 +89,10 @@ else
     echo "Expected : $exp"
     echo "Received : $res"
     ## Dump some debug info
+    echo "system route-info"
+    ip route
+    echo "system ipables"
+    sudo iptables -n -t nat -L -v  |grep sctp
     echo "llb1 lb-info"
     $dexec llb1 loxicmd get lb
     echo "llb1 ep-info"
@@ -103,9 +107,6 @@ else
     $dexec llb2 ip route
     echo "r1 route-info"
     $dexec r1 ip route
-    echo "system route-info"
-    ip route
-
     echo "BFP trace -- "
     sudo timeout 5 cat  /sys/kernel/debug/tracing/trace_pipe
     sudo killall -9 cat
