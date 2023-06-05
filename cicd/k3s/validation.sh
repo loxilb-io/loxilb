@@ -31,6 +31,9 @@ done
 sleep 30
 
 echo $extIP
+$dexec llb1 loxicmd get lb -o wide
+$dexec llb1 loxicmd get ep -o wide
+
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:80) 
 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
@@ -54,9 +57,9 @@ fi
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
-  echo "cluster-k3s (kube-loxilb) [OK]"
+  echo "cluster-k3s (kube-loxilb) tcp [OK]"
 else
-  echo "cluster-k3s (kube-loxilb) [FAILED]"
+  echo "cluster-k3s (kube-loxilb) tcp [FAILED]"
   ## Dump some debug info
   echo "llb1 lb-info"
   $dexec llb1 loxicmd get lb
@@ -73,8 +76,9 @@ fi
 
 out=$($hexec user ../common/udp_client $extIP 55003)
 if [[ ${out} == *"Client"* ]]; then
-  echo cluster-k3s udp [OK]
+  echo cluster-k3s (kube-loxilb) udp [OK]
 else
-  echo cluster-k3s udp [FAILED]
+  echo cluster-k3s (kube-loxilb) udp [FAILED]
+  exit 1
 fi
 exit
