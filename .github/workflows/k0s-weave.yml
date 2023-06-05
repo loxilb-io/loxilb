@@ -17,10 +17,19 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
+      - uses: actions/setup-go@v3
+        with:
+             go-version: '>=1.18.0'
       - run: |
          echo "KUBECONFIG=/var/lib/k0s/pki/admin.conf" >> $GITHUB_ENV
       - run: sudo ip addr add 192.169.20.59/32 dev lo
       - run: sudo swapoff -a
+      - run: |
+             git clone https://github.com/containernetworking/plugins.git
+             cd plugins
+             ./build_linux.sh
+             sudo cp -f bin/* /opt/cni/bin/
+             cd -
       - run: sudo curl -sSLf https://get.k0s.sh | sudo sh
       - run: sudo k0s install controller --enable-worker -c cicd/k0s-weave/k0s.yaml
       - run: sudo k0s start
