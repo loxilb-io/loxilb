@@ -97,6 +97,17 @@ $hexec r1 ip route add 20.20.20.1/32 via 11.11.11.11
 #add_route llb1 1.1.1.0/24 11.11.11.254
 #add_route llb2 1.1.1.0/24 11.11.11.254
 
+# Route back to user
+sudo ip route add 11.11.11.0/24 via 12.12.12.1
+
+# Change default route in llb1
+$hexec llb1 ip route del default
+$hexec llb1 ip route add default via 12.12.12.254
+
+# Change default route in llb2
+$hexec llb2 ip route del default
+$hexec llb2 ip route add default via 14.14.14.254
+
 sleep 1
 ##Create LB rule
 create_lb_rule llb1 20.20.20.1 --tcp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1 --mode=fullnat --bgp
@@ -121,13 +132,14 @@ else
   # Install k0s 
   sudo ip addr add 192.169.20.59/32 dev lo
   sudo curl -sSLf https://get.k0s.sh | sudo sh
-  sudo k0s install controller --enable-worker 
-  #sudo k0s install controller --enable-worker -c k0s.yaml
+  #sudo k0s install controller --enable-worker
+  sudo k0s install controller --enable-worker -c k0s.yaml
   sudo k0s start
 
   sleep 30
   sudo k0s kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
 
+  sleep 30
   # Check kubectl works
   sudo k0s kubectl get pods -A
 
@@ -159,7 +171,11 @@ sleep 15
 sudo k0s kubectl apply -f udp-svc-lb.yml
 sleep 15
 sudo k0s kubectl apply -f sctp-svc-lb.yml
-sleep 30
+sleep 15 
+sudo k0s kubectl apply -f udp-svc-lb2.yml
+sleep 15
+sudo k0s kubectl apply -f sctp-svc-lb2.yml
+sleep 30 
 
 # External LB service must be created by now
 sudo k0s kubectl get svc

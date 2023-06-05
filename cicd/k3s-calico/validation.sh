@@ -31,8 +31,10 @@ done
 sleep 30
 
 echo $extIP
-out=$($hexec user curl -s --connect-timeout 10 http://$extIP:80) 
+$dexec llb1 loxicmd get lb -o wide
+$dexec llb1 loxicmd get ep -o wide
 
+out=$($hexec user curl -s --connect-timeout 10 http://$extIP:80) 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
   echo calico-k3s [OK]
 else
@@ -76,6 +78,7 @@ if [[ ${out} == *"Client"* ]]; then
   echo calico-k3s udp [OK]
 else
   echo calico-k3s udp [FAILED]
+  exit 1
 fi
 
 out=$($hexec user ../common/sctp_client 1.1.1.1 20110 $extIP 55004)
@@ -83,6 +86,7 @@ if [[ ${out} == *"server1"* ]]; then
   echo calico-k3s sctp [OK]
 else
   echo calico-k3s sctp [FAILED]
+  exit 1
 fi
 
 exit

@@ -31,7 +31,16 @@ done
 sleep 30
 
 echo $extIP
+echo "End Points List"
 sudo k0s kubectl get endpoints -A
+echo "SVC List"
+sudo k0s kubectl get svc
+echo "Pod List"
+sudo k0s kubectl get pods -A
+echo "LB List"
+$dexec llb1 loxicmd get lb -o wide
+echo "EP List"
+$dexec llb1 loxicmd get ep -o wide
 
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
@@ -57,6 +66,7 @@ if [[ ${out} == *"Client"* ]]; then
   echo "cluster-k0s (udp)  [OK]"
 else
   echo "cluster-k0s (udp)  [FAILED]"
+  exit 1
 fi
 
 out=$($hexec user ../common/sctp_client 1.1.1.1 20110 $extIP 55004)
@@ -64,5 +74,21 @@ if [[ ${out} == *"server1"* ]]; then
   echo "cluster-k0s (sctp) [OK]"
 else
   echo "cluster-k0s (sctp) [FAILED]"
+  exit 1
 fi
 
+out=$($hexec user ../common/sctp_client 1.1.1.1 20112 $extIP 55005)
+if [[ ${out} == *"server1"* ]]; then
+  echo "cluster-k0s (sctp2) [OK]"
+else
+  echo "cluster-k0s (sctp2) [FAILED]"
+  exit 1
+fi
+
+out=$($hexec user ../common/udp_client $extIP 55006)
+if [[ ${out} == *"Client"* ]]; then
+  echo "cluster-k0s (udp2)  [OK]"
+else
+  echo "cluster-k0s (udp2)  [FAILED]"
+  exit 1
+fi
