@@ -69,7 +69,7 @@ else
   exit 1
 fi
 
-out=$($hexec user ../common/sctp_client 1.1.1.1 0 $extIP 55004)
+out=$($hexec user ../common/sctp_client 1.1.1.1 34951 $extIP 55004)
 if [[ ${out} == *"server1"* ]]; then
   echo "cluster-k0s (sctp) [OK]"
 else
