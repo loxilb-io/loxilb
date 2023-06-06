@@ -81,7 +81,7 @@ else
   exit 1
 fi
 
-out=$($hexec user ../common/sctp_client 1.1.1.1 20110 $extIP 55004)
+out=$($hexec user ../common/sctp_client 1.1.1.1 41291 $extIP 55004)
 if [[ ${out} == *"server1"* ]]; then
   echo calico-k3s sctp [OK]
 else
