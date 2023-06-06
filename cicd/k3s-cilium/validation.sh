@@ -31,8 +31,14 @@ done
 sleep 30
 
 echo $extIP
+echo "loxilb info"
 $dexec llb1 loxicmd get lb -o wide
 $dexec llb1 loxicmd get ep -o wide
+echo "k3s info"
+kubectl get endpoints
+kubectl get pods -A
+kubectl get svc
+
 
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
 
