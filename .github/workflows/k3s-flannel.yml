@@ -1,4 +1,4 @@
-name: K3s-Sanity-CI
+name: K3s-Flannel-Sanity-CI
 on:
  schedule:
  # Runs "At 11:00 UTC every day-of-week"
@@ -8,10 +8,10 @@ on:
       testName:
         description: 'Test Run-Name'     
         required: true
-        default: 'k3s'
+        default: 'k3s-flannel'
 jobs:
   build:
-    name: k3s-sanity
+    name: k3s-flannel-sanity
     runs-on: ubuntu-latest
     steps:
       - run: |
