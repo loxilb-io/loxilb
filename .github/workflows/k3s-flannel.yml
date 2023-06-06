@@ -31,7 +31,7 @@ jobs:
          sleep 60
          kubectl "${{ env.KUBECONFIG }}" get pods -A
       - run: |
-         cd cicd/k3s/
+         cd cicd/k3s-flannel/
          ./config.sh "${{ env.KUBECONFIG }}"
          ./validation.sh "${{ env.KUBECONFIG }}"
          ./rmconfig.sh "${{ env.KUBECONFIG }}"
