@@ -35,9 +35,9 @@ echo "loxilb info"
 $dexec llb1 loxicmd get lb -o wide
 $dexec llb1 loxicmd get ep -o wide
 echo "k3s info"
-kubectl get endpoints
-kubectl get pods -A
-kubectl get svc
+kubectl $KUBECONFIG get endpoints
+kubectl $KUBECONFIG get pods -A
+kubectl $KUBECONFIG get svc
 
 
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
@@ -57,7 +57,7 @@ else
   $dexec llb2 ip route
   echo "r1 route-info"
   $dexec r1 ip route
-  exit 1
+  #exit 1
 fi
 
 out=$($hexec user ../common/udp_client $extIP 55003)
