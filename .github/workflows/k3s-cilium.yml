@@ -1,0 +1,48 @@
+name: K3s-Cilium-Sanity-CI
+on:
+ # schedule:
+ # Runs "At 11:00 UTC every day-of-week"
+ # - cron: '0 11 * * *'
+ workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'k3s-cilium'
+jobs:
+  build:
+    name: k3s-cilium-sanity
+    runs-on: ubuntu-20.04
+    steps:
+      - run: |
+         echo "KUBECONFIG=--kubeconfig=/etc/rancher/k3s/k3s.yaml" >> $GITHUB_ENV
+         echo "CILIUM_CLI_VERSION=v0.14.6" >> $GITHUB_ENV
+         echo "CLI_ARCH=amd64" >> $GITHUB_ENV
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - run: sudo apt-get -y install lksctp-tools
+      - run: curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --disable "metrics-server" --kubelet-arg cloud-provider=external --flannel-backend=none --cluster-cidr=10.42.0.0/16" K3S_KUBECONFIG_MODE="644" sh -
+      - run: |
+         sleep 10
+         mkdir -p ~/.kube/
+         touch ~/.kube/config
+         sudo cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
+         curl -L --fail --remote-name-all https://github.com/cilium/cilium-cli/releases/download/v0.14.6/cilium-linux-amd64.tar.gz{,.sha256sum}
+         sha256sum --check cilium-linux-amd64.tar.gz.sha256sum
+         sudo tar xzvfC cilium-linux-amd64.tar.gz /usr/local/bin
+         rm cilium-linux-amd64.tar.gz{,.sha256sum}
+
+         #kubectl "${{ env.KUBECONFIG }}" create -f https://raw.githubusercontent.com/cilium/cilium/v1.9/install/kubernetes/quick-install.yaml
+      - run: |
+         sleep 10
+         kubectl "${{ env.KUBECONFIG }}" taint nodes --all node.cloudprovider.kubernetes.io/uninitialized=false:NoSchedule-
+         sleep 60
+         kubectl "${{ env.KUBECONFIG }}" get nodes
+         kubectl "${{ env.KUBECONFIG }}" get pods -A
+      - run: |
+         cd cicd/k3s-cilium/
+         ./config.sh "${{ env.KUBECONFIG }}"
+         ./validation.sh "${{ env.KUBECONFIG }}"
+         ./rmconfig.sh "${{ env.KUBECONFIG }}"
+         cd -
