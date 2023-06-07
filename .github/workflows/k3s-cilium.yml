@@ -16,6 +16,8 @@ jobs:
     steps:
       - run: |
          echo "KUBECONFIG=--kubeconfig=/etc/rancher/k3s/k3s.yaml" >> $GITHUB_ENV
+         echo "CILIUM_CLI_VERSION=v0.14.6" >> $GITHUB_ENV
+         echo "CLI_ARCH=amd64" >> $GITHUB_ENV
       - uses: actions/checkout@v2
         with:
           submodules: recursive
@@ -26,7 +28,12 @@ jobs:
          mkdir -p ~/.kube/
          touch ~/.kube/config
          sudo cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
-         kubectl "${{ env.KUBECONFIG }}" create -f https://raw.githubusercontent.com/cilium/cilium/v1.9/install/kubernetes/quick-install.yaml
+         curl -L --fail --remote-name-all https://github.com/cilium/cilium-cli/releases/download/"${{ env.CILIUM_CLI_VERISON }}"/cilium-linux-"${{ env.CLI_ARCH }}".tar.gz{,.sha256sum}
+         sha256sum --check cilium-linux-${{ env.CLI_ARCH }}.tar.gz.sha256sum
+         sudo tar xzvfC cilium-linux-${{ env.CLI_ARCH }}.tar.gz /usr/local/bin
+         rm cilium-linux-${{ env.CLI_ARCH }}.tar.gz{,.sha256sum}
+
+         #kubectl "${{ env.KUBECONFIG }}" create -f https://raw.githubusercontent.com/cilium/cilium/v1.9/install/kubernetes/quick-install.yaml
       - run: |
          sleep 10
          kubectl "${{ env.KUBECONFIG }}" taint nodes --all node.cloudprovider.kubernetes.io/uninitialized=false:NoSchedule-

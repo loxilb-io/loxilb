@@ -30,6 +30,7 @@ done
 ## Any routing updates  ??
 sleep 30
 
+code=0
 echo $extIP
 echo "loxilb info"
 $dexec llb1 loxicmd get lb -o wide
@@ -39,14 +40,11 @@ kubectl $KUBECONFIG get endpoints
 kubectl $KUBECONFIG get pods -A
 kubectl $KUBECONFIG get svc
 
-
-out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
-
-if [[ ${out} == *"Welcome to nginx"* ]]; then
-  echo "cilium-k3s (kube-loxilb) [OK]"
-else
-  echo "cilium-k3s (kube-loxilb) [FAILED]"
+debug_output () {
   ## Dump some debug info
+  lsb_release -a
+  echo "sys route-info"
+  ip route
   echo "llb1 lb-info"
   $dexec llb1 loxicmd get lb
   echo "llb1 route-info"
@@ -57,14 +55,31 @@ else
   $dexec llb2 ip route
   echo "r1 route-info"
   $dexec r1 ip route
-  #exit 1
+}
+
+out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002)
+if [[ ${out} == *"Welcome to nginx"* ]]; then
+  echo "cilium-k3s (kube-loxilb) tcp [OK]"
+else
+  echo "cilium-k3s (kube-loxilb) tcp [FAILED]"
+  debug_output
+  code=1
 fi
 
-out=$($hexec user ../common/udp_client $extIP 55003)
+out=$($hexec user timeout 10 ../common/udp_client $extIP 55003)
 if [[ ${out} == *"Client"* ]]; then
-  echo cilium-k3s udp [OK]
+  echo "cilium-k3s (kube-loxilb) udp [OK]"
 else
-  echo cilium-k3s udp [FAILED]
+  echo "cilium-k3s (kube-loxilb) udp [FAILED]"
+  debug_output
+  code=1
+fi
+
+if [[ $code == 0 ]]
+then
+  echo SCENARIO-k3s-cilium [OK]
+else
+  echo SCENARIO-k3s-cilium [FAILED]
   exit 1
 fi
 

@@ -101,12 +101,12 @@ $hexec r1 ip route add 20.20.20.1/32 via 11.11.11.11
 sudo ip route add 1.1.1.1/32 via 12.12.12.1
 
 # Change default route in llb1
-#$hexec llb1 ip route del default
-#$hexec llb1 ip route add default via 12.12.12.254
+$hexec llb1 ip route del default
+$hexec llb1 ip route add default via 12.12.12.254
 
 # Change default route in llb2
-#$hexec llb2 ip route del default
-#$hexec llb2 ip route add default via 14.14.14.254
+$hexec llb2 ip route del default
+$hexec llb2 ip route add default via 14.14.14.254
 
 sleep 1
 ##Create LB rule
@@ -131,14 +131,23 @@ else
 
   # Install k3s without external cloud-manager and disabled servicelb
   #curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.22.9+k3s1 INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" K3S_KUBECONFIG_MODE="644" sh -
-  curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external --flannel-backend=none --cluster-cidr=10.42.0.0/16" K3S_KUBECONFIG_MODE="644" sh -
+  curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller  --disable "metrics-server" --kubelet-arg cloud-provider=external --flannel-backend=none --cluster-cidr=10.42.0.0/16" K3S_KUBECONFIG_MODE="644" sh -
 
   sleep 10
 
   # Install Cilium
+  CILIUM_CLI_VERSION=$(curl -s https://raw.githubusercontent.com/cilium/cilium-cli/master/stable.txt)
+  CLI_ARCH=amd64
+  if [ "$(uname -m)" = "aarch64" ]; then CLI_ARCH=arm64; fi
+  curl -L --fail --remote-name-all https://github.com/cilium/cilium-cli/releases/download/${CILIUM_CLI_VERSION}/cilium-linux-${CLI_ARCH}.tar.gz{,.sha256sum}
+  sha256sum --check cilium-linux-${CLI_ARCH}.tar.gz.sha256sum
+  sudo tar xzvfC cilium-linux-${CLI_ARCH}.tar.gz /usr/local/bin
+  rm cilium-linux-${CLI_ARCH}.tar.gz{,.sha256sum}
+
   sudo cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
-  kubectl create -f https://raw.githubusercontent.com/cilium/cilium/v1.9/install/kubernetes/quick-install.yaml
-  sleep 20
+  cilium install
+  #kubectl create -f https://raw.githubusercontent.com/cilium/cilium/v1.9/install/kubernetes/quick-install.yaml
+  sleep 60
 
   # Check kubectl works
   kubectl $KUBECONFIG get pods -A
