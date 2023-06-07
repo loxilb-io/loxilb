@@ -28,10 +28,10 @@ jobs:
          mkdir -p ~/.kube/
          touch ~/.kube/config
          sudo cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
-         curl -L --fail --remote-name-all https://github.com/cilium/cilium-cli/releases/download/"${{ env.CILIUM_CLI_VERISON }}"/cilium-linux-"${{ env.CLI_ARCH }}".tar.gz{,.sha256sum}
-         sha256sum --check cilium-linux-${{ env.CLI_ARCH }}.tar.gz.sha256sum
-         sudo tar xzvfC cilium-linux-${{ env.CLI_ARCH }}.tar.gz /usr/local/bin
-         rm cilium-linux-${{ env.CLI_ARCH }}.tar.gz{,.sha256sum}
+         curl -L --fail --remote-name-all https://github.com/cilium/cilium-cli/releases/download/v0.14.6/cilium-linux-amd64.tar.gz{,.sha256sum}
+         sha256sum --check cilium-linux-amd64.tar.gz.sha256sum
+         sudo tar xzvfC cilium-linux-amd64.tar.gz /usr/local/bin
+         rm cilium-linux-amd64.tar.gz{,.sha256sum}
 
          #kubectl "${{ env.KUBECONFIG }}" create -f https://raw.githubusercontent.com/cilium/cilium/v1.9/install/kubernetes/quick-install.yaml
       - run: |
