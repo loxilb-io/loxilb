@@ -11,7 +11,7 @@ on:
         default: 'k0s-weave-ubuntu-22'
 jobs:
   build:
-    name: k0s-weave-sanity
+    name: k0s-weave-sanity-ubuntu-22
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
