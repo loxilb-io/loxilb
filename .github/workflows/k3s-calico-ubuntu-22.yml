@@ -1,4 +1,4 @@
-name: K3s-Calico-Sanity-CI-Ubunut-22
+name: K3s-Calico-Sanity-CI-Ubuntu-22
 on:
  schedule:
  # Runs "At 11:00 UTC every day-of-week"
