@@ -14,6 +14,9 @@ jobs:
     name: k3s-flannel-cluster-sanity
     runs-on: self-hosted
     steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - run: |
          cd cicd/k3s-flannel-cluster
          ./config.sh
