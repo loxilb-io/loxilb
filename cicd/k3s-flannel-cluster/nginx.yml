@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: nginx-lb1
   annotations:
-    loxilb.io/lbmode: "fullnat"
+    loxilb.io/lbmode: "onearm"
 spec:
   externalTrafficPolicy: Local
   loadBalancerClass: loxilb.io/loxilb
