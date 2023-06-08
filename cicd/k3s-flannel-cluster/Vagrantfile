@@ -2,9 +2,12 @@
 # vi: set ft=ruby :
 
 workers = (ENV['WORKERS'] || "1").to_i
-box_name = (ENV['VAGRANT_BOX'] || "ubuntu/focal64")
+#box_name = (ENV['VAGRANT_BOX'] || "ubuntu/focal64")
+box_name = (ENV['VAGRANT_BOX'] || "sysnet4admin/Ubuntu-k8s")
+box_version = "0.7.1"
 Vagrant.configure("2") do |config|
   config.vm.box = "#{box_name}"
+  config.vm.box_version = "#{box_version}"
 
   config.vm.define "loxilb" do |loxilb|
     loxilb.vm.hostname = 'llb1'
