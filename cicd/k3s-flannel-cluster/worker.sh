@@ -1,4 +1,4 @@
-export WORKER_ADDR=$(ip a |grep global | grep -v '10.0.2.15' | awk '{print $2}' | cut -f1 -d '/')
+export WORKER_ADDR=$(ip a |grep global | grep -v '10.0.2.15' | grep '192.168.80' | awk '{print $2}' | cut -f1 -d '/')
 export MASTER_ADDR=$(cat /vagrant/master-ip)
 export NODE_TOKEN=$(cat /vagrant/node-token)
 
