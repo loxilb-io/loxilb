@@ -4,7 +4,7 @@ export NODE_TOKEN=$(cat /vagrant/node-token)
 
 sudo mkdir -p /etc/rancher/k3s
 sudo cp -f /vagrant/k3s.yaml /etc/rancher/k3s/k3s.yaml
-curl -sfL https://get.k3s.io | K3S_URL="https://${MASTER_ADDR}:6443" K3S_TOKEN="${NODE_TOKEN}" INSTALL_K3S_EXEC="--flannel-backend=none --node-ip=${WORKER_ADDR} --node-external-ip=${WORKER_ADDR}" sh -
+curl -sfL https://get.k3s.io | K3S_URL="https://${MASTER_ADDR}:6443" K3S_TOKEN="${NODE_TOKEN}" INSTALL_K3S_EXEC="--node-ip=${WORKER_ADDR} --node-external-ip=${WORKER_ADDR}" sh -
 sudo kubectl apply -f /vagrant/nginx.yml
 sudo kubectl apply -f /vagrant/udp.yml
 #sudo kubectl apply -f /vagrant/sctp.yml
