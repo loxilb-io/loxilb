@@ -26,3 +26,4 @@ spec:
       image: nginx:stable
       ports:
         - containerPort: 80
+  nodeName: worker1

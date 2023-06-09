@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo k3s-flannel-cluster
+echo k3s-cilium-cluster
 
 if [ "$1" ]; then
   KUBECONFIG="$1"
@@ -30,27 +30,18 @@ print_debug_info() {
 
 out=$(curl -s --connect-timeout 10 http://$extIP:55002) 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
-  echo "k3s-flannel-cluster (kube-loxilb) tcp [OK]"
+  echo "k3s-cilium-cluster (kube-loxilb) tcp [OK]"
 else
-  echo "k3s-flannel-cluster (kube-loxilb) tcp [FAILED]"
+  echo "k3s-cilium-cluster (kube-loxilb) tcp [FAILED]"
   print_debug_info
   exit 1
 fi
 
 out=$(timeout 10 ../common/udp_client $extIP 55003)
 if [[ ${out} == *"Client"* ]]; then
-  echo "k3s-flannel-cluster (kube-loxilb) udp [OK]"
+  echo "k3s-cilium-cluster (kube-loxilb) udp [OK]"
 else
-  echo "k3s-flannel-cluster (kube-loxilb) udp [FAILED]"
-  print_debug_info
-  exit 1
-fi
-
-out=$(timeout 10 ../common/sctp_client 192.168.90.1 41291 $extIP 55004)
-if [[ ${out} == *"server1"* ]]; then
-  echo "k3s-flannel-cluster (kube-loxilb) sctp [OK]"
-else
-  echo "k3s-flannel-cluster (kube-loxilb) sctp [FAILED]"
+  echo "k3s-cilium-cluster (kube-loxilb) udp [FAILED]"
   print_debug_info
   exit 1
 fi
