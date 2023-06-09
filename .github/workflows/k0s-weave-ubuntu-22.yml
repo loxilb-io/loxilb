@@ -1,0 +1,55 @@
+name: K0s-Weave-Sanity-CI-Ubuntu-22
+on:
+ #schedule:
+ # Runs "At 11:00 UTC every day-of-week"
+ #- cron: '0 11 * * *'
+ workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'k0s-weave-ubuntu-22'
+jobs:
+  build:
+    name: k0s-weave-sanity-ubuntu-22
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: actions/setup-go@v3
+        with:
+             go-version: '>=1.18.0'
+      - run: |
+         echo "KUBECONFIG=/var/lib/k0s/pki/admin.conf" >> $GITHUB_ENV
+      - run: sudo ip addr add 192.169.20.59/32 dev lo
+      - run: sudo apt-get -y install lksctp-tools
+      - run: sudo swapoff -a
+      - run: |
+             sudo mkdir -p /opt/cni/bin/
+             git clone https://github.com/containernetworking/plugins.git
+             cd plugins
+             ./build_linux.sh
+             sudo cp -f bin/* /opt/cni/bin/
+             cd -
+      - run: sudo curl -sSLf https://get.k0s.sh | sudo sh
+      - run: sudo k0s install controller --enable-worker -c cicd/k0s-weave/k0s.yaml
+      - run: sudo k0s start
+      - run: |
+         sleep 120
+         sudo k0s kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+      - run: |
+         sleep 60
+         sudo k0s kubectl get pods -A
+      - run: |
+         sleep 10
+         sudo k0s kubectl taint nodes --all node-role.kubernetes.io/master:NoSchedule-
+         sleep 60
+         sudo k0s kubectl get nodes
+         sudo k0s kubectl get pods -A
+      - run: |
+         cd cicd/k0s-weave/
+         ./config.sh
+         ./validation.sh
+         ./rmconfig.sh
+         cd -
