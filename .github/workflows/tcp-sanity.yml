@@ -1,4 +1,4 @@
-name: Adv-LB-Sanity-CI
+name: TCP-LB-Sanity-CI
 
 on:
   push:
@@ -13,11 +13,11 @@ on:
         required: true
         default: 'warning'
       tags:
-        description: 'Advanced LB Sanity'
+        description: 'TCP LB Sanity'
        
 jobs:
   build:
-    name: advanced-lb-sanity
+    name: tcp-lb-sanity
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -48,49 +48,37 @@ jobs:
       - run: id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"` && docker commit $id ghcr.io/loxilb-io/loxilb:latest
       - run: docker stop loxilb && docker rm loxilb
       - run: |
-             cd cicd/k8slbsim/
+             cd cicd/tcplb/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/onearml2/
+             cd cicd/tcplbmark/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/ulcltcplb/
+             cd cicd/tcplbdsr1/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/ulclsctplb/
+             cd cicd/tcplbdsr2/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/tcptunlb/
+             cd cicd/tcplbl3dsr/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/sctptunlb/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/wrrtcplb1/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/wrrtcplb2/
+             cd cicd/tcplbhash/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
