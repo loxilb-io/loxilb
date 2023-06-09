@@ -1,10 +1,14 @@
 
 ![build workflow](https://github.com/loxilb-io/loxilb/actions/workflows/docker-image.yml/badge.svg)  
 ![simple workflow](https://github.com/loxilb-io/loxilb/actions/workflows/basic-sanity.yml/badge.svg)   
-![tcplb workflow](https://github.com/loxilb-io/loxilb/actions/workflows/tcp-lb-sanity.yml/badge.svg)  
-![udplb workflow](https://github.com/loxilb-io/loxilb/actions/workflows/udp-lb-sanity.yml/badge.svg)  
-![sctplb workflow](https://github.com/loxilb-io/loxilb/actions/workflows/sctp-lb-sanity.yml/badge.svg)
+[![tcp-lb-sanity](https://github.com/loxilb-io/loxilb/actions/workflows/tcp-sanity.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/tcp-sanity.yml)   
+[![udp-lb-Sanity](https://github.com/loxilb-io/loxilb/actions/workflows/udp-sanity.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/udp-sanity.yml)   
+[![sctp-lb-sanity](https://github.com/loxilb-io/loxilb/actions/workflows/sctp-sanity.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/sctp-sanity.yml)   
 ![extlb workflow](https://github.com/loxilb-io/loxilb/actions/workflows/advanced-lb-sanity.yml/badge.svg)   
 ![ipsec workflow](https://github.com/loxilb-io/loxilb/actions/workflows/ipsec-sanity.yml/badge.svg)  
 ![scale workflow](https://github.com/loxilb-io/loxilb/actions/workflows/scale-sanity.yml/badge.svg)   
-![k3s workflow](https://github.com/loxilb-io/loxilb/actions/workflows/k3s.yml/badge.svg)   
+[![k3s-flannel](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-flannel.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-flannel.yml)   
+[![k3s-calico-cluster](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-flannel-cluster.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-flannel-cluster.yml)  
+[![k3s-calico](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-calico.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-calico.yml)   
+[![k0s-weave](https://github.com/loxilb-io/loxilb/actions/workflows/k0s-weave.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/k0s-weave.yml)   
+   
