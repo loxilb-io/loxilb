@@ -1,4 +1,4 @@
-name: Adv-Sanity-CI
+name: Liveness-LB-Sanity-CI
 
 on:
   push:
@@ -8,16 +8,16 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
     inputs:
-      userInput:
-        description: 'Enter string to print at end'
+      logLevel:
+        description: 'Log level'     
         required: true
-        default: 'Finished'
+        default: 'warning'
       tags:
-        description: 'Advanced Sanity'
+        description: 'Liveness LB Sanity'
        
 jobs:
   build:
-    name: advanced-sanity
+    name: liveness-lb-sanity
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -28,7 +28,7 @@ jobs:
         with:
              go-version: '>=1.18.0'
       - run: sudo apt-get update
-      - run: sudo apt -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat
+      - run: sudo apt -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat ethtool
       - run: |
             git clone https://github.com/loxilb-io/iproute2 iproute2-main
             cd iproute2-main/libbpf/src/
@@ -48,100 +48,56 @@ jobs:
       - run: id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"` && docker commit $id ghcr.io/loxilb-io/loxilb:latest
       - run: docker stop loxilb && docker rm loxilb
       - run: |
-             cd cicd/ulcltcplb/
+             cd cicd/tcplbmon/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/k8slbsim/
+             cd cicd/udplbmon/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/tcplb/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-
-      - run: |
-             cd cicd/sctplb/
+             cd cicd/sctplbmon/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/udplb/
+             cd cicd/tcplbmon6/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/tcptunlb/
+             cd cicd/tcplbepmod/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/ulclsctplb/
+             cd cicd/lbtimeout/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/sctptunlb/
+             cd cicd/lb6timeout/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/sctponearm/
+             cd cicd/httpsep/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/tcplbdsr1/
+             cd cicd/http2ep/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
-      - run: |
-             cd cicd/tcplbdsr2/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/sctplbdsr/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/tcplbhash/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/tcplbl3dsr/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/nat66udp/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/nat66sctp/
-             #./config.sh
-             #./validation.sh
-             #./rmconfig.sh
-             cd -
-      - run: echo ${{ github.event.inputs.userInput }}
