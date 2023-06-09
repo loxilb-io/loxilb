@@ -1,0 +1,25 @@
+name: K3s-Cilium-Cluster-Sanity-CI
+on:
+ #schedule:
+ # Runs "At 13:00 UTC every day-of-week"
+ #- cron: '0 13 * * *'
+ workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'k3s-cilium-cluster'
+jobs:
+  build:
+    name: k3s-cilium-cluster-sanity
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - run: |
+         cd cicd/k3s-cilium-cluster
+         ./config.sh
+         ./validation.sh
+         ./rmconfig.sh
+         cd -
