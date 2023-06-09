@@ -53,13 +53,13 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
-       - run: |
+      - run: |
              cd cicd/nat66udp/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
-       - run: |
+      - run: |
              cd cicd/nat66sctp/
              #./config.sh
              #./validation.sh
