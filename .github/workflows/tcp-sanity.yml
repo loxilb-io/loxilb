@@ -60,13 +60,19 @@ jobs:
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/tcplbl3ds1r/
+             cd cicd/tcplbdsr1/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
-       - run: |
-             cd cicd/tcplbl3ds1r/
+      - run: |
+             cd cicd/tcplbdsr2/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/tcplbl3dsr/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
