@@ -23,6 +23,6 @@ metadata:
 spec:
   containers:
     - name: nginx-test
-      image: nginx:stable
+      image: ghcr.io/loxilb-io/nginx:stable
       ports:
         - containerPort: 80
