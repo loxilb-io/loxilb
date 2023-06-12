@@ -27,7 +27,7 @@ loxilb is an open source hyper-scale software load-balancer for cloud-native wor
 
 ### 📚 Check loxilb [Documentation](https://loxilb-io.github.io/loxilbdocs/) for more info.   
 
-[docs-shield]: https://img.shields.io/badge/info-documentation-blue
+[docs-shield]: https://img.shields.io/badge/info-docs-blue
 [docs-url]: https://loxilb-io.github.io/loxilbdocs/
 [slack=shield]: https://img.shields.io/badge/Community-Join%20Slack-blue
 [slack-url]: https://www.loxilb.io/members
