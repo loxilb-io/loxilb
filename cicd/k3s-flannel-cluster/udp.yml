@@ -25,6 +25,6 @@ metadata:
 spec:
   containers:
     - name: udp-test
-      image: loxilbio/udp-echo
+      image: ghcr.io/loxilb-io/udp-echo:latest
       ports:
         - containerPort: 33333
