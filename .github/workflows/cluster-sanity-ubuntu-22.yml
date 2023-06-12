@@ -23,7 +23,7 @@ jobs:
         with:
              go-version: '>=1.18.0'
       - run: sudo apt-get update
-      - run: sudo apt -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat
+      - run: sudo apt -y install clang-13 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat
       - run: |
             git clone https://github.com/loxilb-io/iproute2 iproute2-main
             cd iproute2-main/libbpf/src/
