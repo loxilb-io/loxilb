@@ -3,11 +3,11 @@ name: Test-Scenario-CI
 on:
  workflow_dispatch:
     inputs:
-      - testName:
+      testName:
           description: 'Test Scenario Name'     
           required: true
           default: 'sconnect'
-      - runsOn:
+      runsOn:
           description: 'Machine Type'
           required: true
           type: choice
@@ -29,12 +29,7 @@ jobs:
         with:
              go-version: '>=1.18.0'
       - run: sudo apt-get update
-      if: ${{ github.event.inputs.runsOn }} == 'ubuntu-20.04'
-      run: sudo apt install clang-10
-
-      if: ${{ github.event.inputs.runsOn }} == 'ubuntu-22.04'
-      run: sudo apt install clang-13
-      
+      - run: if [[ ${{ github.event.inputs.runsOn }} == 'ubuntu-22.04' ]]; then sudo apt -y install clang-13 lksctp-tools; else sudo apt -y install clang-10; fi
       - run: sudo apt -y install llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat
       - run: |
             git clone https://github.com/loxilb-io/iproute2 iproute2-main
