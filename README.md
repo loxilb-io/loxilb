@@ -19,7 +19,7 @@ loxilb is an open source hyper-scale software load-balancer for cloud-native wor
 
 ### 🧿 loxilb is built with the following software stack :   
 - GoLang based control plane components     
-- eBPF based data-path forwarding   
+- [eBPF](https://ebpf.io/) based data-path forwarding   
    * Complete kernel networking bypass with home-grown stack for advanced features like [Conntrack](https://thermalcircle.de/doku.php?id=blog:linux:connection_tracking_1_modules_and_hooks), QoS etc   
    * Highly scalable with low-latency & high throughput   
 - GoLang based easy to use APIs/Interfaces for developers   
