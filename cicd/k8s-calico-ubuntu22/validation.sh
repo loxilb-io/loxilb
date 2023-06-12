@@ -62,9 +62,9 @@ code=0
 for ((i=0;i<=2;i++)); do
 out=$(curl -s --connect-timeout 10 http://$extIP:${tcp_port[i]})
 if [[ ${out} == *"Welcome to nginx"* ]]; then
-  echo -e "K8s-calico-Ubuntu22 TCP\t(${mode[i]})\t[OK]"
+  echo -e "K8s-calico-Ubuntu22 TCP\t\t(${mode[i]})\t[OK]"
 else
-  echo -e "K8s-calico-Ubuntu22 TCP\t(${mode[i]})\t[FAILED]"
+  echo -e "K8s-calico-Ubuntu22 TCP\t\t(${mode[i]})\t[FAILED]"
   ## Dump some debug info
   echo "llb1 lb-info"
   vagrant ssh loxilb -c 'sudo docker exec -it llb1 loxicmd get lb -o wide' 2> /dev/null
@@ -75,9 +75,9 @@ fi
 
 out=$(../common/udp_client $extIP ${udp_port[i]})
 if [[ ${out} == *"Client"* ]]; then
-  echo -e "K8s-calico-Ubuntu22 UDP\t(${mode[i]})\t[OK]"
+  echo -e "K8s-calico-Ubuntu22 UDP\t\t(${mode[i]})\t[OK]"
 else
-  echo -e "K8s-calico-Ubuntu22 UDP\t(${mode[i]})\t[FAILED]"
+  echo -e "K8s-calico-Ubuntu22 UDP\t\t(${mode[i]})\t[FAILED]"
   ## Dump some debug info
   echo "llb1 lb-info"
   vagrant ssh loxilb -c 'sudo docker exec -it llb1 loxicmd get lb -o wide' 2> /dev/null

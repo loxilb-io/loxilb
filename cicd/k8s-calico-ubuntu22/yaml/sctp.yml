@@ -25,7 +25,7 @@ metadata:
 spec:
   containers:
     - name: sctp-default-test
-      image: alpine/socat
+      image: ghcr.io/loxilb-io/alpine-socat:latest
       command: [ "sh", "-c"]
       args:
       - while true; do
