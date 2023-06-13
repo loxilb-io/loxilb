@@ -48,7 +48,7 @@ func loxiXsyncMain() {
 	}
 }
 
-var version string = "0.8.4"
+var version string = "0.8.7"
 var buildInfo string = ""
 
 func main() {
