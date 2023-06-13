@@ -52,7 +52,7 @@ EOF
 kubectl apply -f https://raw.githubusercontent.com/techiescamp/kubeadm-scripts/main/manifests/metrics-server.yaml
 
 # Install loxilb
-kubectl apply -f /vagrant/kube-loxilb.yml
+kubectl apply -f /vagrant/yaml/kube-loxilb.yml
 
 #Install routes for pod to client (fullnat service) in nodes
 sudo ip route add 123.123.123.1 via 192.168.80.9

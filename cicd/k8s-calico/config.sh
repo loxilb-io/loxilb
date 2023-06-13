@@ -1,5 +1,13 @@
 #!/bin/bash
-vagrant global-status  | grep -i virtualbox | cut -f 1 -d ' ' | xargs -L 1 vagrant destroy -f
+VMs=$(vagrant global-status  | grep -i virtualbox)
+while IFS= read -a VMs; do
+    read -a vm <<< "$VMs"
+    cd ${vm[4]} 2>&1>/dev/null
+    echo "Destroying ${vm[1]}"
+    vagrant destroy -f ${vm[1]}
+    cd - 2>&1>/dev/null
+done <<< "$VMs"
+
 vagrant up
 sudo ip route add 123.123.123.1 via 192.168.90.9
 
