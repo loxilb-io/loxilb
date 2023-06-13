@@ -195,11 +195,13 @@ func dpEbpfTicker() {
 func DpEbpfDPLogLevel(cfg *C.struct_ebpfcfg, debug tk.LogLevelT) {
 	switch debug {
 	case tk.LogAlert:
+		cfg.loglevel = 5 // LOG_FATAL
 	case tk.LogCritical:
 		cfg.loglevel = 5 // LOG_FATAL
 	case tk.LogError:
 		cfg.loglevel = 4 // LOG_ERROR
 	case tk.LogWarning:
+		cfg.loglevel = 3 // LOG_WARNING
 	case tk.LogNotice:
 		cfg.loglevel = 3 // LOG_WARNING
 	case tk.LogInfo:
