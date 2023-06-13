@@ -74,7 +74,7 @@ else
   exit 1
 fi
 
-out=$($hexec user ../common/udp_client $extIP 55003)
+out=$($hexec user timeout 30 ../common/udp_client $extIP 55003)
 if [[ ${out} == *"Client"* ]]; then
   echo "cluster-k3s (kube-loxilb) udp [OK]"
 else
