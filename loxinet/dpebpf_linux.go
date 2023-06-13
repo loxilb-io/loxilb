@@ -192,8 +192,35 @@ func dpEbpfTicker() {
 	}
 }
 
+func DpEbpfDPLogLevel(cfg *C.struct_ebpfcfg, debug tk.LogLevelT) {
+	switch debug {
+	case tk.LogAlert:
+	case tk.LogCritical:
+		cfg.loglevel = 5 // LOG_FATAL
+	case tk.LogError:
+		cfg.loglevel = 4 // LOG_ERROR
+	case tk.LogWarning:
+	case tk.LogNotice:
+		cfg.loglevel = 3 // LOG_WARNING
+	case tk.LogInfo:
+		cfg.loglevel = 2 // LOG_INFO
+	case tk.LogDebug:
+		cfg.loglevel = 0 // LOG_TRACE
+	default:
+		cfg.loglevel = 1 // LOG_DEBUG
+	}
+}
+
+// DpEbpfSetLogLevel - Set log level for ebpf subsystem
+func DpEbpfSetLogLevel(logLevel tk.LogLevelT) {
+	cfg := C.struct_ebpfcfg{loglevel: 1}
+
+	DpEbpfDPLogLevel(&cfg, logLevel)
+	C.loxilb_set_loglevel(&cfg)
+}
+
 // DpEbpfInit - initialize the ebpf dp subsystem
-func DpEbpfInit(clusterEn bool, nodeNum int, debug bool) *DpEbpfH {
+func DpEbpfInit(clusterEn bool, nodeNum int, logLevel tk.LogLevelT) *DpEbpfH {
 	var cfg C.struct_ebpfcfg
 
 	if clusterEn {
@@ -204,9 +231,7 @@ func DpEbpfInit(clusterEn bool, nodeNum int, debug bool) *DpEbpfH {
 	cfg.nodenum = C.int(nodeNum)
 	cfg.loglevel = 1
 
-	if debug {
-		cfg.loglevel = 0
-	}
+	DpEbpfDPLogLevel(&cfg, logLevel)
 
 	C.loxilb_main(&cfg)
 
