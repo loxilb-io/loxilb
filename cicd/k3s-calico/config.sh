@@ -2,6 +2,40 @@
 
 source ../common.sh
 
+function wait_cluster_ready {
+    Res=$(sudo kubectl get pods -A |
+    while IFS= read -r line; do
+        if [[ "$line" != *"Running"* && "$line" != *"READY"* ]]; then
+            echo "not ready"
+            return
+        fi
+    done)
+    if [[ $Res == *"not ready"* ]]; then
+        return 1
+    fi
+    return 0
+}
+
+function wait_cluster_ready_full {
+  i=1
+  nr=0
+  for ((;;)) do
+    wait_cluster_ready
+    nr=$?
+    if [[ $nr == 0 ]]; then
+        echo "Cluster is ready"
+        break
+    fi
+    i=$(( $i + 1 ))
+    if [[ $i -ge 40 ]]; then
+        echo "Cluster is not ready.Giving up"
+        exit 1
+    fi
+    echo "Cluster is not ready..."
+    sleep 10
+  done
+}
+
 echo "#########################################"
 echo "Spawning all hosts"
 echo "#########################################"
@@ -154,6 +188,10 @@ sudo chown bird:bird /var/log/bird.log
 sudo systemctl restart bird
 
 sleep 10
+
+# Wait for cluster to be ready
+wait_cluster_ready_full
+
 # Start nginx pods and services for test
 kubectl $KUBECONFIG apply -f nginx.yml
 kubectl $KUBECONFIG apply -f nginx-svc-lb.yml
@@ -175,3 +213,6 @@ kubectl $KUBECONFIG get svc
 
 # Route back to user
 sudo ip route add 1.1.1.1/32 via 12.12.12.1
+
+# Wait for cluster to be ready
+wait_cluster_ready_full
