@@ -181,6 +181,7 @@ type epHostOpts struct {
 	probeDuration     uint32
 	currProbeDuration uint32
 	probePort         uint16
+	probeActivated    bool
 }
 
 type epHost struct {
@@ -770,7 +771,7 @@ func validateXlateEPWeights(servEndPoints []cmn.LbEndPointArg) (int, error) {
 	return 0, nil
 }
 
-func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool) {
+func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool, liveCheckEn bool) {
 	var hopts epHostOpts
 	hopts.inActTryThr = DflLbaInactiveTries
 	hopts.probeDuration = DflHostProbeTimeout
@@ -788,6 +789,10 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool) {
 			hopts.probePort = nep.xPort
 		} else {
 			hopts.probeType = HostProbePing
+		}
+
+		if mh.pProbe == true || liveCheckEn {
+			hopts.probeActivated = true
 		}
 
 		epKey := makeEPKey(nep.xIP.String(), hopts.probeType, hopts.probePort)
@@ -1084,7 +1089,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 		eRule.act.action.(*ruleNatActs).endPoints = eEps
 		eRule.act.action.(*ruleNatActs).mode = natActs.mode
 
-		R.modNatEpHost(eRule, eEps, true)
+		R.modNatEpHost(eRule, eEps, true, serv.Monitor)
 
 		eRule.sT = time.Now()
 		eRule.iTo = serv.InactiveTimeout
@@ -1118,7 +1123,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 	r.BGP = serv.Bgp
 	r.CI = cmn.CIDefault
 
-	R.modNatEpHost(r, natActs.endPoints, true)
+	R.modNatEpHost(r, natActs.endPoints, true, serv.Monitor)
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
@@ -1174,7 +1179,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	defer R.Tables[RtLB].Mark.PutCounter(rule.ruleNum)
 
 	eEps := rule.act.action.(*ruleNatActs).endPoints
-	R.modNatEpHost(rule, eEps, false)
+	R.modNatEpHost(rule, eEps, false, rule.ActChk)
 
 	delete(R.Tables[RtLB].eMap, rt.ruleKey())
 	if rule.ruleNum < RtMaximumLbs {
@@ -1408,9 +1413,13 @@ func (R *RuleH) GetEpHosts() ([]cmn.EndPointMod, error) {
 		// Make end-point
 		ret.HostName = data.hostName
 		ret.Name = data.epKey
-		ret.InActTries = data.opts.inActTryThr
-		ret.ProbeType = data.opts.probeType
-		ret.ProbeDuration = data.opts.probeDuration
+		if !data.opts.probeActivated {
+			ret.ProbeType = HostProbeNone
+		} else {
+			ret.ProbeType = data.opts.probeType
+			ret.ProbeDuration = data.opts.probeDuration
+			ret.InActTries = data.opts.inActTryThr
+		}
 		ret.ProbeReq = data.opts.probeReq
 		ret.ProbeResp = data.opts.probeResp
 		ret.ProbePort = data.opts.probePort
@@ -1482,6 +1491,10 @@ func makeEPKey(hostName string, probeType string, probePort uint16) string {
 // It will return 0 and nil error, else appropriate return code and error string will be set
 func (R *RuleH) AddEPHost(apiCall bool, hostName string, name string, args epHostOpts) (int, error) {
 	var epKey string
+
+	if apiCall && args.probeType != HostProbeNone {
+		args.probeActivated = true
+	}
 
 	R.epMx.Lock()
 	defer R.epMx.Unlock()
@@ -1624,6 +1637,12 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 		sName = fmt.Sprintf("[%s]:%d", ep.hostName, ep.opts.probePort)
 	}
 
+	if !ep.opts.probeActivated {
+		ep.inactive = false
+		ep.inActTries = 0
+		return
+	}
+
 	if ep.opts.probeType == HostProbeConnectTcp ||
 		ep.opts.probeType == HostProbeConnectUdp ||
 		ep.opts.probeType == HostProbeConnectSctp {
@@ -1739,7 +1758,7 @@ func epTicker(R *RuleH, helper int) {
 			if idx > 0 {
 				idx = 0
 				// We restart the sweep from beginning while taking a short break
-				// Due to how goLang range, works we would be sweeping eps mostly randomly
+				// Due to how goLang range works, we would be sweeping eps mostly randomly
 				R.epMx.Unlock()
 				break
 			}

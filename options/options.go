@@ -22,4 +22,5 @@ var Opts struct {
 	CPUProfile        string         `long:"cpuprofile" description:"Enable cpu profiling and specify file to use" default:"none" env:"CPUPROF"`
 	NoPrometheus      bool           `short:"p" long:"nopro" description:" Do not run prometheus thread"`
 	CSumDisable       bool           `long:"disable-csum" description:"Disable checksum update(experimental)"`
+	PassiveEPProbe    bool           `long:"passive-probe" description:"Enable passive liveness probes(experimental)"`
 }
