@@ -81,7 +81,7 @@ const (
 	InitHostProbeTimeout     = 15        // Initial probe timeout for end-point host
 	MaxHostProbeTime         = 24 * 3600 // Max possible host health check duration
 	LbDefaultInactiveTimeout = 4 * 60    // Default inactive timeout for established sessions
-	LbMaxInactiveTimeout     = 24 * 60   // Maximum inactive timeout for established sessions
+	LbMaxInactiveTimeout     = 24 * 3600 // Maximum inactive timeout for established sessions
 	MaxEndPointCheckers      = 4         // Maximum helpers to check endpoint health
 	EndPointCheckerDuration  = 2         // Duration at which ep-helpers will run
 	MaxEndPointSweeps        = 20        // Maximum end-point sweeps per round
