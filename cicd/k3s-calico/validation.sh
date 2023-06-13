@@ -73,7 +73,7 @@ else
   exit 1
 fi
 
-out=$($hexec user ../common/udp_client $extIP 55003)
+out=$($hexec user timeout 30 ../common/udp_client $extIP 55003)
 if [[ ${out} == *"Client"* ]]; then
   echo calico-k3s udp [OK]
 else
@@ -81,7 +81,7 @@ else
   exit 1
 fi
 
-out=$($hexec user ../common/sctp_client 1.1.1.1 41291 $extIP 55004)
+out=$($hexec user timeout 30 ../common/sctp_client 1.1.1.1 41291 $extIP 55004)
 if [[ ${out} == *"server1"* ]]; then
   echo calico-k3s sctp [OK]
 else
