@@ -982,6 +982,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 		return RuleArgsErr, errors.New("secondaryIP-args len error")
 	}
 
+	activateProbe := false
+
 	for _, k := range servSecIPs {
 		pNetAddr := net.ParseIP(k.SecIP)
 		if pNetAddr == nil {
@@ -1002,6 +1004,10 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 
 	natActs.sel = serv.Sel
 	natActs.mode = cmn.LBMode(serv.Mode)
+
+	if natActs.mode == cmn.LBModeOneArm || serv.Monitor {
+		activateProbe = true
+	}
 
 	for _, k := range servEndPoints {
 		pNetAddr := net.ParseIP(k.EpIP)
@@ -1089,7 +1095,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 		eRule.act.action.(*ruleNatActs).endPoints = eEps
 		eRule.act.action.(*ruleNatActs).mode = natActs.mode
 
-		R.modNatEpHost(eRule, eEps, true, serv.Monitor)
+		R.modNatEpHost(eRule, eEps, true, activateProbe)
 
 		eRule.sT = time.Now()
 		eRule.iTo = serv.InactiveTimeout
@@ -1123,7 +1129,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 	r.BGP = serv.Bgp
 	r.CI = cmn.CIDefault
 
-	R.modNatEpHost(r, natActs.endPoints, true, serv.Monitor)
+	R.modNatEpHost(r, natActs.endPoints, true, activateProbe)
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
@@ -1179,7 +1185,11 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	defer R.Tables[RtLB].Mark.PutCounter(rule.ruleNum)
 
 	eEps := rule.act.action.(*ruleNatActs).endPoints
-	R.modNatEpHost(rule, eEps, false, rule.ActChk)
+	activatedProbe := false
+	if rule.act.action.(*ruleNatActs).mode == cmn.LBModeOneArm || rule.ActChk {
+		activatedProbe = true
+	}
+	R.modNatEpHost(rule, eEps, false, activatedProbe)
 
 	delete(R.Tables[RtLB].eMap, rt.ruleKey())
 	if rule.ruleNum < RtMaximumLbs {
