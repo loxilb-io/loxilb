@@ -112,7 +112,7 @@ func RunCommand(command string, isFatal bool) (int, error) {
 // LogString2Level - Convert log level in string to LogLevelT
 func LogString2Level(logStr string) tk.LogLevelT {
 	logLevel := tk.LogDebug
-	switch opts.Opts.LogLevel {
+	switch logStr {
 	case "info":
 		logLevel = tk.LogInfo
 	case "error":
