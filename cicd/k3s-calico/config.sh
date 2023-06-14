@@ -2,40 +2,6 @@
 
 source ../common.sh
 
-function wait_cluster_ready {
-    Res=$(sudo kubectl get pods -A |
-    while IFS= read -r line; do
-        if [[ "$line" != *"Running"* && "$line" != *"READY"* ]]; then
-            echo "not ready"
-            return
-        fi
-    done)
-    if [[ $Res == *"not ready"* ]]; then
-        return 1
-    fi
-    return 0
-}
-
-function wait_cluster_ready_full {
-  i=1
-  nr=0
-  for ((;;)) do
-    wait_cluster_ready
-    nr=$?
-    if [[ $nr == 0 ]]; then
-        echo "Cluster is ready"
-        break
-    fi
-    i=$(( $i + 1 ))
-    if [[ $i -ge 40 ]]; then
-        echo "Cluster is not ready.Giving up"
-        exit 1
-    fi
-    echo "Cluster is not ready..."
-    sleep 10
-  done
-}
-
 echo "#########################################"
 echo "Spawning all hosts"
 echo "#########################################"
@@ -154,7 +120,7 @@ else
 
   # Install k3s without external cloud-manager and disabled servicelb
   #curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.22.9+k3s1 INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" K3S_KUBECONFIG_MODE="644" sh -
-  curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.22.9+k3s1 INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external --flannel-backend=none --cluster-cidr=10.42.0.0/16" K3S_KUBECONFIG_MODE="644" sh -
+  curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external --flannel-backend=none --disable-network-policy --cluster-cidr=10.42.0.0/16" K3S_KUBECONFIG_MODE="644" sh -
 
   sleep 10
 

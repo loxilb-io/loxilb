@@ -30,35 +30,43 @@ done
 ## Any routing updates  ??
 sleep 30
 
-echo $extIP
-echo "End Points List"
-sudo k0s kubectl get endpoints -A
-echo "SVC List"
-sudo k0s kubectl get svc
-echo "Pod List"
-sudo k0s kubectl get pods -A
-echo "LB List"
-$dexec llb1 loxicmd get lb -o wide
-echo "EP List"
-$dexec llb1 loxicmd get ep -o wide
+echo "ExternalIP $extIP"
+
+print_debug_info() {
+  ## Dump some debug info
+  echo "**** k0s svc info ****"
+  sudo k0s kubectl get svc
+  echo "**** k0s pods info ****"
+  sudo k0s kubectl get pods -A
+  echo "**** k0s endpoints info ****"
+  sudo k0s kubectl get endpoints
+
+  echo "**** llb1 lb-info ****"
+  $dexec llb1 loxicmd get lb -o wide
+  echo "**** loxilb ep-info ****"
+  $dexec llb1 loxicmd get ep -o wide
+  echo "**** llb1 route-info ****"
+  $dexec llb1 ip route
+
+  echo "**** llb2 lb-info ****"
+  $dexec llb2 loxicmd get lb -o wide
+  echo "**** loxilb ep-info ****"
+  $dexec llb1 loxicmd get ep -o wide
+  echo "**** llb2 route-info ****"
+  $dexec llb2 ip route
+
+  echo "**** r1 route-info ****"
+  $dexec r1 ip route
+}
+
+code=0
+print_debug_info
 
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
   echo "cluster-k0s (tcp)  [OK]"
 else
-  echo "cluster-k0s (tcp)  [FAILED]"
-  ## Dump some debug info
-  echo "llb1 lb-info"
-  $dexec llb1 loxicmd get lb
-  echo "llb1 route-info"
-  $dexec llb1 ip route
-  echo "llb2 lb-info"
-  $dexec llb2 loxicmd get lb
-  echo "llb2 route-info"
-  $dexec llb2 ip route
-  echo "r1 route-info"
-  $dexec r1 ip route
-  exit 1
+  code=1
 fi
 
 out=$($hexec user ../common/udp_client $extIP 55003)
@@ -66,7 +74,7 @@ if [[ ${out} == *"Client"* ]]; then
   echo "cluster-k0s (udp)  [OK]"
 else
   echo "cluster-k0s (udp)  [FAILED]"
-  exit 1
+  code=1
 fi
 
 out=$($hexec user ../common/sctp_client 1.1.1.1 34951 $extIP 55004)
@@ -74,7 +82,7 @@ if [[ ${out} == *"server1"* ]]; then
   echo "cluster-k0s (sctp) [OK]"
 else
   echo "cluster-k0s (sctp) [FAILED]"
-  exit 1
+  code=1
 fi
 
 out=$($hexec user ../common/sctp_client 1.1.1.1 0 $extIP 55005)
@@ -82,7 +90,7 @@ if [[ ${out} == *"server1"* ]]; then
   echo "cluster-k0s (sctp2) [OK]"
 else
   echo "cluster-k0s (sctp2) [FAILED]"
-  exit 1
+  code=1
 fi
 
 out=$($hexec user ../common/udp_client $extIP 55006)
@@ -90,5 +98,13 @@ if [[ ${out} == *"Client"* ]]; then
   echo "cluster-k0s (udp2)  [OK]"
 else
   echo "cluster-k0s (udp2)  [FAILED]"
+  code=1  
+fi
+
+if [[ $code -eq 1 ]]; then
+  echo "cluster-k0s failed"
   exit 1
 fi
+
+exit
+
