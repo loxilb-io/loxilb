@@ -67,6 +67,7 @@ type loxiNetH struct {
 	wg     sync.WaitGroup
 	bgp    *GoBgpH
 	sumDis bool
+	pProbe bool
 	has    *CIStateH
 	logger *tk.Logger
 	ready  bool
@@ -86,6 +87,9 @@ func (mh *loxiNetH) ParamSet(param cmn.ParamMod) (int, error) {
 	if mh.logger != nil {
 		mh.logger.LogItSetLevel(logLevel)
 	}
+
+	DpEbpfSetLogLevel(logLevel)
+
 	return 0, nil
 }
 
@@ -157,12 +161,8 @@ func loxiNetInit() {
 	}
 
 	// Initialize logger and specify the log file
-	do_debug := false
 	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
 	logLevel := LogString2Level(opts.Opts.LogLevel)
-	if logLevel == tk.LogDebug {
-		do_debug = true
-	}
 	mh.logger = tk.LogItInit(logfile, logLevel, true)
 
 	// Stack trace logger
@@ -182,6 +182,7 @@ func loxiNetInit() {
 
 	mh.self = opts.Opts.ClusterSelf
 	mh.sumDis = opts.Opts.CSumDisable
+	mh.pProbe = opts.Opts.PassiveEPProbe
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGHUP)
@@ -202,7 +203,7 @@ func loxiNetInit() {
 	}
 
 	// Initialize the ebpf datapath subsystem
-	mh.dpEbpf = DpEbpfInit(clusterMode, mh.self, do_debug)
+	mh.dpEbpf = DpEbpfInit(clusterMode, mh.self, -1)
 	mh.dp = DpBrokerInit(mh.dpEbpf)
 
 	// Initialize the security zone subsystem
