@@ -44,14 +44,14 @@ import "C"
 import (
 	"errors"
 	"fmt"
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 	"net"
+	"runtime/debug"
 	"sync"
 	"syscall"
 	"time"
 	"unsafe"
-
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
 )
 
 // This file implements the interface DpHookInterface
@@ -142,6 +142,14 @@ type DpEbpfH struct {
 
 // dpEbpfTicker - this ticker routine runs every DpEbpfLinuxTiVal seconds
 func dpEbpfTicker() {
+
+	// Stack trace logger
+	defer func() {
+		if e := recover(); e != nil {
+			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
+		}
+	}()
+
 	tbls := []int{int(C.LL_DP_RTV4_STATS_MAP),
 		int(C.LL_DP_TMAC_STATS_MAP),
 		int(C.LL_DP_BD_STATS_MAP),
@@ -1753,6 +1761,13 @@ func dpCTMapChkUpdates() {
 
 // dpMapNotifierWorker - Work on any map notifications
 func dpMapNotifierWorker(f chan int, ch chan interface{}) {
+	// Stack trace logger
+	defer func() {
+		if e := recover(); e != nil {
+			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
+		}
+	}()
+
 	for {
 		for n := 0; n < DpWorkQLen; n++ {
 			select {
