@@ -73,7 +73,7 @@ else
   code=1
 fi
 
-out=$(../common/udp_client $extIP ${udp_port[i]})
+out=$(timeout 10 ../common/udp_client $extIP ${udp_port[i]})
 if [[ ${out} == *"Client"* ]]; then
   echo -e "K8s-calico-Ubuntu22 UDP\t\t(${mode[i]})\t[OK]"
 else
@@ -86,7 +86,7 @@ else
   code=1
 fi
 
-out=$(../common/sctp_client 192.168.90.1 34951 $extIP ${sctp_port[i]})
+out=$(timeout 10 ../common/sctp_client 192.168.90.1 34951 $extIP ${sctp_port[i]})
 if [[ ${out} == *"server1"* ]]; then
   echo -e "K8s-calico-Ubuntu22 SCTP\t(${mode[i]})\t[OK]"
 else
