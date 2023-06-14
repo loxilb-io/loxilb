@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source ../common.sh
+source ../k3s_common.sh
 
 echo "#########################################"
 echo "Spawning all hosts"
@@ -161,6 +162,9 @@ sudo systemctl restart bird
 
 sleep 10
 
+# Wait for cluster to be ready
+wait_cluster_ready_full
+
 # Start nginx pods and services for test(using kube-loxilb)
 kubectl $KUBECONFIG apply -f kube-loxilb.yml
 sleep 15
@@ -174,17 +178,28 @@ kubectl $KUBECONFIG apply -f sctp-svc-lb.yml
 
 sleep 50
 
+# Wait for cluster to be ready
+wait_cluster_ready_full
+
 # External LB service must be created by now
 echo "kubectl $KUBECONFIG get svc"
 echo "****************************"
 kubectl $KUBECONFIG get svc
+echo "kubectl $KUBECONFIG get pods -A"
+echo "****************************"
+kubectl $KUBECONFIG get pods -A
 
 echo "llb1: loxicmd get lb -o wide"
 echo "****************************"
 $dexec llb1 loxicmd get lb -o wide
+echo "llb1: loxicmd get ep -o wide"
+echo "****************************"
+$dexec llb1 loxicmd get ep -o wide
 $dexec llb1 cat /etc/shared/keepalive.state
 echo "llb2: loxicmd get lb -o wide"
+echo "****************************"
 $dexec llb2 loxicmd get lb -o wide
+echo "llb2: loxicmd get ep -o wide"
+echo "****************************"
+$dexec llb2 loxicmd get ep -o wide
 $dexec llb2 cat /etc/shared/keepalive.state
-
-
