@@ -1,0 +1,28 @@
+name: perf-CI
+on:
+ schedule:
+ # Runs "At 13:00 UTC every day-of-week"
+ - cron: '0 14 * * *'
+ workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'perf-single-node'
+jobs:
+  build:
+    name: perf-single-node
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-22.04]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - run: |
+         cd cicd/tcpsctpperf
+         ./config.sh
+         ./validation.sh
+         ./rmconfig.sh
+         cd -
