@@ -17,19 +17,18 @@
 package api
 
 import (
-	"log"
-	"os"
-	"time"
-
-	cmn "github.com/loxilb-io/loxilb/common"
-
 	"github.com/go-openapi/loads"
 	flags "github.com/jessevdk/go-flags"
-
 	"github.com/loxilb-io/loxilb/api/restapi"
 	"github.com/loxilb-io/loxilb/api/restapi/handler"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
+	cmn "github.com/loxilb-io/loxilb/common"
 	"github.com/loxilb-io/loxilb/options"
+	tk "github.com/loxilb-io/loxilib"
+	"log"
+	"os"
+	"runtime/debug"
+	"time"
 )
 
 var (
@@ -57,6 +56,13 @@ func WaitAPIServerReady() {
 
 // RunAPIServer - routine to start API server
 func RunAPIServer() {
+
+	// Stack trace logger
+	defer func() {
+		if e := recover(); e != nil {
+			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
+		}
+	}()
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
 	if err != nil {
