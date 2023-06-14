@@ -9,3 +9,4 @@ sudo cp /var/lib/rancher/k3s/server/node-token /vagrant/node-token
 sudo cp /etc/rancher/k3s/k3s.yaml /vagrant/k3s.yaml
 sudo sed -i -e "s/127.0.0.1/${MASTER_IP}/g" /vagrant/k3s.yaml
 sudo kubectl apply -f /vagrant/kube-loxilb.yml
+/vagrant/wait_ready.sh
