@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source ../common.sh
+source ../k3s_common.sh
 
 echo "#########################################"
 echo "Spawning all hosts"
@@ -120,7 +121,7 @@ else
 
   # Install k3s without external cloud-manager and disabled servicelb
   #curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.22.9+k3s1 INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" K3S_KUBECONFIG_MODE="644" sh -
-  curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.22.9+k3s1 INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external --flannel-backend=none --cluster-cidr=10.42.0.0/16" K3S_KUBECONFIG_MODE="644" sh -
+  curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external --flannel-backend=none --disable-network-policy --cluster-cidr=10.42.0.0/16" K3S_KUBECONFIG_MODE="644" sh -
 
   sleep 10
 
@@ -154,6 +155,10 @@ sudo chown bird:bird /var/log/bird.log
 sudo systemctl restart bird
 
 sleep 10
+
+# Wait for cluster to be ready
+wait_cluster_ready_full
+
 # Start nginx pods and services for test
 kubectl $KUBECONFIG apply -f nginx.yml
 kubectl $KUBECONFIG apply -f nginx-svc-lb.yml
@@ -175,3 +180,6 @@ kubectl $KUBECONFIG get svc
 
 # Route back to user
 sudo ip route add 1.1.1.1/32 via 12.12.12.1
+
+# Wait for cluster to be ready
+wait_cluster_ready_full

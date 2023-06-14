@@ -2,6 +2,41 @@
 
 source ../common.sh
 
+
+function wait_k0s_cluster_ready {
+    Res=$(sudo k0s kubectl get pods -A |
+    while IFS= read -r line; do
+        if [[ "$line" != *"Running"* && "$line" != *"READY"* ]]; then
+            echo "not ready"
+            return
+        fi
+    done)
+    if [[ $Res == *"not ready"* ]]; then
+        return 1
+    fi
+    return 0
+}
+
+function wait_k0s_cluster_ready_full {
+  i=1
+  nr=0
+  for ((;;)) do
+    wait_k0s_cluster_ready
+    nr=$?
+    if [[ $nr == 0 ]]; then
+        echo "Cluster is ready"
+        break
+    fi
+    i=$(( $i + 1 ))
+    if [[ $i -ge 40 ]]; then
+        echo "Cluster is not ready.Giving up"
+        exit 1
+    fi
+    echo "Cluster is not ready...."
+    sleep 10
+  done
+}
+
 echo "#########################################"
 echo "Spawning all hosts"
 echo "#########################################"
@@ -161,6 +196,8 @@ fi
 sudo chown bird:bird /var/log/bird.log
 sudo systemctl restart bird
 
+wait_k0s_cluster_ready_full
+
 sleep 30
 
 # Start nginx pods and services for test(using kube-loxilb)
@@ -179,6 +216,8 @@ sleep 30
 
 # External LB service must be created by now
 sudo k0s kubectl get svc
+
+wait_k0s_cluster_ready_full
 
 # Route back to user
 sudo ip route add 1.1.1.1/32 via 12.12.12.1
