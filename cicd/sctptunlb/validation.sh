@@ -16,7 +16,7 @@ waitCount=0
 while [ $j -le 2 ]
 do
     #res=$($hexec ue1 curl ${ep[j]}:8080)
-    res=`$hexec h1 ../common/sctp_client 32.32.32.1 0 ${ep[j]} 8080`
+    res=`$hexec h1 timeout 10 ../common/sctp_client 32.32.32.1 0 ${ep[j]} 8080`
     #echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
@@ -43,7 +43,7 @@ for i in {1..2}
 do
 for j in {0..2}
 do
-    res=$($hexec h$k ../common/sctp_client ${ueIP[k]} 0 88.88.88.88 2020)
+    res=$($hexec h$k timeout 10 ../common/sctp_client ${ueIP[k]} 0 88.88.88.88 2020)
     echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then

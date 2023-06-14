@@ -34,3 +34,13 @@ config_docker_host --host1 llb1 --host2 l3ep2 --ptype phy --addr 32.32.32.254/24
 config_docker_host --host1 llb1 --host2 l3ep3 --ptype phy --addr 33.33.33.254/24
 sleep 5
 create_lb_rule llb1 20.20.20.1 --sctp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1
+create_lb_rule llb1 20.20.20.1 --tcp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1
+
+#We use this test case with iperf too, and iperf doesn't work well with probing, so changing it to ping
+$dexec llb1 loxicmd create ep 31.31.31.1 --name=31.31.31.1_tcp_8080 --probetype=ping
+$dexec llb1 loxicmd create ep 32.32.32.1 --name=32.32.32.1_tcp_8080 --probetype=ping
+$dexec llb1 loxicmd create ep 33.33.33.1 --name=31.31.31.1_tcp_8080 --probetype=ping
+
+$dexec llb1 loxicmd create ep 31.31.31.1 --name=31.31.31.1_sctp_8080 --probetype=ping
+$dexec llb1 loxicmd create ep 32.32.32.1 --name=32.32.32.1_sctp_8080 --probetype=ping
+$dexec llb1 loxicmd create ep 33.33.33.1 --name=31.31.31.1_sctp_8080 --probetype=ping

@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 require "yaml"
-settings = YAML.load_file "settings.yaml"
+settings = YAML.load_file "yaml/settings.yaml"
 
 workers = settings["nodes"]["workers"]["count"]
 
@@ -14,7 +14,7 @@ Vagrant.configure("2") do |config|
     #loxilb.vm.network "forwarded_port", guest: 55002, host: 5502, protocol: "tcp"
     loxilb.vm.network :private_network, ip: settings["network"]["iloxilb_ip"], :netmask => "255.255.255.0"
     loxilb.vm.network :private_network, ip: settings["network"]["oloxilb_ip"], :netmask => "255.255.255.0"
-    loxilb.vm.provision :shell, :path => "loxilb.sh"
+    loxilb.vm.provision :shell, :path => "node_scripts/loxilb.sh"
     loxilb.vm.provider :virtualbox do |vbox|
         vbox.customize ["modifyvm", :id, "--memory", 6000]
         vbox.customize ["modifyvm", :id, "--cpus", 4]
@@ -33,7 +33,7 @@ Vagrant.configure("2") do |config|
         "KUBERNETES_VERSION" => settings["software"]["kubernetes"],
         "OS" => settings["software"]["os"]
       },
-      path: "common.sh"
+      path: "node_scripts/common.sh"
     master.vm.provision "shell",
       env: {
         "CALICO_VERSION" => settings["software"]["calico"],
@@ -41,7 +41,7 @@ Vagrant.configure("2") do |config|
         "POD_CIDR" => settings["network"]["pod_cidr"],
         "SERVICE_CIDR" => settings["network"]["service_cidr"]
       },
-      path: "master.sh"
+      path: "node_scripts/master.sh"
 
     master.vm.provider :virtualbox do |vbox|
         vbox.customize ["modifyvm", :id, "--memory", 4096]
@@ -61,8 +61,8 @@ Vagrant.configure("2") do |config|
           "KUBERNETES_VERSION" => settings["software"]["kubernetes"],
           "OS" => settings["software"]["os"]
         },
-        path: "common.sh"
-      worker.vm.provision "shell", path: "worker.sh"
+        path: "node_scripts/common.sh"
+      worker.vm.provision "shell", path: "node_scripts/worker.sh"
 
       worker.vm.provider :virtualbox do |vbox|
           vbox.customize ["modifyvm", :id, "--memory", 4096]

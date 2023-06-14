@@ -47,6 +47,7 @@ do
   $dexec llb1 loxicmd create lb 20.20.20.1 --tcp=$port:$port  --endpoints=31.31.31.1:1 >> /dev/null
 done
 
+$dexec llb1 loxicmd create lb 20.20.20.1 --tcp=13866:13866  --endpoints=31.31.31.1:1 >> /dev/null
 for ((i=1,port=13866;i<=100;i++,port++))
 do
   $dexec llb1 loxicmd create lb 20.20.20.1 --sctp=$port:$port  --endpoints=31.31.31.1:1 >> /dev/null

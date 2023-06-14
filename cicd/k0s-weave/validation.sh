@@ -69,7 +69,7 @@ else
   code=1
 fi
 
-out=$($hexec user ../common/udp_client $extIP 55003)
+out=$($hexec user timeout 10 ../common/udp_client $extIP 55003)
 if [[ ${out} == *"Client"* ]]; then
   echo "cluster-k0s (udp)  [OK]"
 else
@@ -77,7 +77,7 @@ else
   code=1
 fi
 
-out=$($hexec user ../common/sctp_client 1.1.1.1 34951 $extIP 55004)
+out=$($hexec user timeout 10 ../common/sctp_client 1.1.1.1 34951 $extIP 55004)
 if [[ ${out} == *"server1"* ]]; then
   echo "cluster-k0s (sctp) [OK]"
 else
@@ -85,7 +85,7 @@ else
   code=1
 fi
 
-out=$($hexec user ../common/sctp_client 1.1.1.1 0 $extIP 55005)
+out=$($hexec user timeout 10 ../common/sctp_client 1.1.1.1 0 $extIP 55005)
 if [[ ${out} == *"server1"* ]]; then
   echo "cluster-k0s (sctp2) [OK]"
 else
@@ -93,7 +93,7 @@ else
   code=1
 fi
 
-out=$($hexec user ../common/udp_client $extIP 55006)
+out=$($hexec user timeout 10 ../common/udp_client $extIP 55006)
 if [[ ${out} == *"Client"* ]]; then
   echo "cluster-k0s (udp2)  [OK]"
 else
