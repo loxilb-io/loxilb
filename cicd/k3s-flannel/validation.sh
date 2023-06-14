@@ -35,9 +35,9 @@ echo "ExternalIP $extIP"
 print_debug_info() {
   ## Dump some debug info
   echo "**** k3s svc info ****"
-  sudo kubectl get svc
+  sudo kubectl $KUBECONFIG get svc
   echo "**** k3s pods info ****"
-  sudo kubectl get pods -A
+  sudo kubectl $KUBECONFIG get pods -A
 
   echo "**** llb1 lb-info ****"
   $dexec llb1 loxicmd get lb -o wide
