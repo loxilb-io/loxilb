@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source ../common.sh
+source ../k3s_common.sh
 
 echo "#########################################"
 echo "Spawning all hosts"
