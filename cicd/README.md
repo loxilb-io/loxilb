@@ -11,4 +11,5 @@
 [![k3s-calico-cluster](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-flannel-cluster.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-flannel-cluster.yml)  
 [![k3s-calico](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-calico.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-calico.yml)   
 [![k0s-weave](https://github.com/loxilb-io/loxilb/actions/workflows/k0s-weave.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/k0s-weave.yml)   
+[![liveness-sanity](https://github.com/loxilb-io/loxilb/actions/workflows/liveness-sanity.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/liveness-sanity.yml)   
    
