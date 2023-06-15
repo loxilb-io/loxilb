@@ -132,7 +132,7 @@ type DpEbpfH struct {
 	ticker  *time.Ticker
 	tDone   chan bool
 	ctBcast chan bool
-	tbN     int
+	tbN     uint
 	CtSync  bool
 	ToMapCh chan interface{}
 	ToFinCh chan int
@@ -156,7 +156,7 @@ func dpEbpfTicker() {
 		int(C.LL_DP_TX_BD_STATS_MAP),
 		int(C.LL_DP_SESS4_STATS_MAP),
 		int(C.LL_DP_FW4_STATS_MAP)}
-	tLen := len(tbls)
+	tLen := uint(len(tbls))
 
 	for {
 		if mh.dpEbpf == nil {
