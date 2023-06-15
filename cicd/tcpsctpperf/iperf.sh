@@ -1,6 +1,6 @@
 #!/bin/bash
-time=10
 count=$1
+time=$2
 
 iperf -c 20.20.20.1 -t $time -p 12865 -P $count > iperf.log &
 sleep $((time + 2))

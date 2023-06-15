@@ -1,6 +1,6 @@
 #!/bin/bash
 count=$1
-time=10
+time=$2
 
 # TCP Connections per second
 for ((i=1,tport=12866;i<=count;i++,tport++))
