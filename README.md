@@ -5,18 +5,20 @@ loxilb is an open source hyper-scale software load-balancer for cloud-native wor
 
 ###  🚀 loxilb aims to provide the following :   
 
-- Service type external load-balancer for kubernetes   
-   * L4/NAT stateful loadbalancer   
-   * NAT44, NAT66, NAT64 with One-ARM, FullNAT, DSR etc   
-   * Support for TCP, UDP, SCTP (w/ multi-homing), FTP, TFTP etc   
-   * High-availability support with hitless/maglev clustering   
-   * Full compliance for K8s loadbalancer Spec   
--  Extensive and scalable liveness probes for cloud-native environments
+- Service type load-balancer for kubernetes   
+    * L4/NAT stateful loadbalancer   
+    * NAT44, NAT66, NAT64 with One-ARM, FullNAT, DSR etc   
+    * Support for TCP, UDP, SCTP (w/ multi-homing), FTP, TFTP etc   
+    * High-availability support with hitless/maglev clustering   
+    * Full compliance for K8s loadbalancer Spec
+    * Multi-cluster support      
+-  Extensive and scalable liveness probes for cloud-native environments    
 -  High-perf replacement for the *aging* iptables/ipvs   
--  Optimized SRv6 implementation   
 -  L7 proxy support   
--  Make GTP tunnels first class citizens of the Linux world    
-   * Support for UL-CL, QFI and other extensions   
+-  Telco/5G/6G friendly features    
+    * GTP tunnels as first class citizens     
+    * Optimized SRv6 implementation    
+    * Support for UL-CL with LB, QFI and other utility extensions  
 
 ### 🧿 loxilb is powered by :   
 - Bespoke GoLang based control plane components     
@@ -24,7 +26,7 @@ loxilb is an open source hyper-scale software load-balancer for cloud-native wor
    * Home-grown stack with advanced features like [Conntrack](https://thermalcircle.de/doku.php?id=blog:linux:connection_tracking_1_modules_and_hooks), QoS etc
    * Complete kernel networking bypass    
    * Highly scalable with low-latency & high throughput   
-- GoLang based easy to use APIs/Interfaces for developers   
+- GoLang based easy to use APIs/Interfaces infra   
 - Seamless integration with goBGP based routing stack    
 
 ### 📚 Check loxilb [Documentation](https://loxilb-io.github.io/loxilbdocs/) for more info.   
