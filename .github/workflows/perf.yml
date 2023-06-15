@@ -9,6 +9,14 @@ on:
         description: 'Test Run-Name'     
         required: true
         default: 'perf-single-node'
+      threads:
+        description: 'No. of threads for iperf & netperf'     
+        required: true
+        default: '50'
+      duration:
+        description: 'Test Run duration'     
+        required: true
+        default: '10'
 jobs:
   build:
     name: perf-single-node
@@ -46,6 +54,6 @@ jobs:
       - run: |
          cd cicd/tcpsctpperf
          ./config.sh
-         ./validation.sh
+         ./validation.sh ${{ github.event.input.threads }}  ${{ github.event.input.duration }}
          ./rmconfig.sh
          cd -
