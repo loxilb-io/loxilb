@@ -25,8 +25,11 @@ import (
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
+	"io"
 	"net"
+	"net/http"
 	_ "net/http/pprof"
+	"net/rpc"
 	"os"
 	"os/signal"
 	"runtime/debug"
@@ -73,6 +76,42 @@ type loxiNetH struct {
 	ready  bool
 	self   int
 	pFile  *os.File
+}
+
+// LoxiXsyncMain - State Sync subsystem init
+func LoxiXsyncMain() {
+	if opts.Opts.ClusterNodes == "none" {
+		return
+	}
+
+	// Stack trace logger
+	defer func() {
+		if e := recover(); e != nil {
+			if mh.logger != nil {
+				tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
+			}
+		}
+	}()
+
+	for {
+		rpcObj := new(XSync)
+		err := rpc.Register(rpcObj)
+		if err != nil {
+			panic("Failed to register rpc")
+		}
+
+		rpc.HandleHTTP()
+
+		http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
+			io.WriteString(res, "loxilb-xsync\n")
+		})
+
+		listener := fmt.Sprintf(":%d", XSyncPort)
+		err = http.ListenAndServe(listener, nil)
+		if err != nil {
+			panic("Failed to rpc-listen")
+		}
+	}
 }
 
 // NodeWalker - an implementation of node walker interface
