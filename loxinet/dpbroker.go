@@ -20,15 +20,15 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 	"io"
 	"net"
 	"net/http"
 	"net/rpc"
+	"runtime/debug"
 	"sync"
 	"time"
-
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
 )
 
 // man names constants
@@ -841,6 +841,12 @@ func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 
 // DpWorker - DP worker routine listening on a channel
 func DpWorker(dp *DpH, f chan int, ch chan interface{}) {
+	// Stack trace logger
+	defer func() {
+		if e := recover(); e != nil {
+			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
+		}
+	}()
 	for {
 		for n := 0; n < DpWorkQLen; n++ {
 			select {
