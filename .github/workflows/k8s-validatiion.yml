@@ -18,6 +18,6 @@ jobs:
         with:
           submodules: recursive
       - run: |
-         cd ${{ github.event.inputs.testName }}
+         cd cicd/${{ github.event.inputs.testName }}
          ./validation.sh
          cd -
