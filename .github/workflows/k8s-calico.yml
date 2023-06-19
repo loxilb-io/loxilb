@@ -13,6 +13,8 @@ jobs:
   build:
     name: k8s-calico-cluster-sanity
     runs-on: self-hosted
+    if: github.repository == 'loxilb-io/loxilb' 
+          &&  github.event.inputs.tagName == ''
     steps:
       - uses: actions/checkout@v2
         with:
