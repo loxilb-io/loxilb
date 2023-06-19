@@ -44,7 +44,7 @@ loxilb is an open source hyper-scale software load-balancer for cloud-native wor
 - Extensive support for ```SCTP workloads``` (with multi-homing) on k8s
 - Dual stack with ```NAT66, NAT64``` support for k8s
 - k8s ```multi-cluster``` support 🚧
-- Runs in ```any``` cloud : public cloud (EKS), on-prem or multi-cloud environments
+- Runs in ```any``` cloud (public cloud/on-prem) or ```standalone``` environments
 
   (*🚧: *Work in progress*)      
 
