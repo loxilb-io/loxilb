@@ -154,7 +154,7 @@ spawn_docker_host() {
 
   $hexec $dname ifconfig lo up
   $hexec $dname sysctl net.ipv6.conf.all.disable_ipv6=1 2>&1 >> /dev/null
-  $hexec $dname sysctl net.ipv4.conf.all.arp_accept=1 2>&1 >> /dev/null
+  #$hexec $dname sysctl net.ipv4.conf.all.arp_accept=1 2>&1 >> /dev/null
   $hexec $dname sysctl net.ipv4.conf.eth0.arp_ignore=2 2>&1 >> /dev/null
 }
 
