@@ -29,7 +29,7 @@ loxilb is an open source hyper-scale software load-balancer for cloud-native wor
 - GoLang based easy to use APIs/Interfaces infra   
 - Seamless integration with goBGP based routing stack
 
-### ⚡️ Why choose loxilb ?
+### 📦 Why choose loxilb ?
 - Performs much better compared to its competitors across various architectures ([Link1](https://loxilb-io.github.io/loxilbdocs/perf-single/), [Link2](https://loxilb-io.github.io/loxilbdocs/perf-multi/), [Link3](https://www.loxilb.io/post/running-loxilb-on-aws-graviton2-based-ec2-instance), [Link4](https://www.youtube.com/watch?v=MJXcM0x6IeQ))        
 - ebpf makes it flexible and future-proof (kernel version agnostic and in future OS agnostic🚧)    
 - Advanced QoS for workloads (per LB rule, per end-point or per client)    
