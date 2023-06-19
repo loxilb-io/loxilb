@@ -18,7 +18,7 @@ loxilb is an open source hyper-scale software load-balancer for cloud-native wor
 -  Telco/5G/6G friendly features    
     * GTP tunnels as first class citizens     
     * Optimized SRv6 implementation    
-    * Support for UL-CL with LB, QFI and other utility extensions  
+    * Support for UL-CL with LB, QFI and other utility extensions   
 
 ### 🧿 loxilb is powered by :   
 - Bespoke GoLang based control plane components     
@@ -27,7 +27,23 @@ loxilb is an open source hyper-scale software load-balancer for cloud-native wor
    * Complete kernel networking bypass    
    * Highly scalable with low-latency & high throughput   
 - GoLang based easy to use APIs/Interfaces infra   
-- Seamless integration with goBGP based routing stack    
+- Seamless integration with goBGP based routing stack
+
+### ⚡️ Why choose loxilb ?
+- Performs much better compared to its competitors across various architectures ([Link1](https://loxilb-io.github.io/loxilbdocs/perf-single/), [Link2](https://loxilb-io.github.io/loxilbdocs/perf-multi/), [Link3](https://www.loxilb.io/post/running-loxilb-on-aws-graviton2-based-ec2-instance), [Link4](https://www.youtube.com/watch?v=MJXcM0x6IeQ))        
+- ebpf makes it flexible and future-proof (kernel version agnostic and in future OS agnostic🚧)    
+- Advanced QoS for workloads (per LB rule, per end-point or per client)    
+- Includes powerful NG stateful firewalling    
+- Optimized end-point liveness checks at scale    
+- 5G/Edge awareness (GTP/SRv6🚧)     
+- Support for any Kubernetes distribution - Upstream k8s, k3s, k0s, kind, microk8s etc    
+- Support for any Kubernetes CNI - Calico, Flannel, Cilium, Weave, Multus etc    
+- Extensive support for SCTP workloads (with multi-homing) on k8s    
+- Dual stack support with NAT66, NAT64 support on k8s    
+- Multi k8s-cluster support🚧    
+- Run anywhere - public cloud (AWS), on-prem or multi-cloud environments       
+
+  (🚧: *Work in progress*)    
 
 ### 📚 Check loxilb [Documentation](https://loxilb-io.github.io/loxilbdocs/) for more info.   
 
