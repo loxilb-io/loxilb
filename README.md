@@ -41,10 +41,10 @@ loxilb is an open source hyper-scale software load-balancer for cloud-native wor
 - Includes powerful NG ```stateful firewalling``` and ```IPSEC/Wireguard``` support      
 - Optimized/Custom end-point ```liveness checks at scale```      
 - Support for ```5G/Edge```  cloud-native workloads     
-- Works with ```any``` Kubernetes distribution/CNI - Upstream k8s, k3s, k0s, kind + Calico, Flannel, Cilium, Weave, Multus etc      
+- Works with ```any``` Kubernetes distribution/CNI - k8s/k3s/k0s/kind/OpenShift + Calico/Flannel/Cilium/Weave/Multus etc      
 - Extensive support for ```SCTP workloads``` (with multi-homing) on k8s    
 - Dual stack with ```NAT66, NAT64``` support for k8s     
-- ```Multi k8s-cluster``` support 🚧      
+- k8s ```multi-cluster``` support 🚧      
 - Runs in ```any``` cloud : public cloud (EKS), on-prem or multi-cloud environments        
 
   (*🚧: *Work in progress*)      
