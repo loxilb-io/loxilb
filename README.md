@@ -37,7 +37,7 @@ loxilb is an open source hyper-scale software load-balancer for cloud-native wor
     * [Performance on ARM](https://www.loxilb.io/post/running-loxilb-on-aws-graviton2-based-ec2-instance)
     * [Short Demo on Performance](https://www.youtube.com/watch?v=MJXcM0x6IeQ)
 - ebpf makes it ```flexible``` and ```future-proof``` (kernel version agnostic and in future OS agnostic🚧)      
-- Advanced quality for workloads (per LB rule, per end-point or per client)       
+- Advanced quality of service for workloads (per LB, per end-point or per client)       
 - Includes powerful NG ```stateful firewalling``` and ```IPSEC/Wireguard``` support      
 - Optimized/Custom end-point ```liveness checks at scale```      
 - ```5G/Edge``` awareness (GTP/SRv6🚧)      
