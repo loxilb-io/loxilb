@@ -7,6 +7,7 @@ $hexec l3ep3 node ../common/tcp_server.js server3 &
 
 sleep 5
 code=0
+servIP=( "10.10.10.254" "20.20.20.1" )
 servArr=( "server1" "server2" "server3" )
 ep=( "31.31.31.1" "32.32.32.1" "33.33.33.1" )
 j=0
@@ -33,25 +34,31 @@ do
     sleep 1
 done
 
+for k in {0..1}
+do
+echo "Testing Service IP: ${servIP[k]}"
+lcode=0
 for i in {1..4}
 do
 for j in {0..2}
 do
-    res=$($hexec l3h1 curl --max-time 10 -s 20.20.20.1:2020)
+    res=$($hexec l3h1 curl --max-time 10 -s ${servIP[k]}:2020)
     echo $res
     if [[ $res != "${servArr[j]}" ]]
     then
-        code=1
+        lcode=1
     fi
     sleep 1
 done
 done
-if [[ $code == 0 ]]
+if [[ $lcode == 0 ]]
 then
-    echo SCENARIO-tcplb [OK]
+    echo SCENARIO-tcplb with ${servIP[k]} [OK]
 else
-    echo SCENARIO-tcplb [FAILED]
+    echo SCENARIO-tcplb with ${servIP[k]} [FAILED]
+    code=1
 fi
+done
+
 sudo killall -9 node 2>&1 > /dev/null
 exit $code
-

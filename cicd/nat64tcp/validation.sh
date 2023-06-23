@@ -7,6 +7,7 @@ $hexec l3ep3 node ../common/tcp_server.js server3 &
 
 sleep 5
 code=0
+servIP=( "3ffe::2" "2001::1" )
 servArr=( "server1" "server2" "server3" )
 ep=( "31.31.31.1" "32.32.32.1" "33.33.33.1" )
 j=0
@@ -34,14 +35,19 @@ do
 done
 
 res=$($hexec l3h1 curl -s --max-time 20 '[2001::1]:2020')
+res=$($hexec l3h1 curl -s --max-time 20 '[3ffe::2]:2020')
 sleep 4
 
 nid=0
+for k in {0..1}
+do
+echo "Testing Service IP: ${servIP[k]}"
+lcode=0
 for i in {1..4}
 do
 for j in {0..2}
 do
-    res=$($hexec l3h1 curl -s -j -6 --max-time 10 '[2001::1]:2020')
+    res=$($hexec l3h1 curl -s -j -6 --max-time 10 "[${servIP[k]}]:2020")
     echo $res
     ids=`echo "${res//[!0-9]/}"`
     if [[ $res == *"server"* ]]; then
@@ -53,17 +59,26 @@ do
         fi
       elif [[ $nid != $((ids)) ]]; then
         echo "Expected server$nid got server$((ids))"
-        code=1
+        lcode=1
       fi
       nid=$((($ids + 1)%4))
       if [[ $nid == 0 ]];then
         nid=1
       fi
     else
-      code=1
+      lcode=1
     fi
     sleep 1
 done
+done
+if [[ $lcode == 0 ]]
+then
+    echo nat64tcp with ${servIP[k]} [OK]
+else
+    echo nat64tcp with ${servIP[k]} [FAILED]
+    code=1 
+fi
+
 done
 sudo pkill -9 node
 if [[ $code == 0 ]]
