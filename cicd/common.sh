@@ -147,6 +147,7 @@ spawn_docker_host() {
   get_docker_pid $dname
   echo $pid
   if [ ! -f "$hexist/$dname" -a "$pid" != "" ]; then
+    sudo mkdir -p /var/run/netns  
     sudo touch /var/run/netns/$dname
     #echo "sudo mount -o bind /proc/$pid/ns/net /var/run/netns/$2"
     sudo mount -o bind /proc/$pid/ns/net /var/run/netns/$dname
