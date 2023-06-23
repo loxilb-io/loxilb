@@ -95,3 +95,9 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - run: |
+             cd cicd/nat64tcp/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
