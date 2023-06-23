@@ -3,7 +3,7 @@ count=$1
 time=$2
 
 iperf -c 20.20.20.1 -t $time -p 12865 -P $count > iperf.log &
-sleep $((time + 2))
+sleep $((time + 20))
 res=$(grep SUM iperf.log | tail -1| xargs | cut -d ' ' -f 6)
 unit=$(grep SUM iperf.log | tail -1| xargs | cut -d ' ' -f 7)
 echo -e "TCP throughput \t\t: $res $unit"
