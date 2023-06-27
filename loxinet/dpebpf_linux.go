@@ -134,6 +134,7 @@ type DpEbpfH struct {
 	ctBcast chan bool
 	tbN     uint
 	CtSync  bool
+	RssEn   bool
 	ToMapCh chan interface{}
 	ToFinCh chan int
 	mtx     sync.RWMutex
@@ -230,7 +231,7 @@ func DpEbpfSetLogLevel(logLevel tk.LogLevelT) {
 }
 
 // DpEbpfInit - initialize the ebpf dp subsystem
-func DpEbpfInit(clusterEn bool, nodeNum int, logLevel tk.LogLevelT) *DpEbpfH {
+func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, logLevel tk.LogLevelT) *DpEbpfH {
 	var cfg C.struct_ebpfcfg
 
 	if clusterEn {
@@ -259,6 +260,11 @@ func DpEbpfInit(clusterEn bool, nodeNum int, logLevel tk.LogLevelT) *DpEbpfH {
 		ifStr := C.CString(intf.Name)
 		section := C.CString(string(C.TC_LL_SEC_DEFAULT))
 		C.llb_dp_link_attach(ifStr, section, C.LL_BPF_MOUNT_TC, 1)
+		if rssEn {
+			xSection := C.CString(string(C.XDP_LL_SEC_DEFAULT))
+			C.llb_dp_link_attach(ifStr, xSection, C.LL_BPF_MOUNT_XDP, 1)
+			C.free(unsafe.Pointer(xSection))
+		}
 		C.free(unsafe.Pointer(ifStr))
 		C.free(unsafe.Pointer(section))
 	}
@@ -270,6 +276,7 @@ func DpEbpfInit(clusterEn bool, nodeNum int, logLevel tk.LogLevelT) *DpEbpfH {
 	ne.ctBcast = make(chan bool)
 	ne.ticker = time.NewTicker(DpEbpfLinuxTiVal * time.Second)
 	ne.ctMap = make(map[string]*DpCtInfo)
+	ne.RssEn = rssEn
 
 	go dpEbpfTicker()
 	go dpMapNotifierWorker(ne.ToFinCh, ne.ToMapCh)
@@ -299,22 +306,35 @@ func convDPv6Addr2NetIP(addr unsafe.Pointer) net.IP {
 }
 
 // loadEbpfPgm - load loxilb eBPF program to an interface
-func loadEbpfPgm(name string) int {
+func (e *DpEbpfH) loadEbpfPgm(name string) int {
 	ifStr := C.CString(name)
+	xSection := C.CString(string(C.XDP_LL_SEC_DEFAULT))
+
+	if e.RssEn {
+		C.llb_dp_link_attach(ifStr, xSection, C.LL_BPF_MOUNT_XDP, 0)
+	}
 	section := C.CString(string(C.TC_LL_SEC_DEFAULT))
 	ret := C.llb_dp_link_attach(ifStr, section, C.LL_BPF_MOUNT_TC, 0)
 	C.free(unsafe.Pointer(ifStr))
+	C.free(unsafe.Pointer(xSection))
 	C.free(unsafe.Pointer(section))
 	return int(ret)
 }
 
 // unLoadEbpfPgm - unload loxilb eBPF program from an interface
-func unLoadEbpfPgm(name string) int {
+func (e *DpEbpfH) unLoadEbpfPgm(name string) int {
 	ifStr := C.CString(name)
+	xSection := C.CString(string(C.XDP_LL_SEC_DEFAULT))
+
+	if e.RssEn {
+		C.llb_dp_link_attach(ifStr, xSection, C.LL_BPF_MOUNT_XDP, 1)
+	}
+
 	section := C.CString(string(C.XDP_LL_SEC_DEFAULT))
 	ret := C.llb_dp_link_attach(ifStr, section, C.LL_BPF_MOUNT_TC, 1)
 	C.free(unsafe.Pointer(ifStr))
 	C.free(unsafe.Pointer(section))
+	C.free(unsafe.Pointer(xSection))
 	return int(ret)
 }
 
@@ -360,7 +380,7 @@ func osPortIsRunning(portName string) bool {
 }
 
 // DpPortPropMod - routine to work on a ebpf port property request
-func DpPortPropMod(w *PortDpWorkQ) int {
+func (e *DpEbpfH) DpPortPropMod(w *PortDpWorkQ) int {
 	var txK C.uint
 	var txV C.uint
 	var setIfi *intfSetIfi
@@ -379,7 +399,7 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 	if w.Work == DpCreate {
 
 		if w.LoadEbpf != "" && w.LoadEbpf != "lo" && w.LoadEbpf != "llb0" {
-			lRet := loadEbpfPgm(w.LoadEbpf)
+			lRet := e.loadEbpfPgm(w.LoadEbpf)
 			if lRet != 0 {
 				tk.LogIt(tk.LogError, "ebpf load - %d error\n", w.PortNum)
 				return EbpfErrEbpfLoad
@@ -431,7 +451,7 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 		C.llb_del_map_elem(C.LL_DP_INTF_MAP, unsafe.Pointer(key))
 
 		if w.LoadEbpf != "" {
-			lRet := unLoadEbpfPgm(w.LoadEbpf)
+			lRet := e.unLoadEbpfPgm(w.LoadEbpf)
 			if lRet != 0 {
 				tk.LogIt(tk.LogError, "ebpf unload - ifi %d error\n", w.OsPortNum)
 				return EbpfErrEbpfLoad
@@ -447,12 +467,12 @@ func DpPortPropMod(w *PortDpWorkQ) int {
 
 // DpPortPropAdd - routine to work on a ebpf port property add
 func (e *DpEbpfH) DpPortPropAdd(w *PortDpWorkQ) int {
-	return DpPortPropMod(w)
+	return e.DpPortPropMod(w)
 }
 
 // DpPortPropDel - routine to work on a ebpf port property delete
 func (e *DpEbpfH) DpPortPropDel(w *PortDpWorkQ) int {
-	return DpPortPropMod(w)
+	return e.DpPortPropMod(w)
 }
 
 // DpL2AddrMod - routine to work on a ebpf l2 addr request
