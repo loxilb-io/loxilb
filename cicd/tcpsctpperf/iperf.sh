@@ -9,6 +9,12 @@ unit=$(grep SUM iperf.log | tail -1| xargs | cut -d ' ' -f 7)
 echo -e "TCP throughput \t\t: $res $unit"
 rm -rf iperf.log
 
+resNum=$(bc -l <<<"${res}")
+if [[ $resNum < 10 ]]; then
+  echo "Failed too low $resNum"
+  exit 1
+fi
+
 sleep 2
 
 iperf3 -c 20.20.20.1 -t $time -p 13866 -P $count --logfile iperf.log --sctp &
