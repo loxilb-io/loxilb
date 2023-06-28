@@ -3,7 +3,7 @@
 
 loxilb is an open source hyper-scale software load-balancer for cloud-native workloads. It uses eBPF as its core-engine and is based on Golang. It is designed to power on-premise, edge and public-cloud Kubernetes cluster deployments.
 
-###  🚀 loxilb aims to provide the following :   
+### 📦 loxilb aims to provide the following :   
 - Service type load-balancer for kubernetes
     * L4/NAT stateful loadbalancer
     * NAT44, NAT66, NAT64 with One-ARM, FullNAT, DSR etc
@@ -28,7 +28,7 @@ loxilb is an open source hyper-scale software load-balancer for cloud-native wor
 - GoLang powered easy to use APIs/Interfaces infra
 - Seamless integration with goBGP based routing stack
 
-### 📦 Why choose loxilb?
+### 🚀 Why choose loxilb?
    
 - ```Performs``` much better compared to its competitors across various architectures
     * [Single-Node Performance](https://loxilb-io.github.io/loxilbdocs/perf-single/)  
