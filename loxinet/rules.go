@@ -1005,7 +1005,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 	natActs.sel = serv.Sel
 	natActs.mode = cmn.LBMode(serv.Mode)
 
-	if natActs.mode == cmn.LBModeOneArm || serv.Monitor {
+	if natActs.mode == cmn.LBModeOneArm || natActs.mode == cmn.LBModeFullNAT || serv.Monitor {
 		activateProbe = true
 	}
 
