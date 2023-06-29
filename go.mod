@@ -15,6 +15,7 @@ require (
 	github.com/osrg/gobgp/v3 v3.5.0
 	github.com/prometheus-community/pro-bing v0.1.0
 	github.com/prometheus/client_model v0.3.0
+	github.com/safchain/ethtool v0.3.0
 	github.com/vishvananda/netlink v1.1.1-0.20210330154013-f5de75959ad5
 	golang.org/x/net v0.10.0
 	golang.org/x/sys v0.8.0
