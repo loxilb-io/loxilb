@@ -498,6 +498,8 @@ type LbServiceArg struct {
 	Mode LBMode `json:"mode"`
 	// InactiveTimeout - Forced session reset after inactive timeout
 	InactiveTimeout uint32 `json:"inactiveTimeout"`
+	// Managed - This rule is managed by external entity e.g k8s
+	Managed bool `json:"managed"`
 }
 
 // LbEndPointArg - Information related to load-balancer end-point
