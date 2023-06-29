@@ -2166,6 +2166,9 @@ definitions:
           monitor:
             type: boolean
             description: value for monitoring enabled or not
+          managed:
+            type: boolean
+            description: externally managed rule or not
           mode:
             type: integer
             format: int32
@@ -2178,7 +2181,7 @@ definitions:
             type: integer
             format: int32
             description: value for inactivity timeout (in seconds)
-            
+      
       endpoints:
         type: array
         description: values of End point servers
@@ -2186,7 +2189,7 @@ definitions:
           properties:
             endpointIP:
               type: string
-              description: IP address for externel access
+              description: IP address for external access
             weight:
               type: integer
               description:  Weight for the load balancing
@@ -2196,6 +2199,15 @@ definitions:
             state:
               type: string
               description: state of the endpoint
+
+      secondaryIPs:
+        type: array
+        description: values of Secondary IPs
+        items:
+          properties:
+            secondaryIP:
+              type: string
+              description: IP address for secondary access
   
   RouteEntry:
     type: object

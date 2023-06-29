@@ -44,14 +44,15 @@ import "C"
 import (
 	"errors"
 	"fmt"
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
 	"net"
 	"runtime/debug"
 	"sync"
 	"syscall"
 	"time"
 	"unsafe"
+
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 // This file implements the interface DpHookInterface
@@ -1590,7 +1591,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 		cti.ServiceIP = r.tuples.l3Dst.addr.IP
 		cti.L4ServPort = r.tuples.l4Dst.val
 		cti.BlockNum = r.tuples.pref
-		cti.CI = r.CI
+		cti.CI = r.ci
 		if r.tuples.l4Prot.val == 6 {
 			cti.ServProto = "tcp"
 		} else if r.tuples.l4Prot.val == 132 {

@@ -22,7 +22,7 @@ type LoadbalanceEntry struct {
 	// values of End point servers
 	Endpoints []*LoadbalanceEntryEndpointsItems0 `json:"endpoints"`
 
-	// Secondary IPs in for multi-homed SCTP service
+	// values of Secondary IPs
 	SecondaryIPs []*LoadbalanceEntrySecondaryIPsItems0 `json:"secondaryIPs"`
 
 	// service arguments
@@ -223,7 +223,7 @@ func (m *LoadbalanceEntry) UnmarshalBinary(b []byte) error {
 // swagger:model LoadbalanceEntryEndpointsItems0
 type LoadbalanceEntryEndpointsItems0 struct {
 
-	// IP address for externel access
+	// IP address for external access
 	EndpointIP string `json:"endpointIP,omitempty"`
 
 	// state of the endpoint
@@ -269,7 +269,7 @@ func (m *LoadbalanceEntryEndpointsItems0) UnmarshalBinary(b []byte) error {
 // swagger:model LoadbalanceEntrySecondaryIPsItems0
 type LoadbalanceEntrySecondaryIPsItems0 struct {
 
-	// IP address for externel access
+	// IP address for secondary access
 	SecondaryIP string `json:"secondaryIP,omitempty"`
 }
 
@@ -317,6 +317,9 @@ type LoadbalanceEntryServiceArguments struct {
 
 	// value for inactivity timeout (in seconds)
 	InactiveTimeOut int32 `json:"inactiveTimeOut,omitempty"`
+
+	// externally managed rule or not
+	Managed bool `json:"managed,omitempty"`
 
 	// value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)
 	Mode int32 `json:"mode,omitempty"`
