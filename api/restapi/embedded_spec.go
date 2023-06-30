@@ -3437,7 +3437,7 @@ func init() {
           "items": {
             "properties": {
               "endpointIP": {
-                "description": "IP address for externel access",
+                "description": "IP address for external access",
                 "type": "string"
               },
               "state": {
@@ -3451,6 +3451,18 @@ func init() {
               "weight": {
                 "description": "Weight for the load balancing",
                 "type": "integer"
+              }
+            }
+          }
+        },
+        "secondaryIPs": {
+          "description": "values of Secondary IPs",
+          "type": "array",
+          "items": {
+            "properties": {
+              "secondaryIP": {
+                "description": "IP address for secondary access",
+                "type": "string"
               }
             }
           }
@@ -3475,6 +3487,10 @@ func init() {
               "description": "value for inactivity timeout (in seconds)",
               "type": "integer",
               "format": "int32"
+            },
+            "managed": {
+              "description": "externally managed rule or not",
+              "type": "boolean"
             },
             "mode": {
               "description": "value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)",
@@ -7541,6 +7557,13 @@ func init() {
             "$ref": "#/definitions/LoadbalanceEntryEndpointsItems0"
           }
         },
+        "secondaryIPs": {
+          "description": "values of Secondary IPs",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LoadbalanceEntrySecondaryIPsItems0"
+          }
+        },
         "serviceArguments": {
           "type": "object",
           "properties": {
@@ -7561,6 +7584,10 @@ func init() {
               "description": "value for inactivity timeout (in seconds)",
               "type": "integer",
               "format": "int32"
+            },
+            "managed": {
+              "description": "externally managed rule or not",
+              "type": "boolean"
             },
             "mode": {
               "description": "value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)",
@@ -7590,7 +7617,7 @@ func init() {
     "LoadbalanceEntryEndpointsItems0": {
       "properties": {
         "endpointIP": {
-          "description": "IP address for externel access",
+          "description": "IP address for external access",
           "type": "string"
         },
         "state": {
@@ -7610,7 +7637,7 @@ func init() {
     "LoadbalanceEntrySecondaryIPsItems0": {
       "properties": {
         "secondaryIP": {
-          "description": "IP address for externel access",
+          "description": "IP address for secondary access",
           "type": "string"
         }
       }
@@ -7635,6 +7662,10 @@ func init() {
           "description": "value for inactivity timeout (in seconds)",
           "type": "integer",
           "format": "int32"
+        },
+        "managed": {
+          "description": "externally managed rule or not",
+          "type": "boolean"
         },
         "mode": {
           "description": "value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)",

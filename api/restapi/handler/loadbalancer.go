@@ -37,6 +37,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv.Monitor = params.Attr.ServiceArguments.Monitor
 	lbRules.Serv.Mode = cmn.LBMode(params.Attr.ServiceArguments.Mode)
 	lbRules.Serv.InactiveTimeout = uint32(params.Attr.ServiceArguments.InactiveTimeOut)
+	lbRules.Serv.Managed = params.Attr.ServiceArguments.Managed
 
 	if lbRules.Serv.Proto == "sctp" {
 		for _, data := range params.Attr.SecondaryIPs {
@@ -117,6 +118,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tmpSvc.Mode = int32(lb.Serv.Mode)
 		tmpSvc.InactiveTimeOut = int32(lb.Serv.InactiveTimeout)
 		tmpSvc.Monitor = lb.Serv.Monitor
+		tmpSvc.Managed = lb.Serv.Managed
 
 		tmpLB.ServiceArguments = &tmpSvc
 

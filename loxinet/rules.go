@@ -206,7 +206,7 @@ type ruleNatEp struct {
 	inActTries int
 	inActive   bool
 	noService  bool
-	Mark       bool
+	mark       bool
 }
 
 type ruleNatSIP struct {
@@ -246,11 +246,12 @@ type ruleStat struct {
 type ruleEnt struct {
 	zone    *Zone
 	ruleNum uint64
-	Sync    DpStatusT
+	sync    DpStatusT
 	tuples  ruleTuples
-	CI      string
-	ActChk  bool
-	BGP     bool
+	ci      string
+	actChk  bool
+	managed bool
+	bgp     bool
 	sT      time.Time
 	iTo     uint32
 	act     ruleAct
@@ -295,9 +296,9 @@ type epChecker struct {
 
 // RuleH - context container
 type RuleH struct {
-	Zone       *Zone
-	Cfg        RuleCfg
-	Tables     [RtMax]ruleTable
+	zone       *Zone
+	cfg        RuleCfg
+	tables     [RtMax]ruleTable
 	epMap      map[string]*epHost
 	epCs       [MaxEndPointCheckers]epChecker
 	wg         sync.WaitGroup
@@ -310,21 +311,21 @@ type RuleH struct {
 // RulesInit - initialize the Rules subsystem
 func RulesInit(zone *Zone) *RuleH {
 	var nRh = new(RuleH)
-	nRh.Zone = zone
+	nRh.zone = zone
 
-	nRh.Cfg.RuleInactChkTime = DflLbaCheckTimeout
-	nRh.Cfg.RuleInactTries = DflLbaInactiveTries
+	nRh.cfg.RuleInactChkTime = DflLbaCheckTimeout
+	nRh.cfg.RuleInactTries = DflLbaInactiveTries
 
 	nRh.epMap = make(map[string]*epHost)
-	nRh.Tables[RtFw].tableMatch = RmMax - 1
-	nRh.Tables[RtFw].tableType = RtMf
-	nRh.Tables[RtFw].eMap = make(map[string]*ruleEnt)
-	nRh.Tables[RtFw].Mark = tk.NewCounter(1, RtMaximumFw4s)
+	nRh.tables[RtFw].tableMatch = RmMax - 1
+	nRh.tables[RtFw].tableType = RtMf
+	nRh.tables[RtFw].eMap = make(map[string]*ruleEnt)
+	nRh.tables[RtFw].Mark = tk.NewCounter(1, RtMaximumFw4s)
 
-	nRh.Tables[RtLB].tableMatch = RmL3Dst | RmL4Dst | RmL4Prot
-	nRh.Tables[RtLB].tableType = RtEm
-	nRh.Tables[RtLB].eMap = make(map[string]*ruleEnt)
-	nRh.Tables[RtLB].Mark = tk.NewCounter(1, RtMaximumLbs)
+	nRh.tables[RtLB].tableMatch = RmL3Dst | RmL4Dst | RmL4Prot
+	nRh.tables[RtLB].tableType = RtEm
+	nRh.tables[RtLB].eMap = make(map[string]*ruleEnt)
+	nRh.tables[RtLB].Mark = tk.NewCounter(1, RtMaximumLbs)
 
 	for i := 0; i < MaxEndPointCheckers; i++ {
 		nRh.epCs[i].tD = make(chan bool)
@@ -651,7 +652,7 @@ func (R *RuleH) Rules2Json() ([]byte, error) {
 	var eps []cmn.LbEndPointArg
 	var ret cmn.LbRuleMod
 	var bret []byte
-	for _, data := range R.Tables[RtLB].eMap {
+	for _, data := range R.tables[RtLB].eMap {
 		// Make Service Arguments
 		t.ServIP = data.tuples.l3Dst.addr.IP.String()
 		if data.tuples.l4Prot.val == 6 {
@@ -698,7 +699,7 @@ func (R *RuleH) Rules2Json() ([]byte, error) {
 func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 	var res []cmn.LbRuleMod
 
-	for _, data := range R.Tables[RtLB].eMap {
+	for _, data := range R.tables[RtLB].eMap {
 		var ret cmn.LbRuleMod
 		// Make Service Arguments
 		ret.Serv.ServIP = data.tuples.l3Dst.addr.IP.String()
@@ -716,10 +717,11 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.ServPort = data.tuples.l4Dst.val
 		ret.Serv.Sel = data.act.action.(*ruleNatActs).sel
 		ret.Serv.Mode = data.act.action.(*ruleNatActs).mode
-		ret.Serv.Monitor = data.ActChk
+		ret.Serv.Monitor = data.actChk
 		ret.Serv.InactiveTimeout = data.iTo
-		ret.Serv.Bgp = data.BGP
+		ret.Serv.Bgp = data.bgp
 		ret.Serv.BlockNum = data.tuples.pref
+		ret.Serv.Managed = data.managed
 
 		for _, sip := range data.secIP {
 			ret.SecIPs = append(ret.SecIPs, cmn.LbSecIpArg{SecIP: sip.sIP.String()})
@@ -810,7 +812,7 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool, li
 // GetNatLbRuleByID - Get a NAT rule by its identifier
 func (R *RuleH) GetNatLbRuleByID(ruleID uint32) *ruleEnt {
 	if ruleID < RtMaximumLbs {
-		return R.Tables[RtLB].rArr[ruleID]
+		return R.tables[RtLB].rArr[ruleID]
 	}
 
 	return nil
@@ -846,7 +848,7 @@ func (R *RuleH) GetNatLbRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
-	return R.Tables[RtLB].eMap[rt.ruleKey()]
+	return R.tables[RtLB].eMap[rt.ruleKey()]
 }
 
 // GetNatLbRuleSecIPs - Get secondary IPs for SCTP NAT rule by its service args
@@ -874,8 +876,8 @@ func (R *RuleH) GetNatLbRuleSecIPs(serv cmn.LbServiceArg) []string {
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
-	if R.Tables[RtLB].eMap[rt.ruleKey()] != nil {
-		for _, ip := range R.Tables[RtLB].eMap[rt.ruleKey()].secIP {
+	if R.tables[RtLB].eMap[rt.ruleKey()] != nil {
+		for _, ip := range R.tables[RtLB].eMap[rt.ruleKey()].secIP {
 			ips = append(ips, ip.sIP.String())
 		}
 	}
@@ -885,7 +887,7 @@ func (R *RuleH) GetNatLbRuleSecIPs(serv cmn.LbServiceArg) []string {
 func (R *RuleH) syncEPHostState2Rule(rule *ruleEnt, checkNow bool) bool {
 	var sType string
 	rChg := false
-	if checkNow || time.Duration(time.Now().Sub(rule.sT).Seconds()) >= time.Duration(R.Cfg.RuleInactChkTime) {
+	if checkNow || time.Duration(time.Now().Sub(rule.sT).Seconds()) >= time.Duration(R.cfg.RuleInactChkTime) {
 		switch na := rule.act.action.(type) {
 		case *ruleNatActs:
 			if rule.tuples.l4Prot.val == 6 {
@@ -1039,7 +1041,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
 
-	eRule := R.Tables[RtLB].eMap[rt.ruleKey()]
+	eRule := R.tables[RtLB].eMap[rt.ruleKey()]
 
 	if eRule != nil {
 		if !reflect.DeepEqual(eRule.secIP, nSecIP) {
@@ -1061,8 +1063,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 						ruleChg = true
 						e.inActive = false
 					}
-					e.Mark = true
-					n.Mark = true
+					e.mark = true
+					n.mark = true
 					break
 				}
 			}
@@ -1070,20 +1072,20 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 
 		for i, nEp := range natActs.endPoints {
 			n := &natActs.endPoints[i]
-			if nEp.Mark == false {
+			if nEp.mark == false {
 				ruleChg = true
-				n.Mark = true
+				n.mark = true
 				eEps = append(eEps, *n)
 			}
 		}
 
 		for i, eEp := range eEps {
 			e := &eEps[i]
-			if eEp.Mark == false {
+			if eEp.mark == false {
 				ruleChg = true
 				e.inActive = true
 			}
-			e.Mark = false
+			e.mark = false
 		}
 
 		if ruleChg == false {
@@ -1094,6 +1096,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 		eRule.act.action.(*ruleNatActs).sel = natActs.sel
 		eRule.act.action.(*ruleNatActs).endPoints = eEps
 		eRule.act.action.(*ruleNatActs).mode = natActs.mode
+		// Managed flag can't be modified on the fly
+		// eRule.managed = serv.Managed
 
 		R.modNatEpHost(eRule, eEps, true, activateProbe)
 
@@ -1107,35 +1111,36 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 
 	r := new(ruleEnt)
 	r.tuples = rt
-	r.zone = R.Zone
+	r.zone = R.zone
 	if serv.Mode == cmn.LBModeFullNAT || serv.Mode == cmn.LBModeOneArm {
 		r.act.actType = RtActFullNat
 	} else {
 		r.act.actType = RtActDnat
 	}
+	r.managed = serv.Managed
 	r.secIP = nSecIP
 	// Per LB end-point health-check is supposed to be handled at CCM,
 	// but it certain cases like stand-alone mode, loxilb can do its own
 	// lb end-point health monitoring
-	r.ActChk = serv.Monitor
+	r.actChk = serv.Monitor
 	r.act.action = &natActs
-	r.ruleNum, err = R.Tables[RtLB].Mark.GetCounter()
+	r.ruleNum, err = R.tables[RtLB].Mark.GetCounter()
 	if err != nil {
 		tk.LogIt(tk.LogError, "nat lb-rule - %s:%s hwm error\n", eRule.tuples.String(), eRule.act.String())
 		return RuleAllocErr, errors.New("rule-hwm error")
 	}
 	r.sT = time.Now()
 	r.iTo = serv.InactiveTimeout
-	r.BGP = serv.Bgp
-	r.CI = cmn.CIDefault
+	r.bgp = serv.Bgp
+	r.ci = cmn.CIDefault
 
 	R.modNatEpHost(r, natActs.endPoints, true, activateProbe)
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
-	R.Tables[RtLB].eMap[rt.ruleKey()] = r
+	R.tables[RtLB].eMap[rt.ruleKey()] = r
 	if r.ruleNum < RtMaximumLbs {
-		R.Tables[RtLB].rArr[r.ruleNum] = r
+		R.tables[RtLB].rArr[r.ruleNum] = r
 	}
 
 	r.DP(DpCreate)
@@ -1177,23 +1182,23 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
 
-	rule := R.Tables[RtLB].eMap[rt.ruleKey()]
+	rule := R.tables[RtLB].eMap[rt.ruleKey()]
 	if rule == nil {
 		return RuleNotExistsErr, errors.New("no-rule error")
 	}
 
-	defer R.Tables[RtLB].Mark.PutCounter(rule.ruleNum)
+	defer R.tables[RtLB].Mark.PutCounter(rule.ruleNum)
 
 	eEps := rule.act.action.(*ruleNatActs).endPoints
 	activatedProbe := false
-	if rule.act.action.(*ruleNatActs).mode == cmn.LBModeOneArm || rule.ActChk {
+	if rule.act.action.(*ruleNatActs).mode == cmn.LBModeOneArm || rule.actChk {
 		activatedProbe = true
 	}
 	R.modNatEpHost(rule, eEps, false, activatedProbe)
 
-	delete(R.Tables[RtLB].eMap, rt.ruleKey())
+	delete(R.tables[RtLB].eMap, rt.ruleKey())
 	if rule.ruleNum < RtMaximumLbs {
-		R.Tables[RtLB].rArr[rule.ruleNum] = nil
+		R.tables[RtLB].rArr[rule.ruleNum] = nil
 	}
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
@@ -1207,7 +1212,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 func (R *RuleH) GetFwRule() ([]cmn.FwRuleMod, error) {
 	var res []cmn.FwRuleMod
 
-	for _, data := range R.Tables[RtFw].eMap {
+	for _, data := range R.tables[RtFw].eMap {
 		var ret cmn.FwRuleMod
 		// Make Fw Arguments
 		ret.Rule.DstIP = data.tuples.l3Dst.addr.String()
@@ -1301,7 +1306,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot,
 		l4Src: l4src, l4Dst: l4dst, port: inport, pref: fwRule.Pref}
 
-	eFw := R.Tables[RtFw].eMap[rt.ruleKey()]
+	eFw := R.tables[RtFw].eMap[rt.ruleKey()]
 
 	if eFw != nil {
 		// If a FW rule already exists
@@ -1310,7 +1315,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 
 	r := new(ruleEnt)
 	r.tuples = rt
-	r.zone = R.Zone
+	r.zone = R.zone
 
 	/* Default is drop */
 	fwOpts.op = RtActDrop
@@ -1333,7 +1338,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	}
 
 	r.act.action = &fwOpts
-	r.ruleNum, err = R.Tables[RtFw].Mark.GetCounter()
+	r.ruleNum, err = R.tables[RtFw].Mark.GetCounter()
 	if err != nil {
 		tk.LogIt(tk.LogError, "fw-rule - %s:%s mark error\n", eFw.tuples.String(), eFw.act.String())
 		return RuleAllocErr, errors.New("rule-mark error")
@@ -1342,7 +1347,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 
 	tk.LogIt(tk.LogDebug, "fw-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
-	R.Tables[RtFw].eMap[rt.ruleKey()] = r
+	R.tables[RtFw].eMap[rt.ruleKey()] = r
 
 	r.DP(DpCreate)
 
@@ -1398,14 +1403,14 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 	inport := ruleStringTuple{fwRule.InPort}
 	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot, l4Src: l4src, l4Dst: l4dst, port: inport, pref: fwRule.Pref}
 
-	rule := R.Tables[RtFw].eMap[rt.ruleKey()]
+	rule := R.tables[RtFw].eMap[rt.ruleKey()]
 	if rule == nil {
 		return RuleNotExistsErr, errors.New("no-rule error")
 	}
 
-	defer R.Tables[RtFw].Mark.PutCounter(rule.ruleNum)
+	defer R.tables[RtFw].Mark.PutCounter(rule.ruleNum)
 
-	delete(R.Tables[RtFw].eMap, rt.ruleKey())
+	delete(R.tables[RtFw].eMap, rt.ruleKey())
 
 	tk.LogIt(tk.LogDebug, "fw-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
 
@@ -1660,13 +1665,13 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 			sType = "tcp"
 		} else if ep.opts.probeType == HostProbeConnectUdp {
 			sType = "udp"
-			ret, sIP := R.Zone.L3.IfaSelectAny(net.ParseIP(ep.hostName), true)
+			ret, sIP := R.zone.L3.IfaSelectAny(net.ParseIP(ep.hostName), true)
 			if ret == 0 {
 				sHint = sIP.String()
 			}
 		} else {
 			sType = "sctp"
-			ret, sIP := R.Zone.L3.IfaSelectAny(net.ParseIP(ep.hostName), true)
+			ret, sIP := R.zone.L3.IfaSelectAny(net.ParseIP(ep.hostName), true)
 			if ret == 0 {
 				sHint = sIP.String()
 			}
@@ -1815,10 +1820,10 @@ func epTicker(R *RuleH, helper int) {
 // 1. Syncs rule statistics counts
 // 2. Check health of lb-rule end-points
 func (R *RuleH) RulesSync() {
-	for _, rule := range R.Tables[RtLB].eMap {
+	for _, rule := range R.tables[RtLB].eMap {
 		ruleKeys := rule.tuples.String()
 		ruleActs := rule.act.String()
-		if rule.Sync != 0 {
+		if rule.sync != 0 {
 			rule.DP(DpCreate)
 		}
 		rule.DP(DpStatsGet)
@@ -1826,7 +1831,7 @@ func (R *RuleH) RulesSync() {
 			rule.ruleNum, ruleKeys, ruleActs,
 			rule.stat.packets, rule.stat.bytes)
 
-		if rule.ActChk == false {
+		if rule.actChk == false {
 			continue
 		}
 
@@ -1837,10 +1842,10 @@ func (R *RuleH) RulesSync() {
 		}
 	}
 
-	for _, rule := range R.Tables[RtFw].eMap {
+	for _, rule := range R.tables[RtFw].eMap {
 		ruleKeys := rule.tuples.String()
 		ruleActs := rule.act.String()
-		if rule.Sync != 0 {
+		if rule.sync != 0 {
 			rule.DP(DpCreate)
 		}
 		rule.DP(DpStatsGet)
@@ -1859,7 +1864,7 @@ func (R *RuleH) RulesTicker() {
 func (R *RuleH) RuleDestructAll() {
 	var lbs cmn.LbServiceArg
 	var fwr cmn.FwRuleArg
-	for _, r := range R.Tables[RtLB].eMap {
+	for _, r := range R.tables[RtLB].eMap {
 		lbs.ServIP = r.tuples.l3Dst.addr.IP.String()
 		if r.tuples.l4Dst.val == 6 {
 			lbs.Proto = "tcp"
@@ -1877,7 +1882,7 @@ func (R *RuleH) RuleDestructAll() {
 
 		R.DeleteNatLbRule(lbs)
 	}
-	for _, r := range R.Tables[RtFw].eMap {
+	for _, r := range R.tables[RtFw].eMap {
 		fwr.DstIP = r.tuples.l3Dst.addr.String()
 		fwr.SrcIP = r.tuples.l3Src.addr.String()
 		if r.tuples.l4Src.valid == 0xffff {
@@ -1909,7 +1914,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork := new(NatDpWorkQ)
 
 	nWork.Work = work
-	nWork.Status = &r.Sync
+	nWork.Status = &r.sync
 	nWork.ZoneNum = r.zone.ZoneNum
 	nWork.ServiceIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
 	nWork.L4Port = r.tuples.l4Dst.val
@@ -2032,7 +2037,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 				e, sip := r.zone.L3.IfaSelectAny(ep.XIP, false)
 				if e != 0 {
 					tk.LogIt(tk.LogDebug, "Failed to find suitable source for %s\n", ep.XIP.String())
-					r.Sync = DpCreateErr
+					r.sync = DpCreateErr
 					return -1
 				}
 
@@ -2041,13 +2046,13 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 				if !mh.has.IsCIKAMode() {
 					ep.RIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
 				} else {
-					vip, err := mh.has.CIVipGet(r.CI)
+					vip, err := mh.has.CIVipGet(r.ci)
 					if err == nil {
-						tk.LogIt(tk.LogDebug, "vip for %s: %s\n", r.CI, vip.String())
+						tk.LogIt(tk.LogDebug, "vip for %s: %s\n", r.ci, vip.String())
 						ep.RIP = vip
 					} else {
-						tk.LogIt(tk.LogError, "[DP] vip for %s not found \n", r.CI)
-						r.Sync = DpCreateErr
+						tk.LogIt(tk.LogError, "[DP] vip for %s not found \n", r.ci)
+						r.sync = DpCreateErr
 						return -1
 					}
 				}
@@ -2060,7 +2065,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 			if tk.IsNetIPv6(nWork.ServiceIP.String()) && tk.IsNetIPv4(ep.XIP.String()) {
 				e, sip := r.zone.L3.IfaSelectAny(ep.XIP, false)
 				if e != 0 {
-					r.Sync = DpCreateErr
+					r.sync = DpCreateErr
 					return -1
 				}
 				ep.RIP = sip
@@ -2081,7 +2086,7 @@ func (r *ruleEnt) Fw2DP(work DpWorkT) int {
 	nWork := new(FwDpWorkQ)
 
 	nWork.Work = work
-	nWork.Status = &r.Sync
+	nWork.Status = &r.sync
 	nWork.ZoneNum = r.zone.ZoneNum
 	nWork.SrcIP = r.tuples.l3Src.addr
 	nWork.DstIP = r.tuples.l3Dst.addr
@@ -2102,7 +2107,7 @@ func (r *ruleEnt) Fw2DP(work DpWorkT) int {
 	if r.tuples.port.val != "" {
 		port := r.zone.Ports.PortFindByName(r.tuples.port.val)
 		if port == nil {
-			r.Sync = DpChangeErr
+			r.sync = DpChangeErr
 			return -1
 		}
 		nWork.Port = uint16(port.PortNo)
@@ -2122,7 +2127,7 @@ func (r *ruleEnt) Fw2DP(work DpWorkT) int {
 			nWork.FwType = DpFwRdr
 			port := r.zone.Ports.PortFindByName(at.opt.rdrPort)
 			if port == nil {
-				r.Sync = DpChangeErr
+				r.sync = DpChangeErr
 				return -1
 			}
 			nWork.FwVal1 = uint16(port.PortNo)
