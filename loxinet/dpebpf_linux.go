@@ -53,6 +53,7 @@ import (
 
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
+	"github.com/safchain/ethtool"
 )
 
 // This file implements the interface DpHookInterface
@@ -404,6 +405,22 @@ func (e *DpEbpfH) DpPortPropMod(w *PortDpWorkQ) int {
 			if lRet != 0 {
 				tk.LogIt(tk.LogError, "ebpf load - %d error\n", w.PortNum)
 				return EbpfErrEbpfLoad
+			}
+			
+			ethHandle, err := ethtool.NewEthtool()
+			if err != nil {
+				tk.LogIt(tk.LogError, "ethtoo handle create - %d(%s) error %s\n", w.PortNum, w.LoadEbpf, err.Error())
+			}
+			defer ethHandle.Close()
+			
+			/* We need to enable tx sctp checksumming offload */
+			features := map[string]bool{
+				"tx-checksum-sctp"				: true,
+			}
+			err = ethHandle.Change(w.LoadEbpf, features)
+			
+			if err != nil {
+				tk.LogIt(tk.LogError, "Intf %s unable to change Tx offload: %s\n", w.LoadEbpf, err.Error())
 			}
 		}
 		data := new(intfMapDat)
