@@ -243,6 +243,7 @@ func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, logLevel tk.LogLevelT) 
 	}
 	cfg.nodenum = C.int(nodeNum)
 	cfg.loglevel = 1
+	cfg.no_loader = 0
 
 	DpEbpfDPLogLevel(&cfg, logLevel)
 
@@ -406,19 +407,19 @@ func (e *DpEbpfH) DpPortPropMod(w *PortDpWorkQ) int {
 				tk.LogIt(tk.LogError, "ebpf load - %d error\n", w.PortNum)
 				return EbpfErrEbpfLoad
 			}
-			
+
 			ethHandle, err := ethtool.NewEthtool()
 			if err != nil {
 				tk.LogIt(tk.LogError, "ethtoo handle create - %d(%s) error %s\n", w.PortNum, w.LoadEbpf, err.Error())
 			}
 			defer ethHandle.Close()
-			
+
 			/* We need to enable tx sctp checksumming offload */
 			features := map[string]bool{
-				"tx-checksum-sctp"				: true,
+				"tx-checksum-sctp": true,
 			}
 			err = ethHandle.Change(w.LoadEbpf, features)
-			
+
 			if err != nil {
 				tk.LogIt(tk.LogError, "Intf %s unable to change Tx offload: %s\n", w.LoadEbpf, err.Error())
 			}
