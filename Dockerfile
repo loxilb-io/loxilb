@@ -50,6 +50,7 @@ RUN mkdir -p /root/loxilb-io/loxilb/
 
 # Install loxilb
 RUN git clone --recurse-submodules https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && cd /root/loxilb-io/loxilb/ && go get . && make && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && cp api/certification/* /opt/loxilb/cert/ && cd -
+RUN cp /root/loxilb-io/loxilb/loxilb-ebpf/kernel/loxilb_dp_debug  /usr/local/sbin/loxilb_dp_debug
 RUN cp /root/loxilb-io/loxilb/loxilb /usr/local/sbin/loxilb
 RUN rm -fr /root/loxilb-io/loxilb/*
 RUN rm -fr /root/loxilb-io/loxilb/.git
