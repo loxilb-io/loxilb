@@ -330,6 +330,12 @@ type LoadbalanceEntryServiceArguments struct {
 	// port number for the access
 	Port int64 `json:"port,omitempty"`
 
+	// probe port if probetype is tcp/udp/sctp
+	Probeport uint16 `json:"probeport,omitempty"`
+
+	// probe type for any end-point of this entry
+	Probetype string `json:"probetype,omitempty"`
+
 	// value for access protocol
 	Protocol string `json:"protocol,omitempty"`
 

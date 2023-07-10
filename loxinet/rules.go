@@ -250,6 +250,8 @@ type ruleEnt struct {
 	tuples  ruleTuples
 	ci      string
 	actChk  bool
+	prbType string
+	prbPort uint16
 	managed bool
 	bgp     bool
 	sT      time.Time
@@ -722,6 +724,8 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.Bgp = data.bgp
 		ret.Serv.BlockNum = data.tuples.pref
 		ret.Serv.Managed = data.managed
+		ret.Serv.ProbeType = data.prbType
+		ret.Serv.ProbePort = data.prbPort
 
 		for _, sip := range data.secIP {
 			ret.SecIPs = append(ret.SecIPs, cmn.LbSecIpArg{SecIP: sip.sIP.String()})
@@ -778,19 +782,26 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool, li
 	hopts.inActTryThr = DflLbaInactiveTries
 	hopts.probeDuration = DflHostProbeTimeout
 	for _, nep := range endpoints {
-		if r.tuples.l4Prot.val == 6 {
-			hopts.probeType = HostProbeConnectTcp
-			hopts.probePort = nep.xPort
-		} else if r.tuples.l4Prot.val == 17 {
-			hopts.probeType = HostProbeConnectUdp
-			hopts.probePort = nep.xPort
-		} else if r.tuples.l4Prot.val == 1 {
-			hopts.probeType = HostProbePing
-		} else if r.tuples.l4Prot.val == 132 {
-			hopts.probeType = HostProbeConnectSctp
-			hopts.probePort = nep.xPort
+		if r.prbType == "" {
+			if r.tuples.l4Prot.val == 6 {
+				hopts.probeType = HostProbeConnectTcp
+				hopts.probePort = nep.xPort
+			} else if r.tuples.l4Prot.val == 17 {
+				hopts.probeType = HostProbeConnectUdp
+				hopts.probePort = nep.xPort
+			} else if r.tuples.l4Prot.val == 1 {
+				hopts.probeType = HostProbePing
+			} else if r.tuples.l4Prot.val == 132 {
+				hopts.probeType = HostProbeConnectSctp
+				hopts.probePort = nep.xPort
+			} else {
+				hopts.probeType = HostProbePing
+			}
 		} else {
-			hopts.probeType = HostProbePing
+			// If probetype is specified as a part of rule,
+			// override per end-point liveness settings
+			hopts.probeType = r.prbType
+			hopts.probePort = r.prbPort
 		}
 
 		if mh.pProbe == true || liveCheckEn {
@@ -954,6 +965,36 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 		serv.InactiveTimeout = LbDefaultInactiveTimeout
 	}
 
+	// Validate liveness probetype and port
+	if serv.ProbeType != "" {
+		if serv.ProbeType != HostProbeConnectSctp &&
+			serv.ProbeType != HostProbeConnectTcp &&
+			serv.ProbeType != HostProbeConnectUdp &&
+			serv.ProbeType != HostProbePing &&
+			serv.ProbeType != HostProbeNone {
+			return RuleArgsErr, errors.New("malformed-service-ptype error")
+		}
+
+		if (serv.ProbeType == HostProbeConnectSctp ||
+			serv.ProbeType == HostProbeConnectTcp ||
+			serv.ProbeType == HostProbeConnectUdp) &&
+			(serv.ProbePort == 0) {
+			return RuleArgsErr, errors.New("malformed-service-pport error")
+		}
+
+		if (serv.ProbeType == HostProbeNone || serv.ProbeType == HostProbePing) &&
+			(serv.ProbePort != 0) {
+			return RuleArgsErr, errors.New("malformed-service-pport error")
+		}
+
+		// Override monitor flag to true if certain conditions meet
+		if serv.ProbeType != HostProbeNone {
+			serv.Monitor = true
+		}
+	} else if serv.ProbePort != 0 {
+		return RuleArgsErr, errors.New("malformed-service-pport error")
+	}
+
 	// Currently support a maximum of MAX_NAT_EPS
 	if len(servEndPoints) <= 0 || len(servEndPoints) > MaxNatEndPoints {
 		return RuleEpCountErr, errors.New("endpoints-range error")
@@ -1088,11 +1129,17 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 			e.mark = false
 		}
 
+		if eRule.prbType != serv.ProbeType || eRule.prbPort != serv.ProbePort {
+			ruleChg = true
+		}
+
 		if ruleChg == false {
 			return RuleExistsErr, errors.New("lbrule-exists error")
 		}
 
 		// Update the rule
+		eRule.prbType = serv.ProbeType
+		eRule.prbPort = serv.ProbePort
 		eRule.act.action.(*ruleNatActs).sel = natActs.sel
 		eRule.act.action.(*ruleNatActs).endPoints = eEps
 		eRule.act.action.(*ruleNatActs).mode = natActs.mode
@@ -1119,9 +1166,11 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 	}
 	r.managed = serv.Managed
 	r.secIP = nSecIP
-	// Per LB end-point health-check is supposed to be handled at CCM,
+	// Per LB end-point health-check is supposed to be handled at kube-loxilb/CCM,
 	// but it certain cases like stand-alone mode, loxilb can do its own
 	// lb end-point health monitoring
+	r.prbType = serv.ProbeType
+	r.prbPort = serv.ProbePort
 	r.actChk = serv.Monitor
 	r.act.action = &natActs
 	r.ruleNum, err = R.tables[RtLB].Mark.GetCounter()

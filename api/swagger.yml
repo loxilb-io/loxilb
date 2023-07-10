@@ -2166,6 +2166,13 @@ definitions:
           monitor:
             type: boolean
             description: value for monitoring enabled or not
+          probetype:
+            type: string
+            description: probe type for any end-point of this entry
+          probeport:
+            type: integer
+            format: uint16
+            description: probe port if probetype is tcp/udp/sctp
           managed:
             type: boolean
             description: externally managed rule or not
