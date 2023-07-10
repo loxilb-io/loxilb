@@ -8,6 +8,11 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"github.com/go-openapi/runtime/flagext"
+	"github.com/go-openapi/swag"
+	flags "github.com/jessevdk/go-flags"
+	"github.com/loxilb-io/loxilb/api/restapi/operations"
+	"golang.org/x/net/netutil"
 	"log"
 	"net"
 	"net/http"
@@ -18,13 +23,6 @@ import (
 	"sync/atomic"
 	"syscall"
 	"time"
-
-	"github.com/go-openapi/runtime/flagext"
-	"github.com/go-openapi/swag"
-	flags "github.com/jessevdk/go-flags"
-	"golang.org/x/net/netutil"
-
-	"github.com/loxilb-io/loxilb/api/restapi/operations"
 )
 
 const (
@@ -104,6 +102,8 @@ type Server struct {
 	interrupt    chan os.Signal
 }
 
+var sigShutOk chan bool
+
 // Logf logs message either via defined user logger or via system one if no user logger is defined.
 func (s *Server) Logf(f string, args ...interface{}) {
 	if s.api != nil && s.api.Logger != nil {
@@ -165,6 +165,10 @@ func (s *Server) Serve() (err error) {
 		}
 
 		s.SetHandler(s.api.Serve(nil))
+	}
+
+	if sigShutOk == nil {
+		sigShutOk = make(chan bool)
 	}
 
 	wg := new(sync.WaitGroup)
@@ -487,6 +491,20 @@ func (s *Server) TLSListener() (net.Listener, error) {
 	return s.httpsServerL, nil
 }
 
+func waitServerSigShutOk() {
+	for {
+		select {
+		case <-sigShutOk:
+			return
+		}
+	}
+}
+
+// ServerSigShutOk - Notifier for server to be shutdown on signals
+func ServerSigShutOk() {
+	sigShutOk <- true
+}
+
 func handleInterrupt(once *sync.Once, s *Server) {
 	once.Do(func() {
 		for range s.interrupt {
@@ -494,6 +512,7 @@ func handleInterrupt(once *sync.Once, s *Server) {
 				s.Logf("Server already shutting down")
 				continue
 			}
+			waitServerSigShutOk()
 			s.interrupted = true
 			s.Logf("Shutting down... ")
 			if err := s.Shutdown(); err != nil {
