@@ -22,6 +22,7 @@ import (
 	apiserver "github.com/loxilb-io/loxilb/api"
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
 	prometheus "github.com/loxilb-io/loxilb/api/prometheus"
+	restapi "github.com/loxilb-io/loxilb/api/restapi"
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
@@ -179,8 +180,12 @@ func loxiNetTicker() {
 					try++
 				}
 			} else if sig == syscall.SIGHUP {
-				fmt.Printf("SIGHUP called\n")
+				tk.LogIt(tk.LogCritical, "SIGHUP received\n")
 				pprof.StopCPUProfile()
+			} else if sig == syscall.SIGINT || sig == syscall.SIGTERM {
+				tk.LogIt(tk.LogCritical, "Shutdown on sig %v\n", sig)
+				mh.dpEbpf.DpEbpfUnInit()
+				restapi.ServerSigShutOk()
 			}
 		case t := <-mh.ticker.C:
 			tk.LogIt(-1, "Tick at %v\n", t)
@@ -225,8 +230,7 @@ func loxiNetInit() {
 	mh.sumDis = opts.Opts.CSumDisable
 	mh.pProbe = opts.Opts.PassiveEPProbe
 	mh.sigCh = make(chan os.Signal, 5)
-	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD)
-	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGHUP)
+	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 
 	// Check if profiling is enabled
 	if opts.Opts.CPUProfile != "none" {
