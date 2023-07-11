@@ -500,10 +500,14 @@ type LbServiceArg struct {
 	InactiveTimeout uint32 `json:"inactiveTimeout"`
 	// Managed - This rule is managed by external entity e.g k8s
 	Managed bool `json:"managed"`
-	// ProbeType - Liveness check type for this rule : ping, tcp, udp, sctp, none
+	// ProbeType - Liveness check type for this rule : ping, tcp, udp, sctp, none, http(s)
 	ProbeType string `json:"probetype"`
-	// ProbePort - Liveness check port number. Only valid for tcp, udp, sctp
+	// ProbePort - Liveness check port number. Only valid for tcp, udp, sctp, http(s)
 	ProbePort uint16 `json:"probeport"`
+	// ProbeReq - Request string for liveness check
+	ProbeReq string `json:"probereq"`
+	// ProbeResp - Response string for liveness check
+	ProbeResp string `json:"proberesp"`
 }
 
 // LbEndPointArg - Information related to load-balancer end-point

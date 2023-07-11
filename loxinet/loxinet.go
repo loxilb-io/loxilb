@@ -22,7 +22,6 @@ import (
 	apiserver "github.com/loxilb-io/loxilb/api"
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
 	prometheus "github.com/loxilb-io/loxilb/api/prometheus"
-	restapi "github.com/loxilb-io/loxilb/api/restapi"
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
@@ -185,7 +184,7 @@ func loxiNetTicker() {
 			} else if sig == syscall.SIGINT || sig == syscall.SIGTERM {
 				tk.LogIt(tk.LogCritical, "Shutdown on sig %v\n", sig)
 				mh.dpEbpf.DpEbpfUnInit()
-				restapi.ServerSigShutOk()
+				apiserver.ApiServerShutOk()
 			}
 		case t := <-mh.ticker.C:
 			tk.LogIt(-1, "Tick at %v\n", t)

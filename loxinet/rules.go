@@ -247,6 +247,8 @@ type ruleProbe struct {
 	actChk  bool
 	prbType string
 	prbPort uint16
+	prbReq  string
+	prbResp string
 }
 
 type ruleEnt struct {
@@ -730,6 +732,8 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.Managed = data.managed
 		ret.Serv.ProbeType = data.hChk.prbType
 		ret.Serv.ProbePort = data.hChk.prbPort
+		ret.Serv.ProbeReq = data.hChk.prbReq
+		ret.Serv.ProbeResp = data.hChk.prbResp
 
 		for _, sip := range data.secIP {
 			ret.SecIPs = append(ret.SecIPs, cmn.LbSecIpArg{SecIP: sip.sIP.String()})
@@ -808,6 +812,8 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool, li
 			// override per end-point liveness settings
 			hopts.probeType = r.hChk.prbType
 			hopts.probePort = r.hChk.prbPort
+			hopts.probeReq = r.hChk.prbReq
+			hopts.probeResp = r.hChk.prbResp
 		} else {
 			hopts.probeType = pType
 			hopts.probePort = pPort
@@ -1138,7 +1144,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 			e.mark = false
 		}
 
-		if eRule.hChk.prbType != serv.ProbeType || eRule.hChk.prbPort != serv.ProbePort {
+		if eRule.hChk.prbType != serv.ProbeType || eRule.hChk.prbPort != serv.ProbePort ||
+			eRule.hChk.prbReq != serv.ProbeReq || eRule.hChk.prbResp != serv.ProbeResp {
 			ruleChg = true
 		}
 
@@ -1149,6 +1156,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 		// Update the rule
 		eRule.hChk.prbType = serv.ProbeType
 		eRule.hChk.prbPort = serv.ProbePort
+		eRule.hChk.prbReq = serv.ProbeReq
+		eRule.hChk.prbResp = serv.ProbeResp
 		eRule.act.action.(*ruleNatActs).sel = natActs.sel
 		eRule.act.action.(*ruleNatActs).endPoints = eEps
 		eRule.act.action.(*ruleNatActs).mode = natActs.mode
@@ -1180,6 +1189,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 	// lb end-point health monitoring
 	r.hChk.prbType = serv.ProbeType
 	r.hChk.prbPort = serv.ProbePort
+	r.hChk.prbReq = serv.ProbeReq
+	r.hChk.prbResp = serv.ProbeResp
 	r.hChk.actChk = serv.Monitor
 	r.act.action = &natActs
 	r.ruleNum, err = R.tables[RtLB].Mark.GetCounter()

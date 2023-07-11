@@ -3510,6 +3510,14 @@ func init() {
               "type": "integer",
               "format": "uint16"
             },
+            "probereq": {
+              "description": "probe request string",
+              "type": "string"
+            },
+            "proberesp": {
+              "description": "probe response string",
+              "type": "string"
+            },
             "probetype": {
               "description": "probe type for any end-point of this entry",
               "type": "string"
@@ -7616,6 +7624,14 @@ func init() {
               "type": "integer",
               "format": "uint16"
             },
+            "probereq": {
+              "description": "probe request string",
+              "type": "string"
+            },
+            "proberesp": {
+              "description": "probe response string",
+              "type": "string"
+            },
             "probetype": {
               "description": "probe type for any end-point of this entry",
               "type": "string"
@@ -7702,6 +7718,14 @@ func init() {
           "description": "probe port if probetype is tcp/udp/sctp",
           "type": "integer",
           "format": "uint16"
+        },
+        "probereq": {
+          "description": "probe request string",
+          "type": "string"
+        },
+        "proberesp": {
+          "description": "probe response string",
+          "type": "string"
         },
         "probetype": {
           "description": "probe type for any end-point of this entry",
