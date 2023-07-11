@@ -243,15 +243,19 @@ type ruleStat struct {
 	packets uint64
 }
 
+type ruleProbe struct {
+	actChk  bool
+	prbType string
+	prbPort uint16
+}
+
 type ruleEnt struct {
 	zone    *Zone
 	ruleNum uint64
 	sync    DpStatusT
 	tuples  ruleTuples
 	ci      string
-	actChk  bool
-	prbType string
-	prbPort uint16
+	hChk    ruleProbe
 	managed bool
 	bgp     bool
 	sT      time.Time
@@ -719,13 +723,13 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.ServPort = data.tuples.l4Dst.val
 		ret.Serv.Sel = data.act.action.(*ruleNatActs).sel
 		ret.Serv.Mode = data.act.action.(*ruleNatActs).mode
-		ret.Serv.Monitor = data.actChk
+		ret.Serv.Monitor = data.hChk.actChk
 		ret.Serv.InactiveTimeout = data.iTo
 		ret.Serv.Bgp = data.bgp
 		ret.Serv.BlockNum = data.tuples.pref
 		ret.Serv.Managed = data.managed
-		ret.Serv.ProbeType = data.prbType
-		ret.Serv.ProbePort = data.prbPort
+		ret.Serv.ProbeType = data.hChk.prbType
+		ret.Serv.ProbePort = data.hChk.prbPort
 
 		for _, sip := range data.secIP {
 			ret.SecIPs = append(ret.SecIPs, cmn.LbSecIpArg{SecIP: sip.sIP.String()})
@@ -779,36 +783,41 @@ func validateXlateEPWeights(servEndPoints []cmn.LbEndPointArg) (int, error) {
 
 func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool, liveCheckEn bool) {
 	var hopts epHostOpts
+	pType := ""
+	pPort := uint16(0)
 	hopts.inActTryThr = DflLbaInactiveTries
 	hopts.probeDuration = DflHostProbeTimeout
 	for _, nep := range endpoints {
-		if r.prbType == "" {
-			if r.tuples.l4Prot.val == 6 {
-				hopts.probeType = HostProbeConnectTcp
-				hopts.probePort = nep.xPort
-			} else if r.tuples.l4Prot.val == 17 {
-				hopts.probeType = HostProbeConnectUdp
-				hopts.probePort = nep.xPort
-			} else if r.tuples.l4Prot.val == 1 {
-				hopts.probeType = HostProbePing
-			} else if r.tuples.l4Prot.val == 132 {
-				hopts.probeType = HostProbeConnectSctp
-				hopts.probePort = nep.xPort
-			} else {
-				hopts.probeType = HostProbePing
-			}
+		if r.tuples.l4Prot.val == 6 {
+			pType = HostProbeConnectTcp
+			pPort = nep.xPort
+		} else if r.tuples.l4Prot.val == 17 {
+			pType = HostProbeConnectUdp
+			pPort = nep.xPort
+		} else if r.tuples.l4Prot.val == 1 {
+			pType = HostProbePing
+		} else if r.tuples.l4Prot.val == 132 {
+			pType = HostProbeConnectSctp
+			pPort = nep.xPort
 		} else {
+			pType = HostProbePing
+		}
+
+		if r.hChk.prbType != "" {
 			// If probetype is specified as a part of rule,
 			// override per end-point liveness settings
-			hopts.probeType = r.prbType
-			hopts.probePort = r.prbPort
+			hopts.probeType = r.hChk.prbType
+			hopts.probePort = r.hChk.prbPort
+		} else {
+			hopts.probeType = pType
+			hopts.probePort = pPort
 		}
 
 		if mh.pProbe == true || liveCheckEn {
 			hopts.probeActivated = true
 		}
 
-		epKey := makeEPKey(nep.xIP.String(), hopts.probeType, hopts.probePort)
+		epKey := makeEPKey(nep.xIP.String(), pType, pPort)
 
 		if doAddOp {
 			if nep.inActive != true {
@@ -1129,7 +1138,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 			e.mark = false
 		}
 
-		if eRule.prbType != serv.ProbeType || eRule.prbPort != serv.ProbePort {
+		if eRule.hChk.prbType != serv.ProbeType || eRule.hChk.prbPort != serv.ProbePort {
 			ruleChg = true
 		}
 
@@ -1138,8 +1147,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 		}
 
 		// Update the rule
-		eRule.prbType = serv.ProbeType
-		eRule.prbPort = serv.ProbePort
+		eRule.hChk.prbType = serv.ProbeType
+		eRule.hChk.prbPort = serv.ProbePort
 		eRule.act.action.(*ruleNatActs).sel = natActs.sel
 		eRule.act.action.(*ruleNatActs).endPoints = eEps
 		eRule.act.action.(*ruleNatActs).mode = natActs.mode
@@ -1169,9 +1178,9 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 	// Per LB end-point health-check is supposed to be handled at kube-loxilb/CCM,
 	// but it certain cases like stand-alone mode, loxilb can do its own
 	// lb end-point health monitoring
-	r.prbType = serv.ProbeType
-	r.prbPort = serv.ProbePort
-	r.actChk = serv.Monitor
+	r.hChk.prbType = serv.ProbeType
+	r.hChk.prbPort = serv.ProbePort
+	r.hChk.actChk = serv.Monitor
 	r.act.action = &natActs
 	r.ruleNum, err = R.tables[RtLB].Mark.GetCounter()
 	if err != nil {
@@ -1240,7 +1249,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 
 	eEps := rule.act.action.(*ruleNatActs).endPoints
 	activatedProbe := false
-	if rule.act.action.(*ruleNatActs).mode == cmn.LBModeOneArm || rule.actChk {
+	if rule.act.action.(*ruleNatActs).mode == cmn.LBModeOneArm || rule.hChk.actChk {
 		activatedProbe = true
 	}
 	R.modNatEpHost(rule, eEps, false, activatedProbe)
@@ -1880,7 +1889,7 @@ func (R *RuleH) RulesSync() {
 			rule.ruleNum, ruleKeys, ruleActs,
 			rule.stat.packets, rule.stat.bytes)
 
-		if rule.actChk == false {
+		if rule.hChk.actChk == false {
 			continue
 		}
 
