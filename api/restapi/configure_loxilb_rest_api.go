@@ -18,7 +18,6 @@ package restapi
 import (
 	"crypto/tls"
 	"net/http"
-	"os"
 
 	opts "github.com/loxilb-io/loxilb/options"
 
@@ -155,9 +154,7 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 
 	api.PreServerShutdown = func() {}
 
-	api.ServerShutdown = func() {
-		os.Exit(0)
-	}
+	api.ServerShutdown = func() {}
 
 	return setupGlobalMiddleware(api.Serve(setupMiddlewares))
 }

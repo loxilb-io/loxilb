@@ -3505,6 +3505,23 @@ func init() {
               "description": "port number for the access",
               "type": "integer"
             },
+            "probeport": {
+              "description": "probe port if probetype is tcp/udp/sctp",
+              "type": "integer",
+              "format": "uint16"
+            },
+            "probereq": {
+              "description": "probe request string",
+              "type": "string"
+            },
+            "proberesp": {
+              "description": "probe response string",
+              "type": "string"
+            },
+            "probetype": {
+              "description": "probe type for any end-point of this entry",
+              "type": "string"
+            },
             "protocol": {
               "description": "value for access protocol",
               "type": "string"
@@ -7602,6 +7619,23 @@ func init() {
               "description": "port number for the access",
               "type": "integer"
             },
+            "probeport": {
+              "description": "probe port if probetype is tcp/udp/sctp",
+              "type": "integer",
+              "format": "uint16"
+            },
+            "probereq": {
+              "description": "probe request string",
+              "type": "string"
+            },
+            "proberesp": {
+              "description": "probe response string",
+              "type": "string"
+            },
+            "probetype": {
+              "description": "probe type for any end-point of this entry",
+              "type": "string"
+            },
             "protocol": {
               "description": "value for access protocol",
               "type": "string"
@@ -7679,6 +7713,23 @@ func init() {
         "port": {
           "description": "port number for the access",
           "type": "integer"
+        },
+        "probeport": {
+          "description": "probe port if probetype is tcp/udp/sctp",
+          "type": "integer",
+          "format": "uint16"
+        },
+        "probereq": {
+          "description": "probe request string",
+          "type": "string"
+        },
+        "proberesp": {
+          "description": "probe response string",
+          "type": "string"
+        },
+        "probetype": {
+          "description": "probe type for any end-point of this entry",
+          "type": "string"
         },
         "protocol": {
           "description": "value for access protocol",
