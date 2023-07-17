@@ -67,9 +67,6 @@ RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && i
     echo "    . /etc/bash_completion" >> /root/.bashrc && \
     echo "fi" >> /root/.bashrc
 
-## Please note that bpftool needs llvm for debugging.
-## We need to reinstall llvm while debugging
-
 # Optional files, only apply when files exist
 COPY ./loxilb.rep* /root/loxilb-io/loxilb/loxilb
 COPY ./llb_ebpf_main.o.rep* /opt/loxilb/llb_ebpf_main.o
