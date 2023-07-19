@@ -59,7 +59,7 @@ type ClusterNode struct {
 type CIStateH struct {
 	SpawnKa    bool
 	kaMode     bool
-	ClusterMap map[string]ClusterInstance
+	ClusterMap map[string]*ClusterInstance
 	StateMap   map[string]int
 	NodeMap    map[string]*ClusterNode
 }
@@ -110,7 +110,7 @@ func kaSpawn() {
 	}
 }
 
-func (ci *CIStateH) CISync(doNotify bool) {
+func (ci *CIStateH) CISync() {
 	var sm cmn.HASMod
 	var ciState int
 	var ok bool
@@ -127,7 +127,7 @@ func (ci *CIStateH) CISync(doNotify bool) {
 			var vip string
 			// Format style -
 			// INSTANCE default is in BACKUP state
-			_, err = fmt.Sscanf(fsc.Text(), "INSTANCE %s is in %s state, vip %s", &inst, &state, &vip)
+			_, err = fmt.Sscanf(fsc.Text(), "INSTANCE %s is in %s state vip %s", &inst, &state, &vip)
 			if err != nil {
 				continue
 			}
@@ -146,19 +146,12 @@ func (ci *CIStateH) CISync(doNotify bool) {
 				}
 			}
 
-			if notify && doNotify {
-				tk.LogIt(tk.LogInfo, "ci-change instance %s - state %s vip %s\n", inst, state, vip)
+			if notify {
 				sm.Instance = inst
 				sm.State = state
 				sm.Vip = net.ParseIP(vip)
+				tk.LogIt(tk.LogInfo, "ci-change instance %s - state %s vip %v\n", inst, state, sm.Vip)
 				ci.CIStateUpdate(sm)
-			} else {
-				if ciState != cmn.CIStateMaster && ciState != cmn.CIStateBackup {
-					continue
-				}
-
-				nci := ClusterInstance{State: ciState, StateStr: state}
-				ci.ClusterMap[inst] = nci
 			}
 		}
 
@@ -169,7 +162,7 @@ func (ci *CIStateH) CISync(doNotify bool) {
 // CITicker - Periodic ticker for Cluster module
 func (ci *CIStateH) CITicker() {
 	mh.mtx.Lock()
-	ci.CISync(true)
+	ci.CISync()
 	mh.mtx.Unlock()
 }
 
@@ -191,14 +184,13 @@ func CIInit(spawnKa bool, kaMode bool) *CIStateH {
 	nCIh.StateMap["NOT_DEFINED"] = cmn.CIStateNotDefined
 	nCIh.SpawnKa = spawnKa
 	nCIh.kaMode = kaMode
-	nCIh.ClusterMap = make(map[string]ClusterInstance)
-	// nCIh.CISync(false)
+	nCIh.ClusterMap = make(map[string]*ClusterInstance)
 
 	if _, ok := nCIh.ClusterMap[cmn.CIDefault]; !ok {
-		var ci ClusterInstance
-		ci.State = cmn.CIStateNotDefined
-		ci.StateStr = "NOT_DEFINED"
-		ci.Vip = net.IPv4zero
+		ci := &ClusterInstance{State: cmn.CIStateNotDefined,
+			StateStr: "NOT_DEFINED",
+			Vip:      net.IPv4zero,
+		}
 		nCIh.ClusterMap[cmn.CIDefault] = ci
 		if mh.bgp != nil {
 			mh.bgp.UpdateCIState(cmn.CIDefault, ci.State, ci.Vip)
@@ -236,7 +228,7 @@ func (h *CIStateH) CIStateGet() ([]cmn.HASMod, error) {
 // CIVipGet - routine to get HA state
 func (h *CIStateH) CIVipGet(inst string) (net.IP, error) {
 	if ci, ok := h.ClusterMap[inst]; ok {
-		if !ci.Vip.IsUnspecified() {
+		if ci.Vip != nil && !ci.Vip.IsUnspecified() {
 			return ci.Vip, nil
 		}
 	}
@@ -252,13 +244,17 @@ func (h *CIStateH) IsCIKAMode() bool {
 func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 
 	if _, ok := h.ClusterMap[cm.Instance]; !ok {
-		h.ClusterMap[cm.Instance] = ClusterInstance{State: cmn.CIStateNotDefined,
+		h.ClusterMap[cm.Instance] = &ClusterInstance{State: cmn.CIStateNotDefined,
 			StateStr: "NOT_DEFINED",
 			Vip:      net.IPv4zero}
 		tk.LogIt(tk.LogDebug, "[CLUSTER] New Instance %s created\n", cm.Instance)
 	}
 
-	ci := h.ClusterMap[cm.Instance]
+	ci, found := h.ClusterMap[cm.Instance]
+	if !found {
+		tk.LogIt(tk.LogError, "[CLUSTER] New Instance %s find error\n", cm.Instance)
+		return -1, errors.New("Cluster instance not found")
+	}
 
 	if ci.StateStr == cm.State {
 		return ci.State, nil
@@ -270,7 +266,6 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 		ci.StateStr = cm.State
 		ci.State = h.StateMap[cm.State]
 		ci.Vip = cm.Vip
-		h.ClusterMap[cm.Instance] = ci
 		if h.SpawnKa && (cm.State == "FAULT" || cm.State == "STOP") {
 			RunCommand("pkill keepalived", false)
 		}
