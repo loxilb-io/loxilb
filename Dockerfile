@@ -58,7 +58,7 @@ RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && i
     tar -xzf gobgp_3.5.0_linux_amd64.tar.gz &&  rm gobgp_3.5.0_linux_amd64.tar.gz && \
     mv gobgp* /usr/sbin/ && rm LICENSE README.md && \
     apt-get purge -y clang llvm libelf-dev libpcap-dev libbsd-dev build-essential \
-    elfutils dwarves git bison flex curl wget unzip && apt-get -y autoremove && \
+    elfutils dwarves git bison flex wget unzip && apt-get -y autoremove && \
     apt-get install -y libllvm10 && \
     # cleanup unnecessary packages
     if [ "$arch" = "arm64" ] ; then apt purge -y gcc-multilib-arm-linux-gnueabihf; else apt update && apt purge -y gcc-multilib;fi && \

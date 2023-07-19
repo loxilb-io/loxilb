@@ -127,7 +127,7 @@ func (ci *CIStateH) CISync(doNotify bool) {
 			var vip string
 			// Format style -
 			// INSTANCE default is in BACKUP state
-			_, err = fmt.Sscanf(fsc.Text(), "INSTANCE %s is in %s state, vip %s", &inst, &state, &vip)
+			_, err = fmt.Sscanf(fsc.Text(), "INSTANCE %s is in %s state vip %s", &inst, &state, &vip)
 			if err != nil {
 				continue
 			}
