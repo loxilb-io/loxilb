@@ -110,7 +110,7 @@ func kaSpawn() {
 	}
 }
 
-func (ci *CIStateH) CISync(doNotify bool) {
+func (ci *CIStateH) CISync() {
 	var sm cmn.HASMod
 	var ciState int
 	var ok bool
@@ -146,19 +146,12 @@ func (ci *CIStateH) CISync(doNotify bool) {
 				}
 			}
 
-			if notify && doNotify {
+			if notify {
 				sm.Instance = inst
 				sm.State = state
 				sm.Vip = net.ParseIP(vip)
 				tk.LogIt(tk.LogInfo, "ci-change instance %s - state %s vip %v\n", inst, state, sm.Vip)
 				ci.CIStateUpdate(sm)
-			} else {
-				if ciState != cmn.CIStateMaster && ciState != cmn.CIStateBackup {
-					continue
-				}
-
-				nci := &ClusterInstance{State: ciState, StateStr: state}
-				ci.ClusterMap[inst] = nci
 			}
 		}
 
@@ -169,7 +162,7 @@ func (ci *CIStateH) CISync(doNotify bool) {
 // CITicker - Periodic ticker for Cluster module
 func (ci *CIStateH) CITicker() {
 	mh.mtx.Lock()
-	ci.CISync(true)
+	ci.CISync()
 	mh.mtx.Unlock()
 }
 
@@ -192,7 +185,6 @@ func CIInit(spawnKa bool, kaMode bool) *CIStateH {
 	nCIh.SpawnKa = spawnKa
 	nCIh.kaMode = kaMode
 	nCIh.ClusterMap = make(map[string]*ClusterInstance)
-	// nCIh.CISync(false)
 
 	if _, ok := nCIh.ClusterMap[cmn.CIDefault]; !ok {
 		ci := &ClusterInstance{State: cmn.CIStateNotDefined,
@@ -236,7 +228,7 @@ func (h *CIStateH) CIStateGet() ([]cmn.HASMod, error) {
 // CIVipGet - routine to get HA state
 func (h *CIStateH) CIVipGet(inst string) (net.IP, error) {
 	if ci, ok := h.ClusterMap[inst]; ok {
-		if !ci.Vip.IsUnspecified() {
+		if ci.Vip != nil && !ci.Vip.IsUnspecified() {
 			return ci.Vip, nil
 		}
 	}
