@@ -35,18 +35,20 @@ docker-cp-ebpf: build
 	docker cp /opt/loxilb/llb_ebpf_main.o $(loxilbid):/opt/loxilb/llb_ebpf_main.o
 	docker cp /opt/loxilb/llb_xdp_main.o $(loxilbid):/opt/loxilb/llb_xdp_main.o
 
-docker-rp: build
-	cp loxilb ./loxilb.rep
-	cp /opt/loxilb/llb_ebpf_main.o ./llb_ebpf_main.o.rep
-	cp /opt/loxilb/llb_xdp_main.o ./llb_xdp_main.o.rep
-	$(MAKE) docker
-	rm ./llb_ebpf_main.o.rep ./llb_xdp_main.o.rep ./loxilb.rep
+docker-run:
+	@docker stop $(dock) 2>&1 >> /dev/null || true
+	@docker rm $(dock) 2>&1 >> /dev/null || true
+	docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash  --name $(dock) ghcr.io/loxilb-io/loxilb:latest
 
-docker-rp-ebpf: build
-	cp /opt/loxilb/llb_ebpf_main.o ./llb_ebpf_main.o.rep
-	cp /opt/loxilb/llb_xdp_main.o ./llb_xdp_main.o.rep
-	$(MAKE) docker
-	rm ./llb_ebpf_main.o.rep ./llb_xdp_main.o.rep
+docker-rp: docker-run docker-cp
+	docker commit ${loxilbid} ghcr.io/loxilb-io/loxilb:latest
+	@docker stop $(dock) 2>&1 >> /dev/null || true
+	@docker rm $(dock) 2>&1 >> /dev/null || true
+
+docker-rp-ebpf: docker-run docker-cp-ebpf
+	docker commit ${loxilbid} ghcr.io/loxilb-io/loxilb:latest
+	@docker stop $(dock) 2>&1 >> /dev/null || true
+	@docker rm $(dock) 2>&1 >> /dev/null || true
 
 docker:
 	docker build -t ghcr.io/loxilb-io/loxilb:latest .
