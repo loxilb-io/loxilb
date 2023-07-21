@@ -92,6 +92,7 @@ spec:
         app: loxilb
     spec:
       hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       tolerations:
         - effect: NoSchedule
           operator: Exists
@@ -105,16 +106,16 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
       - name: kube-loxilb
-        image: ghcr.io/loxilb-io/kube-loxilb:latest
+        image: ghcr.io/loxilb-io/kube-loxilb:debug
         imagePullPolicy: Always
         command:
         - /bin/kube-loxilb
         args:
-        - --loxiURL=http://192.168.59.101:11111,http://192.168.59.111:11111
-          #- --externalCIDR=123.123.123.1/24
-        - --externalCIDR=3ffe::1/96
-        - --setBGP=64511
-        - --setLBMode=2
+        #- --loxiURL=http://192.168.80.10:11111
+        - --externalCIDR=123.123.123.1/24
+        #- --monitor
+        #- --setBGP
+        #- --setLBMode=1
         #- --config=/opt/loxilb/agent/kube-loxilb.conf
         resources:
           requests:
