@@ -1,5 +1,7 @@
 #!/bin/bash
 source ../common.sh
+source ../k3s_common.sh
+
 echo "cluster-k3s: TCP & SCTP Multihoming combined"
 
 if [ "$1" ]; then
@@ -113,3 +115,32 @@ else
     echo "BFP trace -- "
     exit 1
 fi
+
+## Check delete and readd service
+kubectl $KUBECONFIG delete -f nginx-svc-lb1.yml
+sleep 10
+kubectl $KUBECONFIG apply -f nginx-svc-lb1.yml
+sleep 10
+
+# Wait for cluster to be ready
+wait_cluster_ready_full
+
+out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002)
+if [[ ${out} == *"Welcome to nginx"* ]]; then
+  echo "cluster-k3s TCP service nginx-lb del+add (kube-loxilb) [OK]"
+else
+  echo "cluster-k3s TCP service nginx-lb del+add (kube-loxilb) [FAILED]"
+  ## Dump some debug info
+  echo "llb1 lb-info"
+  $dexec llb1 loxicmd get lb
+  echo "llb1 route-info"
+  $dexec llb1 ip route
+  echo "llb2 lb-info"
+  $dexec llb2 loxicmd get lb
+  echo "llb2 route-info"
+  $dexec llb2 ip route
+  echo "r1 route-info"
+  $dexec r1 ip route
+  exit 1
+fi
+
