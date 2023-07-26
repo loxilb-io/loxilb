@@ -232,7 +232,7 @@ func DpEbpfSetLogLevel(logLevel tk.LogLevelT) {
 }
 
 // DpEbpfInit - initialize the ebpf dp subsystem
-func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, logLevel tk.LogLevelT) *DpEbpfH {
+func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, egrHooks bool, logLevel tk.LogLevelT) *DpEbpfH {
 	var cfg C.struct_ebpfcfg
 
 	if clusterEn {
@@ -240,6 +240,12 @@ func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, logLevel tk.LogLevelT) 
 	} else {
 		cfg.have_mtrace = 0
 	}
+	if egrHooks {
+		cfg.egr_hooks = 1
+	} else {
+		cfg.egr_hooks = 0
+	}
+
 	cfg.nodenum = C.int(nodeNum)
 	cfg.loglevel = 1
 	cfg.no_loader = 0
