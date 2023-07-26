@@ -24,4 +24,5 @@ var Opts struct {
 	CSumDisable       bool           `long:"disable-csum" description:"Disable checksum update(experimental)"`
 	PassiveEPProbe    bool           `long:"passive-probe" description:"Enable passive liveness probes(experimental)"`
 	RssEnable         bool           `long:"rss-enable" description:"Enable rss optimization(experimental)"`
+	EgrHooks          bool           `long:"egr-hooks" description:"Enable eBPF egress hooks(experimental)"`
 }

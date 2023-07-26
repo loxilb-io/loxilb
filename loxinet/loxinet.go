@@ -76,6 +76,7 @@ type loxiNetH struct {
 	ready  bool
 	self   int
 	rssEn  bool
+	eHooks bool
 	pFile  *os.File
 }
 
@@ -226,6 +227,7 @@ func loxiNetInit() {
 
 	mh.self = opts.Opts.ClusterSelf
 	mh.rssEn = opts.Opts.RssEnable
+	mh.eHooks = opts.Opts.EgrHooks
 	mh.sumDis = opts.Opts.CSumDisable
 	mh.pProbe = opts.Opts.PassiveEPProbe
 	mh.sigCh = make(chan os.Signal, 5)
@@ -247,7 +249,7 @@ func loxiNetInit() {
 	}
 
 	// Initialize the ebpf datapath subsystem
-	mh.dpEbpf = DpEbpfInit(clusterMode, mh.self, mh.rssEn, -1)
+	mh.dpEbpf = DpEbpfInit(clusterMode, mh.self, mh.rssEn, mh.eHooks, -1)
 	mh.dp = DpBrokerInit(mh.dpEbpf)
 
 	// Initialize the security zone subsystem
