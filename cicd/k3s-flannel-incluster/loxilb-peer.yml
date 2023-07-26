@@ -1,36 +1,31 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: loxilb-lb
+  name: loxilb-peer
   namespace: kube-system
 spec:
   selector:
     matchLabels:
-      app: loxilb-app
+      app: loxilb-peer-app
   template:
     metadata:
-      name: loxilb-lb
+      name: loxilb-peer
       labels:
-        app: loxilb-app
+        app: loxilb-peer-app
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
-      tolerations:
-      - key: "node-role.kubernetes.io/master"
-        operator: Exists
-      - key: "node-role.kubernetes.io/control-plane"
-        operator: Exists
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
               - key: "node-role.kubernetes.io/master"
-                operator: Exists
+                operator: DoesNotExist
               - key: "node-role.kubernetes.io/control-plane"
-                operator: Exists
+                operator: DoesNotExist
       containers:
-      - name: loxilb-app
+      - name: loxilb-peer-app
         image: "ghcr.io/loxilb-io/loxilb:latest"
         command: [ "/root/loxilb-io/loxilb/loxilb", "--bgp" ]
         ports:
@@ -45,18 +40,19 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: loxilb-lb-service
+  name: loxilb-peer-service
   namespace: kube-system
 spec:
   clusterIP: None
   selector:
-    app: loxilb-app
+    app: loxilb-peer-app
   ports:
-  - name: loxilb-app
+  - name: loxilb-peer-app
     port: 11111
     targetPort: 11111
     protocol: TCP
-  - name: loxilb-app-bgp
+  - name: loxilb-peer-bgp
     port: 179
     targetPort: 179
     protocol: TCP
+
