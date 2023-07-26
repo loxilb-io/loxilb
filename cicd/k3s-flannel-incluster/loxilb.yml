@@ -32,9 +32,10 @@ spec:
       containers:
       - name: loxilb-app
         image: "ghcr.io/loxilb-io/loxilb:latest"
-        command: [ "/root/loxilb-io/loxilb/loxilb" ]
+        command: [ "/root/loxilb-io/loxilb/loxilb", "--bgp" ]
         ports:
         - containerPort: 11111
+        - containerPort: 179
         securityContext:
           privileged: true
           capabilities:
@@ -54,4 +55,8 @@ spec:
   - name: loxilb-app
     port: 11111
     targetPort: 11111
+    protocol: TCP
+  - name: loxilb-app-bgp
+    port: 179
+    targetPort: 179
     protocol: TCP
