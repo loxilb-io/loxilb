@@ -106,7 +106,7 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
       - name: kube-loxilb
-        image: ghcr.io/loxilb-io/kube-loxilb:debug
+        image: ghcr.io/loxilb-io/kube-loxilb:latest
         imagePullPolicy: Always
         command:
         - /bin/kube-loxilb
