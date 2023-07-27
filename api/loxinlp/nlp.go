@@ -72,7 +72,6 @@ const (
 
 type Intf struct {
 	dev            string
-	itype          int
 	state          bool
 	configApplied  bool
 	needRouteApply bool
@@ -232,7 +231,7 @@ func applyConfigMap(name string, state bool, add bool) {
 			configApplied = nNl.IMap[name].configApplied
 			if !nNl.IMap[name].configApplied {
 				tk.LogIt(tk.LogDebug, "[NLP] Applying Config for %s \n", name)
-				if applyAllConfig(name) == true {
+				if applyAllConfig(name) {
 					configApplied = true
 					tk.LogIt(tk.LogDebug, "[NLP] Applied Config for %s \n", name)
 				} else {
@@ -254,7 +253,7 @@ func applyConfigMap(name string, state bool, add bool) {
 			tk.LogIt(tk.LogDebug, "[NLP] ConfigMap for %s : %v \n", name, nNl.IMap[name])
 		} else {
 			tk.LogIt(tk.LogDebug, "[NLP] Applying Config for %s \n", name)
-			if applyAllConfig(name) == true {
+			if applyAllConfig(name) {
 				configApplied = true
 				tk.LogIt(tk.LogDebug, "[NLP] Applied Config for %s \n", name)
 			} else {
@@ -264,9 +263,7 @@ func applyConfigMap(name string, state bool, add bool) {
 			nNl.IMap[name] = Intf{dev: name, state: state, configApplied: configApplied}
 		}
 	} else {
-		if _, ok := nNl.IMap[name]; ok {
-			delete(nNl.IMap, name)
-		}
+		delete(nNl.IMap, name)
 	}
 }
 
@@ -875,7 +872,7 @@ func AddAddr(addr nlp.Addr, link nlp.Link) int {
 	name := attrs.Name
 	ipStr := (addr.IPNet).String()
 
-	ret, err := hooks.NetAddrAdd(&cmn.IpAddrMod{Dev: name, IP: ipStr})
+	ret, err := hooks.NetAddrAdd(&cmn.IPAddrMod{Dev: name, IP: ipStr})
 	if err != nil {
 		tk.LogIt(tk.LogError, "[NLP] IPv4 Address %v Port %v failed %v\n", ipStr, name, err)
 		ret = -1
@@ -1115,12 +1112,13 @@ func AddRoute(route nlp.Route) int {
 	} else {
 		ipNet = *route.Dst
 	}
+
 	ret, err := hooks.NetRouteAdd(&cmn.RouteMod{Protocol: int(route.Protocol), Flags: route.Flags,
 		Gw: route.Gw, LinkIndex: route.LinkIndex, Dst: ipNet})
 	if err != nil {
 		if route.Gw != nil {
-			tk.LogIt(tk.LogError, "[NLP] RT  %s via %s add failed-%s\n", ipNet.String(),
-				route.Gw.String(), err)
+			tk.LogIt(tk.LogError, "[NLP] RT  %s via %s proto %d add failed-%s\n", ipNet.String(),
+				route.Gw.String(), route.Protocol, err)
 		} else {
 			tk.LogIt(tk.LogError, "[NLP] RT  %s add failed-%s\n", ipNet.String(), err)
 		}
@@ -1215,7 +1213,7 @@ func AUWorkSingle(m nlp.AddrUpdate) int {
 	attrs := link.Attrs()
 	name := attrs.Name
 	if m.NewAddr {
-		_, err := hooks.NetAddrAdd(&cmn.IpAddrMod{Dev: name, IP: m.LinkAddress.String()})
+		_, err := hooks.NetAddrAdd(&cmn.IPAddrMod{Dev: name, IP: m.LinkAddress.String()})
 		if err != nil {
 			tk.LogIt(tk.LogInfo, "[NLP] Address %v Port %v add failed\n", m.LinkAddress.String(), name)
 			fmt.Println(err)
@@ -1224,7 +1222,7 @@ func AUWorkSingle(m nlp.AddrUpdate) int {
 		}
 
 	} else {
-		_, err := hooks.NetAddrDel(&cmn.IpAddrMod{Dev: name, IP: m.LinkAddress.String()})
+		_, err := hooks.NetAddrDel(&cmn.IPAddrMod{Dev: name, IP: m.LinkAddress.String()})
 		if err != nil {
 			tk.LogIt(tk.LogInfo, "[NLP] Address %v Port %v delete failed\n", m.LinkAddress.String(), name)
 			fmt.Println(err)
@@ -1317,13 +1315,20 @@ func RUWorker(ch chan nlp.RouteUpdate, f chan struct{}) {
 	}
 }
 
-func NLWorker(nNl *NlH) {
-	for { /* Single thread for reading all NL msgs in below order */
-		LUWorker(nNl.FromLUCh, nNl.FromLUDone)
-		AUWorker(nNl.FromAUCh, nNl.FromAUDone)
-		NUWorker(nNl.FromNUCh, nNl.FromNUDone)
-		RUWorker(nNl.FromRUCh, nNl.FromRUDone)
-		time.Sleep(1000 * time.Millisecond)
+func NLWorker(nNl *NlH, bgpPeerMode bool) {
+	if bgpPeerMode {
+		for { /* Single thread for reading route NL msgs in below order */
+			RUWorker(nNl.FromRUCh, nNl.FromRUDone)
+			time.Sleep(1000 * time.Millisecond)
+		}
+	} else {
+		for { /* Single thread for reading all NL msgs in below order */
+			LUWorker(nNl.FromLUCh, nNl.FromLUDone)
+			AUWorker(nNl.FromAUCh, nNl.FromAUDone)
+			NUWorker(nNl.FromNUCh, nNl.FromNUDone)
+			RUWorker(nNl.FromRUCh, nNl.FromRUDone)
+			time.Sleep(1000 * time.Millisecond)
+		}
 	}
 }
 
@@ -1483,9 +1488,23 @@ func LbSessionGet(done bool) int {
 	return 0
 }
 
-func NlpInit() *NlH {
+func NlpInit(bgpPeerMode bool) *NlH {
 
 	nNl = new(NlH)
+
+	if bgpPeerMode {
+		nNl.FromRUCh = make(chan nlp.RouteUpdate, cmn.RuWorkQLen)
+		nNl.FromRUCh = make(chan nlp.RouteUpdate, cmn.RuWorkQLen)
+		err := nlp.RouteSubscribe(nNl.FromRUCh, nNl.FromRUDone)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			tk.LogIt(tk.LogInfo, "[NLP] Route msgs subscribed\n")
+		}
+
+		go NLWorker(nNl, bgpPeerMode)
+		return nNl
+	}
 
 	nNl.FromAUCh = make(chan nlp.AddrUpdate, cmn.AuWorkqLen)
 	nNl.FromLUCh = make(chan nlp.LinkUpdate, cmn.LuWorkQLen)
@@ -1494,7 +1513,7 @@ func NlpInit() *NlH {
 	nNl.FromAUDone = make(chan struct{})
 	nNl.FromLUDone = make(chan struct{})
 	nNl.FromNUDone = make(chan struct{})
-	nNl.FromRUDone = make(chan struct{})
+	nNl.FromRUCh = make(chan nlp.RouteUpdate, cmn.RuWorkQLen)
 	nNl.IMap = make(map[string]Intf)
 
 	checkInit := make(chan bool)
@@ -1513,20 +1532,20 @@ func NlpInit() *NlH {
 	} else {
 		tk.LogIt(tk.LogInfo, "[NLP] Addr msgs subscribed\n")
 	}
-	err = nlp.NeighSubscribe(nNl.FromNUCh, nNl.FromAUDone)
+	err = nlp.NeighSubscribe(nNl.FromNUCh, nNl.FromNUDone)
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		tk.LogIt(tk.LogInfo, "[NLP] Neigh msgs subscribed\n")
 	}
-	err = nlp.RouteSubscribe(nNl.FromRUCh, nNl.FromAUDone)
+	err = nlp.RouteSubscribe(nNl.FromRUCh, nNl.FromRUDone)
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		tk.LogIt(tk.LogInfo, "[NLP] Route msgs subscribed\n")
 	}
 
-	go NLWorker(nNl)
+	go NLWorker(nNl, bgpPeerMode)
 	tk.LogIt(tk.LogInfo, "[NLP] NLP Subscription done\n")
 
 	go LbSessionGet(done)

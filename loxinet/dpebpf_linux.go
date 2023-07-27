@@ -191,7 +191,7 @@ func dpEbpfTicker() {
 			// This means around 10s from start
 			if !mh.dpEbpf.CtSync {
 				tk.LogIt(tk.LogDebug, "Get xsync()\n")
-				ret := mh.dp.DpXsyncRpc(DpSyncGet, nil)
+				ret := mh.dp.DpXsyncRPC(DpSyncGet, nil)
 				if ret == 0 {
 					mh.dpEbpf.CtSync = true
 				}
@@ -202,6 +202,7 @@ func dpEbpfTicker() {
 	}
 }
 
+// DpEbpfDPLogLevel - Routine to set log level for DP
 func DpEbpfDPLogLevel(cfg *C.struct_ebpfcfg, debug tk.LogLevelT) {
 	switch debug {
 	case tk.LogAlert:
@@ -1650,7 +1651,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 		cti.XSync = true
 		cti.NTs = time.Now()
 		// Immediately notify for delete
-		ret := mh.dp.DpXsyncRpc(DpSyncDelete, cti)
+		ret := mh.dp.DpXsyncRPC(DpSyncDelete, cti)
 		if ret == 0 {
 			delete(mh.dpEbpf.ctMap, cti.Key())
 			// This is a strange fix - Sometimes loxilb runs as multiple docker
@@ -1690,7 +1691,7 @@ func dpCTMapBcast() {
 	for _, cti := range mh.dpEbpf.ctMap {
 		if cti.Deleted <= 0 && cti.CState == "est" {
 			tot++
-			ret := mh.dp.DpXsyncRpc(DpSyncBcast, cti)
+			ret := mh.dp.DpXsyncRPC(DpSyncBcast, cti)
 			if ret == 0 {
 				rok++
 				cti.XSync = false
@@ -1704,7 +1705,7 @@ func dpCTMapBcast() {
 		cti := new(DpCtInfo)
 		cti.Proto = "xsync"
 		cti.Sport = uint16(mh.self)
-		mh.dp.DpXsyncRpc(DpSyncBcast, cti)
+		mh.dp.DpXsyncRPC(DpSyncBcast, cti)
 	}
 }
 
@@ -1797,10 +1798,10 @@ func dpCTMapChkUpdates() {
 
 			ret := 0
 			if cti.Deleted > 0 {
-				ret = mh.dp.DpXsyncRpc(DpSyncDelete, cti)
+				ret = mh.dp.DpXsyncRPC(DpSyncDelete, cti)
 				cti.Deleted++
 			} else {
-				ret = mh.dp.DpXsyncRpc(DpSyncAdd, cti)
+				ret = mh.dp.DpXsyncRPC(DpSyncAdd, cti)
 			}
 			if ret == 0 || cti.Deleted > ctiDeleteSyncRetries {
 				cti.XSync = false
@@ -1914,10 +1915,9 @@ func (e *DpEbpfH) DpCtDel(w *DpCtInfo) int {
 	if cti == nil {
 		tk.LogIt(tk.LogError, "ctInfo-key (%v) not present\n", mapKey)
 		return EbpfErrCtDel
-	} else {
-		delete(mh.dpEbpf.ctMap, mapKey)
 	}
 
+	delete(mh.dpEbpf.ctMap, mapKey)
 	C.llb_del_map_elem(C.LL_DP_CT_MAP, unsafe.Pointer(&w.PKey[0]))
 
 	return 0

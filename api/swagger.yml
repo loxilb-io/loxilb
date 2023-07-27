@@ -2100,6 +2100,143 @@ paths:
             $ref: '#/definitions/Error'
 
 #----------------------------------------------
+# GoBGP
+#----------------------------------------------
+  '/config/bgp/neigh':
+    post:
+      summary: Adds a BGP Neighbor
+      description: Adds a BGP Neighbor
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes of bgp neighbor
+          schema:
+            $ref: '#/definitions/BGPNeigh'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict.
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/config/bgp/neigh/{ip_address}':
+    delete:
+      summary: Delete a BGP neighbor
+      description: Delete a BGP Neighbor
+      parameters:
+        - name: ip_address
+          in: path
+          type: string
+          required: true
+          description: Neighbor IP address
+        - name: remote_as
+          in: query
+          type: integer
+          format: int32
+          required: false
+          description: Remote ASN number
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. Neigh already exists
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/config/bgp/global':
+    post:
+      summary: Adds a BGP global config
+      description: Adds a BGP global config
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes of bgp global config
+          schema:
+            $ref: '#/definitions/BGPGlobalConfig'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict.
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
+#----------------------------------------------
 # LoxiLB Prometheus 
 #----------------------------------------------
   '/metrics':
@@ -2947,3 +3084,26 @@ definitions:
       logLevel:
         type: string
         description: Set level to debug,info,error,warning,notice,critical,emergency,alert
+  
+  BGPNeigh:
+    type: object
+    properties:
+      ipAddress:
+        type: string
+        description: BGP Nieghbor IP address
+      remoteAs:
+        type: integer
+        description: Remote AS number
+
+  BGPGlobalConfig:
+    type: object
+    properties:
+      routerId:
+        type: string
+        description: BGP Router ID
+      localAs:
+        type: integer
+        description: Local AS number
+      SetNextHopSelf:
+        type: boolean
+        description: Adds policy to set next hop as self, if enabled

@@ -20,8 +20,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
 	"io"
 	"net"
 	"net/http"
@@ -29,6 +27,9 @@ import (
 	"runtime/debug"
 	"sync"
 	"time"
+
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 // man names constants
@@ -317,6 +318,7 @@ type DpCtInfo struct {
 	BlockNum   uint16
 }
 
+// XSync - Remote sync peer information
 type XSync struct {
 	RemoteID int
 	RPCState bool
@@ -397,6 +399,7 @@ type DpHookInterface interface {
 	DpCtGetAsync()
 }
 
+// DpPeer - Remote DP Peer information
 type DpPeer struct {
 	Peer   net.IP
 	Client *rpc.Client
@@ -445,7 +448,8 @@ func dialHTTPPath(network, address, path string) (*rpc.Client, error) {
 	}
 }
 
-func (dp *DpH) DpXsyncRpcReset() int {
+// DpXsyncRPCReset - Routine to reset Sunc RPC Client connections
+func (dp *DpH) DpXsyncRPCReset() int {
 	dp.SyncMtx.Lock()
 	defer dp.SyncMtx.Unlock()
 	for idx := range mh.dp.Peers {
@@ -466,6 +470,7 @@ func (dp *DpH) DpXsyncRpcReset() int {
 	return 0
 }
 
+// DpXsyncInSync - Routine to check if remote peer is in sync
 func (dp *DpH) DpXsyncInSync() bool {
 	dp.SyncMtx.Lock()
 	defer dp.SyncMtx.Unlock()
@@ -476,6 +481,7 @@ func (dp *DpH) DpXsyncInSync() bool {
 	return false
 }
 
+// WaitXsyncReady - Routine to wait till it ready for syncing the peer entity
 func (dp *DpH) WaitXsyncReady(who string) {
 	begin := time.Now()
 	for {
@@ -490,7 +496,8 @@ func (dp *DpH) WaitXsyncReady(who string) {
 	}
 }
 
-func (dp *DpH) DpXsyncRpc(op DpSyncOpT, cti *DpCtInfo) int {
+// DpXsyncRPC - Routine for syncing connection information with peers
+func (dp *DpH) DpXsyncRPC(op DpSyncOpT, cti *DpCtInfo) int {
 	var reply int
 	timeout := 2 * time.Second
 	dp.SyncMtx.Lock()
@@ -643,7 +650,7 @@ func (xs *XSync) DpWorkOnCtGet(async int, ret *int) error {
 	}
 
 	// Most likely need to reset reverse rpc channel
-	mh.dp.DpXsyncRpcReset()
+	mh.dp.DpXsyncRPCReset()
 
 	tk.LogIt(tk.LogDebug, "RPC -  CT Get %d\n", async)
 	mh.dp.DpHooks.DpCtGetAsync()

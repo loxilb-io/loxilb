@@ -8,7 +8,7 @@ var Opts struct {
 	Bgp               bool           `short:"b" long:"bgp" description:"Connect and Sync with GoBGP server"`
 	Ka                string         `short:"k" long:"ka" description:"One of in,out"`
 	Version           bool           `short:"v" long:"version" description:"Show loxilb version"`
-	NoApi             bool           `short:"a" long:"api" description:"Run Rest API server"`
+	NoAPI             bool           `short:"a" long:"api" description:"Run Rest API server"`
 	NoNlp             bool           `short:"n" long:"nonlp" description:"Do not register with nlp"`
 	Host              string         `long:"host" description:"the IP to listen on" default:"0.0.0.0" env:"HOST"`
 	Port              int            `long:"port" description:"the port to listen on for insecure connections" default:"11111" env:"PORT"`
@@ -25,4 +25,5 @@ var Opts struct {
 	PassiveEPProbe    bool           `long:"passive-probe" description:"Enable passive liveness probes(experimental)"`
 	RssEnable         bool           `long:"rss-enable" description:"Enable rss optimization(experimental)"`
 	EgrHooks          bool           `long:"egr-hooks" description:"Enable eBPF egress hooks(experimental)"`
+	BgpPeerMode       bool           `short:"r" long:"peer" description:"Run loxilb with goBGP only, no Datapath"`
 }

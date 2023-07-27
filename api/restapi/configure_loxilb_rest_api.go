@@ -152,6 +152,11 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	// Prometheus
 	api.GetMetricsHandler = operations.GetMetricsHandlerFunc(handler.ConfigGetPrometheusCounter)
 
+	// BGP Peer
+	api.PostConfigBgpGlobalHandler = operations.PostConfigBgpGlobalHandlerFunc(handler.ConfigPostBGPGlobal)
+	api.PostConfigBgpNeighHandler = operations.PostConfigBgpNeighHandlerFunc(handler.ConfigPostBGPNeigh)
+	api.DeleteConfigBgpNeighIPAddressHandler = operations.DeleteConfigBgpNeighIPAddressHandlerFunc(handler.ConfigDeleteBGPNeigh)
+
 	api.PreServerShutdown = func() {}
 
 	api.ServerShutdown = func() {}

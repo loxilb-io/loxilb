@@ -17,6 +17,8 @@
 package loxinet
 
 import (
+	"errors"
+
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
@@ -26,11 +28,13 @@ import (
 
 // NetAPIStruct - empty struct for anchoring client routines
 type NetAPIStruct struct {
+	BgpPeerMode bool
 }
 
 // NetAPIInit - Initialize a new instance of NetAPI
-func NetAPIInit() *NetAPIStruct {
+func NetAPIInit(bgpPeerMode bool) *NetAPIStruct {
 	na := new(NetAPIStruct)
+	na.BgpPeerMode = bgpPeerMode
 	return na
 }
 
@@ -69,7 +73,10 @@ func (*NetAPIStruct) NetPortGet() ([]cmn.PortDump, error) {
 }
 
 // NetPortAdd - Add a port in loxinet
-func (*NetAPIStruct) NetPortAdd(pm *cmn.PortMod) (int, error) {
+func (na *NetAPIStruct) NetPortAdd(pm *cmn.PortMod) (int, error) {
+	if na.BgpPeerMode {
+		return PortBaseErr, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -81,7 +88,10 @@ func (*NetAPIStruct) NetPortAdd(pm *cmn.PortMod) (int, error) {
 }
 
 // NetPortDel - Delete port from loxinet
-func (*NetAPIStruct) NetPortDel(pm *cmn.PortMod) (int, error) {
+func (na *NetAPIStruct) NetPortDel(pm *cmn.PortMod) (int, error) {
+	if na.BgpPeerMode {
+		return PortBaseErr, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -90,7 +100,10 @@ func (*NetAPIStruct) NetPortDel(pm *cmn.PortMod) (int, error) {
 }
 
 // NetVlanGet - Get Vlan Information of loxinet
-func (*NetAPIStruct) NetVlanGet() ([]cmn.VlanGet, error) {
+func (na *NetAPIStruct) NetVlanGet() ([]cmn.VlanGet, error) {
+	if na.BgpPeerMode {
+		return nil, errors.New("running in bgp only mode")
+	}
 	ret, err := mh.zr.Vlans.VlanGet()
 	if err != nil {
 		return nil, err
@@ -99,7 +112,10 @@ func (*NetAPIStruct) NetVlanGet() ([]cmn.VlanGet, error) {
 }
 
 // NetVlanAdd - Add vlan info to loxinet
-func (*NetAPIStruct) NetVlanAdd(vm *cmn.VlanMod) (int, error) {
+func (na *NetAPIStruct) NetVlanAdd(vm *cmn.VlanMod) (int, error) {
+	if na.BgpPeerMode {
+		return VlanBaseErr, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -113,7 +129,10 @@ func (*NetAPIStruct) NetVlanAdd(vm *cmn.VlanMod) (int, error) {
 }
 
 // NetVlanDel - Delete vlan info from loxinet
-func (*NetAPIStruct) NetVlanDel(vm *cmn.VlanMod) (int, error) {
+func (na *NetAPIStruct) NetVlanDel(vm *cmn.VlanMod) (int, error) {
+	if na.BgpPeerMode {
+		return VlanBaseErr, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -122,7 +141,10 @@ func (*NetAPIStruct) NetVlanDel(vm *cmn.VlanMod) (int, error) {
 }
 
 // NetVlanPortAdd - Add a port to vlan in loxinet
-func (*NetAPIStruct) NetVlanPortAdd(vm *cmn.VlanPortMod) (int, error) {
+func (na *NetAPIStruct) NetVlanPortAdd(vm *cmn.VlanPortMod) (int, error) {
+	if na.BgpPeerMode {
+		return VlanPortCreateErr, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -131,7 +153,10 @@ func (*NetAPIStruct) NetVlanPortAdd(vm *cmn.VlanPortMod) (int, error) {
 }
 
 // NetVlanPortDel - Delete a port from vlan in loxinet
-func (*NetAPIStruct) NetVlanPortDel(vm *cmn.VlanPortMod) (int, error) {
+func (na *NetAPIStruct) NetVlanPortDel(vm *cmn.VlanPortMod) (int, error) {
+	if na.BgpPeerMode {
+		return VlanPortExistErr, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -139,15 +164,21 @@ func (*NetAPIStruct) NetVlanPortDel(vm *cmn.VlanPortMod) (int, error) {
 	return ret, err
 }
 
-// NetIpv4AddrGet - Get an IPv4 Address info from loxinet
-func (*NetAPIStruct) NetAddrGet() ([]cmn.IpAddrGet, error) {
+// NetAddrGet - Get an IPv4 Address info from loxinet
+func (na *NetAPIStruct) NetAddrGet() ([]cmn.IPAddrGet, error) {
+	if na.BgpPeerMode {
+		return nil, errors.New("running in bgp only mode")
+	}
 	// There is no locking requirement for this operation
 	ret := mh.zr.L3.IfaGet()
 	return ret, nil
 }
 
 // NetAddrAdd - Add an ipv4 address in loxinet
-func (*NetAPIStruct) NetAddrAdd(am *cmn.IpAddrMod) (int, error) {
+func (na *NetAPIStruct) NetAddrAdd(am *cmn.IPAddrMod) (int, error) {
+	if na.BgpPeerMode {
+		return L3AddrErr, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -156,7 +187,10 @@ func (*NetAPIStruct) NetAddrAdd(am *cmn.IpAddrMod) (int, error) {
 }
 
 // NetAddrDel - Delete an ipv4 address in loxinet
-func (*NetAPIStruct) NetAddrDel(am *cmn.IpAddrMod) (int, error) {
+func (na *NetAPIStruct) NetAddrDel(am *cmn.IPAddrMod) (int, error) {
+	if na.BgpPeerMode {
+		return L3AddrErr, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -165,13 +199,19 @@ func (*NetAPIStruct) NetAddrDel(am *cmn.IpAddrMod) (int, error) {
 }
 
 // NetNeighGet - Get a neighbor in loxinet
-func (*NetAPIStruct) NetNeighGet() ([]cmn.NeighMod, error) {
+func (na *NetAPIStruct) NetNeighGet() ([]cmn.NeighMod, error) {
+	if na.BgpPeerMode {
+		return nil, errors.New("running in bgp only mode")
+	}
 	ret, err := mh.zr.Nh.NeighGet()
 	return ret, err
 }
 
 // NetNeighAdd - Add a neighbor in loxinet
-func (*NetAPIStruct) NetNeighAdd(nm *cmn.NeighMod) (int, error) {
+func (na *NetAPIStruct) NetNeighAdd(nm *cmn.NeighMod) (int, error) {
+	if na.BgpPeerMode {
+		return NeighErrBase, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -186,7 +226,10 @@ func (*NetAPIStruct) NetNeighAdd(nm *cmn.NeighMod) (int, error) {
 }
 
 // NetNeighDel - Delete a neighbor in loxinet
-func (*NetAPIStruct) NetNeighDel(nm *cmn.NeighMod) (int, error) {
+func (na *NetAPIStruct) NetNeighDel(nm *cmn.NeighMod) (int, error) {
+	if na.BgpPeerMode {
+		return NeighErrBase, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -195,7 +238,10 @@ func (*NetAPIStruct) NetNeighDel(nm *cmn.NeighMod) (int, error) {
 }
 
 // NetFdbAdd - Add a forwarding database entry in loxinet
-func (*NetAPIStruct) NetFdbAdd(fm *cmn.FdbMod) (int, error) {
+func (na *NetAPIStruct) NetFdbAdd(fm *cmn.FdbMod) (int, error) {
+	if na.BgpPeerMode {
+		return L2ErrBase, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 	fdbKey := FdbKey{fm.MacAddr, fm.BridgeID}
@@ -205,7 +251,11 @@ func (*NetAPIStruct) NetFdbAdd(fm *cmn.FdbMod) (int, error) {
 }
 
 // NetFdbDel - Delete a forwarding database entry in loxinet
-func (*NetAPIStruct) NetFdbDel(fm *cmn.FdbMod) (int, error) {
+func (na *NetAPIStruct) NetFdbDel(fm *cmn.FdbMod) (int, error) {
+	if na.BgpPeerMode {
+		return L2ErrBase, errors.New("running in bgp only mode")
+	}
+
 	fdbKey := FdbKey{fm.MacAddr, fm.BridgeID}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
@@ -215,17 +265,23 @@ func (*NetAPIStruct) NetFdbDel(fm *cmn.FdbMod) (int, error) {
 }
 
 // NetRouteGet - Get Route info from loxinet
-func (*NetAPIStruct) NetRouteGet() ([]cmn.RouteGet, error) {
+func (na *NetAPIStruct) NetRouteGet() ([]cmn.RouteGet, error) {
+	if na.BgpPeerMode {
+		return nil, errors.New("running in bgp only mode")
+	}
 	// There is no locking requirement for this operation
 	ret, _ := mh.zr.Rt.RouteGet()
 	return ret, nil
 }
 
 // NetRouteAdd - Add a route in loxinet
-func (*NetAPIStruct) NetRouteAdd(rm *cmn.RouteMod) (int, error) {
+func (na *NetAPIStruct) NetRouteAdd(rm *cmn.RouteMod) (int, error) {
 	var ret int
 	var err error
 
+	if na.BgpPeerMode {
+		return RtNhErr, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -241,7 +297,10 @@ func (*NetAPIStruct) NetRouteAdd(rm *cmn.RouteMod) (int, error) {
 }
 
 // NetRouteDel - Delete a route in loxinet
-func (*NetAPIStruct) NetRouteDel(rm *cmn.RouteMod) (int, error) {
+func (na *NetAPIStruct) NetRouteDel(rm *cmn.RouteMod) (int, error) {
+	if na.BgpPeerMode {
+		return RtNhErr, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -250,7 +309,10 @@ func (*NetAPIStruct) NetRouteDel(rm *cmn.RouteMod) (int, error) {
 }
 
 // NetLbRuleAdd - Add a load-balancer rule in loxinet
-func (*NetAPIStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
+func (na *NetAPIStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
+	if na.BgpPeerMode {
+		return RuleErrBase, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 	var ips []string
@@ -270,7 +332,10 @@ func (*NetAPIStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
 }
 
 // NetLbRuleDel - Delete a load-balancer rule in loxinet
-func (*NetAPIStruct) NetLbRuleDel(lm *cmn.LbRuleMod) (int, error) {
+func (na *NetAPIStruct) NetLbRuleDel(lm *cmn.LbRuleMod) (int, error) {
+	if na.BgpPeerMode {
+		return RuleErrBase, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -288,20 +353,29 @@ func (*NetAPIStruct) NetLbRuleDel(lm *cmn.LbRuleMod) (int, error) {
 }
 
 // NetLbRuleGet - Get a load-balancer rule from loxinet
-func (*NetAPIStruct) NetLbRuleGet() ([]cmn.LbRuleMod, error) {
+func (na *NetAPIStruct) NetLbRuleGet() ([]cmn.LbRuleMod, error) {
+	if na.BgpPeerMode {
+		return nil, errors.New("running in bgp only mode")
+	}
 	ret, err := mh.zr.Rules.GetNatLbRule()
 	return ret, err
 }
 
 // NetCtInfoGet - Get connection track info from loxinet
-func (*NetAPIStruct) NetCtInfoGet() ([]cmn.CtInfo, error) {
+func (na *NetAPIStruct) NetCtInfoGet() ([]cmn.CtInfo, error) {
+	if na.BgpPeerMode {
+		return nil, errors.New("running in bgp only mode")
+	}
 	// There is no locking requirement for this operation
 	ret := mh.dp.DpMapGetCt4()
 	return ret, nil
 }
 
 // NetSessionAdd - Add a 3gpp user-session info in loxinet
-func (*NetAPIStruct) NetSessionAdd(sm *cmn.SessionMod) (int, error) {
+func (na *NetAPIStruct) NetSessionAdd(sm *cmn.SessionMod) (int, error) {
+	if na.BgpPeerMode {
+		return SessErrBase, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -310,7 +384,10 @@ func (*NetAPIStruct) NetSessionAdd(sm *cmn.SessionMod) (int, error) {
 }
 
 // NetSessionDel - Delete a 3gpp user-session info in loxinet
-func (*NetAPIStruct) NetSessionDel(sm *cmn.SessionMod) (int, error) {
+func (na *NetAPIStruct) NetSessionDel(sm *cmn.SessionMod) (int, error) {
+	if na.BgpPeerMode {
+		return SessErrBase, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -319,7 +396,10 @@ func (*NetAPIStruct) NetSessionDel(sm *cmn.SessionMod) (int, error) {
 }
 
 // NetSessionUlClAdd - Add a 3gpp ulcl-filter info in loxinet
-func (*NetAPIStruct) NetSessionUlClAdd(sr *cmn.SessionUlClMod) (int, error) {
+func (na *NetAPIStruct) NetSessionUlClAdd(sr *cmn.SessionUlClMod) (int, error) {
+	if na.BgpPeerMode {
+		return SessErrBase, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -328,7 +408,10 @@ func (*NetAPIStruct) NetSessionUlClAdd(sr *cmn.SessionUlClMod) (int, error) {
 }
 
 // NetSessionUlClDel - Delete a 3gpp ulcl-filter info in loxinet
-func (*NetAPIStruct) NetSessionUlClDel(sr *cmn.SessionUlClMod) (int, error) {
+func (na *NetAPIStruct) NetSessionUlClDel(sr *cmn.SessionUlClMod) (int, error) {
+	if na.BgpPeerMode {
+		return SessErrBase, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -337,28 +420,40 @@ func (*NetAPIStruct) NetSessionUlClDel(sr *cmn.SessionUlClMod) (int, error) {
 }
 
 // NetSessionGet - Get 3gpp user-session info in loxinet
-func (*NetAPIStruct) NetSessionGet() ([]cmn.SessionMod, error) {
+func (na *NetAPIStruct) NetSessionGet() ([]cmn.SessionMod, error) {
+	if na.BgpPeerMode {
+		return nil, errors.New("running in bgp only mode")
+	}
 	// There is no locking requirement for this operation
 	ret, err := mh.zr.Sess.SessGet()
 	return ret, err
 }
 
 // NetSessionUlClGet - Get 3gpp ulcl filter info from loxinet
-func (*NetAPIStruct) NetSessionUlClGet() ([]cmn.SessionUlClMod, error) {
+func (na *NetAPIStruct) NetSessionUlClGet() ([]cmn.SessionUlClMod, error) {
+	if na.BgpPeerMode {
+		return nil, errors.New("running in bgp only mode")
+	}
 	// There is no locking requirement for this operation
 	ret, err := mh.zr.Sess.SessUlclGet()
 	return ret, err
 }
 
 // NetPolicerGet - Get a policer in loxinet
-func (*NetAPIStruct) NetPolicerGet() ([]cmn.PolMod, error) {
+func (na *NetAPIStruct) NetPolicerGet() ([]cmn.PolMod, error) {
+	if na.BgpPeerMode {
+		return nil, errors.New("running in bgp only mode")
+	}
 	// There is no locking requirement for this operation
 	ret, err := mh.zr.Pols.PolGetAll()
 	return ret, err
 }
 
 // NetPolicerAdd - Add a policer in loxinet
-func (*NetAPIStruct) NetPolicerAdd(pm *cmn.PolMod) (int, error) {
+func (na *NetAPIStruct) NetPolicerAdd(pm *cmn.PolMod) (int, error) {
+	if na.BgpPeerMode {
+		return PolInfoErr, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -367,7 +462,10 @@ func (*NetAPIStruct) NetPolicerAdd(pm *cmn.PolMod) (int, error) {
 }
 
 // NetPolicerDel - Delete a policer in loxinet
-func (*NetAPIStruct) NetPolicerDel(pm *cmn.PolMod) (int, error) {
+func (na *NetAPIStruct) NetPolicerDel(pm *cmn.PolMod) (int, error) {
+	if na.BgpPeerMode {
+		return PolInfoErr, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -376,14 +474,20 @@ func (*NetAPIStruct) NetPolicerDel(pm *cmn.PolMod) (int, error) {
 }
 
 // NetCIStateGet - Get current node cluster state
-func (*NetAPIStruct) NetCIStateGet() ([]cmn.HASMod, error) {
+func (na *NetAPIStruct) NetCIStateGet() ([]cmn.HASMod, error) {
+	if na.BgpPeerMode {
+		return nil, errors.New("running in bgp only mode")
+	}
 	// There is no locking requirement for this operation
 	ret, err := mh.has.CIStateGet()
 	return ret, err
 }
 
 // NetCIStateMod - Modify cluster state
-func (*NetAPIStruct) NetCIStateMod(hm *cmn.HASMod) (int, error) {
+func (na *NetAPIStruct) NetCIStateMod(hm *cmn.HASMod) (int, error) {
+	if na.BgpPeerMode {
+		return CIErrBase, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -396,7 +500,10 @@ func (*NetAPIStruct) NetCIStateMod(hm *cmn.HASMod) (int, error) {
 }
 
 // NetFwRuleAdd - Add a firewall rule in loxinet
-func (*NetAPIStruct) NetFwRuleAdd(fm *cmn.FwRuleMod) (int, error) {
+func (na *NetAPIStruct) NetFwRuleAdd(fm *cmn.FwRuleMod) (int, error) {
+	if na.BgpPeerMode {
+		return RuleTupleErr, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -405,7 +512,10 @@ func (*NetAPIStruct) NetFwRuleAdd(fm *cmn.FwRuleMod) (int, error) {
 }
 
 // NetFwRuleDel - Delete a firewall rule in loxinet
-func (*NetAPIStruct) NetFwRuleDel(fm *cmn.FwRuleMod) (int, error) {
+func (na *NetAPIStruct) NetFwRuleDel(fm *cmn.FwRuleMod) (int, error) {
+	if na.BgpPeerMode {
+		return RuleTupleErr, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -414,13 +524,19 @@ func (*NetAPIStruct) NetFwRuleDel(fm *cmn.FwRuleMod) (int, error) {
 }
 
 // NetFwRuleGet - Get a firewall rule from loxinet
-func (*NetAPIStruct) NetFwRuleGet() ([]cmn.FwRuleMod, error) {
+func (na *NetAPIStruct) NetFwRuleGet() ([]cmn.FwRuleMod, error) {
+	if na.BgpPeerMode {
+		return nil, errors.New("running in bgp only mode")
+	}
 	ret, err := mh.zr.Rules.GetFwRule()
 	return ret, err
 }
 
 // NetEpHostAdd - Add a LB end-point in loxinet
-func (*NetAPIStruct) NetEpHostAdd(em *cmn.EndPointMod) (int, error) {
+func (na *NetAPIStruct) NetEpHostAdd(em *cmn.EndPointMod) (int, error) {
+	if na.BgpPeerMode {
+		return RuleErrBase, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -433,7 +549,10 @@ func (*NetAPIStruct) NetEpHostAdd(em *cmn.EndPointMod) (int, error) {
 }
 
 // NetEpHostDel - Delete a LB end-point in loxinet
-func (*NetAPIStruct) NetEpHostDel(em *cmn.EndPointMod) (int, error) {
+func (na *NetAPIStruct) NetEpHostDel(em *cmn.EndPointMod) (int, error) {
+	if na.BgpPeerMode {
+		return RuleErrBase, errors.New("running in bgp only mode")
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
@@ -442,19 +561,57 @@ func (*NetAPIStruct) NetEpHostDel(em *cmn.EndPointMod) (int, error) {
 }
 
 // NetEpHostGet - Get LB end-points from loxinet
-func (*NetAPIStruct) NetEpHostGet() ([]cmn.EndPointMod, error) {
+func (na *NetAPIStruct) NetEpHostGet() ([]cmn.EndPointMod, error) {
+	if na.BgpPeerMode {
+		return nil, errors.New("running in bgp only mode")
+	}
 	ret, err := mh.zr.Rules.GetEpHosts()
 	return ret, err
 }
 
 // NetParamSet - Set operational params of loxinet
-func (*NetAPIStruct) NetParamSet(param cmn.ParamMod) (int, error) {
+func (na *NetAPIStruct) NetParamSet(param cmn.ParamMod) (int, error) {
+	if na.BgpPeerMode {
+		return 0, errors.New("running in bgp only mode")
+	}
 	ret, err := mh.ParamSet(param)
 	return ret, err
 }
 
 // NetParamGet - Get operational params of loxinet
-func (*NetAPIStruct) NetParamGet(param *cmn.ParamMod) (int, error) {
+func (na *NetAPIStruct) NetParamGet(param *cmn.ParamMod) (int, error) {
+	if na.BgpPeerMode {
+		return 0, errors.New("running in bgp only mode")
+	}
 	ret, err := mh.ParamGet(param)
 	return ret, err
+}
+
+// NetGoBGPNeighAdd - Add bgp neigh to gobgp
+func (na *NetAPIStruct) NetGoBGPNeighAdd(param *cmn.GoBGPNeighMod) (int, error) {
+	if mh.bgp != nil {
+		return mh.bgp.BGPNeighMod(true, param.Addr, param.RemoteAS)
+	}
+	tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
+	return 0, errors.New("loxilb BGP mode is disabled")
+
+}
+
+// NetGoBGPNeighDel - Del bgp neigh from gobgp
+func (na *NetAPIStruct) NetGoBGPNeighDel(param *cmn.GoBGPNeighMod) (int, error) {
+	if mh.bgp != nil {
+		return mh.bgp.BGPNeighMod(false, param.Addr, param.RemoteAS)
+	}
+	tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
+	return 0, errors.New("loxilb BGP mode is disabled")
+}
+
+// NetGoBGPGCAdd - Add bgp global config
+func (na *NetAPIStruct) NetGoBGPGCAdd(param *cmn.GoBGPGlobalConfig) (int, error) {
+	if mh.bgp != nil {
+		return mh.bgp.BGPGlobalConfigAdd(*param)
+	}
+	tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
+	return 0, errors.New("loxilb BGP mode is disabled")
+
 }

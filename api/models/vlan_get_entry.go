@@ -118,6 +118,11 @@ func (m *VlanGetEntry) contextValidateMember(ctx context.Context, formats strfmt
 	for i := 0; i < len(m.Member); i++ {
 
 		if m.Member[i] != nil {
+
+			if swag.IsZero(m.Member[i]) { // not required
+				return nil
+			}
+
 			if err := m.Member[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("member" + "." + strconv.Itoa(i))
@@ -136,6 +141,11 @@ func (m *VlanGetEntry) contextValidateMember(ctx context.Context, formats strfmt
 func (m *VlanGetEntry) contextValidateVlanStatistic(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.VlanStatistic != nil {
+
+		if swag.IsZero(m.VlanStatistic) { // not required
+			return nil
+		}
+
 		if err := m.VlanStatistic.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("vlanStatistic")

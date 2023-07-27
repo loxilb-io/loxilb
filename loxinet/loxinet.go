@@ -164,7 +164,7 @@ func (mh *loxiNetH) ParamGet(param *cmn.ParamMod) (int, error) {
 }
 
 // loxiNetTicker - this ticker routine runs every LOXINET_TIVAL seconds
-func loxiNetTicker() {
+func loxiNetTicker(bgpPeerMode bool) {
 	for {
 		select {
 		case <-mh.tDone:
@@ -184,14 +184,18 @@ func loxiNetTicker() {
 				pprof.StopCPUProfile()
 			} else if sig == syscall.SIGINT || sig == syscall.SIGTERM {
 				tk.LogIt(tk.LogCritical, "Shutdown on sig %v\n", sig)
-				mh.dpEbpf.DpEbpfUnInit()
+				if !bgpPeerMode {
+					mh.dpEbpf.DpEbpfUnInit()
+				}
 				apiserver.ApiServerShutOk()
 			}
 		case t := <-mh.ticker.C:
 			tk.LogIt(-1, "Tick at %v\n", t)
-			// Do any housekeeping activities for security zones
-			mh.zn.ZoneTicker()
-			mh.has.CITicker()
+			if !bgpPeerMode {
+				// Do any housekeeping activities for security zones
+				mh.zn.ZoneTicker()
+				mh.has.CITicker()
+			}
 		}
 	}
 }
@@ -219,7 +223,7 @@ func loxiNetInit() {
 
 	// It is important to make sure loxilb's eBPF filesystem
 	// is in place and mounted to make sure maps are pinned properly
-	if FileExists(BpfFsCheckFile) == false {
+	if !FileExists(BpfFsCheckFile) {
 		if FileExists(MkfsScript) {
 			RunCommand(MkfsScript, true)
 		}
@@ -248,67 +252,75 @@ func loxiNetInit() {
 		}
 	}
 
-	// Initialize the ebpf datapath subsystem
-	mh.dpEbpf = DpEbpfInit(clusterMode, mh.self, mh.rssEn, mh.eHooks, -1)
-	mh.dp = DpBrokerInit(mh.dpEbpf)
+	if !opts.Opts.BgpPeerMode {
+		// Initialize the ebpf datapath subsystem
+		mh.dpEbpf = DpEbpfInit(clusterMode, mh.self, mh.rssEn, mh.eHooks, -1)
+		mh.dp = DpBrokerInit(mh.dpEbpf)
 
-	// Initialize the security zone subsystem
-	mh.zn = ZoneInit()
+		// Initialize the security zone subsystem
+		mh.zn = ZoneInit()
 
-	// Add a root zone by default
-	mh.zn.ZoneAdd(RootZone)
-	mh.zr, _ = mh.zn.Zonefind(RootZone)
-	if mh.zr == nil {
-		tk.LogIt(tk.LogError, "root zone not found\n")
-		return
-	}
-
-	// Initialize the clustering subsystem
-	mh.has = CIInit(spawnKa, kaMode)
-	if clusterMode {
-		// Add cluster nodes if specified
-		cNodes := strings.Split(opts.Opts.ClusterNodes, ",")
-		for _, cNode := range cNodes {
-			addr := net.ParseIP(cNode)
-			if addr == nil {
-				continue
-			}
-			mh.has.ClusterNodeAdd(cmn.CluserNodeMod{Addr: addr})
+		// Add a root zone by default
+		mh.zn.ZoneAdd(RootZone)
+		mh.zr, _ = mh.zn.Zonefind(RootZone)
+		if mh.zr == nil {
+			tk.LogIt(tk.LogError, "root zone not found\n")
+			return
 		}
+
+		// Initialize the clustering subsystem
+		mh.has = CIInit(spawnKa, kaMode)
+		if clusterMode {
+			// Add cluster nodes if specified
+			cNodes := strings.Split(opts.Opts.ClusterNodes, ",")
+			for _, cNode := range cNodes {
+				addr := net.ParseIP(cNode)
+				if addr == nil {
+					continue
+				}
+				mh.has.ClusterNodeAdd(cmn.ClusterNodeMod{Addr: addr})
+			}
+		}
+	} else {
+		// If bgp peer mode is enable then bgp flag has to be set by default
+		opts.Opts.Bgp = true
+		//opts.Opts.NoNlp = true
+		opts.Opts.NoPrometheus = true
 	}
 
 	// Initialize goBgp client
 	if opts.Opts.Bgp {
-		mh.bgp = GoBgpInit()
+		mh.bgp = GoBgpInit(opts.Opts.BgpPeerMode)
 	}
 
 	// Initialize and spawn the api server subsystem
-	if opts.Opts.NoApi == false {
-		apiserver.RegisterAPIHooks(NetAPIInit())
+	if !opts.Opts.NoAPI {
+		apiserver.RegisterAPIHooks(NetAPIInit(opts.Opts.BgpPeerMode))
 		go apiserver.RunAPIServer()
 		apiserver.WaitAPIServerReady()
 	}
 
 	// Initialize the nlp subsystem
-	if opts.Opts.NoNlp == false {
-		nlp.NlpRegister(NetAPIInit())
-		nlp.NlpInit()
+	if !opts.Opts.NoNlp {
+		nlp.NlpRegister(NetAPIInit(opts.Opts.BgpPeerMode))
+		nlp.NlpInit(opts.Opts.BgpPeerMode)
 	}
 
 	// Initialize the Prometheus subsystem
-	if opts.Opts.NoPrometheus == false {
-		prometheus.PrometheusRegister(NetAPIInit())
+	if !opts.Opts.NoPrometheus {
+		prometheus.PrometheusRegister(NetAPIInit(opts.Opts.BgpPeerMode))
 		prometheus.Init()
 	}
 
-	// Spawn CI maintenance application
-	mh.has.CISpawn()
-
+	if !opts.Opts.BgpPeerMode {
+		// Spawn CI maintenance application
+		mh.has.CISpawn()
+	}
 	// Initialize the loxinet global ticker(s)
 	mh.tDone = make(chan bool)
 	mh.ticker = time.NewTicker(LoxinetTiVal * time.Second)
 	mh.wg.Add(1)
-	go loxiNetTicker()
+	go loxiNetTicker(opts.Opts.BgpPeerMode)
 
 	mh.ready = true
 }

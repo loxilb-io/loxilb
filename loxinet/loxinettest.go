@@ -28,7 +28,7 @@ import (
 func TestLoxinet(t *testing.T) {
 
 	opts.Opts.NoNlp = true
-	opts.Opts.NoApi = true
+	opts.Opts.NoAPI = true
 	opts.Opts.CPUProfile = "none"
 	opts.Opts.NoPrometheus = true
 

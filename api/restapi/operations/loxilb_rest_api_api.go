@@ -42,6 +42,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
+		DeleteConfigBgpNeighIPAddressHandler: DeleteConfigBgpNeighIPAddressHandlerFunc(func(params DeleteConfigBgpNeighIPAddressParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigBgpNeighIPAddress has not yet been implemented")
+		}),
 		DeleteConfigEndpointEpipaddressIPAddressHandler: DeleteConfigEndpointEpipaddressIPAddressHandlerFunc(func(params DeleteConfigEndpointEpipaddressIPAddressParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigEndpointEpipaddressIPAddress has not yet been implemented")
 		}),
@@ -153,6 +156,12 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		GetStatusProcessHandler: GetStatusProcessHandlerFunc(func(params GetStatusProcessParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetStatusProcess has not yet been implemented")
 		}),
+		PostConfigBgpGlobalHandler: PostConfigBgpGlobalHandlerFunc(func(params PostConfigBgpGlobalParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigBgpGlobal has not yet been implemented")
+		}),
+		PostConfigBgpNeighHandler: PostConfigBgpNeighHandlerFunc(func(params PostConfigBgpNeighParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigBgpNeigh has not yet been implemented")
+		}),
 		PostConfigCistateHandler: PostConfigCistateHandlerFunc(func(params PostConfigCistateParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigCistate has not yet been implemented")
 		}),
@@ -240,6 +249,8 @@ type LoxilbRestAPIAPI struct {
 	//   - application/json
 	JSONProducer runtime.Producer
 
+	// DeleteConfigBgpNeighIPAddressHandler sets the operation handler for the delete config bgp neigh IP address operation
+	DeleteConfigBgpNeighIPAddressHandler DeleteConfigBgpNeighIPAddressHandler
 	// DeleteConfigEndpointEpipaddressIPAddressHandler sets the operation handler for the delete config endpoint epipaddress IP address operation
 	DeleteConfigEndpointEpipaddressIPAddressHandler DeleteConfigEndpointEpipaddressIPAddressHandler
 	// DeleteConfigFdbMacAddressDevIfNameHandler sets the operation handler for the delete config fdb mac address dev if name operation
@@ -314,6 +325,10 @@ type LoxilbRestAPIAPI struct {
 	GetStatusFilesystemHandler GetStatusFilesystemHandler
 	// GetStatusProcessHandler sets the operation handler for the get status process operation
 	GetStatusProcessHandler GetStatusProcessHandler
+	// PostConfigBgpGlobalHandler sets the operation handler for the post config bgp global operation
+	PostConfigBgpGlobalHandler PostConfigBgpGlobalHandler
+	// PostConfigBgpNeighHandler sets the operation handler for the post config bgp neigh operation
+	PostConfigBgpNeighHandler PostConfigBgpNeighHandler
 	// PostConfigCistateHandler sets the operation handler for the post config cistate operation
 	PostConfigCistateHandler PostConfigCistateHandler
 	// PostConfigEndpointHandler sets the operation handler for the post config endpoint operation
@@ -425,6 +440,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.DeleteConfigBgpNeighIPAddressHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigBgpNeighIPAddressHandler")
+	}
 	if o.DeleteConfigEndpointEpipaddressIPAddressHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigEndpointEpipaddressIPAddressHandler")
 	}
@@ -535,6 +553,12 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.GetStatusProcessHandler == nil {
 		unregistered = append(unregistered, "GetStatusProcessHandler")
+	}
+	if o.PostConfigBgpGlobalHandler == nil {
+		unregistered = append(unregistered, "PostConfigBgpGlobalHandler")
+	}
+	if o.PostConfigBgpNeighHandler == nil {
+		unregistered = append(unregistered, "PostConfigBgpNeighHandler")
 	}
 	if o.PostConfigCistateHandler == nil {
 		unregistered = append(unregistered, "PostConfigCistateHandler")
@@ -675,6 +699,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/config/bgp/neigh/{ip_address}"] = NewDeleteConfigBgpNeighIPAddress(o.context, o.DeleteConfigBgpNeighIPAddressHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
@@ -826,6 +854,14 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
+	o.handlers["POST"]["/config/bgp/global"] = NewPostConfigBgpGlobal(o.context, o.PostConfigBgpGlobalHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/bgp/neigh"] = NewPostConfigBgpNeigh(o.context, o.PostConfigBgpNeighHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
 	o.handlers["POST"]["/config/cistate"] = NewPostConfigCistate(o.context, o.PostConfigCistateHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
@@ -932,6 +968,6 @@ func (o *LoxilbRestAPIAPI) AddMiddlewareFor(method, path string, builder middlew
 	}
 	o.Init()
 	if h, ok := o.handlers[um][path]; ok {
-		o.handlers[method][path] = builder(h)
+		o.handlers[um][path] = builder(h)
 	}
 }

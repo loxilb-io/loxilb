@@ -165,11 +165,11 @@ const (
 // possible types of end-point probe
 const (
 	HostProbePing        = "ping"
-	HostProbeConnectTcp  = "tcp"
-	HostProbeConnectUdp  = "udp"
-	HostProbeConnectSctp = "sctp"
-	HostProbeHttp        = "http"
-	HostProbeHttps       = "https"
+	HostProbeConnectTCP  = "tcp"
+	HostProbeConnectUDP  = "udp"
+	HostProbeConnectSCTP = "sctp"
+	HostProbeHTTP        = "http"
+	HostProbeHTTPS       = "https"
 	HostProbeNone        = "none"
 )
 
@@ -736,7 +736,7 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.ProbeResp = data.hChk.prbResp
 
 		for _, sip := range data.secIP {
-			ret.SecIPs = append(ret.SecIPs, cmn.LbSecIpArg{SecIP: sip.sIP.String()})
+			ret.SecIPs = append(ret.SecIPs, cmn.LbSecIPArg{SecIP: sip.sIP.String()})
 		}
 
 		// Make Endpoints
@@ -793,15 +793,15 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool, li
 	hopts.probeDuration = DflHostProbeTimeout
 	for _, nep := range endpoints {
 		if r.tuples.l4Prot.val == 6 {
-			pType = HostProbeConnectTcp
+			pType = HostProbeConnectTCP
 			pPort = nep.xPort
 		} else if r.tuples.l4Prot.val == 17 {
-			pType = HostProbeConnectUdp
+			pType = HostProbeConnectUDP
 			pPort = nep.xPort
 		} else if r.tuples.l4Prot.val == 1 {
 			pType = HostProbePing
 		} else if r.tuples.l4Prot.val == 132 {
-			pType = HostProbeConnectSctp
+			pType = HostProbeConnectSCTP
 			pPort = nep.xPort
 		} else {
 			pType = HostProbePing
@@ -917,13 +917,13 @@ func (R *RuleH) syncEPHostState2Rule(rule *ruleEnt, checkNow bool) bool {
 		switch na := rule.act.action.(type) {
 		case *ruleNatActs:
 			if rule.tuples.l4Prot.val == 6 {
-				sType = HostProbeConnectTcp
+				sType = HostProbeConnectTCP
 			} else if rule.tuples.l4Prot.val == 17 {
-				sType = HostProbeConnectUdp
+				sType = HostProbeConnectUDP
 			} else if rule.tuples.l4Prot.val == 1 {
 				sType = HostProbePing
 			} else if rule.tuples.l4Prot.val == 132 {
-				sType = HostProbeConnectSctp
+				sType = HostProbeConnectSCTP
 			} else {
 				return rChg
 			}
@@ -956,7 +956,7 @@ func (R *RuleH) syncEPHostState2Rule(rule *ruleEnt, checkNow bool) bool {
 // AddNatLbRule - Add a service LB nat rule. The service details are passed in serv argument,
 // and end-point information is passed in the slice servEndPoints. On success,
 // it will return 0 and nil error, else appropriate return code and error string will be set
-func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg, servEndPoints []cmn.LbEndPointArg) (int, error) {
+func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, servEndPoints []cmn.LbEndPointArg) (int, error) {
 	var natActs ruleNatActs
 	var nSecIP []ruleNatSIP
 	var ipProto uint8
@@ -982,17 +982,17 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIpArg,
 
 	// Validate liveness probetype and port
 	if serv.ProbeType != "" {
-		if serv.ProbeType != HostProbeConnectSctp &&
-			serv.ProbeType != HostProbeConnectTcp &&
-			serv.ProbeType != HostProbeConnectUdp &&
+		if serv.ProbeType != HostProbeConnectSCTP &&
+			serv.ProbeType != HostProbeConnectTCP &&
+			serv.ProbeType != HostProbeConnectUDP &&
 			serv.ProbeType != HostProbePing &&
 			serv.ProbeType != HostProbeNone {
 			return RuleArgsErr, errors.New("malformed-service-ptype error")
 		}
 
-		if (serv.ProbeType == HostProbeConnectSctp ||
-			serv.ProbeType == HostProbeConnectTcp ||
-			serv.ProbeType == HostProbeConnectUdp) &&
+		if (serv.ProbeType == HostProbeConnectSCTP ||
+			serv.ProbeType == HostProbeConnectTCP ||
+			serv.ProbeType == HostProbeConnectUDP) &&
 			(serv.ProbePort == 0) {
 			return RuleArgsErr, errors.New("malformed-service-pport error")
 		}
@@ -1547,18 +1547,18 @@ func validateEPHostOpts(hostName string, args epHostOpts) (int, error) {
 	}
 
 	if args.probeType != HostProbePing &&
-		args.probeType != HostProbeConnectTcp &&
-		args.probeType != HostProbeConnectUdp &&
-		args.probeType != HostProbeConnectSctp &&
-		args.probeType != HostProbeHttp &&
-		args.probeType != HostProbeHttps &&
+		args.probeType != HostProbeConnectTCP &&
+		args.probeType != HostProbeConnectUDP &&
+		args.probeType != HostProbeConnectSCTP &&
+		args.probeType != HostProbeHTTP &&
+		args.probeType != HostProbeHTTPS &&
 		args.probeType != HostProbeNone {
 		return RuleArgsErr, errors.New("host-args unknown probe type")
 	}
 
-	if (args.probeType == HostProbeConnectTcp ||
-		args.probeType == HostProbeConnectUdp ||
-		args.probeType == HostProbeConnectSctp) &&
+	if (args.probeType == HostProbeConnectTCP ||
+		args.probeType == HostProbeConnectUDP ||
+		args.probeType == HostProbeConnectSCTP) &&
 		args.probePort == 0 {
 		return RuleArgsErr, errors.New("host-args unknown probe port")
 	}
@@ -1590,18 +1590,17 @@ func (R *RuleH) AddEPHost(apiCall bool, hostName string, name string, args epHos
 		return RuleArgsErr, err
 	}
 	// Load CA cert into pool
-	if args.probeType == HostProbeHttps {
+	if args.probeType == HostProbeHTTPS {
 		// Check if there exist a CA certificate particularily for this EP
 		rootCACertile := cmn.CertPath + hostName + "/" + cmn.CACertFileName
 		if exists := FileExists(rootCACertile); exists {
 			rootCA, err := ioutil.ReadFile(rootCACertile)
 			if err != nil {
 				tk.LogIt(tk.LogError, "RootCA cert load failed : %v", err)
-				return RuleArgsErr, errors.New("rootCA cert load failed\n")
-			} else {
-				R.rootCAPool.AppendCertsFromPEM(rootCA)
-				tk.LogIt(tk.LogDebug, "RootCA cert loaded for %s\n", hostName)
+				return RuleArgsErr, errors.New("rootca cert load failed")
 			}
+			R.rootCAPool.AppendCertsFromPEM(rootCA)
+			tk.LogIt(tk.LogDebug, "RootCA cert loaded for %s\n", hostName)
 		}
 	}
 	if name == "" {
@@ -1727,12 +1726,12 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 		return
 	}
 
-	if ep.opts.probeType == HostProbeConnectTcp ||
-		ep.opts.probeType == HostProbeConnectUdp ||
-		ep.opts.probeType == HostProbeConnectSctp {
-		if ep.opts.probeType == HostProbeConnectTcp {
+	if ep.opts.probeType == HostProbeConnectTCP ||
+		ep.opts.probeType == HostProbeConnectUDP ||
+		ep.opts.probeType == HostProbeConnectSCTP {
+		if ep.opts.probeType == HostProbeConnectTCP {
 			sType = "tcp"
-		} else if ep.opts.probeType == HostProbeConnectUdp {
+		} else if ep.opts.probeType == HostProbeConnectUDP {
 			sType = "udp"
 			ret, sIP := R.zone.L3.IfaSelectAny(net.ParseIP(ep.hostName), true)
 			if ret == 0 {
@@ -1790,7 +1789,7 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 			ep.transitionEPState(false, 1)
 		}
 		pinger.Stop()
-	} else if ep.opts.probeType == HostProbeHttp {
+	} else if ep.opts.probeType == HostProbeHTTP {
 		var addr net.IP
 		if addr = net.ParseIP(ep.hostName); addr == nil {
 			// This is already verified
@@ -1800,7 +1799,7 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 		urlStr := fmt.Sprintf("http://%s:%d/%s", addr.String(), ep.opts.probePort, ep.opts.probeReq)
 		sOk := tk.HTTPProber(urlStr)
 		ep.transitionEPState(sOk, inActTryThr)
-	} else if ep.opts.probeType == HostProbeHttps {
+	} else if ep.opts.probeType == HostProbeHTTPS {
 		var addr net.IP
 		if addr = net.ParseIP(ep.hostName); addr == nil {
 			// This is already verified
