@@ -116,7 +116,7 @@ spawn_docker_host() {
         fi
       fi
       docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config $ka_conf --name $dname $lxdocker
-      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $ka_opts
+      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $ka_opts --egr-hooks
 
       if [[ "$ka" == "out" ]];then
         ka_opts="-k out"
@@ -128,7 +128,7 @@ spawn_docker_host() {
       fi
     else
       docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname $lxdocker $bgp_opts
-      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts
+      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts --egr-hooks
     fi
   elif [[ "$dtype" == "host" ]]; then
     if [[ ! -z "$bpath" ]]; then
