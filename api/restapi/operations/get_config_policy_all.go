@@ -132,6 +132,11 @@ func (o *GetConfigPolicyAllOKBody) contextValidatePolAttr(ctx context.Context, f
 	for i := 0; i < len(o.PolAttr); i++ {
 
 		if o.PolAttr[i] != nil {
+
+			if swag.IsZero(o.PolAttr[i]) { // not required
+				return nil
+			}
+
 			if err := o.PolAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigPolicyAllOK" + "." + "polAttr" + "." + strconv.Itoa(i))

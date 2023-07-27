@@ -517,6 +517,7 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 	return 0, nil
 }
 
+// NeighDeleteByPort - Routine to delete all the neigh on this port
 func (n *NeighH) NeighDeleteByPort(port string) {
 	for _, ne := range n.NeighMap {
 		if ne.OifPort.Name == port {

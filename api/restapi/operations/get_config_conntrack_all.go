@@ -132,6 +132,11 @@ func (o *GetConfigConntrackAllOKBody) contextValidateCtAttr(ctx context.Context,
 	for i := 0; i < len(o.CtAttr); i++ {
 
 		if o.CtAttr[i] != nil {
+
+			if swag.IsZero(o.CtAttr[i]) { // not required
+				return nil
+			}
+
 			if err := o.CtAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigConntrackAllOK" + "." + "ctAttr" + "." + strconv.Itoa(i))

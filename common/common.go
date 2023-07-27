@@ -262,7 +262,7 @@ type VlanPortMod struct {
 	Tagged bool `json:"tagged"`
 }
 
-// vlanStat - statistics for vlan interface
+// VlanStat - statistics for vlan interface
 type VlanStat struct {
 	InBytes    uint64
 	InPackets  uint64
@@ -305,8 +305,8 @@ type FdbMod struct {
 	Type int
 }
 
-// IpAddrMod - Info about an ip address
-type IpAddrMod struct {
+// IPAddrMod - Info about an ip address
+type IPAddrMod struct {
 	// Dev - name of the related device
 	Dev string
 	// IP - Actual IP address
@@ -325,8 +325,8 @@ type NeighMod struct {
 	HardwareAddr net.HardwareAddr
 }
 
-// IpAddrGet - Info about an ip addresses
-type IpAddrGet struct {
+// IPAddrGet - Info about an ip addresses
+type IPAddrGet struct {
 	// Dev - name of the related device
 	Dev string
 	// IP - Actual IP address
@@ -377,7 +377,7 @@ type RouteMod struct {
 	Dst net.IPNet
 }
 
-// FwRuleOpts - Information related to Firewall options
+// FwOptArg - Information related to Firewall options
 type FwOptArg struct {
 	// Drop - Drop any matching rule
 	Drop bool `json:"drop"`
@@ -465,6 +465,7 @@ const (
 	LbSelPrio
 )
 
+// LBMode - Variable to define LB mode
 type LBMode int32
 
 const (
@@ -472,7 +473,7 @@ const (
 	LBModeDefault LBMode = iota
 	// LBModeOneArm - One Arm Mode
 	LBModeOneArm
-	// LBModeOneArm - Full NAT Mode
+	// LBModeFullNAT - Full NAT Mode
 	LBModeFullNAT
 	// LBModeDSR - DSR Mode
 	LBModeDSR
@@ -523,8 +524,8 @@ type LbEndPointArg struct {
 	State string `json:"state"`
 }
 
-// LbSecIpArg - Secondary IP
-type LbSecIpArg struct {
+// LbSecIPArg - Secondary IP
+type LbSecIPArg struct {
 	// SecIP - Secondary IP address
 	SecIP string `json:"secondaryIP"`
 }
@@ -534,7 +535,7 @@ type LbRuleMod struct {
 	// Serv - service argument of type LbServiceArg
 	Serv LbServiceArg `json:"serviceArguments"`
 	// SecIPs - Secondary IPs for SCTP multi-homed service
-	SecIPs []LbSecIpArg `json:"secondaryIPs"`
+	SecIPs []LbSecIPArg `json:"secondaryIPs"`
 	// Eps - slice containing LbEndPointArg
 	Eps []LbEndPointArg `json:"endpoints"`
 }
@@ -583,6 +584,21 @@ type ParamMod struct {
 	LogLevel string `json:"logLevel"`
 }
 
+// GoBGPGlobalConfig - Info related to goBGP global config
+type GoBGPGlobalConfig struct {
+	// Local AS number
+	LocalAs int64 `json:"localAs,omitempty"`
+	// BGP Router ID
+	RouterID  string `json:"routerId,omitempty"`
+	SetNHSelf bool   `json:"setNextHopSelf,omitempty"`
+}
+
+// GoBGPNeighMod - Info related to goBGP neigh
+type GoBGPNeighMod struct {
+	Addr     net.IP `json:"neighIP"`
+	RemoteAS uint32 `json:"remoteAS"`
+}
+
 // Equal - check if two session tunnel entries are equal
 func (ut *SessTun) Equal(ut1 *SessTun) bool {
 	if ut.TeID == ut1.TeID && ut.Addr.Equal(ut1.Addr) {
@@ -622,7 +638,7 @@ type HASMod struct {
 }
 
 // ClusterNodeMod - information related to a cluster node instance
-type CluserNodeMod struct {
+type ClusterNodeMod struct {
 	// Instance - Cluster Instance
 	Addr net.IP `json:"Addr"`
 }
@@ -760,9 +776,9 @@ type NetHookInterface interface {
 	NetVlanPortDel(*VlanPortMod) (int, error)
 	NetFdbAdd(*FdbMod) (int, error)
 	NetFdbDel(*FdbMod) (int, error)
-	NetAddrGet() ([]IpAddrGet, error)
-	NetAddrAdd(*IpAddrMod) (int, error)
-	NetAddrDel(*IpAddrMod) (int, error)
+	NetAddrGet() ([]IPAddrGet, error)
+	NetAddrAdd(*IPAddrMod) (int, error)
+	NetAddrDel(*IPAddrMod) (int, error)
 	NetNeighGet() ([]NeighMod, error)
 	NetNeighAdd(*NeighMod) (int, error)
 	NetNeighDel(*NeighMod) (int, error)
@@ -792,4 +808,7 @@ type NetHookInterface interface {
 	NetEpHostGet() ([]EndPointMod, error)
 	NetParamSet(param ParamMod) (int, error)
 	NetParamGet(param *ParamMod) (int, error)
+	NetGoBGPNeighAdd(nm *GoBGPNeighMod) (int, error)
+	NetGoBGPNeighDel(nm *GoBGPNeighMod) (int, error)
+	NetGoBGPGCAdd(gc *GoBGPGlobalConfig) (int, error)
 }

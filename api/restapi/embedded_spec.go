@@ -37,6 +37,203 @@ func init() {
   "host": "0.0.0.0:11111",
   "basePath": "/netlox/v1",
   "paths": {
+    "/config/bgp/global": {
+      "post": {
+        "description": "Adds a BGP global config",
+        "summary": "Adds a BGP global config",
+        "parameters": [
+          {
+            "description": "Attributes of bgp global config",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BGPGlobalConfig"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bgp/neigh": {
+      "post": {
+        "description": "Adds a BGP Neighbor",
+        "summary": "Adds a BGP Neighbor",
+        "parameters": [
+          {
+            "description": "Attributes of bgp neighbor",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BGPNeigh"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bgp/neigh/{ip_address}": {
+      "delete": {
+        "description": "Delete a BGP Neighbor",
+        "summary": "Delete a BGP neighbor",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Neighbor IP address",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "Remote ASN number",
+            "name": "remote_as",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. Neigh already exists",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/cistate": {
       "post": {
         "description": "Informs Current Cluster Instance state in the device",
@@ -3032,6 +3229,36 @@ func init() {
     }
   },
   "definitions": {
+    "BGPGlobalConfig": {
+      "type": "object",
+      "properties": {
+        "SetNextHopSelf": {
+          "description": "Adds policy to set next hop as self, if enabled",
+          "type": "boolean"
+        },
+        "localAs": {
+          "description": "Local AS number",
+          "type": "integer"
+        },
+        "routerId": {
+          "description": "BGP Router ID",
+          "type": "string"
+        }
+      }
+    },
+    "BGPNeigh": {
+      "type": "object",
+      "properties": {
+        "ipAddress": {
+          "description": "BGP Nieghbor IP address",
+          "type": "string"
+        },
+        "remoteAs": {
+          "description": "Remote AS number",
+          "type": "integer"
+        }
+      }
+    },
     "CIStatusEntry": {
       "type": "object",
       "properties": {
@@ -4173,6 +4400,203 @@ func init() {
   "host": "0.0.0.0:11111",
   "basePath": "/netlox/v1",
   "paths": {
+    "/config/bgp/global": {
+      "post": {
+        "description": "Adds a BGP global config",
+        "summary": "Adds a BGP global config",
+        "parameters": [
+          {
+            "description": "Attributes of bgp global config",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BGPGlobalConfig"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bgp/neigh": {
+      "post": {
+        "description": "Adds a BGP Neighbor",
+        "summary": "Adds a BGP Neighbor",
+        "parameters": [
+          {
+            "description": "Attributes of bgp neighbor",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BGPNeigh"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bgp/neigh/{ip_address}": {
+      "delete": {
+        "description": "Delete a BGP Neighbor",
+        "summary": "Delete a BGP neighbor",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Neighbor IP address",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "Remote ASN number",
+            "name": "remote_as",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. Neigh already exists",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/cistate": {
       "post": {
         "description": "Informs Current Cluster Instance state in the device",
@@ -7168,6 +7592,36 @@ func init() {
     }
   },
   "definitions": {
+    "BGPGlobalConfig": {
+      "type": "object",
+      "properties": {
+        "SetNextHopSelf": {
+          "description": "Adds policy to set next hop as self, if enabled",
+          "type": "boolean"
+        },
+        "localAs": {
+          "description": "Local AS number",
+          "type": "integer"
+        },
+        "routerId": {
+          "description": "BGP Router ID",
+          "type": "string"
+        }
+      }
+    },
+    "BGPNeigh": {
+      "type": "object",
+      "properties": {
+        "ipAddress": {
+          "description": "BGP Nieghbor IP address",
+          "type": "string"
+        },
+        "remoteAs": {
+          "description": "Remote AS number",
+          "type": "integer"
+        }
+      }
+    },
     "CIStatusEntry": {
       "type": "object",
       "properties": {

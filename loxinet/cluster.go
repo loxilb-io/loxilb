@@ -44,12 +44,14 @@ const (
 	KAPidFile2   = "/var/run/vrrp.pid"
 )
 
+// ClusterInstance - Struct for Cluster Instance information
 type ClusterInstance struct {
 	State    int
 	StateStr string
 	Vip      net.IP
 }
 
+// ClusterNode - Struct for Cluster Node Information
 type ClusterNode struct {
 	Addr   net.IP
 	Status DpStatusT
@@ -67,7 +69,7 @@ type CIStateH struct {
 func kaSpawn() {
 	url := fmt.Sprintf("http://127.0.0.1:%d/config/params", opts.Opts.Port)
 	for true {
-		if IsLoxiAPIActive(url) == true {
+		if IsLoxiAPIActive(url) {
 			break
 		}
 		tk.LogIt(tk.LogDebug, "KA - waiting for API server\n")
@@ -110,7 +112,7 @@ func kaSpawn() {
 	}
 }
 
-func (ci *CIStateH) CISync() {
+func (h *CIStateH) CISync() {
 	var sm cmn.HASMod
 	var ciState int
 	var ok bool
@@ -132,13 +134,13 @@ func (ci *CIStateH) CISync() {
 				continue
 			}
 
-			if ciState, ok = ci.StateMap[state]; !ok {
+			if ciState, ok = h.StateMap[state]; !ok {
 				continue
 			}
 
 			notify := false
 
-			if eci, ok := ci.ClusterMap[inst]; !ok {
+			if eci, ok := h.ClusterMap[inst]; !ok {
 				notify = true
 			} else {
 				if eci.State != ciState {
@@ -151,7 +153,7 @@ func (ci *CIStateH) CISync() {
 				sm.State = state
 				sm.Vip = net.ParseIP(vip)
 				tk.LogIt(tk.LogInfo, "ci-change instance %s - state %s vip %v\n", inst, state, sm.Vip)
-				ci.CIStateUpdate(sm)
+				h.CIStateUpdate(sm)
 			}
 		}
 
@@ -160,15 +162,15 @@ func (ci *CIStateH) CISync() {
 }
 
 // CITicker - Periodic ticker for Cluster module
-func (ci *CIStateH) CITicker() {
+func (h *CIStateH) CITicker() {
 	mh.mtx.Lock()
-	ci.CISync()
+	h.CISync()
 	mh.mtx.Unlock()
 }
 
 // CISpawn - Spawn CI application
-func (ci *CIStateH) CISpawn() {
-	if ci.SpawnKa {
+func (h *CIStateH) CISpawn() {
+	if h.SpawnKa {
 		go kaSpawn()
 	}
 }
@@ -208,7 +210,7 @@ func (h *CIStateH) CIStateGetInst(inst string) (string, error) {
 		return ci.StateStr, nil
 	}
 
-	return "NOT_DEFINED", errors.New("Not found")
+	return "NOT_DEFINED", errors.New("not found")
 }
 
 // CIStateGet - routine to get HA state
@@ -273,14 +275,15 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 			mh.bgp.UpdateCIState(cm.Instance, ci.State, ci.Vip)
 		}
 		return ci.State, nil
-	} else {
-		tk.LogIt(tk.LogError, "[CLUSTER] Invalid State: %s\n", cm.State)
-		return ci.State, errors.New("Invalid Cluster state")
 	}
+
+	tk.LogIt(tk.LogError, "[CLUSTER] Invalid State: %s\n", cm.State)
+	return ci.State, errors.New("Invalid Cluster state")
+
 }
 
 // ClusterNodeAdd - routine to update cluster nodes
-func (h *CIStateH) ClusterNodeAdd(node cmn.CluserNodeMod) (int, error) {
+func (h *CIStateH) ClusterNodeAdd(node cmn.ClusterNodeMod) (int, error) {
 
 	cNode := h.NodeMap[node.Addr.String()]
 
@@ -298,7 +301,7 @@ func (h *CIStateH) ClusterNodeAdd(node cmn.CluserNodeMod) (int, error) {
 }
 
 // ClusterNodeDelete - routine to delete cluster node
-func (h *CIStateH) ClusterNodeDelete(node cmn.CluserNodeMod) (int, error) {
+func (h *CIStateH) ClusterNodeDelete(node cmn.ClusterNodeMod) (int, error) {
 
 	cNode := h.NodeMap[node.Addr.String()]
 

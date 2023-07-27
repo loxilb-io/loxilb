@@ -88,6 +88,7 @@ func VlanValid(vlanID int) bool {
 	return false
 }
 
+// VlanGet - Routine to get vlan bridge details
 func (V *VlansH) VlanGet() ([]cmn.VlanGet, error) {
 	ret := []cmn.VlanGet{}
 	for k, v := range V.VlanMap {
