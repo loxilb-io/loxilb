@@ -4,7 +4,7 @@ metadata:
   name: udp-lb1
   annotations:
    loxilb.io/liveness: "yes"
-   loxilb.io/lbmode: "onearm"
+   loxilb.io/lbmode: "fullnat"
 spec:
   loadBalancerClass: loxilb.io/loxilb
   externalTrafficPolicy: Local

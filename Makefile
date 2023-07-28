@@ -28,11 +28,13 @@ run:
 docker-cp: build
 	docker cp loxilb $(loxilbid):/root/loxilb-io/loxilb/loxilb
 	docker cp /opt/loxilb/llb_ebpf_main.o $(loxilbid):/opt/loxilb/llb_ebpf_main.o
+	docker cp /opt/loxilb/llb_ebpf_emain.o $(loxilbid):/opt/loxilb/llb_ebpf_emain.o
 	docker cp /opt/loxilb/llb_xdp_main.o $(loxilbid):/opt/loxilb/llb_xdp_main.o
 	docker cp loxilb-ebpf/kernel/loxilb_dp_debug  $(loxilbid):/usr/local/sbin/
 
 docker-cp-ebpf: build
 	docker cp /opt/loxilb/llb_ebpf_main.o $(loxilbid):/opt/loxilb/llb_ebpf_main.o
+	docker cp /opt/loxilb/llb_ebpf_emain.o $(loxilbid):/opt/loxilb/llb_ebpf_emain.o
 	docker cp /opt/loxilb/llb_xdp_main.o $(loxilbid):/opt/loxilb/llb_xdp_main.o
 
 docker-run:
