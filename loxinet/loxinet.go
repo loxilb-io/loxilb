@@ -303,7 +303,7 @@ func loxiNetInit() {
 	// Initialize the nlp subsystem
 	if !opts.Opts.NoNlp {
 		nlp.NlpRegister(NetAPIInit(opts.Opts.BgpPeerMode))
-		nlp.NlpInit(opts.Opts.BgpPeerMode)
+		nlp.NlpInit(opts.Opts.BgpPeerMode, opts.Opts.BlackList)
 	}
 
 	// Initialize the Prometheus subsystem
