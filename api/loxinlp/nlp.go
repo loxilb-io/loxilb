@@ -1530,6 +1530,9 @@ func NlpInit(bgpPeerMode bool, blackList string) *NlH {
 
 	nNl = new(NlH)
 
+	nNl.BlackList = blackList
+	nNl.BLRgx = regexp.MustCompile(blackList)
+
 	if bgpPeerMode {
 		nNl.FromRUCh = make(chan nlp.RouteUpdate, cmn.RuWorkQLen)
 		nNl.FromRUCh = make(chan nlp.RouteUpdate, cmn.RuWorkQLen)
@@ -1544,8 +1547,6 @@ func NlpInit(bgpPeerMode bool, blackList string) *NlH {
 		return nNl
 	}
 
-	nNl.BlackList = blackList
-	nNl.BLRgx = regexp.MustCompile(blackList)
 	nNl.FromAUCh = make(chan nlp.AddrUpdate, cmn.AuWorkqLen)
 	nNl.FromLUCh = make(chan nlp.LinkUpdate, cmn.LuWorkQLen)
 	nNl.FromNUCh = make(chan nlp.NeighUpdate, cmn.NuWorkQLen)
