@@ -27,7 +27,7 @@ spec:
       containers:
       - name: loxilb-peer-app
         image: "ghcr.io/loxilb-io/loxilb:latest"
-        command: [ "/root/loxilb-io/loxilb/loxilb", "--bgp" ]
+        command: [ "/root/loxilb-io/loxilb/loxilb", "--peer" ]
         ports:
         - containerPort: 11111
         - containerPort: 179
