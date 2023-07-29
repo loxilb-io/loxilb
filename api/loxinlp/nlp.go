@@ -82,7 +82,9 @@ type NlH struct {
 	LinkUpdateCh
 	NeighUpdateCh
 	RouteUpdateCh
-	IMap map[string]Intf
+	IMap      map[string]Intf
+	BlackList string
+	BLRgx     *regexp.Regexp
 }
 
 var hooks cmn.NetHookInterface
@@ -1198,6 +1200,12 @@ func DelRoute(route nlp.Route) int {
 
 func LUWorkSingle(m nlp.LinkUpdate) int {
 	var ret int
+
+	filter := nNl.BLRgx.MatchString(m.Link.Attrs().Name)
+	if filter {
+		return -1
+	}
+
 	ret = ModLink(m.Link, m.Header.Type == syscall.RTM_NEWLINK)
 	return ret
 }
@@ -1207,6 +1215,11 @@ func AUWorkSingle(m nlp.AddrUpdate) int {
 	link, err := nlp.LinkByIndex(m.LinkIndex)
 	if err != nil {
 		fmt.Println(err)
+		return -1
+	}
+
+	filter := nNl.BLRgx.MatchString(link.Attrs().Name)
+	if filter {
 		return -1
 	}
 
@@ -1243,6 +1256,11 @@ func NUWorkSingle(m nlp.NeighUpdate) int {
 		return -1
 	}
 
+	filter := nNl.BLRgx.MatchString(link.Attrs().Name)
+	if filter {
+		return -1
+	}
+
 	add := m.Type == syscall.RTM_NEWNEIGH
 
 	if add {
@@ -1256,6 +1274,17 @@ func NUWorkSingle(m nlp.NeighUpdate) int {
 
 func RUWorkSingle(m nlp.RouteUpdate) int {
 	var ret int
+
+	link, err := nlp.LinkByIndex(m.LinkIndex)
+	if err != nil {
+		fmt.Println(err)
+		return -1
+	}
+
+	filter := nNl.BLRgx.MatchString(link.Attrs().Name)
+	if filter {
+		return -1
+	}
 
 	if m.Type == syscall.RTM_NEWROUTE {
 		ret = AddRoute(m.Route)
@@ -1338,6 +1367,10 @@ func GetBridges() {
 		return
 	}
 	for _, link := range links {
+		filter := nNl.BLRgx.MatchString(link.Attrs().Name)
+		if filter {
+			continue
+		}
 		switch link.(type) {
 		case *nlp.Bridge:
 			{
@@ -1360,8 +1393,13 @@ func NlpGet(ch chan bool) int {
 	}
 
 	for _, link := range links {
-		ret = ModLink(link, true)
 
+		filter := nNl.BLRgx.MatchString(link.Attrs().Name)
+		if filter {
+			continue
+		}
+
+		ret = ModLink(link, true)
 		if ret == -1 {
 			continue
 		}
@@ -1488,7 +1526,7 @@ func LbSessionGet(done bool) int {
 	return 0
 }
 
-func NlpInit(bgpPeerMode bool) *NlH {
+func NlpInit(bgpPeerMode bool, blackList string) *NlH {
 
 	nNl = new(NlH)
 
@@ -1506,6 +1544,8 @@ func NlpInit(bgpPeerMode bool) *NlH {
 		return nNl
 	}
 
+	nNl.BlackList = blackList
+	nNl.BLRgx = regexp.MustCompile(blackList)
 	nNl.FromAUCh = make(chan nlp.AddrUpdate, cmn.AuWorkqLen)
 	nNl.FromLUCh = make(chan nlp.LinkUpdate, cmn.LuWorkQLen)
 	nNl.FromNUCh = make(chan nlp.NeighUpdate, cmn.NuWorkQLen)

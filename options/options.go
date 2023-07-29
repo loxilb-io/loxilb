@@ -26,4 +26,5 @@ var Opts struct {
 	RssEnable         bool           `long:"rss-enable" description:"Enable rss optimization(experimental)"`
 	EgrHooks          bool           `long:"egr-hooks" description:"Enable eBPF egress hooks(experimental)"`
 	BgpPeerMode       bool           `short:"r" long:"peer" description:"Run loxilb with goBGP only, no Datapath"`
+	BlackList         string         `long:"blacklist" description:"Regex string of blacklisted ports" default:"none"`
 }

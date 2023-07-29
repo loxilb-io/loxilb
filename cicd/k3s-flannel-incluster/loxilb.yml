@@ -32,7 +32,7 @@ spec:
       containers:
       - name: loxilb-app
         image: "ghcr.io/loxilb-io/loxilb:latest"
-        command: [ "/root/loxilb-io/loxilb/loxilb", "--bgp", "--egr-hooks" ]
+        command: [ "/root/loxilb-io/loxilb/loxilb", "--bgp", "--egr-hooks", "--blacklist=cni[0-9a-z]|veth.|flannel." ]
         ports:
         - containerPort: 11111
         - containerPort: 179
