@@ -132,11 +132,6 @@ func (o *GetConfigLoadbalancerAllOKBody) contextValidateLbAttr(ctx context.Conte
 	for i := 0; i < len(o.LbAttr); i++ {
 
 		if o.LbAttr[i] != nil {
-
-			if swag.IsZero(o.LbAttr[i]) { // not required
-				return nil
-			}
-
 			if err := o.LbAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigLoadbalancerAllOK" + "." + "lbAttr" + "." + strconv.Itoa(i))

@@ -149,11 +149,6 @@ func (m *LoadbalanceEntry) contextValidateEndpoints(ctx context.Context, formats
 	for i := 0; i < len(m.Endpoints); i++ {
 
 		if m.Endpoints[i] != nil {
-
-			if swag.IsZero(m.Endpoints[i]) { // not required
-				return nil
-			}
-
 			if err := m.Endpoints[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("endpoints" + "." + strconv.Itoa(i))
@@ -174,11 +169,6 @@ func (m *LoadbalanceEntry) contextValidateSecondaryIPs(ctx context.Context, form
 	for i := 0; i < len(m.SecondaryIPs); i++ {
 
 		if m.SecondaryIPs[i] != nil {
-
-			if swag.IsZero(m.SecondaryIPs[i]) { // not required
-				return nil
-			}
-
 			if err := m.SecondaryIPs[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("secondaryIPs" + "." + strconv.Itoa(i))
@@ -197,11 +187,6 @@ func (m *LoadbalanceEntry) contextValidateSecondaryIPs(ctx context.Context, form
 func (m *LoadbalanceEntry) contextValidateServiceArguments(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.ServiceArguments != nil {
-
-		if swag.IsZero(m.ServiceArguments) { // not required
-			return nil
-		}
-
 		if err := m.ServiceArguments.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("serviceArguments")

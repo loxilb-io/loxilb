@@ -105,11 +105,6 @@ func (m *MirrorEntry) ContextValidate(ctx context.Context, formats strfmt.Regist
 func (m *MirrorEntry) contextValidateMirrorInfo(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.MirrorInfo != nil {
-
-		if swag.IsZero(m.MirrorInfo) { // not required
-			return nil
-		}
-
 		if err := m.MirrorInfo.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("mirrorInfo")
@@ -126,11 +121,6 @@ func (m *MirrorEntry) contextValidateMirrorInfo(ctx context.Context, formats str
 func (m *MirrorEntry) contextValidateTargetObject(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.TargetObject != nil {
-
-		if swag.IsZero(m.TargetObject) { // not required
-			return nil
-		}
-
 		if err := m.TargetObject.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("targetObject")

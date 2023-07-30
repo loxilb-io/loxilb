@@ -589,8 +589,9 @@ type GoBGPGlobalConfig struct {
 	// Local AS number
 	LocalAs int64 `json:"localAs,omitempty"`
 	// BGP Router ID
-	RouterID  string `json:"routerId,omitempty"`
-	SetNHSelf bool   `json:"setNextHopSelf,omitempty"`
+	RouterID   string `json:"routerId,omitempty"`
+	SetNHSelf  bool   `json:"setNextHopSelf,omitempty"`
+	ListenPort uint16 `json:"listenPort,omitempty"`
 }
 
 // GoBGPNeighMod - Info related to goBGP neigh
