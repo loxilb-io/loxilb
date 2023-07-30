@@ -30,7 +30,7 @@ spec:
         command: [ "/root/loxilb-io/loxilb/loxilb", "--peer" ]
         ports:
         - containerPort: 11111
-        - containerPort: 179
+        - containerPort: 1791
         - containerPort: 50051
         securityContext:
           privileged: true
@@ -53,8 +53,8 @@ spec:
     targetPort: 11111
     protocol: TCP
   - name: loxilb-peer-bgp
-    port: 179
-    targetPort: 179
+    port: 1791
+    targetPort: 1791
     protocol: TCP
   - name: loxilb-peer-gobgp
     port: 50051
