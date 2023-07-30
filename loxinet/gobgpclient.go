@@ -827,6 +827,7 @@ func (gbh *GoBgpH) BGPGlobalConfigAdd(config cmn.GoBGPGlobalConfig) (int, error)
 		Global: &api.Global{
 			Asn:             uint32(config.LocalAs),
 			RouterId:        config.RouterID,
+			ListenPort:      int32(config.ListenPort),
 			ListenAddresses: lalist,
 		},
 	})

@@ -20,6 +20,9 @@ type BGPGlobalConfig struct {
 	// Adds policy to set next hop as self, if enabled
 	SetNextHopSelf bool `json:"SetNextHopSelf,omitempty"`
 
+	// Listen port (default 179)
+	ListenPort int64 `json:"listenPort,omitempty"`
+
 	// Local AS number
 	LocalAs int64 `json:"localAs,omitempty"`
 

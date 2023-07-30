@@ -108,11 +108,6 @@ func (m *SessionEntry) ContextValidate(ctx context.Context, formats strfmt.Regis
 func (m *SessionEntry) contextValidateAccessNetworkTunnel(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.AccessNetworkTunnel != nil {
-
-		if swag.IsZero(m.AccessNetworkTunnel) { // not required
-			return nil
-		}
-
 		if err := m.AccessNetworkTunnel.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("accessNetworkTunnel")
@@ -129,11 +124,6 @@ func (m *SessionEntry) contextValidateAccessNetworkTunnel(ctx context.Context, f
 func (m *SessionEntry) contextValidateCoreNetworkTunnel(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.CoreNetworkTunnel != nil {
-
-		if swag.IsZero(m.CoreNetworkTunnel) { // not required
-			return nil
-		}
-
 		if err := m.CoreNetworkTunnel.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("coreNetworkTunnel")

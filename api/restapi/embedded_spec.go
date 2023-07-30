@@ -3236,6 +3236,10 @@ func init() {
           "description": "Adds policy to set next hop as self, if enabled",
           "type": "boolean"
         },
+        "listenPort": {
+          "description": "Listen port (default 179)",
+          "type": "integer"
+        },
         "localAs": {
           "description": "Local AS number",
           "type": "integer"
@@ -7598,6 +7602,10 @@ func init() {
         "SetNextHopSelf": {
           "description": "Adds policy to set next hop as self, if enabled",
           "type": "boolean"
+        },
+        "listenPort": {
+          "description": "Listen port (default 179)",
+          "type": "integer"
         },
         "localAs": {
           "description": "Local AS number",

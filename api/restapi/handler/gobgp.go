@@ -74,6 +74,12 @@ func ConfigPostBGPGlobal(params operations.PostConfigBgpGlobalParams) middleware
 	// Export policy list
 	bgpG.SetNHSelf = params.Attr.SetNextHopSelf
 
+	// Listen Port
+	bgpG.ListenPort = uint16(params.Attr.ListenPort)
+	if bgpG.ListenPort == 0 {
+		bgpG.ListenPort = 179
+	}
+
 	tk.LogIt(tk.LogDebug, "[API] GoBGP GCAdd : %v\n", bgpG)
 	_, err := ApiHooks.NetGoBGPGCAdd(&bgpG)
 	if err != nil {

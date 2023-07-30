@@ -3107,3 +3107,6 @@ definitions:
       SetNextHopSelf:
         type: boolean
         description: Adds policy to set next hop as self, if enabled
+      listenPort:
+        type: integer
+        description: Listen port (default 179)

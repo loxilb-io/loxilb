@@ -132,11 +132,6 @@ func (o *GetConfigMirrorAllOKBody) contextValidateMirrAttr(ctx context.Context, 
 	for i := 0; i < len(o.MirrAttr); i++ {
 
 		if o.MirrAttr[i] != nil {
-
-			if swag.IsZero(o.MirrAttr[i]) { // not required
-				return nil
-			}
-
 			if err := o.MirrAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigMirrorAllOK" + "." + "mirrAttr" + "." + strconv.Itoa(i))
