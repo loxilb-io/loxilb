@@ -75,11 +75,6 @@ func (m *SessionUlClEntry) ContextValidate(ctx context.Context, formats strfmt.R
 func (m *SessionUlClEntry) contextValidateUlclArgument(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.UlclArgument != nil {
-
-		if swag.IsZero(m.UlclArgument) { // not required
-			return nil
-		}
-
 		if err := m.UlclArgument.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("ulclArgument")

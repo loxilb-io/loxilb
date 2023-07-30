@@ -132,11 +132,6 @@ func (o *GetConfigVlanAllOKBody) contextValidateVlanAttr(ctx context.Context, fo
 	for i := 0; i < len(o.VlanAttr); i++ {
 
 		if o.VlanAttr[i] != nil {
-
-			if swag.IsZero(o.VlanAttr[i]) { // not required
-				return nil
-			}
-
 			if err := o.VlanAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigVlanAllOK" + "." + "vlanAttr" + "." + strconv.Itoa(i))
