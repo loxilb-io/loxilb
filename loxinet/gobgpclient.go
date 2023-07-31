@@ -739,7 +739,7 @@ func (gbh *GoBgpH) UpdateCIState(instance string, state int, vip net.IP) {
 }
 
 // BGPNeighMod - Routine to add BGP neigh to goBGP server
-func (gbh *GoBgpH) BGPNeighMod(add bool, neigh net.IP, ras uint32) (int, error) {
+func (gbh *GoBgpH) BGPNeighMod(add bool, neigh net.IP, ras uint32, rPort uint32) (int, error) {
 	var peer *api.Peer
 	var err error
 
@@ -748,10 +748,17 @@ func (gbh *GoBgpH) BGPNeighMod(add bool, neigh net.IP, ras uint32) (int, error) 
 		State:          &api.PeerState{},
 		RouteServer:    &api.RouteServer{},
 		RouteReflector: &api.RouteReflector{},
+		Transport:      &api.Transport{},
 	}
 	peer.Conf.NeighborAddress = neigh.String()
 	peer.State.NeighborAddress = neigh.String()
 	peer.Conf.PeerAsn = ras
+	if rPort != 0 {
+		peer.Transport.RemotePort = rPort
+	} else {
+		peer.Transport.RemotePort = 179
+	}
+
 	if add {
 		_, err = gbh.client.AddPeer(context.Background(),
 			&api.AddPeerRequest{

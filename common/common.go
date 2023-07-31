@@ -596,8 +596,9 @@ type GoBGPGlobalConfig struct {
 
 // GoBGPNeighMod - Info related to goBGP neigh
 type GoBGPNeighMod struct {
-	Addr     net.IP `json:"neighIP"`
-	RemoteAS uint32 `json:"remoteAS"`
+	Addr       net.IP `json:"neighIP"`
+	RemoteAS   uint32 `json:"remoteAS"`
+	RemotePort uint16 `json:"remotePort"`
 }
 
 // Equal - check if two session tunnel entries are equal
