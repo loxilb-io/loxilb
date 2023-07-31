@@ -9,10 +9,12 @@ cluster_name: Kubernetes Cluster
 #   NO_PROXY=127.0.0.1,localhost,master-node,node01,node02,node03
 # All IPs/CIDRs should be private and allowed in /etc/vbox/networks.conf.
 network:
-  iloxilb_ip: 192.168.80.9
-  oloxilb_ip: 192.168.90.9
   # Worker IPs are simply incremented from the control IP.
+  client_ip: 192.168.90.9
   control_ip: 192.168.80.10
+  control_ip2: 192.168.90.10
+  control2_ip: 192.168.80.11
+  control2_ip2: 192.168.90.11
   dns_servers:
     - 8.8.8.8
     - 1.1.1.1
@@ -20,11 +22,11 @@ network:
   service_cidr: 172.17.1.0/18
 nodes:
   control:
-    cpu: 2
+    cpu: 4
     memory: 4096
   workers:
     count: 2
-    cpu: 1
+    cpu: 2
     memory: 2048
 # Mount additional shared folders from the host into each virtual machine.
 # Note that the project directory is automatically mounted at /vagrant.
@@ -32,12 +34,10 @@ nodes:
 #   - host_path: ../images
 #     vm_path: /vagrant/images
 software:
-  loxilb:
+  cluster:
     box: 
      name: sysnet4admin/Ubuntu-k8s
      version: 0.7.1
-  cluster:
-    box: bento/ubuntu-22.04
   calico: 3.26.0
   # To skip the dashboard installation, set its version to an empty value or comment it out:
   kubernetes: 1.27.1-00
