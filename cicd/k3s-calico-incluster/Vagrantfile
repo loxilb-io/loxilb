@@ -31,8 +31,8 @@ Vagrant.configure("2") do |config|
     master.vm.network :private_network, ip: "192.168.90.10", :netmask => "255.255.255.0"
     master.vm.provision :shell, :path => "master1.sh"
     master.vm.provider :virtualbox do |vbox|
-        vbox.customize ["modifyvm", :id, "--memory", 2048]
-        vbox.customize ["modifyvm", :id, "--cpus", 2]
+        vbox.customize ["modifyvm", :id, "--memory", 4096]
+        vbox.customize ["modifyvm", :id, "--cpus", 3]
     end
   end
 
@@ -42,8 +42,8 @@ Vagrant.configure("2") do |config|
     master.vm.network :private_network, ip: "192.168.90.11", :netmask => "255.255.255.0"
     master.vm.provision :shell, :path => "master2.sh"
     master.vm.provider :virtualbox do |vbox|
-        vbox.customize ["modifyvm", :id, "--memory", 2048]
-        vbox.customize ["modifyvm", :id, "--cpus", 2]
+        vbox.customize ["modifyvm", :id, "--memory", 4096]
+        vbox.customize ["modifyvm", :id, "--cpus", 3]
     end
   end
 
