@@ -5,8 +5,7 @@ export NODE_TOKEN=$(cat /vagrant/node-token)
 mkdir -p /etc/rancher/k3s
 cp -f /vagrant/k3s.yaml /etc/rancher/k3s/k3s.yaml
 curl -sfL https://get.k3s.io | K3S_TOKEN=${NODE_TOKEN} sh -s - agent --server https://192.168.80.10:6443 --node-ip=${WORKER_ADDR} --node-external-ip=${WORKER_ADDR} -t ${NODE_TOKEN}
-#sudo kubectl apply -f /vagrant/loxilb-peer.yml
+sudo kubectl apply -f /vagrant/loxilb-peer.yml
 sudo kubectl apply -f /vagrant/nginx.yml
-#sudo kubectl apply -f /vagrant/udp.yml
-#sudo kubectl apply -f /vagrant/sctp.yml
+sudo kubectl apply -f /vagrant/udp.yml
 /vagrant/wait_ready.sh

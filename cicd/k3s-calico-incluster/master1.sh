@@ -6,8 +6,8 @@ echo $MASTER_IP > /vagrant/master-ip
 cp /var/lib/rancher/k3s/server/node-token /vagrant/node-token
 sed -i -e "s/127.0.0.1/${MASTER_IP}/g" /etc/rancher/k3s/k3s.yaml
 cp /etc/rancher/k3s/k3s.yaml /vagrant/k3s.yaml
-#sudo kubectl apply -f /vagrant/loxilb.yml
-#sudo kubectl apply -f /vagrant/kube-loxilb.yml
+sudo kubectl apply -f /vagrant/loxilb.yml
+sudo kubectl apply -f /vagrant/kube-loxilb.yml
 sudo kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.0/manifests/tigera-operator.yaml
 sudo kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.0/manifests/custom-resources.yaml
 /vagrant/wait_ready.sh

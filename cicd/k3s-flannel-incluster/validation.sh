@@ -9,23 +9,18 @@ fi
 # Set space as the delimiter
 IFS=' '
 
-sleep 45
+sleep 5
 extIP="123.123.123.1"
 echo $extIP
 
 echo "Service Info"
-vagrant ssh master -c 'sudo kubectl get svc'
-echo "LB Info"
-vagrant ssh loxilb -c 'sudo docker exec -i loxilb loxicmd get lb -o wide'
-echo "EP Info"
-vagrant ssh loxilb -c 'sudo docker exec -i loxilb loxicmd get ep -o wide'
+vagrant ssh master1 -c 'sudo kubectl get svc'
 
 print_debug_info() {
-  echo "llb1 route-info"
-  vagrant ssh loxilb -c 'ip route'
-  vagrant ssh master -c 'sudo kubectl get pods -A'
-  vagrant ssh master -c 'sudo kubectl get svc'
-  vagrant ssh master -c 'sudo kubectl get nodes'
+  echo "cluster-info"
+  vagrant ssh master1 -c 'sudo kubectl get pods -A'
+  vagrant ssh master1 -c 'sudo kubectl get svc'
+  vagrant ssh master1 -c 'sudo kubectl get nodes'
 }
 
 out=$(curl -s --connect-timeout 10 http://$extIP:55002) 

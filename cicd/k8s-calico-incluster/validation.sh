@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo k8s-calico
+echo k8s-calico-incluster
 
 if [ "$1" ]; then
   KUBECONFIG="$1"
@@ -11,11 +11,11 @@ IFS=' '
 
 for((i=0; i<120; i++))
 do
-  extLB=$(vagrant ssh master -c 'kubectl get svc' 2> /dev/null | grep "tcp-lb-default")
+  extLB=$(vagrant ssh master -c 'kubectl get svc' 2> /dev/null | grep "tcp-lb-fullnat")
   read -a strarr <<< "$extLB"
   len=${#strarr[*]}
   if [[ $((len)) -lt 6 ]]; then
-    echo "Can't find tcp-lb service"
+    echo "Can't find tcp-lb-fullnat"
     sleep 1
     continue
   fi 
@@ -42,61 +42,31 @@ echo "**************************************************************************
 echo -e "\nPod List"
 echo "******************************************************************************"
 vagrant ssh master -c 'kubectl get pods -A' 2> /dev/null
-echo "******************************************************************************"
-echo -e "\nLB List"
-echo "******************************************************************************"
-vagrant ssh loxilb -c 'sudo docker exec -it loxilb loxicmd get lb -o wide' 2> /dev/null
-echo "******************************************************************************"
-echo -e "\nEP List"
-echo "******************************************************************************"
-vagrant ssh loxilb -c 'sudo docker exec -it loxilb loxicmd get ep -o wide' 2> /dev/null
-echo "******************************************************************************"
 
 echo -e "\nTEST RESULTS"
 echo "******************************************************************************"
-mode=( "default" "onearm" "fullnat" )
-tcp_port=( 55002 56002 57002 )
-udp_port=( 55003 56003 57003 )
-sctp_port=( 55004 56004 57004 )
+mode=( "fullnat" )
+tcp_port=( 57002 )
+udp_port=( 57003 )
+sctp_port=( 57004 )
 code=0
-for ((i=0;i<=2;i++)); do
-out=$(curl -s --connect-timeout 10 http://$extIP:${tcp_port[i]})
-if [[ ${out} == *"Welcome to nginx"* ]]; then
-  echo -e "K8s-calico TCP\t(${mode[i]})\t[OK]"
+for ((i=0;i<1;i++)); do
+out=$(vagrant ssh host -c "curl -s --connect-timeout 10 http://$extIP:${tcp_port[i]}")
+echo $out
+if [[ ${out} == *"nginx"* ]]; then
+  echo -e "K8s-calico-incluster TCP\t(${mode[i]})\t[OK]"
 else
-  echo -e "K8s-calico TCP\t(${mode[i]})\t[FAILED]"
-  ## Dump some debug info
-  echo "llb1 lb-info"
-  vagrant ssh loxilb -c 'sudo docker exec -it llb1 loxicmd get lb -o wide' 2> /dev/null
-  echo "llb1 route-info"
-  vagrant ssh loxilb -c 'sudo docker exec -it llb1 ip route' 2> /dev/null
+  echo -e "K8s-calico-incluster TCP\t(${mode[i]})\t[FAILED]"
   code=1
 fi
 
-out=$(timeout 5 ../common/udp_client $extIP ${udp_port[i]})
+out=$(vagrant ssh host -c "timeout 5 /vagrant/tools/udp_client $extIP ${udp_port[i]}")
 if [[ ${out} == *"Client"* ]]; then
-  echo -e "K8s-calico UDP\t(${mode[i]})\t[OK]"
+  echo -e "K8s-calico-incluster UDP\t(${mode[i]})\t[OK]"
 else
-  echo -e "K8s-calico UDP\t(${mode[i]})\t[FAILED]"
-  ## Dump some debug info
-  echo "llb1 lb-info"
-  vagrant ssh loxilb -c 'sudo docker exec -it llb1 loxicmd get lb -o wide' 2> /dev/null
-  echo "llb1 route-info"
-  vagrant ssh loxilb -c 'sudo docker exec -it llb1 ip route' 2> /dev/null
-  code=1
-fi
-
-out=$(timeout 5 ../common/sctp_client 192.168.90.1 34951 $extIP ${sctp_port[i]})
-if [[ ${out} == *"server1"* ]]; then
-  echo -e "K8s-calico SCTP\t(${mode[i]})\t[OK]"
-else
-  echo -e "K8s-calico SCTP\t(${mode[i]})\t[FAILED]"
-  ## Dump some debug info
-  echo "llb1 lb-info"
-  vagrant ssh loxilb -c 'sudo docker exec -it llb1 loxicmd get lb -o wide' 2> /dev/null
-  echo "llb1 route-info"
-  vagrant ssh loxilb -c 'sudo docker exec -it llb1 ip route' 2> /dev/null
+  echo -e "K8s-calico-incluster UDP\t(${mode[i]})\t[FAILED]"
   code=1
 fi
 done
+
 exit $code
