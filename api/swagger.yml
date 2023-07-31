@@ -3090,10 +3090,13 @@ definitions:
     properties:
       ipAddress:
         type: string
-        description: BGP Nieghbor IP address
+        description: BGP Neighbor IP address
       remoteAs:
         type: integer
         description: Remote AS number
+      remotePort:
+        type: integer
+        description: Remote Connect Port (default 179)
 
   BGPGlobalConfig:
     type: object

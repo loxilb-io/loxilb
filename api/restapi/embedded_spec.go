@@ -3254,11 +3254,15 @@ func init() {
       "type": "object",
       "properties": {
         "ipAddress": {
-          "description": "BGP Nieghbor IP address",
+          "description": "BGP Neighbor IP address",
           "type": "string"
         },
         "remoteAs": {
           "description": "Remote AS number",
+          "type": "integer"
+        },
+        "remotePort": {
+          "description": "Remote Connect Port (default 179)",
           "type": "integer"
         }
       }
@@ -7621,11 +7625,15 @@ func init() {
       "type": "object",
       "properties": {
         "ipAddress": {
-          "description": "BGP Nieghbor IP address",
+          "description": "BGP Neighbor IP address",
           "type": "string"
         },
         "remoteAs": {
           "description": "Remote AS number",
+          "type": "integer"
+        },
+        "remotePort": {
+          "description": "Remote Connect Port (default 179)",
           "type": "integer"
         }
       }

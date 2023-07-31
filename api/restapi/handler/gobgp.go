@@ -33,6 +33,9 @@ func ConfigPostBGPNeigh(params operations.PostConfigBgpNeighParams) middleware.R
 	// Remote AS
 	bgpNeighMod.RemoteAS = uint32(params.Attr.RemoteAs)
 
+	// Remote Port
+	bgpNeighMod.RemotePort = uint16(params.Attr.RemotePort)
+
 	tk.LogIt(tk.LogDebug, "[API] GoBGP neighAdd : %v\n", bgpNeighMod)
 	_, err := ApiHooks.NetGoBGPNeighAdd(&bgpNeighMod)
 	if err != nil {

@@ -17,11 +17,14 @@ import (
 // swagger:model BGPNeigh
 type BGPNeigh struct {
 
-	// BGP Nieghbor IP address
+	// BGP Neighbor IP address
 	IPAddress string `json:"ipAddress,omitempty"`
 
 	// Remote AS number
 	RemoteAs int64 `json:"remoteAs,omitempty"`
+
+	// Remote Connect Port (default 179)
+	RemotePort int64 `json:"remotePort,omitempty"`
 }
 
 // Validate validates this b g p neigh
