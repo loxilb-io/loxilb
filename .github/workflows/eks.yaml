@@ -116,9 +116,9 @@ jobs:
         script: |
           curl http://${{ env.LOXILB_PUBLIC_IP }}:8080
           sleep 10
-          ../common/udp_client ${{ env.LOXILB_PUBLIC_IP }} 50003
+          ./udp_client ${{ env.LOXILB_PUBLIC_IP }} 50003
           sleep 10
-          ../common/sctp_client ${{ env.HOST_PRIVATE_IP }} 0 ${{ env.LOXILB_PUBLIC_IP }} 55004
+          ./sctp_client ${{ env.HOST_PRIVATE_IP }} 0 ${{ env.LOXILB_PUBLIC_IP }} 55004
     
     - name: delete k8s configure
       run: |
