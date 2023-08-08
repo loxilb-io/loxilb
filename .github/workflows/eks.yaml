@@ -1,0 +1,133 @@
+name: 'LoxiLB with EKS test'
+
+on:
+ schedule:
+ # Runs "At 11:00 UTC every day-of-week"
+ - cron: '0 11 * * *'
+ workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'LoxiLB with EKS test'
+  
+permissions:
+  contents: read
+env: 
+  AWS_REGION: ap-northeast-3
+
+jobs:
+  terraform:
+    name: 'Terraform with eks'
+    runs-on: ubuntu-latest
+    environment: production
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./cicd/eks      
+      
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    # AWS check 
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+  
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: terraform init
+      
+    # Generates an execution plan for Terraform
+    - name: Terraform Plan
+      run: terraform plan -input=false
+      
+    - name: Terraform Apply
+      run: terraform apply -auto-approve -input=false
+      
+    - name: Install and kubectl
+      run: |
+        VERSION=$(curl --silent https://storage.googleapis.com/kubernetes-release/release/stable.txt)
+        curl https://storage.googleapis.com/kubernetes-release/release/$VERSION/bin/linux/amd64/kubectl \
+          --progress-bar \
+          --location \
+          --remote-name
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/
+
+    - name: Get envs
+      run: |
+        echo "LOXILB_PUBLIC_IP=$(terraform output -raw loxilb_public_ip)" >> $GITHUB_ENV
+        echo "LOXILB_PRIVATE_IP=$(terraform output -raw loxilb_private_ip)" >> $GITHUB_ENV
+        echo "HOST_PUBLIC_IP=$(terraform output -raw host_public_ip)" >> $GITHUB_ENV
+        echo "HOST_PRIVATE_IP=$(terraform output -raw host_private_ip)" >> $GITHUB_ENV
+        echo "LOXILB_USER=ubuntu" >> $GITHUB_ENV
+        echo "HOST_USER=ubuntu" >> $GITHUB_ENV
+
+    - name: Loxilb update
+      uses: appleboy/ssh-action@v0.1.6
+      with:          
+        host: ${{ env.LOXILB_PUBLIC_IP }}
+        username: ${{ env.LOXILB_USER }}
+        key: ${{ secrets.AWS_SSH_KEY }}
+        port: 22
+        script_stop: true
+        script: |
+            sudo docker image pull ghcr.io/loxilb-io/loxilb:latest
+            sudo docker stop loxilb
+            sudo docker rm loxilb
+            sudo docker run -u root --cap-add SYS_ADMIN --net host  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
+            sleep 20
+            sudo docker exec loxilb /root/loxilb-io/loxilb/loxilb -v
+      
+    - name: get kubeconfig
+      run: aws eks --region $(terraform output -raw region) update-kubeconfig --name $(terraform output -raw cluster_name)
+      
+    - name: kube-loxilb apply
+      run: |
+        export LOXILB_PRIVATE_IP=${{ env.LOXILB_PRIVATE_IP }}
+        envsubst < kube-loxilb.yaml  | kubectl apply -f -
+        sleep 60
+    
+    - name: make Service with Pod
+      run: |
+        kubectl apply -f nginx-svc.yaml
+        sleep 10
+        kubectl apply -f udp-svc.yaml
+        sleep 10
+        kubectl apply -f sctp-svc.yaml
+        sleep 10
+           
+    - name: Host Commands
+      uses: appleboy/ssh-action@v0.1.6
+      with:
+        host: ${{ env.HOST_PUBLIC_IP }}
+        username: ${{ env.HOST_USER }}
+        key: ${{ secrets.AWS_SSH_KEY }}
+        port: 22
+        script_stop: true
+        script: |
+          curl http://${{ env.LOXILB_PUBLIC_IP }}:8080
+          sleep 10
+          ../common/udp_client ${{ env.LOXILB_PUBLIC_IP }} 50003
+          sleep 10
+          ../common/sctp_client ${{ env.HOST_PRIVATE_IP }} 0 ${{ env.LOXILB_PUBLIC_IP }} 55004
+    
+    - name: delete k8s configure
+      run: |
+        kubectl delete -f nginx-svc.yaml
+        kubectl delete -f udp-svc.yaml
+        kubectl delete -f sctp-svc.yaml
+        kubectl delete -f kube-loxilb.yaml
+        
+    - name : delete testbed
+      if: ${{ always() }}
+      run: |
+        terraform destroy  -auto-approve -input=false

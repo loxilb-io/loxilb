@@ -1,0 +1,130 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-loxilb
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kube-loxilb
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - watch
+      - list
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - watch
+      - list
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - endpoints
+      - services
+      - services/status
+    verbs:
+      - get
+      - watch
+      - list
+      - patch
+      - update
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups:
+      - authentication.k8s.io
+    resources:
+      - tokenreviews
+    verbs:
+      - create
+  - apiGroups:
+      - authorization.k8s.io
+    resources:
+      - subjectaccessreviews
+    verbs:
+      - create
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kube-loxilb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kube-loxilb
+subjects:
+  - kind: ServiceAccount
+    name: kube-loxilb
+    namespace: kube-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-loxilb
+  namespace: kube-system
+  labels:
+    app: loxilb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loxilb
+  template:
+    metadata:
+      labels:
+        app: loxilb
+    spec:
+      hostNetwork: true
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+        # Mark the pod as a critical add-on for rescheduling.
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - effect: NoExecute
+          operator: Exists
+      priorityClassName: system-node-critical
+      serviceAccountName: kube-loxilb
+      terminationGracePeriodSeconds: 0
+      containers:
+      - name: kube-loxilb
+        image: ghcr.io/loxilb-io/kube-loxilb:latest
+        imagePullPolicy: Always
+        command:
+        - /bin/kube-loxilb
+        args:
+        - --loxiURL=http://$LOXILB_PRIVATE_IP:11111
+        - --externalCIDR=$LOXILB_PRIVATE_IP/32
+        #- --externalSecondaryCIDRs=124.124.124.1/24,125.125.125.1/24
+        #- --monitor
+        #- --setBGP
+        - --setLBMode=2
+        #- --config=/opt/loxilb/agent/kube-loxilb.conf
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "50Mi"
+          limits:
+            cpu: "100m"
+            memory: "50Mi"
+        securityContext:
+          privileged: true
+          capabilities:
+            add: ["NET_ADMIN", "NET_RAW"]

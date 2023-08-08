@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: udp-lb1
+  annotations:
+   loxilb.io/liveness: "yes"
+   loxilb.io/lbmode: "fullnat"
+spec:
+  loadBalancerClass: loxilb.io/loxilb
+  externalTrafficPolicy: Local
+  selector:
+    what: udp-test
+  ports:
+    - port: 50003
+      protocol: UDP
+      targetPort: 33333
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: udp-test
+  labels:
+    what: udp-test
+spec:
+  containers:
+    - name: udp-test
+      image: loxilbio/udp-echo
+      ports:
+        - containerPort: 33333
