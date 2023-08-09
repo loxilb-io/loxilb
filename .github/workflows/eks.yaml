@@ -1,4 +1,4 @@
-name: 'LoxiLB with EKS test'
+name: 'EKS'
 
 on:
  schedule:
@@ -9,7 +9,7 @@ on:
       testName:
         description: 'Test Run-Name'     
         required: true
-        default: 'LoxiLB with EKS test'
+        default: 'EKS'
   
 permissions:
   contents: read
