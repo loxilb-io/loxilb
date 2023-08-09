@@ -103,7 +103,11 @@ jobs:
         kubectl apply -f udp-svc.yaml
         sleep 10
         kubectl apply -f sctp-svc.yaml
-        sleep 10
+        sleep 20
+        echo "**** svc info ****"
+        kubectl get svc
+        echo "**** pods info ****"
+        kubectl get pods -A
            
     - name: Host Commands
       uses: appleboy/ssh-action@v0.1.6
@@ -112,13 +116,12 @@ jobs:
         username: ${{ env.HOST_USER }}
         key: ${{ secrets.AWS_SSH_KEY }}
         port: 22
-        script_stop: true
         script: |
           curl http://${{ env.LOXILB_PUBLIC_IP }}:8080
           sleep 10
           ./udp_client ${{ env.LOXILB_PUBLIC_IP }} 50003
           sleep 10
-          ./sctp_client ${{ env.HOST_PRIVATE_IP }} 0 ${{ env.LOXILB_PUBLIC_IP }} 55004
+          for i in $(seq 1 10); do    ./sctp_client ${{ env.HOST_PRIVATE_IP }} 0 ${{ env.LOXILB_PUBLIC_IP }} 55004;    sleep 1; done
     
     - name: delete k8s configure
       run: |
