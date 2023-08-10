@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sctp-lb1
+  annotations:
+   loxilb.io/liveness: "yes"
+   loxilb.io/lbmode: "fullnat"
+spec:
+  loadBalancerClass: loxilb.io/loxilb
+  externalTrafficPolicy: Local
+  selector:
+    what: sctp-test
+  ports:
+    - port: 55004
+      protocol: SCTP
+      targetPort: 9999
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sctp-test
+  labels:
+    what: sctp-test
+spec:
+  containers:
+    - name: sctp-test
+      image: alpine/socat
+      command: [ "sh", "-c"]
+      args:
+      - while true; do
+          socat -v -T2 sctp-l:9999,reuseaddr,fork system:"echo 'server1'; cat";
+          sleep 20;
+        done;
+      ports:
+        - containerPort: 9999
+      env:
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP

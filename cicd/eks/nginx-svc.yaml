@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-lb1
+  annotations:
+   loxilb.io/liveness : "yes"
+spec:
+  externalTrafficPolicy: Local
+  loadBalancerClass: loxilb.io/loxilb
+  selector:
+    what: nginx-test
+  ports:
+    - port: 8080
+      targetPort: 80 
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-test
+  labels:
+    what: nginx-test
+spec:
+  containers:
+    - name: nginx-test
+      image: nginx:stable
+      ports:
+        - containerPort: 80
