@@ -403,7 +403,7 @@ func GoBgpInit(bgpPeerMode bool) *GoBgpH {
 	gbh := new(GoBgpH)
 
 	gbh.eventCh = make(chan goBgpEvent, cmn.RuWorkQLen)
-	gbh.host = "127.0.0.1:50051"
+	gbh.host = "127.0.0.1:50052"
 	gbh.ciMap = make(map[string]*goCI)
 	gbh.state = BGPDisconnected
 	go gbh.goBgpSpawn(bgpPeerMode)
@@ -430,7 +430,7 @@ func (gbh *GoBgpH) goBgpSpawn(bgpPeerMode bool) {
 		if _, err := os.Stat(confFile); errors.Is(err, os.ErrNotExist) {
 			if _, err := os.Stat("/etc/gobgp/gobgp.conf"); errors.Is(err, os.ErrNotExist) {
 				if _, err := os.Stat("/etc/gobgp/gobgp_loxilb.yaml"); errors.Is(err, os.ErrNotExist) {
-					tk.LogIt(tk.LogError, "No BGP conf file found\n")
+					tk.LogIt(tk.LogError, "No BGP conf file found. Run without it\n")
 				} else {
 					cfgOpts = "-t yaml -f /etc/gobgp/gobgp_loxilb.yaml"
 				}
@@ -441,7 +441,7 @@ func (gbh *GoBgpH) goBgpSpawn(bgpPeerMode bool) {
 			cfgOpts = "-f " + confFile
 		}
 
-		command := fmt.Sprintf("gobgpd %s", cfgOpts)
+		command := fmt.Sprintf("gobgpd %s --api-hosts=127.0.0.1:50052", cfgOpts)
 		cmd := exec.Command("bash", "-c", command)
 		err := cmd.Run()
 		if err != nil {
