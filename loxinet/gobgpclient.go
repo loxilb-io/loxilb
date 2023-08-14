@@ -359,7 +359,7 @@ func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string, pref uin
 		tk.LogIt(tk.LogCritical, "[GoBGP] Advertised Route add %s/%d via %s failed: %v\n", rtPrefix, pLen, nh, err)
 		return -1
 	}
-	tk.LogIt(tk.LogDebug, "[GoBGP] Advertised Route [OK]: %s/%d via %s\n", rtPrefix, pLen, nh)
+	tk.LogIt(tk.LogDebug, "[GoBGP] Advertised Route [OK]: %s/%d via %s pref(%v):med(%v)\n", rtPrefix, pLen, nh, pref, med)
 	return 0
 }
 
@@ -401,6 +401,8 @@ func (gbh *GoBgpH) DelAdvertiseRoute(rtPrefix string, pLen int, nh string, pref 
 	if err != nil {
 		tk.LogIt(tk.LogCritical, "Advertised Route del failed: %v\n", err)
 		return -1
+	} else {
+		tk.LogIt(tk.LogDebug, "[GoBGP] Withdraw Route [OK]: %s/%d via %s pref(%v):med(%v)\n", rtPrefix, pLen, nh, pref, med)
 	}
 	return 0
 }
@@ -572,6 +574,9 @@ func (gbh *GoBgpH) DelBGPRule(instance string, IP []string) {
 				gbh.DelAdvertiseRoute(ip, 32, "0.0.0.0", pref, med)
 			} else {
 				gbh.DelAdvertiseRoute(ip, 128, "::", pref, med)
+			}
+			if ci.rules[ip] == 0 {
+				delete(ci.rules, ip)
 			}
 			tk.LogIt(tk.LogDebug, "[GoBGP] Del BGP Rule %s\n", ip)
 		}
