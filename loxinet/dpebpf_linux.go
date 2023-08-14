@@ -1714,6 +1714,7 @@ func dpCTMapChkUpdates() {
 	defer mh.dpEbpf.mtx.Unlock()
 	var tact C.struct_dp_ct_tact
 	var act *C.struct_dp_ct_dat
+	var blkCti []DpCtInfo
 
 	tc := time.Now()
 	fd := C.llb_map2fd(C.LL_DP_CT_MAP)
@@ -1746,7 +1747,7 @@ func dpCTMapChkUpdates() {
 				delete(mh.dpEbpf.ctMap, cti.Key())
 				mh.dpEbpf.ctMap[goCtEnt.Key()] = goCtEnt
 				ctStr := goCtEnt.String()
-				tk.LogIt(tk.LogInfo, "[CT] %s - %s\n", "update", ctStr)
+				tk.LogIt(tk.LogDebug, "[CT] %s - %s\n", "update", ctStr)
 				if goCtEnt.CState == "est" {
 					goCtEnt.XSync = true
 					goCtEnt.NTs = time.Now()
@@ -1801,7 +1802,8 @@ func dpCTMapChkUpdates() {
 				ret = mh.dp.DpXsyncRPC(DpSyncDelete, cti)
 				cti.Deleted++
 			} else {
-				ret = mh.dp.DpXsyncRPC(DpSyncAdd, cti)
+				blkCti = append(blkCti, *cti)
+				//ret = mh.dp.DpXsyncRPC(DpSyncAdd, cti)
 			}
 			if ret == 0 || cti.Deleted > ctiDeleteSyncRetries {
 				cti.XSync = false
@@ -1813,6 +1815,11 @@ func dpCTMapChkUpdates() {
 				}
 			}
 		}
+	}
+
+	if len(blkCti) > 0 {
+		tk.LogIt(tk.LogDebug, "[CT] Block Sync - \n")
+		mh.dp.DpXsyncRPC(DpSyncAdd, blkCti)
 	}
 }
 
@@ -1937,4 +1944,14 @@ func (e *DpEbpfH) DpCtGetAsync() {
 	//			cte.NTs = time.Now()
 	//		}
 	//	}
+}
+
+// DpTakeLock - routine to take underlying DP lock
+func (e *DpEbpfH) DpGetLock() {
+	C.llb_xh_lock()
+}
+
+// DpRelLock - routine to release underlying DP lock
+func (e *DpEbpfH) DpRelLock() {
+	C.llb_xh_unlock()
 }

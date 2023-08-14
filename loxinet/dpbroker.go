@@ -397,6 +397,8 @@ type DpHookInterface interface {
 	DpCtAdd(w *DpCtInfo) int
 	DpCtDel(w *DpCtInfo) int
 	DpCtGetAsync()
+	DpGetLock()
+	DpRelLock()
 }
 
 // DpPeer - Remote DP Peer information
@@ -497,7 +499,7 @@ func (dp *DpH) WaitXsyncReady(who string) {
 }
 
 // DpXsyncRPC - Routine for syncing connection information with peers
-func (dp *DpH) DpXsyncRPC(op DpSyncOpT, cti *DpCtInfo) int {
+func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
 	var reply int
 	timeout := 2 * time.Second
 	dp.SyncMtx.Lock()
@@ -509,6 +511,15 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, cti *DpCtInfo) int {
 
 	rpcRetries := 0
 	rpcErr := false
+	var cti *DpCtInfo = nil
+	var blkCti []DpCtInfo
+
+	switch na := arg.(type) {
+	case *DpCtInfo:
+		cti = na
+	case []DpCtInfo:
+		blkCti = na
+	}
 
 	for idx := range mh.dp.Peers {
 	restartRPC:
@@ -528,7 +539,11 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, cti *DpCtInfo) int {
 		reply = 0
 		rpcCallStr := ""
 		if op == DpSyncAdd || op == DpSyncBcast {
-			rpcCallStr = "XSync.DpWorkOnCtAdd"
+			if len(blkCti) > 0 {
+				rpcCallStr = "XSync.DpWorkOnBlockCtAdd"
+			} else {
+				rpcCallStr = "XSync.DpWorkOnCtAdd"
+			}
 		} else if op == DpSyncDelete {
 			rpcCallStr = "XSync.DpWorkOnCtDelete"
 		} else if op == DpSyncGet {
@@ -539,17 +554,28 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, cti *DpCtInfo) int {
 
 		var call *rpc.Call
 		if op == DpSyncAdd || op == DpSyncDelete || op == DpSyncBcast {
-			if cti == nil {
-				return -1
-			}
 			if op != DpSyncBcast {
+				if cti == nil && len(blkCti) <= 0 {
+					return -1
+				}
+
+				var tmpCti *DpCtInfo
+				if cti == nil {
+					tmpCti = &blkCti[0]
+				} else {
+					tmpCti = cti
+				}
 				// FIXME - There is a race condition here
-				cIState, _ := mh.has.CIStateGetInst(cti.CI)
+				cIState, _ := mh.has.CIStateGetInst(tmpCti.CI)
 				if cIState != "MASTER" {
 					return 0
 				}
 			}
-			call = pe.Client.Go(rpcCallStr, *cti, &reply, make(chan *rpc.Call, 1))
+			if cti != nil {
+				call = pe.Client.Go(rpcCallStr, *cti, &reply, make(chan *rpc.Call, 1))
+			} else {
+				call = pe.Client.Go(rpcCallStr, blkCti, &reply, make(chan *rpc.Call, 1))
+			}
 		} else {
 			async := 1
 			call = pe.Client.Go(rpcCallStr, async, &reply, make(chan *rpc.Call, 1))
@@ -596,6 +622,30 @@ func DpBrokerInit(dph DpHookInterface) *DpH {
 	go DpWorker(nDp, nDp.ToFinCh, nDp.ToDpCh)
 
 	return nDp
+}
+
+// DpWorkOnBlockCtAdd - Add block CT entries from remote
+func (xs *XSync) DpWorkOnBlockCtAdd(blockCtis []DpCtInfo, ret *int) error {
+	if !mh.ready {
+		return errors.New("Not-Ready")
+	}
+
+	*ret = 0
+
+	mh.dp.DpHooks.DpGetLock()
+
+	for _, cti := range blockCtis {
+
+		tk.LogIt(tk.LogDebug, "RPC - Block CT Add %s\n", cti.Key())
+		r := mh.dp.DpHooks.DpCtAdd(&cti)
+		if r != 0 {
+			*ret = r
+		}
+	}
+
+	mh.dp.DpHooks.DpRelLock()
+
+	return nil
 }
 
 // DpWorkOnCtAdd - Add a CT entry from remote
