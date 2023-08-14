@@ -519,7 +519,7 @@ func (gbh *GoBgpH) AddBGPRule(instance string, IP []string) {
 	for _, ip := range IP {
 		ci.rules[ip]++
 
-		if gbh.state == BGPConnected {
+		if gbh.state == BGPConnected && ci.rules[ip] == 1 {
 			if ci.hastate == cmn.CIStateBackup {
 				pref = cmn.LowLocalPref
 				med = cmn.LowMed
