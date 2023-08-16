@@ -12,7 +12,7 @@ on:
         default: 'EKS'
   
 permissions:
-  contents: read
+  contents: write-all
 env: 
   AWS_REGION: ap-northeast-3
 
@@ -140,6 +140,8 @@ jobs:
         kubectl delete -f kube-loxilb.yaml
         
     - name : delete testbed
-      if: ${{ always() }}
+      if: | 
+        ${{ always() && 
+            github.repository == 'loxilb-io/loxilb' }}
       run: |
         terraform destroy  -auto-approve -input=false
