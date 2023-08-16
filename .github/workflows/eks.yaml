@@ -36,7 +36,9 @@ jobs:
     # Run this only on main repo
     - name: Check Repo owner
       if: github.repository != 'loxilb-io/loxilb'
-      run: exit 1
+      run: |
+          gh run cancel ${{ github.run_id }}
+          gh run watch ${{ github.run_id }}
 
     # AWS check 
     - name: Configure AWS credentials
