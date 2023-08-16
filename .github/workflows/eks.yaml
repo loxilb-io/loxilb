@@ -18,6 +18,7 @@ env:
 
 jobs:
   terraform:
+    permissions: write-all
     name: 'Terraform with eks'
     runs-on: ubuntu-latest
     environment: production
@@ -36,7 +37,11 @@ jobs:
     # Run this only on main repo
     - name: Check Repo owner
       if: github.repository != 'loxilb-io/loxilb'
-      run: exit 0
+      run: |
+          gh run cancel ${{ github.run_id }}
+          gh run watch ${{ github.run_id }}
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     # AWS check 
     - name: Configure AWS credentials
@@ -136,6 +141,6 @@ jobs:
         kubectl delete -f kube-loxilb.yaml
         
     - name : delete testbed
-      if: ${{ always() }}
+      if: ${{ ! cancelled() }}
       run: |
         terraform destroy  -auto-approve -input=false
