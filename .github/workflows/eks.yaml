@@ -12,12 +12,13 @@ on:
         default: 'EKS'
   
 permissions:
-  contents: write-all
+  contents: read
 env: 
   AWS_REGION: ap-northeast-3
 
 jobs:
   terraform:
+    permissions: write-all
     name: 'Terraform with eks'
     runs-on: ubuntu-latest
     environment: production
