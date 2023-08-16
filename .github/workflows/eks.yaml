@@ -141,8 +141,6 @@ jobs:
         kubectl delete -f kube-loxilb.yaml
         
     - name : delete testbed
-      if: | 
-        ${{ always() && 
-            github.repository == 'loxilb-io/loxilb' }}
+      if: ${{ ! cancelled() }}
       run: |
         terraform destroy  -auto-approve -input=false
