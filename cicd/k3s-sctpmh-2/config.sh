@@ -39,9 +39,6 @@ create_docker_host_cnbridge --host1 sw1 --host2 llb2
 create_docker_host_cnbridge --host1 sw1 --host2 r1
 create_docker_host_cnbridge --host1 sw1 --host2 r3
 
-$hexec user ip route add 124.124.124.1/32 via 2.2.2.254
-$hexec user ip route add 125.125.125.1/32 via 2.2.2.254
-
 ## Make network for k3s connectivity
 sudo ip link add ellb1sys type veth peer name esysllb1
 sleep 3
@@ -122,6 +119,10 @@ $hexec llb1 ip route add default via 12.12.12.254
 # Change default route in llb2
 $hexec llb2 ip route del default 
 $hexec llb2 ip route add default via 14.14.14.254
+
+# Backup paths in user
+$hexec user ip route add 124.124.124.1/32 via 2.2.2.254
+$hexec user ip route add 125.125.125.1/32 via 2.2.2.254
 
 sleep 1
 ##Create LB rule
