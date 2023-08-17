@@ -545,7 +545,11 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
 				rpcCallStr = "XSync.DpWorkOnCtAdd"
 			}
 		} else if op == DpSyncDelete {
-			rpcCallStr = "XSync.DpWorkOnCtDelete"
+			if len(blkCti) > 0 {
+				rpcCallStr = "XSync.DpWorkOnBlockCtDelete"
+			} else {
+				rpcCallStr = "XSync.DpWorkOnCtDelete"
+			}
 		} else if op == DpSyncGet {
 			rpcCallStr = "XSync.DpWorkOnCtGet"
 		} else {
@@ -632,6 +636,7 @@ func (xs *XSync) DpWorkOnBlockCtAdd(blockCtis []DpCtInfo, ret *int) error {
 
 	*ret = 0
 
+	tk.LogIt(tk.LogDebug, "RPC - Block Add CT Start Len %d\n", len(blockCtis))
 	mh.dp.DpHooks.DpGetLock()
 
 	for _, cti := range blockCtis {
@@ -679,6 +684,30 @@ func (xs *XSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
 	tk.LogIt(tk.LogDebug, "RPC - CT Add %s\n", cti.Key())
 	r := mh.dp.DpHooks.DpCtAdd(&cti)
 	*ret = r
+	return nil
+}
+
+// DpWorkOnBlockCtDelete - Add block CT entries from remote
+func (xs *XSync) DpWorkOnBlockCtDelete(blockCtis []DpCtInfo, ret *int) error {
+	if !mh.ready {
+		return errors.New("Not-Ready")
+	}
+
+	*ret = 0
+
+	mh.dp.DpHooks.DpGetLock()
+
+	for _, cti := range blockCtis {
+
+		tk.LogIt(tk.LogDebug, "RPC - Block CT Del %s\n", cti.Key())
+		r := mh.dp.DpHooks.DpCtDel(&cti)
+		if r != 0 {
+			*ret = r
+		}
+	}
+
+	mh.dp.DpHooks.DpRelLock()
+
 	return nil
 }
 
