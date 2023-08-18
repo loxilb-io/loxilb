@@ -51,7 +51,7 @@ else
     exit 1
 fi
 
-sleep 60
+sleep 65
 
 # For this scenario, loxilb will send reset after configured inactivity of 30s
 
