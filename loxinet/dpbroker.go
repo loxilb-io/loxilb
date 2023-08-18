@@ -635,10 +635,6 @@ func (xs *XSync) DpWorkOnBlockCtAdd(blockCtis []DpCtInfo, ret *int) error {
 	}
 
 	*ret = 0
-
-	tk.LogIt(tk.LogDebug, "RPC - Block Add CT Start Len %d\n", len(blockCtis))
-	mh.dp.DpHooks.DpGetLock()
-
 	for _, cti := range blockCtis {
 
 		tk.LogIt(tk.LogDebug, "RPC - Block CT Add %s\n", cti.Key())
@@ -647,8 +643,6 @@ func (xs *XSync) DpWorkOnBlockCtAdd(blockCtis []DpCtInfo, ret *int) error {
 			*ret = r
 		}
 	}
-
-	mh.dp.DpHooks.DpRelLock()
 
 	return nil
 }
@@ -694,9 +688,6 @@ func (xs *XSync) DpWorkOnBlockCtDelete(blockCtis []DpCtInfo, ret *int) error {
 	}
 
 	*ret = 0
-
-	mh.dp.DpHooks.DpGetLock()
-
 	for _, cti := range blockCtis {
 
 		tk.LogIt(tk.LogDebug, "RPC - Block CT Del %s\n", cti.Key())
@@ -705,8 +696,6 @@ func (xs *XSync) DpWorkOnBlockCtDelete(blockCtis []DpCtInfo, ret *int) error {
 			*ret = r
 		}
 	}
-
-	mh.dp.DpHooks.DpRelLock()
 
 	return nil
 }

@@ -133,6 +133,7 @@ type DpEbpfH struct {
 	ticker  *time.Ticker
 	tDone   chan bool
 	ctBcast chan bool
+	nID     uint
 	tbN     uint
 	CtSync  bool
 	RssEn   bool
@@ -280,12 +281,13 @@ func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, egrHooks bool, logLevel
 
 	ne := new(DpEbpfH)
 	ne.tDone = make(chan bool)
-	ne.ToMapCh = make(chan interface{}, DpWorkQLen)
+	ne.ToMapCh = make(chan interface{}, 65536)
 	ne.ToFinCh = make(chan int)
 	ne.ctBcast = make(chan bool)
 	ne.ticker = time.NewTicker(DpEbpfLinuxTiVal * time.Second)
 	ne.ctMap = make(map[string]*DpCtInfo)
 	ne.RssEn = rssEn
+	ne.nID = uint((C.LLB_CT_MAP_ENTRIES / C.LLB_MAX_LB_NODES) * nodeNum)
 
 	go dpEbpfTicker()
 	go dpMapNotifierWorker(ne.ToFinCh, ne.ToMapCh)
@@ -1608,6 +1610,9 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 	if len(cti.PVal) != 0 {
 		tact = (*C.struct_dp_ct_tact)(unsafe.Pointer(&cti.PVal[0]))
 		act = &tact.ctd
+		if (uint)(act.nid) != mh.dpEbpf.nID {
+			return
+		}
 		addOp = true
 		opStr = "Add"
 	} else {
@@ -1648,7 +1653,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 
 	if addOp == false {
 		cti = mh.dpEbpf.ctMap[mapKey]
-		if cti == nil {
+		if cti == nil || cti.Deleted > 0 {
 			return
 		}
 		cti.Deleted = 1
@@ -1680,7 +1685,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 		}
 	}
 
-	tk.LogIt(tk.LogInfo, "[CT] %s - %s\n", opStr, cti.String())
+	tk.LogIt(tk.LogDebug, "[CT] %s - %s\n", opStr, cti.String())
 }
 
 func dpCTMapBcast() {
@@ -1724,7 +1729,9 @@ func dpCTMapChkUpdates() {
 	tc := time.Now()
 	fd := C.llb_map2fd(C.LL_DP_CT_MAP)
 
-	tk.LogIt(tk.LogInfo, "[CT] Map size %d\n", len(mh.dpEbpf.ctMap))
+	if len(mh.dpEbpf.ctMap) > 0 {
+		tk.LogIt(tk.LogDebug, "[CT] Map size %d\n", len(mh.dpEbpf.ctMap))
+	}
 
 	for _, cti := range mh.dpEbpf.ctMap {
 		// tk.LogIt(tk.LogDebug, "[CT] check %s:%s:%v\n", cti.Key(), cti.CState, cti.XSync)
@@ -1895,7 +1902,8 @@ func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
 
 	// Fix few things
 	ptact := (*C.struct_dp_ct_tact)(unsafe.Pointer(&w.PVal[0]))
-	ptact.ctd.rid = C.uint(r.ruleNum) // Race-condition here
+	ptact.ctd.rid = C.ushort(r.ruleNum) // Race-condition here
+	ptact.ctd.nid = C.uint(mh.dpEbpf.nID)
 	ptact.lts = C.get_os_nsecs()
 
 	mh.dpEbpf.mtx.Lock()
