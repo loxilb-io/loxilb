@@ -1,0 +1,24 @@
+syntax = "proto3";
+import "google/protobuf/any.proto";
+option go_package = "./loxinet";
+
+message XSyncReply {
+  int32 response = 1;
+}
+
+message ConnInfo {
+    google.protobuf.Any cti = 1;
+}
+
+message ConnGet {
+    int32 async = 1;
+}
+// The xsync service definition.
+service XSync {
+    rpc DpWorkOnBlockCtAddGRPC (ConnInfo) returns (XSyncReply) {}
+    rpc DpWorkOnCtAddGRPC (ConnInfo) returns (XSyncReply) {}
+    rpc DpWorkOnBlockCtDelGRPC (ConnInfo) returns (XSyncReply) {}
+    rpc DpWorkOnCtDelGRPC (ConnInfo) returns (XSyncReply) {}
+    rpc DpWorkOnCtGetGRPC (ConnGet) returns (XSyncReply) {}
+  }
+  
