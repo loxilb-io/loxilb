@@ -92,6 +92,8 @@ const (
 const (
 	DpEbpfLinuxTiVal     = 10
 	ctiDeleteSyncRetries = 4
+	blkCtiMaxLen         = 4096
+	mapNotifierChLen     = 131072
 )
 
 // ebpf table related defines in go
@@ -281,7 +283,7 @@ func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, egrHooks bool, logLevel
 
 	ne := new(DpEbpfH)
 	ne.tDone = make(chan bool)
-	ne.ToMapCh = make(chan interface{}, 65536)
+	ne.ToMapCh = make(chan interface{}, mapNotifierChLen)
 	ne.ToFinCh = make(chan int)
 	ne.ctBcast = make(chan bool)
 	ne.ticker = time.NewTicker(DpEbpfLinuxTiVal * time.Second)
@@ -1690,32 +1692,20 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 
 func dpCTMapBcast() {
 	mh.dpEbpf.mtx.Lock()
-	defer mh.dpEbpf.mtx.Unlock()
-
-	var (
-		tot int
-		rok int
-	)
 
 	for _, cti := range mh.dpEbpf.ctMap {
 		if cti.Deleted <= 0 && cti.CState == "est" {
-			tot++
-			ret := mh.dp.DpXsyncRPC(DpSyncBcast, cti)
-			if ret == 0 {
-				rok++
-				cti.XSync = false
-			} else {
-				cti.XSync = true
-				cti.NTs = time.Now()
-			}
+			cti.XSync = true
 		}
 	}
-	if tot == rok {
-		cti := new(DpCtInfo)
-		cti.Proto = "xsync"
-		cti.Sport = uint16(mh.self)
-		mh.dp.DpXsyncRPC(DpSyncBcast, cti)
-	}
+
+	mh.dpEbpf.mtx.Unlock()
+
+	cti := new(DpCtInfo)
+	cti.Proto = "xsync"
+	cti.Sport = uint16(mh.self)
+	mh.dp.DpXsyncRPC(DpSyncBcast, cti)
+	tk.LogIt(tk.LogInfo, "[CT]  CTBcast Complete \n")
 }
 
 func dpCTMapChkUpdates() {
@@ -1730,7 +1720,7 @@ func dpCTMapChkUpdates() {
 	fd := C.llb_map2fd(C.LL_DP_CT_MAP)
 
 	if len(mh.dpEbpf.ctMap) > 0 {
-		tk.LogIt(tk.LogDebug, "[CT] Map size %d\n", len(mh.dpEbpf.ctMap))
+		tk.LogIt(tk.LogInfo, "[CT] Map size %d\n", len(mh.dpEbpf.ctMap))
 	}
 
 	for _, cti := range mh.dpEbpf.ctMap {
@@ -1833,7 +1823,7 @@ func dpCTMapChkUpdates() {
 			}
 		}
 
-		if len(blkCti) > 1024 {
+		if len(blkCti) > blkCtiMaxLen {
 			tk.LogIt(tk.LogDebug, "[CT] Block Add Sync - \n")
 			tc1 := time.Now()
 			mh.dp.DpXsyncRPC(DpSyncAdd, blkCti)
@@ -1842,7 +1832,7 @@ func dpCTMapChkUpdates() {
 			blkCti = nil
 		}
 
-		if len(blkDelCti) > 1024 {
+		if len(blkDelCti) > blkCtiMaxLen {
 			tk.LogIt(tk.LogDebug, "[CT] Block Del Sync - \n")
 			mh.dp.DpXsyncRPC(DpSyncDelete, blkDelCti)
 			blkDelCti = nil
@@ -1873,7 +1863,7 @@ func dpMapNotifierWorker(f chan int, ch chan interface{}) {
 	}()
 
 	for {
-		for n := 0; n < DpWorkQLen; n++ {
+		for {
 			select {
 			case m := <-ch:
 				switch mq := m.(type) {
@@ -1886,7 +1876,6 @@ func dpMapNotifierWorker(f chan int, ch chan interface{}) {
 				continue
 			}
 		}
-		time.Sleep(2000 * time.Millisecond)
 	}
 }
 
@@ -1973,18 +1962,7 @@ func (e *DpEbpfH) DpCtDel(w *DpCtInfo) int {
 
 // DpCtGetAsync - routine to work on a ebpf ct get async request
 func (e *DpEbpfH) DpCtGetAsync() {
-
 	e.ctBcast <- true
-
-	//	mh.dpEbpf.mtx.Lock()
-	//	defer mh.dpEbpf.mtx.Unlock()
-
-	//	for _, cte := range mh.dpEbpf.ctMap {
-	//		if cte.CState == "est" {
-	//			cte.XSync = true
-	//			cte.NTs = time.Now()
-	//		}
-	//	}
 }
 
 // DpTakeLock - routine to take underlying DP lock
