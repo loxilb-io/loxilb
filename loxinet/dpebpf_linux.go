@@ -1863,18 +1863,14 @@ func dpMapNotifierWorker(f chan int, ch chan interface{}) {
 	}()
 
 	for {
-		for {
-			select {
-			case m := <-ch:
-				switch mq := m.(type) {
-				case *DpCtInfo:
-					dpCTMapNotifierWorker(mq)
-				}
-			case <-f:
-				return
-			default:
-				continue
+		select {
+		case m := <-ch:
+			switch mq := m.(type) {
+			case *DpCtInfo:
+				dpCTMapNotifierWorker(mq)
 			}
+		case <-f:
+			return
 		}
 	}
 }
