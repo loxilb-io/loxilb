@@ -94,6 +94,7 @@ const (
 	ctiDeleteSyncRetries = 4
 	blkCtiMaxLen         = 4096
 	mapNotifierChLen     = 131072
+	mapNotifierWorkers   = 5
 )
 
 // ebpf table related defines in go
@@ -140,7 +141,7 @@ type DpEbpfH struct {
 	CtSync  bool
 	RssEn   bool
 	ToMapCh chan interface{}
-	ToFinCh chan int
+	ToFinCh [mapNotifierWorkers]chan int
 	mtx     sync.RWMutex
 	ctMap   map[string]*DpCtInfo
 }
@@ -284,7 +285,9 @@ func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, egrHooks bool, logLevel
 	ne := new(DpEbpfH)
 	ne.tDone = make(chan bool)
 	ne.ToMapCh = make(chan interface{}, mapNotifierChLen)
-	ne.ToFinCh = make(chan int)
+	for i := 0; i < mapNotifierWorkers; i++ {
+		ne.ToFinCh[i] = make(chan int)
+	}
 	ne.ctBcast = make(chan bool)
 	ne.ticker = time.NewTicker(DpEbpfLinuxTiVal * time.Second)
 	ne.ctMap = make(map[string]*DpCtInfo)
@@ -292,7 +295,9 @@ func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, egrHooks bool, logLevel
 	ne.nID = uint((C.LLB_CT_MAP_ENTRIES / C.LLB_MAX_LB_NODES) * nodeNum)
 
 	go dpEbpfTicker()
-	go dpMapNotifierWorker(ne.ToFinCh, ne.ToMapCh)
+	for i := 0; i < mapNotifierWorkers; i++ {
+		go dpMapNotifierWorker(ne.ToFinCh[i], ne.ToMapCh)
+	}
 
 	return ne
 }
@@ -301,7 +306,9 @@ func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, egrHooks bool, logLevel
 func (e *DpEbpfH) DpEbpfUnInit() {
 
 	e.tDone <- true
-	e.ToFinCh <- 1
+	for i := 0; i < mapNotifierWorkers; i++ {
+		e.ToFinCh[i] <- 1
+	}
 
 	tk.LogIt(tk.LogInfo, "ebpf uninit \n")
 
@@ -1863,18 +1870,14 @@ func dpMapNotifierWorker(f chan int, ch chan interface{}) {
 	}()
 
 	for {
-		for {
-			select {
-			case m := <-ch:
-				switch mq := m.(type) {
-				case *DpCtInfo:
-					dpCTMapNotifierWorker(mq)
-				}
-			case <-f:
-				return
-			default:
-				continue
+		select {
+		case m := <-ch:
+			switch mq := m.(type) {
+			case *DpCtInfo:
+				dpCTMapNotifierWorker(mq)
 			}
+		case <-f:
+			return
 		}
 	}
 }
