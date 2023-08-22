@@ -91,10 +91,10 @@ const (
 // constants
 const (
 	DpEbpfLinuxTiVal     = 10
-	ctiDeleteSyncRetries = 4
+	ctiDeleteSyncRetries = 3
 	blkCtiMaxLen         = 4096
 	mapNotifierChLen     = 8096
-	mapNotifierWorkers   = 2
+	mapNotifierWorkers   = 1
 )
 
 // ebpf table related defines in go
@@ -1823,8 +1823,8 @@ func dpCTMapChkUpdates() {
 
 				if cti.Deleted > 0 {
 					delete(mh.dpEbpf.ctMap, cti.Key())
-					// This is a strange fix - See comment above
-					//C.llb_del_map_elem(C.LL_DP_CT_MAP, unsafe.Pointer(&cti.PKey[0]))
+					// This is a strange fix - See comment above. Do we still need it ?
+					// C.llb_del_map_elem(C.LL_DP_CT_MAP, unsafe.Pointer(&cti.PKey[0]))
 				}
 			}
 		}
