@@ -91,9 +91,10 @@ const (
 // constants
 const (
 	DpEbpfLinuxTiVal     = 10
-	ctiDeleteSyncRetries = 4
+	ctiDeleteSyncRetries = 3
 	blkCtiMaxLen         = 4096
-	mapNotifierChLen     = 131072
+	mapNotifierChLen     = 8096
+	mapNotifierWorkers   = 1
 )
 
 // ebpf table related defines in go
@@ -140,7 +141,7 @@ type DpEbpfH struct {
 	CtSync  bool
 	RssEn   bool
 	ToMapCh chan interface{}
-	ToFinCh chan int
+	ToFinCh [mapNotifierWorkers]chan int
 	mtx     sync.RWMutex
 	ctMap   map[string]*DpCtInfo
 }
@@ -284,7 +285,9 @@ func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, egrHooks bool, logLevel
 	ne := new(DpEbpfH)
 	ne.tDone = make(chan bool)
 	ne.ToMapCh = make(chan interface{}, mapNotifierChLen)
-	ne.ToFinCh = make(chan int)
+	for i := 0; i < mapNotifierWorkers; i++ {
+		ne.ToFinCh[i] = make(chan int)
+	}
 	ne.ctBcast = make(chan bool)
 	ne.ticker = time.NewTicker(DpEbpfLinuxTiVal * time.Second)
 	ne.ctMap = make(map[string]*DpCtInfo)
@@ -292,7 +295,9 @@ func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, egrHooks bool, logLevel
 	ne.nID = uint((C.LLB_CT_MAP_ENTRIES / C.LLB_MAX_LB_NODES) * nodeNum)
 
 	go dpEbpfTicker()
-	go dpMapNotifierWorker(ne.ToFinCh, ne.ToMapCh)
+	for i := 0; i < mapNotifierWorkers; i++ {
+		go dpMapNotifierWorker(ne.ToFinCh[i], ne.ToMapCh)
+	}
 
 	return ne
 }
@@ -301,7 +306,9 @@ func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, egrHooks bool, logLevel
 func (e *DpEbpfH) DpEbpfUnInit() {
 
 	e.tDone <- true
-	e.ToFinCh <- 1
+	for i := 0; i < mapNotifierWorkers; i++ {
+		e.ToFinCh[i] <- 1
+	}
 
 	tk.LogIt(tk.LogInfo, "ebpf uninit \n")
 
@@ -1588,7 +1595,7 @@ func goMapNotiHandler(m *mapNoti) {
 	ctKey := (*C.struct_dp_ct_key)(unsafe.Pointer(m.key))
 
 	// Only connection oriented protocols
-	if mh.dpEbpf == nil || (ctKey.l4proto != 6 && ctKey.l4proto != 132) {
+	if m.addop == 0 || mh.dpEbpf == nil || (ctKey.l4proto != 6 && ctKey.l4proto != 132) {
 		return
 	}
 
@@ -1599,7 +1606,8 @@ func goMapNotiHandler(m *mapNoti) {
 		goCtEnt.PVal = C.GoBytes(unsafe.Pointer(m.val), m.val_len)
 	}
 
-	mh.dpEbpf.ToMapCh <- goCtEnt
+	dpCTMapNotifierWorker(goCtEnt)
+	//mh.dpEbpf.ToMapCh <- goCtEnt
 }
 
 func dpCTMapNotifierWorker(cti *DpCtInfo) {
@@ -1651,10 +1659,8 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 	mh.dpEbpf.mtx.Lock()
 	defer mh.dpEbpf.mtx.Unlock()
 
-	mapKey := cti.Key()
-
 	if addOp == false {
-		cti = mh.dpEbpf.ctMap[mapKey]
+		cti = mh.dpEbpf.ctMap[cti.Key()]
 		if cti == nil || cti.Deleted > 0 {
 			return
 		}
@@ -1779,7 +1785,7 @@ func dpCTMapChkUpdates() {
 					continue
 				}
 				if C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&tact)) != 0 {
-					tk.LogIt(tk.LogInfo, "[CT] ent not found %s\n", cti.Key())
+					tk.LogIt(tk.LogDebug, "[CT] ent not found %s\n", cti.Key())
 					//delete(mh.dpEbpf.ctMap, cti.Key())
 					cti.Deleted++
 					cti.XSync = true
@@ -1817,8 +1823,8 @@ func dpCTMapChkUpdates() {
 
 				if cti.Deleted > 0 {
 					delete(mh.dpEbpf.ctMap, cti.Key())
-					// This is a strange fix - See comment above
-					C.llb_del_map_elem(C.LL_DP_CT_MAP, unsafe.Pointer(&cti.PKey[0]))
+					// This is a strange fix - See comment above. Do we still need it ?
+					// C.llb_del_map_elem(C.LL_DP_CT_MAP, unsafe.Pointer(&cti.PKey[0]))
 				}
 			}
 		}
@@ -1863,18 +1869,14 @@ func dpMapNotifierWorker(f chan int, ch chan interface{}) {
 	}()
 
 	for {
-		for {
-			select {
-			case m := <-ch:
-				switch mq := m.(type) {
-				case *DpCtInfo:
-					dpCTMapNotifierWorker(mq)
-				}
-			case <-f:
-				return
-			default:
-				continue
+		select {
+		case m := <-ch:
+			switch mq := m.(type) {
+			case *DpCtInfo:
+				dpCTMapNotifierWorker(mq)
 			}
+		case <-f:
+			return
 		}
 	}
 }
