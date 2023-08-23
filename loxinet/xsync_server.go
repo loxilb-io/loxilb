@@ -24,7 +24,6 @@ import (
 	"net"
 
 	"github.com/golang/protobuf/ptypes/wrappers"
-	//"github.com/loxilb-io/loxilb/loxinet"
 	tk "github.com/loxilb-io/loxilib"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
@@ -55,9 +54,30 @@ func (xs *XSync) DpWorkOnBlockCtAdd(blockCtis []DpCtInfo, ret *int) error {
 	return nil
 }
 
+// DpWorkOnBlockCtDelete - Add block CT entries from remote
+func (xs *XSync) DpWorkOnBlockCtDelete(blockCtis []DpCtInfo, ret *int) error {
+	if !mh.ready {
+		return errors.New("Not-Ready")
+	}
+
+	*ret = 0
+	for _, cti := range blockCtis {
+
+		tk.LogIt(tk.LogDebug, "RPC - Block CT Del %s\n", cti.Key())
+		r := mh.dp.DpHooks.DpCtDel(&cti)
+		if r != 0 {
+			*ret = r
+		}
+	}
+
+	return nil
+}
+
 // DpWorkOnCtAdd - Add a CT entry from remote goRPC client
 func (xs *XSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
 	if !mh.ready {
+		*ret = -1
+		tk.LogIt(tk.LogDebug, "RPC - CT Xsync Not-Ready")
 		return errors.New("Not-Ready")
 	}
 
@@ -70,6 +90,7 @@ func (xs *XSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
 			if r.RemoteID == int(cti.Sport) {
 				r.RPCState = true
 				*ret = 0
+				tk.LogIt(tk.LogDebug, "RPC - CT Xsync Remote-%v Already present\n", cti.Sport)
 				return nil
 			}
 		}
@@ -107,7 +128,7 @@ func (xs *XSync) DpWorkOnCtGet(async int, ret *int) error {
 	}
 
 	// Most likely need to reset reverse rpc channel
-	mh.dp.DpXsyncRPCReset()
+	//mh.dp.DpXsyncRPCReset()
 
 	tk.LogIt(tk.LogDebug, "RPC -  CT Get %d\n", async)
 	mh.dp.DpHooks.DpCtGetAsync()
@@ -119,6 +140,9 @@ func (xs *XSync) DpWorkOnCtGet(async int, ret *int) error {
 func (xs *XSync) DpWorkOnBlockCtAddGRPC(ctx context.Context, m *ConnInfo) (*XSyncReply, error) {
 	var value interface{}
 	var resp int
+	var cti DpCtInfo
+	var ctis []DpCtInfo
+
 	bytesValue := &wrappers.BytesValue{}
 	anyValue := m.Cti
 
@@ -130,14 +154,26 @@ func (xs *XSync) DpWorkOnBlockCtAddGRPC(ctx context.Context, m *ConnInfo) (*XSyn
 		if uErr != nil {
 			return &XSyncReply{Response: -1}, uErr
 		}
+		//tk.LogIt(tk.LogDebug, "RPC -  BLOCK CT ADD : %T : %v\n", value, value)
+		blk := value.([]interface{})
+		for i := range blk {
+			//tk.LogIt(tk.LogDebug, "BLOCK CT  %d: %v\n", i, blk[i])
+			jsonData, _:= json.Marshal(blk[i].(map[string]interface{}))
+			//tk.LogIt(tk.LogDebug, "BLOCK CT  json %d: %v\n", i, jsonData)
+			json.Unmarshal(jsonData, &cti)
+			ctis = append(ctis, cti)
+
+		}
 	}
-	xs.DpWorkOnBlockCtAdd(value.([]DpCtInfo), &resp)
+
+	xs.DpWorkOnBlockCtAdd(ctis, &resp)
 	return &XSyncReply{Response: int32(resp)}, nil
 }
 
 func (xs *XSync) DpWorkOnCtAddGRPC(ctx context.Context, m *ConnInfo) (*XSyncReply, error) {
 	var value interface{}
 	var resp int
+	var cti DpCtInfo
 	bytesValue := &wrappers.BytesValue{}
 	anyValue := m.Cti
 
@@ -149,19 +185,53 @@ func (xs *XSync) DpWorkOnCtAddGRPC(ctx context.Context, m *ConnInfo) (*XSyncRepl
 		if uErr != nil {
 			return &XSyncReply{Response: -1}, uErr
 		}
+		jsonData, _:= json.Marshal( value.(map[string]interface{}))
+		json.Unmarshal(jsonData, &cti)
 	}
-	
-	xs.DpWorkOnCtAdd(value.(DpCtInfo), &resp)
+	//tk.LogIt(tk.LogDebug, "RPC -  CT ADD : %v\n", cti)
+
+	xs.DpWorkOnCtAdd(cti, &resp)
+	//tk.LogIt(tk.LogDebug, "RPC -  CT ADD Server reply: %v\n", resp)
 	return &XSyncReply{Response: int32(resp)}, nil
 }
 
-func (xs *XSync) DpWorkOnBlockCtDelGRPC(context.Context, *ConnInfo) (*XSyncReply, error) {
-	return nil, errors.New("method DpWorkOnBlockCtDelGRPC not implemented")
+func (xs *XSync) DpWorkOnBlockCtDelGRPC(ctx context.Context, m *ConnInfo) (*XSyncReply, error) {
+	var value interface{}
+	var resp int
+	var cti DpCtInfo
+	var ctis []DpCtInfo
+
+	bytesValue := &wrappers.BytesValue{}
+	anyValue := m.Cti
+
+	err := anypb.UnmarshalTo(anyValue, bytesValue, proto.UnmarshalOptions{})
+	if err != nil {
+		return &XSyncReply{Response: -1}, err
+	} else {
+		uErr := json.Unmarshal(bytesValue.Value, &value)
+		if uErr != nil {
+			return &XSyncReply{Response: -1}, uErr
+		}
+		//tk.LogIt(tk.LogDebug, "RPC -  BLOCK CT DEL : %T : %v\n", value, value)
+		blk := value.([]interface{})
+		for i := range blk {
+			//tk.LogIt(tk.LogDebug, "BLOCK CT  %d: %v\n", i, blk[i])
+			jsonData, _:= json.Marshal(blk[i].(map[string]interface{}))
+			//tk.LogIt(tk.LogDebug, "BLOCK CT  json %d: %v\n", i, jsonData)
+			json.Unmarshal(jsonData, &cti)
+			ctis = append(ctis, cti)
+		}
+	}
+
+	xs.DpWorkOnBlockCtDelete(ctis, &resp)
+	return &XSyncReply{Response: int32(resp)}, nil
 }
 
 func (xs *XSync) DpWorkOnCtDelGRPC(ctx context.Context, m *ConnInfo) (*XSyncReply, error) {
 	var value interface{}
 	var resp int
+	var cti DpCtInfo
+
 	bytesValue := &wrappers.BytesValue{}
 	anyValue := m.Cti
 
@@ -173,8 +243,11 @@ func (xs *XSync) DpWorkOnCtDelGRPC(ctx context.Context, m *ConnInfo) (*XSyncRepl
 		if uErr != nil {
 			return &XSyncReply{Response: -1}, uErr
 		}
+		jsonData, _:= json.Marshal( value.(map[string]interface{}))
+		json.Unmarshal(jsonData, &cti)
 	}
-	xs.DpWorkOnCtDelete(value.(DpCtInfo), &resp)
+
+	xs.DpWorkOnCtDelete(cti, &resp)
 	return &XSyncReply{Response: int32(resp)}, nil
 }
 

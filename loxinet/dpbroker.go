@@ -89,7 +89,7 @@ const (
 const (
 	DpWorkQLen = 1024
 	XSyncPort  = 22222
-	XSyncPortGRPC  = 22223
+	XSyncPortGRPC  = 22224
 	DpTiVal    = 20
 )
 
@@ -303,28 +303,28 @@ type NatDpWorkQ struct {
 
 // DpCtInfo - representation of a datapath conntrack information
 type DpCtInfo struct {
-	DIP     net.IP
-	SIP     net.IP
-	Dport   uint16
-	Sport   uint16
-	Proto   string
-	CState  string
-	CAct    string
-	CI      string
-	Packets uint64
-	Bytes   uint64
-	Deleted int
-	PKey    []byte
-	PVal    []byte
-	LTs     time.Time
-	NTs     time.Time
-	XSync   bool
+	DIP     net.IP      `json:"dip"`
+	SIP     net.IP		`json:"sip"`
+	Dport   uint16		`json:"dport"`
+	Sport   uint16		`json:"sport"`
+	Proto   string		`json:"proto"`
+	CState  string		`json:"cstate"`
+	CAct    string		`json:"cact"`
+	CI      string		`json:"ci"`
+	Packets uint64		`json:"packets"`
+	Bytes   uint64		`json:"bytes"`
+	Deleted int 		`json:"deleted"`
+	PKey    []byte		`json:"pkey"`
+	PVal    []byte		`json:"pval"`
+	LTs     time.Time	`json:"lts"`
+	NTs     time.Time	`json:"nts"`
+	XSync   bool		`json:"xsync"`
 
 	// LB Association Data
-	ServiceIP  net.IP
-	ServProto  string
-	L4ServPort uint16
-	BlockNum   uint16
+	ServiceIP  net.IP	`json:"serviceip"`
+	ServProto  string	`json:"servproto"`
+	L4ServPort uint16	`json:"l4servproto"`
+	BlockNum   uint16	`json:"blocknum"`
 }
 
 const (
@@ -560,7 +560,7 @@ func callGRPC(client XSyncClient, rpcCallStr string, args interface{}, reply *in
 
 	if rpcCallStr == "XSync.DpWorkOnBlockCtAdd" {
 		xreply, err = client.DpWorkOnBlockCtAddGRPC(ctx, &ConnInfo{Cti: anyValue})
-	} else if rpcCallStr == "XSync.DpWorkOnBlockCtDel" {
+	} else if rpcCallStr == "XSync.DpWorkOnBlockCtDelete" {
 		xreply, err = client.DpWorkOnBlockCtDelGRPC(ctx, &ConnInfo{Cti: anyValue})
 	} else if rpcCallStr == "XSync.DpWorkOnCtAdd" {
 		xreply, err = client.DpWorkOnCtAddGRPC(ctx, &ConnInfo{Cti: anyValue})
@@ -569,7 +569,9 @@ func callGRPC(client XSyncClient, rpcCallStr string, args interface{}, reply *in
 	} else if rpcCallStr == "XSync.DpWorkOnCtGet" {
 		xreply, err = client.DpWorkOnCtGetGRPC(ctx, &ConnGet{Async: args.(int32)})
 	}
+
 	if (err != nil) {
+		*reply = -1
 		tk.LogIt(tk.LogInfo, "XSync %s reply - %v\n", rpcCallStr, err.Error())
 	} else if xreply != nil {
 		*reply = int(xreply.Response)
@@ -622,17 +624,17 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
 				var cinfo GRPCClient
 				opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 				cStr := fmt.Sprintf("%s:%d", pe.Peer.String(), XSyncPortGRPC)
+				//cinfo.conn, err = grpc.DialContext(context.TODO(), cStr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 				cinfo.conn, err = grpc.Dial(cStr, opts...)
 				if err != nil {
 					tk.LogIt(tk.LogInfo,"Failed to dial xsync gRPC pair: %v", err)
-					return -1
+					continue
 				}
 				
 				cinfo.xclient = NewXSyncClient(cinfo.conn)
 				pe.Client = cinfo
 				tk.LogIt(tk.LogInfo, "XSync gRPC - %s :Connected\n", cStr)
 			}
-			
 		}
 
 		reply = 0
@@ -699,34 +701,38 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
 		}
 
 		if dp.RPC.RPCType == RPCTypeGoRPC {
-			resp := <-call.Done
-			if resp != nil {
-				err = resp.Error
-			}
-		}
-		select {
-		case <-time.After(timeout):
-			tk.LogIt(tk.LogError, "rpc call timeout(%v)\n", timeout)
-			if pe.Client != nil {
-				if dp.RPC.RPCType == RPCTypeGoRPC {
-					pe.Client.(*rpc.Client).Close()
-				} else {
-					pe.Client.(GRPCClient).conn.Close()
+			select {
+			case <-time.After(timeout):
+				tk.LogIt(tk.LogError, "rpc call timeout(%v)\n", timeout)
+				if pe.Client != nil {
+					if dp.RPC.RPCType == RPCTypeGoRPC {
+						pe.Client.(*rpc.Client).Close()
+					} else {
+						pe.Client.(GRPCClient).conn.Close()
+					}
+				}
+				pe.Client = nil
+				rpcRetries++
+				if rpcRetries < 2 {
+					goto restartRPC
+				}
+				rpcErr = true
+			case resp := <-call.Done:
+				if resp != nil && resp.Error != nil {
+					tk.LogIt(tk.LogError, "rpc call failed(%s)\n", resp.Error)
+					rpcErr = true
 				}
 			}
-			pe.Client = nil
-			rpcRetries++
-			if rpcRetries < 2 {
-				goto restartRPC
-			}
-			rpcErr = true
-		}
-		if err != nil {
-			tk.LogIt(tk.LogError, "rpc call failed(%s)\n", err)
-			rpcErr = true
-	    }
-		if reply != 0 {
-			rpcErr = true
+	    } else {
+			if err != nil || reply != 0 {
+				tk.LogIt(tk.LogError, "grpc call failed(%s)\n", err)
+				rpcErr = true
+				pe.Client = nil
+				rpcRetries++
+				if rpcRetries < 2 {
+					goto restartRPC
+				}
+	    	}
 		}
 	}
 
