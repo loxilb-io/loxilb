@@ -116,7 +116,7 @@ spec:
         #- --monitor
         - --setBGP=64511
         #- --extBGPPeers=50.50.50.1:65101,51.51.51.1:65102
-        #- --setRoles
+        #- --setRoles=0.0.0.0
         #- --setLBMode=2
         #- --config=/opt/loxilb/agent/kube-loxilb.conf
         resources:
