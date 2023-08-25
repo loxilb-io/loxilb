@@ -59,7 +59,7 @@ func (o *DeleteConfigBgpNeighIPAddressParams) BindRequest(r *http.Request, route
 		res = append(res, err)
 	}
 
-	qRemoteAs, qhkRemoteAs, _ := qs.GetOK("remote_as")
+	qRemoteAs, qhkRemoteAs, _ := qs.GetOK("remoteAs")
 	if err := o.bindRemoteAs(qRemoteAs, qhkRemoteAs, route.Formats); err != nil {
 		res = append(res, err)
 	}
@@ -99,7 +99,7 @@ func (o *DeleteConfigBgpNeighIPAddressParams) bindRemoteAs(rawData []string, has
 
 	value, err := swag.ConvertInt32(raw)
 	if err != nil {
-		return errors.InvalidType("remote_as", "query", "int32", raw)
+		return errors.InvalidType("remoteAs", "query", "int32", raw)
 	}
 	o.RemoteAs = &value
 

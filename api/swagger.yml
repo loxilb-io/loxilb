@@ -2155,7 +2155,7 @@ paths:
           type: string
           required: true
           description: Neighbor IP address
-        - name: remote_as
+        - name: remoteAs
           in: query
           type: integer
           format: int32
