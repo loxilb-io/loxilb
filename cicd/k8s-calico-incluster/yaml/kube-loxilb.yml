@@ -115,7 +115,7 @@ spec:
         - --externalCIDR=123.123.123.1/24
         - --setBGP=64512
         - --listenBGPPort=1791
-        - --setRoles
+        - --setRoles=0.0.0.0
         #- --monitor
         #- --setBGP
         #- --setLBMode=1
