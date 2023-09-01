@@ -22,11 +22,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type XSyncClient interface {
-	DpWorkOnBlockCtAddGRPC(ctx context.Context, in *ConnInfo, opts ...grpc.CallOption) (*XSyncReply, error)
-	DpWorkOnCtAddGRPC(ctx context.Context, in *ConnInfo, opts ...grpc.CallOption) (*XSyncReply, error)
-	DpWorkOnBlockCtDelGRPC(ctx context.Context, in *ConnInfo, opts ...grpc.CallOption) (*XSyncReply, error)
-	DpWorkOnCtDelGRPC(ctx context.Context, in *ConnInfo, opts ...grpc.CallOption) (*XSyncReply, error)
 	DpWorkOnCtGetGRPC(ctx context.Context, in *ConnGet, opts ...grpc.CallOption) (*XSyncReply, error)
+	DpWorkOnCtModGRPC(ctx context.Context, in *CtInfoMod, opts ...grpc.CallOption) (*XSyncReply, error)
+	DpWorkOnBlockCtModGRPC(ctx context.Context, in *BlockCtInfoMod, opts ...grpc.CallOption) (*XSyncReply, error)
 }
 
 type xSyncClient struct {
@@ -35,42 +33,6 @@ type xSyncClient struct {
 
 func NewXSyncClient(cc grpc.ClientConnInterface) XSyncClient {
 	return &xSyncClient{cc}
-}
-
-func (c *xSyncClient) DpWorkOnBlockCtAddGRPC(ctx context.Context, in *ConnInfo, opts ...grpc.CallOption) (*XSyncReply, error) {
-	out := new(XSyncReply)
-	err := c.cc.Invoke(ctx, "/XSync/DpWorkOnBlockCtAddGRPC", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *xSyncClient) DpWorkOnCtAddGRPC(ctx context.Context, in *ConnInfo, opts ...grpc.CallOption) (*XSyncReply, error) {
-	out := new(XSyncReply)
-	err := c.cc.Invoke(ctx, "/XSync/DpWorkOnCtAddGRPC", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *xSyncClient) DpWorkOnBlockCtDelGRPC(ctx context.Context, in *ConnInfo, opts ...grpc.CallOption) (*XSyncReply, error) {
-	out := new(XSyncReply)
-	err := c.cc.Invoke(ctx, "/XSync/DpWorkOnBlockCtDelGRPC", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *xSyncClient) DpWorkOnCtDelGRPC(ctx context.Context, in *ConnInfo, opts ...grpc.CallOption) (*XSyncReply, error) {
-	out := new(XSyncReply)
-	err := c.cc.Invoke(ctx, "/XSync/DpWorkOnCtDelGRPC", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *xSyncClient) DpWorkOnCtGetGRPC(ctx context.Context, in *ConnGet, opts ...grpc.CallOption) (*XSyncReply, error) {
@@ -82,15 +44,31 @@ func (c *xSyncClient) DpWorkOnCtGetGRPC(ctx context.Context, in *ConnGet, opts .
 	return out, nil
 }
 
+func (c *xSyncClient) DpWorkOnCtModGRPC(ctx context.Context, in *CtInfoMod, opts ...grpc.CallOption) (*XSyncReply, error) {
+	out := new(XSyncReply)
+	err := c.cc.Invoke(ctx, "/XSync/DpWorkOnCtModGRPC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *xSyncClient) DpWorkOnBlockCtModGRPC(ctx context.Context, in *BlockCtInfoMod, opts ...grpc.CallOption) (*XSyncReply, error) {
+	out := new(XSyncReply)
+	err := c.cc.Invoke(ctx, "/XSync/DpWorkOnBlockCtModGRPC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // XSyncServer is the server API for XSync service.
 // All implementations must embed UnimplementedXSyncServer
 // for forward compatibility
 type XSyncServer interface {
-	DpWorkOnBlockCtAddGRPC(context.Context, *ConnInfo) (*XSyncReply, error)
-	DpWorkOnCtAddGRPC(context.Context, *ConnInfo) (*XSyncReply, error)
-	DpWorkOnBlockCtDelGRPC(context.Context, *ConnInfo) (*XSyncReply, error)
-	DpWorkOnCtDelGRPC(context.Context, *ConnInfo) (*XSyncReply, error)
 	DpWorkOnCtGetGRPC(context.Context, *ConnGet) (*XSyncReply, error)
+	DpWorkOnCtModGRPC(context.Context, *CtInfoMod) (*XSyncReply, error)
+	DpWorkOnBlockCtModGRPC(context.Context, *BlockCtInfoMod) (*XSyncReply, error)
 	mustEmbedUnimplementedXSyncServer()
 }
 
@@ -98,20 +76,14 @@ type XSyncServer interface {
 type UnimplementedXSyncServer struct {
 }
 
-func (UnimplementedXSyncServer) DpWorkOnBlockCtAddGRPC(context.Context, *ConnInfo) (*XSyncReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DpWorkOnBlockCtAddGRPC not implemented")
-}
-func (UnimplementedXSyncServer) DpWorkOnCtAddGRPC(context.Context, *ConnInfo) (*XSyncReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DpWorkOnCtAddGRPC not implemented")
-}
-func (UnimplementedXSyncServer) DpWorkOnBlockCtDelGRPC(context.Context, *ConnInfo) (*XSyncReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DpWorkOnBlockCtDelGRPC not implemented")
-}
-func (UnimplementedXSyncServer) DpWorkOnCtDelGRPC(context.Context, *ConnInfo) (*XSyncReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DpWorkOnCtDelGRPC not implemented")
-}
 func (UnimplementedXSyncServer) DpWorkOnCtGetGRPC(context.Context, *ConnGet) (*XSyncReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DpWorkOnCtGetGRPC not implemented")
+}
+func (UnimplementedXSyncServer) DpWorkOnCtModGRPC(context.Context, *CtInfoMod) (*XSyncReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DpWorkOnCtModGRPC not implemented")
+}
+func (UnimplementedXSyncServer) DpWorkOnBlockCtModGRPC(context.Context, *BlockCtInfoMod) (*XSyncReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DpWorkOnBlockCtModGRPC not implemented")
 }
 func (UnimplementedXSyncServer) mustEmbedUnimplementedXSyncServer() {}
 
@@ -124,78 +96,6 @@ type UnsafeXSyncServer interface {
 
 func RegisterXSyncServer(s grpc.ServiceRegistrar, srv XSyncServer) {
 	s.RegisterService(&XSync_ServiceDesc, srv)
-}
-
-func _XSync_DpWorkOnBlockCtAddGRPC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConnInfo)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(XSyncServer).DpWorkOnBlockCtAddGRPC(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/XSync/DpWorkOnBlockCtAddGRPC",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(XSyncServer).DpWorkOnBlockCtAddGRPC(ctx, req.(*ConnInfo))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _XSync_DpWorkOnCtAddGRPC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConnInfo)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(XSyncServer).DpWorkOnCtAddGRPC(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/XSync/DpWorkOnCtAddGRPC",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(XSyncServer).DpWorkOnCtAddGRPC(ctx, req.(*ConnInfo))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _XSync_DpWorkOnBlockCtDelGRPC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConnInfo)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(XSyncServer).DpWorkOnBlockCtDelGRPC(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/XSync/DpWorkOnBlockCtDelGRPC",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(XSyncServer).DpWorkOnBlockCtDelGRPC(ctx, req.(*ConnInfo))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _XSync_DpWorkOnCtDelGRPC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConnInfo)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(XSyncServer).DpWorkOnCtDelGRPC(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/XSync/DpWorkOnCtDelGRPC",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(XSyncServer).DpWorkOnCtDelGRPC(ctx, req.(*ConnInfo))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _XSync_DpWorkOnCtGetGRPC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -216,6 +116,42 @@ func _XSync_DpWorkOnCtGetGRPC_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _XSync_DpWorkOnCtModGRPC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CtInfoMod)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(XSyncServer).DpWorkOnCtModGRPC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/XSync/DpWorkOnCtModGRPC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(XSyncServer).DpWorkOnCtModGRPC(ctx, req.(*CtInfoMod))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _XSync_DpWorkOnBlockCtModGRPC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BlockCtInfoMod)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(XSyncServer).DpWorkOnBlockCtModGRPC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/XSync/DpWorkOnBlockCtModGRPC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(XSyncServer).DpWorkOnBlockCtModGRPC(ctx, req.(*BlockCtInfoMod))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // XSync_ServiceDesc is the grpc.ServiceDesc for XSync service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -224,24 +160,16 @@ var XSync_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*XSyncServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "DpWorkOnBlockCtAddGRPC",
-			Handler:    _XSync_DpWorkOnBlockCtAddGRPC_Handler,
-		},
-		{
-			MethodName: "DpWorkOnCtAddGRPC",
-			Handler:    _XSync_DpWorkOnCtAddGRPC_Handler,
-		},
-		{
-			MethodName: "DpWorkOnBlockCtDelGRPC",
-			Handler:    _XSync_DpWorkOnBlockCtDelGRPC_Handler,
-		},
-		{
-			MethodName: "DpWorkOnCtDelGRPC",
-			Handler:    _XSync_DpWorkOnCtDelGRPC_Handler,
-		},
-		{
 			MethodName: "DpWorkOnCtGetGRPC",
 			Handler:    _XSync_DpWorkOnCtGetGRPC_Handler,
+		},
+		{
+			MethodName: "DpWorkOnCtModGRPC",
+			Handler:    _XSync_DpWorkOnCtModGRPC_Handler,
+		},
+		{
+			MethodName: "DpWorkOnBlockCtModGRPC",
+			Handler:    _XSync_DpWorkOnBlockCtModGRPC_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

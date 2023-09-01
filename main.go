@@ -43,7 +43,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	go ln.LoxiXsyncMain()
+	go ln.LoxiXsyncMain(opts.Opts.Rpc)
 	// Need some time for RPC Handler to be up
 	time.Sleep(2 * time.Second)
 
