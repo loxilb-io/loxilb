@@ -181,7 +181,7 @@ func init() {
             "type": "integer",
             "format": "int32",
             "description": "Remote ASN number",
-            "name": "remote_as",
+            "name": "remoteAs",
             "in": "query"
           }
         ],
@@ -4552,7 +4552,7 @@ func init() {
             "type": "integer",
             "format": "int32",
             "description": "Remote ASN number",
-            "name": "remote_as",
+            "name": "remoteAs",
             "in": "query"
           }
         ],

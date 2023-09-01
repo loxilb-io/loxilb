@@ -66,7 +66,7 @@ func (o *DeleteConfigBgpNeighIPAddressURL) Build() (*url.URL, error) {
 		remoteAsQ = swag.FormatInt32(*o.RemoteAs)
 	}
 	if remoteAsQ != "" {
-		qs.Set("remote_as", remoteAsQ)
+		qs.Set("remoteAs", remoteAsQ)
 	}
 
 	_result.RawQuery = qs.Encode()
