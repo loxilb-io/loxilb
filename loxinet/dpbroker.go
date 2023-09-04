@@ -429,7 +429,6 @@ type DpH struct {
 	ToFinCh  chan int
 	DpHooks  DpHookInterface
 	SyncMtx  sync.RWMutex
-	MapMtx   sync.RWMutex
 	Peers    []DpPeer
 	RPC      *XSync
 	Remotes  []XSync
@@ -597,10 +596,10 @@ func callGRPC(client XSyncClient, rpcCallStr string, args interface{}, reply *in
 
 	if err != nil {
 		*reply = -1
-		tk.LogIt(tk.LogInfo, "XSync %s reply - %v[NOK]\n", rpcCallStr, err.Error())
+		tk.LogIt(tk.LogError, "XSync %s reply - %v[NOK]\n", rpcCallStr, err.Error())
 	} else if xreply != nil {
 		*reply = int(xreply.Response)
-		tk.LogIt(tk.LogInfo, "XSync %s peer reply - %d\n", rpcCallStr, *reply)
+		tk.LogIt(tk.LogDebug, "XSync %s peer reply - %d\n", rpcCallStr, *reply)
 	}
 	return err
 }

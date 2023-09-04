@@ -40,9 +40,6 @@ func (xs *XSync) DpWorkOnBlockCtAdd(blockCtis []DpCtInfo, ret *int) error {
 
 	*ret = 0
 
-	mh.dp.MapMtx.Lock()
-	defer mh.dp.MapMtx.Unlock()
-
 	for _, cti := range blockCtis {
 
 		tk.LogIt(tk.LogDebug, "RPC - Block CT Add %s\n", cti.Key())
@@ -63,9 +60,6 @@ func (xs *XSync) DpWorkOnBlockCtDelete(blockCtis []DpCtInfo, ret *int) error {
 
 	*ret = 0
 	
-	mh.dp.MapMtx.Lock()
-	defer mh.dp.MapMtx.Unlock()
-
 	for _, cti := range blockCtis {
 
 		tk.LogIt(tk.LogDebug, "RPC - Block CT Del %s\n", cti.Key())
