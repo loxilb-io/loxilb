@@ -16,17 +16,35 @@ jobs:
     if: github.repository == 'loxilb-io/loxilb' 
           &&  github.event.inputs.tagName == ''
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
         with:
           submodules: recursive
-      - run: |
+
+      - name: Run the test
+        run: |
          cd cicd/k8s-calico
          ./config.sh
          ./validation.sh
-         ./rmconfig.sh
          cd -
-         cd cicd/k8s-calico-ubuntu22
-         ./config.sh
-         ./validation.sh
-         ./rmconfig.sh
-         cd -
+         
+      - name: Clean test-bed
+        if: success() || failure()
+        run: |
+          cd cicd/k8s-calico || true
+          ./rmconfig.sh
+          cd -
+
+      - name: Run the U22 test
+        run: |
+          cd cicd/k8s-calico-ubuntu22
+          ./config.sh
+          ./validation.sh
+          cd -
+         
+      - name: Clean U22 test-bed
+        if: success() || failure()
+        run: |
+          cd cicd/k8s-calico-ubuntu22 || true
+          ./rmconfig.sh
+          cd -
