@@ -17,13 +17,8 @@
 package loxinet
 
 import (
-	"bufio"
-	"errors"
 	"fmt"
-	"io"
 	"net"
-	"net/http"
-	"net/rpc"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -294,28 +289,40 @@ type NatDpWorkQ struct {
 
 // DpCtInfo - representation of a datapath conntrack information
 type DpCtInfo struct {
-	DIP     net.IP
-	SIP     net.IP
-	Dport   uint16
-	Sport   uint16
-	Proto   string
-	CState  string
-	CAct    string
-	CI      string
-	Packets uint64
-	Bytes   uint64
-	Deleted int
-	PKey    []byte
-	PVal    []byte
-	LTs     time.Time
-	NTs     time.Time
-	XSync   bool
+	DIP     net.IP    `json:"dip"`
+	SIP     net.IP    `json:"sip"`
+	Dport   uint16    `json:"dport"`
+	Sport   uint16    `json:"sport"`
+	Proto   string    `json:"proto"`
+	CState  string    `json:"cstate"`
+	CAct    string    `json:"cact"`
+	CI      string    `json:"ci"`
+	Packets uint64    `json:"packets"`
+	Bytes   uint64    `json:"bytes"`
+	Deleted int       `json:"deleted"`
+	PKey    []byte    `json:"pkey"`
+	PVal    []byte    `json:"pval"`
+	LTs     time.Time `json:"lts"`
+	NTs     time.Time `json:"nts"`
+	XSync   bool      `json:"xsync"`
 
 	// LB Association Data
-	ServiceIP  net.IP
-	ServProto  string
-	L4ServPort uint16
-	BlockNum   uint16
+	ServiceIP  net.IP `json:"serviceip"`
+	ServProto  string `json:"servproto"`
+	L4ServPort uint16 `json:"l4servproto"`
+	BlockNum   uint16 `json:"blocknum"`
+}
+
+const (
+	RPCTypeNetRPC = iota
+	RPCTypeGRPC
+)
+
+type RPCHookInterface interface {
+	RPCConnect(*DpPeer) int
+	RPCClose(*DpPeer) int
+	RPCReset(*DpPeer) int
+	RPCSend(*DpPeer, string, any) (int, error)
 }
 
 // XSync - Remote sync peer information
@@ -323,6 +330,8 @@ type XSync struct {
 	RemoteID int
 	RPCState bool
 	// For peer to peer RPC
+	RPCType  int
+	RPCHooks RPCHookInterface
 }
 
 // UlClDpWorkQ - work queue entry for ul-cl filter related operation
@@ -403,8 +412,9 @@ type DpHookInterface interface {
 
 // DpPeer - Remote DP Peer information
 type DpPeer struct {
-	Peer   net.IP
-	Client *rpc.Client
+	Peer net.IP
+	//Client *rpc.Client
+	Client interface{}
 }
 
 // DpH - datapath context container
@@ -419,55 +429,13 @@ type DpH struct {
 	Remotes  []XSync
 }
 
-// dialHTTPPath connects to an HTTP RPC server
-// at the specified network address and path.
-// This is based on rpc package's DialHTTPPath but with added timeout
-func dialHTTPPath(network, address, path string) (*rpc.Client, error) {
-	var connected = "200 Connected to Go RPC"
-	timeOut := 2 * time.Second
-
-	conn, err := net.DialTimeout(network, address, timeOut)
-	if err != nil {
-		return nil, err
-	}
-	io.WriteString(conn, "CONNECT "+path+" HTTP/1.0\n\n")
-
-	// Require successful HTTP response
-	// before switching to RPC protocol.
-	resp, err := http.ReadResponse(bufio.NewReader(conn), &http.Request{Method: "CONNECT"})
-	if err == nil && resp.Status == connected {
-		return rpc.NewClient(conn), nil
-	}
-	if err == nil {
-		err = errors.New("unexpected HTTP response: " + resp.Status)
-	}
-	conn.Close()
-	return nil, &net.OpError{
-		Op:   "dial-http",
-		Net:  network + " " + address,
-		Addr: nil,
-		Err:  err,
-	}
-}
-
 // DpXsyncRPCReset - Routine to reset Sunc RPC Client connections
 func (dp *DpH) DpXsyncRPCReset() int {
 	dp.SyncMtx.Lock()
 	defer dp.SyncMtx.Unlock()
 	for idx := range mh.dp.Peers {
 		pe := &mh.dp.Peers[idx]
-		if pe.Client != nil {
-			pe.Client.Close()
-			pe.Client = nil
-		}
-		if pe.Client == nil {
-			cStr := fmt.Sprintf("%s:%d", pe.Peer.String(), XSyncPort)
-			pe.Client, _ = dialHTTPPath("tcp", cStr, rpc.DefaultRPCPath)
-			if pe.Client == nil {
-				return -1
-			}
-			tk.LogIt(tk.LogInfo, "XSync RPC - %s :Reset\n", cStr)
-		}
+		dp.RPC.RPCHooks.RPCReset(pe)
 	}
 	return 0
 }
@@ -477,10 +445,7 @@ func (dp *DpH) DpXsyncInSync() bool {
 	dp.SyncMtx.Lock()
 	defer dp.SyncMtx.Unlock()
 
-	if len(dp.Remotes) >= len(mh.has.NodeMap) {
-		return true
-	}
-	return false
+	return len(dp.Remotes) >= len(mh.has.NodeMap)
 }
 
 // WaitXsyncReady - Routine to wait till it ready for syncing the peer entity
@@ -500,8 +465,9 @@ func (dp *DpH) WaitXsyncReady(who string) {
 
 // DpXsyncRPC - Routine for syncing connection information with peers
 func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
-	var reply int
-	timeout := 2 * time.Second
+	var reply,ret int
+	var err error
+
 	dp.SyncMtx.Lock()
 	defer dp.SyncMtx.Unlock()
 
@@ -525,15 +491,11 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
 	restartRPC:
 		pe := &mh.dp.Peers[idx]
 		if pe.Client == nil {
-			cStr := fmt.Sprintf("%s:%d", pe.Peer.String(), XSyncPort)
-			var err error
-			pe.Client, err = dialHTTPPath("tcp", cStr, rpc.DefaultRPCPath)
-			if pe.Client == nil {
-				tk.LogIt(tk.LogInfo, "XSync RPC - %s :Fail(%s)\n", cStr, err)
+			ret = dp.RPC.RPCHooks.RPCConnect(pe)
+			if ret != 0 {
 				rpcErr = true
 				continue
 			}
-			tk.LogIt(tk.LogInfo, "XSync RPC - %s :Connected\n", cStr)
 		}
 
 		reply = 0
@@ -556,7 +518,6 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
 			return -1
 		}
 
-		var call *rpc.Call
 		if op == DpSyncAdd || op == DpSyncDelete || op == DpSyncBcast {
 			if op != DpSyncBcast {
 				if cti == nil && len(blkCti) <= 0 {
@@ -576,34 +537,27 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
 				}
 			}
 			if cti != nil {
-				call = pe.Client.Go(rpcCallStr, *cti, &reply, make(chan *rpc.Call, 1))
+				reply, err = dp.RPC.RPCHooks.RPCSend(pe, rpcCallStr, *cti)
 			} else {
-				call = pe.Client.Go(rpcCallStr, blkCti, &reply, make(chan *rpc.Call, 1))
+				reply, err = dp.RPC.RPCHooks.RPCSend(pe, rpcCallStr, blkCti)
 			}
 		} else {
 			async := 1
-			call = pe.Client.Go(rpcCallStr, async, &reply, make(chan *rpc.Call, 1))
+			reply, err = dp.RPC.RPCHooks.RPCSend(pe, rpcCallStr, int32(async))
 		}
-		select {
-		case <-time.After(timeout):
-			tk.LogIt(tk.LogError, "rpc call timeout(%v)\n", timeout)
-			if pe.Client != nil {
-				pe.Client.Close()
-			}
+
+		if err != nil {
+			tk.LogIt(tk.LogError, "XSync call failed(%s)\n", err)
+			rpcErr = true
 			pe.Client = nil
 			rpcRetries++
 			if rpcRetries < 2 {
 				goto restartRPC
 			}
+		}
+		if reply != 0 {
+			tk.LogIt(tk.LogError, "Xsync server returned error (%d)\n", reply)
 			rpcErr = true
-		case resp := <-call.Done:
-			if resp != nil && resp.Error != nil {
-				tk.LogIt(tk.LogError, "rpc call failed(%s)\n", resp.Error)
-				rpcErr = true
-			}
-			if reply != 0 {
-				rpcErr = true
-			}
 		}
 	}
 
@@ -614,7 +568,7 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
 }
 
 // DpBrokerInit - initialize the DP broker subsystem
-func DpBrokerInit(dph DpHookInterface) *DpH {
+func DpBrokerInit(dph DpHookInterface, rpcMode int) *DpH {
 	nDp := new(DpH)
 
 	nDp.ToDpCh = make(chan interface{}, DpWorkQLen)
@@ -623,108 +577,16 @@ func DpBrokerInit(dph DpHookInterface) *DpH {
 	nDp.DpHooks = dph
 	nDp.RPC = new(XSync)
 
+	nDp.RPC.RPCType = rpcMode
+	if (rpcMode == RPCTypeNetRPC) {
+		nDp.RPC.RPCHooks = &netRPCClient{}
+	} else {
+		nDp.RPC.RPCHooks = &gRPCClient{}
+	}
+
 	go DpWorker(nDp, nDp.ToFinCh, nDp.ToDpCh)
 
 	return nDp
-}
-
-// DpWorkOnBlockCtAdd - Add block CT entries from remote
-func (xs *XSync) DpWorkOnBlockCtAdd(blockCtis []DpCtInfo, ret *int) error {
-	if !mh.ready {
-		return errors.New("Not-Ready")
-	}
-
-	*ret = 0
-	for _, cti := range blockCtis {
-
-		tk.LogIt(tk.LogDebug, "RPC - Block CT Add %s\n", cti.Key())
-		r := mh.dp.DpHooks.DpCtAdd(&cti)
-		if r != 0 {
-			*ret = r
-		}
-	}
-
-	return nil
-}
-
-// DpWorkOnCtAdd - Add a CT entry from remote
-func (xs *XSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
-	if !mh.ready {
-		return errors.New("Not-Ready")
-	}
-
-	if cti.Proto == "xsync" {
-		mh.dp.SyncMtx.Lock()
-		defer mh.dp.SyncMtx.Unlock()
-
-		for idx := range mh.dp.Remotes {
-			r := &mh.dp.Remotes[idx]
-			if r.RemoteID == int(cti.Sport) {
-				r.RPCState = true
-				*ret = 0
-				return nil
-			}
-		}
-
-		r := XSync{RemoteID: int(cti.Sport), RPCState: true}
-		mh.dp.Remotes = append(mh.dp.Remotes, r)
-
-		tk.LogIt(tk.LogDebug, "RPC - CT Xsync Remote-%v\n", cti.Sport)
-
-		*ret = 0
-		return nil
-	}
-
-	tk.LogIt(tk.LogDebug, "RPC - CT Add %s\n", cti.Key())
-	r := mh.dp.DpHooks.DpCtAdd(&cti)
-	*ret = r
-	return nil
-}
-
-// DpWorkOnBlockCtDelete - Add block CT entries from remote
-func (xs *XSync) DpWorkOnBlockCtDelete(blockCtis []DpCtInfo, ret *int) error {
-	if !mh.ready {
-		return errors.New("Not-Ready")
-	}
-
-	*ret = 0
-	for _, cti := range blockCtis {
-
-		tk.LogIt(tk.LogDebug, "RPC - Block CT Del %s\n", cti.Key())
-		r := mh.dp.DpHooks.DpCtDel(&cti)
-		if r != 0 {
-			*ret = r
-		}
-	}
-
-	return nil
-}
-
-// DpWorkOnCtDelete - Delete a CT entry from remote
-func (xs *XSync) DpWorkOnCtDelete(cti DpCtInfo, ret *int) error {
-	if !mh.ready {
-		return errors.New("Not-Ready")
-	}
-	tk.LogIt(tk.LogDebug, "RPC -  CT Del %s\n", cti.Key())
-	r := mh.dp.DpHooks.DpCtDel(&cti)
-	*ret = r
-	return nil
-}
-
-// DpWorkOnCtGet - Get all CT entries asynchronously
-func (xs *XSync) DpWorkOnCtGet(async int, ret *int) error {
-	if !mh.ready {
-		return errors.New("Not-Ready")
-	}
-
-	// Most likely need to reset reverse rpc channel
-	mh.dp.DpXsyncRPCReset()
-
-	tk.LogIt(tk.LogDebug, "RPC -  CT Get %d\n", async)
-	mh.dp.DpHooks.DpCtGetAsync()
-	*ret = 0
-
-	return nil
 }
 
 // DpWorkOnPort - routine to work on a port work queue request
@@ -865,7 +727,7 @@ func (dp *DpH) DpWorkOnPeerOp(pWq *PeerDpWorkQ) DpRetT {
 			pe := &dp.Peers[idx]
 			if pe.Peer.Equal(pWq.PeerIP) {
 				if pe.Client != nil {
-					pe.Client.Close()
+					dp.RPC.RPCHooks.RPCClose(pe)
 				}
 				dp.Peers = append(dp.Peers[:idx], dp.Peers[idx+1:]...)
 				tk.LogIt(tk.LogInfo, "Deleted cluster-peer %s\n", pWq.PeerIP.String())

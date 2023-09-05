@@ -1,0 +1,49 @@
+syntax = "proto3";
+option go_package = "./loxinet";
+
+message XSyncReply {
+  int32 response = 1;
+}
+
+message ConnGet {
+    int32 async = 1;
+}
+
+message CtInfo {
+    bytes dip = 1;
+    bytes sip = 2;
+    int32 dport = 3;
+    int32 sport = 4;
+    string proto = 5;
+    string cstate = 6;
+    string cact = 7;
+    string ci = 8;
+    int64 packets = 9;
+    int64 bytes = 10;
+    int32 deleted = 11;
+    bytes pkey = 12;
+    bytes pval = 13;
+    bool xsync = 14;
+    bytes serviceip = 15;
+    string servproto = 16;
+    int32 l4servport = 17;
+    int32 blocknum = 18;
+}
+
+message CtInfoMod {
+    bool add = 1;
+    CtInfo ct = 2;
+}
+
+message BlockCtInfoMod {
+    bool add = 1;
+    repeated CtInfo ct = 2;
+}
+
+// The xsync service definition.
+service XSync {
+    rpc DpWorkOnCtGetGRPC (ConnGet) returns (XSyncReply) {}
+    rpc DpWorkOnCtModGRPC (CtInfoMod) returns (XSyncReply) {}
+    rpc DpWorkOnBlockCtModGRPC (BlockCtInfoMod) returns (XSyncReply) {}
+  }
+  

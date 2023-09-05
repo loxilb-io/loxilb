@@ -92,7 +92,7 @@ const (
 const (
 	DpEbpfLinuxTiVal     = 10
 	ctiDeleteSyncRetries = 3
-	blkCtiMaxLen         = 4096
+	blkCtiMaxLen         = 8192
 	mapNotifierChLen     = 8096
 	mapNotifierWorkers   = 1
 )
@@ -187,7 +187,6 @@ func dpEbpfTicker() {
 			// Age any entries related to Conntrack
 			/* No need to fetch all stats in this fashion */
 			//C.llb_collect_map_stats(C.int(C.LL_DP_CT_STATS_MAP))
-
 			/* Per entry stats will be fetched in C.ll_ct_map_ent_has_aged */
 			C.llb_age_map_entries(C.LL_DP_CT_MAP)
 			C.llb_age_map_entries(C.LL_DP_FCV4_MAP)
@@ -454,7 +453,7 @@ func (e *DpEbpfH) DpPortPropMod(w *PortDpWorkQ) int {
 			lRet := e.loadEbpfPgm(w.LoadEbpf)
 			if lRet != 0 {
 				tk.LogIt(tk.LogError, "ebpf load - %d error\n", w.PortNum)
-				return EbpfErrEbpfLoad
+				syscall.Exit(1)
 			}
 		}
 		data := new(intfMapDat)
@@ -1829,7 +1828,7 @@ func dpCTMapChkUpdates() {
 			}
 		}
 
-		if len(blkCti) > blkCtiMaxLen {
+		if len(blkCti) >= blkCtiMaxLen {
 			tk.LogIt(tk.LogDebug, "[CT] Block Add Sync - \n")
 			tc1 := time.Now()
 			mh.dp.DpXsyncRPC(DpSyncAdd, blkCti)
@@ -1838,7 +1837,7 @@ func dpCTMapChkUpdates() {
 			blkCti = nil
 		}
 
-		if len(blkDelCti) > blkCtiMaxLen {
+		if len(blkDelCti) >= blkCtiMaxLen {
 			tk.LogIt(tk.LogDebug, "[CT] Block Del Sync - \n")
 			mh.dp.DpXsyncRPC(DpSyncDelete, blkDelCti)
 			blkDelCti = nil
@@ -1927,7 +1926,8 @@ func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
 
 	cte.XSync = false
 	cte.NTs = time.Now()
-	cte.LTs = cti.NTs
+	//cte.LTs = cti.NTs
+	cte.LTs = time.Now()
 
 	ret := C.llb_add_map_elem(C.LL_DP_CT_MAP, unsafe.Pointer(&cti.PKey[0]), unsafe.Pointer(&cti.PVal[0]))
 	if ret != 0 {

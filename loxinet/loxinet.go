@@ -25,11 +25,8 @@ import (
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
-	"io"
 	"net"
-	"net/http"
 	_ "net/http/pprof"
-	"net/rpc"
 	"os"
 	"os/signal"
 	"runtime/debug"
@@ -78,42 +75,6 @@ type loxiNetH struct {
 	rssEn  bool
 	eHooks bool
 	pFile  *os.File
-}
-
-// LoxiXsyncMain - State Sync subsystem init
-func LoxiXsyncMain() {
-	if opts.Opts.ClusterNodes == "none" {
-		return
-	}
-
-	// Stack trace logger
-	defer func() {
-		if e := recover(); e != nil {
-			if mh.logger != nil {
-				tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
-			}
-		}
-	}()
-
-	for {
-		rpcObj := new(XSync)
-		err := rpc.Register(rpcObj)
-		if err != nil {
-			panic("Failed to register rpc")
-		}
-
-		rpc.HandleHTTP()
-
-		http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
-			io.WriteString(res, "loxilb-xsync\n")
-		})
-
-		listener := fmt.Sprintf(":%d", XSyncPort)
-		err = http.ListenAndServe(listener, nil)
-		if err != nil {
-			panic("Failed to rpc-listen")
-		}
-	}
 }
 
 // NodeWalker - an implementation of node walker interface
@@ -203,6 +164,8 @@ func loxiNetTicker(bgpPeerMode bool) {
 var mh loxiNetH
 
 func loxiNetInit() {
+	var rpcMode int
+
 	spawnKa, kaMode := KAString2Mode(opts.Opts.Ka)
 	clusterMode := false
 	if opts.Opts.ClusterNodes != "none" {
@@ -251,11 +214,16 @@ func loxiNetInit() {
 			return
 		}
 	}
+	if opts.Opts.Rpc == "netrpc" {
+		rpcMode = RPCTypeNetRPC
+	} else {
+		rpcMode = RPCTypeGRPC
+	}
 
 	if !opts.Opts.BgpPeerMode {
 		// Initialize the ebpf datapath subsystem
 		mh.dpEbpf = DpEbpfInit(clusterMode, mh.self, mh.rssEn, mh.eHooks, -1)
-		mh.dp = DpBrokerInit(mh.dpEbpf)
+		mh.dp = DpBrokerInit(mh.dpEbpf, rpcMode)
 
 		// Initialize the security zone subsystem
 		mh.zn = ZoneInit()

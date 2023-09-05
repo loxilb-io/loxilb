@@ -1,0 +1,48 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+loxilbs = (ENV['LOXILBS'] || "2").to_i
+eps = (ENV['LOXILBS'] || "1").to_i
+box_name = (ENV['VAGRANT_BOX'] || "sysnet4admin/Ubuntu-k8s")
+box_version = "0.7.1"
+Vagrant.configure("2") do |config|
+  config.vm.box = "#{box_name}"
+  config.vm.box_version = "#{box_version}"
+
+  (1..loxilbs).each do |node_number|
+    config.vm.define "llb#{node_number}" do |loxilb|
+      loxilb.vm.hostname = "llb#{node_number}"
+      ip = node_number + 10
+      loxilb.vm.network :private_network, ip: "192.168.80.#{ip}", :netmask => "255.255.255.0"
+      loxilb.vm.network :private_network, ip: "192.168.90.#{ip}", :netmask => "255.255.255.0"
+      loxilb.vm.provision :shell, :path => "loxilb.sh"
+      loxilb.vm.provider :virtualbox do |vbox|
+        vbox.customize ["modifyvm", :id, "--memory", 6000]
+        vbox.customize ["modifyvm", :id, "--cpus", 4]
+      end
+    end
+  end
+
+  config.vm.define "client" do |client|
+    client.vm.hostname = 'client'
+    client.vm.network :private_network, ip: "192.168.80.100", :netmask => "255.255.255.0"
+    client.vm.provision :shell, :path => "client.sh"
+    client.vm.provider :virtualbox do |vbox|
+        vbox.customize ["modifyvm", :id, "--memory", 6000]
+        vbox.customize ["modifyvm", :id, "--cpus", 4]
+    end
+  end
+
+  (1..eps).each do |node_number|
+    config.vm.define "ep#{node_number}" do |ep|
+      ep.vm.hostname = "ep#{node_number}"
+      ip = node_number + 100
+      ep.vm.network :private_network, ip: "192.168.90.#{ip}", :netmask => "255.255.255.0"
+      ep.vm.provision :shell, :path => "ep.sh"
+      ep.vm.provider :virtualbox do |vbox|
+          vbox.customize ["modifyvm", :id, "--memory", 6000]
+          vbox.customize ["modifyvm", :id, "--cpus", 4]
+      end
+    end
+  end
+end
