@@ -453,7 +453,7 @@ func (e *DpEbpfH) DpPortPropMod(w *PortDpWorkQ) int {
 			lRet := e.loadEbpfPgm(w.LoadEbpf)
 			if lRet != 0 {
 				tk.LogIt(tk.LogError, "ebpf load - %d error\n", w.PortNum)
-				return EbpfErrEbpfLoad
+				syscall.Exit(1)
 			}
 		}
 		data := new(intfMapDat)

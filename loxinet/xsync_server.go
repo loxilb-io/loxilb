@@ -20,16 +20,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"io"
-	"net/rpc"
+	"net"
 	"net/http"
+	"net/rpc"
 	"runtime/debug"
-	"google.golang.org/grpc"
 
-	tk "github.com/loxilb-io/loxilib"
+	"google.golang.org/grpc"
 	opts "github.com/loxilb-io/loxilb/options"
-	
+	tk "github.com/loxilb-io/loxilib"
 )
 
 // DpWorkOnBlockCtAdd - Add block CT entries from remote goRPC client
@@ -59,7 +58,7 @@ func (xs *XSync) DpWorkOnBlockCtDelete(blockCtis []DpCtInfo, ret *int) error {
 	}
 
 	*ret = 0
-	
+
 	for _, cti := range blockCtis {
 
 		tk.LogIt(tk.LogDebug, "RPC - Block CT Del %s\n", cti.Key())
@@ -104,7 +103,7 @@ func (xs *XSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
 	}
 
 	tk.LogIt(tk.LogDebug, "RPC - CT Add %s\n", cti.Key())
-	
+
 	r := mh.dp.DpHooks.DpCtAdd(&cti)
 	*ret = r
 	return nil
@@ -138,22 +137,22 @@ func (xs *XSync) DpWorkOnCtGet(async int, ret *int) error {
 }
 
 func (xs *XSync) DpWorkOnCtGetGRPC(ctx context.Context, m *ConnGet) (*XSyncReply, error) {
-	
+
 	var resp int
 	err := xs.DpWorkOnCtGet(int(m.Async), &resp)
-	
+
 	return &XSyncReply{Response: int32(resp)}, err
 }
 
-func (ci *CtInfo) ConvertToDpCtInfo() (DpCtInfo) {
-		
-	cti := DpCtInfo {
-		DIP:ci.Dip, SIP:ci.Sip,
+func (ci *CtInfo) ConvertToDpCtInfo() DpCtInfo {
+
+	cti := DpCtInfo{
+		DIP: ci.Dip, SIP: ci.Sip,
 		Dport: uint16(ci.Dport), Sport: uint16(ci.Sport),
-		Proto: ci.Proto, CState: ci.Cstate, CAct: ci.Cact, CI:ci.Ci,
+		Proto: ci.Proto, CState: ci.Cstate, CAct: ci.Cact, CI: ci.Ci,
 		Packets: uint64(ci.Packets), Bytes: uint64(ci.Bytes), Deleted: int(ci.Deleted),
 		PKey: ci.Pkey, PVal: ci.Pval,
-		XSync: ci.Xsync, ServiceIP: ci.Serviceip, ServProto: ci.Servproto, 
+		XSync: ci.Xsync, ServiceIP: ci.Serviceip, ServProto: ci.Servproto,
 		L4ServPort: uint16(ci.L4Servport), BlockNum: uint16(ci.Blocknum),
 	}
 	return cti
@@ -177,13 +176,13 @@ func (xs *XSync) DpWorkOnBlockCtModGRPC(ctx context.Context, m *BlockCtInfoMod) 
 }
 
 func (xs *XSync) DpWorkOnCtModGRPC(ctx context.Context, m *CtInfoMod) (*XSyncReply, error) {
-	
+
 	var resp int
 	var err error
 
 	ci := m.Ct
 	cti := ci.ConvertToDpCtInfo()
-	
+
 	if m.Add {
 		err = xs.DpWorkOnCtAdd(cti, &resp)
 	} else {
