@@ -64,7 +64,7 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable crio --now
 
-echo "CRI runtime installed susccessfully"
+echo "CRI runtime installed successfully"
 
 sudo apt-get update
 sudo apt-get install -y apt-transport-https ca-certificates curl
