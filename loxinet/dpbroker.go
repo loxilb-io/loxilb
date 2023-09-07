@@ -465,7 +465,7 @@ func (dp *DpH) WaitXsyncReady(who string) {
 
 // DpXsyncRPC - Routine for syncing connection information with peers
 func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
-	var reply,ret int
+	var reply, ret int
 	var err error
 
 	dp.SyncMtx.Lock()
@@ -578,7 +578,7 @@ func DpBrokerInit(dph DpHookInterface, rpcMode int) *DpH {
 	nDp.RPC = new(XSync)
 
 	nDp.RPC.RPCType = rpcMode
-	if (rpcMode == RPCTypeNetRPC) {
+	if rpcMode == RPCTypeNetRPC {
 		nDp.RPC.RPCHooks = &netRPCClient{}
 	} else {
 		nDp.RPC.RPCHooks = &gRPCClient{}

@@ -21,14 +21,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	tk "github.com/loxilb-io/loxilib"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"io"
 	"net"
 	"net/http"
 	"net/rpc"
 	"time"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	tk "github.com/loxilb-io/loxilib"
 )
 
 type netRPCClient struct {
@@ -112,8 +112,8 @@ func (*netRPCClient) RPCClose(pe *DpPeer) int {
 
 func (*netRPCClient) RPCSend(pe *DpPeer, rpcCallStr string, args any) (int, error) {
 	var reply int
-	client, _ := pe.Client.(*rpc.Client)	
-	timeout := 2 * time.Second		
+	client, _ := pe.Client.(*rpc.Client)
+	timeout := 2 * time.Second
 	call := client.Go(rpcCallStr, args, &reply, make(chan *rpc.Call, 1))
 	select {
 	case <-time.After(timeout):
@@ -122,7 +122,7 @@ func (*netRPCClient) RPCSend(pe *DpPeer, rpcCallStr string, args any) (int, erro
 			pe.Client.(*rpc.Client).Close()
 		}
 		pe.Client = nil
-	
+
 		return reply, errors.New("netrpc call timeout")
 	case resp := <-call.Done:
 		if resp != nil && resp.Error != nil {
@@ -259,5 +259,5 @@ func (*gRPCClient) RPCSend(pe *DpPeer, rpcCallStr string, args any) (int, error)
 	var reply int
 	err := callGRPC(pe.Client.(gRPCClient).xclient, rpcCallStr, args, &reply)
 
-	return reply,err
+	return reply, err
 }

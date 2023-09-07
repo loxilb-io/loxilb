@@ -26,9 +26,9 @@ import (
 	"net/rpc"
 	"runtime/debug"
 
-	"google.golang.org/grpc"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
+	"google.golang.org/grpc"
 )
 
 // DpWorkOnBlockCtAdd - Add block CT entries from remote goRPC client
