@@ -1,0 +1,36 @@
+name: Docker-K3S-Sanity-CI
+on:
+ #schedule:
+ # Runs "At 13:00 UTC every day-of-week"
+ #- cron: '0 13 * * *'
+ workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'docker-k3s'
+jobs:
+  test-runner:
+    name: docker-k3s-sanity
+    runs-on: self-hosted
+    if: github.repository == 'loxilb-io/loxilb' 
+          &&  github.event.inputs.tagName == ''
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+          submodules: recursive
+
+    - name: Run the test
+      run: |
+         cd cicd/docker-k3s-lb
+         ./config.sh
+         ./validation.sh
+         cd -
+         
+    - name: Clean test-bed
+      if: success() || failure()
+      run: |
+        cd cicd/docker-k3s-lb || true
+        ./rmconfig.sh
+        cd -
