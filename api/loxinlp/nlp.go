@@ -408,17 +408,17 @@ func DelVLANNoHook(vlanid int) int {
 	vlanLink, err := nlp.LinkByName(VlanName)
 	if err != nil {
 		ret = -1
-		tk.LogIt(tk.LogWarning, "[NLP] Vlan Bridge get Fail\n", err.Error())
+		tk.LogIt(tk.LogWarning, "[NLP] Vlan Bridge get Fail: %s\n", err.Error())
 	}
 	err = nlp.LinkSetDown(vlanLink)
 	if err != nil {
 		ret = -1
-		tk.LogIt(tk.LogWarning, "[NLP] Vlan Bridge Link Down Fail\n", err.Error())
+		tk.LogIt(tk.LogWarning, "[NLP] Vlan Bridge Link Down Fail: %s\n", err.Error())
 	}
 	err = nlp.LinkDel(vlanLink)
 	if err != nil {
 		ret = -1
-		tk.LogIt(tk.LogWarning, "[NLP] Vlan Bridge delete Fail\n", err.Error())
+		tk.LogIt(tk.LogWarning, "[NLP] Vlan Bridge delete Fail: %s\n", err.Error())
 	}
 
 	return ret
@@ -535,7 +535,7 @@ func AddVxLANBridgeNoHook(vxlanid int, epIntfName string) int {
 		time.Sleep(1 * time.Second)
 		VxlanDevNonPointer, err := nlp.LinkByName(VxlanBridgeName)
 		if err != nil {
-			tk.LogIt(tk.LogWarning, "[NLP] Vxlan Interface create fail\n", err.Error())
+			tk.LogIt(tk.LogWarning, "[NLP] Vxlan Interface create fail: %s\n", err.Error())
 			return -1
 		}
 		nlp.LinkSetUp(VxlanDevNonPointer)
@@ -554,17 +554,17 @@ func DelVxLANNoHook(vxlanid int) int {
 	vxlanLink, err := nlp.LinkByName(VxlanName)
 	if err != nil {
 		ret = -1
-		tk.LogIt(tk.LogWarning, "[NLP] Vxlan Bridge get Fail\n", err.Error())
+		tk.LogIt(tk.LogWarning, "[NLP] Vxlan Bridge get Fail:%s\n", err.Error())
 	}
 	err = nlp.LinkSetDown(vxlanLink)
 	if err != nil {
 		ret = -1
-		tk.LogIt(tk.LogWarning, "[NLP] Vxlan Bridge Link Down Fail\n", err.Error())
+		tk.LogIt(tk.LogWarning, "[NLP] Vxlan Bridge Link Down Fail:%s\n", err.Error())
 	}
 	err = nlp.LinkDel(vxlanLink)
 	if err != nil {
 		ret = -1
-		tk.LogIt(tk.LogWarning, "[NLP] Vxlan Bridge delete Fail\n", err.Error())
+		tk.LogIt(tk.LogWarning, "[NLP] Vxlan Bridge delete Fail:%s\n", err.Error())
 	}
 
 	return ret

@@ -50,9 +50,11 @@ import (
 	"syscall"
 	"time"
 	"unsafe"
+	"strings"
 
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
+	nlp "github.com/vishvananda/netlink"
 )
 
 // This file implements the interface DpHookInterface
@@ -360,12 +362,31 @@ func convDPv6Addr2NetIP(addr unsafe.Pointer) net.IP {
 func (e *DpEbpfH) loadEbpfPgm(name string) int {
 	ifStr := C.CString(name)
 	xSection := C.CString(string(C.XDP_LL_SEC_DEFAULT))
-
+	link, err := nlp.LinkByName(name)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[DP] Port %s not found\n", name)
+		return -1
+	}
 	if e.RssEn {
 		C.llb_dp_link_attach(ifStr, xSection, C.LL_BPF_MOUNT_XDP, 0)
 	}
 	section := C.CString(string(C.TC_LL_SEC_DEFAULT))
 	ret := C.llb_dp_link_attach(ifStr, section, C.LL_BPF_MOUNT_TC, 0)
+
+	filters, err := nlp.FilterList(link, nlp.HANDLE_MIN_INGRESS)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "[DP] Filter on %s not found\n", name)
+		return -1
+	}
+	ret = -1
+	for _,f := range filters {
+		if t, ok := f.(*nlp.BpfFilter); ok {
+			if strings.Contains(t.Name, C.TC_LL_SEC_DEFAULT) {
+				ret = 0
+				break
+			}
+		}
+	}
 	C.free(unsafe.Pointer(ifStr))
 	C.free(unsafe.Pointer(xSection))
 	C.free(unsafe.Pointer(section))
