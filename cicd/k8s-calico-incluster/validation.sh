@@ -20,7 +20,7 @@ do
     continue
   fi 
   if [[ ${strarr[3]} != *"none"* ]]; then
-    extIP=${strarr[3]}
+    extIP="$(cut -d'-' -f2 <<<${strarr[3]})"
     break
   fi
   echo "No external LB allocated"
