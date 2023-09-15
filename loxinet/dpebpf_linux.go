@@ -46,11 +46,11 @@ import (
 	"fmt"
 	"net"
 	"runtime/debug"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
 	"unsafe"
-	"strings"
 
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
@@ -379,7 +379,7 @@ func (e *DpEbpfH) loadEbpfPgm(name string) int {
 		return -1
 	}
 	ret = -1
-	for _,f := range filters {
+	for _, f := range filters {
 		if t, ok := f.(*nlp.BpfFilter); ok {
 			if strings.Contains(t.Name, C.TC_LL_SEC_DEFAULT) {
 				ret = 0
@@ -1076,7 +1076,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 	return 0
 }
 
-func (ct *DpCtInfo) convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtInfo {
+func (ct *DpCtInfo) convDPCt2GoObjFixup(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat, fixup bool) *DpCtInfo {
 	if ctKey.v6 == 0 {
 		ct.DIP = tk.NltoIP(uint32(ctKey.daddr[0]))
 		ct.SIP = tk.NltoIP(uint32(ctKey.saddr[0]))
@@ -1215,6 +1215,13 @@ func (ct *DpCtInfo) convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp
 		}
 
 		port := tk.Ntohs(uint16(ctDat.xi.nat_xport))
+		if fixup {
+			if ctDat.xi.osp != 0 {
+				aSport := tk.Ntohs(uint16(ctDat.xi.osp))
+				aDport := tk.Ntohs(uint16(ctDat.xi.odp))
+				ct.CState = fmt.Sprintf("frag:%d->%d", aSport, aDport)
+			}
+		}
 
 		if ctDat.xi.nat_flags == C.LLB_NAT_DST {
 			if ctDat.xi.nat_rip[0] == 0 && ctDat.xi.nat_rip[1] == 0 &&
@@ -1268,6 +1275,10 @@ func (ct *DpCtInfo) convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp
 	return ct
 }
 
+func (ct *DpCtInfo) convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp_ct_dat) *DpCtInfo {
+	return ct.convDPCt2GoObjFixup(ctKey, ctDat, false)
+}
+
 // DpTableGet - routine to work on a ebpf map get request
 func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 	var tbl int
@@ -1305,7 +1316,7 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 			if act.dir == C.CT_DIR_IN || act.dir == C.CT_DIR_OUT {
 				var b, p uint64
 				goCt4Ent := new(DpCtInfo)
-				goCt4Ent.convDPCt2GoObj(ctKey, act)
+				goCt4Ent.convDPCt2GoObjFixup(ctKey, act, true)
 				ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_CT_STATS_MAP), C.uint(tact.ca.cidx), C.int(1),
 					(unsafe.Pointer(&b)), unsafe.Pointer(&p))
 				if ret == 0 {
