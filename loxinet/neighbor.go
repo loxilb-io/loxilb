@@ -134,7 +134,7 @@ func (n *NeighH) Activate(ne *Neigh) {
 		return
 	}
 
-	ret, Sip := n.Zone.L3.IfaSelect(ne.OifPort.Name, ne.Addr, true)
+	ret, Sip, _ := n.Zone.L3.IfaSelect(ne.OifPort.Name, ne.Addr, true)
 	if ret != 0 {
 		tk.LogIt(tk.LogDebug, "Failed to select l3 ifa select\n")
 		return
@@ -162,7 +162,7 @@ func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, sIP net.IP, tunID uint32, 
 	}
 	if sIP == nil {
 		e := 0
-		e, sIP = n.Zone.L3.IfaSelect(port.Name, rIP, false)
+		e, sIP, _ = n.Zone.L3.IfaSelect(port.Name, rIP, false)
 		if e != 0 {
 			tk.LogIt(tk.LogError, "%s:ifa select error\n", port.Name)
 			return -1, nil

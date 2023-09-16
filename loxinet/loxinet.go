@@ -145,6 +145,8 @@ func loxiNetTicker(bgpPeerMode bool) {
 				pprof.StopCPUProfile()
 			} else if sig == syscall.SIGINT || sig == syscall.SIGTERM {
 				tk.LogIt(tk.LogCritical, "Shutdown on sig %v\n", sig)
+				// TODO - More subsystem cleanup TBD
+				mh.zr.Rules.RuleDestructAll()
 				if !bgpPeerMode {
 					mh.dpEbpf.DpEbpfUnInit()
 				}
