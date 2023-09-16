@@ -64,4 +64,25 @@ else
     echo SCENARIO-udplb [FAILED]
 fi
 sudo pkill udp_server 2>&1 > /dev/null
+
+$hexec l3ep1 ./udp_jumbo_app server 8080 &
+$hexec l3ep2 ./udp_jumbo_app server 8080 &
+$hexec l3ep3 ./udp_jumbo_app server 8080 &
+
+sleep 5
+
+for j in {0..2}
+do
+    res=$($hexec l3h1 timeout 3 ./udp_jumbo_app client 20.20.20.1:2020)
+    echo -e "FRAG TEST RUN$j:$res"
+    if [[ $res != "OK" ]]
+    then
+        echo -e "Run $j: Expected OK, Received : $res"
+        code=1
+    fi
+    sleep 1
+done
+
+sudo pkill udp_jumbo_app 2>&1 > /dev/null
+
 exit $code

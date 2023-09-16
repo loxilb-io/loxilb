@@ -116,7 +116,7 @@ spec:
         #- --monitor
         #- --setBGP=64511
         #- --extBGPPeers=50.50.50.1:65101,51.51.51.1:65102
-        - --setRoles=9.9.9.9
+        - --setRoles=0.0.0.0
         #- --monitor
         #- --setBGP
         #- --setLBMode=1
