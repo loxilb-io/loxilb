@@ -14,7 +14,7 @@ hexist="$vrn$hn"
 lxdocker="ghcr.io/loxilb-io/loxilb:latest"
 var=$(lsb_release -r | cut -f2)
 if [[ $var == *"22.04"* ]];then
-  lxdocker="ghcr.io/loxilb-io/loxilb:latestU22"
+  lxdocker="ghcr.io/loxilb-io/loxilb:latestu22"
 fi
 
 loxilbs=()
