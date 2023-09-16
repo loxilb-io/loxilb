@@ -67,4 +67,4 @@ jobs:
       - name: Publish the latest loxilb Docker image
         if: | 
           github.repository == 'loxilb-io/loxilb' && github.event_name != 'pull_request'
-        run: docker image tag ghcr.io/loxilb-io/loxilb:latest ghcr.io/loxilb-io/loxilb:latestU22 && docker push ghcr.io/loxilb-io/loxilb:latestU22
+        run: docker image tag ghcr.io/loxilb-io/loxilb:latest ghcr.io/loxilb-io/loxilb:latestu22 && docker push ghcr.io/loxilb-io/loxilb:latestu22
