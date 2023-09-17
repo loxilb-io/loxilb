@@ -310,6 +310,7 @@ type RuleH struct {
 	cfg        RuleCfg
 	tables     [RtMax]ruleTable
 	epMap      map[string]*epHost
+	vipMap     map[string]int
 	epCs       [MaxEndPointCheckers]epChecker
 	wg         sync.WaitGroup
 	lepHID     uint8
@@ -326,6 +327,7 @@ func RulesInit(zone *Zone) *RuleH {
 	nRh.cfg.RuleInactChkTime = DflLbaCheckTimeout
 	nRh.cfg.RuleInactTries = DflLbaInactiveTries
 
+	nRh.vipMap = make(map[string]int)
 	nRh.epMap = make(map[string]*epHost)
 	nRh.tables[RtFw].tableMatch = RmMax - 1
 	nRh.tables[RtFw].tableType = RtMf
@@ -1213,8 +1215,11 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	if r.ruleNum < RtMaximumLbs {
 		R.tables[RtLB].rArr[r.ruleNum] = r
 	}
+	R.vipMap[sNetAddr.IP.String()]++
 
-	R.AdvRuleVIPIfL2(sNetAddr.IP)
+	if R.vipMap[sNetAddr.IP.String()] == 1 {
+		R.AdvRuleVIPIfL2(sNetAddr.IP)
+	}
 
 	r.DP(DpCreate)
 
@@ -1274,8 +1279,13 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 		R.tables[RtLB].rArr[rule.ruleNum] = nil
 	}
 
-	if IsIPHostAddr(sNetAddr.IP.String()) {
-		loxinlp.DelAddrNoHook(sNetAddr.IP.String()+"/32", "lo")
+	R.vipMap[sNetAddr.IP.String()]--
+
+	if R.vipMap[sNetAddr.IP.String()] == 0 {
+		if IsIPHostAddr(sNetAddr.IP.String()) {
+			loxinlp.DelAddrNoHook(sNetAddr.IP.String()+"/32", "lo")
+		}
+		delete(R.vipMap, sNetAddr.IP.String())
 	}
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
@@ -1907,8 +1917,6 @@ func (R *RuleH) RulesSync() {
 			rule.ruleNum, ruleKeys, ruleActs,
 			rule.stat.packets, rule.stat.bytes)
 
-		R.AdvRuleVIPIfL2(rule.tuples.l3Dst.addr.IP)
-
 		if rule.hChk.actChk == false {
 			continue
 		}
@@ -1917,6 +1925,13 @@ func (R *RuleH) RulesSync() {
 		if rChg {
 			tk.LogIt(tk.LogDebug, "nat lb-Rule updated %d:%s,%s\n", rule.ruleNum, ruleKeys, ruleActs)
 			rule.DP(DpCreate)
+		}
+	}
+
+	for vip := range R.vipMap {
+		ip := net.ParseIP(vip)
+		if ip != nil {
+			R.AdvRuleVIPIfL2(ip)
 		}
 	}
 
