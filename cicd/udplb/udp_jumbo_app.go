@@ -76,7 +76,6 @@ func main() {
 	}
 }
 
-
 func UDPClient() {
 
 	if len(os.Args) < 2 {

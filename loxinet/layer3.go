@@ -226,13 +226,13 @@ func (l3 *L3H) IfaDeleteAll(Obj string) (int, error) {
 // IfaSelect - Given any ip address, select optimal ip address from Obj's ifa list
 // This is useful to determine source ip address when sending traffic
 // to the given ip address
-func (l3 *L3H) IfaSelect(Obj string, addr net.IP, findAny bool) (int, net.IP) {
+func (l3 *L3H) IfaSelect(Obj string, addr net.IP, findAny bool) (int, net.IP, string) {
 
 	key := IfaKey{Obj}
 	ifa := l3.IfaMap[key]
 
 	if ifa == nil {
-		return L3ObjErr, net.IPv4(0, 0, 0, 0)
+		return L3ObjErr, net.IPv4(0, 0, 0, 0), ""
 	}
 
 	for _, ifaEnt := range ifa.Ifas {
@@ -245,17 +245,54 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP, findAny bool) (int, net.IP) {
 		}
 
 		if ifaEnt.IfaNet.Contains(addr) {
-			return 0, ifaEnt.IfaAddr
+			return 0, ifaEnt.IfaAddr, Obj
 		}
 	}
 
 	if findAny == false {
-		return L3AddrErr, net.IPv4(0, 0, 0, 0)
+		return L3AddrErr, net.IPv4(0, 0, 0, 0), ""
 	}
 
 	// Select first IP
 	if len(ifa.Ifas) > 0 {
-		return 0, ifa.Ifas[0].IfaAddr
+		return 0, ifa.Ifas[0].IfaAddr, Obj
+	}
+
+	return L3AddrErr, net.IPv4(0, 0, 0, 0), ""
+}
+
+// IfaFindAny - Given any ip address, check if it matches ip address in any ifa list
+// This is useful to determine if ip address is already assigned to some interface
+func (l3 *L3H) IfaFindAny(addr net.IP) (int, net.IP) {
+	for ifName := range l3.IfaMap {
+		ret, rAddr := l3.IfaFind(ifName.Obj, addr)
+		if ret == 0 {
+			return 0, rAddr
+		}
+	}
+	return L3AddrErr, nil
+}
+
+// IfaFind - Given any ip address, check if it matches ip address from Obj's ifa list
+// This is useful to determine if ip address is already assigned to some interface
+func (l3 *L3H) IfaFind(Obj string, addr net.IP) (int, net.IP) {
+
+	key := IfaKey{Obj}
+	ifa := l3.IfaMap[key]
+
+	if ifa == nil {
+		return L3ObjErr, net.IPv4(0, 0, 0, 0)
+	}
+
+	for _, ifaEnt := range ifa.Ifas {
+
+		if tk.IsNetIPv6(addr.String()) && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String()) {
+			continue
+		}
+
+		if ifaEnt.IfaNet.IP.Equal(addr) {
+			return 0, ifaEnt.IfaAddr
+		}
 	}
 
 	return L3AddrErr, net.IPv4(0, 0, 0, 0)
@@ -263,7 +300,7 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP, findAny bool) (int, net.IP) {
 
 // IfaSelectAny - Given any dest ip address, select optimal interface source ip address
 // This is useful to determine source ip address when sending traffic to the given ip address
-func (l3 *L3H) IfaSelectAny(addr net.IP, findAny bool) (int, net.IP) {
+func (l3 *L3H) IfaSelectAny(addr net.IP, findAny bool) (int, net.IP, string) {
 	var err int
 	var tDat tk.TrieData
 	var firstIP *net.IP
@@ -271,6 +308,7 @@ func (l3 *L3H) IfaSelectAny(addr net.IP, findAny bool) (int, net.IP) {
 	v6 := false
 	IfObj := ""
 	firstIP = nil
+	firstIfObj := ""
 
 	if tk.IsNetIPv4(addr.String()) {
 		err, _, tDat = l3.Zone.Rt.Trie4.FindTrie(addr.String())
@@ -294,7 +332,7 @@ func (l3 *L3H) IfaSelectAny(addr net.IP, findAny bool) (int, net.IP) {
 		}
 	}
 
-	if IfObj != "" {
+	if IfObj != "" && IfObj != "lo" {
 		return l3.IfaSelect(IfObj, addr, findAny)
 	}
 
@@ -313,24 +351,25 @@ func (l3 *L3H) IfaSelectAny(addr net.IP, findAny bool) (int, net.IP) {
 			}
 
 			if ifaEnt.IfaNet.Contains(addr) {
-				return 0, ifaEnt.IfaAddr
+				return 0, ifaEnt.IfaAddr, ifa.Key.Obj
 			}
 
 			if firstIP == nil {
 				firstIP = &ifaEnt.IfaAddr
+				firstIfObj = ifa.Key.Obj
 			}
 		}
 	}
 
 	if findAny == false {
-		return L3AddrErr, net.IPv4(0, 0, 0, 0)
+		return L3AddrErr, net.IPv4(0, 0, 0, 0), ""
 	}
 
 	if firstIP != nil {
-		return 0, *firstIP
+		return 0, *firstIP, firstIfObj
 	}
 
-	return L3AddrErr, net.IPv4(0, 0, 0, 0)
+	return L3AddrErr, net.IPv4(0, 0, 0, 0), ""
 }
 
 // Ifa2String - Format an ifa to a string

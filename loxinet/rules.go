@@ -17,11 +17,13 @@
 package loxinet
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/loxilb-io/loxilb/api/loxinlp"
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 	probing "github.com/prometheus-community/pro-bing"
@@ -1212,6 +1214,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		R.tables[RtLB].rArr[r.ruleNum] = r
 	}
 
+	R.AdvRuleVIPIfL2(sNetAddr.IP)
+
 	r.DP(DpCreate)
 
 	return 0, nil
@@ -1268,6 +1272,10 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	delete(R.tables[RtLB].eMap, rt.ruleKey())
 	if rule.ruleNum < RtMaximumLbs {
 		R.tables[RtLB].rArr[rule.ruleNum] = nil
+	}
+
+	if IsIPHostAddr(sNetAddr.IP.String()) {
+		loxinlp.DelAddrNoHook(sNetAddr.IP.String()+"/32", "lo")
 	}
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
@@ -1733,13 +1741,13 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 			sType = "tcp"
 		} else if ep.opts.probeType == HostProbeConnectUDP {
 			sType = "udp"
-			ret, sIP := R.zone.L3.IfaSelectAny(net.ParseIP(ep.hostName), true)
+			ret, sIP, _ := R.zone.L3.IfaSelectAny(net.ParseIP(ep.hostName), true)
 			if ret == 0 {
 				sHint = sIP.String()
 			}
 		} else {
 			sType = "sctp"
-			ret, sIP := R.zone.L3.IfaSelectAny(net.ParseIP(ep.hostName), true)
+			ret, sIP, _ := R.zone.L3.IfaSelectAny(net.ParseIP(ep.hostName), true)
 			if ret == 0 {
 				sHint = sIP.String()
 			}
@@ -1899,6 +1907,8 @@ func (R *RuleH) RulesSync() {
 			rule.ruleNum, ruleKeys, ruleActs,
 			rule.stat.packets, rule.stat.bytes)
 
+		R.AdvRuleVIPIfL2(rule.tuples.l3Dst.addr.IP)
+
 		if rule.hChk.actChk == false {
 			continue
 		}
@@ -1932,21 +1942,27 @@ func (R *RuleH) RulesTicker() {
 func (R *RuleH) RuleDestructAll() {
 	var lbs cmn.LbServiceArg
 	var fwr cmn.FwRuleArg
+	fmt.Printf("Deleting Rules\n")
+
 	for _, r := range R.tables[RtLB].eMap {
 		lbs.ServIP = r.tuples.l3Dst.addr.IP.String()
-		if r.tuples.l4Dst.val == 6 {
+		fmt.Printf("Deleting %s\n", r.tuples.l3Dst.addr.IP.String())
+
+		if r.tuples.l4Prot.val == 6 {
 			lbs.Proto = "tcp"
-		} else if r.tuples.l4Dst.val == 1 {
+		} else if r.tuples.l4Prot.val == 1 {
 			lbs.Proto = "icmp"
-		} else if r.tuples.l4Dst.val == 17 {
+		} else if r.tuples.l4Prot.val == 17 {
 			lbs.Proto = "udp"
-		} else if r.tuples.l4Dst.val == 132 {
+		} else if r.tuples.l4Prot.val == 132 {
 			lbs.Proto = "sctp"
 		} else {
 			continue
 		}
 
 		lbs.ServPort = r.tuples.l4Dst.val
+
+		fmt.Printf("Deleting fin %s\n", r.tuples.l3Dst.addr.IP.String())
 
 		R.DeleteNatLbRule(lbs)
 	}
@@ -2102,7 +2118,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 		for idx := range nWork.endPoints {
 			ep := &nWork.endPoints[idx]
 			if mode == cmn.LBModeOneArm {
-				e, sip := r.zone.L3.IfaSelectAny(ep.XIP, false)
+				e, sip, _ := r.zone.L3.IfaSelectAny(ep.XIP, false)
 				if e != 0 {
 					tk.LogIt(tk.LogDebug, "Failed to find suitable source for %s\n", ep.XIP.String())
 					r.sync = DpCreateErr
@@ -2131,7 +2147,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 		for idx := range nWork.endPoints {
 			ep := &nWork.endPoints[idx]
 			if tk.IsNetIPv6(nWork.ServiceIP.String()) && tk.IsNetIPv4(ep.XIP.String()) {
-				e, sip := r.zone.L3.IfaSelectAny(ep.XIP, false)
+				e, sip, _ := r.zone.L3.IfaSelectAny(ep.XIP, false)
 				if e != 0 {
 					r.sync = DpCreateErr
 					return -1
@@ -2255,4 +2271,41 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 
 	return r.Fw2DP(work)
 
+}
+
+func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
+	ciState, _ := mh.has.CIStateGetInst(cmn.CIDefault)
+	if ciState == "MASTER" {
+		ev, _, iface := R.zone.L3.IfaSelectAny(IP, false)
+		if ev == 0 {
+			if !IsIPHostAddr(IP.String()) {
+				if loxinlp.AddAddrNoHook(IP.String()+"/32", "lo") != 0 {
+					tk.LogIt(tk.LogError, "nat lb-rule vip %s:%s add failed\n", IP.String(), "lo")
+				} else {
+					tk.LogIt(tk.LogInfo, "nat lb-rule vip %s:%s added\n", IP.String(), "lo")
+				}
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			rCh := make(chan int)
+			go GratArpReqWithCtx(ctx, rCh, IP, iface)
+			select {
+			case <-rCh:
+				break
+			case <-ctx.Done():
+				tk.LogIt(tk.LogInfo, "nat lb-rule vip %s - iface %s : GratARP timeout\n", IP.String(), iface)
+			}
+		}
+
+	} else {
+		if IsIPHostAddr(IP.String()) {
+			if loxinlp.DelAddrNoHook(IP.String()+"/32", "lo") != 0 {
+				tk.LogIt(tk.LogError, "nat lb-rule vip %s:%s delete failed\n", IP.String(), "lo")
+			} else {
+				tk.LogIt(tk.LogInfo, "nat lb-rule vip %s:%s deleted\n", IP.String(), "lo")
+			}
+		}
+	}
+
+	return nil
 }

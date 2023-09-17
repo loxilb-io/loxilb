@@ -18,17 +18,22 @@ package loxinet
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
-	opts "github.com/loxilb-io/loxilb/options"
-	tk "github.com/loxilb-io/loxilib"
+	"encoding/binary"
+	"errors"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"strconv"
 	"syscall"
 	"time"
+
+	opts "github.com/loxilb-io/loxilb/options"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 // IterIntf - interface implementation to iterate various loxinet
@@ -182,4 +187,101 @@ func HTTPSProber(urls string, cert tls.Certificate, certPool *x509.CertPool, res
 	}
 
 	return true
+}
+
+// IsIPHostAddr - Check if provided address is a local address
+func IsIPHostAddr(ipString string) bool {
+	// get list of available addresses
+	addr, err := net.InterfaceAddrs()
+	if err != nil {
+		return false
+	}
+
+	for _, addr := range addr {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			// check if IPv4 or IPv6 is not nil
+			if ipnet.IP.To4() != nil || ipnet.IP.To16 != nil {
+				if ipnet.IP.String() == ipString {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+// GratArpReq - sends a gratuitious arp reply given the DIP, SIP and interface name
+func GratArpReq(AdvIP net.IP, ifName string) (int, error) {
+	bcAddr := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
+	fd, err := syscall.Socket(syscall.AF_PACKET, syscall.SOCK_DGRAM, int(tk.Htons(syscall.ETH_P_ARP)))
+	if err != nil {
+		return -1, errors.New("af-packet-err")
+	}
+	defer syscall.Close(fd)
+
+	if err := syscall.BindToDevice(fd, ifName); err != nil {
+		return -1, errors.New("bind-err")
+	}
+
+	ifi, err := net.InterfaceByName(ifName)
+	if err != nil {
+		return -1, errors.New("intf-err")
+	}
+
+	ll := syscall.SockaddrLinklayer{
+		Protocol: tk.Htons(syscall.ETH_P_ARP),
+		Ifindex:  ifi.Index,
+		Pkttype:  0, // syscall.PACKET_HOST
+		Hatype:   1,
+		Halen:    6,
+	}
+
+	for i := 0; i < 8; i++ {
+		ll.Addr[i] = 0xff
+	}
+
+	buf := new(bytes.Buffer)
+
+	var sb = make([]byte, 2)
+	binary.BigEndian.PutUint16(sb, 1) // HwType = 1
+	buf.Write(sb)
+
+	binary.BigEndian.PutUint16(sb, 0x0800) // protoType
+	buf.Write(sb)
+
+	buf.Write([]byte{6}) // hwAddrLen
+	buf.Write([]byte{4}) // protoAddrLen
+
+	binary.BigEndian.PutUint16(sb, 0x2) // OpCode
+	buf.Write(sb)
+
+	buf.Write(ifi.HardwareAddr) // senderHwAddr
+	buf.Write(AdvIP.To4())      // senderProtoAddr
+
+	buf.Write(bcAddr)      // targetHwAddr
+	buf.Write(AdvIP.To4()) // targetProtoAddr
+
+	if err := syscall.Bind(fd, &ll); err != nil {
+		return -1, errors.New("bind-err")
+	}
+	if err := syscall.Sendto(fd, buf.Bytes(), 0, &ll); err != nil {
+		return -1, errors.New("send-err")
+	}
+
+	return 0, nil
+}
+
+// GratArpReq - sends a gratuitious arp reply given the DIP, SIP and interface name
+func GratArpReqWithCtx(ctx context.Context, rCh chan<- int, AdvIP net.IP, ifName string) (int, error) {
+	for {
+		select {
+		case <-ctx.Done():
+			return -1, ctx.Err()
+		default:
+			ret, _ := GratArpReq(AdvIP, ifName)
+			rCh <- ret
+			return 0, nil
+		}
+	}
 }
