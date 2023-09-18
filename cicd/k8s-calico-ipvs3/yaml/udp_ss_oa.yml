@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: udp-lb-oa-ss
+  labels:
+    app: udp-lb-oa-ss
+  annotations:
+    loxilb.io/liveness: "yes"
+    loxilb.io/lbmode: "onearm"
+spec:
+  externalTrafficPolicy: Local
+  loadBalancerClass: loxilb.io/loxilb
+  selector:
+    app: udp-lb-oa-ss
+  ports:
+  - port: 58003
+    protocol: UDP
+    targetPort: 33333
+    name: udp-ss
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: udp-ss
+spec:
+  selector:
+    matchLabels:
+      app: udp-lb-oa-ss
+  serviceName: "udp-lb-oa-ss"
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: udp-lb-oa-ss
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: udp-lb-oa-ss
+        image: ghcr.io/loxilb-io/udp-echo:latest
+        ports:
+        - containerPort: 33333
+          name: udp-ss

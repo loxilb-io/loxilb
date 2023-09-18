@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tcp-lb-oa-ss
+spec:
+  selector:
+    matchLabels:
+      run: tcp-lb-oa-ss
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        run: tcp-lb-oa-ss
+    spec:
+      containers:
+      - name: tcp-lb-oa-ss
+        image: ghcr.io/loxilb-io/nginx:stable
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: www
+          mountPath: /usr/share/nginx/html
+  volumeClaimTemplates:
+  - metadata:
+      name: www
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tcp-lb-oa-ss
+  annotations:
+    loxilb.io/liveness: "yes"
+    loxilb.io/lbmode: "onearm"
+spec:
+  externalTrafficPolicy: Local
+  loadBalancerClass: loxilb.io/loxilb
+  selector:
+    run: tcp-lb-oa-ss
+  ports:
+    - port: 65002
+      targetPort: 80
+  type: LoadBalancer
