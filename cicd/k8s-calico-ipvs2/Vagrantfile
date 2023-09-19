@@ -1,0 +1,83 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require "yaml"
+settings = YAML.load_file "yaml/settings.yaml"
+
+workers = settings["nodes"]["workers"]["count"]
+loxilbs = (ENV['LOXILBS'] || "2").to_i
+
+Vagrant.configure("2") do |config|
+
+  if Vagrant.has_plugin?("vagrant-vbguest")
+    config.vbguest.auto_update = false
+  end
+
+  (1..loxilbs).each do |node_number|
+    config.vm.define "llb#{node_number}" do |loxilb|
+      loxilb.vm.box = settings["software"]["loxilb"]["box"]["name"]
+      loxilb.vm.box_version = settings["software"]["loxilb"]["box"]["version"]
+      loxilb.vm.hostname = "llb#{node_number}"
+      ip = node_number + 251
+      loxilb.vm.network :private_network, ip: "192.168.80.#{ip}", :netmask => "255.255.255.0"
+      loxilb.vm.provision :shell, :path => "node_scripts/loxilb.sh"
+      loxilb.vm.provider :virtualbox do |vbox|
+        vbox.customize ["modifyvm", :id, "--memory", 6000]
+        vbox.customize ["modifyvm", :id, "--cpus", 4]
+        vbox.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+      end
+    end
+  end
+
+  config.vm.define "master" do |master|
+    master.vm.box = settings["software"]["cluster"]["box"]
+    master.vm.hostname = 'master'
+    master.vm.network :private_network, ip: settings["network"]["control_ip"], :netmask => "255.255.255.0"
+    master.vm.provision "shell",
+      env: {
+        "DNS_SERVERS" => settings["network"]["dns_servers"].join(" "),
+        "ENVIRONMENT" => settings["environment"],
+        "KUBERNETES_VERSION" => settings["software"]["kubernetes"],
+        "OS" => settings["software"]["os"]
+      },
+      path: "node_scripts/common.sh"
+    master.vm.provision "shell",
+      env: {
+        "CALICO_VERSION" => settings["software"]["calico"],
+        "CONTROL_IP" => settings["network"]["control_ip"],
+        "POD_CIDR" => settings["network"]["pod_cidr"],
+        "SERVICE_CIDR" => settings["network"]["service_cidr"]
+      },
+      path: "node_scripts/master.sh"
+
+    master.vm.provider :virtualbox do |vbox|
+        vbox.customize ["modifyvm", :id, "--memory", 4096]
+        vbox.customize ["modifyvm", :id, "--cpus", 2]
+        vbox.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+    end
+  end
+
+  (1..workers).each do |node_number|
+    config.vm.define "worker#{node_number}" do |worker|
+      worker.vm.box = settings["software"]["cluster"]["box"]
+      worker.vm.hostname = "worker#{node_number}"
+      ip = node_number + 200
+      worker.vm.network :private_network, ip: "192.168.80.#{ip}", :netmask => "255.255.255.0"
+      worker.vm.provision "shell",
+        env: {
+          "DNS_SERVERS" => settings["network"]["dns_servers"].join(" "),
+          "ENVIRONMENT" => settings["environment"],
+          "KUBERNETES_VERSION" => settings["software"]["kubernetes"],
+          "OS" => settings["software"]["os"]
+        },
+        path: "node_scripts/common.sh"
+      worker.vm.provision "shell", path: "node_scripts/worker.sh"
+
+      worker.vm.provider :virtualbox do |vbox|
+          vbox.customize ["modifyvm", :id, "--memory", 4096]
+          vbox.customize ["modifyvm", :id, "--cpus", 2]
+          vbox.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+      end
+    end
+  end
+end
