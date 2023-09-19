@@ -2312,7 +2312,7 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 			}
 		}
 
-	} else {
+	} else if ciState != "NOT_DEFINED" {
 		if IsIPHostAddr(IP.String()) {
 			if loxinlp.DelAddrNoHook(IP.String()+"/32", "lo") != 0 {
 				tk.LogIt(tk.LogError, "nat lb-rule vip %s:%s delete failed\n", IP.String(), "lo")
