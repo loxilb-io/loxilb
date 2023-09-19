@@ -200,7 +200,7 @@ func IsIPHostAddr(ipString string) bool {
 	for _, addr := range addr {
 		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 			// check if IPv4 or IPv6 is not nil
-			if ipnet.IP.To4() != nil || ipnet.IP.To16 != nil {
+			if ipnet.IP.To4() != nil || ipnet.IP.To16() != nil {
 				if ipnet.IP.String() == ipString {
 					return true
 				}
