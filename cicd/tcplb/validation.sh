@@ -7,7 +7,7 @@ $hexec l3ep3 node ../common/tcp_server.js server3 &
 
 sleep 5
 code=0
-servIP=( "10.10.10.254" "20.20.20.1" )
+servIP=( "10.10.10.254" "20.20.20.1" "10.10.10.3" )
 servArr=( "server1" "server2" "server3" )
 ep=( "31.31.31.1" "32.32.32.1" "33.33.33.1" )
 j=0
@@ -34,7 +34,7 @@ do
     sleep 1
 done
 
-for k in {0..1}
+for k in {0..2}
 do
 echo "Testing Service IP: ${servIP[k]}"
 lcode=0
