@@ -1561,7 +1561,7 @@ func NlpInit(bgpPeerMode bool, blackList string) *NlH {
 	go NlpGet(checkInit)
 	done := <-checkInit
 
-	err := nlp.LinkSubscribe(nNl.FromLUCh, nNl.FromAUDone)
+	err := nlp.LinkSubscribe(nNl.FromLUCh, nNl.FromLUDone)
 	if err != nil {
 		tk.LogIt(tk.LogError, "%v", err)
 	} else {
