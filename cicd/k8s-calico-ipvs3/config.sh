@@ -32,6 +32,7 @@ done
 
 sudo sysctl net.ipv4.conf.vboxnet1.arp_accept=1
 
-#Create fullnat Service
-vagrant ssh master -c 'kubectl apply -f /vagrant/yaml/tcp_fullnat.yml' 2> /dev/null
-vagrant ssh master -c 'kubectl apply -f /vagrant/yaml/udp_fullnat.yml' 2> /dev/null
+#Create onearm Service
+vagrant ssh master -c 'kubectl apply -f /vagrant/yaml/tcp_onearm.yml' 2> /dev/null
+vagrant ssh master -c 'kubectl apply -f /vagrant/yaml/udp_onearm.yml' 2> /dev/null
+vagrant ssh master -c 'kubectl apply -f /vagrant/yaml/sctp_onearm.yml' 2> /dev/null

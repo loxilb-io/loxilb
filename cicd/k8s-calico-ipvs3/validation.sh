@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo k8s-calico-ipvs2
+echo k8s-calico-ipvs3
 
 if [ "$1" ]; then
   KUBECONFIG="$1"
@@ -11,7 +11,7 @@ IFS=' '
 
 for((i=0; i<120; i++))
 do
-  extLB=$(vagrant ssh master -c 'kubectl get svc' 2> /dev/null | grep "tcp-lb-fullnat")
+  extLB=$(vagrant ssh master -c 'kubectl get svc' 2> /dev/null | grep "tcp-lb-onearm")
   read -a strarr <<< "$extLB"
   len=${#strarr[*]}
   if [[ $((len)) -lt 6 ]]; then
@@ -28,12 +28,10 @@ do
 done
 
 ## Any routing updates  ??
-sleep 30
-
-vagrant ssh master -c 'kubectl cp /vagrant/index1.html tcp-ss-0:/usr/share/nginx/html/index.html'
-vagrant ssh master -c 'kubectl cp /vagrant/index2.html tcp-ss-1:/usr/share/nginx/html/index.html'
+#sleep 30
 
 echo Service IP : $extIP
+echo $extIP > extIP
 echo -e "\nEnd Points List"
 echo "******************************************************************************"
 vagrant ssh master -c 'kubectl get endpoints -A' 2> /dev/null
@@ -56,68 +54,6 @@ vagrant ssh llb1 -c 'sudo docker exec -it loxilb loxicmd get ep -o wide' 2> /dev
 echo "******************************************************************************"
 echo -e "\nTEST RESULTS"
 echo "******************************************************************************"
-mode=( "onearm" "fullnat" "onearm-ss" "fullnat-ss")
-tcp_port=( 56002 57002 58002 59002)
-udp_port=( 56003 57003 58003 59003)
-sctp_port=( 56004 57004 58004 59004)
 
-code=0
-for ((i=0;i<=1;i++)); do
-out=$(curl -s --connect-timeout 10 http://$extIP:${tcp_port[i]})
-if [[ ${out} == *"Welcome to nginx"* ]]; then
-  echo -e "K8s-calico-ipvs2 TCP\t(${mode[i]})\t[OK]"
-else
-  echo -e "K8s-calico-ipvs2 TCP\t(${mode[i]})\t[FAILED]"
-  ## Dump some debug info
-  echo "llb1 lb-info"
-  vagrant ssh loxilb -c 'sudo docker exec -it llb1 loxicmd get lb -o wide' 2> /dev/null
-  echo "llb1 route-info"
-  vagrant ssh loxilb -c 'sudo docker exec -it llb1 ip route' 2> /dev/null
-  code=1
-fi
-
-out=$(timeout 5 ../common/udp_client $extIP ${udp_port[i]})
-if [[ ${out} == *"Client"* ]]; then
-  echo -e "K8s-calico-ipvs2 UDP\t(${mode[i]})\t[OK]"
-else
-  echo -e "K8s-calico-ipvs2 UDP\t(${mode[i]})\t[FAILED]"
-  ## Dump some debug info
-  echo "llb1 lb-info"
-  vagrant ssh loxilb -c 'sudo docker exec -it llb1 loxicmd get lb -o wide' 2> /dev/null
-  echo "llb1 route-info"
-  vagrant ssh loxilb -c 'sudo docker exec -it llb1 ip route' 2> /dev/null
-  code=1
-fi
-
-done
-
-for ((i=2;i<=3;i++)); do
-out=$(curl -s --connect-timeout 10 http://$extIP:${tcp_port[i]})
-if [[ ${out} == *"Welcome to nginx"* ]]; then
-  echo -e "K8s-calico-ipvs2 TCP\t(${mode[i]})\t[OK]"
-else
-  echo -e "K8s-calico-ipvs2 TCP\t(${mode[i]})\t[FAILED]"
-  ## Dump some debug info
-  echo "llb1 lb-info"
-  vagrant ssh loxilb -c 'sudo docker exec -it llb1 loxicmd get lb -o wide' 2> /dev/null
-  echo "llb1 route-info"
-  vagrant ssh loxilb -c 'sudo docker exec -it llb1 ip route' 2> /dev/null
-  code=1
-fi
-
-out=$(timeout 5 ../common/udp_client $extIP ${udp_port[i]})
-if [[ ${out} == *"Client"* ]]; then
-  echo -e "K8s-calico-ipvs2 UDP\t(${mode[i]})\t[OK]"
-else
-  echo -e "K8s-calico-ipvs2 UDP\t(${mode[i]})\t[FAILED]"
-  ## Dump some debug info
-  echo "llb1 lb-info"
-  vagrant ssh loxilb -c 'sudo docker exec -it llb1 loxicmd get lb -o wide' 2> /dev/null
-  echo "llb1 route-info"
-  vagrant ssh loxilb -c 'sudo docker exec -it llb1 ip route' 2> /dev/null
-  code=1
-fi
-
-done
-
-exit $code
+vagrant ssh host -c 'sudo /vagrant/host_validation.sh' 2> /dev/null
+sudo rm extIP
