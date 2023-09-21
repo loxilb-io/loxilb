@@ -1535,7 +1535,6 @@ func NlpInit(bgpPeerMode bool, blackList string) *NlH {
 
 	if bgpPeerMode {
 		nNl.FromRUCh = make(chan nlp.RouteUpdate, cmn.RuWorkQLen)
-		nNl.FromRUCh = make(chan nlp.RouteUpdate, cmn.RuWorkQLen)
 		err := nlp.RouteSubscribe(nNl.FromRUCh, nNl.FromRUDone)
 		if err != nil {
 			fmt.Println(err)
