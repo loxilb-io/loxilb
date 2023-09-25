@@ -1535,7 +1535,6 @@ func NlpInit(bgpPeerMode bool, blackList string) *NlH {
 
 	if bgpPeerMode {
 		nNl.FromRUCh = make(chan nlp.RouteUpdate, cmn.RuWorkQLen)
-		nNl.FromRUCh = make(chan nlp.RouteUpdate, cmn.RuWorkQLen)
 		err := nlp.RouteSubscribe(nNl.FromRUCh, nNl.FromRUDone)
 		if err != nil {
 			fmt.Println(err)
@@ -1561,7 +1560,7 @@ func NlpInit(bgpPeerMode bool, blackList string) *NlH {
 	go NlpGet(checkInit)
 	done := <-checkInit
 
-	err := nlp.LinkSubscribe(nNl.FromLUCh, nNl.FromAUDone)
+	err := nlp.LinkSubscribe(nNl.FromLUCh, nNl.FromLUDone)
 	if err != nil {
 		tk.LogIt(tk.LogError, "%v", err)
 	} else {

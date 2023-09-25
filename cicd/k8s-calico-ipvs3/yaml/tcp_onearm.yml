@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tcp-lb-onearm
+  annotations:
+    loxilb.io/liveness: "yes"
+    loxilb.io/lbmode: "onearm"
+spec:
+  externalTrafficPolicy: Local
+  loadBalancerClass: loxilb.io/loxilb
+  selector:
+    what: tcp-onearm-test
+  ports:
+    - port: 56002
+      targetPort: 80 
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tcp-onearm-test
+  labels:
+    what: tcp-onearm-test
+spec:
+  containers:
+    - name: tcp-onearm-test
+      image: ghcr.io/loxilb-io/nginx:stable
+      ports:
+        - containerPort: 80
