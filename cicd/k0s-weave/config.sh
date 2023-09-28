@@ -175,6 +175,15 @@ else
   sudo k0s kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
 
   sleep 30
+
+  if [ ! -f /opt/cni/bin/loopback ]; then
+    git clone https://github.com/containernetworking/plugins.git
+    cd plugins
+    ./build_linux.sh
+    sudo cp -f bin/* /opt/cni/bin/
+	  cd -
+  fi
+
   # Check kubectl works
   sudo k0s kubectl get pods -A
 
