@@ -181,7 +181,7 @@ else
     cd plugins
     ./build_linux.sh
     sudo cp -f bin/* /opt/cni/bin/
-	  cd -
+    cd -
   fi
 
   # Check kubectl works
