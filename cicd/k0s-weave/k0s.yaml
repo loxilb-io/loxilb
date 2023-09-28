@@ -10,7 +10,6 @@ spec:
     port: 6443
     sans:
     - 192.169.20.59
-    tunneledNetworkingMode: false
   controllerManager: {}
   extensions:
     helm:

@@ -39,6 +39,8 @@ delete_docker_host ep3
 sudo ip link del esysllb1
 sudo ip link del esysllb2
 
+./rmweave.sh
+
 # If k3s setup exists, remove it
 if [[ -f "/usr/local/bin/k0s" ]]; then
   sudo k0s stop
