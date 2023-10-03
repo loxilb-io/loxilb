@@ -28,9 +28,9 @@ jobs:
         run: |
          echo "KUBECONFIG=/var/lib/k0s/pki/admin.conf" >> $GITHUB_ENV
       - name: Setup lo
-        run: sudo ip addr add 192.169.20.59/32 dev lo
+        run: sudo ip addr add 192.169.20.59/32 dev lo || true
       - name: Setup Packages
-        run: sudo apt-get -y install lksctp-tools
+        run: sudo apt-get -y install lksctp-tools || true
       - name: Check container plugins
         run: |
              sudo mkdir -p /opt/cni/bin/
@@ -68,3 +68,4 @@ jobs:
           cd cicd/k0s-weave/ || true
           ./rmconfig.sh
           cd -
+          sudo ip addr del 192.169.20.59/32 dev lo || true
