@@ -6,7 +6,7 @@ source ../common.sh
 function wait_k0s_cluster_ready {
     Res=$(sudo k0s kubectl get pods -A |
     while IFS= read -r line; do
-        if [[ "$line" != *"Running"* && "$line" != *"READY"* && "$line" != *"Completed"* ]]; then
+        if [[ "$line" != *"Running"* && "$line" != *"READY"* ]]; then
             echo "not ready"
             return
         fi
@@ -220,10 +220,10 @@ sudo k0s kubectl apply -f udp-svc-lb.yml
 sleep 15
 sudo k0s kubectl apply -f sctp-svc-lb.yml
 sleep 15 
-#sudo k0s kubectl apply -f udp-svc-lb2.yml
-#sleep 15
-#sudo k0s kubectl apply -f sctp-svc-lb2.yml
-#sleep 30
+sudo k0s kubectl apply -f udp-svc-lb2.yml
+sleep 15
+sudo k0s kubectl apply -f sctp-svc-lb2.yml
+sleep 30
 
 # External LB service must be created by now
 sudo k0s kubectl get svc

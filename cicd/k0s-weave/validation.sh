@@ -85,10 +85,6 @@ else
   code=1
 fi
 
-exit
-
-## Currently not running the following tests
-
 out=$($hexec user timeout 10 ../common/sctp_client 1.1.1.1 0 $extIP 55005)
 if [[ ${out} == *"server1"* ]]; then
   echo "cluster-k0s (sctp2) [OK]"
