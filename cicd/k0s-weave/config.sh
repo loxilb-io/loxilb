@@ -30,6 +30,8 @@ function wait_k0s_cluster_ready_full {
     i=$(( $i + 1 ))
     if [[ $i -ge 40 ]]; then
         echo "Cluster is not ready.Giving up"
+        sudo k0s kubectl get svc
+        sudo k0s kubectl get pods -A
         exit 1
     fi
     echo "Cluster is not ready...."
@@ -221,7 +223,7 @@ sleep 15
 sudo k0s kubectl apply -f udp-svc-lb2.yml
 sleep 15
 sudo k0s kubectl apply -f sctp-svc-lb2.yml
-sleep 30 
+sleep 30
 
 # External LB service must be created by now
 sudo k0s kubectl get svc

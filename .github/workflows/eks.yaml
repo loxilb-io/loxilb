@@ -28,18 +28,12 @@ jobs:
       run:
         shell: bash
         working-directory: ./cicd/eks      
-      
+    if: github.repository == 'loxilb-io/loxilb' 
+          &&  github.event.inputs.tagName == ''
     steps:
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       uses: actions/checkout@v3
-
-    # Run this only on main repo
-    - name: Check Repo owner
-      if: github.repository != 'loxilb-io/loxilb'
-      run: |
-          gh run cancel ${{ github.run_id }}
-          gh run watch ${{ github.run_id }}
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
