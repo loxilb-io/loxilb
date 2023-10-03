@@ -31,14 +31,6 @@ jobs:
         run: sudo ip addr add 192.169.20.59/32 dev lo || true
       - name: Setup Packages
         run: sudo apt-get -y install lksctp-tools || true
-      - name: Check container plugins
-        run: |
-             sudo mkdir -p /opt/cni/bin/
-             git clone https://github.com/containernetworking/plugins.git
-             cd plugins
-             ./build_linux.sh
-             sudo cp -f bin/* /opt/cni/bin/
-             cd -
       - name: Install k0s
         run: sudo curl -sSLf https://get.k0s.sh | sudo sh
       - name: Enable k0s worker
