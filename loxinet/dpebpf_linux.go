@@ -641,10 +641,11 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
 	key.tunnel_id = C.uint(w.TunID)
 
 	if w.Work == DpCreate {
-		dat := new(sActValue)
+		dat := new(tMacDat)
+		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_tmac_tact)
 		if w.TunID != 0 {
 			if w.NhNum == 0 {
-				dat.act_type = C.DP_SET_RM_VXLAN
+				dat.ca.act_type = C.DP_SET_RM_VXLAN
 				rtNhAct := (*rtNhAct)(getPtrOffset(unsafe.Pointer(dat),
 					C.sizeof_struct_dp_cmn_act))
 				C.memset(unsafe.Pointer(rtNhAct), 0, C.sizeof_struct_dp_rt_nh_act)
@@ -655,7 +656,7 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
 				/* No need for tunnel ID in case of Access side */
 				key.tunnel_id = 0
 				key.tun_type = 0
-				dat.act_type = C.DP_SET_RT_TUN_NH
+				dat.ca.act_type = C.DP_SET_RT_TUN_NH
 				rtNhAct := (*rtNhAct)(getPtrOffset(unsafe.Pointer(dat),
 					C.sizeof_struct_dp_cmn_act))
 				C.memset(unsafe.Pointer(rtNhAct), 0, C.sizeof_struct_dp_rt_nh_act)
@@ -665,7 +666,7 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
 				rtNhAct.tid = C.uint(tk.Htonl(tid))
 			}
 		} else {
-			dat.act_type = C.DP_SET_L3_EN
+			dat.ca.act_type = C.DP_SET_L3_EN
 		}
 
 		ret := C.llb_add_map_elem(C.LL_DP_TMAC_MAP,
