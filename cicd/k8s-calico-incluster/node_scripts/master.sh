@@ -16,6 +16,8 @@ mkdir -p "$HOME"/.kube
 sudo cp -i /etc/kubernetes/admin.conf "$HOME"/.kube/config
 sudo chown "$(id -u)":"$(id -g)" "$HOME"/.kube/config
 
+curl -sfL https://github.com/loxilb-io/loxilb-ebpf/raw/main/kprobe/install.sh | sh -
+
 # Save Configs to shared /Vagrant location
 
 # For Vagrant re-runs, check if there is existing configs in the location and delete it for saving new configuration.
