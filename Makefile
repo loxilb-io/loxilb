@@ -31,14 +31,14 @@ docker-cp: build
 	docker cp /opt/loxilb/llb_ebpf_emain.o $(loxilbid):/opt/loxilb/llb_ebpf_emain.o
 	docker cp /opt/loxilb/llb_xdp_main.o $(loxilbid):/opt/loxilb/llb_xdp_main.o
 	docker cp loxilb-ebpf/kernel/loxilb_dp_debug  $(loxilbid):/usr/local/sbin/
-	docker cp loxilb-ebpf/libbpf/src/libbpf.so.0.4.0 $(loxilbid)::/usr/lib64/
+	docker cp loxilb-ebpf/libbpf/src/libbpf.so.0.4.0 $(loxilbid):/usr/lib64/
 
 docker-cp-ebpf: build
 	docker cp /opt/loxilb/llb_ebpf_main.o $(loxilbid):/opt/loxilb/llb_ebpf_main.o
 	docker cp /opt/loxilb/llb_ebpf_emain.o $(loxilbid):/opt/loxilb/llb_ebpf_emain.o
 	docker cp /opt/loxilb/llb_xdp_main.o $(loxilbid):/opt/loxilb/llb_xdp_main.o
 	docker cp loxilb-ebpf/kernel/loxilb_dp_debug  $(loxilbid):/usr/local/sbin/
-	docker cp loxilb-ebpf/libbpf/src/libbpf.so.0.4.0 $(loxilbid)::/usr/lib64/
+	docker cp loxilb-ebpf/libbpf/src/libbpf.so.0.4.0 $(loxilbid):/usr/lib64/
 
 docker-run:
 	@docker stop $(dock) 2>&1 >> /dev/null || true
