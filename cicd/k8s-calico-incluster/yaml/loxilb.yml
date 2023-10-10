@@ -28,6 +28,7 @@ spec:
       containers:
       - name: loxilb-app
         image: "ghcr.io/loxilb-io/loxilb:latest"
+        imagePullPolicy: Always
         command: [ "/root/loxilb-io/loxilb/loxilb", "--bgp", "--egr-hooks", "--blacklist=cali.|tunl.|vxlan[.]calico|veth." ]
         ports:
         - containerPort: 11111
