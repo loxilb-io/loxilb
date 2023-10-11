@@ -1,0 +1,25 @@
+name: K3s-Flannel-InCluster-Sanity-CI
+on:
+ # schedule:
+ # Runs "At 11:00 UTC every day-of-week"
+ # - cron: '0 11 * * *'
+ workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'k3s-flannel-incluster'
+jobs:
+  build:
+    name: k3s-flannel-incluster-sanity
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - run: |
+         cd cicd/k3s-flannel-incluster
+         ./config.sh
+         ./validation.sh
+         ./rmconfig.sh
+         cd -
