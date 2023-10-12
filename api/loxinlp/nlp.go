@@ -29,10 +29,11 @@ import (
 	"syscall"
 	"time"
 
-	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 	nlp "github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
+
+	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 const (
@@ -963,12 +964,6 @@ func AddNeigh(neigh nlp.Neigh, link nlp.Link) int {
 			tk.LogIt(tk.LogInfo, "[NLP] NH %v mac %v dev %v added\n", neigh.IP.String(), mac, name)
 		} */
 	} else if neigh.Family == unix.AF_BRIDGE {
-
-		if len(neigh.HardwareAddr) == 0 {
-			return -1
-		}
-		copy(mac[:], neigh.HardwareAddr[:6])
-
 		if neigh.Vlan == 1 {
 			/*FDB comes with vlan 1 also */
 			return 0
