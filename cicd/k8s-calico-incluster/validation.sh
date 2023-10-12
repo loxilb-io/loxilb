@@ -60,13 +60,33 @@ else
   code=1
 fi
 
-out=$(vagrant ssh host -c "timeout 5 /vagrant/tools/udp_client $extIP ${udp_port[i]}")
+out=$(vagrant ssh host -c "timeout 5 ./udp_client $extIP ${udp_port[i]}")
 if [[ ${out} == *"Client"* ]]; then
   echo -e "K8s-calico-incluster UDP\t(${mode[i]})\t[OK]"
 else
   echo -e "K8s-calico-incluster UDP\t(${mode[i]})\t[FAILED]"
   code=1
 fi
+
+out=$(vagrant ssh host -c "socat -T10 - SCTP:$extIP:${sctp_port[i]},bind=192.168.90.9")
+if [[ ${out} == *"server"* ]]; then
+  echo -e "K8s-calico-incluster SCTP\t(${mode[i]})\t[OK]"
+else
+  echo -e "K8s-calico-incluster SCTP\t(${mode[i]})\t[FAILED]"
+  code=1
+fi
 done
+
+mode=( "default" )
+sctp_port=( 55004 )
+code=0
+
+out=$(vagrant ssh host -c "socat -T10 - SCTP:$extIP:${sctp_port[0]},bind=192.168.90.9")
+if [[ ${out} == *"server"* ]]; then
+  echo -e "K8s-calico-incluster SCTP\t(${mode[0]})\t[OK]"
+else
+  echo -e "K8s-calico-incluster SCTP\t(${mode[0]})\t[FAILED]"
+  code=1
+fi
 
 exit $code
