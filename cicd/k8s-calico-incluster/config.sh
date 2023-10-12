@@ -34,3 +34,4 @@ done
 vagrant ssh master -c 'kubectl apply -f /vagrant/yaml/tcp_fullnat.yml' 2> /dev/null
 vagrant ssh master -c 'kubectl apply -f /vagrant/yaml/udp_fullnat.yml' 2> /dev/null
 vagrant ssh master -c 'kubectl apply -f /vagrant/yaml/sctp_fullnat.yml' 2> /dev/null
+vagrant ssh master -c 'kubectl apply -f /vagrant/yaml/sctp.yml' 2> /dev/null

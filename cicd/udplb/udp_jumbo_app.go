@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -65,8 +64,10 @@ func main() {
 		//fmt.Print("-> ", string(buffer[:]))
 		count++
 		if count == 1 && !bytes.Equal(abuf, fbuffer) {
-			panic(errors.New("Fail match"))
+			fmt.Println("unexpected msg %v", abuf)
+			continue
 		}
+
 		_, err = connection.WriteToUDP(abuf, addr)
 		if err != nil {
 			fmt.Println(err)
@@ -126,9 +127,12 @@ func UDPClient() {
 		os.Exit(1)
 	}
 
-	// Send a message to the server
-	fbuffer = []byte("hello")
-	buffer = []byte("hello")
+	// Send another message to the server
+	f, err = os.Open("./msg_short.txt")
+	Check(err)
+
+	_, err = f.Read(fbuffer)
+	Check(err)
 
 	_, err = conn.Write(fbuffer)
 	if err != nil {

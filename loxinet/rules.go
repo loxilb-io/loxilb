@@ -203,6 +203,7 @@ type epHost struct {
 
 type ruleNatEp struct {
 	xIP        net.IP
+	rIP        net.IP
 	xPort      uint16
 	weight     uint8
 	inActTries int
@@ -254,19 +255,20 @@ type ruleProbe struct {
 }
 
 type ruleEnt struct {
-	zone    *Zone
-	ruleNum uint64
-	sync    DpStatusT
-	tuples  ruleTuples
-	ci      string
-	hChk    ruleProbe
-	managed bool
-	bgp     bool
-	sT      time.Time
-	iTo     uint32
-	act     ruleAct
-	secIP   []ruleNatSIP
-	stat    ruleStat
+	zone     *Zone
+	ruleNum  uint64
+	sync     DpStatusT
+	tuples   ruleTuples
+	ci       string
+	hChk     ruleProbe
+	managed  bool
+	bgp      bool
+	addrRslv bool
+	sT       time.Time
+	iTo      uint32
+	act      ruleAct
+	secIP    []ruleNatSIP
+	stat     ruleStat
 }
 
 type ruleTable struct {
@@ -914,6 +916,70 @@ func (R *RuleH) GetNatLbRuleSecIPs(serv cmn.LbServiceArg) []string {
 	return ips
 }
 
+func (R *RuleH) electEPSrc(r *ruleEnt) bool {
+	var sip net.IP
+	var e int
+	chg := false
+	mode := "default"
+	addrRslv := false
+
+	switch na := r.act.action.(type) {
+	case *ruleNatActs:
+		{
+			for idx := range na.endPoints {
+				np := &na.endPoints[idx]
+				sip = np.rIP
+				if na.mode == cmn.LBModeOneArm {
+					mode = "onearm"
+					e, sip, _ = R.zone.L3.IfaSelectAny(np.xIP, false)
+					if e != 0 {
+						tk.LogIt(tk.LogDebug, "Failed to find suitable source for %s\n", np.xIP.String())
+						addrRslv = true
+					}
+					if np.xIP.Equal(sip) {
+						sip = net.IPv4(0, 0, 0, 0)
+					}
+				} else if na.mode == cmn.LBModeFullNAT {
+					mode = "fullnat"
+					if !mh.has.IsCIKAMode() {
+						sip = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
+						if np.xIP.Equal(sip) {
+							sip = net.IPv4(0, 0, 0, 0)
+						}
+					} else {
+						vip, err := mh.has.CIVipGet(r.ci)
+						if err == nil {
+							tk.LogIt(tk.LogDebug, "vip for %s: %s\n", r.ci, vip.String())
+							sip = vip
+						} else {
+							tk.LogIt(tk.LogError, "vip for %s not found \n", r.ci)
+							addrRslv = true
+						}
+					}
+				} else {
+					serviceIP := r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
+					if tk.IsNetIPv6(serviceIP.String()) && tk.IsNetIPv4(np.xIP.String()) {
+						e, sip, _ = r.zone.L3.IfaSelectAny(np.xIP, false)
+						if e != 0 {
+							addrRslv = true
+						}
+					} else {
+						sip = net.IPv4(0, 0, 0, 0)
+					}
+				}
+
+				if !np.rIP.Equal(sip) {
+					np.rIP = sip
+					chg = true
+					tk.LogIt(tk.LogDebug, "%s:suitable source for %s: %s\n", mode, np.xIP.String(), np.rIP.String())
+				}
+			}
+		}
+	}
+	r.addrRslv = addrRslv
+	return chg
+}
+
 func (R *RuleH) syncEPHostState2Rule(rule *ruleEnt, checkNow bool) bool {
 	var sType string
 	rChg := false
@@ -1073,6 +1139,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 
 	for _, k := range servEndPoints {
 		pNetAddr := net.ParseIP(k.EpIP)
+		xNetAddr := net.IPv4(0, 0, 0, 0)
 		if pNetAddr == nil {
 			return RuleUnknownEpErr, errors.New("malformed-lbep error")
 		}
@@ -1086,7 +1153,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		if natActs.mode == cmn.LBModeDSR && k.EpPort != serv.ServPort {
 			return RuleUnknownServiceErr, errors.New("malformed-service dsr-port error")
 		}
-		ep := ruleNatEp{pNetAddr, k.EpPort, k.Weight, 0, false, false, false}
+		ep := ruleNatEp{pNetAddr, xNetAddr, k.EpPort, k.Weight, 0, false, false, false}
 		natActs.endPoints = append(natActs.endPoints, ep)
 	}
 
@@ -1169,6 +1236,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		// eRule.managed = serv.Managed
 
 		R.modNatEpHost(eRule, eEps, true, activateProbe)
+		R.electEPSrc(eRule)
 
 		eRule.sT = time.Now()
 		eRule.iTo = serv.InactiveTimeout
@@ -1208,6 +1276,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	r.ci = cmn.CIDefault
 
 	R.modNatEpHost(r, natActs.endPoints, true, activateProbe)
+	R.electEPSrc(r)
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
@@ -1906,10 +1975,12 @@ func epTicker(R *RuleH, helper int) {
 // 1. Syncs rule statistics counts
 // 2. Check health of lb-rule end-points
 func (R *RuleH) RulesSync() {
+	rChg := false
 	for _, rule := range R.tables[RtLB].eMap {
 		ruleKeys := rule.tuples.String()
 		ruleActs := rule.act.String()
-		if rule.sync != 0 {
+		rChg = R.electEPSrc(rule)
+		if rule.sync != 0 || rChg {
 			rule.DP(DpCreate)
 		}
 		rule.DP(DpStatsGet)
@@ -1921,7 +1992,7 @@ func (R *RuleH) RulesSync() {
 			continue
 		}
 
-		rChg := R.syncEPHostState2Rule(rule, false)
+		rChg = R.syncEPHostState2Rule(rule, false)
 		if rChg {
 			tk.LogIt(tk.LogDebug, "nat lb-Rule updated %d:%s,%s\n", rule.ruleNum, ruleKeys, ruleActs)
 			rule.DP(DpCreate)
@@ -2010,6 +2081,10 @@ func (R *RuleH) RuleDestructAll() {
 // Nat2DP - Sync state of nat-rule entity to data-path
 func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 
+	if r.addrRslv {
+		return -1
+	}
+
 	nWork := new(NatDpWorkQ)
 
 	nWork.Work = work
@@ -2073,6 +2148,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 				}
 				for x := 0; x < sw && j < MaxNatEndPoints; x++ {
 					neps[j].xIP = oEp.xIP
+					neps[j].rIP = oEp.rIP
 					neps[j].xPort = oEp.xPort
 					neps[j].inActive = oEp.inActive
 					neps[j].weight = oEp.weight
@@ -2092,6 +2168,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 					idx := small[v%k]
 					oEp := &at.endPoints[idx]
 					neps[j].xIP = oEp.xIP
+					neps[j].rIP = oEp.rIP
 					neps[j].xPort = oEp.xPort
 					neps[j].inActive = oEp.inActive
 					neps[j].weight = oEp.weight
@@ -2103,6 +2180,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 				var ep NatEP
 
 				ep.XIP = e.xIP
+				ep.RIP = e.rIP
 				ep.XPort = e.xPort
 				ep.Weight = e.weight
 				if e.inActive || e.noService {
@@ -2115,6 +2193,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 				var ep NatEP
 
 				ep.XIP = k.xIP
+				ep.RIP = k.rIP
 				ep.XPort = k.xPort
 				ep.Weight = k.weight
 				if k.inActive || k.noService {
@@ -2127,51 +2206,6 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 		break
 	default:
 		return -1
-	}
-
-	if nWork.NatType == DpFullNat {
-		for idx := range nWork.endPoints {
-			ep := &nWork.endPoints[idx]
-			if mode == cmn.LBModeOneArm {
-				e, sip, _ := r.zone.L3.IfaSelectAny(ep.XIP, false)
-				if e != 0 {
-					tk.LogIt(tk.LogDebug, "Failed to find suitable source for %s\n", ep.XIP.String())
-					r.sync = DpCreateErr
-					return -1
-				}
-
-				ep.RIP = sip
-			} else {
-				if !mh.has.IsCIKAMode() {
-					ep.RIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
-				} else {
-					vip, err := mh.has.CIVipGet(r.ci)
-					if err == nil {
-						tk.LogIt(tk.LogDebug, "vip for %s: %s\n", r.ci, vip.String())
-						ep.RIP = vip
-					} else {
-						tk.LogIt(tk.LogError, "[DP] vip for %s not found \n", r.ci)
-						r.sync = DpCreateErr
-						return -1
-					}
-				}
-				tk.LogIt(tk.LogDebug, "suitable source for %s: %s\n", ep.XIP.String(), ep.RIP.String())
-			}
-		}
-	} else {
-		for idx := range nWork.endPoints {
-			ep := &nWork.endPoints[idx]
-			if tk.IsNetIPv6(nWork.ServiceIP.String()) && tk.IsNetIPv4(ep.XIP.String()) {
-				e, sip, _ := r.zone.L3.IfaSelectAny(ep.XIP, false)
-				if e != 0 {
-					r.sync = DpCreateErr
-					return -1
-				}
-				ep.RIP = sip
-			} else {
-				ep.RIP = net.IPv4(0, 0, 0, 0)
-			}
-		}
 	}
 
 	mh.dp.ToDpCh <- nWork

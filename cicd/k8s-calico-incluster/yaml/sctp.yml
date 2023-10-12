@@ -3,7 +3,6 @@ kind: Service
 metadata:
   name: sctp-lb-default
   annotations:
-   loxilb.io/liveness: "yes"
    loxilb.io/lbmode: "default"
 spec:
   loadBalancerClass: loxilb.io/loxilb
@@ -23,6 +22,16 @@ metadata:
   labels:
     what: sctp-default-test
 spec:
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: Exists
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: "node-role.kubernetes.io/control-plane"
+            operator: Exists
   containers:
     - name: sctp-default-test
       image: ghcr.io/loxilb-io/alpine-socat:latest
