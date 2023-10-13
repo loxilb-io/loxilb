@@ -9,4 +9,5 @@ sudo kubectl apply -f /vagrant/loxilb-peer.yml
 sudo kubectl apply -f /vagrant/nginx.yml
 sudo kubectl apply -f /vagrant/udp.yml
 sudo kubectl apply -f /vagrant/sctp.yml
+sudo kubectl apply -f /vagrant/sctp_default.yml
 /vagrant/wait_ready.sh
