@@ -220,7 +220,7 @@ func (gbh *GoBgpH) syncRoute(p *goBgpRouteInfo, showIdentifier bgp.BGPAddPathMod
 		}
 
 		tk.LogIt(tk.LogDebug, "[GoBGP] ip route add %s via %s\n", route.Dst.String(), route.Gw.String())
-		if err := nlp.RouteAdd(route); err != nil {
+		if err := nlp.RouteReplace(route); err != nil {
 			tk.LogIt(tk.LogError, "[GoBGP] failed to ip route add. err: %s\n", err.Error())
 			return err
 		}
@@ -232,6 +232,9 @@ func (gbh *GoBgpH) syncRoute(p *goBgpRouteInfo, showIdentifier bgp.BGPAddPathMod
 func (gbh *GoBgpH) processRoute(pathList []*api.Path) {
 
 	for _, p := range pathList {
+		if !p.Best || p.IsNexthopInvalid {
+			continue
+		}
 		// NLRI have destination CIDR info
 		nlri, err := apiutil.GetNativeNlri(p)
 		if err != nil {
@@ -623,7 +626,7 @@ func (gbh *GoBgpH) AddCurrentBgpRoutesToIPRoute() error {
 		var nlpRoute *nlp.Route
 		var nexthopIP net.IP
 		for _, p := range r.Paths {
-			if !p.Best {
+			if !p.Best || p.IsNexthopInvalid {
 				continue
 			}
 			attrs, err := apiutil.GetNativePathAttributes(p)
@@ -652,7 +655,7 @@ func (gbh *GoBgpH) AddCurrentBgpRoutesToIPRoute() error {
 			continue
 		}
 		tk.LogIt(tk.LogDebug, "[GoBGP] ip route add %s via %s\n", dstIPN.String(), nlpRoute.Gw.String())
-		nlp.RouteAdd(nlpRoute)
+		nlp.RouteReplace(nlpRoute)
 	}
 
 	return nil
