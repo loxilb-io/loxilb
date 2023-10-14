@@ -80,6 +80,8 @@ type goCI struct {
 // GoBgpH - context container
 type GoBgpH struct {
 	eventCh chan goBgpEvent
+	ticker  *time.Ticker
+	tDone   chan bool
 	host    string
 	conn    *grpc.ClientConn
 	client  api.GobgpApiClient
@@ -193,10 +195,18 @@ func (gbh *GoBgpH) syncRoute(p *goBgpRouteInfo, showIdentifier bgp.BGPAddPathMod
 		return nil
 	}
 
-	_, dstIPN, err := net.ParseCIDR(p.nlri.String())
+	dstIP, dstIPN, err := net.ParseCIDR(p.nlri.String())
 	if err != nil {
 		return err
 	}
+
+	mh.mtx.Lock()
+	ev, _, _ := mh.zr.L3.IfaSelectAny(dstIP, false)
+	if ev == 0 {
+		mh.mtx.Unlock()
+		return nil
+	}
+	mh.mtx.Unlock()
 
 	// NextHop
 	nexthop := gbh.getNextHopFromPathAttributes(p.attrs)
@@ -419,6 +429,9 @@ func GoBgpInit(bgpPeerMode bool) *GoBgpH {
 	gbh.host = "127.0.0.1:50052"
 	gbh.ciMap = make(map[string]*goCI)
 	gbh.state = BGPDisconnected
+	gbh.tDone = make(chan bool)
+	gbh.ticker = time.NewTicker(30 * time.Second)
+	go gbh.goBGPTicker()
 	go gbh.goBgpSpawn(bgpPeerMode)
 	go gbh.goBgpConnect(gbh.host)
 	go gbh.goBgpMonitor()
@@ -617,11 +630,19 @@ func (gbh *GoBgpH) AddCurrentBgpRoutesToIPRoute() error {
 	}
 
 	for _, r := range rib {
-		_, dstIPN, err := net.ParseCIDR(r.GetPrefix())
+		dstIP, dstIPN, err := net.ParseCIDR(r.GetPrefix())
 		if err != nil {
 			tk.LogIt(tk.LogError, "%s is invalid prefix\n", r.GetPrefix())
 			return err
 		}
+
+		mh.mtx.Lock()
+		ev, _, _ := mh.zr.L3.IfaSelectAny(dstIP, false)
+		if ev == 0 {
+			mh.mtx.Unlock()
+			continue
+		}
+		mh.mtx.Unlock()
 
 		var nlpRoute *nlp.Route
 		var nexthopIP net.IP
@@ -942,6 +963,29 @@ func getRoutesAndAdvertise() {
 				}
 				mh.bgp.AdvertiseRoute(prefix, plen, nh, cmn.HighLocalPref, cmn.HighMed, false)
 			}
+		}
+	}
+}
+
+// goBGPRoutesSync - Sync gobgp routes with sys routes
+func (gbh *GoBgpH) goBGPRoutesSync() {
+	gbh.mtx.Lock()
+	defer gbh.mtx.Unlock()
+
+	if err := gbh.AddCurrentBgpRoutesToIPRoute(); err != nil {
+		tk.LogIt(tk.LogError, "[GoBGP] AddCurrentBgpRoutesToIpRoute() return err: %s\n", err.Error())
+	}
+
+}
+
+// goBGPTicker - Perform periodic operations related to gobgp
+func (gbh *GoBgpH) goBGPTicker() {
+	for {
+		select {
+		case <-gbh.tDone:
+			return
+		case <-gbh.ticker.C:
+			gbh.goBGPRoutesSync()
 		}
 	}
 }
