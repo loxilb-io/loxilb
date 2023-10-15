@@ -211,6 +211,28 @@ func IsIPHostAddr(ipString string) bool {
 	return false
 }
 
+// IsIPHostNetAddr - Check if provided address is a local subnet
+func IsIPHostNetAddr(ip net.IP) bool {
+	// get list of available addresses
+	addr, err := net.InterfaceAddrs()
+	if err != nil {
+		return false
+	}
+
+	for _, addr := range addr {
+		if ipnet, ok := addr.(*net.IPNet); ok {
+			// check if IPv4 or IPv6 is not nil
+			if ipnet.IP.To4() != nil || ipnet.IP.To16() != nil {
+				if ipnet.Contains(ip) {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
 // GratArpReq - sends a gratuitious arp reply given the DIP, SIP and interface name
 func GratArpReq(AdvIP net.IP, ifName string) (int, error) {
 	bcAddr := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
