@@ -77,13 +77,6 @@ type goCI struct {
 	rules   map[string]int
 }
 
-// goBGPNeigh - goBGP neighbor
-type goBGPNeigh struct {
-	name       string
-	remoteAS   uint32
-	remotePort uint32
-}
-
 // GoBgpH - context container
 type GoBgpH struct {
 	eventCh chan goBgpEvent
@@ -97,7 +90,8 @@ type GoBgpH struct {
 	noNlp   bool
 	localAs uint32
 	ciMap   map[string]*goCI
-	nbMap   map[string]*goBGPNeigh
+	reqRst  bool
+	resetTS time.Time
 }
 
 func (gbh *GoBgpH) getGlobalConfig() error {
@@ -459,9 +453,6 @@ func GoBgpInit(bgpPeerMode bool) *GoBgpH {
 	if gbh.ciMap = make(map[string]*goCI); gbh.ciMap == nil {
 		panic("gbh.ciMap alloc failure")
 	}
-	if gbh.nbMap = make(map[string]*goBGPNeigh); gbh.nbMap == nil {
-		panic("gbh.nbMap alloc failure")
-	}
 	gbh.state = BGPDisconnected
 	gbh.tDone = make(chan bool)
 	gbh.ticker = time.NewTicker(30 * time.Second)
@@ -752,7 +743,9 @@ func (gbh *GoBgpH) advertiseAllVIPs(instance string) {
 }
 
 func (gbh *GoBgpH) initBgpClient() {
+
 	gbh.mtx.Lock()
+	defer gbh.mtx.Unlock()
 
 	for ciname, ci := range gbh.ciMap {
 		if ci != nil {
@@ -761,9 +754,9 @@ func (gbh *GoBgpH) initBgpClient() {
 
 		if ciname == cmn.CIDefault {
 			if ci.hastate == cmn.CIStateBackup {
-				gbh.resetNeighAdj(true)
+				gbh.resetBGPMed(true)
 			} else if ci.hastate == cmn.CIStateMaster {
-				gbh.resetNeighAdj(false)
+				gbh.resetBGPMed(false)
 			}
 		}
 	}
@@ -774,7 +767,6 @@ func (gbh *GoBgpH) initBgpClient() {
 	if err := gbh.AddCurrBgpRoutesToIPRoute(); err != nil {
 		tk.LogIt(tk.LogError, "[GoBGP] AddCurrentBgpRoutesToIpRoute() return err: %s\n", err.Error())
 	}
-	gbh.mtx.Unlock()
 
 	go gbh.GetgoBGPRoutesEvents(gbh.client)
 }
@@ -834,9 +826,9 @@ func (gbh *GoBgpH) UpdateCIState(instance string, state int, vip net.IP) {
 	if update {
 		if instance == cmn.CIDefault {
 			if ci.hastate == cmn.CIStateBackup {
-				gbh.resetNeighAdj(true)
+				gbh.resetBGPMed(true)
 			} else if ci.hastate == cmn.CIStateMaster {
-				gbh.resetNeighAdj(false)
+				gbh.resetBGPMed(false)
 			}
 		}
 	}
@@ -844,7 +836,41 @@ func (gbh *GoBgpH) UpdateCIState(instance string, state int, vip net.IP) {
 }
 
 // resetNeighAdj - Reset BGP Neighbor's adjacencies
-func (gbh *GoBgpH) resetNeighAdj(toLow bool) error {
+func (gbh *GoBgpH) resetNeighAdj() error {
+
+	stream, err := gbh.client.ListPeer(context.Background(), &api.ListPeerRequest{
+		Address:          "",
+		EnableAdvertised: false,
+	})
+	if err != nil {
+		return err
+	}
+
+	l := make([]*api.Peer, 0, 1024)
+	for {
+		r, err := stream.Recv()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+		l = append(l, r.Peer)
+	}
+
+	if len(l) == 0 {
+		return nil
+	}
+
+	for _, nb := range l {
+		if nb.Conf.PeerAsn != gbh.localAs {
+			gbh.resetSingleNeighAdj(nb.Conf.NeighborAddress)
+		}
+	}
+	return nil
+}
+
+// resetBGPMed - Reset BGP Med attribute
+func (gbh *GoBgpH) resetBGPMed(toLow bool) error {
 
 	if !toLow {
 		if _, err := gbh.removeExportPolicy("global", "set-med-export-gpolicy"); err != nil {
@@ -862,11 +888,9 @@ func (gbh *GoBgpH) resetNeighAdj(toLow bool) error {
 		}
 	}
 
-	for _, nb := range gbh.nbMap {
-		if nb.remoteAS != gbh.localAs {
-			gbh.resetSingeNeighAdj(nb.name)
-		}
-	}
+	gbh.reqRst = true
+	gbh.resetTS = time.Now()
+
 	return nil
 }
 
@@ -907,26 +931,6 @@ func (gbh *GoBgpH) BGPNeighMod(add bool, neigh net.IP, ras uint32, rPort uint32)
 	if err != nil {
 		return -1, err
 	}
-
-	gbh.mtx.Lock()
-	defer gbh.mtx.Unlock()
-
-	if add {
-		nbr := gbh.nbMap[neigh.String()]
-		if nbr != nil {
-			nbr = new(goBGPNeigh)
-			nbr.name = neigh.String()
-			nbr.remoteAS = ras
-			nbr.remotePort = rPort
-			gbh.nbMap[neigh.String()] = nbr
-		} else {
-			nbr.remoteAS = ras
-			nbr.remotePort = rPort
-		}
-	} else {
-		delete(gbh.nbMap, neigh.String())
-	}
-
 	return 0, nil
 }
 
@@ -1010,8 +1014,8 @@ func (gbh *GoBgpH) removeExportPolicy(remoteIP string, name string) (int, error)
 	return 0, err
 }
 
-// resetSingeNeighAdj - Routine to reset a bgp neighbor
-func (gbh *GoBgpH) resetSingeNeighAdj(remoteIP string) error {
+// resetSingleNeighAdj - Routine to reset a bgp neighbor
+func (gbh *GoBgpH) resetSingleNeighAdj(remoteIP string) error {
 	var comm string
 	soft := true
 	dir := api.ResetPeerRequest_OUT
@@ -1026,7 +1030,7 @@ func (gbh *GoBgpH) resetSingeNeighAdj(remoteIP string) error {
 	return err
 }
 
-// BGPNeighMod - Routine to add BGP neigh to goBGP server
+// BGPGlobalConfigAdd - Routine to add global config in goBGP server
 func (gbh *GoBgpH) BGPGlobalConfigAdd(config cmn.GoBGPGlobalConfig) (int, error) {
 	lalist := make([]string, 0, 1)
 	lalist = append(lalist, "0.0.0.0")
@@ -1134,13 +1138,20 @@ func getRoutesAndAdvertise() {
 	}
 }
 
-// goBGPRoutesSync - Sync gobgp routes with sys routes
-func (gbh *GoBgpH) goBGPRoutesSync() {
+// goBGPHouseKeeper - Periodic house keeping operations
+func (gbh *GoBgpH) goBGPHouseKeeper() {
 	gbh.mtx.Lock()
 	defer gbh.mtx.Unlock()
 
 	if err := gbh.AddCurrBgpRoutesToIPRoute(); err != nil {
 		tk.LogIt(tk.LogError, "[GoBGP] AddCurrentBgpRoutesToIpRoute() return err: %s\n", err.Error())
+	}
+
+	if gbh.reqRst {
+		if time.Duration(time.Since(gbh.resetTS).Seconds()) > time.Duration(4) {
+			gbh.reqRst = false
+			//gbh.resetNeighAdj()
+		}
 	}
 
 }
@@ -1152,7 +1163,7 @@ func (gbh *GoBgpH) goBGPTicker() {
 		case <-gbh.tDone:
 			return
 		case <-gbh.ticker.C:
-			gbh.goBGPRoutesSync()
+			gbh.goBGPHouseKeeper()
 		}
 	}
 }
