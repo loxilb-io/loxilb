@@ -16,6 +16,7 @@ loxilb is an open source hyper-scale software load-balancer for cloud-native wor
 -  L7 proxy support
 -  Telco/5G/6G friendly features
     * GTP tunnels as first class citizens
+    * LB support on various interfaces - N2, N4, E2 etc    
     * Optimized SRv6 implementation
     * Support for UL-CL with LB, QFI and other utility extensions
 
