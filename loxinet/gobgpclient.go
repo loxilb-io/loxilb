@@ -95,7 +95,9 @@ type GoBgpH struct {
 }
 
 func (gbh *GoBgpH) getGlobalConfig() error {
-	r, err := gbh.client.GetBgp(context.Background(), &api.GetBgpRequest{})
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	r, err := gbh.client.GetBgp(ctx, &api.GetBgpRequest{})
 	if err != nil {
 		return err
 	}
@@ -374,7 +376,9 @@ func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string, pref uin
 
 	attrs := []*apb.Any{a1, a2, a3, a4, a5}
 
-	_, err := gbh.client.AddPath(context.Background(), &api.AddPathRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	_, err := gbh.client.AddPath(ctx, &api.AddPathRequest{
 		Path: &api.Path{
 			Family: apiFamily,
 			Nlri:   nlri,
@@ -426,7 +430,9 @@ func (gbh *GoBgpH) DelAdvertiseRoute(rtPrefix string, pLen int, nh string, pref 
 
 	attrs := []*apb.Any{a1, a2, a3, a4, a5}
 
-	_, err := gbh.client.DeletePath(context.Background(), &api.DeletePathRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	_, err := gbh.client.DeletePath(ctx, &api.DeletePathRequest{
 		Path: &api.Path{
 			Family: &api.Family{Afi: api.Family_AFI_IP, Safi: api.Family_SAFI_UNICAST},
 			Nlri:   nlri,
@@ -514,14 +520,17 @@ func (gbh *GoBgpH) goBgpConnect(host string) {
 			gbh.client = api.NewGobgpApiClient(conn)
 			gbh.mtx.Unlock()
 			for {
+				ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 				gbh.mtx.Lock()
-				r, err := gbh.client.GetBgp(context.TODO(), &api.GetBgpRequest{})
+				r, err := gbh.client.GetBgp(ctx, &api.GetBgpRequest{})
 				if err != nil {
 					tk.LogIt(tk.LogInfo, "BGP session %s not ready. Will Retry!\n", gbh.host)
 					gbh.mtx.Unlock()
+					cancel()
 					time.Sleep(2000 * time.Millisecond)
 					continue
 				}
+				cancel()
 				tk.LogIt(tk.LogNotice, "BGP server %s UP!\n", gbh.host)
 				if r.Global.Asn == 0 {
 					tk.LogIt(tk.LogInfo, "BGP Global Config %s not done. Will wait!\n", gbh.host)
@@ -633,7 +642,10 @@ func (gbh *GoBgpH) AddCurrBgpRoutesToIPRoute() error {
 		Safi: api.Family_SAFI_UNICAST,
 	}
 
-	stream, err := gbh.client.ListPath(context.TODO(), &api.ListPathRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	stream, err := gbh.client.ListPath(ctx, &api.ListPathRequest{
 		TableType: api.TableType_GLOBAL,
 		Family:    ipv4UC,
 	})
@@ -837,8 +849,10 @@ func (gbh *GoBgpH) UpdateCIState(instance string, state int, vip net.IP) {
 
 // resetNeighAdj - Reset BGP Neighbor's adjacencies
 func (gbh *GoBgpH) resetNeighAdj() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 
-	stream, err := gbh.client.ListPeer(context.Background(), &api.ListPeerRequest{
+	stream, err := gbh.client.ListPeer(ctx, &api.ListPeerRequest{
 		Address:          "",
 		EnableAdvertised: false,
 	})
@@ -916,14 +930,17 @@ func (gbh *GoBgpH) BGPNeighMod(add bool, neigh net.IP, ras uint32, rPort uint32)
 		peer.Transport.RemotePort = 179
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
 	if add {
-		_, err = gbh.client.AddPeer(context.Background(),
+		_, err = gbh.client.AddPeer(ctx,
 			&api.AddPeerRequest{
 				Peer: peer,
 			})
 
 	} else {
-		_, err = gbh.client.DeletePeer(context.Background(),
+		_, err = gbh.client.DeletePeer(ctx,
 			&api.DeletePeerRequest{
 				Address: neigh.String(),
 			})
@@ -936,13 +953,15 @@ func (gbh *GoBgpH) BGPNeighMod(add bool, neigh net.IP, ras uint32, rPort uint32)
 
 // createSelfNHpolicy - Routine to create policy statement
 func (gbh *GoBgpH) createNHpolicyStmt(name string, addr string) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 	st := &api.Statement{
 		Name:    name,
 		Actions: &api.Actions{},
 	}
 	st.Actions.Nexthop = &api.NexthopAction{}
 	st.Actions.Nexthop.Address = addr
-	_, err := gbh.client.AddStatement(context.Background(),
+	_, err := gbh.client.AddStatement(ctx,
 		&api.AddStatementRequest{
 			Statement: st,
 		})
@@ -951,6 +970,8 @@ func (gbh *GoBgpH) createNHpolicyStmt(name string, addr string) (int, error) {
 
 // createSetMedPolicy - Routine to create set med-policy statement
 func (gbh *GoBgpH) createSetMedPolicy(name string, val int64) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 	st := &api.Statement{
 		Name:    name,
 		Actions: &api.Actions{},
@@ -958,7 +979,7 @@ func (gbh *GoBgpH) createSetMedPolicy(name string, val int64) (int, error) {
 	st.Actions.Med = &api.MedAction{}
 	st.Actions.Med.Type = api.MedAction_MOD
 	st.Actions.Med.Value = val
-	_, err := gbh.client.AddStatement(context.Background(),
+	_, err := gbh.client.AddStatement(ctx,
 		&api.AddStatementRequest{
 			Statement: st,
 		})
@@ -967,6 +988,8 @@ func (gbh *GoBgpH) createSetMedPolicy(name string, val int64) (int, error) {
 
 // addPolicy - Routine to apply global policy statement
 func (gbh *GoBgpH) addPolicy(name string, stmt string) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 	stmts := make([]*api.Statement, 0, 1)
 	stmts = append(stmts, &api.Statement{Name: stmt})
 	p := &api.Policy{
@@ -974,7 +997,7 @@ func (gbh *GoBgpH) addPolicy(name string, stmt string) (int, error) {
 		Statements: stmts,
 	}
 
-	_, err := gbh.client.AddPolicy(context.Background(),
+	_, err := gbh.client.AddPolicy(ctx,
 		&api.AddPolicyRequest{
 			Policy:                  p,
 			ReferExistingStatements: true,
@@ -984,13 +1007,15 @@ func (gbh *GoBgpH) addPolicy(name string, stmt string) (int, error) {
 
 // addPolicy - Routine to apply global policy statement
 func (gbh *GoBgpH) applyExportPolicy(remoteIP string, name string) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 	assign := &api.PolicyAssignment{Name: remoteIP}
 	assign.Direction = api.PolicyDirection_EXPORT
 	assign.DefaultAction = api.RouteAction_NONE
 	ps := make([]*api.Policy, 0, 1)
 	ps = append(ps, &api.Policy{Name: name})
 	assign.Policies = ps
-	_, err := gbh.client.AddPolicyAssignment(context.Background(),
+	_, err := gbh.client.AddPolicyAssignment(ctx,
 		&api.AddPolicyAssignmentRequest{
 			Assignment: assign,
 		})
@@ -1000,13 +1025,15 @@ func (gbh *GoBgpH) applyExportPolicy(remoteIP string, name string) (int, error) 
 
 // removePolicy - Routine to apply global policy statement
 func (gbh *GoBgpH) removeExportPolicy(remoteIP string, name string) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 	assign := &api.PolicyAssignment{Name: remoteIP}
 	assign.Direction = api.PolicyDirection_EXPORT
 	assign.DefaultAction = api.RouteAction_NONE
 	ps := make([]*api.Policy, 0, 1)
 	ps = append(ps, &api.Policy{Name: name})
 	assign.Policies = ps
-	_, err := gbh.client.DeletePolicyAssignment(context.Background(),
+	_, err := gbh.client.DeletePolicyAssignment(ctx,
 		&api.DeletePolicyAssignmentRequest{
 			Assignment: assign,
 		})
@@ -1016,26 +1043,30 @@ func (gbh *GoBgpH) removeExportPolicy(remoteIP string, name string) (int, error)
 
 // resetSingleNeighAdj - Routine to reset a bgp neighbor
 func (gbh *GoBgpH) resetSingleNeighAdj(remoteIP string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 	var comm string
 	soft := true
 	dir := api.ResetPeerRequest_OUT
-	_, err := gbh.client.ResetPeer(context.Background(), &api.ResetPeerRequest{
+	_, err := gbh.client.ResetPeer(ctx, &api.ResetPeerRequest{
 		Address:       remoteIP,
 		Communication: comm,
 		Soft:          soft,
 		Direction:     dir,
 	})
 
-	tk.LogIt(tk.LogInfo, "[GoBGP] Soft reset neigh %s:%s\n", remoteIP, err.Error())
+	tk.LogIt(tk.LogInfo, "[GoBGP] Soft reset neigh %s\n", remoteIP)
 	return err
 }
 
 // BGPGlobalConfigAdd - Routine to add global config in goBGP server
 func (gbh *GoBgpH) BGPGlobalConfigAdd(config cmn.GoBGPGlobalConfig) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 	lalist := make([]string, 0, 1)
 	lalist = append(lalist, "0.0.0.0")
 
-	_, err := gbh.client.StartBgp(context.Background(), &api.StartBgpRequest{
+	_, err := gbh.client.StartBgp(ctx, &api.StartBgpRequest{
 		Global: &api.Global{
 			Asn:             uint32(config.LocalAs),
 			RouterId:        config.RouterID,
@@ -1150,7 +1181,7 @@ func (gbh *GoBgpH) goBGPHouseKeeper() {
 	if gbh.reqRst {
 		if time.Duration(time.Since(gbh.resetTS).Seconds()) > time.Duration(4) {
 			gbh.reqRst = false
-			//gbh.resetNeighAdj()
+			gbh.resetNeighAdj()
 		}
 	}
 
