@@ -41,7 +41,7 @@ else
   exit 1
 fi
 
-out=$(vagrant ssh host -c "socat -T10 - SCTP:$extIP:55004,bind=192.168.90.9")
+out=$(vagrant ssh host -c "socat -T10 - sctp:$extIP:55004,bind=192.168.90.9")
 if [[ ${out} == *"server1"* ]]; then
   echo "k3s-flannel-cluster (kube-loxilb) sctp [OK]"
 else
@@ -50,11 +50,11 @@ else
   exit 1
 fi
 
-out=$(vagramt ssh host -c "socat -T10 - SCTP:$extIP:57004,bind=192.168.90.9")
+out=$(vagrant ssh host -c "socat -T10 - sctp:$extIP:57004,bind=192.168.90.9")
 if [[ ${out} == *"server1"* ]]; then
-  echo "k3s-flannel-cluster (kube-loxilb) onearm-sctp [OK]"
+  echo "k3s-flannel-cluster (kube-loxilb) default-sctp [OK]"
 else
-  echo "k3s-flannel-cluster (kube-loxilb) onerarm-sctp [FAILED]"
+  echo "k3s-flannel-cluster (kube-loxilb) default-sctp [FAILED]"
   print_debug_info
   exit 1
 fi
