@@ -77,6 +77,13 @@ type goCI struct {
 	rules   map[string]int
 }
 
+// goBGPNeigh - goBGP neighbor
+type goBGPNeigh struct {
+	name       string
+	remoteAS   uint32
+	remotePort uint32
+}
+
 // GoBgpH - context container
 type GoBgpH struct {
 	eventCh chan goBgpEvent
@@ -90,6 +97,17 @@ type GoBgpH struct {
 	noNlp   bool
 	localAs uint32
 	ciMap   map[string]*goCI
+	nbMap   map[string]*goBGPNeigh
+}
+
+func (gbh *GoBgpH) getGlobalConfig() error {
+	r, err := gbh.client.GetBgp(context.Background(), &api.GetBgpRequest{})
+	if err != nil {
+		return err
+	}
+
+	gbh.localAs = r.Global.Asn
+	return nil
 }
 
 func (gbh *GoBgpH) getPathAttributeString(nlri bgp.AddrPrefixInterface, attrs []bgp.PathAttributeInterface) string {
@@ -239,8 +257,10 @@ func (gbh *GoBgpH) syncRoute(p *goBgpRouteInfo, showIdentifier bgp.BGPAddPathMod
 func (gbh *GoBgpH) processRoute(pathList []*api.Path) {
 
 	for _, p := range pathList {
-		if !p.Best || p.IsNexthopInvalid {
-			continue
+		if !p.GetIsWithdraw() {
+			if !p.Best || p.IsNexthopInvalid {
+				continue
+			}
 		}
 		// NLRI have destination CIDR info
 		nlri, err := apiutil.GetNativeNlri(p)
@@ -264,8 +284,8 @@ func (gbh *GoBgpH) processRoute(pathList []*api.Path) {
 	}
 }
 
-// GetRoutes - get routes in goBGP
-func (gbh *GoBgpH) GetRoutes(client api.GobgpApiClient) int {
+// GetgoBGPRoutesEvents - get routes in goBGP
+func (gbh *GoBgpH) GetgoBGPRoutesEvents(client api.GobgpApiClient) int {
 
 	processRoutes := func(recver interface {
 		Recv() (*api.WatchEventResponse, error)
@@ -313,6 +333,13 @@ func (gbh *GoBgpH) GetRoutes(client api.GobgpApiClient) int {
 // AdvertiseRoute - advertise a new route using goBGP
 func (gbh *GoBgpH) AdvertiseRoute(rtPrefix string, pLen int, nh string, pref uint32, med uint32, ipv4 bool) int {
 	var apiFamily *api.Family
+
+	if gbh.localAs == 0 {
+		if err := gbh.getGlobalConfig(); err != nil {
+			tk.LogIt(tk.LogError, "[GoBGP] Can't get localAS\n")
+			return -1
+		}
+	}
 	// add routes
 	//tk.LogIt(tk.LogDebug, "\n\n\n Advertising Route : %v via %v\n\n\n", rtPrefix, nh)
 	nlri, _ := apb.New(&api.IPAddressPrefix{
@@ -429,7 +456,12 @@ func GoBgpInit(bgpPeerMode bool) *GoBgpH {
 
 	gbh.eventCh = make(chan goBgpEvent, cmn.RuWorkQLen)
 	gbh.host = "127.0.0.1:50052"
-	gbh.ciMap = make(map[string]*goCI)
+	if gbh.ciMap = make(map[string]*goCI); gbh.ciMap == nil {
+		panic("gbh.ciMap alloc failure")
+	}
+	if gbh.nbMap = make(map[string]*goBGPNeigh); gbh.nbMap == nil {
+		panic("gbh.nbMap alloc failure")
+	}
 	gbh.state = BGPDisconnected
 	gbh.tDone = make(chan bool)
 	gbh.ticker = time.NewTicker(30 * time.Second)
@@ -603,8 +635,8 @@ func (gbh *GoBgpH) DelBGPRule(instance string, IP []string) {
 	}
 }
 
-// AddCurrentBgpRoutesToIPRoute - add bgp routes to OS
-func (gbh *GoBgpH) AddCurrentBgpRoutesToIPRoute() error {
+// AddCurrBgpRoutesToIPRoute - add bgp routes to OS
+func (gbh *GoBgpH) AddCurrBgpRoutesToIPRoute() error {
 	ipv4UC := &api.Family{
 		Afi:  api.Family_AFI_IP,
 		Safi: api.Family_SAFI_UNICAST,
@@ -676,7 +708,7 @@ func (gbh *GoBgpH) AddCurrentBgpRoutesToIPRoute() error {
 	return nil
 }
 
-func (gbh *GoBgpH) advertiseAllRoutes(instance string) {
+func (gbh *GoBgpH) advertiseAllVIPs(instance string) {
 	var pref uint32
 	var med uint32
 	add := true
@@ -719,24 +751,32 @@ func (gbh *GoBgpH) advertiseAllRoutes(instance string) {
 	}
 }
 
-func (gbh *GoBgpH) getGoBgpRoutes() {
+func (gbh *GoBgpH) initBgpClient() {
 	gbh.mtx.Lock()
 
 	for ciname, ci := range gbh.ciMap {
 		if ci != nil {
-			gbh.advertiseAllRoutes(ciname)
+			gbh.advertiseAllVIPs(ciname)
+		}
+
+		if ciname == cmn.CIDefault {
+			if ci.hastate == cmn.CIStateBackup {
+				gbh.resetNeighAdj(true)
+			} else if ci.hastate == cmn.CIStateMaster {
+				gbh.resetNeighAdj(false)
+			}
 		}
 	}
 
 	/* Get local routes and advertise */
 	//getRoutesAndAdvertise()
 
-	if err := gbh.AddCurrentBgpRoutesToIPRoute(); err != nil {
+	if err := gbh.AddCurrBgpRoutesToIPRoute(); err != nil {
 		tk.LogIt(tk.LogError, "[GoBGP] AddCurrentBgpRoutesToIpRoute() return err: %s\n", err.Error())
 	}
 	gbh.mtx.Unlock()
 
-	go gbh.GetRoutes(gbh.client)
+	go gbh.GetgoBGPRoutesEvents(gbh.client)
 }
 
 func (gbh *GoBgpH) processBgpEvent(e goBgpEvent) {
@@ -752,7 +792,7 @@ func (gbh *GoBgpH) processBgpEvent(e goBgpEvent) {
 		tk.LogIt(tk.LogNotice, "******************* BGP %s connected *******************\n", gbh.host)
 		gbh.conn = e.conn
 		gbh.state = BGPConnected
-		gbh.getGoBgpRoutes()
+		gbh.initBgpClient()
 	case bgpRtRecvd:
 		gbh.processRouteSingle(&e.Data, bgp.BGP_ADD_PATH_RECEIVE)
 	}
@@ -775,18 +815,59 @@ func (gbh *GoBgpH) goBgpMonitor() {
 
 // UpdateCIState - Routine to update CI state for this module and re-advertise with appropriate priority
 func (gbh *GoBgpH) UpdateCIState(instance string, state int, vip net.IP) {
+	update := false
 	ci := gbh.ciMap[instance]
 	if ci == nil {
 		ci = new(goCI)
 		ci.rules = make(map[string]int)
+	} else {
+		if ci.hastate != state {
+			update = true
+		}
 	}
 	ci.name = instance
 	ci.hastate = state
 	ci.vip = vip
 	gbh.ciMap[instance] = ci
 
-	gbh.advertiseAllRoutes(instance)
+	gbh.advertiseAllVIPs(instance)
+	if update {
+		if instance == cmn.CIDefault {
+			if ci.hastate == cmn.CIStateBackup {
+				gbh.resetNeighAdj(true)
+			} else if ci.hastate == cmn.CIStateMaster {
+				gbh.resetNeighAdj(false)
+			}
+		}
+	}
 	tk.LogIt(tk.LogNotice, "[BGP] Instance %s(%v) HA state updated : %d\n", instance, vip, state)
+}
+
+// resetNeighAdj - Reset BGP Neighbor's adjacencies
+func (gbh *GoBgpH) resetNeighAdj(toLow bool) error {
+
+	if !toLow {
+		if _, err := gbh.removeExportPolicy("global", "set-med-export-gpolicy"); err != nil {
+			tk.LogIt(tk.LogError, "[GoBGP] Error removing set-med-export policy%s\n", err.Error())
+			// return err
+		} else {
+			tk.LogIt(tk.LogInfo, "[GoBGP] Removed set-med-export policy\n")
+		}
+	} else {
+		if _, err := gbh.applyExportPolicy("global", "set-med-export-gpolicy"); err != nil {
+			tk.LogIt(tk.LogError, "[GoBGP] Error applying set-med-export policy%s\n", err.Error())
+			//return err
+		} else {
+			tk.LogIt(tk.LogInfo, "[GoBGP] Applied set-med-export policy\n")
+		}
+	}
+
+	for _, nb := range gbh.nbMap {
+		if nb.remoteAS != gbh.localAs {
+			gbh.resetSingeNeighAdj(nb.name)
+		}
+	}
+	return nil
 }
 
 // BGPNeighMod - Routine to add BGP neigh to goBGP server
@@ -804,6 +885,7 @@ func (gbh *GoBgpH) BGPNeighMod(add bool, neigh net.IP, ras uint32, rPort uint32)
 	peer.Conf.NeighborAddress = neigh.String()
 	peer.State.NeighborAddress = neigh.String()
 	peer.Conf.PeerAsn = ras
+	peer.Conf.AllowOwnAsn = 1
 	if rPort != 0 {
 		peer.Transport.RemotePort = rPort
 	} else {
@@ -825,6 +907,26 @@ func (gbh *GoBgpH) BGPNeighMod(add bool, neigh net.IP, ras uint32, rPort uint32)
 	if err != nil {
 		return -1, err
 	}
+
+	gbh.mtx.Lock()
+	defer gbh.mtx.Unlock()
+
+	if add {
+		nbr := gbh.nbMap[neigh.String()]
+		if nbr != nil {
+			nbr = new(goBGPNeigh)
+			nbr.name = neigh.String()
+			nbr.remoteAS = ras
+			nbr.remotePort = rPort
+			gbh.nbMap[neigh.String()] = nbr
+		} else {
+			nbr.remoteAS = ras
+			nbr.remotePort = rPort
+		}
+	} else {
+		delete(gbh.nbMap, neigh.String())
+	}
+
 	return 0, nil
 }
 
@@ -908,6 +1010,22 @@ func (gbh *GoBgpH) removeExportPolicy(remoteIP string, name string) (int, error)
 	return 0, err
 }
 
+// resetSingeNeighAdj - Routine to reset a bgp neighbor
+func (gbh *GoBgpH) resetSingeNeighAdj(remoteIP string) error {
+	var comm string
+	soft := true
+	dir := api.ResetPeerRequest_OUT
+	_, err := gbh.client.ResetPeer(context.Background(), &api.ResetPeerRequest{
+		Address:       remoteIP,
+		Communication: comm,
+		Soft:          soft,
+		Direction:     dir,
+	})
+
+	tk.LogIt(tk.LogInfo, "[GoBGP] Soft reset neigh %s:%s\n", remoteIP, err.Error())
+	return err
+}
+
 // BGPNeighMod - Routine to add BGP neigh to goBGP server
 func (gbh *GoBgpH) BGPGlobalConfigAdd(config cmn.GoBGPGlobalConfig) (int, error) {
 	lalist := make([]string, 0, 1)
@@ -947,6 +1065,22 @@ func (gbh *GoBgpH) BGPGlobalConfigAdd(config cmn.GoBGPGlobalConfig) (int, error)
 			return 0, err
 		}
 	}
+
+	// Create the set-med policy statement
+	if _, err := gbh.createSetMedPolicy("set-med-export-gstmt", 50); err != nil {
+		tk.LogIt(tk.LogError, "[GoBGP] Error creating set-med-export-gstmt stmt %s\n", err.Error())
+		return 0, err
+	}
+	// Create the global policy
+	if _, err := gbh.addPolicy("set-med-export-gpolicy", "set-med-export-gstmt"); err != nil {
+		tk.LogIt(tk.LogError, "[GoBGP] Error creating set-med-export policy%s\n", err.Error())
+		return 0, err
+	}
+	// Apply the global policy
+	//if _, err := gbh.applyExportPolicy("global", "set-med-export-gpolicy"); err != nil {
+	//	tk.LogIt(tk.LogError, "[GoBGP] Error applying set-med-export policy%s\n", err.Error())
+	//	return 0, err
+	//}
 
 	return 0, err
 }
@@ -1005,7 +1139,7 @@ func (gbh *GoBgpH) goBGPRoutesSync() {
 	gbh.mtx.Lock()
 	defer gbh.mtx.Unlock()
 
-	if err := gbh.AddCurrentBgpRoutesToIPRoute(); err != nil {
+	if err := gbh.AddCurrBgpRoutesToIPRoute(); err != nil {
 		tk.LogIt(tk.LogError, "[GoBGP] AddCurrentBgpRoutesToIpRoute() return err: %s\n", err.Error())
 	}
 
