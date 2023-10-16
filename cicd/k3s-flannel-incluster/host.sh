@@ -4,8 +4,7 @@ chmod 777 sctp_client
 chmod 777 udp_client
 echo "123.123.123.1 k8s-svc" >> /etc/hosts
 
-# Install Bird to work with k3s
-sudo apt install -y bird2 
+sudo apt install -y bird2 socat
 
 sleep 5
 
