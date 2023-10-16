@@ -945,6 +945,8 @@ func (R *RuleH) electEPSrc(r *ruleEnt) bool {
 						sip = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
 						if np.xIP.Equal(sip) {
 							sip = net.IPv4(0, 0, 0, 0)
+						} else if IsIPHostAddr(np.xIP.String()) {
+							sip = net.IPv4(0, 0, 0, 0)
 						}
 					} else {
 						vip, err := mh.has.CIVipGet(r.ci)
