@@ -12,6 +12,7 @@ dexec="sudo docker exec -i "
 hns="sudo ip netns "
 hexist="$vrn$hn"
 lxdocker="ghcr.io/loxilb-io/loxilb:latest"
+cluster_opts=""
 var=$(lsb_release -r | cut -f2)
 if [[ $var == *"22.04"* ]];then
   lxdocker="ghcr.io/loxilb-io/loxilb:latestu22"
@@ -101,12 +102,6 @@ spawn_docker_host() {
         bgp_conf="-v $bpath:/etc/gobgp/"
       fi
     fi
-    if [[ "$dname" == "llb1" ]]; then
-      cluster_opts=" --cluster=172.17.0.3 --self=0"
-    elif [[ "$dname" == "llb2" ]]; then
-      cluster_opts=" --cluster=172.17.0.2 --self=1"
-    fi
-
     if [[ ! -z ${ka+x} ]]; then
       sudo mkdir -p /etc/shared/$dname/
       if [[ "$ka" == "in" ]];then
@@ -116,6 +111,7 @@ spawn_docker_host() {
         fi
       fi
       docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config $ka_conf --name $dname $lxdocker
+      get_llb_peerIP $dname
       docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $ka_opts
 
       if [[ "$ka" == "out" ]];then
@@ -157,6 +153,29 @@ spawn_docker_host() {
   $hexec $dname sysctl net.ipv6.conf.all.disable_ipv6=1 2>&1 >> /dev/null
   #$hexec $dname sysctl net.ipv4.conf.all.arp_accept=1 2>&1 >> /dev/null
   $hexec $dname sysctl net.ipv4.conf.eth0.arp_ignore=2 2>&1 >> /dev/null
+}
+
+## Get loxilb peer docker IP
+get_llb_peerIP() {
+   if [[ "$1" == "llb1" ]]; then
+      llb1IP=$(docker inspect --format='{{.NetworkSettings.IPAddress}}' llb1)
+      if [[ "lb$llb1IP" == "lb" ]];then
+        llb2IP="172.17.0.3"
+      else
+        read A B C D <<<"${llb1IP//./ }"
+        llb2IP="$A.$B.$C.$((D+1))"
+      fi
+      cluster_opts=" --cluster=$llb2IP --self=0"
+    elif [[ "$1" == "llb2" ]]; then
+      llb2IP=$(docker inspect --format='{{.NetworkSettings.IPAddress}}' llb2)
+      if [[ "lb$llb2IP" == "lb" ]];then
+        llb1IP="172.17.0.2"
+      else
+        read A B C D <<<"${llb2IP//./ }"
+        llb1IP="$A.$B.$C.$((D-1))"
+      fi
+      cluster_opts=" --cluster=$llb1IP --self=1"
+    fi
 }
 
 ## Deletes a docker host
