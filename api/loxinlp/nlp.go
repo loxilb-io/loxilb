@@ -304,7 +304,7 @@ func DelFDBNoHook(macAddress, ifName string) int {
 	var ret int
 	MacAddress, err := net.ParseMAC(macAddress)
 	if err != nil {
-		tk.LogIt(tk.LogWarning, "[NLP] Port %s find Fail\n", ifName)
+		tk.LogIt(tk.LogWarning, "[NLP] MacAddress Parse %s Fail\n", macAddress)
 		return -1
 	}
 	IfName, err := nlp.LinkByName(ifName)
@@ -340,7 +340,7 @@ func AddNeighNoHook(address, ifName, macAddress string) int {
 	}
 	MacAddress, err := net.ParseMAC(macAddress)
 	if err != nil {
-		tk.LogIt(tk.LogWarning, "[NLP] Port %s find Fail\n", ifName)
+		tk.LogIt(tk.LogWarning, "[NLP] MacAddress Parse %s Fail\n", macAddress)
 		return -1
 	}
 	// Make Neigh
