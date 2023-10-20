@@ -52,9 +52,10 @@ import (
 	"time"
 	"unsafe"
 
-	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 	nlp "github.com/vishvananda/netlink"
+
+	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 // This file implements the interface DpHookInterface
@@ -1985,7 +1986,7 @@ func (e *DpEbpfH) DpCtDel(w *DpCtInfo) int {
 	mapKey := w.Key()
 	cti := mh.dpEbpf.ctMap[mapKey]
 	if cti == nil {
-		tk.LogIt(tk.LogError, "ctInfo-key (%v) not present\n", mapKey)
+		tk.LogIt(tk.LogDebug, "ctInfo-key (%v) not present\n", mapKey)
 		return 0
 	}
 
