@@ -996,7 +996,7 @@ func AddNeigh(neigh nlp.Neigh, link nlp.Link) int {
 				brId = vxlan.VxlanId
 				ftype = cmn.FdbTun
 			} else {
-				tk.LogIt(tk.LogError, "[NLP] L2fdb %v brId %v dst %v dev %v IGNORED\n", mac[:], brId, dst, name)
+				tk.LogIt(tk.LogInfo, "[NLP] L2fdb %v brId %v dst %v dev %v IGNORED\n", mac[:], brId, dst, name)
 				return 0
 			}
 		} else {
@@ -1037,7 +1037,7 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 			tk.LogIt(tk.LogError, "[NLP] NH  %v %v del failed\n", neigh.IP.String(), name)
 			ret = -1
 		} else {
-			tk.LogIt(tk.LogError, "[NLP] NH %v %v deleted\n", neigh.IP.String(), name)
+			tk.LogIt(tk.LogInfo, "[NLP] NH %v %v deleted\n", neigh.IP.String(), name)
 		}
 
 	} else {
@@ -1121,10 +1121,10 @@ func AddRoute(route nlp.Route) int {
 		}
 	} else {
 		if route.Gw != nil {
-			tk.LogIt(tk.LogError, "[NLP] RT  %s via %s added\n", ipNet.String(),
+			tk.LogIt(tk.LogInfo, "[NLP] RT  %s via %s added\n", ipNet.String(),
 				route.Gw.String())
 		} else {
-			tk.LogIt(tk.LogError, "[NLP] RT  %s added\n", ipNet.String())
+			tk.LogIt(tk.LogInfo, "[NLP] RT  %s added\n", ipNet.String())
 		}
 	}
 
@@ -1184,10 +1184,10 @@ func DelRoute(route nlp.Route) int {
 		}
 	} else {
 		if route.Gw != nil {
-			tk.LogIt(tk.LogError, "[NLP] RT  %s via %s deleted\n", ipNet.String(),
+			tk.LogIt(tk.LogInfo, "[NLP] RT  %s via %s deleted\n", ipNet.String(),
 				route.Gw.String())
 		} else {
-			tk.LogIt(tk.LogError, "[NLP] RT  %s deleted\n", ipNet.String())
+			tk.LogIt(tk.LogInfo, "[NLP] RT  %s deleted\n", ipNet.String())
 		}
 	}
 	return ret
