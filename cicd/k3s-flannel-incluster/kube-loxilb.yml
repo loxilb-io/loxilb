@@ -80,16 +80,16 @@ metadata:
   name: kube-loxilb
   namespace: kube-system
   labels:
-    app: loxilb
+    app: kube-loxilb-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: loxilb
+      app: kube-loxilb-app
   template:
     metadata:
       labels:
-        app: loxilb
+        app: kube-loxilb-app
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -117,7 +117,6 @@ spec:
         - --setRoles=0.0.0.0
         - --extBGPPeers=192.168.90.9:64511
         #- --monitor
-        #- --setBGP
         #- --setLBMode=1
         #- --config=/opt/loxilb/agent/kube-loxilb.conf
         resources:
