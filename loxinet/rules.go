@@ -23,10 +23,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/loxilb-io/loxilb/api/loxinlp"
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
-	probing "github.com/prometheus-community/pro-bing"
 	"io/ioutil"
 	"net"
 	"reflect"
@@ -34,6 +30,12 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	tk "github.com/loxilb-io/loxilib"
+	probing "github.com/prometheus-community/pro-bing"
+
+	"github.com/loxilb-io/loxilb/api/loxinlp"
+	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 // error codes
@@ -357,7 +359,7 @@ func RulesInit(zone *Zone) *RuleH {
 			tk.LogIt(tk.LogError, "RootCA cert load failed : %v\n", err)
 		} else {
 			nRh.rootCAPool.AppendCertsFromPEM(rootCA)
-			tk.LogIt(tk.LogError, "RootCA cert loaded\n")
+			tk.LogIt(tk.LogDebug, "RootCA cert loaded\n")
 		}
 	}
 
