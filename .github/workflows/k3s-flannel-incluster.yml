@@ -17,15 +17,15 @@ jobs:
           &&  github.event.inputs.tagName == ''
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
+        #uses: actions/checkout@v2
+        #with:
+        #  submodules: recursive
 
       - name: Run the test
         run: |
          cd cicd/k3s-flannel-incluster
-         ./config.sh
-         sleep 90
+         #./config.sh
+         #sleep 90
          ./validation.sh
          cd -
          
