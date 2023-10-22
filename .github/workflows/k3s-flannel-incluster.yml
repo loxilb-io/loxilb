@@ -13,7 +13,7 @@ jobs:
   build:
     name: k3s-flannel-incluster-sanity
     runs-on: self-hosted
-    if: github.repository == 'TrekkieCoder/loxilb' 
+    if: github.repository == 'loxilb-io/loxilb' 
           &&  github.event.inputs.tagName == ''
     steps:
       - name: Checkout
