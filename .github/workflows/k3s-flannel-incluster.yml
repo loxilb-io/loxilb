@@ -25,7 +25,7 @@ jobs:
         run: |
          cd cicd/k3s-flannel-incluster
          ./config.sh
-         sleep 90
+         sleep 120
          ./validation.sh
          cd -
          
@@ -33,5 +33,5 @@ jobs:
         if: success() || failure()
         run: |
           cd cicd/k3s-flannel-incluster || true
-          ./rmconfig.sh
+          #./rmconfig.sh
           cd -
