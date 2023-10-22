@@ -16,11 +16,6 @@ jobs:
     if: github.repository == 'TrekkieCoder/loxilb' 
           &&  github.event.inputs.tagName == ''
     steps:
-      - name: Checkout
-        #uses: actions/checkout@v2
-        #with:
-        #  submodules: recursive
-
       - name: Run the test
         run: |
          cd cicd/k3s-flannel-incluster
