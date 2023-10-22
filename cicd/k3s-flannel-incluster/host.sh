@@ -1,4 +1,4 @@
-wget https://github.com/TrekkieCoder/loxilb/raw/main/cicd/common/sctp_socat_client
+wget https://github.com/loxilb-io/loxilb/raw/main/cicd/common/sctp_socat_client
 wget https://github.com/loxilb-io/loxilb/raw/main/cicd/common/udp_client
 chmod 777 sctp_socat_client
 chmod 777 udp_client
