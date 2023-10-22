@@ -41,8 +41,6 @@ else
   exit 1
 fi
 
-rm -f /vagrant/log1.txt
-touch /vagrant/log1.txt
 vagrant ssh host -c "socat -v -T10 - sctp:$extIP:55004,bind=192.168.90.9 1> /vagrant/log1.txt 2>&1"
 out=$(cat log1.txt)
 if [[ ${out} == *"server1"* ]]; then
@@ -52,9 +50,8 @@ else
   print_debug_info
   exit 1
 fi
+rm -f /vagrant/log1.txt
 
-rm -f /vagrant/log2.txt
-touch /vagrant/log2.txt
 vagrant ssh host -c "socat -v -T10 - sctp:$extIP:57004,bind=192.168.90.9 1> /vagrant/log2.txt 2>&1"
 out=$(cat log2.txt)
 if [[ ${out} == *"server1"* ]]; then
@@ -64,5 +61,6 @@ else
   print_debug_info
   exit 1
 fi
+rm -f /vagrant/log2.txt
 
 exit
