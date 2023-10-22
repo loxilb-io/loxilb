@@ -86,7 +86,7 @@ else
   code=1
 fi
 
-out=$(timeout 5 ../common/sctp_client 192.168.90.1 34951 $extIP ${sctp_port[i]})
+out=$(timeout 5 ../common/sctp_socat_client 192.168.90.1 34951 $extIP ${sctp_port[i]})
 if [[ ${out} == *"server1"* ]]; then
   echo -e "K8s-calico SCTP\t(${mode[i]})\t[OK]"
 else

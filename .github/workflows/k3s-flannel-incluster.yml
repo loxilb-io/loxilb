@@ -25,6 +25,7 @@ jobs:
         run: |
          cd cicd/k3s-flannel-incluster
          ./config.sh
+         sleep 90
          ./validation.sh
          cd -
          
