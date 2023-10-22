@@ -41,7 +41,10 @@ else
   exit 1
 fi
 
-out=$(vagrant ssh host -c "socat -T10 - sctp:$extIP:55004,bind=192.168.90.9")
+rm -f /vagrant/log1.txt
+touch /vagrant/log1.txt
+vagrant ssh host -c "socat -v -T10 - sctp:$extIP:55004,bind=192.168.90.9 1> /vagrant/log1.txt 2>&1"
+out=$(cat log1.txt)
 if [[ ${out} == *"server1"* ]]; then
   echo "k3s-flannel-cluster (kube-loxilb) sctp [OK]"
 else
@@ -50,7 +53,10 @@ else
   exit 1
 fi
 
-out=$(vagrant ssh host -c "socat -T10 - sctp:$extIP:57004,bind=192.168.90.9")
+rm -f /vagrant/log2.txt
+touch /vagrant/log2.txt
+vagrant ssh host -c "socat -v -T10 - sctp:$extIP:57004,bind=192.168.90.9 1> /vagrant/log2.txt 2>&1"
+out=$(cat log2.txt)
 if [[ ${out} == *"server1"* ]]; then
   echo "k3s-flannel-cluster (kube-loxilb) default-sctp [OK]"
 else
