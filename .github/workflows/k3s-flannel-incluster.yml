@@ -27,8 +27,12 @@ jobs:
          ./config.sh
          sleep 120
          ./validation.sh
-         vagrant ssh host -c "socat -T10 - sctp:123.123.123.1:55004,bind=192.168.90.9"
-         vagrant ssh host -c "socat -T10 - sctp:123.123.123.1:57004,bind=192.168.90.9"
+         echo "Trying"
+         vagrant ssh host -c "ip route"
+         echo "Trying2"
+         vagrant ssh host -c "socat -T10 - sctp:123.123.123.1:55004,bind=192.168.90.9" | tee out.txt
+         echo "Trying3"
+         vagrant ssh host -c "socat -T10 - sctp:123.123.123.1:57004,bind=192.168.90.9" | tee out1.txt
          cd -
          
       - name: Clean test-bed
