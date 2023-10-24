@@ -223,6 +223,9 @@ func (m *LoadbalanceEntry) UnmarshalBinary(b []byte) error {
 // swagger:model LoadbalanceEntryEndpointsItems0
 type LoadbalanceEntryEndpointsItems0 struct {
 
+	// traffic counters of the endpoint
+	Counter string `json:"counter,omitempty"`
+
 	// IP address for external access
 	EndpointIP string `json:"endpointIP,omitempty"`
 

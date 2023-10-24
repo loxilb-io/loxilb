@@ -3671,6 +3671,10 @@ func init() {
           "type": "array",
           "items": {
             "properties": {
+              "counter": {
+                "description": "traffic counters of the endpoint",
+                "type": "string"
+              },
               "endpointIP": {
                 "description": "IP address for external access",
                 "type": "string"
@@ -8120,6 +8124,10 @@ func init() {
     },
     "LoadbalanceEntryEndpointsItems0": {
       "properties": {
+        "counter": {
+          "description": "traffic counters of the endpoint",
+          "type": "string"
+        },
         "endpointIP": {
           "description": "IP address for external access",
           "type": "string"

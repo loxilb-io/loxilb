@@ -141,6 +141,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 			tmpEp.TargetPort = int64(ep.EpPort)
 			tmpEp.Weight = int64(ep.Weight)
 			tmpEp.State = ep.State
+			tmpEp.Counter = ep.Counters
 			tmpLB.Endpoints = append(tmpLB.Endpoints, tmpEp)
 		}
 

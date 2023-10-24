@@ -211,7 +211,8 @@ type ruleNatEp struct {
 	inActTries int
 	inActive   bool
 	noService  bool
-	mark       bool
+	chkVal     bool
+	stat       ruleStat
 }
 
 type ruleNatSIP struct {
@@ -759,11 +760,14 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 				continue
 			}
 
+			counterStr := fmt.Sprintf("%v:%v", ep.stat.packets, ep.stat.bytes)
+
 			ret.Eps = append(ret.Eps, cmn.LbEndPointArg{
-				EpIP:   ep.xIP.String(),
-				EpPort: ep.xPort,
-				Weight: ep.weight,
-				State:  state,
+				EpIP:     ep.xIP.String(),
+				EpPort:   ep.xPort,
+				Weight:   ep.weight,
+				State:    state,
+				Counters: counterStr,
 			})
 		}
 		// Make LB rule
@@ -1157,7 +1161,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		if natActs.mode == cmn.LBModeDSR && k.EpPort != serv.ServPort {
 			return RuleUnknownServiceErr, errors.New("malformed-service dsr-port error")
 		}
-		ep := ruleNatEp{pNetAddr, xNetAddr, k.EpPort, k.Weight, 0, false, false, false}
+		ep := ruleNatEp{pNetAddr, xNetAddr, k.EpPort, k.Weight, 0, false, false, false, ruleStat{0, 0}}
 		natActs.endPoints = append(natActs.endPoints, ep)
 	}
 
@@ -1194,8 +1198,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 						ruleChg = true
 						e.inActive = false
 					}
-					e.mark = true
-					n.mark = true
+					e.chkVal = true
+					n.chkVal = true
 					break
 				}
 			}
@@ -1203,20 +1207,20 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 
 		for i, nEp := range natActs.endPoints {
 			n := &natActs.endPoints[i]
-			if nEp.mark == false {
+			if nEp.chkVal == false {
 				ruleChg = true
-				n.mark = true
+				n.chkVal = true
 				eEps = append(eEps, *n)
 			}
 		}
 
 		for i, eEp := range eEps {
 			e := &eEps[i]
-			if eEp.mark == false {
+			if eEp.chkVal == false {
 				ruleChg = true
 				e.inActive = true
 			}
-			e.mark = false
+			e.chkVal = false
 		}
 
 		if eRule.hChk.prbType != serv.ProbeType || eRule.hChk.prbPort != serv.ProbePort ||
@@ -1987,12 +1991,27 @@ func (R *RuleH) RulesSync() {
 		if rule.sync != 0 || rChg {
 			rule.DP(DpCreate)
 		}
-		rule.DP(DpStatsGet)
+
+		bytes := uint64(0)
+		packets := uint64(0)
+		switch at := rule.act.action.(type) {
+		case *ruleNatActs:
+			for _, natActs := range at.endPoints {
+				bytes += natActs.stat.bytes
+				packets += natActs.stat.packets
+			}
+		}
+
+		rule.stat.bytes = bytes
+		rule.stat.packets = packets
+
 		tk.LogIt(-1, "%d:%s,%s pc %v bc %v \n",
 			rule.ruleNum, ruleKeys, ruleActs,
 			rule.stat.packets, rule.stat.bytes)
 
-		if rule.hChk.actChk == false {
+		rule.DP(DpStatsGet)
+
+		if !rule.hChk.actChk {
 			continue
 		}
 
@@ -2303,18 +2322,30 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 	}
 
 	if work == DpStatsGet {
-		nStat := new(StatDpWorkQ)
-		nStat.Work = work
-		nStat.Mark = uint32(r.ruleNum)
-		if isNat == true {
-			nStat.Name = MapNameNat4
+		if isNat {
+			switch at := r.act.action.(type) {
+			case *ruleNatActs:
+				for i := range at.endPoints {
+					nEP := &at.endPoints[i]
+					nStat := new(StatDpWorkQ)
+					nStat.Work = work
+					nStat.Mark = (((uint32(r.ruleNum)) & 0xfff) << 4) | (uint32(i) & 0xf)
+					nStat.Name = MapNameNat4
+					nStat.Bytes = &nEP.stat.bytes
+					nStat.Packets = &nEP.stat.packets
+					mh.dp.ToDpCh <- nStat
+				}
+			}
 		} else {
+			nStat := new(StatDpWorkQ)
+			nStat.Work = work
+			nStat.Mark = uint32(r.ruleNum)
 			nStat.Name = MapNameFw4
-		}
-		nStat.Bytes = &r.stat.bytes
-		nStat.Packets = &r.stat.packets
+			nStat.Bytes = &r.stat.bytes
+			nStat.Packets = &r.stat.packets
 
-		mh.dp.ToDpCh <- nStat
+			mh.dp.ToDpCh <- nStat
+		}
 		return 0
 	}
 
