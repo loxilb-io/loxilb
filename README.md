@@ -10,7 +10,7 @@ loxilb is an open source hyper-scale software load-balancer for cloud-native wor
     * Support for TCP, UDP, SCTP (w/ multi-homing), QUIC, FTP, TFTP etc
     * High-availability support with hitless/maglev/cgnat clustering
     * Full compliance for K8s loadbalancer Spec
-    * Multi-cluster support
+    * Multi-cluster, in-cluster or ext-cluster deployment support
 -  Extensive and scalable liveness probes for cloud-native environments
 -  High-perf replacement for the *aging* iptables/ipvs
 -  L7 proxy support - HTTP1.0, 1.1, 2.0 etc    

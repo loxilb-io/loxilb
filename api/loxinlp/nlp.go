@@ -94,6 +94,11 @@ func NlpRegister(hook cmn.NetHookInterface) {
 	hooks = hook
 }
 
+func iSBlackListedIntf(name string, masterIdx int) bool {
+	filter := nNl.BLRgx.MatchString(name)
+	return filter
+}
+
 func applyAllConfig(name string) bool {
 	command := "loxicmd apply --per-intf " + name + " -c /etc/loxilb/ipconfig/"
 	cmd := exec.Command("bash", "-c", command)
@@ -1196,8 +1201,7 @@ func DelRoute(route nlp.Route) int {
 func LUWorkSingle(m nlp.LinkUpdate) int {
 	var ret int
 
-	filter := nNl.BLRgx.MatchString(m.Link.Attrs().Name)
-	if filter {
+	if iSBlackListedIntf(m.Link.Attrs().Name, m.Link.Attrs().MasterIndex) {
 		return -1
 	}
 
@@ -1213,8 +1217,7 @@ func AUWorkSingle(m nlp.AddrUpdate) int {
 		return -1
 	}
 
-	filter := nNl.BLRgx.MatchString(link.Attrs().Name)
-	if filter {
+	if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 		return -1
 	}
 
@@ -1251,8 +1254,7 @@ func NUWorkSingle(m nlp.NeighUpdate) int {
 		return -1
 	}
 
-	filter := nNl.BLRgx.MatchString(link.Attrs().Name)
-	if filter {
+	if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 		return -1
 	}
 
@@ -1276,8 +1278,7 @@ func RUWorkSingle(m nlp.RouteUpdate) int {
 		return -1
 	}
 
-	filter := nNl.BLRgx.MatchString(link.Attrs().Name)
-	if filter {
+	if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 		return -1
 	}
 
@@ -1362,8 +1363,7 @@ func GetBridges() {
 		return
 	}
 	for _, link := range links {
-		filter := nNl.BLRgx.MatchString(link.Attrs().Name)
-		if filter {
+		if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 			continue
 		}
 		switch link.(type) {
@@ -1389,8 +1389,7 @@ func NlpGet(ch chan bool) int {
 
 	for _, link := range links {
 
-		filter := nNl.BLRgx.MatchString(link.Attrs().Name)
-		if filter {
+		if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 			continue
 		}
 

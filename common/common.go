@@ -526,6 +526,8 @@ type LbEndPointArg struct {
 	Weight uint8 `json:"weight"`
 	// State - current state of the end-point
 	State string `json:"state"`
+	// Counters -  traffic counters of the end-point
+	Counters string `json:"counters"`
 }
 
 // LbSecIPArg - Secondary IP

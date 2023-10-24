@@ -2349,6 +2349,9 @@ definitions:
             state:
               type: string
               description: state of the endpoint
+            counter:
+              type: string
+              description: traffic counters of the endpoint
 
       secondaryIPs:
         type: array
