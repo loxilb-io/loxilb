@@ -85,7 +85,7 @@ else
   code=1
 fi
 
-out=$($hexec user timeout 30 ../common/sctp_client 1.1.1.1 41291 $extIP 55004)
+out=$($hexec user timeout 30 ../common/sctp_socat_client 1.1.1.1 41291 $extIP 55004)
 if [[ ${out} == *"server1"* ]]; then
   echo "calico-k3s (kube-loxillb) sctp [OK]"
 else
