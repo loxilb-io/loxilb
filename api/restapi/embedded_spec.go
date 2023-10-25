@@ -3264,6 +3264,10 @@ func init() {
         "remotePort": {
           "description": "Remote Connect Port (default 179)",
           "type": "integer"
+        },
+        "setMultiHop": {
+          "description": "Enable multi-hop peering (if needed)",
+          "type": "boolean"
         }
       }
     },
@@ -7639,6 +7643,10 @@ func init() {
         "remotePort": {
           "description": "Remote Connect Port (default 179)",
           "type": "integer"
+        },
+        "setMultiHop": {
+          "description": "Enable multi-hop peering (if needed)",
+          "type": "boolean"
         }
       }
     },

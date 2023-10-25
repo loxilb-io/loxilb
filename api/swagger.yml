@@ -3100,6 +3100,9 @@ definitions:
       remotePort:
         type: integer
         description: Remote Connect Port (default 179)
+      setMultiHop:
+        type: boolean
+        description: Enable multi-hop peering (if needed)
 
   BGPGlobalConfig:
     type: object
