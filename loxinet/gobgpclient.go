@@ -909,7 +909,7 @@ func (gbh *GoBgpH) resetBGPMed(toLow bool) error {
 }
 
 // BGPNeighMod - Routine to add BGP neigh to goBGP server
-func (gbh *GoBgpH) BGPNeighMod(add bool, neigh net.IP, ras uint32, rPort uint32) (int, error) {
+func (gbh *GoBgpH) BGPNeighMod(add bool, neigh net.IP, ras uint32, rPort uint32, mhop bool) (int, error) {
 	var peer *api.Peer
 	var err error
 
@@ -928,6 +928,13 @@ func (gbh *GoBgpH) BGPNeighMod(add bool, neigh net.IP, ras uint32, rPort uint32)
 		peer.Transport.RemotePort = rPort
 	} else {
 		peer.Transport.RemotePort = 179
+	}
+
+	if mhop {
+		peer.EbgpMultihop = &api.EbgpMultihop{
+			Enabled:     true,
+			MultihopTtl: uint32(8),
+		}
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)

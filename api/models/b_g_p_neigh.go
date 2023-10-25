@@ -25,6 +25,9 @@ type BGPNeigh struct {
 
 	// Remote Connect Port (default 179)
 	RemotePort int64 `json:"remotePort,omitempty"`
+
+	// Enable multi-hop peering (if needed)
+	SetMultiHop bool `json:"setMultiHop,omitempty"`
 }
 
 // Validate validates this b g p neigh

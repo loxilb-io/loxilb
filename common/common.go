@@ -605,6 +605,7 @@ type GoBGPNeighMod struct {
 	Addr       net.IP `json:"neighIP"`
 	RemoteAS   uint32 `json:"remoteAS"`
 	RemotePort uint16 `json:"remotePort"`
+	MultiHop   bool   `json:"multiHop"`
 }
 
 // Equal - check if two session tunnel entries are equal
