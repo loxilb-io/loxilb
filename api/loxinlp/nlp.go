@@ -437,7 +437,7 @@ func AddVLANMemberNoHook(vlanid int, intfName string, tagged bool) int {
 	VlanBridgeName := fmt.Sprintf("vlan%d", vlanid)
 	VlanLink, err := nlp.LinkByName(VlanBridgeName)
 	if err != nil {
-		tk.LogIt(tk.LogWarning, "[NLP] Vlan Bridge added Fail\n")
+		tk.LogIt(tk.LogWarning, "[NLP] Vlan Bridge finding Fail\n")
 		return 404
 	}
 	ParentInterface, err := nlp.LinkByName(intfName)
