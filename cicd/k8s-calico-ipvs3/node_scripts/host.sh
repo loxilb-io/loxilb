@@ -8,6 +8,6 @@ if [ ! -f  /var/log/bird.log ]; then
   sudo touch /var/log/bird.log
 fi
 sudo chown bird:bird /var/log/bird.log
-sudo service bird start
+sudo service bird restart
 
 echo "Host is up"
