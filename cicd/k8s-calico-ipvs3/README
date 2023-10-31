@@ -1,0 +1,8 @@
+## Test Case Description
+
+This scenario will have K8s(1 Master Nodes & 2 Worker Nodes) cluster with Calico CNI in ipvs mode. LoxiLB will be running as external Service LB. Workloads will be spawned in all the cluster nodes.
+
+Client will be connected to the LoxiLB with L3 network. Client and LoxiLB will run BGP peering. LoxiLB will advertise the Service CIDR or VirtualIP to the client. 
+Service CIDR will also be a Virtual IP, different from the K8s cluster network.
+
+In scenarios where LoxiLB runs outside of the cluster, it is advised to create LB services in either one-arm or fullnat mode for ease of connectivity or else user has to resolve connectivity with either static routes or through BGP.
