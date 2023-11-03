@@ -193,7 +193,6 @@ paths:
           description: Maintanence mode
           schema:
             $ref: '#/definitions/Error'
-
 #----------------------------------------------
 # Conntrack
 #----------------------------------------------
@@ -223,7 +222,6 @@ paths:
           description: Maintanence mode
           schema:
             $ref: '#/definitions/Error'
-
 
 #----------------------------------------------
 # Port Dump
@@ -2331,6 +2329,9 @@ definitions:
             type: integer
             format: int32
             description: value for inactivity timeout (in seconds)
+          name:
+            type: string
+            description: service name
       
       endpoints:
         type: array
@@ -2435,6 +2436,9 @@ definitions:
       bytes:
         type: integer
         description:  Packet bytes of the conntrack
+      servName:
+        type: string
+        description: Connection's Service Name
 
   PortEntry:
     type: object

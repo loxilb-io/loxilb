@@ -330,6 +330,9 @@ type LoadbalanceEntryServiceArguments struct {
 	// value for monitoring enabled or not
 	Monitor bool `json:"monitor,omitempty"`
 
+	// service name
+	Name string `json:"name,omitempty"`
+
 	// port number for the access
 	Port int64 `json:"port,omitempty"`
 

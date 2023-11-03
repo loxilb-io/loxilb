@@ -38,6 +38,9 @@ type ConntrackEntry struct {
 	// value for access protocol
 	Protocol string `json:"protocol,omitempty"`
 
+	// Connection's Service Name
+	ServName string `json:"servName,omitempty"`
+
 	// IP address for externel access
 	SourceIP string `json:"sourceIP,omitempty"`
 
