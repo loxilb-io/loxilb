@@ -194,7 +194,7 @@ func (z *ZoneH) GetPortZone(port string) *Zone {
 func (z *ZoneH) ZonePortAdd(name string, zns string) (int, error) {
 	zone := z.ZonePorts[name]
 	if zone != nil {
-		if zone.Name == name {
+		if zone.Name == zns {
 			return 0, nil
 		}
 		return ZoneExistsErr, errors.New("zone exists")
