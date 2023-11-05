@@ -1325,6 +1325,7 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 					goCt4Ent.Bytes += b
 					goCt4Ent.Packets += p
 				}
+				goCt4Ent.RuleID = uint32(act.rid)
 				//fmt.Println(goCt4Ent)
 				ctMap[goCt4Ent.Key()] = goCt4Ent
 			}

@@ -3343,6 +3343,10 @@ func init() {
           "description": "value for access protocol",
           "type": "string"
         },
+        "servName": {
+          "description": "Connection's Service Name",
+          "type": "string"
+        },
         "sourceIP": {
           "description": "IP address for externel access",
           "type": "string"
@@ -3743,6 +3747,10 @@ func init() {
             "monitor": {
               "description": "value for monitoring enabled or not",
               "type": "boolean"
+            },
+            "name": {
+              "description": "service name",
+              "type": "string"
             },
             "port": {
               "description": "port number for the access",
@@ -7722,6 +7730,10 @@ func init() {
           "description": "value for access protocol",
           "type": "string"
         },
+        "servName": {
+          "description": "Connection's Service Name",
+          "type": "string"
+        },
         "sourceIP": {
           "description": "IP address for externel access",
           "type": "string"
@@ -8097,6 +8109,10 @@ func init() {
               "description": "value for monitoring enabled or not",
               "type": "boolean"
             },
+            "name": {
+              "description": "service name",
+              "type": "string"
+            },
             "port": {
               "description": "port number for the access",
               "type": "integer"
@@ -8195,6 +8211,10 @@ func init() {
         "monitor": {
           "description": "value for monitoring enabled or not",
           "type": "boolean"
+        },
+        "name": {
+          "description": "service name",
+          "type": "string"
         },
         "port": {
           "description": "port number for the access",

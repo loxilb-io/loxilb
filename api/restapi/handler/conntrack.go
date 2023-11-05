@@ -16,6 +16,7 @@
 package handler
 
 import (
+
 	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	tk "github.com/loxilb-io/loxilib"
@@ -44,7 +45,7 @@ func ConfigGetConntrack(params operations.GetConfigConntrackAllParams) middlewar
 		tmpResult.Protocol = conntrack.Proto
 		tmpResult.SourceIP = conntrack.Sip.String()
 		tmpResult.SourcePort = int64(conntrack.Sport)
-
+		tmpResult.ServName = conntrack.ServiceName
 		result = append(result, &tmpResult)
 	}
 	return operations.NewGetConfigConntrackAllOK().WithPayload(&operations.GetConfigConntrackAllOKBody{CtAttr: result})

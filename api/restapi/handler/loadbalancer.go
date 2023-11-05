@@ -42,6 +42,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv.ProbePort = params.Attr.ServiceArguments.Probeport
 	lbRules.Serv.ProbeReq = params.Attr.ServiceArguments.Probereq
 	lbRules.Serv.ProbeResp = params.Attr.ServiceArguments.Proberesp
+	lbRules.Serv.Name = params.Attr.ServiceArguments.Name
 
 	if lbRules.Serv.Proto == "sctp" {
 		for _, data := range params.Attr.SecondaryIPs {
@@ -101,6 +102,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 	// Get LB rules
 	tk.LogIt(tk.LogDebug, "[API] Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
+	
 	res, err := ApiHooks.NetLbRuleGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
@@ -111,7 +113,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 	for _, lb := range res {
 		var tmpLB models.LoadbalanceEntry
 		var tmpSvc models.LoadbalanceEntryServiceArguments
-
+		
 		// Service Arg match
 		tmpSvc.ExternalIP = lb.Serv.ServIP
 		tmpSvc.Bgp = lb.Serv.Bgp
@@ -125,6 +127,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tmpSvc.Managed = lb.Serv.Managed
 		tmpSvc.Probetype = lb.Serv.ProbeType
 		tmpSvc.Probeport = lb.Serv.ProbePort
+		tmpSvc.Name = lb.Serv.Name
 
 		tmpLB.ServiceArguments = &tmpSvc
 
@@ -149,6 +152,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 	}
 	return operations.NewGetConfigLoadbalancerAllOK().WithPayload(&operations.GetConfigLoadbalancerAllOKBody{LbAttr: result})
 }
+
 func ConfigDeleteAllLoadbalancer(params operations.DeleteConfigLoadbalancerAllParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 

@@ -311,6 +311,7 @@ type DpCtInfo struct {
 	ServProto  string `json:"servproto"`
 	L4ServPort uint16 `json:"l4servproto"`
 	BlockNum   uint16 `json:"blocknum"`
+	RuleID	   uint32 `json:"ruleid"`
 }
 
 const (
@@ -802,6 +803,8 @@ func DpWorker(dp *DpH, f chan int, ch chan interface{}) {
 // DpMapGetCt4 - get DP conntrack information as a map
 func (dp *DpH) DpMapGetCt4() []cmn.CtInfo {
 	var CtInfoArr []cmn.CtInfo
+	var servName string
+
 	nTable := new(TableDpWorkQ)
 	nTable.Work = DpMapGet
 	nTable.Name = MapNameCt4
@@ -814,9 +817,16 @@ func (dp *DpH) DpMapGetCt4() []cmn.CtInfo {
 	switch r := ret.(type) {
 	case map[string]*DpCtInfo:
 		for _, dCti := range r {
+			
+			mh.mtx.Lock()
+			rule := mh.zr.Rules.GetNatLbRuleByID(dCti.RuleID)
+			mh.mtx.Unlock()
+			if rule != nil {
+				servName = rule.name
+			}
 			cti := cmn.CtInfo{Dip: dCti.DIP, Sip: dCti.SIP, Dport: dCti.Dport, Sport: dCti.Sport,
 				Proto: dCti.Proto, CState: dCti.CState, CAct: dCti.CAct,
-				Pkts: dCti.Packets, Bytes: dCti.Bytes}
+				Pkts: dCti.Packets, Bytes: dCti.Bytes, ServiceName: servName}
 			CtInfoArr = append(CtInfoArr, cti)
 		}
 	}

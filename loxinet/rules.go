@@ -272,6 +272,7 @@ type ruleEnt struct {
 	act      ruleAct
 	secIP    []ruleNatSIP
 	stat     ruleStat
+	name	 string
 }
 
 type ruleTable struct {
@@ -743,6 +744,7 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.ProbePort = data.hChk.prbPort
 		ret.Serv.ProbeReq = data.hChk.prbReq
 		ret.Serv.ProbeResp = data.hChk.prbResp
+		ret.Serv.Name = data.name
 
 		for _, sip := range data.secIP {
 			ret.SecIPs = append(ret.SecIPs, cmn.LbSecIPArg{SecIP: sip.sIP.String()})
@@ -1257,6 +1259,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	r := new(ruleEnt)
 	r.tuples = rt
 	r.zone = R.zone
+	r.name = serv.Name
 	if serv.Mode == cmn.LBModeFullNAT || serv.Mode == cmn.LBModeOneArm {
 		r.act.actType = RtActFullNat
 	} else {

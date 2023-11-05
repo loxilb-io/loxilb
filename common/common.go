@@ -513,6 +513,8 @@ type LbServiceArg struct {
 	ProbeReq string `json:"probereq"`
 	// ProbeResp - Response string for liveness check
 	ProbeResp string `json:"proberesp"`
+	// Name - Service name
+	Name string `json:"name"`
 }
 
 // LbEndPointArg - Information related to load-balancer end-point
@@ -566,6 +568,8 @@ type CtInfo struct {
 	Pkts uint64 `json:"packets"`
 	// Bytes - bytes tracked by ct entry
 	Bytes uint64 `json:"bytes"`
+	// ServiceName - Connection's service name
+	ServiceName string `json:"servName"`
 }
 
 // UlClArg - ulcl argument information
