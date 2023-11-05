@@ -187,19 +187,14 @@ func (z *ZoneH) ZonePortIsValid(name string, zns string) (int, error) {
 
 // GetPortZone - routine to identify the zone of a port
 func (z *ZoneH) GetPortZone(port string) *Zone {
-	zone := z.ZonePorts[port]
-	if zone == nil {
-		return nil
-	}
-
-	return zone
+	return z.ZonePorts[port]
 }
 
 // ZonePortAdd - routine to add a port to a zone
 func (z *ZoneH) ZonePortAdd(name string, zns string) (int, error) {
 	zone := z.ZonePorts[name]
 	if zone != nil {
-		if zone.Name == name {
+		if zone.Name == zns {
 			return 0, nil
 		}
 		return ZoneExistsErr, errors.New("zone exists")
