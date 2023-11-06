@@ -21,13 +21,14 @@ import (
 	"fmt"
 	"net"
 
-	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
+
+	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 // constants
 const (
-	L3ErrBase = iota - RtErrBase - 1000
+	L3ErrBase = iota - 8000
 	L3AddrErr
 	L3ObjErr
 )

@@ -23,8 +23,9 @@ import (
 	"sync"
 	"time"
 
-	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
+
+	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 // man names constants
@@ -43,7 +44,7 @@ const (
 
 // error codes
 const (
-	DpErrBase = iota - L3ErrBase - 1000
+	DpErrBase = iota - 103000
 	DpWqUnkErr
 )
 
@@ -311,7 +312,7 @@ type DpCtInfo struct {
 	ServProto  string `json:"servproto"`
 	L4ServPort uint16 `json:"l4servproto"`
 	BlockNum   uint16 `json:"blocknum"`
-	RuleID	   uint32 `json:"ruleid"`
+	RuleID     uint32 `json:"ruleid"`
 }
 
 const (
@@ -817,7 +818,7 @@ func (dp *DpH) DpMapGetCt4() []cmn.CtInfo {
 	switch r := ret.(type) {
 	case map[string]*DpCtInfo:
 		for _, dCti := range r {
-			
+
 			mh.mtx.Lock()
 			rule := mh.zr.Rules.GetNatLbRuleByID(dCti.RuleID)
 			mh.mtx.Unlock()
