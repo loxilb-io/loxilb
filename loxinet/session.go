@@ -21,13 +21,14 @@ import (
 	"fmt"
 	"net"
 
-	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
+
+	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 // error codes for session api
 const (
-	SessErrBase = iota - 90000
+	SessErrBase = iota - 102000
 	SessModErr
 	SessNoExistErr
 	SessExistsErr

@@ -28,7 +28,7 @@ import (
 
 // error codes for zone
 const (
-	ZoneBaseErr = iota - RtErrBase - 1000
+	ZoneBaseErr = iota - 6000
 	ZoneExistsErr
 	ZoneNotExistErr
 	ZoneNumberErr

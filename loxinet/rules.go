@@ -40,7 +40,7 @@ import (
 
 // error codes
 const (
-	RuleErrBase = iota - ZoneBaseErr - 1000
+	RuleErrBase = iota - 7000
 	RuleUnknownServiceErr
 	RuleUnknownEpErr
 	RuleExistsErr
@@ -272,7 +272,7 @@ type ruleEnt struct {
 	act      ruleAct
 	secIP    []ruleNatSIP
 	stat     ruleStat
-	name	 string
+	name     string
 }
 
 type ruleTable struct {
