@@ -2,7 +2,7 @@
 source ../common.sh
 source ../k3s_common.sh
 
-echo "cluster-k3s: TCP & SCTP Multihoming combined"
+echo -e "cluster-k3s: TCP & SCTP Multihoming combined\n"
 
 if [ "$1" ]; then
   KUBECONFIG="$1"
@@ -32,7 +32,8 @@ done
 
 ## Any routing updates  ??
 #sleep 30
-echo $extIP
+echo "TCP service tcp-lb1 -> $extIP:55002"
+echo -e "------------------------------------------------------------------------------------\n"
 
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
@@ -52,6 +53,7 @@ else
   $dexec r1 ip route
   exit 1
 fi
+echo -e "------------------------------------------------------------------------------------\n\n\n"
 
 for((i=0; i<120; i++))
 do
@@ -73,6 +75,7 @@ do
 done
 
 echo "SCTP Multihoming service sctp-lb1 -> $extIP:$port"
+echo -e "------------------------------------------------------------------------------------\n"
 
 $hexec user sctp_darn -H 1.1.1.1 -h 123.123.123.1 -p 55003 -s < input > output
 sleep 5
@@ -115,7 +118,103 @@ else
     echo "BFP trace -- "
     exit 1
 fi
+echo -e "------------------------------------------------------------------------------------\n\n\n"
 
+echo "SCTP Multihoming service sctp-lb2 -> 133.133.133.1:55004"
+echo -e "------------------------------------------------------------------------------------\n"
+
+$hexec user timeout 10 sctp_darn -H 1.1.1.1 -h 133.133.133.1 -p 55004 -s < input > output
+sleep 5
+exp="New connection, peer addresses
+133.133.133.1:55004
+134.134.134.1:55004
+135.135.135.1:55004"
+
+res=`cat output | grep -A 3 "New connection, peer addresses"`
+sudo rm -rf output
+if [[ "$res" == "$exp" ]]; then
+    echo $res
+    echo "cluster-k3s SCTP Multihoming service sctp-lb2 (kube-loxilb) [OK]"
+else
+    echo "cluster-k3s SCTP Multihoming service sctp-lb2 (kube-loxilb) [NOK]"
+    echo "Expected : $exp"
+    echo "Received : $res"
+    ## Dump some debug info
+    echo "system route-info"
+    ip route
+    echo "system ipables"
+    sudo iptables -n -t nat -L -v  |grep sctp
+    echo "llb1 lb-info"
+    $dexec llb1 loxicmd get lb
+    echo "llb1 ep-info"
+    $dexec llb1 loxicmd get ep
+    echo "llb1 bpf-info"
+    $dexec llb1 ntc filter show dev eth0 ingress
+    echo "llb1 route-info"
+    $dexec llb1 ip route
+    echo "llb2 lb-info"
+    $dexec llb2 loxicmd get lb
+    echo "llb2 route-info"
+    $dexec llb2 ip route
+    echo "r1 route-info"
+    $dexec r1 ip route
+    echo "BFP trace -- "
+    sudo timeout 5 cat  /sys/kernel/debug/tracing/trace_pipe
+    sudo killall -9 cat
+    echo "BFP trace -- "
+    exit 1
+fi
+echo -e "------------------------------------------------------------------------------------\n\n\n"
+
+echo "SCTP Multihoming service sctp-lb2 -> 133.133.133.2:55004"
+echo -e "------------------------------------------------------------------------------------\n"
+
+$hexec user timeout 10 sctp_darn -H 1.1.1.1 -h 133.133.133.2 -p 55004 -s < input > output
+sleep 5
+exp="New connection, peer addresses
+133.133.133.2:55004
+134.134.134.1:55004
+135.135.135.1:55004"
+
+res=`cat output | grep -A 3 "New connection, peer addresses"`
+sudo rm -rf output
+if [[ "$res" == "$exp" ]]; then
+    echo $res
+    echo "cluster-k3s SCTP Multihoming service sctp-lb2 (kube-loxilb) [OK]"
+else
+    echo "cluster-k3s SCTP Multihoming service sctp-lb2 (kube-loxilb) [NOK]"
+    echo "Expected : $exp"
+    echo "Received : $res"
+    ## Dump some debug info
+    echo "system route-info"
+    ip route
+    echo "system ipables"
+    sudo iptables -n -t nat -L -v  |grep sctp
+    echo "llb1 lb-info"
+    $dexec llb1 loxicmd get lb
+    echo "llb1 ep-info"
+    $dexec llb1 loxicmd get ep
+    echo "llb1 bpf-info"
+    $dexec llb1 ntc filter show dev eth0 ingress
+    echo "llb1 route-info"
+    $dexec llb1 ip route
+    echo "llb2 lb-info"
+    $dexec llb2 loxicmd get lb
+    echo "llb2 route-info"
+    $dexec llb2 ip route
+    echo "r1 route-info"
+    $dexec r1 ip route
+    echo "BFP trace -- "
+    sudo timeout 5 cat  /sys/kernel/debug/tracing/trace_pipe
+    sudo killall -9 cat
+    echo "BFP trace -- "
+    exit 1
+fi
+echo -e "------------------------------------------------------------------------------------\n\n\n"
+
+
+echo "TCP service tcp-lb1 -> $extIP:55002(del+add)"
+echo -e "------------------------------------------------------------------------------------\n"
 ## Check delete and readd service
 kubectl $KUBECONFIG delete -f nginx-svc-lb1.yml
 sleep 10
@@ -143,4 +242,5 @@ else
   $dexec r1 ip route
   exit 1
 fi
+echo -e "------------------------------------------------------------------------------------\n\n\n"
 

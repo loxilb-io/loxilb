@@ -817,7 +817,7 @@ func (dp *DpH) DpMapGetCt4() []cmn.CtInfo {
 	switch r := ret.(type) {
 	case map[string]*DpCtInfo:
 		for _, dCti := range r {
-			
+			servName = "-"
 			mh.mtx.Lock()
 			rule := mh.zr.Rules.GetNatLbRuleByID(dCti.RuleID)
 			mh.mtx.Unlock()
