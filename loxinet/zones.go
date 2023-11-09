@@ -28,7 +28,7 @@ import (
 
 // error codes for zone
 const (
-	ZoneBaseErr = iota - RtErrBase - 1000
+	ZoneBaseErr = iota - 6000
 	ZoneExistsErr
 	ZoneNotExistErr
 	ZoneNumberErr
@@ -143,7 +143,7 @@ func (z *ZoneH) ZoneDelete(name string) (int, error) {
 func (z *ZoneH) ZoneBrAdd(name string, zns string) (int, error) {
 	zone := z.ZoneBrs[name]
 	if zone != nil {
-		if zone.Name == name {
+		if zone.Name == zns {
 			return 0, nil
 		}
 		return ZoneExistsErr, errors.New("zone exists")

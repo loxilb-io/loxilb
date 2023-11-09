@@ -21,8 +21,9 @@ import (
 	"fmt"
 	"net"
 
-	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
+
+	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 // error codes
@@ -110,7 +111,7 @@ func RtInit(zone *Zone) *RtH {
 	var nRt = new(RtH)
 	nRt.RtMap = make(map[RtKey]*Rt)
 	nRt.Trie4 = tk.TrieInit(false)
-	nRt.Trie6 = tk.TrieInit(false)
+	nRt.Trie6 = tk.TrieInit(true)
 	nRt.Zone = zone
 	nRt.Mark = tk.NewCounter(1, MaxSysRoutes)
 	return nRt
