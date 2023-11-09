@@ -217,11 +217,11 @@ $dexec llb1 loxicmd get lb -o wide
 echo "llb1: loxicmd get ep -o wide"
 echo "****************************"
 $dexec llb1 loxicmd get ep -o wide
-$dexec llb1 cat /etc/shared/keepalive.state
+#$dexec llb1 cat /etc/shared/keepalive.state
 echo "llb2: loxicmd get lb -o wide"
 echo "****************************"
 $dexec llb2 loxicmd get lb -o wide
 echo "llb2: loxicmd get ep -o wide"
 echo "****************************"
 $dexec llb2 loxicmd get ep -o wide
-$dexec llb2 cat /etc/shared/keepalive.state
+#$dexec llb2 cat /etc/shared/keepalive.state
