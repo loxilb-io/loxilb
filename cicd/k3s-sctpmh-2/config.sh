@@ -111,6 +111,10 @@ $hexec r1 ip route add 20.20.20.1/32 via 11.11.11.11
 
 # Route back to user
 sudo ip route add 11.11.11.0/24 via 12.12.12.1
+sudo ip route add 1.1.1.1 via 12.12.12.1
+sudo ip route add 123.123.123.1 via 12.12.12.1
+sudo ip route add 133.133.133.1 via 12.12.12.1
+sudo ip route add 133.133.133.2 via 12.12.12.1
 
 # Change default route in llb1
 $hexec llb1 ip route del default 
@@ -123,6 +127,8 @@ $hexec llb2 ip route add default via 14.14.14.254
 # Backup paths in user
 $hexec user ip route add 124.124.124.1/32 via 2.2.2.254
 $hexec user ip route add 125.125.125.1/32 via 2.2.2.254
+$hexec user ip route add 134.134.134.1/32 via 2.2.2.254
+$hexec user ip route add 135.135.135.1/32 via 2.2.2.254
 
 sleep 1
 ##Create LB rule
@@ -190,6 +196,7 @@ kubectl $KUBECONFIG apply -f nginx-svc-lb1.yml
 #docker save --output sctp-server.tar loxilb-io/sctp-server
 #sudo k3s ctr images import ./sctp-server.tar
 kubectl $KUBECONFIG apply -f sctp-svc-lb.yml
+kubectl $KUBECONFIG apply -f sctp-svc-lb2.yml
 
 sleep 50
 
@@ -210,11 +217,11 @@ $dexec llb1 loxicmd get lb -o wide
 echo "llb1: loxicmd get ep -o wide"
 echo "****************************"
 $dexec llb1 loxicmd get ep -o wide
-$dexec llb1 cat /etc/shared/keepalive.state
+#$dexec llb1 cat /etc/shared/keepalive.state
 echo "llb2: loxicmd get lb -o wide"
 echo "****************************"
 $dexec llb2 loxicmd get lb -o wide
 echo "llb2: loxicmd get ep -o wide"
 echo "****************************"
 $dexec llb2 loxicmd get ep -o wide
-$dexec llb2 cat /etc/shared/keepalive.state
+#$dexec llb2 cat /etc/shared/keepalive.state
