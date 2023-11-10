@@ -179,6 +179,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 				if pfxSz1 == pfxSz2 {
 					ifa.Ifas = append(ifa.Ifas[:index], ifa.Ifas[index+1:]...)
 					found = true
+					break
 				}
 			}
 		}
