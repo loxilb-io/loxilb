@@ -417,6 +417,7 @@ func IfaMkString(ifa *Ifa, v4 bool) string {
 		}
 		plen, _ := ifaEnt.IfaNet.Mask.Size()
 		str = fmt.Sprintf("%s/%d (%s) ", ifaEnt.IfaAddr.String(), plen, flagStr)
+		break
 	}
 
 	return str
