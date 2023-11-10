@@ -403,17 +403,17 @@ func (l3 *L3H) Ifas2String(it IterIntf) error {
 func IfaMkString(ifa *Ifa, v4 bool) string {
 	var str string
 	for _, ifaEnt := range ifa.Ifas {
-		var flagStr string
-		if ifaEnt.Secondary {
-			flagStr = "S"
-		} else {
-			flagStr = "P"
-		}
 		if !v4 && tk.IsNetIPv4(ifaEnt.IfaAddr.String()) {
 			continue
 		}
 		if v4 && tk.IsNetIPv6(ifaEnt.IfaAddr.String()) {
 			continue
+		}
+		var flagStr string
+		if ifaEnt.Secondary {
+			flagStr = "S"
+		} else {
+			flagStr = "P"
 		}
 		plen, _ := ifaEnt.IfaNet.Mask.Size()
 		str = fmt.Sprintf("%s/%d (%s) ", ifaEnt.IfaAddr.String(), plen, flagStr)
