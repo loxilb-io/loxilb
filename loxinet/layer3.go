@@ -156,7 +156,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 	var found bool = false
 	addr, network, err := net.ParseCIDR(Cidr)
 	if err != nil {
-		tk.LogIt(tk.LogError, "ifa delete - malformed %s:%s\n", addr.String(), Obj)
+		tk.LogIt(tk.LogError, "ifa delete - malformed %s:%s\n", Cidr, Obj)
 		return L3AddrErr, errors.New("ip address parse error")
 	}
 
