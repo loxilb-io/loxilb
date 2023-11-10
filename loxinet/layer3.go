@@ -106,6 +106,8 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 
 		ifa.DP(DpCreate)
 
+		tk.LogIt(tk.LogDebug, "ifa added %s:%s\n", addr.String(), Obj)
+
 		return 0, nil
 	}
 
