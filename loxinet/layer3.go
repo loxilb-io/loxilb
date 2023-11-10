@@ -387,9 +387,8 @@ func Ifa2String(ifa *Ifa, it IterIntf) {
 		}
 		plen, _ := ifaEnt.IfaNet.Mask.Size()
 		str = fmt.Sprintf("%s/%d - %s", ifaEnt.IfaAddr.String(), plen, flagStr)
+		it.NodeWalker(str)
 	}
-
-	it.NodeWalker(str)
 }
 
 // Ifas2String - Format all ifas to string
