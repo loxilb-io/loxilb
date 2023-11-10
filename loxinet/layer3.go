@@ -130,7 +130,6 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 	}
 
 	ifaEnt := new(IfaEnt)
-	ifa.Key.Obj = Obj
 	ifaEnt.IfaAddr = addr
 	ifaEnt.IfaNet = *network
 	ifaEnt.Secondary = sec
