@@ -106,6 +106,8 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 
 		ifa.DP(DpCreate)
 
+		tk.LogIt(tk.LogDebug, "ifa added %s:%s\n", addr.String(), Obj)
+
 		return 0, nil
 	}
 
@@ -128,7 +130,6 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 	}
 
 	ifaEnt := new(IfaEnt)
-	ifa.Key.Obj = Obj
 	ifaEnt.IfaAddr = addr
 	ifaEnt.IfaNet = *network
 	ifaEnt.Secondary = sec
@@ -156,7 +157,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 	var found bool = false
 	addr, network, err := net.ParseCIDR(Cidr)
 	if err != nil {
-		tk.LogIt(tk.LogError, "ifa delete - malformed %s:%s\n", addr.String(), Obj)
+		tk.LogIt(tk.LogError, "ifa delete - malformed %s:%s\n", Cidr, Obj)
 		return L3AddrErr, errors.New("ip address parse error")
 	}
 
@@ -178,6 +179,7 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 				if pfxSz1 == pfxSz2 {
 					ifa.Ifas = append(ifa.Ifas[:index], ifa.Ifas[index+1:]...)
 					found = true
+					break
 				}
 			}
 		}
@@ -385,9 +387,8 @@ func Ifa2String(ifa *Ifa, it IterIntf) {
 		}
 		plen, _ := ifaEnt.IfaNet.Mask.Size()
 		str = fmt.Sprintf("%s/%d - %s", ifaEnt.IfaAddr.String(), plen, flagStr)
+		it.NodeWalker(str)
 	}
-
-	it.NodeWalker(str)
 }
 
 // Ifas2String - Format all ifas to string
@@ -402,20 +403,21 @@ func (l3 *L3H) Ifas2String(it IterIntf) error {
 func IfaMkString(ifa *Ifa, v4 bool) string {
 	var str string
 	for _, ifaEnt := range ifa.Ifas {
-		var flagStr string
-		if ifaEnt.Secondary {
-			flagStr = "S"
-		} else {
-			flagStr = "P"
-		}
 		if !v4 && tk.IsNetIPv4(ifaEnt.IfaAddr.String()) {
 			continue
 		}
 		if v4 && tk.IsNetIPv6(ifaEnt.IfaAddr.String()) {
 			continue
 		}
+		var flagStr string
+		if ifaEnt.Secondary {
+			flagStr = "S"
+		} else {
+			flagStr = "P"
+		}
 		plen, _ := ifaEnt.IfaNet.Mask.Size()
 		str = fmt.Sprintf("%s/%d (%s) ", ifaEnt.IfaAddr.String(), plen, flagStr)
+		break
 	}
 
 	return str
