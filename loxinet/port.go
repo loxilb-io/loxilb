@@ -25,8 +25,9 @@ import (
 	"net"
 	"strings"
 
-	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
+
+	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 // error codes
@@ -710,7 +711,7 @@ func port2String(e *Port, it IterIntf) {
 	if e.SInfo.PortType&cmn.PortBondSif == cmn.PortBondSif {
 		pStr += "bond-sif,"
 	}
-	if e.SInfo.PortType&cmn.PortBondSif == cmn.PortBond {
+	if e.SInfo.PortType&cmn.PortBond == cmn.PortBond {
 		pStr += "bond,"
 	}
 	if e.SInfo.PortType&cmn.PortVxlanSif == cmn.PortVxlanSif {
