@@ -850,7 +850,7 @@ func (P *PortsH) PortDestructAll() {
 		if p.SInfo.PortType&cmn.PortBondSif == cmn.PortBondSif {
 			bondSlaves = append(bondSlaves, p)
 		}
-		if p.SInfo.PortType&cmn.PortBondSif == cmn.PortBond {
+		if p.SInfo.PortType&cmn.PortBond == cmn.PortBond {
 			bonds = append(bonds, p)
 		}
 		if p.SInfo.PortType&cmn.PortVxlanSif == cmn.PortVxlanSif {
