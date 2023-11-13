@@ -611,8 +611,10 @@ func (P *PortsH) PortsToGet() ([]cmn.PortDump, error) {
 		if opCode == 0 {
 			ports.Stats.RxBytes = ifis.Ifs[tk.RxBytes]
 			ports.Stats.RxPackets = ifis.Ifs[tk.RxPkts]
+			ports.Stats.RxError = ifis.Ifs[tk.RxErrors]
 			ports.Stats.TxBytes = ifis.Ifs[tk.TxBytes]
 			ports.Stats.TxPackets = ifis.Ifs[tk.TxPkts]
+			ports.Stats.TxError = ifis.Ifs[tk.TxErrors]
 		}
 
 		routed := false
