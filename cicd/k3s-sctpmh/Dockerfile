@@ -4,7 +4,7 @@ FROM ubuntu:20.04
 WORKDIR /
 
 # Install any needed packages specified in requirements.txt
-RUN apt update
+RUN apt-get update
 RUN apt-get -y install lksctp-tools
 
 # Make port 9999 available to the world outside this container
