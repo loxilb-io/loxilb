@@ -13,8 +13,8 @@ add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu
 apt-get install -y docker-ce
 sudo docker run -u root --cap-add SYS_ADMIN --restart unless-stopped --privileged --entrypoint /root/loxilb-io/loxilb/loxilb -dit -v /dev/log:/dev/log  --name loxilb ghcr.io/loxilb-io/loxilb:latest
 
-#docker exec -i loxilb apt update
-#docker exec -i loxilb apt -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat ethtool
+#docker exec -i loxilb apt-get update
+#docker exec -i loxilb apt-get -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat ethtool
 
 # Create mac-vlan on top of underlying eth1 interface
 docker network create -d macvlan -o parent=eth1 --subnet 192.168.163.0/24   --gateway 192.168.163.1 --aux-address 'host=192.168.163.252' llbnet
@@ -24,8 +24,8 @@ docker network connect llbnet loxilb --ip=192.168.163.247
 
 # Start a docker to simulate e2 sctp endpoint
 docker run -u root --cap-add SYS_ADMIN -dit --privileged --name e2 eyes852/ubuntu-iperf-test:0.5
-docker exec -i e2 apt update
-docker exec -i e2 apt -y install lksctp-tools
+docker exec -i e2 apt-get update
+docker exec -i e2 apt-get -y install lksctp-tools
 
 # Turn tx checksum offload "off" in the end-point pod for LB to work properly
 #/vagrant/set_chksum.sh e2 off

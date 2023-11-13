@@ -212,7 +212,7 @@ else
 fi
 
 # Install Bird to work with k3s
-sudo apt install bird2 --yes
+sudo apt-get install bird2 --yes
 
 sleep 5
 

@@ -57,15 +57,15 @@ $dexec llb2 ip route add 31.31.31.0/24 via 77.77.77.2 dev vti100
 $dexec llb2 ip route add 32.32.32.0/24 via 77.77.77.2 dev vti100
 $dexec llb2 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=25.25.25.1:1,26.26.26.1:1
 
-$dexec llb1 apt update
-$dexec llb1 apt install -y strongswan strongswan-swanctl systemctl
+$dexec llb1 apt-get update
+$dexec llb1 apt-get install -y strongswan strongswan-swanctl systemctl
 docker cp llb1_ipsec_config/ipsec.conf llb1:/etc/
 docker cp llb1_ipsec_config/ipsec.secrets llb1:/etc/
 docker cp llb1_ipsec_config/charon.conf llb1:/etc/strongswan.d/
 $dexec llb1 systemctl restart strongswan-starter
 
-$dexec llb2 apt update
-$dexec llb2 apt install -y strongswan strongswan-swanctl systemctl
+$dexec llb2 apt-get update
+$dexec llb2 apt-get install -y strongswan strongswan-swanctl systemctl
 docker cp llb2_ipsec_config/ipsec.conf llb2:/etc/
 docker cp llb2_ipsec_config/ipsec.secrets llb2:/etc/
 docker cp llb2_ipsec_config/charon.conf llb2:/etc/strongswan.d/

@@ -1,5 +1,5 @@
 # Install Bird to work with k3s
-sudo apt -y install bird2 lksctp-tools
+sudo apt-get -y install bird2 lksctp-tools
 
 sleep 5
 

@@ -14,17 +14,17 @@ RUN mkdir -p /opt/loxilb && \
     mkdir -p /etc/bash_completion.d/
 
 # Update Ubuntu Software repository
-RUN apt update && apt install -y wget
+RUN apt-get update && apt-get install -y wget
 
 # Env for golang
 ENV PATH="${PATH}:/usr/local/go/bin"
 
 # Install loxilb related packages
-RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && if [ "$arch" = "arm64" ] ; then apt install -y gcc-multilib-arm-linux-gnueabihf; else apt update && apt install -y  gcc-multilib;fi && \
+RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && if [ "$arch" = "arm64" ] ; then apt-get install -y gcc-multilib-arm-linux-gnueabihf; else apt-get update && apt-get install -y  gcc-multilib;fi && \
     # Arch specific packages - GoLang
     wget https://go.dev/dl/go1.18.linux-${arch}.tar.gz && tar -xzf go1.18.linux-${arch}.tar.gz --directory /usr/local/ && rm go1.18.linux-${arch}.tar.gz && \
     # Dev and util packages
-    apt install -y clang llvm libelf-dev libpcap-dev vim net-tools \
+    apt-get install -y clang llvm libelf-dev libpcap-dev vim net-tools \
     elfutils dwarves git libbsd-dev bridge-utils wget unzip build-essential \
     bison flex sudo iproute2 pkg-config tcpdump iputils-ping keepalived curl bash-completion && \
     # Install loxilb's custom ntc tool
@@ -61,7 +61,7 @@ RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && i
     elfutils dwarves git bison flex wget unzip && apt-get -y autoremove && \
     apt-get install -y libllvm10 && \
     # cleanup unnecessary packages
-    if [ "$arch" = "arm64" ] ; then apt purge -y gcc-multilib-arm-linux-gnueabihf; else apt update && apt purge -y gcc-multilib;fi && \
+    if [ "$arch" = "arm64" ] ; then apt purge -y gcc-multilib-arm-linux-gnueabihf; else apt-get update && apt purge -y gcc-multilib;fi && \
     rm -rf /var/lib/apt/lists/* && apt clean && \
     echo "if [ -f /etc/bash_completion ] && ! shopt -oq posix; then" >> /root/.bashrc && \
     echo "    . /etc/bash_completion" >> /root/.bashrc && \
