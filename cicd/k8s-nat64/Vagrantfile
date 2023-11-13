@@ -116,7 +116,7 @@ Vagrant.configure("2") do |config|
       # Disable swap for each vm
       config.vm.provision "0", type: "shell", inline: "swapoff -a"
       config.vm.provision "shell", inline: <<-SHELL
-        apt update
+        apt-get update
         mkdir -p $HOME/.kube
         hostnamectl set-hostname node"#{i}"
       SHELL
@@ -125,7 +125,7 @@ Vagrant.configure("2") do |config|
       if config.vm.hostname == "node1" || config.vm.hostname == "k8slx-01"
           config.vm.provision "shell", privileged: false, inline: <<-SHELL
             git clone https://github.com/kubernetes-sigs/kubespray.git
-            sudo apt update; sudo apt install -y python3-pip sshpass; sudo pip install -r kubespray/requirements.txt
+            sudo apt-get update; sudo apt-get install -y python3-pip sshpass; sudo pip install -r kubespray/requirements.txt
             cp -rfp kubespray/inventory/sample kubespray/inventory/mycluster
             CONFIG_FILE=kubespray/inventory/mycluster/hosts.yml python3 kubespray/contrib/inventory_builder/inventory.py 192.168.59.211 192.168.59.212 192.168.59.213 192.168.59.214
             ssh-keygen -b 2048 -t rsa -f /home/vagrant/.ssh/id_rsa -q -N ""
