@@ -8,7 +8,7 @@ apt-get install -y docker-ce
 docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged --entrypoint /bin/bash -dit -v /dev/log:/dev/log --net=host --name loxilb ghcr.io/loxilb-io/loxilb:latest
 
 docker exec -it loxilb apt update
-docker exec -it loxilb apt -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat ethtool
+docker exec -it loxilb apt-get -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat ethtool
 docker exec -it loxilb git clone https://github.com/loxilb-io/loxilb.git --recurse-submodules
 
 echo alias loxicmd=\"sudo docker exec -it loxilb loxicmd\" >> ~/.bashrc

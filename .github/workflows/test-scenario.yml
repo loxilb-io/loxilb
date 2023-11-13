@@ -29,8 +29,8 @@ jobs:
         with:
              go-version: '>=1.18.0'
       - run: sudo apt-get update
-      - run: if [[ ${{ github.event.inputs.runsOn }} == 'ubuntu-22.04' ]]; then sudo apt -y install clang-13 lksctp-tools; else sudo apt -y install clang-10; fi
-      - run: sudo apt -y install llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat
+      - run: if [[ ${{ github.event.inputs.runsOn }} == 'ubuntu-22.04' ]]; then sudo apt-get -y install clang-13 lksctp-tools; else sudo apt-get -y install clang-10; fi
+      - run: sudo apt-get -y install llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat
       - run: |
             git clone https://github.com/loxilb-io/iproute2 iproute2-main
             cd iproute2-main/libbpf/src/
