@@ -181,9 +181,8 @@ get_llb_peerIP() {
 ## Deletes a docker host
 ## arg1 - hostname 
 delete_docker_host() {
-  id=`docker ps -f name=$1| grep -w $1 | cut  -d " "  -f 1 | grep -iv  "CONTAINER"`
-  if [ "$id" != "" ]; then
-    docker stop $1 2>&1 >> /dev/null
+  if docker stop $1 2>&1 >> /dev/null
+  then
     hd="true"
     ka=`docker ps -f name=ka_$1| grep -w ka_$1 | cut  -d " "  -f 1 | grep -iv  "CONTAINER"`
     loxilbs=( "${loxilbs[@]/$1}" )
@@ -196,9 +195,7 @@ delete_docker_host() {
     $hns del $1
     sudo rm -fr "$hexist/$1" 2>&1 >> /dev/null
   fi
-  if [ "$id" != "" ]; then
-    docker rm $1 2>&1 >> /dev/null
-  fi
+  docker rm $1 2>&1 >> /dev/null || true
 }
 
 ## Connects two docker hosts
