@@ -19,8 +19,9 @@ package loxinet
 import (
 	"errors"
 
-	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
+
+	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 // error codes
@@ -221,6 +222,7 @@ func (M *MirrH) MirrDelete(name string) (int, error) {
 	m.DP(DpRemove)
 
 	delete(M.MirrMap, m.Key)
+	defer M.Mark.PutCounter(m.HwNum)
 
 	tk.LogIt(tk.LogInfo, "mirror deleted - %s\n", name)
 
