@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 source ../common.sh
 if [ -z "$1" ]; then
     threads=50
