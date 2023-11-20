@@ -126,7 +126,8 @@ func (z *ZoneH) ZoneDelete(name string) (int, error) {
 		return ZoneNotExistErr, errors.New("no such zone")
 	}
 
-	zone.Name = name
+	zone.Rules.RuleDestructAll()
+	zone.Mirrs.MirrDestructAll()
 	zone.Pols.PolDestructAll()
 	zone.Rt.RtDestructAll()
 	zone.Nh.NeighDestructAll()
