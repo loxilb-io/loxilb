@@ -11,14 +11,15 @@ time=$2
 dst="$3"
 
 $hexec l3ep1 \
-  iperf -s -p 12865 \
-  > "${dst}server.log" 2>&1 &
+  iperf -s -p 12865 --reportstyle c \
+  > "${dst}server.csv" \
+  &
 # $! only gives use the pid of sudo.
 
+# --sum-only is not supported with CSV reportstyle.
 $hexec l3h1 \
-  iperf -c 20.20.20.1 -t $time -p 12865 -P $threads \
-  2>&1 | tee "${dst}client.log"
+  iperf -c 20.20.20.1 -t $time -p 12865 -P $threads --reportstyle c \
+  > "${dst}client.csv"
 
 sudo pkill -SIGTERM iperf
 wait
-cat "${dst}server.log"
