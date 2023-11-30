@@ -1,0 +1,43 @@
+#!/bin/bash
+set -eo pipefail
+set -x
+
+. "$(dirname $0)/../common.sh"
+
+# TODO: Call this from bench-loxilb suite, parse netperf.*.log in tidy.py
+
+set -u
+
+threads=$1
+time=$2
+dst="$3"
+
+# Must be for TCP for this script.
+export OSE_NETPERF_TEST=${OSE_NETPERF_TEST:-TCP_CRR}
+
+$hexec l3ep1 \
+    netserver -4 -p 12865 \
+    &
+# $! only gives use the pid of sudo.
+
+sleep 2 # await netserver, avoid 'could not establish control connection'
+
+for ((i=0,tport=12866;i<threads;i++,tport++))
+do
+    $hexec l3h1 \
+        netperf -L 10.10.10.1 -H 20.20.20.1 -t $OSE_NETPERF_TEST -l $time \
+        -- -P ,$tport \
+        > ${dst}client.$i.log \
+        &
+done
+
+sleep 10 # startup overhead
+sleep $time
+
+# netperf terminates by itself with -l.
+sudo pkill -SIGTERM netserver
+wait
+
+# netserver somehow corrupts /dev/null, so we have to create it again
+# https://github.com/HewlettPackard/netperf/pull/27
+sudo rm -f /dev/null; sudo mknod -m 666 /dev/null c 1 3
