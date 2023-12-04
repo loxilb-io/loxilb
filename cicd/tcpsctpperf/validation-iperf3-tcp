@@ -11,13 +11,13 @@ time=$2
 dst="$3"
 
 $hexec l3ep1 \
-    iperf3 --server -p 13866 --json \
+    iperf3 --server -p 12865 --json \
     > "${dst}server.json" \
     &
 # $! only gives use the pid of sudo.
 
 $hexec l3h1 \
-    iperf3 -c 20.20.20.1 -t $time -p 13866 -P $threads --json \
+    iperf3 -c 20.20.20.1 -t $time -p 12865 -P $threads --json \
     > "${dst}client.json"
 
 sudo pkill -SIGTERM iperf3

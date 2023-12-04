@@ -4,8 +4,6 @@ set -x
 
 . "$(dirname $0)/../common.sh"
 
-# TODO: Call this from bench-loxilb suite, parse netperf.*.log in tidy.py
-
 set -u
 
 threads=$1
