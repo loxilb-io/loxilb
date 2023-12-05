@@ -1,0 +1,77 @@
+#!/bin/bash
+set -eo pipefail
+set -x
+
+. "$(dirname $0)/../common.sh"
+
+set -u
+
+threads=$1
+time=$2
+dst="$3"
+
+cleanup() {
+    set +e
+
+    sudo pkill -SIGTERM nginx
+}
+
+trap cleanup EXIT
+
+OSE_NGINX_PAYLOAD=${OSE_NGINX_PAYLOAD:-1024}
+OSE_WRK_CONNECTIONS=${OSE_WRK_CONNECTIONS:-100}
+OSE_WRK_RATE=${OSE_WRK_RATE:-2000}
+
+# https://github.com/loxilb-io/loxilb/issues/449
+for i in $(seq 1 1)
+do
+    tmpd=$(mktemp --directory --suffix=-$(basename $0)-$i)
+    mkdir -p $tmpd/www
+    echo "Hello World from $i" > $tmpd/www/hello-world.txt
+    head --bytes=${OSE_NGINX_PAYLOAD} /dev/urandom > $tmpd/www/head-urandom
+
+    echo "
+worker_processes $threads;
+daemon off;  # run in foreground
+events {}
+pid nginx.pid;
+error_log /dev/stderr;
+http {
+    access_log off;
+    client_body_temp_path .;
+    proxy_temp_path .;
+    fastcgi_temp_path .;
+    uwsgi_temp_path .;
+    scgi_temp_path .;
+    server {
+        server_name localhost;
+        listen 12865;
+        location / {
+            root www;
+        }
+    }
+}
+" > $tmpd/nginx.conf
+
+    $hexec l3ep$i \
+        nginx -p $tmpd -c nginx.conf \
+        > ${dst}nginx.log \
+        &
+done
+
+set +e
+url=http://20.20.20.1:12865/head-urandom
+
+$hexec l3h1 \
+    curl $url | wc --bytes
+
+$hexec l3h1 \
+    wrk --threads $threads --duration ${time}s --connections $OSE_WRK_CONNECTIONS --rate $OSE_WRK_RATE --latency $url \
+    > ${dst}latency.log
+ec=$?
+set -e
+
+sudo pkill -SIGTERM nginx
+wait
+
+exit $ec

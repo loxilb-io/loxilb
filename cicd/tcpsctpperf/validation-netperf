@@ -10,6 +10,18 @@ threads=$1
 time=$2
 dst="$3"
 
+cleanup() {
+    set +e
+
+    sudo pkill -SIGTERM netserver netperf
+
+    # netserver somehow corrupts /dev/null, so we have to create it again
+    # https://github.com/HewlettPackard/netperf/pull/27
+    sudo rm -f /dev/null; sudo mknod -m 666 /dev/null c 1 3
+}
+
+trap cleanup EXIT
+
 # Must be for TCP for this script.
 export OSE_NETPERF_TEST=${OSE_NETPERF_TEST:-TCP_CRR}
 
@@ -35,7 +47,3 @@ sleep $time
 # netperf terminates by itself with -l.
 sudo pkill -SIGTERM netserver
 wait
-
-# netserver somehow corrupts /dev/null, so we have to create it again
-# https://github.com/HewlettPackard/netperf/pull/27
-sudo rm -f /dev/null; sudo mknod -m 666 /dev/null c 1 3

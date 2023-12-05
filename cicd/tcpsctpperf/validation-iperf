@@ -10,6 +10,14 @@ threads=$1
 time=$2
 dst="$3"
 
+cleanup() {
+    set +e
+
+    sudo pkill -SIGTERM iperf
+}
+
+trap cleanup EXIT
+
 $hexec l3ep1 \
   iperf -s -p 12865 --reportstyle c \
   > "${dst}server.csv" \

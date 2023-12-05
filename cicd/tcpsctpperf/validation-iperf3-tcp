@@ -10,6 +10,14 @@ threads=$1
 time=$2
 dst="$3"
 
+cleanup() {
+    set +e
+
+    sudo pkill -SIGTERM iperf3
+}
+
+trap cleanup EXIT
+
 $hexec l3ep1 \
     iperf3 --server -p 12865 --json \
     > "${dst}server.json" \
