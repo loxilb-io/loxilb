@@ -102,7 +102,6 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 	// Get LB rules
 	tk.LogIt(tk.LogDebug, "[API] Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
-	
 	res, err := ApiHooks.NetLbRuleGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
@@ -113,7 +112,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 	for _, lb := range res {
 		var tmpLB models.LoadbalanceEntry
 		var tmpSvc models.LoadbalanceEntryServiceArguments
-		
+
 		// Service Arg match
 		tmpSvc.ExternalIP = lb.Serv.ServIP
 		tmpSvc.Bgp = lb.Serv.Bgp
