@@ -311,7 +311,7 @@ func (gbh *GoBgpH) GetgoBGPRoutesEvents(client api.GobgpApiClient) int {
 			Table: &api.WatchEventRequest_Table{
 				Filters: []*api.WatchEventRequest_Table_Filter{
 					{
-						Type: api.WatchEventRequest_Table_Filter_ADJIN,
+						Type: api.WatchEventRequest_Table_Filter_BEST,
 					},
 				},
 			},
@@ -876,9 +876,9 @@ func (gbh *GoBgpH) resetNeighAdj() error {
 	}
 
 	for _, nb := range l {
-		if nb.Conf.PeerAsn != gbh.localAs {
-			gbh.resetSingleNeighAdj(nb.Conf.NeighborAddress)
-		}
+		//if nb.Conf.PeerAsn != gbh.localAs {
+		gbh.resetSingleNeighAdj(nb.Conf.NeighborAddress)
+		//}
 	}
 	return nil
 }
