@@ -81,6 +81,7 @@ type goCI struct {
 type GoBgpH struct {
 	eventCh chan goBgpEvent
 	ticker  *time.Ticker
+	fTicker *time.Ticker
 	tDone   chan bool
 	host    string
 	conn    *grpc.ClientConn
@@ -91,6 +92,7 @@ type GoBgpH struct {
 	localAs uint32
 	ciMap   map[string]*goCI
 	reqRst  bool
+	reSync  bool
 	resetTS time.Time
 }
 
@@ -230,6 +232,7 @@ func (gbh *GoBgpH) syncRoute(p *goBgpRouteInfo, showIdentifier bgp.BGPAddPathMod
 	}
 
 	if p.withdraw {
+		gbh.reSync = true
 		tk.LogIt(tk.LogDebug, "[GoBGP] ip route delete %s via %s\n", route.Dst.String(), route.Gw.String())
 		if err := nlp.RouteDel(route); err != nil {
 			tk.LogIt(tk.LogError, "[GoBGP] failed to ip route delete. err: %s\n", err.Error())
@@ -462,6 +465,7 @@ func GoBgpInit(bgpPeerMode bool) *GoBgpH {
 	gbh.state = BGPDisconnected
 	gbh.tDone = make(chan bool)
 	gbh.ticker = time.NewTicker(30 * time.Second)
+	gbh.fTicker = time.NewTicker(5 * time.Second)
 	go gbh.goBGPTicker()
 	go gbh.goBgpSpawn(bgpPeerMode)
 	go gbh.goBgpConnect(gbh.host)
@@ -1202,13 +1206,26 @@ func getRoutesAndAdvertise() {
 	}
 }
 
-// goBGPHouseKeeper - Periodic house keeping operations
-func (gbh *GoBgpH) goBGPHouseKeeper() {
+// goBGPLazyHouseKeeper - Periodic (lazy) house keeping operations
+func (gbh *GoBgpH) goBGPLazyHouseKeeper() {
 	gbh.mtx.Lock()
 	defer gbh.mtx.Unlock()
 
 	if err := gbh.AddCurrBgpRoutesToIPRoute(); err != nil {
 		tk.LogIt(tk.LogError, "[GoBGP] AddCurrentBgpRoutesToIpRoute() return err: %s\n", err.Error())
+	}
+}
+
+// goBGPHouseKeeper - Periodic (faster) house keeping operations
+func (gbh *GoBgpH) goBGPHouseKeeper() {
+	gbh.mtx.Lock()
+	defer gbh.mtx.Unlock()
+
+	if gbh.reSync {
+		if err := gbh.AddCurrBgpRoutesToIPRoute(); err != nil {
+			tk.LogIt(tk.LogError, "[GoBGP] AddCurrentBgpRoutesToIpRoute() return err: %s\n", err.Error())
+		}
+		gbh.reSync = false
 	}
 
 	if gbh.reqRst {
@@ -1217,7 +1234,6 @@ func (gbh *GoBgpH) goBGPHouseKeeper() {
 			gbh.resetNeighAdj()
 		}
 	}
-
 }
 
 // goBGPTicker - Perform periodic operations related to gobgp
@@ -1227,6 +1243,8 @@ func (gbh *GoBgpH) goBGPTicker() {
 		case <-gbh.tDone:
 			return
 		case <-gbh.ticker.C:
+			gbh.goBGPLazyHouseKeeper()
+		case <-gbh.fTicker.C:
 			gbh.goBGPHouseKeeper()
 		}
 	}
