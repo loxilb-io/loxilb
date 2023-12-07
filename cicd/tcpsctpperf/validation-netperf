@@ -21,22 +21,25 @@ cleanup() {
 }
 
 trap cleanup EXIT
+trap cleanup SIGINT
 
 # Must be for TCP for this script.
 export OSE_NETPERF_TEST=${OSE_NETPERF_TEST:-TCP_CRR}
+export OSE_LATENCY_REQ_PAYLOAD_SIZE=${OSE_LATENCY_PAYLOAD_SIZE:-1}
+export OSE_LATENCY_PAYLOAD_SIZE=${OSE_LATENCY_PAYLOAD_SIZE:-1024}
 
 $hexec l3ep1 \
     netserver -4 -p 12865 \
     &
 # $! only gives use the pid of sudo.
 
-sleep 2 # await netserver, avoid 'could not establish control connection'
+sleep 1 # await netserver, avoid 'could not establish control connection'
 
 for ((i=0,tport=12866;i<threads;i++,tport++))
 do
     $hexec l3h1 \
         netperf -L 10.10.10.1 -H 20.20.20.1 -t $OSE_NETPERF_TEST -l $time \
-        -- -P ,$tport \
+        -- -P ,$tport -r ${OSE_LATENCY_REQ_PAYLOAD_SIZE},$OSE_LATENCY_PAYLOAD_SIZE \
         > ${dst}client.$i.log \
         &
 done

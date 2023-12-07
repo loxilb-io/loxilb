@@ -24,6 +24,8 @@ $hexec l3ep1 \
     &
 # $! only gives use the pid of sudo.
 
+sleep 2
+
 $hexec l3h1 \
     iperf3 -c 20.20.20.1 -t $time -p 13866 -P $threads --sctp --json \
     > "${dst}client.json"

@@ -23,15 +23,15 @@ OSE_WRK_CONNECTIONS=${OSE_WRK_CONNECTIONS:-100}
 OSE_WRK_RATE=${OSE_WRK_RATE:-2000}
 
 # https://github.com/loxilb-io/loxilb/issues/449
-for i in $(seq 1 1)
+for i in $(seq 1 $OSE_LOXILB_SERVERS)
 do
     tmpd=$(mktemp --directory --suffix=-$(basename $0)-$i)
     mkdir -p $tmpd/www
     echo "Hello World from $i" > $tmpd/www/hello-world.txt
-    head --bytes=${OSE_NGINX_PAYLOAD} /dev/urandom > $tmpd/www/head-urandom
+    head --bytes=${OSE_LATENCY_PAYLOAD_SIZE} /dev/urandom > $tmpd/www/head-urandom
 
     echo "
-worker_processes $threads;
+worker_processes 1;
 daemon off;  # run in foreground
 events {}
 pid nginx.pid;
@@ -45,7 +45,7 @@ http {
     scgi_temp_path .;
     server {
         server_name localhost;
-        listen 12865;
+        listen 14000;
         location / {
             root www;
         }
@@ -59,9 +59,14 @@ http {
         &
 done
 
-set +e
-url=http://20.20.20.1:12865/head-urandom
+sleep $OSE_LOXILB_SERVERS
 
+set +e
+url=http://20.20.20.1:14000/hello-world.txt
+$hexec l3h1 \
+    curl $url
+
+url=http://20.20.20.1:14000/head-urandom
 $hexec l3h1 \
     curl $url | wc --bytes
 

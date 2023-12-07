@@ -24,6 +24,8 @@ $hexec l3ep1 \
   &
 # $! only gives use the pid of sudo.
 
+sleep 1
+
 # --sum-only is not supported with CSV reportstyle.
 $hexec l3h1 \
   iperf -c 20.20.20.1 -t $time -p 12865 -P $threads --reportstyle c \
