@@ -93,6 +93,7 @@ type GoBgpH struct {
 	ciMap   map[string]*goCI
 	reqRst  bool
 	reSync  bool
+	pMode   bool
 	resetTS time.Time
 }
 
@@ -464,6 +465,7 @@ func GoBgpInit(bgpPeerMode bool) *GoBgpH {
 	}
 	gbh.state = BGPDisconnected
 	gbh.tDone = make(chan bool)
+	gbh.pMode = bgpPeerMode
 	gbh.ticker = time.NewTicker(30 * time.Second)
 	gbh.fTicker = time.NewTicker(5 * time.Second)
 	go gbh.goBGPTicker()
@@ -1214,6 +1216,10 @@ func getRoutesAndAdvertise() {
 
 // goBGPLazyHouseKeeper - Periodic (lazy) house keeping operations
 func (gbh *GoBgpH) goBGPLazyHouseKeeper() {
+	if gbh.pMode {
+		return
+	}
+
 	gbh.mtx.Lock()
 	defer gbh.mtx.Unlock()
 
@@ -1229,7 +1235,7 @@ func (gbh *GoBgpH) goBGPHouseKeeper() {
 
 	rsync := false
 
-	if gbh.reSync {
+	if gbh.reSync || gbh.pMode {
 		if err := gbh.AddCurrBgpRoutesToIPRoute(); err != nil {
 			tk.LogIt(tk.LogError, "[GoBGP] AddCurrentBgpRoutesToIpRoute() return err: %s\n", err.Error())
 		}
