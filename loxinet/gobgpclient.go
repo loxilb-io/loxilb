@@ -674,7 +674,7 @@ func (gbh *GoBgpH) AddCurrBgpRoutesToIPRoute() error {
 	for _, r := range rib {
 		dstIP, dstIPN, err := net.ParseCIDR(r.GetPrefix())
 		if err != nil {
-			tk.LogIt(tk.LogError, "%s is invalid prefix\n", r.GetPrefix())
+			tk.LogIt(tk.LogError, "%s is invalid prefix %s\n", r.GetPrefix(), err)
 			return err
 		}
 
@@ -705,7 +705,11 @@ func (gbh *GoBgpH) AddCurrBgpRoutesToIPRoute() error {
 		}
 
 		if nlpRoute == nil || nlpRoute.Gw.IsUnspecified() {
-			tk.LogIt(tk.LogDebug, "prefix %s is invalid\n", r.GetPrefix())
+			if nlpRoute != nil {
+				nlp.RouteDel(nlpRoute)
+			} else {
+				tk.LogIt(tk.LogDebug, "prefix %s is invalid\n", r.GetPrefix())
+			}
 			continue
 		}
 		//tk.LogIt(tk.LogDebug, "[GoBGP] ip route add %s via %s\n", dstIPN.String(), nlpRoute.Gw.String())
@@ -792,7 +796,9 @@ func (gbh *GoBgpH) processBgpEvent(e goBgpEvent) {
 	switch e.EventType {
 	case bgpDisconnected:
 		tk.LogIt(tk.LogNotice, "******************* BGP %s disconnected *******************\n", gbh.host)
-		gbh.conn.Close()
+		if gbh.conn != nil {
+			gbh.conn.Close()
+		}
 		gbh.conn = nil
 		gbh.state = BGPDisconnected
 		go gbh.goBgpConnect(gbh.host)
@@ -1221,17 +1227,23 @@ func (gbh *GoBgpH) goBGPHouseKeeper() {
 	gbh.mtx.Lock()
 	defer gbh.mtx.Unlock()
 
+	rsync := false
+
 	if gbh.reSync {
 		if err := gbh.AddCurrBgpRoutesToIPRoute(); err != nil {
 			tk.LogIt(tk.LogError, "[GoBGP] AddCurrentBgpRoutesToIpRoute() return err: %s\n", err.Error())
 		}
 		gbh.reSync = false
+		rsync = true
 	}
 
 	if gbh.reqRst {
 		if time.Duration(time.Since(gbh.resetTS).Seconds()) > time.Duration(4) {
 			gbh.reqRst = false
 			gbh.resetNeighAdj()
+			if !rsync {
+				gbh.AddCurrBgpRoutesToIPRoute()
+			}
 		}
 	}
 }
