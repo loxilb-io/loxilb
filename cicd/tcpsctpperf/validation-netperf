@@ -1,0 +1,52 @@
+#!/bin/bash
+set -eo pipefail
+set -x
+
+. "$(dirname $0)/../common.sh"
+
+set -u
+
+threads=$1
+time=$2
+dst="$3"
+
+cleanup() {
+    set +e
+
+    sudo pkill -SIGTERM netserver
+    sudo pkill -SIGTERM netperf
+}
+
+trap cleanup EXIT
+trap cleanup SIGINT
+
+# Must be for TCP for this script.
+export OSE_NETPERF_TEST=${OSE_NETPERF_TEST:-TCP_CRR}
+export OSE_LATENCY_REQ_PAYLOAD_SIZE=${OSE_LATENCY_PAYLOAD_SIZE:-1}
+export OSE_LATENCY_PAYLOAD_SIZE=${OSE_LATENCY_PAYLOAD_SIZE:-1024}
+
+# Run as nobody to prevent /dev/null corruption
+# (https://github.com/HewlettPackard/netperf/issues/26).
+$hexec l3ep1 \
+    sudo -u nobody \
+    netserver -D -4 -p 12865 \
+    &
+# $! only gives use the pid of sudo.
+
+sleep 1 # await netserver, avoid 'could not establish control connection'
+
+for ((i=0,tport=12866;i<threads;i++,tport++))
+do
+    $hexec l3h1 \
+        netperf -L 10.10.10.1 -H 20.20.20.1 -t $OSE_NETPERF_TEST -l $time \
+        -- -P ,$tport -r ${OSE_LATENCY_REQ_PAYLOAD_SIZE},$OSE_LATENCY_PAYLOAD_SIZE \
+        > ${dst}client.$i.log \
+        &
+done
+
+sleep 10 # startup overhead
+sleep $time
+
+# netperf terminates by itself with -l.
+sudo pkill -SIGTERM netserver
+wait
