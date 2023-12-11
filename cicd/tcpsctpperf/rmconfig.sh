@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export OSE_LOXILB_SERVERS=${OSE_LOXILB_SERVERS:-1}
+
 source ../common.sh
 
 disconnect_docker_hosts l3h1 llb1
