@@ -1551,8 +1551,6 @@ func NlpInit(bgpPeerMode bool, blackList string) *NlH {
 	nNl.IMap = make(map[string]Intf)
 
 	checkInit := make(chan bool)
-	go NlpGet(checkInit)
-	done := <-checkInit
 
 	err := nlp.LinkSubscribe(nNl.FromLUCh, nNl.FromLUDone)
 	if err != nil {
@@ -1581,6 +1579,9 @@ func NlpInit(bgpPeerMode bool, blackList string) *NlH {
 
 	go NLWorker(nNl, bgpPeerMode)
 	tk.LogIt(tk.LogInfo, "[NLP] NLP Subscription done\n")
+
+	go NlpGet(checkInit)
+	done := <-checkInit
 
 	go LbSessionGet(done)
 

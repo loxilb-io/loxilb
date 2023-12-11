@@ -13,6 +13,8 @@ hns="sudo ip netns "
 hexist="$vrn$hn"
 lxdocker="ghcr.io/loxilb-io/loxilb:latest"
 cluster_opts=""
+## FIXME - This is needed for perfCI scripts
+OSE_LOXILB_SERVERS=${OSE_LOXILB_SERVERS:=1}
 var=$(lsb_release -r | cut -f2)
 if [[ $var == *"22.04"* ]];then
   lxdocker="ghcr.io/loxilb-io/loxilb:latestu22"
@@ -152,7 +154,9 @@ spawn_docker_host() {
   $hexec $dname ifconfig lo up
   $hexec $dname sysctl net.ipv6.conf.all.disable_ipv6=1 2>&1 >> /dev/null
   #$hexec $dname sysctl net.ipv4.conf.all.arp_accept=1 2>&1 >> /dev/null
-  $hexec $dname sysctl net.ipv4.conf.eth0.arp_ignore=2 2>&1 >> /dev/null
+  if [ -f /proc/sys/net/ipv4/conf/eth0/arp_ignore ]; then
+    $hexec $dname sysctl net.ipv4.conf.eth0.arp_ignore=2 2>&1 >> /dev/null
+  fi
 }
 
 ## Get loxilb peer docker IP
