@@ -1729,9 +1729,13 @@ func (R *RuleH) AddEPHost(apiCall bool, hostName string, name string, args epHos
 	if apiCall != true {
 		ep.ruleCount = 1
 	}
-	ep.hID = R.lepHID % MaxEndPointCheckers
-	//ep.sT = time.Now()
-	R.lepHID++
+	if args.probeType != HostProbeConnectUDP {
+		ep.hID = R.lepHID % MaxEndPointCheckers
+		//ep.sT = time.Now()
+		R.lepHID++
+	} else {
+		ep.hID = 0
+	}
 
 	R.epMap[epKey] = ep
 
