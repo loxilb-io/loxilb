@@ -43,9 +43,9 @@ const (
 	HighLocalPref = 5000
 	// LowLocalPref - Low local preference for advertising BGP route(Backup)
 	LowLocalPref = 100
-	// HighMed - Low metric means higher probability for selection outiside AS
+	// HighMed - Low metric means higher probability for selection outside AS
 	HighMed = 10
-	// LowMed - High metric means lower probability for selection outiside AS
+	// LowMed - High metric means lower probability for selection outside AS
 	LowMed = 20
 )
 

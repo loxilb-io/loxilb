@@ -37,6 +37,7 @@ RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && i
     make install && cd - && rm -fr main.zip iproute2-main && \
     # Install bpftool
     git clone --recurse-submodules https://github.com/libbpf/bpftool.git && cd bpftool/src/ && \
+    git switch --detach v7.2.0 && \
     make clean && 	make -j $(nproc) && cp -f ./bpftool /usr/local/sbin/bpftool && \
     cd - && rm -fr bpftool && \
     # Install loxicmd
