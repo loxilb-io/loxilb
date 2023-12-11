@@ -1,6 +1,8 @@
 #!/bin/bash
 set -eo pipefail
 
+export OSE_LOXILB_SERVERS=${OSE_LOXILB_SERVERS:-1}
+
 source ../common.sh
 
 echo "#########################################"
