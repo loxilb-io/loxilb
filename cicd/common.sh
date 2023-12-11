@@ -13,8 +13,6 @@ hns="sudo ip netns "
 hexist="$vrn$hn"
 lxdocker="ghcr.io/loxilb-io/loxilb:latest"
 cluster_opts=""
-## FIXME - This is needed for perfCI scripts
-OSE_LOXILB_SERVERS=${OSE_LOXILB_SERVERS:=1}
 var=$(lsb_release -r | cut -f2)
 if [[ $var == *"22.04"* ]];then
   lxdocker="ghcr.io/loxilb-io/loxilb:latestu22"
