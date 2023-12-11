@@ -19,8 +19,9 @@ package loxinet
 import (
 	"errors"
 
-	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
+
+	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 // error codes
@@ -220,6 +221,7 @@ func (P *PolH) PolDelete(pName string) (int, error) {
 	p.DP(DpRemove)
 
 	delete(P.PolMap, p.Key)
+	defer P.Mark.PutCounter(p.HwNum)
 
 	tk.LogIt(tk.LogInfo, "policer deleted - %s\n", pName)
 

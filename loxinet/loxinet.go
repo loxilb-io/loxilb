@@ -241,6 +241,10 @@ func loxiNetInit() {
 		// Initialize the clustering subsystem
 		mh.has = CIInit(spawnKa, kaMode)
 		if clusterMode {
+			if opts.Opts.Bgp {
+				tk.LogIt(tk.LogInfo, "init-wait cluster mode\n")
+				time.Sleep(10 * time.Second)
+			}
 			// Add cluster nodes if specified
 			cNodes := strings.Split(opts.Opts.ClusterNodes, ",")
 			for _, cNode := range cNodes {
