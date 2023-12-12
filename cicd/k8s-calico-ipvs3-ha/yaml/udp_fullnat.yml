@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: udp-lb-onearm
+  annotations:
+   loxilb.io/liveness: "yes"
+   loxilb.io/lbmode: "onearm"
+spec:
+  loadBalancerClass: loxilb.io/loxilb
+  externalTrafficPolicy: Local
+  selector:
+    what: udp-onearm-test
+  ports:
+    - port: 56003
+      protocol: UDP
+      targetPort: 33333
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: udp-onearm-test
+  labels:
+    what: udp-onearm-test
+spec:
+  containers:
+    - name: udp-onearm-test
+      image: ghcr.io/loxilb-io/udp-echo:latest
+      ports:
+        - containerPort: 33333
