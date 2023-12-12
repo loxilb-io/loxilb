@@ -1,0 +1,11 @@
+## Test Case Description
+
+This scenario will demonstrate LoxiLB in HA mode(clustering). The setup will have 2 LoxiLB nodes, K8s(1 Master Nodes & 2 Worker Nodes) cluster with Calico CNI in ipvs mode. LoxiLB will be running as external Service LB. Workloads will be spawned in all the cluster nodes.
+
+Client will be connected to the LoxiLB with L3 network. Client and LoxiLB will do eBGP peering where Cluster nodes and LoxiLB will do iBGP. LoxiLB will advertise the Service CIDR or VirtualIP to the client and cluster nodes.
+ 
+Service CIDR will also be a Virtual IP, different from the K8s cluster network.
+
+In scenarios where LoxiLB runs outside of the cluster in HA mode, it is advised to create LB services in fullnat mode for ease of connectivity.
+
+Please follow the link for detailed explanation about this scenario: https://www.loxilb.io/post/k8s-deploying-hitless-and-ha-load-balancing
