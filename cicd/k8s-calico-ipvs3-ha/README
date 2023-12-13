@@ -9,3 +9,11 @@ Service CIDR will also be a Virtual IP, different from the K8s cluster network.
 In scenarios where LoxiLB runs outside of the cluster in HA mode, it is advised to create LB services in fullnat mode for ease of connectivity.
 
 Please follow the link for detailed explanation about this scenario: https://www.loxilb.io/post/k8s-deploying-hitless-and-ha-load-balancing
+
+If you wish to create this scenario in your lab then install Vagrant and follow the steps below:
+
+1. Run ./config.sh to setup the K8s cluster, client and LoxiLB nodes
+
+2. Run ./validation.sh to run the HA test. Test Results will be displayed at the end.
+
+3. Run ./rmconfig.sh to cleanup the setup.
