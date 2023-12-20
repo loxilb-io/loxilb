@@ -37,7 +37,17 @@ type ociInterfaces struct {
 	VnicId          string `json:"vnicId"`
 }
 
-var Client *core.VirtualNetworkClient
+type ociInstInfo struct {
+	CompartmentId string `json:"compartmentId"`
+	Id            string `json:"id"`
+}
+
+var (
+	CompartMentID string
+	VcnId         string
+	InstanceID    string
+	Client        *core.VirtualNetworkClient
+)
 
 func OCICreatePrivateIp(vnStr string, vIP net.IP) error {
 
@@ -47,8 +57,6 @@ func OCICreatePrivateIp(vnStr string, vIP net.IP) error {
 		IpAddress:   common.String(vIP.String())}}
 
 	_, err := Client.CreatePrivateIp(context.Background(), req)
-	helpers.FatalIfError(err)
-
 	return err
 }
 
@@ -57,7 +65,9 @@ func OCIGetPrivateIpID(vnStr string, vIP net.IP) (string, error) {
 	req := core.ListPrivateIpsRequest{VnicId: common.String(vnStr)}
 
 	resp, err := Client.ListPrivateIps(context.Background(), req)
-	helpers.FatalIfError(err)
+	if err != nil {
+		return "", err
+	}
 
 	displayName := fmt.Sprintf("loxilb-%s", vIP.String())
 
@@ -70,13 +80,43 @@ func OCIGetPrivateIpID(vnStr string, vIP net.IP) (string, error) {
 	return "", errors.New("ipID not found")
 }
 
+func OCIGetPrivateIpIDByIP(vIP net.IP) (string, error) {
+
+	req := core.ListSubnetsRequest{
+		//VcnId:        common.String(VcnId),
+		CompartmentId: common.String(CompartMentID),
+		Limit:         common.Int(100)}
+
+	resp, err := Client.ListSubnets(context.Background(), req)
+	if err != nil {
+		return "", err
+	}
+
+	for _, subnet := range resp.Items {
+		req1 := core.ListPrivateIpsRequest{IpAddress: common.String(vIP.String()),
+			SubnetId: common.String(*subnet.Id)}
+		resp1, err := Client.ListPrivateIps(context.Background(), req1)
+		if err != nil {
+			return "", err
+		}
+
+		displayName := fmt.Sprintf("loxilb-%s", vIP.String())
+
+		for _, item := range resp1.Items {
+			if *item.DisplayName == displayName {
+				return *item.Id, nil
+			}
+		}
+	}
+
+	return "", errors.New("ipID by IP not found")
+}
+
 func OCIDeletePrivateIp(ipIDStr string) error {
 
 	req := core.DeletePrivateIpRequest{PrivateIpId: common.String(ipIDStr)}
 
 	resp, err := Client.DeletePrivateIp(context.Background(), req)
-	helpers.FatalIfError(err)
-
 	fmt.Println(resp)
 	return err
 }
@@ -116,13 +156,38 @@ func getOCIInterfaces(vIP net.IP) (string, error) {
 	return "", errors.New("oci-api no such interface")
 }
 
+func getOCIInstanceInfo() (string, string) {
+	var info ociInstInfo
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", "http://169.254.169.254/opc/v2/instance/", nil)
+	if err != nil {
+		return "", ""
+	}
+	req.Header.Set("Authorization", "Bearer Oracle")
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", ""
+	}
+	defer resp.Body.Close()
+	bodyText, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", ""
+	}
+	err = json.Unmarshal(bodyText, &info)
+	if err != nil {
+		return "", ""
+	}
+
+	return info.CompartmentId, info.Id
+}
+
 func OCIUpdatePrivateIp(vIP net.IP, add bool) error {
 	vnStr, err := getOCIInterfaces(vIP)
 	if err != nil {
 		return err
 	}
 
-	ipID, err := OCIGetPrivateIpID(vnStr, vIP)
+	ipID, err := OCIGetPrivateIpIDByIP(vIP)
 	if err == nil && ipID != "" {
 		err1 := OCIDeletePrivateIp(ipID)
 		if !add {
@@ -142,5 +207,9 @@ func OCIApiInit() error {
 	helpers.FatalIfError(err)
 
 	Client = &client
+	CompartMentID, InstanceID = getOCIInstanceInfo()
+	if CompartMentID == "" || InstanceID == "" {
+		helpers.FatalIfError(errors.New("no instance info"))
+	}
 	return err
 }

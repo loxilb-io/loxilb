@@ -2402,11 +2402,6 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 			} else {
 				tk.LogIt(tk.LogInfo, "nat lb-rule vip %s:%s deleted\n", IP.String(), "lo")
 			}
-			err := OCIUpdatePrivateIp(IP, false)
-			if err != nil {
-				tk.LogIt(tk.LogError, "oci lb-rule vip %s delete failed\n", IP.String())
-				return err
-			}
 		}
 	}
 
