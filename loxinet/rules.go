@@ -2370,6 +2370,13 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 		ev, _, iface := R.zone.L3.IfaSelectAny(IP, false)
 		if ev == 0 {
 			if !IsIPHostAddr(IP.String()) {
+				if mh.cloudLabel == "oci" {
+					err := OCIUpdatePrivateIp(IP, true)
+					if err != nil {
+						tk.LogIt(tk.LogError, "oci lb-rule vip %s add failed\n", IP.String())
+						return err
+					}
+				}
 				if loxinlp.AddAddrNoHook(IP.String()+"/32", "lo") != 0 {
 					tk.LogIt(tk.LogError, "nat lb-rule vip %s:%s add failed\n", IP.String(), "lo")
 				} else {
@@ -2394,6 +2401,11 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 				tk.LogIt(tk.LogError, "nat lb-rule vip %s:%s delete failed\n", IP.String(), "lo")
 			} else {
 				tk.LogIt(tk.LogInfo, "nat lb-rule vip %s:%s deleted\n", IP.String(), "lo")
+			}
+			err := OCIUpdatePrivateIp(IP, false)
+			if err != nil {
+				tk.LogIt(tk.LogError, "oci lb-rule vip %s delete failed\n", IP.String())
+				return err
 			}
 		}
 	}

@@ -56,25 +56,26 @@ const (
 )
 
 type loxiNetH struct {
-	dpEbpf *DpEbpfH
-	dp     *DpH
-	zn     *ZoneH
-	zr     *Zone
-	mtx    sync.RWMutex
-	ticker *time.Ticker
-	tDone  chan bool
-	sigCh  chan os.Signal
-	wg     sync.WaitGroup
-	bgp    *GoBgpH
-	sumDis bool
-	pProbe bool
-	has    *CIStateH
-	logger *tk.Logger
-	ready  bool
-	self   int
-	rssEn  bool
-	eHooks bool
-	pFile  *os.File
+	dpEbpf     *DpEbpfH
+	dp         *DpH
+	zn         *ZoneH
+	zr         *Zone
+	mtx        sync.RWMutex
+	ticker     *time.Ticker
+	tDone      chan bool
+	sigCh      chan os.Signal
+	wg         sync.WaitGroup
+	bgp        *GoBgpH
+	sumDis     bool
+	pProbe     bool
+	has        *CIStateH
+	logger     *tk.Logger
+	ready      bool
+	self       int
+	rssEn      bool
+	eHooks     bool
+	cloudLabel string
+	pFile      *os.File
 }
 
 // NodeWalker - an implementation of node walker interface
@@ -194,6 +195,7 @@ func loxiNetInit() {
 		}
 	}
 
+	mh.cloudLabel = opts.Opts.Cloud
 	mh.self = opts.Opts.ClusterSelf
 	mh.rssEn = opts.Opts.RssEnable
 	mh.eHooks = opts.Opts.EgrHooks

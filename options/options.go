@@ -28,4 +28,5 @@ var Opts struct {
 	BgpPeerMode       bool           `short:"r" long:"peer" description:"Run loxilb with goBGP only, no Datapath"`
 	BlackList         string         `long:"blacklist" description:"Regex string of blacklisted ports" default:"none"`
 	Rpc               string         `long:"rpc" description:"RPC mode for syncing - netrpc or grpc" default:"netrpc"`
+	Cloud             string         `long:"cloud" description:"cloud type if any e.g aws, oci, gcp" default:"on-prem"`
 }
