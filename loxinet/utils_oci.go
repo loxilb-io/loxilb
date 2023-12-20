@@ -37,17 +37,16 @@ type ociInterfaces struct {
 	VnicId          string `json:"vnicId"`
 }
 
-func OCICreatePrivateIp(vnStr string, vIP net.IP) error {
+var Client *core.VirtualNetworkClient
 
-	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(common.DefaultConfigProvider())
-	helpers.FatalIfError(err)
+func OCICreatePrivateIp(vnStr string, vIP net.IP) error {
 
 	displayName := fmt.Sprintf("loxilb-%s", vIP.String())
 	req := core.CreatePrivateIpRequest{CreatePrivateIpDetails: core.CreatePrivateIpDetails{VnicId: common.String(vnStr),
 		DisplayName: common.String(displayName),
 		IpAddress:   common.String(vIP.String())}}
 
-	_, err = client.CreatePrivateIp(context.Background(), req)
+	_, err := Client.CreatePrivateIp(context.Background(), req)
 	helpers.FatalIfError(err)
 
 	return err
@@ -55,12 +54,9 @@ func OCICreatePrivateIp(vnStr string, vIP net.IP) error {
 
 func OCIGetPrivateIpID(vnStr string, vIP net.IP) (string, error) {
 
-	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(common.DefaultConfigProvider())
-	helpers.FatalIfError(err)
-
 	req := core.ListPrivateIpsRequest{VnicId: common.String(vnStr)}
 
-	resp, err := client.ListPrivateIps(context.Background(), req)
+	resp, err := Client.ListPrivateIps(context.Background(), req)
 	helpers.FatalIfError(err)
 
 	displayName := fmt.Sprintf("loxilb-%s", vIP.String())
@@ -76,12 +72,9 @@ func OCIGetPrivateIpID(vnStr string, vIP net.IP) (string, error) {
 
 func OCIDeletePrivateIp(ipIDStr string) error {
 
-	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(common.DefaultConfigProvider())
-	helpers.FatalIfError(err)
-
 	req := core.DeletePrivateIpRequest{PrivateIpId: common.String(ipIDStr)}
 
-	resp, err := client.DeletePrivateIp(context.Background(), req)
+	resp, err := Client.DeletePrivateIp(context.Background(), req)
 	helpers.FatalIfError(err)
 
 	fmt.Println(resp)
@@ -142,4 +135,12 @@ func OCIUpdatePrivateIp(vIP net.IP, add bool) error {
 	}
 
 	return OCICreatePrivateIp(vnStr, vIP)
+}
+
+func OCIApiInit() error {
+	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(common.DefaultConfigProvider())
+	helpers.FatalIfError(err)
+
+	Client = &client
+	return err
 }

@@ -204,6 +204,10 @@ func loxiNetInit() {
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 
+	if mh.cloudLabel == "oci" {
+		OCIApiInit()
+	}
+
 	// Check if profiling is enabled
 	if opts.Opts.CPUProfile != "none" {
 		var err error
