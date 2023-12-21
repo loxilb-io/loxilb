@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 NetLOX Inc
+ * Copyright (c) 2023 NetLOX Inc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	tk "github.com/loxilb-io/loxilib"
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/oracle/oci-go-sdk/v65/example/helpers"
 	"io"
 	"net"
 	"net/http"
+	"time"
 )
 
 type ociInterfaces struct {
@@ -56,7 +58,9 @@ func OCICreatePrivateIp(vnStr string, vIP net.IP) error {
 		DisplayName: common.String(displayName),
 		IpAddress:   common.String(vIP.String())}}
 
-	_, err := Client.CreatePrivateIp(context.Background(), req)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
+	defer cancel()
+	_, err := Client.CreatePrivateIp(ctx, req)
 	return err
 }
 
@@ -64,7 +68,9 @@ func OCIGetPrivateIpID(vnStr string, vIP net.IP) (string, error) {
 
 	req := core.ListPrivateIpsRequest{VnicId: common.String(vnStr)}
 
-	resp, err := Client.ListPrivateIps(context.Background(), req)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
+	defer cancel()
+	resp, err := Client.ListPrivateIps(ctx, req)
 	if err != nil {
 		return "", err
 	}
@@ -116,7 +122,9 @@ func OCIDeletePrivateIp(ipIDStr string) error {
 
 	req := core.DeletePrivateIpRequest{PrivateIpId: common.String(ipIDStr)}
 
-	resp, err := Client.DeletePrivateIp(context.Background(), req)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
+	defer cancel()
+	resp, err := Client.DeletePrivateIp(ctx, req)
 	fmt.Println(resp)
 	return err
 }
@@ -128,6 +136,9 @@ func getOCIInterfaces(vIP net.IP) (string, error) {
 	if err != nil {
 		return "", errors.New("oci-api failure")
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
+	defer cancel()
+	req = req.WithContext(ctx)
 	req.Header.Set("Authorization", "Bearer Oracle")
 	resp, err := client.Do(req)
 	if err != nil {
@@ -163,6 +174,9 @@ func getOCIInstanceInfo() (string, string) {
 	if err != nil {
 		return "", ""
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
+	defer cancel()
+	req = req.WithContext(ctx)
 	req.Header.Set("Authorization", "Bearer Oracle")
 	resp, err := client.Do(req)
 	if err != nil {
@@ -211,5 +225,6 @@ func OCIApiInit() error {
 	if CompartMentID == "" || InstanceID == "" {
 		helpers.FatalIfError(errors.New("no instance info"))
 	}
+	tk.LogIt(tk.LogInfo, "oci api init\n")
 	return err
 }

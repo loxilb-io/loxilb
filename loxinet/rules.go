@@ -1364,6 +1364,12 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	if R.vipMap[sNetAddr.IP.String()] == 0 {
 		if IsIPHostAddr(sNetAddr.IP.String()) {
 			loxinlp.DelAddrNoHook(sNetAddr.IP.String()+"/32", "lo")
+			if mh.cloudLabel == "oci" {
+				err := OCIUpdatePrivateIp(sNetAddr.IP, false)
+				if err != nil {
+					tk.LogIt(tk.LogError, "oci lb-rule vip %s delete failed\n", sNetAddr.IP.String())
+				}
+			}
 		}
 		delete(R.vipMap, sNetAddr.IP.String())
 	}
