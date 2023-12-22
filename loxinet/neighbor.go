@@ -244,7 +244,7 @@ func (n *NeighH) NeighRecursiveResolve(ne *Neigh) bool {
 
 	if ne.Resolved == true {
 
-		if port.IsL3TunPort() {
+		if port.IsIPinIPTunPort() {
 			err, pDstNet, tDat := n.Zone.Rt.Trie4.FindTrie(port.HInfo.TunDst.String())
 			if err == 0 && pDstNet != nil {
 				switch rtn := tDat.(type) {
