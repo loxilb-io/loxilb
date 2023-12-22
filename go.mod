@@ -12,6 +12,7 @@ require (
 	github.com/go-openapi/validate v0.22.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/loxilb-io/loxilib v0.8.9-0.20231211082246-dc641488569f
+	github.com/oracle/oci-go-sdk/v65 v65.55.0
 	github.com/osrg/gobgp/v3 v3.5.0
 	github.com/prometheus-community/pro-bing v0.1.0
 	github.com/prometheus/client_model v0.3.0
@@ -25,10 +26,12 @@ require (
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/loxilb-io/sctp v0.0.0-20230519081703-6d1baec82fd4 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
+	github.com/sony/gobreaker v0.5.0 // indirect
 )
 
 require (
