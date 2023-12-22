@@ -1068,3 +1068,11 @@ func (p *Port) IsL3TunPort() bool {
 	}
 	return false
 }
+
+// IsIPinIPTunPort - check if the port is of IPinIPTun type
+func (p *Port) IsIPinIPTunPort() bool {
+	if p.SInfo.PortType&(cmn.PortIPTun) != 0 {
+		return true
+	}
+	return false
+}

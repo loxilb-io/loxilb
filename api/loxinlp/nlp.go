@@ -825,6 +825,19 @@ func ModLink(link nlp.Link, add bool) int {
 		tunDst = iptun.Remote
 		tunSrc = iptun.Local
 		tk.LogIt(tk.LogInfo, "[NLP] IPTun %v (%s:%s), %s\n", name, tunSrc.String(), tunDst.String(), mod)
+	} else if vtiTun, ok := link.(*nlp.Vti); ok {
+		pType = cmn.PortVti
+		if vtiTun.Remote == nil || vtiTun.Local == nil {
+			return -1
+		}
+
+		if vtiTun.Remote.IsUnspecified() || vtiTun.Local.IsUnspecified() {
+			return -1
+		}
+		tunId = int(vtiTun.OKey)
+		tunDst = vtiTun.Remote
+		tunSrc = vtiTun.Local
+		tk.LogIt(tk.LogInfo, "[NLP] VTITun %v (%s:%s), %s\n", name, tunSrc.String(), tunDst.String(), mod)
 	} else if master != "" {
 		pType = cmn.PortBondSif
 	}
