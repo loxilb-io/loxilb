@@ -32,6 +32,7 @@ docker-cp: build
 	docker cp /opt/loxilb/llb_xdp_main.o $(loxilbid):/opt/loxilb/llb_xdp_main.o
 	docker cp loxilb-ebpf/kernel/loxilb_dp_debug  $(loxilbid):/usr/local/sbin/
 	docker cp loxilb-ebpf/libbpf/src/libbpf.so.0.4.0 $(loxilbid):/usr/lib64/
+	docker cp loxilb-ebpf/utils/loxilb_dp_tool $(loxilbid):/usr/local/sbin/
 
 docker-cp-ebpf: build
 	docker cp /opt/loxilb/llb_ebpf_main.o $(loxilbid):/opt/loxilb/llb_ebpf_main.o
@@ -46,6 +47,7 @@ docker-run:
 	docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash  --name $(dock) ghcr.io/loxilb-io/loxilb:latest
 
 docker-rp: docker-run docker-cp
+	@docker exec -it $(dock) mkllb_bpffs 2>&1 >> /dev/null || true
 	docker commit ${loxilbid} ghcr.io/loxilb-io/loxilb:latest
 	@docker stop $(dock) 2>&1 >> /dev/null || true
 	@docker rm $(dock) 2>&1 >> /dev/null || true
