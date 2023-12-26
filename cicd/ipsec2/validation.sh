@@ -24,7 +24,7 @@ do
     then
       printf "Ping %-16s \t->\t %-16s \t\t: [OK]\n" lh$i ${servArr[j]} $size ;
     else
-      printf "Ping %-16s \t->\t %-16s \t\t: [OK]\n" lh$i ${servArr[j]} $size ;
+      printf "Ping %-16s \t->\t %-16s \t\t: [NOK]\n" lh$i ${servArr[j]} $size ;
       code=1
     fi
     j=$(( $j + 1 ))

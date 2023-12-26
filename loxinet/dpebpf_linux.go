@@ -475,6 +475,11 @@ func (e *DpEbpfH) DpPortPropMod(w *PortDpWorkQ) int {
 			lRet := e.loadEbpfPgm(w.LoadEbpf)
 			if lRet != 0 {
 				tk.LogIt(tk.LogError, "ebpf load - %d error\n", w.PortNum)
+				/* Shouldn't exit if the interface is not there, so return -1 and continue*/
+				_, err := nlp.LinkByName(w.LoadEbpf)
+				if err != nil {
+					return -1
+				}
 				syscall.Exit(1)
 			}
 		}

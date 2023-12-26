@@ -135,6 +135,8 @@ spawn_docker_host() {
     else
       docker run -u root --cap-add SYS_ADMIN -dit --name $dname eyes852/ubuntu-iperf-test:0.5
     fi
+  elif [[ "$dtype" == "seahost" ]]; then
+      docker run -u root --cap-add SYS_ADMIN -i -t --rm --detach --entrypoint /bin/bash --name $dname  ghcr.io/loxilb-io/seagull:ubuntu1804
   fi
 
   pid=""
