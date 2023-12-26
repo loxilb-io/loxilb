@@ -1013,7 +1013,6 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 	switch {
 	case w.Name == MapNameNat4:
 		tbl = append(tbl, int(C.LL_DP_NAT_STATS_MAP))
-		sync = 1
 	case w.Name == MapNameBD:
 		tbl = append(tbl, int(C.LL_DP_BD_STATS_MAP), int(C.LL_DP_TX_BD_STATS_MAP))
 	case w.Name == MapNameRxBD:
@@ -1032,13 +1031,17 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 		return EbpfErrWqUnk
 	}
 
-	if w.Work == DpStatsGet {
+	if w.Work == DpStatsGet || w.Work == DpStatsGetImm {
 		var b C.longlong
 		var p C.longlong
 
 		packets = 0
 		bytes = 0
 		dropPackets = 0
+
+		if w.Work == DpStatsGetImm {
+			sync = 1
+		}
 
 		for _, t := range tbl {
 
