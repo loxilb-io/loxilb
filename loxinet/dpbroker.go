@@ -59,6 +59,7 @@ const (
 	DpStatsGet
 	DpStatsClr
 	DpMapGet
+	DpStatsGetImm
 )
 
 // DpStatusT - status of a dp work

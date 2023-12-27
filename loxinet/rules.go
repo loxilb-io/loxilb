@@ -750,6 +750,8 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 			ret.SecIPs = append(ret.SecIPs, cmn.LbSecIPArg{SecIP: sip.sIP.String()})
 		}
 
+		data.DP(DpStatsGetImm)
+
 		// Make Endpoints
 		tmpEp := data.act.action.(*ruleNatActs).endPoints
 		for _, ep := range tmpEp {
@@ -2005,25 +2007,6 @@ func (R *RuleH) RulesSync() {
 			rule.DP(DpCreate)
 		}
 
-		bytes := uint64(0)
-		packets := uint64(0)
-		switch at := rule.act.action.(type) {
-		case *ruleNatActs:
-			for _, natActs := range at.endPoints {
-				bytes += natActs.stat.bytes
-				packets += natActs.stat.packets
-			}
-		}
-
-		rule.stat.bytes = bytes
-		rule.stat.packets = packets
-
-		tk.LogIt(-1, "%d:%s,%s pc %v bc %v \n",
-			rule.ruleNum, ruleKeys, ruleActs,
-			rule.stat.packets, rule.stat.bytes)
-
-		rule.DP(DpStatsGet)
-
 		if !rule.hChk.actChk {
 			continue
 		}
@@ -2334,7 +2317,7 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 		return 0
 	}
 
-	if work == DpStatsGet {
+	if work == DpStatsGet || work == DpStatsGetImm {
 		if isNat {
 			switch at := r.act.action.(type) {
 			case *ruleNatActs:
@@ -2346,7 +2329,11 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 					nStat.Name = MapNameNat4
 					nStat.Bytes = &nEP.stat.bytes
 					nStat.Packets = &nEP.stat.packets
-					mh.dp.ToDpCh <- nStat
+					if work == DpStatsGetImm {
+						DpWorkSingle(mh.dp, nStat)
+					} else {
+						mh.dp.ToDpCh <- nStat
+					}
 				}
 			}
 		} else {
