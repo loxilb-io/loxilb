@@ -1212,7 +1212,9 @@ func (ct *DpCtInfo) convDPCt2GoObjFixup(ctKey *C.struct_dp_ct_key, ctDat *C.stru
 	ct.Bytes = uint64(ctDat.pb.bytes)
 
 	if ctDat.xi.nat_flags == C.LLB_NAT_DST ||
-		ctDat.xi.nat_flags == C.LLB_NAT_SRC {
+		ctDat.xi.nat_flags == C.LLB_NAT_SRC ||
+		ctDat.xi.nat_flags == C.LLB_NAT_HDST ||
+		ctDat.xi.nat_flags == C.LLB_NAT_HSRC {
 		var xip net.IP
 
 		if ctDat.xi.nv6 == 0 {
@@ -1233,14 +1235,18 @@ func (ct *DpCtInfo) convDPCt2GoObjFixup(ctKey *C.struct_dp_ct_key, ctDat *C.stru
 			}
 		}
 
-		if ctDat.xi.nat_flags == C.LLB_NAT_DST {
+		if ctDat.xi.nat_flags == C.LLB_NAT_DST || ctDat.xi.nat_flags == C.LLB_NAT_HDST {
 			if ctDat.xi.nat_rip[0] == 0 && ctDat.xi.nat_rip[1] == 0 &&
 				ctDat.xi.nat_rip[2] == 0 && ctDat.xi.nat_rip[3] == 0 {
 				nmode := ""
 				if ctDat.xi.dsr != 0 {
 					nmode = "ddsr"
 				} else {
-					nmode = "dnat"
+					if ctDat.xi.nat_flags == C.LLB_NAT_HDST {
+						nmode = "hdnat"
+					} else {
+						nmode = "dnat"
+					}
 				}
 				ct.CAct = fmt.Sprintf("%s-%s:%d:w%d", nmode, xip.String(), port, ctDat.xi.wprio)
 			} else {
@@ -1256,14 +1262,18 @@ func (ct *DpCtInfo) convDPCt2GoObjFixup(ctKey *C.struct_dp_ct_key, ctDat *C.stru
 				}
 				ct.CAct = fmt.Sprintf("fdnat-%s,%s:%d:w%d", rip.String(), xip.String(), port, ctDat.xi.wprio)
 			}
-		} else if ctDat.xi.nat_flags == C.LLB_NAT_SRC {
+		} else if ctDat.xi.nat_flags == C.LLB_NAT_SRC || ctDat.xi.nat_flags == C.LLB_NAT_HSRC {
 			if ctDat.xi.nat_rip[0] == 0 && ctDat.xi.nat_rip[1] == 0 &&
 				ctDat.xi.nat_rip[2] == 0 && ctDat.xi.nat_rip[3] == 0 {
 				nmode := ""
 				if ctDat.xi.dsr != 0 {
 					nmode = "sdsr"
 				} else {
-					nmode = "snat"
+					if ctDat.xi.nat_flags == C.LLB_NAT_HSRC {
+						nmode = "hsnat"
+					} else {
+						nmode = "snat"
+					}
 				}
 				ct.CAct = fmt.Sprintf("%s-%s:%d:w%d", nmode, xip.String(), port, ctDat.xi.wprio)
 			} else {
