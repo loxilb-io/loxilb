@@ -95,6 +95,9 @@ func NlpRegister(hook cmn.NetHookInterface) {
 }
 
 func iSBlackListedIntf(name string, masterIdx int) bool {
+	if name == "lo" {
+		return true
+	}
 	filter := nNl.BLRgx.MatchString(name)
 	return filter
 }

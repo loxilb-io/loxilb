@@ -100,8 +100,18 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 		ra := RtAttr{0, 0, false, ifObjID}
 		_, err = mh.zr.Rt.RtAdd(*network, RootZone, ra, nil)
 		if err != nil {
-			tk.LogIt(tk.LogDebug, "ifa add - %s:%s self-rt error\n", addr.String(), Obj)
-			return L3AddrErr, errors.New("self-route add error")
+			tk.LogIt(tk.LogDebug, "ifa add - %s:%s subnet-rt error\n", addr.String(), Obj)
+			return L3AddrErr, errors.New("subnet-route add error")
+		} else {
+			myAddr, myNet, err := net.ParseCIDR(addr.String() + "/32")
+			if err != nil {
+				return L3AddrErr, errors.New("myip address parse error")
+			}
+			_, err = mh.zr.Rt.RtAdd(*myNet, RootZone, ra, nil)
+			if err != nil {
+				tk.LogIt(tk.LogDebug, " - %s:%s my-self-rt error\n", myAddr.String(), Obj)
+				return L3AddrErr, errors.New("my-self-route add error")
+			}
 		}
 
 		ifa.DP(DpCreate)
@@ -140,8 +150,18 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 	ra := RtAttr{0, 0, false, ifObjID}
 	_, err = mh.zr.Rt.RtAdd(*network, RootZone, ra, nil)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, " - %s:%s self-rt error\n", addr.String(), Obj)
-		return L3AddrErr, errors.New("self-route add error")
+		tk.LogIt(tk.LogDebug, " - %s:%s subnet-rt error\n", addr.String(), Obj)
+		return L3AddrErr, errors.New("subnet-route add error")
+	} else {
+		myAddr, myNet, err := net.ParseCIDR(addr.String() + "/32")
+		if err != nil {
+			return L3AddrErr, errors.New("myip address parse error")
+		}
+		_, err = mh.zr.Rt.RtAdd(*myNet, RootZone, ra, nil)
+		if err != nil {
+			tk.LogIt(tk.LogDebug, " - %s:%s my-self-rt error\n", myAddr.String(), Obj)
+			return L3AddrErr, errors.New("my-self-route add error")
+		}
 	}
 
 	ifa.DP(DpCreate)
