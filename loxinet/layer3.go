@@ -102,7 +102,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 		if err != nil {
 			tk.LogIt(tk.LogDebug, "ifa add - %s:%s subnet-rt error\n", addr.String(), Obj)
 			return L3AddrErr, errors.New("subnet-route add error")
-		} else {
+		} else if sz, _ := net.IPMask(network.Mask).Size(); sz != 32 && sz != 128 {
 			myAddr, myNet, err := net.ParseCIDR(addr.String() + "/32")
 			if err != nil {
 				return L3AddrErr, errors.New("myip address parse error")
@@ -152,7 +152,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 	if err != nil {
 		tk.LogIt(tk.LogDebug, " - %s:%s subnet-rt error\n", addr.String(), Obj)
 		return L3AddrErr, errors.New("subnet-route add error")
-	} else {
+	} else if sz, _ := net.IPMask(network.Mask).Size(); sz != 32 && sz != 128 {
 		myAddr, myNet, err := net.ParseCIDR(addr.String() + "/32")
 		if err != nil {
 			return L3AddrErr, errors.New("myip address parse error")
@@ -205,12 +205,22 @@ func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
 		}
 	}
 
-	if found == true {
+	if found {
 		// delete self-routes related to this ifa
 		_, err = mh.zr.Rt.RtDelete(*network, RootZone)
 		if err != nil {
-			tk.LogIt(tk.LogError, "ifa delete %s:%s self-rt error\n", addr.String(), Obj)
+			tk.LogIt(tk.LogError, "ifa delete %s:%s subnet-rt error\n", addr.String(), Obj)
 			// Continue after logging error because there is noway to fallback
+		}
+		if sz, _ := net.IPMask(network.Mask).Size(); sz != 32 && sz != 128 {
+			myAddr, myNet, err := net.ParseCIDR(addr.String() + "/32")
+			if err == nil {
+				_, err = mh.zr.Rt.RtDelete(*myNet, RootZone)
+				if err != nil {
+					tk.LogIt(tk.LogError, "ifa delete %s:%s my-self-rt error\n", myAddr.String(), Obj)
+					// Continue after logging error because there is noway to fallback
+				}
+			}
 		}
 		if len(ifa.Ifas) == 0 {
 			delete(l3.IfaMap, ifa.Key)
