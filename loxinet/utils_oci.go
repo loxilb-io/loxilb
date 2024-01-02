@@ -61,6 +61,9 @@ func OCICreatePrivateIp(vnStr string, vIP net.IP) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
 	defer cancel()
 	_, err := Client.CreatePrivateIp(ctx, req)
+	if err != nil {
+		tk.LogIt(tk.LogError, "oci create privIP failed %s\n", err)
+	}
 	return err
 }
 
@@ -198,6 +201,7 @@ func getOCIInstanceInfo() (string, string) {
 func OCIUpdatePrivateIp(vIP net.IP, add bool) error {
 	vnStr, err := getOCIInterfaces(vIP)
 	if err != nil {
+		tk.LogIt(tk.LogError, "oci get intf failed %s\n", err)
 		return err
 	}
 
@@ -205,11 +209,13 @@ func OCIUpdatePrivateIp(vIP net.IP, add bool) error {
 	if err == nil && ipID != "" {
 		err1 := OCIDeletePrivateIp(ipID)
 		if !add {
+			tk.LogIt(tk.LogError, "oci delete privIP failed %s\n", err1)
 			return err1
 		}
 	}
 
 	if !add {
+		tk.LogIt(tk.LogError, "oci get privIP failed %s\n", err)
 		return err
 	}
 
