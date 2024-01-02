@@ -137,6 +137,9 @@ else
   echo "End K3s installation"
 fi
 
+
+sudo apt-get update
+
 # Install Bird to work with k3s
 sudo apt-get install bird2 --yes
 
