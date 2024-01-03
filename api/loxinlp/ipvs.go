@@ -119,7 +119,6 @@ func IpVSSync() {
 				ent.InValid = true
 			}
 
-			tk.LogIt(tk.LogInfo, "IPVS BuildDB\n")
 			ipVSList := ipVSCtx.BuildIpVSDB()
 
 			for _, ent := range ipVSCtx.RMap {
