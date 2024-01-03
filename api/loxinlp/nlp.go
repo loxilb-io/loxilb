@@ -1536,7 +1536,7 @@ func LbSessionGet(done bool) int {
 	return 0
 }
 
-func NlpInit(bgpPeerMode bool, blackList string) *NlH {
+func NlpInit(bgpPeerMode bool, blackList string, ipvsCompat bool) *NlH {
 
 	nNl = new(NlH)
 
@@ -1600,6 +1600,10 @@ func NlpInit(bgpPeerMode bool, blackList string) *NlH {
 	done := <-checkInit
 
 	go LbSessionGet(done)
+
+	if ipvsCompat {
+		IpVSInit()
+	}
 
 	return nNl
 }
