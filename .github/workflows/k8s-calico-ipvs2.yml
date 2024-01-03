@@ -1,17 +1,17 @@
-name: K8s-Calico-Cluster-IPVS-Sanity-CI
+name: K8s-Calico-Cluster-IPVS2-Sanity-CI
 on:
- schedule:
- # Runs "At 14:00 UTC every day-of-week"
- - cron: '0 14 * * *'
+ #schedule:
+ # Runs "At 15:00 UTC every day-of-week"
+ - cron: '0 15 * * *'
  workflow_dispatch:
     inputs:
       testName:
         description: 'Test Run-Name'     
         required: true
-        default: 'k8s-calico-cluster-ipvs'
+        default: 'k8s-calico-cluster-ipvs2'
 jobs:
   test-runner:
-    name: k8s-calico-cluster-ipvs-sanity
+    name: k8s-calico-cluster-ipvs2-sanity
     runs-on: self-hosted
     if: github.repository == 'loxilb-io/loxilb' 
           &&  github.event.inputs.tagName == ''
@@ -23,7 +23,7 @@ jobs:
 
     - name: Run the test
       run: |
-         cd cicd/k8s-calico-ipvs
+         cd cicd/k8s-calico-ipvs2
          ./config.sh
          ./validation.sh
          cd -
@@ -31,6 +31,6 @@ jobs:
     - name: Clean test-bed
       if: success() || failure()
       run: |
-        cd cicd/k8s-calico-ipvs || true
+        cd cicd/k8s-calico-ipvs2 || true
         ./rmconfig.sh
         cd -
