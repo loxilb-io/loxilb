@@ -27,4 +27,4 @@ If applicable, add screenshots to help explain your problem.
  - K8s Version [e.g. 1.27, 1.29, EKS-1.27, Openshift 4.12] 
 
 **Additional context**
-Add any other context about the problem here.
+Add any other context or topology about the problem here.
