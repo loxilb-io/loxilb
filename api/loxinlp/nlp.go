@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
@@ -118,7 +117,7 @@ func applyLoadBalancerConfig() bool {
 	var resp struct {
 		Attr []cmn.LbRuleMod `json:"lbAttr"`
 	}
-	byteBuf, err := ioutil.ReadFile("/etc/loxilb/lbconfig.txt")
+	byteBuf, err := os.ReadFile("/etc/loxilb/lbconfig.txt")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -139,7 +138,7 @@ func applySessionConfig() bool {
 	var resp struct {
 		Attr []cmn.SessionMod `json:"sessionAttr"`
 	}
-	byteBuf, err := ioutil.ReadFile("/etc/loxilb/sessionconfig.txt")
+	byteBuf, err := os.ReadFile("/etc/loxilb/sessionconfig.txt")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -160,7 +159,7 @@ func applyUlClConfig() bool {
 	var resp struct {
 		Attr []cmn.SessionUlClMod `json:"ulclAttr"`
 	}
-	byteBuf, err := ioutil.ReadFile("/etc/loxilb/sessionulclconfig.txt")
+	byteBuf, err := os.ReadFile("/etc/loxilb/sessionulclconfig.txt")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -181,7 +180,7 @@ func applyFWConfig() bool {
 	var resp struct {
 		Attr []cmn.FwRuleMod `json:"fwAttr"`
 	}
-	byteBuf, err := ioutil.ReadFile("/etc/loxilb/FWconfig.txt")
+	byteBuf, err := os.ReadFile("/etc/loxilb/FWconfig.txt")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -202,7 +201,7 @@ func applyEPConfig() bool {
 	var resp struct {
 		Attr []cmn.EndPointMod `json:"Attr"`
 	}
-	byteBuf, err := ioutil.ReadFile("/etc/loxilb/EPconfig.txt")
+	byteBuf, err := os.ReadFile("/etc/loxilb/EPconfig.txt")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -719,8 +718,12 @@ func ModLink(link nlp.Link, add bool) int {
 
 		vid, _ = strconv.Atoi(strings.Join(re.FindAllString(name, -1), " "))
 		// Dirty hack to support docker0 bridge
-		if vid == 0 && name == "docker0" {
-			vid = 4090
+		if vid == 0 {
+			if name == "docker0" {
+				vid = 4090
+			} else if name == "cni0" {
+				vid = 4091
+			}
 		}
 		if add {
 			ret, err = hooks.NetVlanAdd(&cmn.VlanMod{Vid: vid, Dev: name, LinkIndex: idx,
@@ -739,6 +742,8 @@ func ModLink(link nlp.Link, add bool) int {
 		if (add && (err != nil)) || !add {
 			applyConfigMap(name, state, add)
 		}
+
+		return ret
 	}
 
 	/* Get bridge detail */
@@ -750,8 +755,12 @@ func ModLink(link nlp.Link, add bool) int {
 		}
 		vid, _ = strconv.Atoi(strings.Join(re.FindAllString(brLink.Attrs().Name, -1), " "))
 		// Dirty hack to support docker bridge
-		if vid == 0 && brLink.Attrs().Name == "docker0" {
-			vid = 4090
+		if vid == 0 {
+			if brLink.Attrs().Name == "docker0" {
+				vid = 4090
+			} else if brLink.Attrs().Name == "cni0" {
+				vid = 4091
+			}
 		}
 	}
 

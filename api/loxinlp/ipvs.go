@@ -17,12 +17,14 @@
 package loxinlp
 
 import (
-	"github.com/loxilb-io/ipvs"
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
+	"fmt"
 	"os"
 	"reflect"
 	"time"
+
+	"github.com/loxilb-io/ipvs"
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 type ipVSKey struct {
@@ -123,7 +125,8 @@ func IpVSSync() {
 
 			for _, ent := range ipVSCtx.RMap {
 				if ent.InValid {
-					lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: ent.Key.Address, ServPort: ent.Key.Port, Proto: ent.Key.Protocol, Sel: cmn.LbSelRr}}
+					name := fmt.Sprintf("ipvs_%s:%d-%s", ent.Key.Address, ent.Key.Port, ent.Key.Protocol)
+					lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: ent.Key.Address, ServPort: ent.Key.Port, Proto: ent.Key.Protocol, Sel: cmn.LbSelRr, Name: name}}
 					_, err := hooks.NetLbRuleDel(&lbrule)
 					if err != nil {
 						tk.LogIt(tk.LogError, "IPVS LB %v delete failed\n", ent.Key)
@@ -134,7 +137,8 @@ func IpVSSync() {
 			}
 
 			for _, newEnt := range ipVSList {
-				lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: newEnt.Key.Address, ServPort: newEnt.Key.Port, Proto: newEnt.Key.Protocol, Sel: cmn.LbSelRr}}
+				name := fmt.Sprintf("ipvs_%s:%d-%s", newEnt.Key.Address, newEnt.Key.Port, newEnt.Key.Protocol)
+				lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: newEnt.Key.Address, ServPort: newEnt.Key.Port, Proto: newEnt.Key.Protocol, Sel: cmn.LbSelRr, Name: name}}
 				for _, ep := range newEnt.EndPoints {
 					lbrule.Eps = append(lbrule.Eps, cmn.LbEndPointArg{EpIP: ep.EpIP, EpPort: ep.EpPort, Weight: 1})
 				}
