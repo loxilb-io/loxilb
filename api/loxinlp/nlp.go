@@ -742,8 +742,6 @@ func ModLink(link nlp.Link, add bool) int {
 		if (add && (err != nil)) || !add {
 			applyConfigMap(name, state, add)
 		}
-
-		return ret
 	}
 
 	/* Get bridge detail */
