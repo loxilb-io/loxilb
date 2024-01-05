@@ -1,4 +1,5 @@
 # Install Bird to work with k3s
+sudo apt-get update
 sudo apt-get -y install bird2 lksctp-tools iperf
 
 sudo ip addr add 30.30.30.1/32 dev lo
