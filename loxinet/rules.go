@@ -1135,6 +1135,9 @@ func (R *RuleH) UnFoldRecursiveEPs(r *ruleEnt) {
 	}
 
 	for _, tr := range R.tables[RtLB].eMap {
+		if tr == r {
+			continue
+		}
 		switch atr := r.act.action.(type) {
 		case *ruleNatActs:
 			for i := range atr.endPoints {
