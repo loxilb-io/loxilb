@@ -952,6 +952,14 @@ func (R *RuleH) electEPSrc(r *ruleEnt) bool {
 		{
 			for idx := range na.endPoints {
 				np := &na.endPoints[idx]
+
+				if np.foldRuleKey != "" {
+					fr := R.tables[RtLB].eMap[np.foldRuleKey]
+					if fr == nil || fr.addrRslv {
+						addrRslv = true
+						continue
+					}
+				}
 				sip = np.rIP
 				if na.mode == cmn.LBModeOneArm {
 					mode = "onearm"
@@ -2326,17 +2334,33 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 			}
 		} else {
 			for _, k := range at.endPoints {
-				var ep NatEP
+				if len(k.foldEndPoints) > 0 {
+					for _, kf := range k.foldEndPoints {
+						var ep NatEP
 
-				ep.XIP = k.xIP
-				ep.RIP = k.rIP
-				ep.XPort = k.xPort
-				ep.Weight = k.weight
-				if k.inActive || k.noService {
-					ep.InActive = true
+						ep.XIP = kf.xIP
+						ep.RIP = kf.rIP
+						ep.XPort = kf.xPort
+						ep.Weight = kf.weight
+						if kf.inActive || kf.noService {
+							ep.InActive = true
+						}
+
+						nWork.endPoints = append(nWork.endPoints, ep)
+					}
+				} else {
+					var ep NatEP
+
+					ep.XIP = k.xIP
+					ep.RIP = k.rIP
+					ep.XPort = k.xPort
+					ep.Weight = k.weight
+					if k.inActive || k.noService {
+						ep.InActive = true
+					}
+
+					nWork.endPoints = append(nWork.endPoints, ep)
 				}
-
-				nWork.endPoints = append(nWork.endPoints, ep)
 			}
 		}
 		break
@@ -2438,18 +2462,41 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 		if isNat {
 			switch at := r.act.action.(type) {
 			case *ruleNatActs:
+				numEndPoints := 0
 				for i := range at.endPoints {
 					nEP := &at.endPoints[i]
-					nStat := new(StatDpWorkQ)
-					nStat.Work = work
-					nStat.Mark = (((uint32(r.ruleNum)) & 0xfff) << 4) | (uint32(i) & 0xf)
-					nStat.Name = MapNameNat4
-					nStat.Bytes = &nEP.stat.bytes
-					nStat.Packets = &nEP.stat.packets
-					if work == DpStatsGetImm {
-						DpWorkSingle(mh.dp, nStat)
+					if len(nEP.foldEndPoints) > 0 {
+						totBytes := uint64(0)
+						totPackets := uint64(0)
+						for range nEP.foldEndPoints {
+							bytes := uint64(0)
+							packets := uint64(0)
+							nStat := new(StatDpWorkQ)
+							nStat.Work = DpStatsGetImm
+							nStat.Mark = (((uint32(r.ruleNum)) & 0xfff) << 4) | (uint32(numEndPoints) & 0xf)
+							nStat.Name = MapNameNat4
+							nStat.Bytes = &bytes
+							nStat.Packets = &packets
+							DpWorkSingle(mh.dp, nStat)
+							numEndPoints++
+							totBytes += bytes
+							totPackets += packets
+						}
+						nEP.stat.bytes = totBytes
+						nEP.stat.packets = totPackets
 					} else {
-						mh.dp.ToDpCh <- nStat
+						nStat := new(StatDpWorkQ)
+						nStat.Work = work
+						nStat.Mark = (((uint32(r.ruleNum)) & 0xfff) << 4) | (uint32(numEndPoints) & 0xf)
+						nStat.Name = MapNameNat4
+						nStat.Bytes = &nEP.stat.bytes
+						nStat.Packets = &nEP.stat.packets
+						if work == DpStatsGetImm {
+							DpWorkSingle(mh.dp, nStat)
+						} else {
+							mh.dp.ToDpCh <- nStat
+						}
+						numEndPoints++
 					}
 				}
 			}
