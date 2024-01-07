@@ -204,15 +204,17 @@ type epHost struct {
 }
 
 type ruleNatEp struct {
-	xIP        net.IP
-	rIP        net.IP
-	xPort      uint16
-	weight     uint8
-	inActTries int
-	inActive   bool
-	noService  bool
-	chkVal     bool
-	stat       ruleStat
+	xIP           net.IP
+	rIP           net.IP
+	xPort         uint16
+	weight        uint8
+	inActTries    int
+	inActive      bool
+	noService     bool
+	chkVal        bool
+	stat          ruleStat
+	foldEndPoints []ruleNatEp
+	foldRuleKey   string
 }
 
 type ruleNatSIP struct {
@@ -650,12 +652,24 @@ func (a *ruleAct) String() string {
 				ks += fmt.Sprintf("%s", "onearm:")
 			}
 			for _, n := range na.endPoints {
-				ks += fmt.Sprintf("eip-%s,ep-%d,w-%d,",
-					n.xIP.String(), n.xPort, n.weight)
-				if n.inActive || n.noService {
-					ks += fmt.Sprintf("dead|")
+				if len(n.foldEndPoints) > 0 {
+					for _, nf := range n.foldEndPoints {
+						ks += fmt.Sprintf("feip-%s,fep-%d,fw-%d,",
+							nf.xIP.String(), nf.xPort, nf.weight)
+						if nf.inActive || nf.noService {
+							ks += fmt.Sprintf("dead|")
+						} else {
+							ks += fmt.Sprintf("alive|")
+						}
+					}
 				} else {
-					ks += fmt.Sprintf("alive|")
+					ks += fmt.Sprintf("eip-%s,ep-%d,w-%d,",
+						n.xIP.String(), n.xPort, n.weight)
+					if n.inActive || n.noService {
+						ks += fmt.Sprintf("dead|")
+					} else {
+						ks += fmt.Sprintf("alive|")
+					}
 				}
 			}
 		}
@@ -1035,6 +1049,112 @@ func (R *RuleH) syncEPHostState2Rule(rule *ruleEnt, checkNow bool) bool {
 	return rChg
 }
 
+// FoldRecursiveEPs - Check if this rule's key matches endpoint of another rule.
+// If so, replace that rule's endpoints to this rule's endpoints
+func (R *RuleH) FoldRecursiveEPs(r *ruleEnt) {
+
+	for _, tr := range R.tables[RtLB].eMap {
+		switch atr := r.act.action.(type) {
+		case *ruleNatActs:
+			for i := range atr.endPoints {
+				rep := &atr.endPoints[i]
+				service := ""
+				if tk.IsNetIPv4(rep.xIP.String()) {
+					service = rep.xIP.String() + "/32"
+				} else {
+					service = rep.xIP.String() + "/128"
+				}
+				_, sNetAddr, err := net.ParseCIDR(service)
+				if err != nil {
+					continue
+				}
+				l4prot := rule8Tuple{r.tuples.l4Prot.val, 0xff}
+				l3dst := ruleIPTuple{*sNetAddr}
+				l4dst := rule16Tuple{rep.xPort, 0xffff}
+				rtk := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: r.tuples.pref}
+				if rtk.ruleKey() == tr.tuples.ruleKey() {
+					rep.foldEndPoints = tr.act.action.(*ruleNatActs).endPoints
+					rep.foldRuleKey = tr.tuples.ruleKey()
+				}
+			}
+		}
+
+		switch at := tr.act.action.(type) {
+		case *ruleNatActs:
+			if r.act.action.(*ruleNatActs).sel != at.sel || r.act.action.(*ruleNatActs).sel == cmn.LbSelPrio {
+				continue
+			}
+			fold := false
+			for i := range at.endPoints {
+				ep := &at.endPoints[i]
+				service := ""
+				if tk.IsNetIPv4(ep.xIP.String()) {
+					service = ep.xIP.String() + "/32"
+				} else {
+					service = ep.xIP.String() + "/128"
+				}
+				_, sNetAddr, err := net.ParseCIDR(service)
+				if err != nil {
+					continue
+				}
+
+				l4prot := rule8Tuple{r.tuples.l4Prot.val, 0xff}
+				l3dst := ruleIPTuple{*sNetAddr}
+				l4dst := rule16Tuple{ep.xPort, 0xffff}
+				rtk := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: r.tuples.pref}
+				if r.tuples.ruleKey() == rtk.ruleKey() {
+					ep.foldEndPoints = r.act.action.(*ruleNatActs).endPoints
+					ep.foldRuleKey = r.tuples.ruleKey()
+					fold = true
+				}
+				if fold {
+					tr.DP(DpCreate)
+					tk.LogIt(tk.LogDebug, "nat lb-rule folded - %d:%s-%s\n", tr.ruleNum, tr.tuples.String(), tr.act.String())
+				}
+			}
+		}
+	}
+}
+
+// UnFoldRecursiveEPs - Check if this rule's key matches endpoint of another rule.
+// If so, replace that rule's original endpoint
+func (R *RuleH) UnFoldRecursiveEPs(r *ruleEnt) {
+
+	selPolicy := cmn.LbSelRr
+	switch at := r.act.action.(type) {
+	case *ruleNatActs:
+		selPolicy = at.sel
+	}
+
+	for _, tr := range R.tables[RtLB].eMap {
+		switch atr := r.act.action.(type) {
+		case *ruleNatActs:
+			for i := range atr.endPoints {
+				rep := &atr.endPoints[i]
+				if rep.foldRuleKey == tr.tuples.ruleKey() {
+					rep.foldEndPoints = nil
+					rep.foldRuleKey = ""
+				}
+			}
+		}
+		switch at := tr.act.action.(type) {
+		case *ruleNatActs:
+			if selPolicy != at.sel || selPolicy == cmn.LbSelPrio {
+				continue
+			}
+			for i := range at.endPoints {
+				ep := &at.endPoints[i]
+				if r.tuples.ruleKey() == ep.foldRuleKey {
+					ep.foldEndPoints = nil
+					ep.foldRuleKey = ""
+					tr.DP(DpCreate)
+					tk.LogIt(tk.LogDebug, "nat lb-rule unfolded - %d:%s-%s\n", tr.ruleNum, tr.tuples.String(), tr.act.String())
+				}
+			}
+		}
+	}
+}
+
 // AddNatLbRule - Add a service LB nat rule. The service details are passed in serv argument,
 // and end-point information is passed in the slice servEndPoints. On success,
 // it will return 0 and nil error, else appropriate return code and error string will be set
@@ -1165,7 +1285,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		if natActs.mode == cmn.LBModeDSR && k.EpPort != serv.ServPort {
 			return RuleUnknownServiceErr, errors.New("malformed-service dsr-port error")
 		}
-		ep := ruleNatEp{pNetAddr, xNetAddr, k.EpPort, k.Weight, 0, false, false, false, ruleStat{0, 0}}
+		ep := ruleNatEp{pNetAddr, xNetAddr, k.EpPort, k.Weight, 0, false, false, false, ruleStat{0, 0}, nil, ""}
 		natActs.endPoints = append(natActs.endPoints, ep)
 	}
 
@@ -1211,7 +1331,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 
 		for i, nEp := range natActs.endPoints {
 			n := &natActs.endPoints[i]
-			if nEp.chkVal == false {
+			if !nEp.chkVal {
 				ruleChg = true
 				n.chkVal = true
 				eEps = append(eEps, *n)
@@ -1220,7 +1340,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 
 		for i, eEp := range eEps {
 			e := &eEps[i]
-			if eEp.chkVal == false {
+			if !eEp.chkVal {
 				ruleChg = true
 				e.inActive = true
 			}
@@ -1232,7 +1352,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 			ruleChg = true
 		}
 
-		if ruleChg == false {
+		if !ruleChg {
 			return RuleExistsErr, errors.New("lbrule-exists error")
 		}
 
@@ -1287,6 +1407,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	r.iTo = serv.InactiveTimeout
 	r.bgp = serv.Bgp
 	r.ci = cmn.CIDefault
+
+	R.FoldRecursiveEPs(r)
 
 	R.modNatEpHost(r, natActs.endPoints, true, activateProbe)
 	R.electEPSrc(r)
@@ -1355,6 +1477,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 		activatedProbe = true
 	}
 	R.modNatEpHost(rule, eEps, false, activatedProbe)
+	R.UnFoldRecursiveEPs(rule)
 
 	delete(R.tables[RtLB].eMap, rt.ruleKey())
 	if rule.ruleNum < RtMaximumLbs {
