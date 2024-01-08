@@ -13,24 +13,24 @@ jobs:
   test-runner:
     name: k8s-calico-cluster-ipvs3-ha-sanity
     runs-on: self-hosted
-    if: github.repository == 'loxilb-io/loxilb' 
-          &&  github.event.inputs.tagName == ''
+    #if: github.repository == 'loxilb-io/loxilb' 
+    #      &&  github.event.inputs.tagName == ''
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-          submodules: recursive
+    #- name: Checkout
+    #  uses: actions/checkout@v2
+    #  with:
+    #      submodules: recursive
 
     - name: Run the test
       run: |
          cd cicd/k8s-calico-ipvs3-ha
-         ./config.sh
+         #./config.sh
          ./validation.sh
          cd -
          
-    - name: Clean test-bed
-      if: success() || failure()
-      run: |
-        cd cicd/k8s-calico-ipvs3-ha || true
-        ./rmconfig.sh
-        cd -
+    #- name: Clean test-bed
+    #  if: success() || failure()
+    #  run: |
+    #    cd cicd/k8s-calico-ipvs3-ha || true
+    #    ./rmconfig.sh
+    #    cd -
