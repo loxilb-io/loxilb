@@ -28,6 +28,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -1432,7 +1433,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	}
 	R.vipMap[sNetAddr.IP.String()]++
 
-	if R.vipMap[sNetAddr.IP.String()] == 1 {
+	if R.vipMap[sNetAddr.IP.String()] == 1 && !strings.Contains(r.name, "ipvs") {
 		R.AdvRuleVIPIfL2(sNetAddr.IP)
 	}
 
@@ -1498,7 +1499,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	R.vipMap[sNetAddr.IP.String()]--
 
 	if R.vipMap[sNetAddr.IP.String()] == 0 {
-		if IsIPHostAddr(sNetAddr.IP.String()) {
+		if IsIPHostAddr(sNetAddr.IP.String()) && !strings.Contains(rule.name, "ipvs") {
 			loxinlp.DelAddrNoHook(sNetAddr.IP.String()+"/32", "lo")
 		}
 		delete(R.vipMap, sNetAddr.IP.String())
