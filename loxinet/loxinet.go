@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	apiserver "github.com/loxilb-io/loxilb/api"
+	k8s "github.com/loxilb-io/loxilb/api/k8s"
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
 	prometheus "github.com/loxilb-io/loxilb/api/prometheus"
 	cmn "github.com/loxilb-io/loxilb/common"
@@ -278,6 +279,11 @@ func loxiNetInit() {
 	if !opts.Opts.NoNlp {
 		nlp.NlpRegister(NetAPIInit(opts.Opts.BgpPeerMode))
 		nlp.NlpInit(opts.Opts.BgpPeerMode, opts.Opts.BlackList, opts.Opts.IPVSCompat)
+	}
+
+	// Initialize the k8s subsystem
+	if opts.Opts.K8sApi != "none" {
+		k8s.K8sApiInit(opts.Opts.K8sApi, NetAPIInit(opts.Opts.BgpPeerMode))
 	}
 
 	// Initialize the Prometheus subsystem
