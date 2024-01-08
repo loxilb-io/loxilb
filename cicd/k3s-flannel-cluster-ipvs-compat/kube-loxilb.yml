@@ -110,8 +110,9 @@ spec:
         command:
         - /bin/kube-loxilb
         args:
-        - --loxiURL=http://192.168.80.9:11111
-        - --externalCIDR=123.123.123.1/24
+        #- --loxiURL=http://192.168.80.9:11111
+        - --externalCIDR=192.168.80.20/32
+        - --setRoles=0.0.0.0
         #- --monitor
         #- --setBGP
         #- --setLBMode=1
