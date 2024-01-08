@@ -1,6 +1,8 @@
 module github.com/loxilb-io/loxilb
 
-go 1.18
+go 1.21
+
+toolchain go1.21.5
 
 require (
 	github.com/go-openapi/errors v0.20.3
