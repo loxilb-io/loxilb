@@ -1,15 +1,92 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: loxilb-lb
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: loxilb-lb
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - watch
+      - list
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - watch
+      - list
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - endpoints
+      - services
+      - services/status
+    verbs:
+      - get
+      - watch
+      - list
+      - patch
+      - update
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups:
+      - authentication.k8s.io
+    resources:
+      - tokenreviews
+    verbs:
+      - create
+  - apiGroups:
+      - authorization.k8s.io
+    resources:
+      - subjectaccessreviews
+    verbs:
+      - create
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: loxilb-lb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: loxilb-lb
+subjects:
+  - kind: ServiceAccount
+    name: loxilb-lb
+    namespace: kube-system
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: loxilb-lb
   namespace: kube-system
+  labels:
+    app: loxilb-app
 spec:
   selector:
     matchLabels:
       app: loxilb-app
   template:
     metadata:
-      name: loxilb-lb
       labels:
         app: loxilb-app
     spec:
@@ -20,11 +97,14 @@ spec:
         operator: Exists
       - key: "node-role.kubernetes.io/control-plane"
         operator: Exists
+      priorityClassName: system-node-critical
+      serviceAccountName: loxilb-lb
       containers:
-      - name: loxilb-app
-        image: "ghcr.io/loxilb-io/loxilb:latest"
+      - name: loxilb-lb
+        image: "ghcr.io/loxilb-io/loxilb:debug"
         imagePullPolicy: Always
-        command: [ "/root/loxilb-io/loxilb/loxilb", "--bgp", "--egr-hooks", "--blacklist=veth.|flannel.|cali.|tunl.|vxlan[.]calico", "--ipvs-compat" ]
+        #command: [ "sleep", "72000" ]
+        command: [ "/root/loxilb-io/loxilb/loxilb", "--egr-hooks", "--blacklist=cni.|veth.|flannel.|cali.|tunl.|vxlan[.]calico", "--ipvs-compat", "--k8s-api=cluster" ]
         ports:
         - containerPort: 11111
         - containerPort: 179
@@ -34,6 +114,11 @@ spec:
           capabilities:
             add:
               - SYS_ADMIN
+        env:
+          - name: MY_NODE_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
 ---
 apiVersion: v1
 kind: Service
