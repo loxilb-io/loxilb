@@ -101,7 +101,7 @@ spec:
       serviceAccountName: loxilb-lb
       containers:
       - name: loxilb-lb
-        image: "ghcr.io/loxilb-io/loxilb:debug"
+        image: "ghcr.io/loxilb-io/loxilb:latest"
         imagePullPolicy: Always
         #command: [ "sleep", "72000" ]
         command: [ "/root/loxilb-io/loxilb/loxilb", "--egr-hooks", "--blacklist=cni.|veth.|flannel.|cali.|tunl.|vxlan[.]calico", "--ipvs-compat", "--k8s-api=cluster" ]

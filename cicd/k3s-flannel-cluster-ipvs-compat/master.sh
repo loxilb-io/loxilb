@@ -1,6 +1,6 @@
 export MASTER_IP=$(ip a |grep global | grep -v '10.0.2.15' | grep '192.168.80' | awk '{print $2}' | cut -f1 -d '/')
 
-curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik --disable servicelb --disable-cloud-controller --kube-proxy-arg proxy-mode=ipvs \
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik --disable servicelb --disable-cloud-controller --kube-proxy-arg proxy-mode=ipvs --flannel-iface=eth1 \
 --node-ip=${MASTER_IP} --node-external-ip=${MASTER_IP} \
 --bind-address=${MASTER_IP}" sh -
 
