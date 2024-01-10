@@ -14,6 +14,6 @@ If you wish to create this scenario in your lab then install Vagrant and follow 
 
 1. Run ./config.sh to setup the K8s cluster, client and LoxiLB nodes
 
-2. Run ./validation.sh to run the HA test. Test Results will be displayed at the end.
+2. Run ./validation.sh to run the TCP HA test or ./validation_with_sctp.sh to run TCP & SCTP HA Test. Test Results will be displayed at the end.
 
 3. Run ./rmconfig.sh to cleanup the setup.

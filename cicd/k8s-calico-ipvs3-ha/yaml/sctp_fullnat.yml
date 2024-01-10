@@ -29,7 +29,7 @@ spec:
       image: loxilbio/sctp-darn:latest
       imagePullPolicy: Always
       #command: ["/bin/sh", "-ec", "while :; do echo '.'; sleep 6 ; done"]
-      #command: ["sctp_darn","-H", "0.0.0.0","-P", "9999", "-l"]
-      command: ["sctp_test","-H", "0.0.0.0","-P", "9999", "-l"]
+      command: ["sctp_darn","-H", "0.0.0.0","-P", "9999", "-l"]
+      #command: ["sctp_test","-H", "0.0.0.0","-P", "9999", "-l"]
       ports:
         - containerPort: 9999

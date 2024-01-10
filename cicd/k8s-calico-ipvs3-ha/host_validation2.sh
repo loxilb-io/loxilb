@@ -1,12 +1,9 @@
 #!/bin/bash
+
 pkill iperf
-pkill sctp_test
 
 iperff_res=$(tail -n 1 iperff.out | xargs | cut -d ' ' -f 7)
 iperfd_res=$(tail -n 1 iperff.out | xargs | cut -d ' ' -f 7)
-
-sdf_res=$(grep -i "Client: Sending packets.(100000/100000)" sdf.out)
-sdd_res=$(grep -i "Client: Sending packets.(100000/100000)" sdd.out)
 
 if [[ $iperff_res != 0 ]]; then
     echo -e "K8s-calico-ipvs3-ha TCP\t\t(fullnat)\t[OK]"
@@ -19,20 +16,6 @@ if [[ $iperfd_res != 0 ]]; then
     echo -e "K8s-calico-ipvs3-ha TCP\t\t(default\t[OK]"
 else
     echo -e "K8s-calico-ipvs3-ha TCP\t\t(default)\t[FAILED]"
-    code=1
-fi
-
-if [[ ! -z $sdf_res ]]; then
-    echo -e "K8s-calico-ipvs3-ha SCTP\t(fullnat)\t[OK]"
-else
-    echo -e "K8s-calico-ipvs3-ha SCTP\t(fullnat)\t[FAILED]"
-    code=1
-fi
-
-if [[ ! -z $sdd_res ]]; then
-    echo -e "K8s-calico-ipvs3-ha SCTP\t(default)\t[OK]"
-else
-    echo -e "K8s-calico-ipvs3-ha SCTP\t(default)\t[FAILED]"
     code=1
 fi
 

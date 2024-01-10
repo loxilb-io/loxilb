@@ -77,9 +77,9 @@ fi
 echo -e "\n MASTER\t: $master"
 echo -e " BACKUP\t: $backup\n"
 
-vagrant ssh host -c 'sudo /vagrant/host_validation.sh' 2> /dev/null
+vagrant ssh host -c 'sudo /vagrant/host_validation_with_sctp.sh' 2> /dev/null
 
-sleep 15
+#sleep 15
 echo -e "phase-2 begins..\n"
 
 count=1
@@ -113,7 +113,7 @@ fi
 echo "Restarting MASTER:$master.."
 vagrant ssh $master -c 'sudo docker restart loxilb' 2> /dev/null
 
-sleep 50
+sleep 30
 
 sudo rm extIP
-vagrant ssh host -c 'sudo /vagrant/host_validation2.sh' 2> /dev/null
+vagrant ssh host -c 'sudo /vagrant/host_validation2_with_sctp.sh' 2> /dev/null
