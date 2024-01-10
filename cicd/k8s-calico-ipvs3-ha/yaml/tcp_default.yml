@@ -3,8 +3,9 @@ kind: Service
 metadata:
   name: tcp-lb-default
   annotations:
-    loxilb.io/liveness: "yes"
     loxilb.io/lbmode: "default"
+      #loxilb.io/liveness: "yes"
+      #loxilb.io/probetype: "ping"
 spec:
   externalTrafficPolicy: Local
   loadBalancerClass: loxilb.io/loxilb

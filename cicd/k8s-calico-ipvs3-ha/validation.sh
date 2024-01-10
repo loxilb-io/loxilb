@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 source ../common.sh
 echo k8s-calico-ipvs3-ha
 
@@ -47,18 +48,18 @@ echo "**************************************************************************
 echo -e "\nLB List"
 echo -e "\n---- LLB1 ----"
 echo "******************************************************************************"
-vagrant ssh llb1 -c 'sudo docker exec -it loxilb loxicmd get lb -o wide' 2> /dev/null
+vagrant ssh llb1 -c 'sudo ./loxicmd get lb -o wide' 2> /dev/null
 echo "******************************************************************************"
 echo -e "\n---- LLB2 ----"
-vagrant ssh llb2 -c 'sudo docker exec -it loxilb loxicmd get lb -o wide' 2> /dev/null
+vagrant ssh llb2 -c 'sudo ./loxicmd get lb -o wide' 2> /dev/null
 echo "******************************************************************************"
 echo -e "\nEP List"
 echo -e "\n---- LLB1 ----"
 echo "******************************************************************************"
-vagrant ssh llb1 -c 'sudo docker exec -it loxilb loxicmd get ep -o wide' 2> /dev/null
+vagrant ssh llb1 -c 'sudo ./loxicmd get ep -o wide' 2> /dev/null
 echo "******************************************************************************"
 echo -e "\n---- LLB2 ----"
-vagrant ssh llb2 -c 'sudo docker exec -it loxilb loxicmd get ep -o wide' 2> /dev/null
+vagrant ssh llb2 -c 'sudo ./loxicmd get ep -o wide' 2> /dev/null
 echo "******************************************************************************"
 echo -e "\nTEST RESULTS"
 echo "******************************************************************************"
@@ -78,14 +79,16 @@ echo -e " BACKUP\t: $backup\n"
 
 vagrant ssh host -c 'sudo /vagrant/host_validation.sh' 2> /dev/null
 
+sleep 15
+
 count=1
 sync=0
 while [[ $count -le 5 ]] ; do
 echo -e "\nStatus at MASTER:$master\n"
-vagrant ssh $master -c "sudo docker exec -it loxilb loxicmd get ct | grep est" 2> /dev/null
+vagrant ssh $master -c "sudo ./loxicmd get ct | grep est" 2> /dev/null
 
 echo -e "\nStatus at BACKUP:$backup\n"
-vagrant ssh $backup -c "sudo docker exec -it loxilb loxicmd get ct | grep est" 2> /dev/null
+vagrant ssh $backup -c "sudo ./loxicmd get ct | grep est" 2> /dev/null
 
 nres1=$(curl -sX 'GET' 'http://192.168.80.252:11111/netlox/v1/config/conntrack/all' -H 'accept: application/json' | grep -ow "\"conntrackState\":\"est\"" | wc -l)
 nres2=$(curl -sX 'GET' 'http://192.168.80.253:11111/netlox/v1/config/conntrack/all' -H 'accept: application/json' | grep -ow "\"conntrackState\":\"est\"" | wc -l)
@@ -102,17 +105,14 @@ done
 
 if [[ $sync == 0 ]]; then
     echo -e "\nConnection Sync failed\n"
-    vagrant ssh host -c 'sudo pkill iperf; sudo pkill sctp_darn; sudo rm -rf *.pipe *.out'
+    vagrant ssh host -c 'sudo pkill iperf; sudo pkill sctp_test; sudo rm -rf *.out'
     exit 1
 fi
 
 echo "Restarting MASTER:$master.."
 vagrant ssh $master -c 'sudo docker restart loxilb' 2> /dev/null
 
-sleep 10
-
-vagrant ssh host -c 'sudo /vagrant/host_validation2.sh' 2> /dev/null
+sleep 30
 
 sudo rm extIP
-
-exit $code
+vagrant ssh host -c 'sudo /vagrant/host_validation2.sh' 2> /dev/null
