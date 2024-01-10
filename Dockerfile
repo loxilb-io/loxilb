@@ -7,22 +7,19 @@ LABEL description="This is loxilb official Docker Image"
 # Disable Prompt During Packages Installation
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Prepare environment
-RUN mkdir -p /opt/loxilb && \
-    mkdir -p /opt/loxilb/cert/ && \
-    mkdir -p /root/loxilb-io/loxilb/ && \
-    mkdir -p /etc/bash_completion.d/
-
-# Update Ubuntu Software repository
-RUN apt-get update && apt-get install -y wget
-
 # Env for golang
 ENV PATH="${PATH}:/usr/local/go/bin"
 
 # Install loxilb related packages
-RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && if [ "$arch" = "arm64" ] ; then apt-get install -y gcc-multilib-arm-linux-gnueabihf; else apt-get update && apt-get install -y  gcc-multilib;fi && \
+RUN mkdir -p /opt/loxilb && \
+    mkdir -p /opt/loxilb/cert/ && \
+    mkdir -p /root/loxilb-io/loxilb/ && \
+    mkdir -p /etc/bash_completion.d/ && \
+    # Update Ubuntu Software repository
+    apt-get update && apt-get install -y wget && \
+    arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && if [ "$arch" = "arm64" ] ; then apt-get install -y gcc-multilib-arm-linux-gnueabihf; else apt-get update && apt-get install -y  gcc-multilib;fi && \
     # Arch specific packages - GoLang
-    wget https://go.dev/dl/go1.18.linux-${arch}.tar.gz && tar -xzf go1.18.linux-${arch}.tar.gz --directory /usr/local/ && rm go1.18.linux-${arch}.tar.gz && \
+    wget https://go.dev/dl/go1.21.5.linux-${arch}.tar.gz && tar -xzf go1.21.5.linux-${arch}.tar.gz --directory /usr/local/ && rm go1.21.5.linux-${arch}.tar.gz && \
     # Dev and util packages
     apt-get install -y clang llvm libelf-dev libpcap-dev vim net-tools \
     elfutils dwarves git libbsd-dev bridge-utils wget unzip build-essential \
