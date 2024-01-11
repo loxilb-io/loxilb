@@ -1374,7 +1374,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 			} else if mh.cloudLabel == "aws" {
 				err := AWSUpdatePrivateIp(sNetAddr.IP, false)
 				if err != nil {
-					tk.LogIt(tk.LogError, "aws lb-rule vip %s delete failed\n", sNetAddr.IP.String())
+					tk.LogIt(tk.LogError, "aws lb-rule vip %s delete failed. err: %v\n", sNetAddr.IP.String(), err)
 				}
 			}
 		}
@@ -2372,7 +2372,7 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 				} else if mh.cloudLabel == "aws" {
 					err := AWSUpdatePrivateIp(IP, false)
 					if err != nil {
-						tk.LogIt(tk.LogError, "aws lb-rule vip %s add failed\n", IP.String())
+						tk.LogIt(tk.LogError, "aws lb-rule vip %s add failed. err: %v\n", IP.String(), err)
 						return err
 					}
 				}
