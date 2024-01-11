@@ -19,12 +19,6 @@ package loxinet
 import (
 	"errors"
 	"fmt"
-	apiserver "github.com/loxilb-io/loxilb/api"
-	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
-	prometheus "github.com/loxilb-io/loxilb/api/prometheus"
-	cmn "github.com/loxilb-io/loxilb/common"
-	opts "github.com/loxilb-io/loxilb/options"
-	tk "github.com/loxilb-io/loxilib"
 	"net"
 	_ "net/http/pprof"
 	"os"
@@ -35,6 +29,13 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	apiserver "github.com/loxilb-io/loxilb/api"
+	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
+	prometheus "github.com/loxilb-io/loxilb/api/prometheus"
+	cmn "github.com/loxilb-io/loxilb/common"
+	opts "github.com/loxilb-io/loxilb/options"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 // string constant representing root security zone
@@ -206,6 +207,8 @@ func loxiNetInit() {
 
 	if mh.cloudLabel == "oci" {
 		OCIApiInit()
+	} else if mh.cloudLabel == "aws" {
+		AWSApiInit()
 	}
 
 	// Check if profiling is enabled
