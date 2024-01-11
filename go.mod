@@ -15,6 +15,7 @@ require (
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/loxilb-io/ipvs v0.1.0
 	github.com/loxilb-io/loxilib v0.8.9-0.20231211082246-dc641488569f
+	github.com/oracle/oci-go-sdk/v65 v65.55.0
 	github.com/osrg/gobgp/v3 v3.5.0
 	github.com/prometheus-community/pro-bing v0.1.0
 	github.com/prometheus/client_model v0.3.0
@@ -40,6 +41,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/loxilb-io/sctp v0.0.0-20230519081703-6d1baec82fd4 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/moby/ipvs v1.1.0 // indirect
@@ -62,6 +64,7 @@ require (
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
+	github.com/sony/gobreaker v0.5.0 // indirect
 )
 
 require (

@@ -30,4 +30,5 @@ var Opts struct {
 	Rpc               string         `long:"rpc" description:"RPC mode for syncing - netrpc or grpc" default:"netrpc"`
 	K8sApi            string         `long:"k8s-api" description:"Enable k8s watcher(experimental)" default:"none"`
 	IPVSCompat        bool           `long:"ipvs-compat" description:"Enable ipvs-compat(experimental)"`
+	Cloud             string         `long:"cloud" description:"cloud type if any e.g aws, oci, gcp" default:"on-prem"`
 }

@@ -1501,6 +1501,12 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	if R.vipMap[sNetAddr.IP.String()] == 0 {
 		if IsIPHostAddr(sNetAddr.IP.String()) && !strings.Contains(rule.name, "ipvs") {
 			loxinlp.DelAddrNoHook(sNetAddr.IP.String()+"/32", "lo")
+			if mh.cloudLabel == "oci" {
+				err := OCIUpdatePrivateIp(sNetAddr.IP, false)
+				if err != nil {
+					tk.LogIt(tk.LogError, "oci lb-rule vip %s delete failed\n", sNetAddr.IP.String())
+				}
+			}
 		}
 		delete(R.vipMap, sNetAddr.IP.String())
 	}
@@ -2147,12 +2153,7 @@ func (R *RuleH) RulesSync() {
 		}
 	}
 
-	for vip := range R.vipMap {
-		ip := net.ParseIP(vip)
-		if ip != nil {
-			R.AdvRuleVIPIfL2(ip)
-		}
-	}
+	R.RuleVIPSyncToClusterState()
 
 	for _, rule := range R.tables[RtFw].eMap {
 		ruleKeys := rule.tuples.String()
@@ -2531,6 +2532,13 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 		ev, _, iface := R.zone.L3.IfaSelectAny(IP, false)
 		if ev == 0 {
 			if !IsIPHostAddr(IP.String()) {
+				if mh.cloudLabel == "oci" {
+					err := OCIUpdatePrivateIp(IP, true)
+					if err != nil {
+						tk.LogIt(tk.LogError, "oci lb-rule vip %s add failed\n", IP.String())
+						return err
+					}
+				}
 				if loxinlp.AddAddrNoHook(IP.String()+"/32", "lo") != 0 {
 					tk.LogIt(tk.LogError, "nat lb-rule vip %s:%s add failed\n", IP.String(), "lo")
 				} else {
@@ -2560,4 +2568,13 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 	}
 
 	return nil
+}
+
+func (R *RuleH) RuleVIPSyncToClusterState() {
+	for vip := range R.vipMap {
+		ip := net.ParseIP(vip)
+		if ip != nil {
+			R.AdvRuleVIPIfL2(ip)
+		}
+	}
 }
