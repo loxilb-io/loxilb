@@ -7,4 +7,5 @@ add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu
 apt-get update
 apt-get install -y docker-ce
 docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --net=host --name loxilb ghcr.io/loxilb-io/loxilb:latest -b --cluster=192.168.80.253 --self=0
+docker cp loxilb:/usr/local/sbin/loxicmd ./
 #docker exec -dt loxilb /root/loxilb-io/loxilb/loxilb -b --cluster=192.168.80.253 --self=0

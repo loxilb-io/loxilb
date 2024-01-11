@@ -40,6 +40,9 @@ kubeadm token create --print-join-command > $config_path/join.sh
 curl https://raw.githubusercontent.com/projectcalico/calico/v${CALICO_VERSION}/manifests/calico.yaml -O
 
 kubectl apply -f calico.yaml
+kubectl patch configmap/calico-config -n kube-system --type merge \
+  -p '{"data":{"veth_mtu": "8900"}}'
+kubectl rollout restart daemonset calico-node -n kube-system
 
 sudo -i -u vagrant bash << EOF
 whoami

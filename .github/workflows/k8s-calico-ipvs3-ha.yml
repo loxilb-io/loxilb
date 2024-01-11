@@ -1,8 +1,8 @@
 name: K8s-Calico-Cluster-IPVS3-HA-Sanity-CI
 on:
- #schedule:
+ schedule:
  # Runs "At 17:00 UTC every day-of-week"
- #- cron: '0 17 * * *'
+ - cron: '0 17 * * *'
  workflow_dispatch:
     inputs:
       testName:
