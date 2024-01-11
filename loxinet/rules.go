@@ -2370,7 +2370,7 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 						return err
 					}
 				} else if mh.cloudLabel == "aws" {
-					err := AWSUpdatePrivateIp(IP, false)
+					err := AWSUpdatePrivateIp(IP, true)
 					if err != nil {
 						tk.LogIt(tk.LogError, "aws lb-rule vip %s add failed. err: %v\n", IP.String(), err)
 						return err
