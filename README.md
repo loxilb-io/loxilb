@@ -10,11 +10,11 @@ Kubernetes defines many service constructs like cluster-ip, node-port, load-bala
 
 <img src="https://github.com/loxilb-io/loxilb/assets/75648333/6f933bcf-96b7-42ba-bfe2-ea4b85b9a73b" width=50% height=50%>
 
-All these services are provided by load-balancers/proxies operating at Layer4/Layer7. Due to Kubernetes's highly modular architecture,  these services can be provided by different software modules. For example, kube-proxy is used to provide cluster-ip and node-port services by default. 
+All these services are provided by load-balancers/proxies operating at Layer4/Layer7. Since Kubernetes's is highly modular,  these services can be provided by different software modules. For example, kube-proxy is used by default to provide cluster-ip and node-port services. 
 
-Service type load-balancer is usually provided by public cloud-provider as a managed service. But for on-prem and self-managed clusers, there are only a few good options. <b>loxilb provides service type load-balancer as its main use-case</b>. loxilb can be run in-cluster or ext-to-cluster as per user need.  
+Service type load-balancer is usually provided by public cloud-provider(s) as a managed entity. But for on-prem and self-managed clusers, there are only a few good options available. <b>loxilb provides service type load-balancer as its main use-case</b>. loxilb can be run in-cluster or ext-to-cluster as per user need.  
 
-Additionally, loxilb can also support cluster-ip and node-port services and thereby providing end-to-end connectivity for Kubernetes.
+Additionally, loxilb can also support cluster-ip and node-port services, thereby providing end-to-end connectivity for Kubernetes.
 
 ## Why choose loxilb?
    
@@ -49,10 +49,10 @@ Additionally, loxilb can also support cluster-ip and node-port services and ther
 - A kubernetes agent [kube-loxilb](https://github.com/loxilb-io/kube-loxilb) written in Go
 
 ## Layer4 Vs Layer7
-loxilb works as a L4 load-balancer/service-mesh by default. Although it provides great performance, at times, L7 load-balancing might become necessary in K8s. There are many good L7 proxies already available for k8s. Still, we are working on providing a great L7 solution natively in eBPF. It is a tough endeavor one which should reap great benefits once completed. Please keep an eye for updates on this.
+loxilb works as a L4 load-balancer/service-mesh by default. Although it provides great performance, at times, L7 load-balancing might become necessary in K8s. There are many good L7 proxies already available for K8s. Still, we are working on providing a great L7 solution natively in eBPF. It is a tough endeavor one which should reap great benefits once completed. Please keep an eye for updates on this.
 
 ## Telco-Cloud with loxilb
-For deploying telco-cloud with cloud-native functions, loxilb can be used as a SCP(service communication proxy). SCP is nothing but a glorified term for Kubernetes load-balancing. But telco-cloud requires load-balancing across various interfaces/standards like N2, N4, E2(ORAN), S6x, 5GLAN, GTP etc. Each of these interfaces present its own unique challenges(and DPI) for load-balancing which loxilb aims to solve e.g.
+For deploying telco-cloud with cloud-native functions, loxilb can be used as a SCP(service communication proxy). SCP is nothing but a glorified term for Kubernetes load-balancing/proxy. But telco-cloud requires load-balancing across various interfaces/standards like N2, N4, E2(ORAN), S6x, 5GLAN, GTP etc. Each of these interfaces present its own unique challenges(and DPI) for load-balancing which loxilb aims to solve e.g.
 - N4 requires PFCP level session-intelligence
 - N2 requires NGAP parsing capability
 - S6x requires Diameter/SCTP multi-homing LB support
