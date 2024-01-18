@@ -10,9 +10,11 @@ Kubernetes defines many service constructs like cluster-ip, node-port, load-bala
 
 <img src="https://github.com/UltraInstinct14/loxilb/assets/75648333/2a6ef6fd-e1a8-4377-94bd-a35a15555761" width=50% height=50%>
 
-All these services are provided by load-balancers/proxies operating at Layer4/Layer7. Due to Kubernetes's highly modular architecture,  these services can be provided by different software modules. For example, kube-proxy is used to provide cluster-ip and node-port services by default. Service type load-balancer is usually provided by public cloud-provider as a managed service. But for on-prem and self-managed clusers, there are only a few good options. loxilb supports <b>service type load-balancer</b> as its main use-case. 
+All these services are provided by load-balancers/proxies operating at Layer4/Layer7. Due to Kubernetes's highly modular architecture,  these services can be provided by different software modules. For example, kube-proxy is used to provide cluster-ip and node-port services by default. 
 
-Additionally, loxilb can also support cluster-ip and node-port services and thereby providing end-to-end networking requirements for Kubernetes.
+Service type load-balancer is usually provided by public cloud-provider as a managed service. But for on-prem and self-managed clusers, there are only a few good options. <b>loxilb provides service type load-balancer as its main use-case</b>. 
+
+Additionally, loxilb can also support cluster-ip and node-port services and thereby providing end-to-end connectivity for Kubernetes.
 
 ## Why choose loxilb?
    
