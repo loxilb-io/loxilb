@@ -6,7 +6,7 @@ loxilb is an open source cloud-native load-balancer based on GoLang/eBPF with th
 
 ## Kubernetes with loxilb
 
-Kubernetes defines many service constructs like cluster-ip, node-port, load-balancer etc for pod to pod, pod to service and service from outside communication possible in a seamless manner.
+Kubernetes defines many service constructs like cluster-ip, node-port, load-balancer etc for pod to pod, pod to service and service from outside communication. 
 
 <img src="https://github.com/UltraInstinct14/loxilb/assets/75648333/2a6ef6fd-e1a8-4377-94bd-a35a15555761" width=50% height=50%>
 
