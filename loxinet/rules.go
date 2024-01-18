@@ -1431,10 +1431,12 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	if r.ruleNum < RtMaximumLbs {
 		R.tables[RtLB].rArr[r.ruleNum] = r
 	}
-	R.vipMap[sNetAddr.IP.String()]++
+	if !strings.Contains(r.name, "ipvs") {
+		R.vipMap[sNetAddr.IP.String()]++
 
-	if R.vipMap[sNetAddr.IP.String()] == 1 && !strings.Contains(r.name, "ipvs") {
-		R.AdvRuleVIPIfL2(sNetAddr.IP)
+		if R.vipMap[sNetAddr.IP.String()] == 1 {
+			R.AdvRuleVIPIfL2(sNetAddr.IP)
+		}
 	}
 
 	r.DP(DpCreate)
@@ -1496,13 +1498,15 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 		R.tables[RtLB].rArr[rule.ruleNum] = nil
 	}
 
-	R.vipMap[sNetAddr.IP.String()]--
+	if !strings.Contains(rule.name, "ipvs") {
+		R.vipMap[sNetAddr.IP.String()]--
 
-	if R.vipMap[sNetAddr.IP.String()] == 0 {
-		if IsIPHostAddr(sNetAddr.IP.String()) && !strings.Contains(rule.name, "ipvs") {
-			loxinlp.DelAddrNoHook(sNetAddr.IP.String()+"/32", "lo")
+		if R.vipMap[sNetAddr.IP.String()] == 0 {
+			if IsIPHostAddr(sNetAddr.IP.String()) {
+				loxinlp.DelAddrNoHook(sNetAddr.IP.String()+"/32", "lo")
+			}
+			delete(R.vipMap, sNetAddr.IP.String())
 		}
-		delete(R.vipMap, sNetAddr.IP.String())
 	}
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())

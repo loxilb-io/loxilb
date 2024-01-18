@@ -481,10 +481,10 @@ create_docker_host_vxlan() {
   #echo "$h1:$link1->$h2:$link2"
 
   if [[ "$uifType" == "phy" ]]; then
-    sudo ip -n $h1 link add vxlan$vxid type vxlan id $vxid local $lip dev $link1 dstport 4789
+    sudo ip -n $h1 link add vxlan$vxid type vxlan id $vxid local $lip dev $link1 dstport 0
     sudo ip -n $h1 link set vxlan$vxid up
   elif [[ "$uifType" == "vlan" ]]; then
-    sudo ip -n $h1 link add vxlan$vxid type vxlan id $vxid local $lip dev vlan$vid dstport 4789
+    sudo ip -n $h1 link add vxlan$vxid type vxlan id $vxid local $lip dev vlan$vid dstport 0
     sudo ip -n $h1 link set vxlan$vxid up
   fi
 

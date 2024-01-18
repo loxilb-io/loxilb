@@ -1363,7 +1363,8 @@ func RUWorker(ch chan nlp.RouteUpdate, f chan struct{}) {
 	}
 }
 
-func NLWorker(nNl *NlH, bgpPeerMode bool) {
+func NLWorker(nNl *NlH, bgpPeerMode bool, ch chan bool) {
+	ch <- true
 	if bgpPeerMode {
 		for { /* Single thread for reading route NL msgs in below order */
 			RUWorker(nNl.FromRUCh, nNl.FromRUDone)
@@ -1549,6 +1550,7 @@ func NlpInit(bgpPeerMode bool, blackList string, ipvsCompat bool) *NlH {
 
 	nNl.BlackList = blackList
 	nNl.BLRgx = regexp.MustCompile(blackList)
+	checkInit := make(chan bool)
 
 	if bgpPeerMode {
 		nNl.FromRUCh = make(chan nlp.RouteUpdate, cmn.RuWorkQLen)
@@ -1559,7 +1561,8 @@ func NlpInit(bgpPeerMode bool, blackList string, ipvsCompat bool) *NlH {
 			tk.LogIt(tk.LogInfo, "[NLP] Route msgs subscribed\n")
 		}
 
-		go NLWorker(nNl, bgpPeerMode)
+		go NLWorker(nNl, bgpPeerMode, checkInit)
+		<-checkInit
 		return nNl
 	}
 
@@ -1573,7 +1576,8 @@ func NlpInit(bgpPeerMode bool, blackList string, ipvsCompat bool) *NlH {
 	nNl.FromRUCh = make(chan nlp.RouteUpdate, cmn.RuWorkQLen)
 	nNl.IMap = make(map[string]Intf)
 
-	checkInit := make(chan bool)
+	go NLWorker(nNl, bgpPeerMode, checkInit)
+	<-checkInit
 
 	err := nlp.LinkSubscribe(nNl.FromLUCh, nNl.FromLUDone)
 	if err != nil {
@@ -1600,7 +1604,6 @@ func NlpInit(bgpPeerMode bool, blackList string, ipvsCompat bool) *NlH {
 		tk.LogIt(tk.LogInfo, "[NLP] Route msgs subscribed\n")
 	}
 
-	go NLWorker(nNl, bgpPeerMode)
 	tk.LogIt(tk.LogInfo, "[NLP] NLP Subscription done\n")
 
 	go NlpGet(checkInit)
