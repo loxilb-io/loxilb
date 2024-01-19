@@ -2540,6 +2540,7 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 				} else {
 					tk.LogIt(tk.LogInfo, "nat lb-rule vip %s:%s added\n", IP.String(), "lo")
 				}
+				loxinlp.DelNeighNoHook(IP.String(), "")
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer cancel()
