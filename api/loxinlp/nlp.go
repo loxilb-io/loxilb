@@ -19,6 +19,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
+	nlp "github.com/vishvananda/netlink"
+	"golang.org/x/sys/unix"
 	"net"
 	"os"
 	"os/exec"
@@ -27,12 +31,6 @@ import (
 	"strings"
 	"syscall"
 	"time"
-
-	tk "github.com/loxilb-io/loxilib"
-	nlp "github.com/vishvananda/netlink"
-	"golang.org/x/sys/unix"
-
-	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 const (
@@ -368,12 +366,21 @@ func AddNeighNoHook(address, ifName, macAddress string) int {
 
 func DelNeighNoHook(address, ifName string) int {
 	var ret int
+	Address := net.ParseIP(address)
 	IfName, err := nlp.LinkByName(ifName)
 	if err != nil {
-		tk.LogIt(tk.LogWarning, "[NLP] Port %s find Fail\n", ifName)
-		return -1
+		nList, err1 := nlp.NeighList(0, 0)
+		if err1 != nil {
+			tk.LogIt(tk.LogWarning, "[NLP] Neighbor List get Failed\n")
+			return -1
+		}
+		for _, n := range nList {
+			if n.IP.String() == address {
+				nlp.NeighDel(&n)
+			}
+		}
+		return 0
 	}
-	Address := net.ParseIP(address)
 
 	// Make Neigh
 	neigh := nlp.Neigh{
