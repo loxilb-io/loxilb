@@ -2,7 +2,7 @@
 FROM ubuntu:20.04
 
 # LABEL about the loxilb image
-LABEL description="This is loxilb official Docker Image"
+LABEL description="loxilb official docker image"
 
 # Disable Prompt During Packages Installation
 ARG DEBIAN_FRONTEND=noninteractive

@@ -76,6 +76,7 @@ type FdbEnt struct {
 	stime    time.Time
 	unReach  bool
 	inActive bool
+	hCnt     int
 	Sync     DpStatusT
 }
 
@@ -200,6 +201,10 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 	if found == true {
 		// Check if it is a modify
 		if l2FdbAttrEqual(&attr, &fdb.FdbAttr) {
+			if attr.FdbType == cmn.FdbPhy {
+				fdb.hCnt++
+				return 0, nil
+			}
 			tk.LogIt(tk.LogDebug, "fdb ent exists, %v\n", key)
 			return L2SameFdbErr, errors.New("same fdb")
 		}
@@ -240,6 +245,13 @@ func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 	if found == false {
 		tk.LogIt(tk.LogDebug, "fdb ent not found, %v\n", key)
 		return L2NoFdbErr, errors.New("no such fdb")
+	}
+
+	if fdb.FdbAttr.FdbType == cmn.FdbPhy {
+		if fdb.hCnt > 0 {
+			fdb.hCnt--
+			return 0, nil
+		}
 	}
 
 	if fdb.Port.SInfo.PortType == cmn.PortVxlanBr {
