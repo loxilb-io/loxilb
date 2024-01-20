@@ -26,9 +26,9 @@ Additionally, loxilb can also support cluster-ip and node-port services, thereby
 - Utitlizes ebpf which makes it ```flexible``` as well as ```customizable```
 - Advanced ```quality of service``` for workloads (per LB, per end-point or per client)
 - Works with ```any``` Kubernetes distribution/CNI - k8s/k3s/k0s/kind/OpenShift + Calico/Flannel/Cilium/Weave/Multus etc
-- Extensive support for ```SCTP workloads``` (with multi-homing) on k8s
-- Dual stack with ```NAT66, NAT64``` support for k8s
-- k8s ```multi-cluster``` support (planned 🚧)
+- Extensive support for ```SCTP workloads``` (with multi-homing) on K8s
+- Dual stack with ```NAT66, NAT64``` support for K8s
+- K8s ```multi-cluster``` support (planned 🚧)
 - Runs in ```any``` cloud (public cloud/on-prem) or ```standalone``` environments
 
 ## Overall features of loxilb
