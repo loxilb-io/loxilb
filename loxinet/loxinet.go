@@ -54,6 +54,8 @@ const (
 const (
 	MkfsScript     = "/usr/local/sbin/mkllb_bpffs"
 	BpfFsCheckFile = "/opt/loxilb/dp/bpf/intf_map"
+	ARPAcceptAll   = "sysctl net.ipv4.conf.all.arp_accept=1"
+	ARPAcceptDfl   = "sysctl net.ipv4.conf.default.arp_accept=1"
 )
 
 type loxiNetH struct {
@@ -194,6 +196,9 @@ func loxiNetInit() {
 			RunCommand(MkfsScript, true)
 		}
 	}
+
+	RunCommand(ARPAcceptAll, false)
+	RunCommand(ARPAcceptDfl, false)
 
 	mh.self = opts.Opts.ClusterSelf
 	mh.rssEn = opts.Opts.RssEnable

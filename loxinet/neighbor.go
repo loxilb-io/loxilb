@@ -41,7 +41,7 @@ const (
 
 // constants
 const (
-	NeighAts       = 10
+	NeighAts       = 30
 	MaxSysNeigh    = 3 * 1024
 	MaxTunnelNeigh = 1024
 )
@@ -126,21 +126,32 @@ func (n *NeighH) Activate(ne *Neigh) {
 		return
 	}
 
-	if ne.Resolved {
-		return
-	}
-
 	if time.Now().Sub(ne.Ats) < NeighAts || ne.OifPort.Name == "lo" {
 		return
 	}
 
-	ret, Sip, _ := n.Zone.L3.IfaSelect(ne.OifPort.Name, ne.Addr, true)
+	name := ne.OifPort.Name
+	addr := ne.Addr
+	var Sip net.IP
+	ret := -1
+	if ne.OifPort.IsIPinIPTunPort() {
+		addr = ne.OifPort.HInfo.TunDst
+		ret, Sip, name = n.Zone.L3.IfaSelectAny(addr, false)
+		if ret != 0 {
+			tk.LogIt(tk.LogDebug, "Failed to select l3-tun ifa select (%s:%s)\n", name, addr.String())
+			return
+		}
+		goto doIT
+	}
+
+	ret, Sip, _ = n.Zone.L3.IfaSelect(name, addr, true)
 	if ret != 0 {
-		tk.LogIt(tk.LogDebug, "Failed to select l3 ifa select\n")
+		tk.LogIt(tk.LogDebug, "Failed to select l3 ifa select (%s:%s)\n", name, addr.String())
 		return
 	}
 
-	tk.ArpPing(ne.Addr, Sip, ne.OifPort.Name)
+doIT:
+	tk.ArpPing(addr, Sip, name)
 
 	ne.Ats = time.Now()
 }
