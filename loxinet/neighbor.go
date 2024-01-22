@@ -41,7 +41,7 @@ const (
 
 // constants
 const (
-	NeighAts       = 30
+	NeighAts       = 10
 	MaxSysNeigh    = 3 * 1024
 	MaxTunnelNeigh = 1024
 )
@@ -126,7 +126,11 @@ func (n *NeighH) Activate(ne *Neigh) {
 		return
 	}
 
-	if time.Now().Sub(ne.Ats) < NeighAts || ne.OifPort.Name == "lo" {
+	if ne.Resolved && !ne.OifPort.IsIPinIPTunPort() {
+		return
+	}
+
+	if time.Since(ne.Ats) < NeighAts || ne.OifPort.Name == "lo" {
 		return
 	}
 
