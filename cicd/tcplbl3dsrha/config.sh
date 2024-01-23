@@ -120,10 +120,8 @@ $hexec llb2 ip route add 57.57.57.0/24 via 46.46.2.1
 
 $hexec llb2 ip link add name ipip23 type ipip local 33.33.33.254 remote 33.33.33.1
 $hexec llb2 ip link set dev ipip23 up
-$hexec llb2 ip addr add 47.47.3.254/24 dev ipip23
+$hexec llb2 ip addr add 47.47.2.254/24 dev ipip23
 $hexec llb2 ip route add 58.58.58.0/24 via 47.47.2.1
-
-
 
 $hexec ep1 ip link add name ipip11 type ipip local 31.31.31.1 remote 31.31.31.253
 $hexec ep1 ip link set dev ipip11 up
@@ -159,7 +157,6 @@ $hexec ep3 ip addr add 47.47.2.1/24 dev ipip32
 #$hexec ep3 ip route add 10.10.10.0/24 dev ipip0
 $hexec ep3 ip addr add 58.58.58.1/32 dev lo
 $hexec ep3 ip addr add 20.20.20.1/32 dev lo
-
 
 ##Pod networks
 #add_route llb1 1.1.1.0/24 11.11.11.254

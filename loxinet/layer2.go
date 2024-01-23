@@ -147,7 +147,7 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 			default:
 				return true, -1, errors.New("no neigh found")
 			}
-			if nh, ok := tDat.(*Neigh); ok && !nh.Inactive {
+			if nh, ok := tDat.(*Neigh); ok && !nh.Inactive && !nh.Dummy {
 				rt := zone.Rt.RtFind(*pDstNet, zone.Name)
 				if rt == nil {
 					unRch = true
@@ -233,7 +233,7 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 
 	nfdb.DP(DpCreate)
 
-	tk.LogIt(tk.LogDebug, "added fdb ent, %v\n", key)
+	tk.LogIt(tk.LogDebug, "added fdb ent, %v : health(%v)\n", key, !nfdb.unReach)
 
 	return 0, nil
 }

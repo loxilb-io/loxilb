@@ -376,7 +376,7 @@ func (r *RtH) RtDeleteByPort(port string) (int, error) {
 			continue
 		}
 		for _, nh := range rte.NextHops {
-			if nh.OifPort.Name == port {
+			if nh.OifPort != nil && nh.OifPort.Name == port {
 				r.RtDelete(*dst, r.Zone.Name)
 			}
 		}

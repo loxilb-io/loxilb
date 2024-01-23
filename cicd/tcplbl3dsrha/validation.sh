@@ -5,41 +5,36 @@ $hexec ep1 socat -v -T0.05 tcp-l:8080,reuseaddr,fork system:"echo 'server1'; cat
 $hexec ep2 socat -v -T0.05 tcp-l:8080,reuseaddr,fork system:"echo 'server2'; cat" >/dev/null 2>&1 &
 $hexec ep3 socat -v -T0.05 tcp-l:8080,reuseaddr,fork system:"echo 'server3'; cat" >/dev/null 2>&1 &
 
+function wait_vip_ready {
+  i=1
+  nr=0
+  for ((;;)) do
+    res=$($hexec r1 ip route |grep 20.20.20.1)
+    if [[ x$res != x"" ]]; then
+      echo "VIP advertised"
+      break
+    fi
+
+    i=$(( $i + 1 ))
+    if [[ $i -ge 40 ]]; then
+        echo "VIP not found in r1. Giving up"
+        exit 1
+    fi
+    echo "VIP not found in r1.Waiting..."
+    sleep 10
+  done
+}
+
+wait_vip_ready
 sleep 5
 code=0
-servArr=( "server1" "server2" "server3" )
-ep=( "56.56.56.1" "57.57.57.1" "58.58.58.1" )
-j=0
-waitCount=0
-while [ $j -le 2 ]
-do
-    #res=$($hexec user curl --max-time 10 -s ${ep[j]}:8080)
-    res=$($hexec user socat -T60 - TCP:${ep[j]}:8080,reuseaddr)
-    #echo $res
-    if [[ $res == "${servArr[j]}" ]]
-    then
-        echo "$res UP"
-        j=$(( $j + 1 ))
-    else
-        echo "Waiting for ${servArr[j]}(${ep[j]})"
-        waitCount=$(( $waitCount + 1 ))
-        if [[ $waitCount == 10 ]];
-        then
-            echo "All Servers are not UP"
-            echo SCENARIO-tcplbl3dsrha [FAILED]
-            exit 1
-        fi
-    fi
-    sleep 1
-done
-
 exp=""
 for i in {1..4}
 do
 for j in {0..2}
 do
     #res=$($hexec user curl --local-port 55001 --max-time 10 -s 20.20.20.1:2020)
-    res=$($hexec user socat -T60 - TCP:20.20.20.1:8080,sp=15402,reuseaddr)
+    res=$($hexec user socat -T2 - TCP:20.20.20.1:8080,sp=15402,reuseaddr)
     echo $res
     if [[ $exp == "" ]]
     then
@@ -49,7 +44,6 @@ do
     then
       code=1
     fi
-    sleep 1
 done
 done
 if [[ $code == 0 ]]

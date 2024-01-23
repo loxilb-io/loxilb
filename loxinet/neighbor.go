@@ -42,6 +42,7 @@ const (
 // constants
 const (
 	NeighAts       = 10
+	NeighRslvdAts  = 40
 	MaxSysNeigh    = 3 * 1024
 	MaxTunnelNeigh = 1024
 )
@@ -86,6 +87,7 @@ type Neigh struct {
 	Key      NeighKey
 	Addr     net.IP
 	Attr     NeighAttr
+	Dummy    bool
 	Inactive bool
 	Resolved bool
 	Mark     uint64
@@ -122,25 +124,41 @@ func NeighInit(zone *Zone) *NeighH {
 // Activate - Try to activate a neighbor
 func (n *NeighH) Activate(ne *Neigh) {
 
-	if tk.IsNetIPv6(ne.Addr.String()) {
+	interval := NeighAts * time.Second
+	if tk.IsNetIPv6(ne.Addr.String()) || ne.Dummy {
 		return
 	}
 
 	if ne.Resolved {
+		interval = NeighRslvdAts * time.Second
+	}
+
+	if (time.Since(ne.Ats) < interval) || ne.OifPort.Name == "lo" {
 		return
 	}
 
-	if time.Now().Sub(ne.Ats) < NeighAts || ne.OifPort.Name == "lo" {
-		return
+	name := ne.OifPort.Name
+	addr := ne.Addr
+	var Sip net.IP
+	ret := -1
+	if ne.OifPort.IsIPinIPTunPort() {
+		addr = ne.OifPort.HInfo.TunDst
+		ret, Sip, name = n.Zone.L3.IfaSelectAny(addr, false)
+		if ret != 0 {
+			tk.LogIt(tk.LogDebug, "Failed to select l3-tun ifa select (%s:%s)\n", name, addr.String())
+			return
+		}
+		goto doIT
 	}
 
-	ret, Sip, _ := n.Zone.L3.IfaSelect(ne.OifPort.Name, ne.Addr, true)
+	ret, Sip, _ = n.Zone.L3.IfaSelect(name, addr, true)
 	if ret != 0 {
-		tk.LogIt(tk.LogDebug, "Failed to select l3 ifa select\n")
+		tk.LogIt(tk.LogDebug, "Failed to select l3 ifa select (%s:%s)\n", name, addr.String())
 		return
 	}
 
-	tk.ArpPing(ne.Addr, Sip, ne.OifPort.Name)
+doIT:
+	tk.ArpPing(addr, Sip, name)
 
 	ne.Ats = time.Now()
 }
@@ -345,7 +363,14 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 	port := n.Zone.Ports.PortFindByOSID(Attr.OSLinkIndex)
 	if port == nil {
 		tk.LogIt(tk.LogError, "neigh add - %s:%s no oport\n", Addr.String(), Zone)
+		if !found {
+			n.NeighMap[key] = &Neigh{Dummy: true, Attr: Attr, NhRtm: make(map[RtKey]*Rt)}
+		}
 		return NeighOifErr, errors.New("nh-oif error")
+	}
+
+	if ne != nil && ne.Dummy {
+		found = false
 	}
 
 	// Special case to handle IpinIP VTIs
@@ -365,6 +390,7 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 
 	if found == true {
 		ne.Inactive = false
+		ne.Dummy = false
 		if bytes.Equal(Attr.HardwareAddr, zeroHwAddr) == true {
 			ne.Resolved = false
 		} else {
@@ -388,15 +414,20 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 		return NeighRangeErr, errors.New("nh-hwm error")
 	}
 
-	ne = new(Neigh)
+	if ne == nil {
+		ne = new(Neigh)
+	}
 
+	ne.Dummy = false
 	ne.Key = key
 	ne.Addr = Addr
 	ne.Attr = Attr
 	ne.OifPort = port
 	ne.Mark = idx
 	ne.Type |= NhNormal
-	ne.NhRtm = make(map[RtKey]*Rt)
+	if ne.NhRtm == nil {
+		ne.NhRtm = make(map[RtKey]*Rt)
+	}
 	ne.Inactive = false
 
 	n.NeighRecursiveResolve(ne)
@@ -453,6 +484,18 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 	if found == false {
 		tk.LogIt(tk.LogError, "neigh delete - %s:%s doesnt exist\n", Addr.String(), Zone)
 		return NeighNoEntErr, errors.New("no-nh error")
+	}
+
+	if ne != nil && ne.Dummy {
+		if len(ne.NhRtm) > 0 {
+			ne.Resolved = false
+			ne.Inactive = true
+			zeroHwAddr, _ := net.ParseMAC("00:00:00:00:00:00")
+			ne.Attr.HardwareAddr = zeroHwAddr
+			return 0, nil
+		}
+		delete(n.NeighMap, ne.Key)
+		return 0, nil
 	}
 
 	var mask net.IPMask
@@ -520,7 +563,7 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 // NeighDeleteByPort - Routine to delete all the neigh on this port
 func (n *NeighH) NeighDeleteByPort(port string) {
 	for _, ne := range n.NeighMap {
-		if ne.OifPort.Name == port {
+		if ne.OifPort != nil && ne.OifPort.Name == port {
 			n.NeighDelete(ne.Addr, ne.Key.Zone)
 		}
 	}
@@ -597,7 +640,7 @@ func (n *NeighH) Neighs2String(it IterIntf) error {
 func (n *NeighH) PortNotifier(name string, osID int, evType PortEvent) {
 	if evType&PortEvDown|PortEvDelete|PortEvLowerDown != 0 {
 		for _, ne := range n.NeighMap {
-			if ne.OifPort.Name == name {
+			if ne.OifPort != nil && ne.OifPort.Name == name {
 				n.NeighDelete(net.ParseIP(ne.Key.NhString), ne.Key.Zone)
 			}
 		}
@@ -607,6 +650,21 @@ func (n *NeighH) PortNotifier(name string, osID int, evType PortEvent) {
 
 // NeighTicker - a per neighbor ticker sub-routine
 func (n *NeighH) NeighTicker(ne *Neigh) {
+
+	if ne.Dummy {
+		zone, _ := mh.zn.Zonefind(ne.Key.Zone)
+		if zone == nil {
+			delete(n.NeighMap, ne.Key)
+			return
+		}
+
+		_, err := zone.Nh.NeighAdd(net.ParseIP(ne.Key.NhString), ne.Key.Zone, ne.Attr)
+		if err == nil {
+
+			tk.LogIt(tk.LogInfo, "nh defer added - %s:%s\n", ne.Key.NhString, ne.Key.Zone)
+		}
+
+	}
 	n.Activate(ne)
 	if n.NeighRecursiveResolve(ne) {
 		ne.DP(DpCreate)
@@ -635,6 +693,9 @@ func (n *NeighH) NeighDestructAll() {
 // DP - sync state of neighbor entity to data-path
 func (ne *Neigh) DP(work DpWorkT) int {
 
+	if ne.Dummy {
+		return 0
+	}
 	//if nh.Resolved == false && work == DP_CREATE {
 	//	return -1
 	//}
