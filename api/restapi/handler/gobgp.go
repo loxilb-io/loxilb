@@ -16,13 +16,36 @@
 package handler
 
 import (
+	"net"
+
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
-	"net"
 )
 
+func ConfigGetBGPNeigh(params operations.GetConfigBgpNeighAllParams) middleware.Responder {
+	tk.LogIt(tk.LogDebug, "[API] BGP Neighbor %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	res, err := ApiHooks.NetGoBGPNeighGet()
+	if err != nil {
+		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		return &ResultResponse{Result: err.Error()}
+	}
+	var result []*models.BGPNeighGetEntry
+	result = make([]*models.BGPNeighGetEntry, 0)
+	for _, nei := range res {
+		tmpNeigh := models.BGPNeighGetEntry{}
+		tmpNeigh.IPAddress = nei.Addr
+		tmpNeigh.RemoteAs = int64(nei.RemoteAS)
+		tmpNeigh.State = nei.State
+		tmpNeigh.Updowntime = nei.Uptime
+
+		result = append(result, &tmpNeigh)
+	}
+
+	return operations.NewGetConfigBgpNeighAllOK().WithPayload(&operations.GetConfigBgpNeighAllOKBody{BgpNeiAttr: result})
+}
 func ConfigPostBGPNeigh(params operations.PostConfigBgpNeighParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] BGP Neighbor %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var bgpNeighMod cmn.GoBGPNeighMod

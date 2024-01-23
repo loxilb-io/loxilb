@@ -2100,6 +2100,50 @@ paths:
 #----------------------------------------------
 # GoBGP
 #----------------------------------------------
+  '/config/bgp/neigh/all':
+    get:
+      summary: Get the all of BGP Neighbor
+      description: Get the all of BGP Neighbor
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              bgpNeiAttr:
+                type: array
+                items:
+                  $ref: '#/definitions/BGPNeighGetEntry'
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
   '/config/bgp/neigh':
     post:
       summary: Adds a BGP Neighbor
@@ -3107,6 +3151,24 @@ definitions:
       setMultiHop:
         type: boolean
         description: Enable multi-hop peering (if needed)
+
+
+  BGPNeighGetEntry:
+    type: object
+    properties:
+      ipAddress:
+        type: string
+        description: BGP Neighbor IP address
+      remoteAs:
+        type: integer
+        description: Remote AS number
+      state:
+        type: string
+        description: Current state
+      updowntime:
+        type: string
+        description: Current uptime
+
 
   BGPGlobalConfig:
     type: object

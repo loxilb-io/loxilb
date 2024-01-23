@@ -23,6 +23,7 @@ import (
 	"crypto/x509"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -306,4 +307,24 @@ func GratArpReqWithCtx(ctx context.Context, rCh chan<- int, AdvIP net.IP, ifName
 			return 0, nil
 		}
 	}
+}
+
+func FormatTimedelta(t time.Time) string {
+	d := time.Now().Unix() - t.Unix()
+	u := uint64(d)
+	neg := d < 0
+	if neg {
+		u = -u
+	}
+	secs := u % 60
+	u /= 60
+	mins := u % 60
+	u /= 60
+	hours := u % 24
+	days := u / 24
+
+	if days == 0 {
+		return fmt.Sprintf("%02d:%02d:%02d", hours, mins, secs)
+	}
+	return fmt.Sprintf("%dd ", days) + fmt.Sprintf("%02d:%02d:%02d", hours, mins, secs)
 }
