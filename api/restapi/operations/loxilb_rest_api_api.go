@@ -93,6 +93,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler: DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandlerFunc(func(params DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigVlanVlanIDMemberIfNameTaggedTagged has not yet been implemented")
 		}),
+		GetConfigBgpNeighAllHandler: GetConfigBgpNeighAllHandlerFunc(func(params GetConfigBgpNeighAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigBgpNeighAll has not yet been implemented")
+		}),
 		GetConfigCistateAllHandler: GetConfigCistateAllHandlerFunc(func(params GetConfigCistateAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigCistateAll has not yet been implemented")
 		}),
@@ -283,6 +286,8 @@ type LoxilbRestAPIAPI struct {
 	DeleteConfigVlanVlanIDHandler DeleteConfigVlanVlanIDHandler
 	// DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler sets the operation handler for the delete config vlan vlan ID member if name tagged tagged operation
 	DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler
+	// GetConfigBgpNeighAllHandler sets the operation handler for the get config bgp neigh all operation
+	GetConfigBgpNeighAllHandler GetConfigBgpNeighAllHandler
 	// GetConfigCistateAllHandler sets the operation handler for the get config cistate all operation
 	GetConfigCistateAllHandler GetConfigCistateAllHandler
 	// GetConfigConntrackAllHandler sets the operation handler for the get config conntrack all operation
@@ -490,6 +495,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler")
+	}
+	if o.GetConfigBgpNeighAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigBgpNeighAllHandler")
 	}
 	if o.GetConfigCistateAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigCistateAllHandler")
@@ -767,6 +775,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/config/vlan/{vlan_id}/member/{if_name}/tagged/{tagged}"] = NewDeleteConfigVlanVlanIDMemberIfNameTaggedTagged(o.context, o.DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/config/bgp/neigh/all"] = NewGetConfigBgpNeighAll(o.context, o.GetConfigBgpNeighAllHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

@@ -920,6 +920,53 @@ func (gbh *GoBgpH) resetBGPPolicy(toLow bool) error {
 	return nil
 }
 
+// BGPNeighGet - Routine to get BGP neigh from goBGP server
+func (gbh *GoBgpH) BGPNeighGet(address string, enableAdv bool) ([]cmn.GoBGPNeighGetMod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	stream, err := gbh.client.ListPeer(ctx, &api.ListPeerRequest{
+		Address:          address,
+		EnableAdvertised: enableAdv,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	b := make([]cmn.GoBGPNeighGetMod, 0, 1024)
+	for {
+		r, err := stream.Recv()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		tmpPeer := cmn.GoBGPNeighGetMod{}
+		tmpPeer.Addr = r.Peer.State.NeighborAddress
+		tmpPeer.RemoteAS = r.Peer.State.PeerAsn
+		tmpPeer.State = r.Peer.State.SessionState.String()
+		timeStr := "never"
+		maxtimelen := len("Up/Down")
+		if r.Peer.Timers.State.Uptime != nil {
+			t := r.Peer.Timers.State.Downtime.AsTime()
+			if r.Peer.State.SessionState == api.PeerState_ESTABLISHED {
+				t = r.Peer.Timers.State.Uptime.AsTime()
+			}
+			timeStr = FormatTimedelta(t)
+		}
+		if len(timeStr) > maxtimelen {
+			maxtimelen = len(timeStr)
+		}
+
+		tmpPeer.Uptime = timeStr
+		b = append(b, tmpPeer)
+	}
+	if address != "" && len(b) == 0 {
+		return b, fmt.Errorf("not found neighbor %s", address)
+	}
+
+	return b, err
+}
+
 // BGPNeighMod - Routine to add BGP neigh to goBGP server
 func (gbh *GoBgpH) BGPNeighMod(add bool, neigh net.IP, ras uint32, rPort uint32, mhop bool) (int, error) {
 	var peer *api.Peer
