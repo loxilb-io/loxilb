@@ -147,7 +147,7 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 			default:
 				return true, -1, errors.New("no neigh found")
 			}
-			if nh, ok := tDat.(*Neigh); ok && !nh.Inactive {
+			if nh, ok := tDat.(*Neigh); ok && !nh.Inactive && !nh.Dummy {
 				rt := zone.Rt.RtFind(*pDstNet, zone.Name)
 				if rt == nil {
 					unRch = true
