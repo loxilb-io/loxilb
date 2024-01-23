@@ -41,7 +41,7 @@ const (
 
 // constants
 const (
-	NeighAts       = 10
+	NeighAts       = 45
 	MaxSysNeigh    = 3 * 1024
 	MaxTunnelNeigh = 1024
 )
@@ -86,6 +86,7 @@ type Neigh struct {
 	Key      NeighKey
 	Addr     net.IP
 	Attr     NeighAttr
+	Dummy    bool
 	Inactive bool
 	Resolved bool
 	Mark     uint64
@@ -126,11 +127,7 @@ func (n *NeighH) Activate(ne *Neigh) {
 		return
 	}
 
-	if ne.Resolved && !ne.OifPort.IsIPinIPTunPort() {
-		return
-	}
-
-	if time.Since(ne.Ats) < NeighAts || ne.OifPort.Name == "lo" {
+	if (time.Since(ne.Ats) < NeighAts) || ne.OifPort.Name == "lo" {
 		return
 	}
 
@@ -360,7 +357,16 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 	port := n.Zone.Ports.PortFindByOSID(Attr.OSLinkIndex)
 	if port == nil {
 		tk.LogIt(tk.LogError, "neigh add - %s:%s no oport\n", Addr.String(), Zone)
+		if !found {
+			n.NeighMap[key] = &Neigh{Dummy: true, Attr: Attr}
+		}
 		return NeighOifErr, errors.New("nh-oif error")
+	}
+
+	if ne != nil && ne.Dummy {
+		delete(n.NeighMap, key)
+		found = false
+		ne = nil
 	}
 
 	// Special case to handle IpinIP VTIs
@@ -468,6 +474,11 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 	if found == false {
 		tk.LogIt(tk.LogError, "neigh delete - %s:%s doesnt exist\n", Addr.String(), Zone)
 		return NeighNoEntErr, errors.New("no-nh error")
+	}
+
+	if ne != nil && ne.Dummy {
+		delete(n.NeighMap, ne.Key)
+		return 0, nil
 	}
 
 	var mask net.IPMask
@@ -622,6 +633,21 @@ func (n *NeighH) PortNotifier(name string, osID int, evType PortEvent) {
 
 // NeighTicker - a per neighbor ticker sub-routine
 func (n *NeighH) NeighTicker(ne *Neigh) {
+
+	if ne.Dummy {
+		zone, _ := mh.zn.Zonefind(ne.Key.Zone)
+		if zone == nil {
+			delete(n.NeighMap, ne.Key)
+			return
+		}
+
+		_, err := zone.Nh.NeighAdd(net.ParseIP(ne.Key.NhString), ne.Key.Zone, ne.Attr)
+		if err == nil {
+
+			tk.LogIt(tk.LogInfo, "nh defer added - %s:%s\n", ne.Key.NhString, ne.Key.Zone)
+		}
+
+	}
 	n.Activate(ne)
 	if n.NeighRecursiveResolve(ne) {
 		ne.DP(DpCreate)
