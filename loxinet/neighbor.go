@@ -41,7 +41,8 @@ const (
 
 // constants
 const (
-	NeighAts       = 45
+	NeighAts       = 10
+	NeighRslvdAts  = 40
 	MaxSysNeigh    = 3 * 1024
 	MaxTunnelNeigh = 1024
 )
@@ -123,11 +124,16 @@ func NeighInit(zone *Zone) *NeighH {
 // Activate - Try to activate a neighbor
 func (n *NeighH) Activate(ne *Neigh) {
 
+	interval := NeighAts * time.Second
 	if tk.IsNetIPv6(ne.Addr.String()) || ne.Dummy {
 		return
 	}
 
-	if (time.Since(ne.Ats) < NeighAts) || ne.OifPort.Name == "lo" {
+	if ne.Resolved {
+		interval = NeighRslvdAts * time.Second
+	}
+
+	if (time.Since(ne.Ats) < interval) || ne.OifPort.Name == "lo" {
 		return
 	}
 

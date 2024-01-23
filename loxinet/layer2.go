@@ -233,7 +233,7 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 
 	nfdb.DP(DpCreate)
 
-	tk.LogIt(tk.LogDebug, "added fdb ent, %v\n", key)
+	tk.LogIt(tk.LogDebug, "added fdb ent, %v : health(%v)\n", key, !nfdb.unReach)
 
 	return 0, nil
 }
