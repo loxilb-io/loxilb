@@ -587,6 +587,20 @@ func (na *NetAPIStruct) NetParamGet(param *cmn.ParamMod) (int, error) {
 	return ret, err
 }
 
+// NetGoBGPNeighGet - Get bgp neigh to gobgp
+func (na *NetAPIStruct) NetGoBGPNeighGet() ([]cmn.GoBGPNeighGetMod, error) {
+	if mh.bgp != nil {
+		a, err := mh.bgp.BGPNeighGet("", false)
+		if err != nil {
+			return nil, err
+		}
+		return a, nil
+	}
+	tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
+	return nil, errors.New("loxilb BGP mode is disabled")
+
+}
+
 // NetGoBGPNeighAdd - Add bgp neigh to gobgp
 func (na *NetAPIStruct) NetGoBGPNeighAdd(param *cmn.GoBGPNeighMod) (int, error) {
 	if mh.bgp != nil {

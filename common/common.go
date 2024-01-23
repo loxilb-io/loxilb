@@ -612,6 +612,14 @@ type GoBGPNeighMod struct {
 	MultiHop   bool   `json:"multiHop"`
 }
 
+// GoBGPNeighGetMod - Info related to goBGP neigh
+type GoBGPNeighGetMod struct {
+	Addr     string `json:"neighIP"`
+	RemoteAS uint32 `json:"remoteAS"`
+	State    string `json:"state"`
+	Uptime   string `json:"uptime"`
+}
+
 // Equal - check if two session tunnel entries are equal
 func (ut *SessTun) Equal(ut1 *SessTun) bool {
 	if ut.TeID == ut1.TeID && ut.Addr.Equal(ut1.Addr) {
@@ -821,6 +829,7 @@ type NetHookInterface interface {
 	NetEpHostGet() ([]EndPointMod, error)
 	NetParamSet(param ParamMod) (int, error)
 	NetParamGet(param *ParamMod) (int, error)
+	NetGoBGPNeighGet() ([]GoBGPNeighGetMod, error)
 	NetGoBGPNeighAdd(nm *GoBGPNeighMod) (int, error)
 	NetGoBGPNeighDel(nm *GoBGPNeighMod) (int, error)
 	NetGoBGPGCAdd(gc *GoBGPGlobalConfig) (int, error)
