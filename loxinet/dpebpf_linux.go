@@ -45,6 +45,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
 	"runtime/debug"
 	"strings"
 	"sync"
@@ -157,6 +158,10 @@ func dpEbpfTicker() {
 		if e := recover(); e != nil {
 			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
 		}
+		if mh.dp != nil {
+			mh.dp.DpHooks.DpEbpfUnInit()
+		}
+		os.Exit(1)
 	}()
 
 	tbls := []int{int(C.LL_DP_RTV4_STATS_MAP),
@@ -1918,6 +1923,10 @@ func dpMapNotifierWorker(f chan int, ch chan interface{}) {
 		if e := recover(); e != nil {
 			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
 		}
+		if mh.dp != nil {
+			mh.dp.DpHooks.DpEbpfUnInit()
+		}
+		os.Exit(1)
 	}()
 
 	for {

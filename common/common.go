@@ -65,11 +65,11 @@ const (
 
 const (
 	// AuWorkqLen - Address worker channel depth
-	AuWorkqLen = 1024
+	AuWorkqLen = 2048
 	// LuWorkQLen - Link worker channel depth
-	LuWorkQLen = 1024
+	LuWorkQLen = 2048
 	// NuWorkQLen - Neigh worker channel depth
-	NuWorkQLen = 1024
+	NuWorkQLen = 2048
 	// RuWorkQLen - Route worker channel depth
 	RuWorkQLen = 40827
 )
@@ -833,4 +833,5 @@ type NetHookInterface interface {
 	NetGoBGPNeighAdd(nm *GoBGPNeighMod) (int, error)
 	NetGoBGPNeighDel(nm *GoBGPNeighMod) (int, error)
 	NetGoBGPGCAdd(gc *GoBGPGlobalConfig) (int, error)
+	NetHandlePanic()
 }

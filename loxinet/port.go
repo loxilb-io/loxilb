@@ -914,7 +914,8 @@ func (p *Port) DP(work DpWorkT) int {
 		ipts.Qfi = 0
 		ipts.TTeID = 0
 
-		mh.dp.ToDpCh <- ipts
+		//mh.dp.ToDpCh <- ipts
+		DpWorkSingle(mh.dp, ipts)
 		return 0
 	}
 
@@ -944,7 +945,8 @@ func (p *Port) DP(work DpWorkT) int {
 		rmWq.TunType = DpTunVxlan
 		rmWq.BD = p.L2.Vid
 
-		mh.dp.ToDpCh <- rmWq
+		//mh.dp.ToDpCh <- rmWq
+		DpWorkSingle(mh.dp, rmWq)
 
 		return 0
 	}
@@ -961,7 +963,8 @@ func (p *Port) DP(work DpWorkT) int {
 		pWq.IngVlan = p.L2.Vid
 		pWq.SetBD = p.L2.Vid
 		pWq.SetZoneNum = zoneNum
-		mh.dp.ToDpCh <- pWq
+		//mh.dp.ToDpCh <- pWq
+		DpWorkSingle(mh.dp, pWq)
 
 		return 0
 	}
@@ -981,7 +984,8 @@ func (p *Port) DP(work DpWorkT) int {
 			pWq.SetPol = p.SInfo.PortPolNum
 			pWq.SetMirr = p.SInfo.PortMirNum
 
-			mh.dp.ToDpCh <- pWq
+			//mh.dp.ToDpCh <- pWq
+			DpWorkSingle(mh.dp, pWq)
 		}
 		return 0
 	}
@@ -1039,7 +1043,8 @@ func (p *Port) DP(work DpWorkT) int {
 	}
 
 	// TODO - Need to unload eBPF when port properties change
-	mh.dp.ToDpCh <- pWq
+	//mh.dp.ToDpCh <- pWq
+	DpWorkSingle(mh.dp, pWq)
 
 	return 0
 }

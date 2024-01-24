@@ -129,6 +129,17 @@ func (mh *loxiNetH) ParamGet(param *cmn.ParamMod) (int, error) {
 
 // loxiNetTicker - this ticker routine runs every LOXINET_TIVAL seconds
 func loxiNetTicker(bgpPeerMode bool) {
+
+	defer func() {
+		if e := recover(); e != nil {
+			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
+		}
+		if mh.dp != nil {
+			mh.dp.DpHooks.DpEbpfUnInit()
+		}
+		os.Exit(1)
+	}()
+
 	for {
 		select {
 		case <-mh.tDone:
@@ -187,6 +198,10 @@ func loxiNetInit() {
 		if e := recover(); e != nil {
 			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
 		}
+		if mh.dp != nil {
+			mh.dp.DpHooks.DpEbpfUnInit()
+		}
+		os.Exit(1)
 	}()
 
 	// It is important to make sure loxilb's eBPF filesystem
@@ -308,6 +323,14 @@ func loxiNetInit() {
 	go loxiNetTicker(opts.Opts.BgpPeerMode)
 
 	mh.ready = true
+}
+
+type Shark struct {
+	Name string
+}
+
+func (s *Shark) SayHello() {
+	fmt.Println("Hi! My name is", s.Name)
 }
 
 // loxiNetRun - This routine will not return

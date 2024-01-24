@@ -19,6 +19,7 @@ package loxinet
 import (
 	"fmt"
 	"net"
+	"os"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -411,6 +412,7 @@ type DpHookInterface interface {
 	DpCtGetAsync()
 	DpGetLock()
 	DpRelLock()
+	DpEbpfUnInit()
 }
 
 // DpPeer - Remote DP Peer information
@@ -786,6 +788,10 @@ func DpWorker(dp *DpH, f chan int, ch chan interface{}) {
 		if e := recover(); e != nil {
 			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
 		}
+		if mh.dp != nil {
+			mh.dp.DpHooks.DpEbpfUnInit()
+		}
+		os.Exit(1)
 	}()
 	for {
 		for n := 0; n < DpWorkQLen; n++ {

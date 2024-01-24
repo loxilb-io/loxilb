@@ -27,6 +27,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"syscall"
@@ -1378,8 +1379,18 @@ func RUWorker(ch chan nlp.RouteUpdate, f chan struct{}) {
 	}
 }
 
-func NLWorker(nNl *NlH, bgpPeerMode bool, ch chan bool) {
+func NLWorker(nNl *NlH, bgpPeerMode bool, ch chan bool, wch chan bool) {
 	ch <- true
+	<-wch
+
+	defer func() {
+		if e := recover(); e != nil {
+			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
+		}
+		hooks.NetHandlePanic()
+		os.Exit(1)
+	}()
+
 	if bgpPeerMode {
 		for { /* Single thread for reading route NL msgs in below order */
 			RUWorker(nNl.FromRUCh, nNl.FromRUDone)
@@ -1429,6 +1440,18 @@ func NlpGet(ch chan bool) int {
 	for _, link := range links {
 
 		if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+			continue
+		}
+
+		ret = ModLink(link, true)
+		if ret == -1 {
+			continue
+		}
+	}
+
+	for _, link := range links {
+
+		if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 			// Need addresss to work with
 			addrs, err := nlp.AddrList(link, nlp.FAMILY_ALL)
 			if err != nil {
@@ -1443,11 +1466,6 @@ func NlpGet(ch chan bool) int {
 					AddAddr(addr, link)
 				}
 			}
-			continue
-		}
-
-		ret = ModLink(link, true)
-		if ret == -1 {
 			continue
 		}
 
@@ -1580,6 +1598,7 @@ func NlpInit(bgpPeerMode bool, blackList string, ipvsCompat bool) *NlH {
 	nNl.BlackList = blackList
 	nNl.BLRgx = regexp.MustCompile(blackList)
 	checkInit := make(chan bool)
+	waitInit := make(chan bool)
 
 	if bgpPeerMode {
 		nNl.FromRUCh = make(chan nlp.RouteUpdate, cmn.RuWorkQLen)
@@ -1590,7 +1609,7 @@ func NlpInit(bgpPeerMode bool, blackList string, ipvsCompat bool) *NlH {
 			tk.LogIt(tk.LogInfo, "[NLP] Route msgs subscribed\n")
 		}
 
-		go NLWorker(nNl, bgpPeerMode, checkInit)
+		go NLWorker(nNl, bgpPeerMode, checkInit, waitInit)
 		<-checkInit
 		return nNl
 	}
@@ -1605,7 +1624,7 @@ func NlpInit(bgpPeerMode bool, blackList string, ipvsCompat bool) *NlH {
 	nNl.FromRUCh = make(chan nlp.RouteUpdate, cmn.RuWorkQLen)
 	nNl.IMap = make(map[string]Intf)
 
-	go NLWorker(nNl, bgpPeerMode, checkInit)
+	go NLWorker(nNl, bgpPeerMode, checkInit, waitInit)
 	<-checkInit
 
 	err := nlp.LinkSubscribe(nNl.FromLUCh, nNl.FromLUDone)
@@ -1637,6 +1656,7 @@ func NlpInit(bgpPeerMode bool, blackList string, ipvsCompat bool) *NlH {
 
 	go NlpGet(checkInit)
 	done := <-checkInit
+	waitInit <- true
 
 	go LbSessionGet(done)
 
