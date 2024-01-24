@@ -45,7 +45,6 @@ RUN mkdir -p /opt/loxilb && \
     git clone --recurse-submodules https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && \
     cd /root/loxilb-io/loxilb/ && go get . && make && \
     cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
-    cp loxilb-ebpf/utils/loxilb_dp_tool /usr/local/sbin/loxilb_dp_tool && \
     cp api/certification/* /opt/loxilb/cert/ && cd - && \
     cp /root/loxilb-io/loxilb/loxilb-ebpf/kernel/loxilb_dp_debug  /usr/local/sbin/loxilb_dp_debug && \
     cp /root/loxilb-io/loxilb/loxilb /usr/local/sbin/loxilb && \
