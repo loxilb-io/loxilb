@@ -1505,6 +1505,11 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 			if IsIPHostAddr(sNetAddr.IP.String()) {
 				loxinlp.DelAddrNoHook(sNetAddr.IP.String()+"/32", "lo")
 			}
+			dev := fmt.Sprintf("llb-rule-%s", sNetAddr.IP.String())
+			ret, _ := mh.zr.L3.IfaFind(dev, sNetAddr.IP)
+			if ret != 0 {
+				mh.zr.L3.IfaDelete(dev, sNetAddr.IP.String()+"/32")
+			}
 			delete(R.vipMap, sNetAddr.IP.String())
 		}
 	}
@@ -2560,6 +2565,15 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 				tk.LogIt(tk.LogError, "nat lb-rule vip %s:%s delete failed\n", IP.String(), "lo")
 			} else {
 				tk.LogIt(tk.LogInfo, "nat lb-rule vip %s:%s deleted\n", IP.String(), "lo")
+			}
+		}
+	} else {
+		dev := fmt.Sprintf("llb-rule-%s", IP.String())
+		ret, _ := mh.zr.L3.IfaFind(dev, IP)
+		if ret != 0 {
+			_, err := mh.zr.L3.IfaAdd(dev, IP.String()+"/32")
+			if err != nil {
+				fmt.Printf("Failed to add IP : %s:%s\n", dev, err)
 			}
 		}
 	}

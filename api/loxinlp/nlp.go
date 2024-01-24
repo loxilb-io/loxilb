@@ -924,8 +924,12 @@ func AddAddrNoHook(address, ifName string) int {
 	var ret int
 	IfName, err := nlp.LinkByName(ifName)
 	if err != nil {
-		tk.LogIt(tk.LogWarning, "[NLP] Port %s find Fail\n", ifName)
-		return -1
+		_, err := hooks.NetAddrAdd(&cmn.IPAddrMod{Dev: ifName, IP: address})
+		if err != nil {
+			tk.LogIt(tk.LogWarning, "[NLP] Hook IPv4 Address %v Port %v Add Fail\n", address, ifName)
+			return -1
+		}
+		return 0
 	}
 	Address, err := nlp.ParseAddr(address)
 	if err != nil {
@@ -944,8 +948,12 @@ func DelAddrNoHook(address, ifName string) int {
 	var ret int
 	IfName, err := nlp.LinkByName(ifName)
 	if err != nil {
-		tk.LogIt(tk.LogWarning, "[NLP] Port %s find Fail\n", ifName)
-		return -1
+		_, err := hooks.NetAddrDel(&cmn.IPAddrMod{Dev: ifName, IP: address})
+		if err != nil {
+			tk.LogIt(tk.LogWarning, "[NLP] Hook IPv4 Address %v Port %v delete Fail\n", address, ifName)
+			return -1
+		}
+		return 0
 	}
 	Address, err := nlp.ParseAddr(address)
 	if err != nil {
@@ -1247,9 +1255,9 @@ func AUWorkSingle(m nlp.AddrUpdate) int {
 		return -1
 	}
 
-	if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
-		return -1
-	}
+	//if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+	//	return -1
+	//}
 
 	attrs := link.Attrs()
 	name := attrs.Name
@@ -1421,6 +1429,20 @@ func NlpGet(ch chan bool) int {
 	for _, link := range links {
 
 		if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+			// Need addresss to work with
+			addrs, err := nlp.AddrList(link, nlp.FAMILY_ALL)
+			if err != nil {
+				tk.LogIt(tk.LogError, "[NLP] Error getting address list %v for intf %s\n",
+					err, link.Attrs().Name)
+			}
+
+			if len(addrs) == 0 {
+				tk.LogIt(tk.LogDebug, "[NLP] No addresses found for intf %s\n", link.Attrs().Name)
+			} else {
+				for _, addr := range addrs {
+					AddAddr(addr, link)
+				}
+			}
 			continue
 		}
 
