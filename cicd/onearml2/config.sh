@@ -35,6 +35,8 @@ create_docker_host_vlan --host1 llb1 --host2 l2ep2 --ptype untagged --id 100
 create_docker_host_vlan --host1 llb1 --host2 l2ep3 --ptype untagged --id 100
 
 $dexec llb1 bash -c 'for i in /proc/sys/net/ipv4/conf/*/rp_filter; do echo 0 > "$i"; done'
+$dexec llb1 bash -c 'for i in /proc/sys/net/ipv4/conf/*/arp_accept; do echo 1 > "$i"; done'
+$dexec llb1 brctl setageing vlan100 3600
 
 sleep 5
 
