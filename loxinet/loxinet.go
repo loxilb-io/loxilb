@@ -325,14 +325,6 @@ func loxiNetInit() {
 	mh.ready = true
 }
 
-type Shark struct {
-	Name string
-}
-
-func (s *Shark) SayHello() {
-	fmt.Println("Hi! My name is", s.Name)
-}
-
 // loxiNetRun - This routine will not return
 func loxiNetRun() {
 	mh.wg.Wait()
