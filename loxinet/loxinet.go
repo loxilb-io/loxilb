@@ -193,17 +193,6 @@ func loxiNetInit() {
 	logLevel := LogString2Level(opts.Opts.LogLevel)
 	mh.logger = tk.LogItInit(logfile, logLevel, true)
 
-	// Stack trace logger
-	defer func() {
-		if e := recover(); e != nil {
-			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
-		}
-		if mh.dp != nil {
-			mh.dp.DpHooks.DpEbpfUnInit()
-		}
-		os.Exit(1)
-	}()
-
 	// It is important to make sure loxilb's eBPF filesystem
 	// is in place and mounted to make sure maps are pinned properly
 	if !FileExists(BpfFsCheckFile) {
@@ -327,6 +316,16 @@ func loxiNetInit() {
 
 // loxiNetRun - This routine will not return
 func loxiNetRun() {
+	// Stack trace logger
+	defer func() {
+		if e := recover(); e != nil {
+			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
+		}
+		if mh.dp != nil {
+			mh.dp.DpHooks.DpEbpfUnInit()
+		}
+		os.Exit(1)
+	}()
 	mh.wg.Wait()
 }
 

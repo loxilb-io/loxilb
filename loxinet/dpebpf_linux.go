@@ -317,7 +317,7 @@ func (e *DpEbpfH) DpEbpfUnInit() {
 		e.ToFinCh[i] <- 1
 	}
 
-	tk.LogIt(tk.LogInfo, "ebpf uninit \n")
+	tk.LogIt(tk.LogInfo, "ebpf uninit : %s\n", debug.Stack())
 
 	// Make sure to unload eBPF programs
 	ifList, err := net.Interfaces()
