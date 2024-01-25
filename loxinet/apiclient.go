@@ -629,3 +629,8 @@ func (na *NetAPIStruct) NetGoBGPGCAdd(param *cmn.GoBGPGlobalConfig) (int, error)
 	return 0, errors.New("loxilb BGP mode is disabled")
 
 }
+
+// NetHandlePanic - Handle panics
+func (na *NetAPIStruct) NetHandlePanic() {
+	mh.dp.DpHooks.DpEbpfUnInit()
+}

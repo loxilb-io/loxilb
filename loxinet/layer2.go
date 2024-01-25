@@ -291,7 +291,7 @@ func (l2 *L2H) L2FdbDel(key FdbKey) (int, error) {
 
 // FdbTicker - Ticker routine for a fwd entry
 func (l2 *L2H) FdbTicker(f *FdbEnt) {
-	if time.Now().Sub(f.stime) > FdbGts {
+	if time.Since(f.stime) > FdbGts {
 		// This scans for inconsistencies in a fdb
 		// 1. Do garbage cleaning if underlying oif or vlan is not valid anymore
 		// 2. If FDB is a TunFDB, we need to make sure NH is reachable
@@ -304,6 +304,8 @@ func (l2 *L2H) FdbTicker(f *FdbEnt) {
 				f.unReach = unRch
 				f.DP(DpCreate)
 			}
+		} else if f.Sync != 0 {
+			f.DP(DpCreate)
 		}
 		f.stime = time.Now()
 	}
@@ -385,6 +387,10 @@ func (f *FdbEnt) DP(work DpWorkT) int {
 		l2Wq.Tagged = 0
 	} else {
 		l2Wq.Tagged = 1
+		if f.Port.SInfo.PortReal == nil {
+			f.Sync = DpUknownErr
+			return -1
+		}
 		l2Wq.PortNum = f.Port.SInfo.PortReal.PortNo
 	}
 	mh.dp.ToDpCh <- l2Wq
@@ -396,6 +402,7 @@ func (f *FdbEnt) DP(work DpWorkT) int {
 
 		if f.Port.SInfo.PortReal == nil ||
 			f.FdbTun.ep == nil {
+			f.Sync = DpUknownErr
 			return -1
 		}
 

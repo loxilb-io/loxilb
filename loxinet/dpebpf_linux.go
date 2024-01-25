@@ -45,6 +45,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
 	"runtime/debug"
 	"strings"
 	"sync"
@@ -157,6 +158,10 @@ func dpEbpfTicker() {
 		if e := recover(); e != nil {
 			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
 		}
+		if mh.dp != nil {
+			mh.dp.DpHooks.DpEbpfUnInit()
+		}
+		os.Exit(1)
 	}()
 
 	tbls := []int{int(C.LL_DP_RTV4_STATS_MAP),
@@ -312,7 +317,7 @@ func (e *DpEbpfH) DpEbpfUnInit() {
 		e.ToFinCh[i] <- 1
 	}
 
-	tk.LogIt(tk.LogInfo, "ebpf uninit \n")
+	tk.LogIt(tk.LogInfo, "ebpf uninit : %s\n", debug.Stack())
 
 	// Make sure to unload eBPF programs
 	ifList, err := net.Interfaces()
@@ -1918,6 +1923,10 @@ func dpMapNotifierWorker(f chan int, ch chan interface{}) {
 		if e := recover(); e != nil {
 			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
 		}
+		if mh.dp != nil {
+			mh.dp.DpHooks.DpEbpfUnInit()
+		}
+		os.Exit(1)
 	}()
 
 	for {

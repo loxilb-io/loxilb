@@ -77,6 +77,8 @@ func RunAPIServer() {
 		if e := recover(); e != nil {
 			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
 		}
+		handler.ApiHooks.NetHandlePanic()
+		os.Exit(1)
 	}()
 
 	if ApiShutOk == nil {

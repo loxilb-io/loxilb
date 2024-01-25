@@ -24,6 +24,7 @@ import (
 	"net"
 	"net/http"
 	"net/rpc"
+	"os"
 	"runtime/debug"
 
 	opts "github.com/loxilb-io/loxilb/options"
@@ -218,6 +219,10 @@ func LoxiXsyncMain(mode string) {
 			if mh.logger != nil {
 				tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
 			}
+			if mh.dp != nil {
+				mh.dp.DpHooks.DpEbpfUnInit()
+			}
+			os.Exit(1)
 		}
 	}()
 	if mode == "netrpc" {

@@ -129,6 +129,17 @@ func (mh *loxiNetH) ParamGet(param *cmn.ParamMod) (int, error) {
 
 // loxiNetTicker - this ticker routine runs every LOXINET_TIVAL seconds
 func loxiNetTicker(bgpPeerMode bool) {
+
+	defer func() {
+		if e := recover(); e != nil {
+			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
+		}
+		if mh.dp != nil {
+			mh.dp.DpHooks.DpEbpfUnInit()
+		}
+		os.Exit(1)
+	}()
+
 	for {
 		select {
 		case <-mh.tDone:
@@ -181,13 +192,6 @@ func loxiNetInit() {
 	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
 	logLevel := LogString2Level(opts.Opts.LogLevel)
 	mh.logger = tk.LogItInit(logfile, logLevel, true)
-
-	// Stack trace logger
-	defer func() {
-		if e := recover(); e != nil {
-			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
-		}
-	}()
 
 	// It is important to make sure loxilb's eBPF filesystem
 	// is in place and mounted to make sure maps are pinned properly
@@ -312,6 +316,16 @@ func loxiNetInit() {
 
 // loxiNetRun - This routine will not return
 func loxiNetRun() {
+	// Stack trace logger
+	defer func() {
+		if e := recover(); e != nil {
+			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
+		}
+		if mh.dp != nil {
+			mh.dp.DpHooks.DpEbpfUnInit()
+		}
+		os.Exit(1)
+	}()
 	mh.wg.Wait()
 }
 
