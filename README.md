@@ -60,6 +60,39 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 - Hitless failover support might be essential for mission-critical applications
 - E2 might require SCTP-LB with OpenVPN bundled together
 
+## Getting Started
+- [How-To : Deploy in K8s with kube-loxilb](kube-loxilb.md)
+- [How-To : Manual build/run](run.md)
+- [How-To : Run loxilb in standalone mode](standalone.md)
+- [How-To : Standalone configuration](cmd.md)
+- [How-To : debug](debugging.md)
+- [How-To : Run in K8s with calico](integrate_bgp_eng.md)
+- [How-To : High-availability with loxilb](ha-deploy.md)
+
+## Community 
+
+### Slack 
+Join the loxilb [Slack](https://www.loxilb.io/members) channel to chat with loxilb developers and other loxilb users. This is a good place to learn about loxilb, ask questions, and work collaboratively.
+
+### General Discussion
+Feel free to post your queries in github [discussion](https://github.com/loxilb-io/loxilb/discussions). If you find any issue/bugs, please raise an issue in github and members from loxilb community will be happy to help.
+
+## Knowledge-Base   
+- [What is eBPF](ebpf.md)
+- [What is k8s service - load-balancer](lb.md)
+- [Architecture in brief](arch.md)
+- [Code organization](code.md)
+- [eBPF internals of loxilb](loxilbebpf.md)
+- [What are loxilb NAT Modes](nat.md)
+- [Developer's guide to loxicmd](cmd-dev.md)
+- [Developer's guide to loxilb API](api-dev.md)
+- [API Reference - loxilb web-Api](api.md)
+- [Performance Reports](perf.md)
+- [Development Roadmap](roadmap.md)
+- [Contribute](contribute.md)
+- [System Requirements](requirements.md)
+- [Frequenctly Asked Questions- FAQs](faq.md)
+
 ## 📚 Please check loxilb [Documentation](https://loxilb-io.github.io/loxilbdocs/) for more detailed info.   
 
 [docs-shield]: https://img.shields.io/badge/info-docs-blue
