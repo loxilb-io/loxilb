@@ -61,13 +61,13 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 - E2 might require SCTP-LB with OpenVPN bundled together
 
 ## Getting Started
-- [How-To : Deploy in K8s with kube-loxilb](kube-loxilb.md)
-- [How-To : Manual build/run](run.md)
-- [How-To : Run loxilb in standalone mode](standalone.md)
-- [How-To : Standalone configuration](cmd.md)
-- [How-To : debug](debugging.md)
-- [How-To : Run in K8s with calico](integrate_bgp_eng.md)
-- [How-To : High-availability with loxilb](ha-deploy.md)
+- [How-To : Deploy in K8s with kube-loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/kube-loxilb.md)
+- [How-To : Manual build/run](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/run.md)
+- [How-To : Run loxilb in standalone mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/standalone.md)
+- [How-To : Standalone configuration](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/cmd.md)
+- [How-To : debug](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/debugging.md)
+- [How-To : Run in K8s with calico](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/integrate_bgp_eng.md)
+- [How-To : High-availability with loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/ha-deploy.md)
 
 ## Community 
 
@@ -79,19 +79,19 @@ Feel free to post your queries in github [discussion](https://github.com/loxilb-
 
 ## Knowledge-Base   
 - [What is eBPF](ebpf.md)
-- [What is k8s service - load-balancer](lb.md)
-- [Architecture in brief](arch.md)
-- [Code organization](code.md)
-- [eBPF internals of loxilb](loxilbebpf.md)
-- [What are loxilb NAT Modes](nat.md)
-- [Developer's guide to loxicmd](cmd-dev.md)
-- [Developer's guide to loxilb API](api-dev.md)
-- [API Reference - loxilb web-Api](api.md)
-- [Performance Reports](perf.md)
-- [Development Roadmap](roadmap.md)
-- [Contribute](contribute.md)
-- [System Requirements](requirements.md)
-- [Frequenctly Asked Questions- FAQs](faq.md)
+- [What is k8s service - load-balancer](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/lb.md)
+- [Architecture in brief](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/arch.md)
+- [Code organization](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/code.md)
+- [eBPF internals of loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/loxilbebpf.md)
+- [What are loxilb NAT Modes](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/nat.md)
+- [Developer's guide to loxicmd](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/cmd-dev.md)
+- [Developer's guide to loxilb API](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/api-dev.md)
+- [API Reference - loxilb web-Api](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/api.md)
+- [Performance Reports](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/perf.md)
+- [Development Roadmap](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/roadmap.md)
+- [Contribute](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/contribute.md)
+- [System Requirements](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/requirements.md)
+- [Frequenctly Asked Questions- FAQs](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/faq.md)
 
 ## 📚 Please check loxilb [Documentation](https://loxilb-io.github.io/loxilbdocs/) for more detailed info.   
 
