@@ -260,6 +260,7 @@ const (
 	EpRR NatSel = iota + 1
 	EpHash
 	EpPrio
+	EpRRPersist
 )
 
 // NatEP - a nat end-point

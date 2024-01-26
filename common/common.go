@@ -467,6 +467,8 @@ const (
 	LbSelHash
 	// LbSelPrio - select the lb based on weighted round-robin
 	LbSelPrio
+	// LbSelRrPersist - persist connectons from same client
+	LbSelRrPersist
 )
 
 // LBMode - Variable to define LB mode
