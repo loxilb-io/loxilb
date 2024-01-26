@@ -2280,6 +2280,8 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 		case at.sel == cmn.LbSelPrio:
 			// Note that internally we use RR to achieve wRR
 			nWork.EpSel = EpRR
+		case at.sel == cmn.LbSelRrPersist:
+			nWork.EpSel = EpRRPersist
 		default:
 			nWork.EpSel = EpRR
 		}

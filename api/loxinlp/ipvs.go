@@ -77,6 +77,10 @@ func (ctx *IpVSH) BuildIpVSDB() []*ipVSEntry {
 			continue
 		}
 
+		if svc.Flags&0x1 == 0x1 {
+			newEntry.Type = "rrp"
+		}
+
 		proto := ""
 		if svc.Protocol == 1 {
 			proto = "icmp"
@@ -137,8 +141,14 @@ func IpVSSync() {
 			}
 
 			for _, newEnt := range ipVSList {
+
+				sel := cmn.LbSelRr
+				if newEnt.Type == "rrp" {
+					sel = cmn.LbSelRrPersist
+				}
+				fmt.Printf("Selection %s\n", newEnt.Type)
 				name := fmt.Sprintf("ipvs_%s:%d-%s", newEnt.Key.Address, newEnt.Key.Port, newEnt.Key.Protocol)
-				lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: newEnt.Key.Address, ServPort: newEnt.Key.Port, Proto: newEnt.Key.Protocol, Sel: cmn.LbSelRr, Name: name}}
+				lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: newEnt.Key.Address, ServPort: newEnt.Key.Port, Proto: newEnt.Key.Protocol, Sel: sel, Name: name}}
 				for _, ep := range newEnt.EndPoints {
 					lbrule.Eps = append(lbrule.Eps, cmn.LbEndPointArg{EpIP: ep.EpIP, EpPort: ep.EpPort, Weight: 1})
 				}
