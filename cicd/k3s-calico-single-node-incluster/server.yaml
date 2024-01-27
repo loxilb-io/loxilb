@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: netshoot-1
+  labels:
+    app: MyApp2
+    kubernetes.io/hostname: master
+spec:
+  containers:
+  - name: netshoot
+    image: nicolaka/netshoot
+    imagePullPolicy: IfNotPresent
+    command:
+      - nc
+      - "-l"
+      - "-k"
+      - "-p"
+      - "22345"
+    ports:
+    - name: svr
+      containerPort: 22345
+      protocol: TCP
+    securityContext:
+      capabilities:
+        add:
+          - all
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: my-service
+    annotations:
+      loxilb.io/lbmode: "fullNAT"
+      loxilb.io/staticIP: "192.168.80.5"
+      loxilb.io/liveness: "no"
+      loxilb.io/probetype: "none"
+spec:
+    loadBalancerClass: loxilb.io/loxilb
+    selector:
+        app: MyApp2
+    ports:
+        - protocol: TCP
+          port: 12345
+          targetPort: 22345
+    externalTrafficPolicy: Local
+    type: LoadBalancer

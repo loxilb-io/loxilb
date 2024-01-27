@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: netshoot-2
+  labels:
+    app: MyApp1
+    kubernetes.io/hostname: master
+spec:
+  containers:
+  - name: netshoot
+    image: nicolaka/netshoot
+    imagePullPolicy: IfNotPresent
+    command: [ "sleep" ]
+    args: [ "infinity" ]
+    ports:
+    - name: svr
+      containerPort: 32345
+      protocol: TCP
+    securityContext:
+      capabilities:
+        add:
+          - all
