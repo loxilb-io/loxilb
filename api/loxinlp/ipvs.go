@@ -27,6 +27,11 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 )
 
+const (
+	K8sNodePortMin = 30000
+	K8sNodePortMax = 32768
+)
+
 type ipVSKey struct {
 	Address  string
 	Protocol string
@@ -41,7 +46,8 @@ type ipvsEndPoint struct {
 
 type ipVSEntry struct {
 	Key       ipVSKey
-	Type      string
+	sel       cmn.EpSelect
+	mode      cmn.LBMode
 	InValid   bool
 	EndPoints []ipvsEndPoint
 }
@@ -72,13 +78,13 @@ func (ctx *IpVSH) BuildIpVSDB() []*ipVSEntry {
 			continue
 		}
 
-		newEntry.Type = svc.SchedName
 		if svc.SchedName != "rr" {
 			continue
 		}
 
+		newEntry.sel = cmn.LbSelRr
 		if svc.Flags&0x1 == 0x1 {
-			newEntry.Type = "rrp"
+			newEntry.sel = cmn.LbSelRrPersist
 		}
 
 		proto := ""
@@ -92,6 +98,11 @@ func (ctx *IpVSH) BuildIpVSDB() []*ipVSEntry {
 			proto = "sctp"
 		} else {
 			continue
+		}
+
+		newEntry.mode = cmn.LBModeDefault
+		if svc.Port >= K8sNodePortMin && svc.Port <= K8sNodePortMax {
+			newEntry.mode = cmn.LBModeOneArm
 		}
 
 		key := ipVSKey{Address: svc.Address.String(), Protocol: proto, Port: svc.Port}
@@ -130,7 +141,7 @@ func IpVSSync() {
 			for _, ent := range ipVSCtx.RMap {
 				if ent.InValid {
 					name := fmt.Sprintf("ipvs_%s:%d-%s", ent.Key.Address, ent.Key.Port, ent.Key.Protocol)
-					lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: ent.Key.Address, ServPort: ent.Key.Port, Proto: ent.Key.Protocol, Sel: cmn.LbSelRr, Name: name}}
+					lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: ent.Key.Address, ServPort: ent.Key.Port, Proto: ent.Key.Protocol, Sel: ent.sel, Mode: ent.mode, Name: name}}
 					_, err := hooks.NetLbRuleDel(&lbrule)
 					if err != nil {
 						tk.LogIt(tk.LogError, "IPVS LB %v delete failed\n", ent.Key)
@@ -141,14 +152,8 @@ func IpVSSync() {
 			}
 
 			for _, newEnt := range ipVSList {
-
-				sel := cmn.LbSelRr
-				if newEnt.Type == "rrp" {
-					sel = cmn.LbSelRrPersist
-				}
-				fmt.Printf("Selection %s\n", newEnt.Type)
 				name := fmt.Sprintf("ipvs_%s:%d-%s", newEnt.Key.Address, newEnt.Key.Port, newEnt.Key.Protocol)
-				lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: newEnt.Key.Address, ServPort: newEnt.Key.Port, Proto: newEnt.Key.Protocol, Sel: sel, Name: name}}
+				lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: newEnt.Key.Address, ServPort: newEnt.Key.Port, Proto: newEnt.Key.Protocol, Sel: newEnt.sel, Mode: newEnt.mode, Name: name}}
 				for _, ep := range newEnt.EndPoints {
 					lbrule.Eps = append(lbrule.Eps, cmn.LbEndPointArg{EpIP: ep.EpIP, EpPort: ep.EpPort, Weight: 1})
 				}
