@@ -102,7 +102,7 @@ func (ctx *IpVSH) BuildIpVSDB() []*ipVSEntry {
 
 		newEntry.mode = cmn.LBModeDefault
 		if svc.Port >= K8sNodePortMin && svc.Port <= K8sNodePortMax {
-			newEntry.mode = cmn.LBModeOneArm
+			newEntry.mode = cmn.LBModeFullNAT
 		}
 
 		key := ipVSKey{Address: svc.Address.String(), Protocol: proto, Port: svc.Port}
