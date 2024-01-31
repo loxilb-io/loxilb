@@ -75,7 +75,7 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 Join the loxilb [Slack](https://www.loxilb.io/members) channel to chat with loxilb developers and other loxilb users. This is a good place to learn about loxilb, ask questions, and work collaboratively.
 
 ### General Discussion
-Feel free to post your queries in github [discussion](https://github.com/loxilb-io/loxilb/discussions). If you find any issue/bugs, please raise an issue in github and members from loxilb community will be happy to help.
+Feel free to post your queries in github [discussion](https://github.com/loxilb-io/loxilb/discussions). If you find any issue/bugs, please raise an [issue](https://github.com/loxilb-io/loxilb/issues) in github and members from loxilb community will be happy to help.
 
 ## Knowledge-Base   
 - [What is eBPF](ebpf.md)
