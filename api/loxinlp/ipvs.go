@@ -48,6 +48,7 @@ type ipVSEntry struct {
 	Key       ipVSKey
 	sel       cmn.EpSelect
 	mode      cmn.LBMode
+	pType     string
 	InValid   bool
 	EndPoints []ipvsEndPoint
 }
@@ -83,6 +84,7 @@ func (ctx *IpVSH) BuildIpVSDB() []*ipVSEntry {
 		}
 
 		newEntry.sel = cmn.LbSelRr
+		newEntry.pType = ""
 		if svc.Flags&0x1 == 0x1 {
 			newEntry.sel = cmn.LbSelRrPersist
 		}
@@ -103,6 +105,7 @@ func (ctx *IpVSH) BuildIpVSDB() []*ipVSEntry {
 		newEntry.mode = cmn.LBModeDefault
 		if svc.Port >= K8sNodePortMin && svc.Port <= K8sNodePortMax {
 			newEntry.mode = cmn.LBModeFullNAT
+			newEntry.pType = "ping"
 		}
 
 		key := ipVSKey{Address: svc.Address.String(), Protocol: proto, Port: svc.Port}
@@ -141,7 +144,7 @@ func IpVSSync() {
 			for _, ent := range ipVSCtx.RMap {
 				if ent.InValid {
 					name := fmt.Sprintf("ipvs_%s:%d-%s", ent.Key.Address, ent.Key.Port, ent.Key.Protocol)
-					lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: ent.Key.Address, ServPort: ent.Key.Port, Proto: ent.Key.Protocol, Sel: ent.sel, Mode: ent.mode, Name: name}}
+					lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: ent.Key.Address, ServPort: ent.Key.Port, Proto: ent.Key.Protocol, Sel: ent.sel, Mode: ent.mode, Name: name, ProbeType: ent.pType}}
 					_, err := hooks.NetLbRuleDel(&lbrule)
 					if err != nil {
 						tk.LogIt(tk.LogError, "IPVS LB %v delete failed\n", ent.Key)
@@ -153,7 +156,7 @@ func IpVSSync() {
 
 			for _, newEnt := range ipVSList {
 				name := fmt.Sprintf("ipvs_%s:%d-%s", newEnt.Key.Address, newEnt.Key.Port, newEnt.Key.Protocol)
-				lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: newEnt.Key.Address, ServPort: newEnt.Key.Port, Proto: newEnt.Key.Protocol, Sel: newEnt.sel, Mode: newEnt.mode, Name: name}}
+				lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: newEnt.Key.Address, ServPort: newEnt.Key.Port, Proto: newEnt.Key.Protocol, Sel: newEnt.sel, Mode: newEnt.mode, Name: name, ProbeType: newEnt.pType}}
 				for _, ep := range newEnt.EndPoints {
 					lbrule.Eps = append(lbrule.Eps, cmn.LbEndPointArg{EpIP: ep.EpIP, EpPort: ep.EpPort, Weight: 1})
 				}
