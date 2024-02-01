@@ -19,11 +19,10 @@ package loxinet
 import (
 	"errors"
 	"fmt"
-	"net"
-
-	tk "github.com/loxilb-io/loxilib"
-
 	cmn "github.com/loxilb-io/loxilb/common"
+	opts "github.com/loxilb-io/loxilb/options"
+	tk "github.com/loxilb-io/loxilib"
+	"net"
 )
 
 // error codes
@@ -469,6 +468,13 @@ func (rt *Rt) DP(work DpWorkT) int {
 
 	if err != nil {
 		return -1
+	}
+
+	if opts.Opts.FallBack {
+		if rtNet.IP.IsUnspecified() {
+			fmt.Printf("FALL BACK MODE\n\n\n\n")
+			return 0
+		}
 	}
 
 	if work == DpStatsGet {
