@@ -187,6 +187,13 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 	key := RtKey{Dst.String(), Zone}
 	nhLen := len(Na)
 
+	if opts.Opts.FallBack {
+		if Dst.IP.IsUnspecified() {
+			tk.LogIt(tk.LogError, "rt add - %s:%s skipped - fallback\n", Dst.String(), Zone)
+			return 0, nil
+		}
+	}
+
 	if nhLen > 1 {
 		tk.LogIt(tk.LogError, "rt add - %s:%s ecmp not supported\n", Dst.String(), Zone)
 		return RtNhErr, errors.New("ecmp-rt error not supported")
@@ -325,6 +332,13 @@ func (rt *Rt) rtRemoveDepObj(i int) []RtDepObj {
 // RtDelete - Delete a route
 func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 	key := RtKey{Dst.String(), Zone}
+
+	if opts.Opts.FallBack {
+		if Dst.IP.IsUnspecified() {
+			tk.LogIt(tk.LogError, "rt delete - %s:%s skipped - fallback\n", Dst.String(), Zone)
+			return 0, nil
+		}
+	}
 
 	rt, found := r.RtMap[key]
 	if found == false {
@@ -468,13 +482,6 @@ func (rt *Rt) DP(work DpWorkT) int {
 
 	if err != nil {
 		return -1
-	}
-
-	if opts.Opts.FallBack {
-		if rtNet.IP.IsUnspecified() {
-			fmt.Printf("FALL BACK MODE\n\n\n\n")
-			return 0
-		}
 	}
 
 	if work == DpStatsGet {
