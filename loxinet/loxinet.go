@@ -266,10 +266,10 @@ func loxiNetInit() {
 			}
 		}
 	} else {
-		// If bgp peer mode is enable then bgp flag has to be set by default
+		// If bgp peer mode is enabled then bgp flag has to be set by default
 		opts.Opts.Bgp = true
 		//opts.Opts.NoNlp = true
-		opts.Opts.NoPrometheus = true
+		opts.Opts.Prometheus = false
 	}
 
 	// Initialize goBgp client
@@ -296,7 +296,7 @@ func loxiNetInit() {
 	}
 
 	// Initialize the Prometheus subsystem
-	if !opts.Opts.NoPrometheus {
+	if opts.Opts.Prometheus {
 		prometheus.PrometheusRegister(NetAPIInit(opts.Opts.BgpPeerMode))
 		prometheus.Init()
 	}

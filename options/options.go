@@ -20,7 +20,7 @@ var Opts struct {
 	ClusterSelf       int            `long:"self" description:"annonation of self in cluster" default:"0"`
 	LogLevel          string         `long:"loglevel" description:"One of debug,info,error,warning,notice,critical,emergency,alert" default:"debug"`
 	CPUProfile        string         `long:"cpuprofile" description:"Enable cpu profiling and specify file to use" default:"none" env:"CPUPROF"`
-	NoPrometheus      bool           `short:"p" long:"nopro" description:" Do not run prometheus thread"`
+	Prometheus        bool           `short:"p" long:"prometheus" description:"Run prometheus thread"`
 	CSumDisable       bool           `long:"disable-csum" description:"Disable checksum update(experimental)"`
 	PassiveEPProbe    bool           `long:"passive-probe" description:"Enable passive liveness probes(experimental)"`
 	RssEnable         bool           `long:"rss-enable" description:"Enable rss optimization(experimental)"`

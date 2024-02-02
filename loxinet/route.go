@@ -214,7 +214,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 			}
 		}
 
-		if rtMod == true {
+		if rtMod {
 			ret, _ := r.RtDelete(Dst, Zone)
 			if ret != 0 {
 				tk.LogIt(tk.LogError, "rt add - %s:%s del failed on mod\n", Dst.String(), Zone)
@@ -238,7 +238,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 	if len(Na) != 0 {
 		rt.TFlags |= RtTypeInd
 
-		if Ra.HostRoute == true {
+		if Ra.HostRoute {
 			rt.TFlags |= RtTypeHost
 		}
 
@@ -341,7 +341,7 @@ func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 	}
 
 	rt, found := r.RtMap[key]
-	if found == false {
+	if !found {
 		tk.LogIt(tk.LogError, "rt delete - %s:%s not found\n", Dst.String(), Zone)
 		return RtNoEntErr, errors.New("no such route")
 	}
