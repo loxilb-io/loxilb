@@ -187,6 +187,13 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 	key := RtKey{Dst.String(), Zone}
 	nhLen := len(Na)
 
+	if opts.Opts.FallBack {
+		if Dst.IP.IsUnspecified() {
+			tk.LogIt(tk.LogError, "rt add - %s:%s skipped - fallback\n", Dst.String(), Zone)
+			return 0, nil
+		}
+	}
+
 	if nhLen > 1 {
 		tk.LogIt(tk.LogError, "rt add - %s:%s ecmp not supported\n", Dst.String(), Zone)
 		return RtNhErr, errors.New("ecmp-rt error not supported")
@@ -207,7 +214,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 			}
 		}
 
-		if rtMod == true {
+		if rtMod {
 			ret, _ := r.RtDelete(Dst, Zone)
 			if ret != 0 {
 				tk.LogIt(tk.LogError, "rt add - %s:%s del failed on mod\n", Dst.String(), Zone)
@@ -231,7 +238,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 	if len(Na) != 0 {
 		rt.TFlags |= RtTypeInd
 
-		if Ra.HostRoute == true {
+		if Ra.HostRoute {
 			rt.TFlags |= RtTypeHost
 		}
 
@@ -326,8 +333,15 @@ func (rt *Rt) rtRemoveDepObj(i int) []RtDepObj {
 func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 	key := RtKey{Dst.String(), Zone}
 
+	if opts.Opts.FallBack {
+		if Dst.IP.IsUnspecified() {
+			tk.LogIt(tk.LogError, "rt delete - %s:%s skipped - fallback\n", Dst.String(), Zone)
+			return 0, nil
+		}
+	}
+
 	rt, found := r.RtMap[key]
-	if found == false {
+	if !found {
 		tk.LogIt(tk.LogError, "rt delete - %s:%s not found\n", Dst.String(), Zone)
 		return RtNoEntErr, errors.New("no such route")
 	}
@@ -468,13 +482,6 @@ func (rt *Rt) DP(work DpWorkT) int {
 
 	if err != nil {
 		return -1
-	}
-
-	if opts.Opts.FallBack {
-		if rtNet.IP.IsUnspecified() {
-			fmt.Printf("FALL BACK MODE\n\n\n\n")
-			return 0
-		}
 	}
 
 	if work == DpStatsGet {

@@ -410,6 +410,7 @@ type DpHookInterface interface {
 	DpTableGet(w *TableDpWorkQ) (DpRetT, error)
 	DpCtAdd(w *DpCtInfo) int
 	DpCtDel(w *DpCtInfo) int
+	DpTableGC()
 	DpCtGetAsync()
 	DpGetLock()
 	DpRelLock()
@@ -461,7 +462,7 @@ func (dp *DpH) WaitXsyncReady(who string) {
 		if dp.DpXsyncInSync() {
 			return
 		}
-		if time.Duration(time.Now().Sub(begin).Seconds()) >= 90 {
+		if time.Duration(time.Since(begin).Seconds()) >= 90 {
 			return
 		}
 		tk.LogIt(tk.LogDebug, "%s:waiting for Xsync..\n", who)
@@ -839,6 +840,8 @@ func (dp *DpH) DpMapGetCt4() []cmn.CtInfo {
 			CtInfoArr = append(CtInfoArr, cti)
 		}
 	}
+
+	dp.DpHooks.DpTableGC()
 
 	return CtInfoArr
 }

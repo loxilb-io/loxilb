@@ -68,7 +68,7 @@ type CIStateH struct {
 
 func kaSpawn() {
 	url := fmt.Sprintf("http://127.0.0.1:%d/config/params", opts.Opts.Port)
-	for true {
+	for {
 		if IsLoxiAPIActive(url) {
 			break
 		}
@@ -234,7 +234,7 @@ func (h *CIStateH) CIVipGet(inst string) (net.IP, error) {
 			return ci.Vip, nil
 		}
 	}
-	return net.IPv4zero, errors.New("Not found")
+	return net.IPv4zero, errors.New("not found")
 }
 
 // IsCIKAMode - routine to get HA state
@@ -255,7 +255,7 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 	ci, found := h.ClusterMap[cm.Instance]
 	if !found {
 		tk.LogIt(tk.LogError, "[CLUSTER] New Instance %s find error\n", cm.Instance)
-		return -1, errors.New("Cluster instance not found")
+		return -1, errors.New("cluster instance not found")
 	}
 
 	if ci.StateStr == cm.State {
@@ -278,7 +278,7 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 	}
 
 	tk.LogIt(tk.LogError, "[CLUSTER] Invalid State: %s\n", cm.State)
-	return ci.State, errors.New("Invalid Cluster state")
+	return ci.State, errors.New("invalid cluster-state")
 
 }
 
@@ -288,7 +288,7 @@ func (h *CIStateH) ClusterNodeAdd(node cmn.ClusterNodeMod) (int, error) {
 	cNode := h.NodeMap[node.Addr.String()]
 
 	if cNode != nil {
-		return -1, errors.New("Exisitng Cnode")
+		return -1, errors.New("exisitng cnode")
 	}
 
 	cNode = new(ClusterNode)
@@ -306,7 +306,7 @@ func (h *CIStateH) ClusterNodeDelete(node cmn.ClusterNodeMod) (int, error) {
 	cNode := h.NodeMap[node.Addr.String()]
 
 	if cNode == nil {
-		return -1, errors.New("No such Cnode")
+		return -1, errors.New("no such cnode")
 	}
 
 	delete(h.NodeMap, node.Addr.String())

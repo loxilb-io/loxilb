@@ -94,7 +94,8 @@ const (
 
 // constants
 const (
-	DpEbpfLinuxTiVal     = 10
+	dpEbpfLinuxTiVal     = 10
+	ctGCTiValDefault     = 45
 	ctiDeleteSyncRetries = 3
 	blkCtiMaxLen         = 8192
 	mapNotifierChLen     = 8096
@@ -139,6 +140,9 @@ type (
 type DpEbpfH struct {
 	ticker  *time.Ticker
 	tDone   chan bool
+	trigGC  chan bool
+	gcTS    time.Time
+	gcTiVal uint
 	ctBcast chan bool
 	nID     uint
 	tbN     uint
@@ -183,6 +187,10 @@ func dpEbpfTicker() {
 			tk.LogIt(tk.LogDebug, "CT Bcast\n")
 			dpCTMapBcast()
 			continue
+		case <-mh.dpEbpf.trigGC:
+			C.llb_age_map_entries(C.LL_DP_CT_MAP)
+			C.llb_age_map_entries(C.LL_DP_FCV4_MAP)
+			mh.dpEbpf.gcTS = time.Now()
 		case t := <-mh.dpEbpf.ticker.C:
 			sel := mh.dpEbpf.tbN % tLen
 			tk.LogIt(-1, "DP Tick at for selector %v:%d\n", t, sel)
@@ -196,8 +204,11 @@ func dpEbpfTicker() {
 			/* No need to fetch all stats in this fashion */
 			//C.llb_collect_map_stats(C.int(C.LL_DP_CT_STATS_MAP))
 			/* Per entry stats will be fetched in C.ll_ct_map_ent_has_aged */
-			C.llb_age_map_entries(C.LL_DP_CT_MAP)
-			C.llb_age_map_entries(C.LL_DP_FCV4_MAP)
+			if mh.dpEbpf.gcTiVal == 0 || time.Duration(time.Since(mh.dpEbpf.gcTS).Seconds()) > time.Duration(mh.dpEbpf.gcTiVal) {
+				C.llb_age_map_entries(C.LL_DP_CT_MAP)
+				C.llb_age_map_entries(C.LL_DP_FCV4_MAP)
+				mh.dpEbpf.gcTS = time.Now()
+			}
 
 			// This means around 10s from start
 			if !mh.dpEbpf.CtSync {
@@ -291,12 +302,15 @@ func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, egrHooks bool, logLevel
 
 	ne := new(DpEbpfH)
 	ne.tDone = make(chan bool)
+	ne.trigGC = make(chan bool)
+	ne.gcTS = time.Now()
+	ne.gcTiVal = ctGCTiValDefault
 	ne.ToMapCh = make(chan interface{}, mapNotifierChLen)
 	for i := 0; i < mapNotifierWorkers; i++ {
 		ne.ToFinCh[i] = make(chan int)
 	}
 	ne.ctBcast = make(chan bool)
-	ne.ticker = time.NewTicker(DpEbpfLinuxTiVal * time.Second)
+	ne.ticker = time.NewTicker(dpEbpfLinuxTiVal * time.Second)
 	ne.ctMap = make(map[string]*DpCtInfo)
 	ne.RssEn = rssEn
 	ne.nID = uint((C.LLB_CT_MAP_ENTRIES / C.LLB_MAX_LB_NODES) * nodeNum)
@@ -377,14 +391,14 @@ func (e *DpEbpfH) loadEbpfPgm(name string) int {
 		C.llb_dp_link_attach(ifStr, xSection, C.LL_BPF_MOUNT_XDP, 0)
 	}
 	section := C.CString(string(C.TC_LL_SEC_DEFAULT))
-	ret := C.llb_dp_link_attach(ifStr, section, C.LL_BPF_MOUNT_TC, 0)
+	C.llb_dp_link_attach(ifStr, section, C.LL_BPF_MOUNT_TC, 0)
 
 	filters, err := nlp.FilterList(link, nlp.HANDLE_MIN_INGRESS)
 	if err != nil {
 		tk.LogIt(tk.LogWarning, "[DP] Filter on %s not found\n", name)
 		return -1
 	}
-	ret = -1
+	ret := -1
 	for _, f := range filters {
 		if t, ok := f.(*nlp.BpfFilter); ok {
 			if strings.Contains(t.Name, C.TC_LL_SEC_DEFAULT) {
@@ -2039,4 +2053,9 @@ func (e *DpEbpfH) DpGetLock() {
 // DpRelLock - routine to release underlying DP lock
 func (e *DpEbpfH) DpRelLock() {
 	C.llb_xh_unlock()
+}
+
+// DpTableGC - Work on table garbage collection
+func (e *DpEbpfH) DpTableGC() {
+	e.trigGC <- true
 }
