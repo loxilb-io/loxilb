@@ -159,10 +159,6 @@ sleep 10
 # Wait for cluster to be ready
 wait_cluster_ready_full
 
-# Start nginx pods and services for test
-kubectl $KUBECONFIG apply -f nginx.yml
-kubectl $KUBECONFIG apply -f nginx-svc-lb.yml
-
 sleep 5 
 
 # Start nginx pods and services for test(using kube-loxilb)
@@ -179,7 +175,7 @@ sleep 30
 kubectl $KUBECONFIG get svc
 
 # Route back to user
-sudo ip route add 1.1.1.1/32 via 12.12.12.1
+sudo ip route add 1.1.1.1/32 via 14.14.14.1
 
 # Wait for cluster to be ready
 wait_cluster_ready_full

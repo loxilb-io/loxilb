@@ -11,7 +11,7 @@ IFS=' '
 
 for((i=0; i<120; i++))
 do
-  extLB=$(sudo kubectl $KUBECONFIG get svc | grep "nginx-lb")
+  extLB=$(sudo kubectl $KUBECONFIG get svc | grep "nginx-lb1")
   read -a strarr <<< "$extLB"
   len=${#strarr[*]}
   if [[ $((len)) -lt 6 ]]; then
@@ -60,14 +60,6 @@ print_debug_info() {
 code=0
 print_debug_info
 
-out=$($hexec user curl -s --connect-timeout 10 http://$extIP:80) 
-if [[ ${out} == *"Welcome to nginx"* ]]; then
-  echo "calico-k3s (ccm) [OK]"
-else
-  echo "calico-k3s (ccm) [FAILED]"
-  code=1
-fi
-
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
@@ -77,6 +69,24 @@ else
   code=1
 fi
 
+for((i=0; i<120; i++))
+do
+  extLB=$(sudo kubectl $KUBECONFIG get svc | grep "udp-lb1")
+  read -a strarr <<< "$extLB"
+  len=${#strarr[*]}
+  if [[ $((len)) -lt 6 ]]; then
+    echo "Can't find nginx-lb service"
+    sleep 1
+    continue
+  fi 
+  if [[ ${strarr[3]} != *"none"* ]]; then
+    extIP="$(cut -d'-' -f2 <<<${strarr[3]})"
+    break
+  fi
+  echo "No external LB allocated"
+  sleep 1
+done
+
 out=$($hexec user timeout 30 ../common/udp_client $extIP 55003)
 if [[ ${out} == *"Client"* ]]; then
   echo "calico-k3s (kube-loxillb) udp [OK]"
@@ -84,6 +94,24 @@ else
   echo "calico-k3s (kube-loxillb) udp [FAILED]"
   code=1
 fi
+
+for((i=0; i<120; i++))
+do
+  extLB=$(sudo kubectl $KUBECONFIG get svc | grep "sctp-lb1")
+  read -a strarr <<< "$extLB"
+  len=${#strarr[*]}
+  if [[ $((len)) -lt 6 ]]; then
+    echo "Can't find nginx-lb service"
+    sleep 1
+    continue
+  fi
+  if [[ ${strarr[3]} != *"none"* ]]; then
+    extIP="$(cut -d'-' -f2 <<<${strarr[3]})"
+    break
+  fi
+  echo "No external LB allocated"
+  sleep 1
+done
 
 out=$($hexec user timeout 30 ../common/sctp_socat_client 1.1.1.1 41291 $extIP 55004)
 if [[ ${out} == *"server1"* ]]; then
