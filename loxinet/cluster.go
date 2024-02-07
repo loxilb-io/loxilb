@@ -90,7 +90,7 @@ func (ci *CIStateH) startBFDProto() {
 	time.Sleep(KAInitTiVal * time.Second)
 
 	bs := bfd.StructNew(3784)
-	err := bs.BFDAddRemote(ci.RemoteIP.String(), 3784, bfd.BFDMinSysTXIntervalUs, 3, "Default", ci)
+	err := bs.BFDAddRemote(ci.RemoteIP.String(), 3784, bfd.BFDMinSysTXIntervalUs, 3, cmn.CIDefault, ci)
 	if err != nil {
 		tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote\n")
 	}

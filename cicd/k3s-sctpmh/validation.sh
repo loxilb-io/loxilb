@@ -125,6 +125,25 @@ sleep 10
 # Wait for cluster to be ready
 wait_cluster_ready_full
 
+for((i=0; i<120; i++))
+do
+  extLB=$(sudo kubectl $KUBECONFIG get svc | grep "nginx-lb1")
+  read -a strarr <<< "$extLB"
+  len=${#strarr[*]}
+  if [[ $((len)) -lt 6 ]]; then
+    echo "Can't find nginx-lb service"
+    sleep 1
+    continue
+  fi
+  if [[ ${strarr[3]} != *"none"* ]]; then
+    extIP="$(cut -d'-' -f2 <<<${strarr[3]})"
+    port=${strarr[4]}
+    break
+  fi
+  echo "No external LB allocated"
+  sleep 1
+done
+
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002)
 if [[ ${out} == *"Welcome to nginx"* ]]; then
   echo "cluster-k3s TCP service nginx-lb del+add (kube-loxilb) [OK]"
