@@ -25,7 +25,7 @@ import (
 	"time"
 )
 
-var version string = "0.9.1"
+var version string = "0.9.2-beta"
 var buildInfo string = ""
 
 func main() {

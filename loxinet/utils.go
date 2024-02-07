@@ -24,6 +24,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	tk "github.com/loxilb-io/loxilib"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -32,9 +33,6 @@ import (
 	"strconv"
 	"syscall"
 	"time"
-
-	opts "github.com/loxilb-io/loxilb/options"
-	tk "github.com/loxilb-io/loxilib"
 )
 
 // IterIntf - interface implementation to iterate various loxinet
@@ -140,18 +138,19 @@ func LogString2Level(logStr string) tk.LogLevelT {
 }
 
 // KAString2Mode - Convert ka mode in string opts to spawn/KAMode
-func KAString2Mode(kaStr string) (bool, bool) {
+func KAString2Mode(kaStr string) (bool, net.IP) {
 	spawnKa := false
-	kaMode := false
-	switch opts.Opts.Ka {
-	case "in":
-		spawnKa = true
-		kaMode = true
-	case "out":
-		spawnKa = false
-		kaMode = true
+
+	if kaStr == "none" {
+		return spawnKa, nil
 	}
-	return spawnKa, kaMode
+
+	remote := net.ParseIP(kaStr)
+	if remote == nil {
+		return spawnKa, remote
+	}
+	spawnKa = true
+	return spawnKa, remote
 }
 
 // HTTPSProber - Do a https probe for given url
