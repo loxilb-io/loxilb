@@ -37,7 +37,7 @@ type WireRaw struct {
 }
 
 type Notifer interface {
-	BFDSessionNotify(instance string, remote string, state SessionState)
+	BFDSessionNotify(instance string, remote string, state string)
 }
 
 type bfdSession struct {
@@ -56,8 +56,8 @@ type bfdSession struct {
 	ReqMinEchoInt  uint32
 	LastRxTS       time.Time
 	TxTicker       *time.Ticker
-	Fin            chan bool
 	RxTicker       *time.Ticker
+	Fin            chan bool
 	Mutex          sync.RWMutex
 	Notify         Notifer
 	PktDat         [24]byte
@@ -72,7 +72,7 @@ func StructNew(port uint16) *Struct {
 	bfdStruct := new(Struct)
 
 	bfdStruct.BFDSessMap = make(map[string]*bfdSession)
-	bfdStruct.bfdStartListener(port)
+	go bfdStruct.bfdStartListener(port)
 	return bfdStruct
 }
 
@@ -96,6 +96,23 @@ func (bs *Struct) BFDAddRemote(remoteIP string, port uint16, interval uint32, mu
 	if err != nil {
 		return errors.New("bfd failed to init session")
 	}
+
+	bs.BFDSessMap[remoteIP] = sess
+
+	return nil
+}
+
+func (bs *Struct) BFDDeleteRemote(remoteIP string, port uint16) error {
+	bs.BFDMtx.Lock()
+	defer bs.BFDMtx.Unlock()
+
+	sess := bs.BFDSessMap[remoteIP]
+	if sess == nil {
+		return errors.New("no bfd session")
+	}
+
+	sess.destruct()
+	delete(bs.BFDSessMap, sess.RemoteName)
 
 	bs.BFDSessMap[remoteIP] = sess
 
@@ -127,23 +144,21 @@ func decodeCtrlPacket(buf []byte, size int) *WireRaw {
 func (bs *Struct) processBFD(conn *net.UDPConn) {
 	var buf [1024]byte
 
-	n, addr, err := conn.ReadFromUDP(buf[:])
+	n, _, err := conn.ReadFromUDP(buf[:])
 	if err != nil {
 		return
 	}
 
-	fmt.Printf("client %v:%d: ", addr, n)
 	raw := decodeCtrlPacket(buf[:], n)
 
 	remIP := tk.NltoIP(raw.Disc)
 	if remIP != nil {
-		fmt.Printf("raw %v:%s:%v\n", raw, remIP.String(), raw.State)
+		//fmt.Printf("raw %v:%s:%v\n", raw, remIP.String(), raw.State)
 		bs.BFDMtx.Lock()
 		defer bs.BFDMtx.Unlock()
 
 		sess := bs.BFDSessMap[remIP.String()]
 		if sess != nil {
-			fmt.Printf("Session found\n")
 			sess.RunSessionSM(raw)
 		}
 	}
@@ -188,30 +203,28 @@ func (b *bfdSession) RunSessionSM(raw *WireRaw) {
 	if raw.State == BFDDown {
 		if b.State == BFDDown {
 			b.State = BFDInit
-			fmt.Printf("%s: BFD State -> INIT\n", b.RemoteName)
+			tk.LogIt(tk.LogInfo, "%s: BFD State -> INIT\n", b.RemoteName)
 		}
 	} else if raw.State == BFDInit {
 		if b.State != BFDUp {
 			b.State = BFDUp
-			fmt.Printf("%s: BFD State -> UP\n", b.RemoteName)
+			tk.LogIt(tk.LogInfo, "%s: BFD State -> UP\n", b.RemoteName)
 		}
 	} else if raw.State == BFDAdminDown {
 		if b.State != BFDAdminDown {
-			fmt.Printf("%s: BFD State -> AdminDown\n", b.RemoteName)
+			tk.LogIt(tk.LogInfo, "%s: BFD State -> AdminDown\n", b.RemoteName)
 		}
 		b.State = BFDAdminDown
 	} else if raw.State == BFDUp {
 		if b.State != BFDUp {
-			fmt.Printf("%s: BFD State -> UP\n", b.RemoteName)
+			tk.LogIt(tk.LogInfo, "%s: BFD State -> UP\n", b.RemoteName)
 		}
 		b.State = BFDUp
 	}
 	newState := b.State
 	b.Mutex.Unlock()
 
-	if newState != oldState {
-		b.Notify.BFDSessionNotify(inst, rem, newState)
-	}
+	b.sendStateNotification(newState, oldState, inst, rem)
 }
 
 func (b *bfdSession) checkSessTimeout() {
@@ -223,20 +236,35 @@ func (b *bfdSession) checkSessTimeout() {
 	if b.State == BFDUp {
 		if time.Duration(time.Since(b.LastRxTS).Microseconds()) > time.Duration(b.TimeOut) {
 			b.State = BFDDown
-			fmt.Printf("%s: BFD State -> Down\n", b.RemoteName)
+			tk.LogIt(tk.LogInfo, "%s: BFD State -> Down\n", b.RemoteName)
 		}
 	}
 	newState := b.State
 	b.Mutex.Unlock()
 
-	if newState != oldState {
-		b.Notify.BFDSessionNotify(inst, rem, newState)
+	b.sendStateNotification(newState, oldState, inst, rem)
+}
+
+func (b *bfdSession) sendStateNotification(newState, oldState SessionState, inst string, remote string) {
+	if newState == oldState {
+		return
 	}
 
+	if newState == BFDUp {
+		ciState := "BACKUP"
+		if b.MyDisc > b.RemDisc {
+			ciState = "MASTER"
+		}
+		b.Notify.BFDSessionNotify(inst, remote, ciState)
+	} else if newState == BFDDown && oldState == BFDUp {
+		ciState := "MASTER"
+		b.Notify.BFDSessionNotify(inst, remote, ciState)
+	} else {
+		b.Notify.BFDSessionNotify(inst, remote, "NOT_DEFINED")
+	}
 }
 
 func (b *bfdSession) bfdSessionTicker() {
-	i := 0
 	for {
 		select {
 		case <-b.Fin:
@@ -246,17 +274,37 @@ func (b *bfdSession) bfdSessionTicker() {
 			b.checkSessTimeout()
 		case t := <-b.TxTicker.C:
 			tk.LogIt(-1, "Tick at %v\n", t)
-			if i < 10 {
-				b.encodeCtrlPacket()
-				b.sendBFDPacket()
-			} else {
-				if b.State == BFDDown {
-					i = 0
-				}
-			}
-			i++
+			b.encodeCtrlPacket()
+			b.sendBFDPacket()
 		}
 	}
+}
+
+// getMyDisc - Get My Discriminator based on remote
+func getMyDisc(ip net.IP) net.IP {
+	// get list of available addresses
+	addr, err := net.InterfaceAddrs()
+	if err != nil {
+		return nil
+	}
+
+	var first net.IP
+
+	for _, addr := range addr {
+		if ipnet, ok := addr.(*net.IPNet); ok {
+			// check if IPv4 or IPv6 is not nil
+			if ipnet.IP.To4() != nil || ipnet.IP.To16() != nil {
+				if ipnet.Contains(ip) {
+					return ipnet.IP
+				}
+				if first == nil {
+					first = ipnet.IP
+				}
+			}
+		}
+	}
+
+	return first
 }
 
 func (b *bfdSession) initialize(remoteIP string, port uint16, interval uint32, multi uint8) error {
@@ -268,7 +316,12 @@ func (b *bfdSession) initialize(remoteIP string, port uint16, interval uint32, m
 		return errors.New("address malformed")
 	}
 
-	b.MyDisc = tk.IPtonl(ip)
+	myIP := getMyDisc(ip)
+	if myIP == nil {
+		return errors.New("my discriminator not found")
+	}
+	b.MyDisc = tk.IPtonl(myIP)
+	b.RemDisc = tk.IPtonl(ip)
 	b.MyMulti = multi
 	b.DesMinTxInt = interval
 	b.ReqMinRxInt = interval
@@ -286,6 +339,14 @@ func (b *bfdSession) initialize(remoteIP string, port uint16, interval uint32, m
 
 	go b.bfdSessionTicker()
 	return nil
+}
+
+func (b *bfdSession) destruct() {
+	b.State = BFDAdminDown
+	b.Fin <- true
+	// Signal ADMIN Down to peer
+	b.encodeCtrlPacket()
+	b.sendBFDPacket()
 }
 
 func (b *bfdSession) encodeCtrlPacket() error {
@@ -308,7 +369,7 @@ func (b *bfdSession) sendBFDPacket() error {
 	b.Cxn.SetDeadline(time.Now().Add(500 * time.Millisecond))
 	_, err := b.Cxn.Write(b.PktDat[:])
 	if err != nil {
-		fmt.Printf("Error in sending %s\n", err)
+		tk.LogIt(-1, "Error in sending %s\n", err)
 	}
 	return err
 }

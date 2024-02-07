@@ -17,16 +17,13 @@
 package loxinet
 
 import (
-	cmn "github.com/loxilb-io/loxilb/common"
-	opts "github.com/loxilb-io/loxilb/options"
-	tk "github.com/loxilb-io/loxilib"
-
-	"bufio"
 	"errors"
 	"fmt"
+	cmn "github.com/loxilb-io/loxilb/common"
+	opts "github.com/loxilb-io/loxilb/options"
+	bfd "github.com/loxilb-io/loxilb/proto"
+	tk "github.com/loxilb-io/loxilib"
 	"net"
-	"os"
-	"os/exec"
 	"time"
 )
 
@@ -60,13 +57,25 @@ type ClusterNode struct {
 // CIStateH - Cluster context handler
 type CIStateH struct {
 	SpawnKa    bool
-	kaMode     bool
+	RemoteIP   net.IP
 	ClusterMap map[string]*ClusterInstance
 	StateMap   map[string]int
 	NodeMap    map[string]*ClusterNode
 }
 
-func kaSpawn() {
+func (ci *CIStateH) BFDSessionNotify(instance string, remote string, ciState string) {
+	var sm cmn.HASMod
+
+	sm.Instance = instance
+	sm.State = ciState
+	sm.Vip = net.ParseIP("0.0.0.0")
+	tk.LogIt(tk.LogInfo, "ci-change instance %s - state %s vip %v\n", instance, ciState, sm.Vip)
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+	ci.CIStateUpdate(sm)
+}
+
+func (ci *CIStateH) startBFDProto() {
 	url := fmt.Sprintf("http://127.0.0.1:%d/config/params", opts.Opts.Port)
 	for {
 		if IsLoxiAPIActive(url) {
@@ -76,107 +85,31 @@ func kaSpawn() {
 		time.Sleep(1 * time.Second)
 	}
 
-	RunCommand("rm -f /etc/shared/keepalive.state", false)
-	RunCommand("pkill keepalived", false)
 	mh.dp.WaitXsyncReady("ka")
 	// We need some cool-off period for loxilb to self sync-up in the cluster
 	time.Sleep(KAInitTiVal * time.Second)
 
-	for {
-		if exists := FileExists(KAConfigFile); !exists {
-			time.Sleep(2000 * time.Millisecond)
-			continue
-		}
-
-		pid := ReadPIDFile(KAPidFile1)
-		if pid != 0 {
-			time.Sleep(5000 * time.Millisecond)
-			continue
-		}
-
-		tk.LogIt(tk.LogInfo, "KA spawning\n")
-		cmd := exec.Command("/usr/sbin/keepalived", "-f", KAConfigFile, "-n")
-		err := cmd.Run()
-		if err != nil {
-			tk.LogIt(tk.LogError, "Error in running KA:%s\n", err)
-		} else {
-			tk.LogIt(tk.LogInfo, "KA found dead. Reaping\n")
-		}
-
-		rmf := fmt.Sprintf("rm -f %s", KAPidFile1)
-		RunCommand(rmf, false)
-		rmf = fmt.Sprintf("rm -f %s", KAPidFile2)
-		RunCommand(rmf, false)
-
-		time.Sleep(2000 * time.Millisecond)
-	}
-}
-
-func (h *CIStateH) CISync() {
-	var sm cmn.HASMod
-	var ciState int
-	var ok bool
-	clusterStateFile := "/etc/shared/keepalive.state"
-	rf, err := os.Open(clusterStateFile)
-	if err == nil {
-
-		fsc := bufio.NewScanner(rf)
-		fsc.Split(bufio.ScanLines)
-
-		for fsc.Scan() {
-			var inst string
-			var state string
-			var vip string
-			// Format style -
-			// INSTANCE default is in BACKUP state
-			_, err = fmt.Sscanf(fsc.Text(), "INSTANCE %s is in %s state vip %s", &inst, &state, &vip)
-			if err != nil {
-				continue
-			}
-
-			if ciState, ok = h.StateMap[state]; !ok {
-				continue
-			}
-
-			notify := false
-
-			if eci, ok := h.ClusterMap[inst]; !ok {
-				notify = true
-			} else {
-				if eci.State != ciState {
-					notify = true
-				}
-			}
-
-			if notify {
-				sm.Instance = inst
-				sm.State = state
-				sm.Vip = net.ParseIP(vip)
-				tk.LogIt(tk.LogInfo, "ci-change instance %s - state %s vip %v\n", inst, state, sm.Vip)
-				h.CIStateUpdate(sm)
-			}
-		}
-
-		rf.Close()
+	bs := bfd.StructNew(3784)
+	err := bs.BFDAddRemote(ci.RemoteIP.String(), 3784, bfd.BFDMinSysTXIntervalUs, 3, "Default", ci)
+	if err != nil {
+		tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote\n")
 	}
 }
 
 // CITicker - Periodic ticker for Cluster module
 func (h *CIStateH) CITicker() {
-	mh.mtx.Lock()
-	h.CISync()
-	mh.mtx.Unlock()
+	// Nothing to do currently
 }
 
 // CISpawn - Spawn CI application
-func (h *CIStateH) CISpawn() {
-	if h.SpawnKa {
-		go kaSpawn()
+func (ci *CIStateH) CISpawn() {
+	if ci.SpawnKa {
+		go ci.startBFDProto()
 	}
 }
 
 // CIInit - routine to initialize Cluster context
-func CIInit(spawnKa bool, kaMode bool) *CIStateH {
+func CIInit(spawnKa bool, remoteIP net.IP) *CIStateH {
 	var nCIh = new(CIStateH)
 	nCIh.StateMap = make(map[string]int)
 	nCIh.StateMap["MASTER"] = cmn.CIStateMaster
@@ -185,7 +118,7 @@ func CIInit(spawnKa bool, kaMode bool) *CIStateH {
 	nCIh.StateMap["STOP"] = cmn.CIStateNotDefined
 	nCIh.StateMap["NOT_DEFINED"] = cmn.CIStateNotDefined
 	nCIh.SpawnKa = spawnKa
-	nCIh.kaMode = kaMode
+	nCIh.RemoteIP = remoteIP
 	nCIh.ClusterMap = make(map[string]*ClusterInstance)
 
 	if _, ok := nCIh.ClusterMap[cmn.CIDefault]; !ok {
@@ -237,9 +170,9 @@ func (h *CIStateH) CIVipGet(inst string) (net.IP, error) {
 	return net.IPv4zero, errors.New("not found")
 }
 
-// IsCIKAMode - routine to get HA state
+// IsCIKAMode - routine to get KA mode
 func (h *CIStateH) IsCIKAMode() bool {
-	return h.kaMode
+	return false
 }
 
 // CIStateUpdate - routine to update cluster state
@@ -274,6 +207,7 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 		if mh.bgp != nil {
 			mh.bgp.UpdateCIState(cm.Instance, ci.State, ci.Vip)
 		}
+		mh.zr.Rules.RuleVIPSyncToClusterState()
 		return ci.State, nil
 	}
 

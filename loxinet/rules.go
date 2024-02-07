@@ -2582,3 +2582,12 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 
 	return nil
 }
+
+func (R *RuleH) RuleVIPSyncToClusterState() {
+	for vip := range R.vipMap {
+		ip := net.ParseIP(vip)
+		if ip != nil {
+			R.AdvRuleVIPIfL2(ip)
+		}
+	}
+}
