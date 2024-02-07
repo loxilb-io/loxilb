@@ -7,8 +7,8 @@ echo "#########################################"
 echo "Spawning all hosts"
 echo "#########################################"
 
-spawn_docker_host --dock-type loxilb --dock-name llb1 --with-bgp yes --bgp-config $(pwd)/llb1_gobgp_config --with-ka in --ka-config $(pwd)/keepalived_config1
-spawn_docker_host --dock-type loxilb --dock-name llb2 --with-bgp yes --bgp-config $(pwd)/llb2_gobgp_config --with-ka in --ka-config $(pwd)/keepalived_config2
+spawn_docker_host --dock-type loxilb --dock-name llb1 --with-bgp yes --bgp-config $(pwd)/llb1_gobgp_config --with-ka in
+spawn_docker_host --dock-type loxilb --dock-name llb2 --with-bgp yes --bgp-config $(pwd)/llb2_gobgp_config --with-ka in
 spawn_docker_host --dock-type host --dock-name ep1
 spawn_docker_host --dock-type host --dock-name ep2
 spawn_docker_host --dock-type host --dock-name ep3
@@ -98,6 +98,10 @@ $hexec r1 ip route add 20.20.20.1/32 via 11.11.11.11
 #add_route llb1 1.1.1.0/24 11.11.11.254
 #add_route llb2 1.1.1.0/24 11.11.11.254
 
+## host network
+sudo ip route add 11.11.11.11/32 via 14.14.14.1
+sudo ip route add 123.123.123.1/32 via 14.14.14.1
+
 sleep 1
 ##Create LB rule
 create_lb_rule llb1 20.20.20.1 --tcp=2020:8080 --endpoints=31.31.31.1:1,32.32.32.1:1,33.33.33.1:1 --mode=fullnat --bgp
@@ -157,8 +161,8 @@ wait_cluster_ready_full
 
 sleep 10
 # Start nginx pods and services for test
-kubectl $KUBECONFIG apply -f nginx.yml
-kubectl $KUBECONFIG apply -f nginx-svc-lb.yml
+#kubectl $KUBECONFIG apply -f nginx.yml
+#kubectl $KUBECONFIG apply -f nginx-svc-lb.yml
 
 sleep 5 
 

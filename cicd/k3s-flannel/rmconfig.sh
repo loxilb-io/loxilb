@@ -10,6 +10,9 @@ fi
 
 source ../common.sh
 
+sudo ip route del 11.11.11.11/32 via 14.14.14.1
+sudo ip route del 123.123.123.1/32 via 14.14.14.1
+
 sudo kubectl $KUBECONFIG delete -f nginx-svc-lb1.yml >> /dev/null 2>&1
 sudo kubectl $KUBECONFIG delete -f nginx-svc-lb.yml >> /dev/null 2>&1
 sudo kubectl $KUBECONFIG delete -f nginx.yml >> /dev/null 2>&1
