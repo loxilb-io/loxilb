@@ -1507,7 +1507,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 			}
 			dev := fmt.Sprintf("llb-rule-%s", sNetAddr.IP.String())
 			ret, _ := mh.zr.L3.IfaFind(dev, sNetAddr.IP)
-			if ret != 0 {
+			if ret == 0 {
 				mh.zr.L3.IfaDelete(dev, sNetAddr.IP.String()+"/32")
 			}
 			delete(R.vipMap, sNetAddr.IP.String())
@@ -2539,6 +2539,11 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 	ciState, _ := mh.has.CIStateGetInst(cmn.CIDefault)
 	if ciState == "MASTER" {
+		dev := fmt.Sprintf("llb-rule-%s", IP.String())
+		ret, _ := mh.zr.L3.IfaFind(dev, IP)
+		if ret == 0 {
+			mh.zr.L3.IfaDelete(dev, IP.String()+"/32")
+		}
 		ev, _, iface := R.zone.L3.IfaSelectAny(IP, false)
 		if ev == 0 {
 			if !IsIPHostAddr(IP.String()) {
@@ -2581,4 +2586,13 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 	}
 
 	return nil
+}
+
+func (R *RuleH) RuleVIPSyncToClusterState() {
+	for vip := range R.vipMap {
+		ip := net.ParseIP(vip)
+		if ip != nil {
+			R.AdvRuleVIPIfL2(ip)
+		}
+	}
 }

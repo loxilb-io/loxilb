@@ -13,6 +13,7 @@ hns="sudo ip netns "
 hexist="$vrn$hn"
 lxdocker="ghcr.io/loxilb-io/loxilb:latest"
 cluster_opts=""
+ka_opts=""
 var=$(lsb_release -r | cut -f2)
 if [[ $var == *"22.04"* ]];then
   lxdocker="ghcr.io/loxilb-io/loxilb:latestu22"
@@ -104,24 +105,9 @@ spawn_docker_host() {
     fi
     if [[ ! -z ${ka+x} ]]; then
       sudo mkdir -p /etc/shared/$dname/
-      if [[ "$ka" == "in" ]];then
-        ka_opts="-k in"
-        if [[ ! -z "$kpath" ]]; then
-            ka_conf="-v $kpath:/etc/keepalived/" 
-        fi
-      fi
-      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config $ka_conf --name $dname $lxdocker
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config --name $dname $lxdocker
       get_llb_peerIP $dname
       docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $ka_opts
-
-      if [[ "$ka" == "out" ]];then
-        ka_opts="-k out"
-        if [[ ! -z "$kpath" ]]; then
-            ka_conf="-v $kpath:/container/service/keepalived/assets/" 
-        fi
-
-        docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit --network=container:$dname $ka_conf -v /etc/shared/$dname:/etc/shared --name ka_$dname osixia/keepalived:2.0.20
-      fi
     else
       docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname $lxdocker $bgp_opts
       docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts
@@ -170,6 +156,7 @@ get_llb_peerIP() {
         llb2IP="$A.$B.$C.$((D+1))"
       fi
       cluster_opts=" --cluster=$llb2IP --self=0"
+      ka_opts=" --ka=$llb2IP"
     elif [[ "$1" == "llb2" ]]; then
       llb2IP=$(docker inspect --format='{{.NetworkSettings.IPAddress}}' llb2)
       if [[ "lb$llb2IP" == "lb" ]];then
@@ -179,6 +166,7 @@ get_llb_peerIP() {
         llb1IP="$A.$B.$C.$((D-1))"
       fi
       cluster_opts=" --cluster=$llb1IP --self=1"
+      ka_opts=" --ka=$llb1IP"
     fi
 }
 
