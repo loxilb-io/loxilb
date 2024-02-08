@@ -14,7 +14,7 @@ jobs:
     name: k3s-flannel-sanity
     runs-on: ubuntu-latest
     steps:
-      - run: sudo apt update
+      - run: sudo apt update && sudo apt -y install bridge-utils lksctp-tools
       - run: |
          echo "KUBECONFIG=--kubeconfig=/etc/rancher/k3s/k3s.yaml" >> $GITHUB_ENV
       - uses: actions/checkout@v2
