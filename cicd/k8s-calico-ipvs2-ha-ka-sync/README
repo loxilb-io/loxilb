@@ -1,0 +1,22 @@
+## Test Case Description
+
+This scenario will demonstrate LoxiLB in L2 HA mode(clustering). The setup will have 2 LoxiLB nodes, K8s(1 Master Nodes & 2 Worker Nodes) cluster with Calico CNI in ipvs mode. LoxiLB will be running as external Service LB. Workloads will be spawned in all the cluster nodes.
+
+Highlights of this demo:
+1) HA in L2 Mode
+2) Sub-second HA failover detection
+3) Connection sync
+
+Client will be connected to the LoxiLB with L2 network. Master LoxiLB will announce the Service IP to the client and cluster nodes.
+ 
+Service CIDR will also be a Virtual IP, a subnet of the K8s cluster network.
+
+In scenarios where LoxiLB runs outside of the cluster in HA mode, it is advised to create LB services in fullnat mode for ease of connectivity.
+
+If you wish to create this scenario in your lab then install Vagrant and follow the steps below:
+
+1. Run ./config.sh to setup the K8s cluster, client and LoxiLB nodes
+
+2. Run ./validation.sh to run the TCP HA test or ./validation_with_sctp.sh to run TCP & SCTP HA Test. Test Results will be displayed at the end.
+
+3. Run ./rmconfig.sh to cleanup the setup.

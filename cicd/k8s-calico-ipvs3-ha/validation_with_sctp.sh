@@ -1,5 +1,4 @@
 #!/bin/bash
-set -eo pipefail
 source ../common.sh
 echo k8s-calico-ipvs3-ha
 
