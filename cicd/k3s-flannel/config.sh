@@ -7,8 +7,8 @@ echo "#########################################"
 echo "Spawning all hosts"
 echo "#########################################"
 
-spawn_docker_host --dock-type loxilb --dock-name llb1 --with-bgp yes --bgp-config $(pwd)/llb1_gobgp_config --with-ka in
-spawn_docker_host --dock-type loxilb --dock-name llb2 --with-bgp yes --bgp-config $(pwd)/llb2_gobgp_config --with-ka in
+spawn_docker_host --dock-type loxilb --dock-name llb1 --with-bgp yes --with-ka in
+spawn_docker_host --dock-type loxilb --dock-name llb2 --with-bgp yes --with-ka in
 spawn_docker_host --dock-type host --dock-name ep1
 spawn_docker_host --dock-type host --dock-name ep2
 spawn_docker_host --dock-type host --dock-name ep3
@@ -37,16 +37,22 @@ sleep 3
 sudo ip -n llb1 link set ellb1sys up
 sudo ip -n llb1 addr add 12.12.12.1/24 dev ellb1sys
 sudo ip link set esysllb1 up
-sudo ip addr add 12.12.12.254/24 dev esysllb1
+#sudo ip addr add 12.12.12.254/24 dev esysllb1
 
 sudo ip link add ellb2sys type veth peer name esysllb2
 sleep 3
 sudo ip link set ellb2sys netns llb2
 sleep 3
 sudo ip -n llb2 link set ellb2sys up
-sudo ip -n llb2 addr add 14.14.14.1/24 dev ellb2sys
+sudo ip -n llb2 addr add 12.12.12.2/24 dev ellb2sys
 sudo ip link set esysllb2 up
-sudo ip addr add 14.14.14.254/24 dev esysllb2
+#sudo ip addr add 14.14.14.254/24 dev esysllb2
+
+sudo brctl addbr k3sbr
+sudo brctl addif k3sbr esysllb2
+sudo brctl addif k3sbr esysllb1
+sudo ip link set k3sbr up
+sudo ip addr add 12.12.12.254/24 dev k3sbr
 
 #node1 config
 config_docker_host --host1 user --host2 r1 --ptype phy --addr 1.1.1.1/24 --gw 1.1.1.254
@@ -99,8 +105,8 @@ $hexec r1 ip route add 20.20.20.1/32 via 11.11.11.11
 #add_route llb2 1.1.1.0/24 11.11.11.254
 
 ## host network
-sudo ip route add 11.11.11.11/32 via 14.14.14.1
-sudo ip route add 123.123.123.1/32 via 14.14.14.1
+#sudo ip route add 11.11.11.11/32 via 14.14.14.1
+#sudo ip route add 123.123.123.1/32 via 14.14.14.1
 
 sleep 1
 ##Create LB rule
