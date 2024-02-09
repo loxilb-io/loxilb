@@ -20,10 +20,11 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	tk "github.com/loxilb-io/loxilib"
 	"net"
 	"sync"
 	"time"
+
+	tk "github.com/loxilb-io/loxilib"
 )
 
 type SessionState uint8
@@ -36,7 +37,8 @@ const (
 )
 
 const (
-	BFDMinSysTXIntervalUs = 200000
+	BFDMinSysTXIntervalUs = 100000
+	BFDDflSysTXIntervalUs = 200000
 	BFDMinSysRXIntervalUs = 200000
 )
 

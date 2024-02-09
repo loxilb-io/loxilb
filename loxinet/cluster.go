@@ -19,12 +19,14 @@ package loxinet
 import (
 	"errors"
 	"fmt"
+	"net"
+	"os"
+	"time"
+
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
 	bfd "github.com/loxilb-io/loxilb/proto"
 	tk "github.com/loxilb-io/loxilib"
-	"net"
-	"time"
 )
 
 // error codes for cluster module
@@ -58,6 +60,7 @@ type ClusterNode struct {
 type CIStateH struct {
 	SpawnKa    bool
 	RemoteIP   net.IP
+	KaArgsVal  int64
 	ClusterMap map[string]*ClusterInstance
 	StateMap   map[string]int
 	NodeMap    map[string]*ClusterNode
@@ -89,11 +92,18 @@ func (ci *CIStateH) startBFDProto() {
 	// We need some cool-off period for loxilb to self sync-up in the cluster
 	time.Sleep(KAInitTiVal * time.Second)
 
+	txInterval := uint32(bfd.BFDDflSysTXIntervalUs)
+	if ci.KaArgsVal != 0 && ci.KaArgsVal >= bfd.BFDMinSysTXIntervalUs {
+		txInterval = uint32(ci.KaArgsVal)
+	}
+
 	bs := bfd.StructNew(3784)
-	err := bs.BFDAddRemote(ci.RemoteIP.String(), 3784, bfd.BFDMinSysTXIntervalUs, 3, cmn.CIDefault, ci)
+	err := bs.BFDAddRemote(ci.RemoteIP.String(), 3784, txInterval, 3, cmn.CIDefault, ci)
 	if err != nil {
 		tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote\n")
+		os.Exit(1)
 	}
+	tk.LogIt(tk.LogInfo, "KA - Added BFD remote %s:%vus\n", ci.RemoteIP.String(), txInterval)
 }
 
 // CITicker - Periodic ticker for Cluster module
@@ -109,7 +119,7 @@ func (ci *CIStateH) CISpawn() {
 }
 
 // CIInit - routine to initialize Cluster context
-func CIInit(spawnKa bool, remoteIP net.IP) *CIStateH {
+func CIInit(spawnKa bool, remoteIP net.IP, extArgs int64) *CIStateH {
 	var nCIh = new(CIStateH)
 	nCIh.StateMap = make(map[string]int)
 	nCIh.StateMap["MASTER"] = cmn.CIStateMaster
@@ -119,6 +129,7 @@ func CIInit(spawnKa bool, remoteIP net.IP) *CIStateH {
 	nCIh.StateMap["NOT_DEFINED"] = cmn.CIStateNotDefined
 	nCIh.SpawnKa = spawnKa
 	nCIh.RemoteIP = remoteIP
+	nCIh.KaArgsVal = extArgs
 	nCIh.ClusterMap = make(map[string]*ClusterInstance)
 
 	if _, ok := nCIh.ClusterMap[cmn.CIDefault]; !ok {
