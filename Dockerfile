@@ -23,7 +23,7 @@ RUN mkdir -p /opt/loxilb && \
     # Dev and util packages
     apt-get install -y clang llvm libelf-dev libpcap-dev vim net-tools \
     elfutils dwarves git libbsd-dev bridge-utils wget unzip build-essential \
-    bison flex sudo iproute2 pkg-config tcpdump iputils-ping keepalived curl bash-completion && \
+    bison flex sudo iproute2 pkg-config tcpdump iputils-ping curl bash-completion && \
     # Install loxilb's custom ntc tool
     wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
     unzip main.zip && cd iproute2-main/libbpf/src/ && mkdir build && \
