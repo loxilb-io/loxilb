@@ -182,7 +182,7 @@ var mh loxiNetH
 func loxiNetInit() {
 	var rpcMode int
 
-	spawnKa, kaMode := KAString2Mode(opts.Opts.Ka)
+	spawnKa, kaMode, kaExtArgs := KAString2Mode(opts.Opts.Ka)
 	clusterMode := false
 	if opts.Opts.ClusterNodes != "none" {
 		clusterMode = true
@@ -249,7 +249,7 @@ func loxiNetInit() {
 		}
 
 		// Initialize the clustering subsystem
-		mh.has = CIInit(spawnKa, kaMode)
+		mh.has = CIInit(spawnKa, kaMode, kaExtArgs)
 		if clusterMode {
 			if opts.Opts.Bgp {
 				tk.LogIt(tk.LogInfo, "init-wait cluster mode\n")

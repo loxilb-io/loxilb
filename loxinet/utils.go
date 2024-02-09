@@ -31,6 +31,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -138,19 +139,26 @@ func LogString2Level(logStr string) tk.LogLevelT {
 }
 
 // KAString2Mode - Convert ka mode in string opts to spawn/KAMode
-func KAString2Mode(kaStr string) (bool, net.IP) {
+func KAString2Mode(kaStr string) (bool, net.IP, int64) {
 	spawnKa := false
+	kaExtraArgs := int64(0)
 
 	if kaStr == "none" {
-		return spawnKa, nil
+		return spawnKa, nil, kaExtraArgs
 	}
 
-	remote := net.ParseIP(kaStr)
+	kaArgs := strings.Split(kaStr, ":")
+
+	remote := net.ParseIP(kaArgs[0])
 	if remote == nil {
-		return spawnKa, remote
+		return spawnKa, remote, kaExtraArgs
+	}
+
+	if len(kaArgs) > 1 {
+		kaExtraArgs, _ = strconv.ParseInt(kaArgs[1], 10, 32)
 	}
 	spawnKa = true
-	return spawnKa, remote
+	return spawnKa, remote, kaExtraArgs
 }
 
 // HTTPSProber - Do a https probe for given url
