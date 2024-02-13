@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo k3s-flannel-cluster
+echo k3s-multus
 
 if [ "$1" ]; then
   KUBECONFIG="$1"
