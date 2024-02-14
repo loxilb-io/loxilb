@@ -162,14 +162,14 @@ func decodeCtrlPacket(buf []byte, size int) *WireRaw {
 func (bs *Struct) processBFD(conn *net.UDPConn) {
 	var buf [1024]byte
 
-	n, _, err := conn.ReadFromUDP(buf[:])
+	n, addr, err := conn.ReadFromUDP(buf[:])
 	if err != nil {
 		return
 	}
 
 	raw := decodeCtrlPacket(buf[:], n)
 
-	remIP := tk.NltoIP(raw.Disc)
+	remIP := addr.IP
 	if remIP != nil {
 		//fmt.Printf("raw %v:%s:%v\n", raw, remIP.String(), raw.State)
 		bs.BFDMtx.Lock()
@@ -178,6 +178,8 @@ func (bs *Struct) processBFD(conn *net.UDPConn) {
 		sess := bs.BFDSessMap[remIP.String()]
 		if sess != nil {
 			sess.RunSessionSM(raw)
+		} else {
+			tk.LogIt(tk.LogDebug, "bfd session(%s) not found\n", remIP.String())
 		}
 	}
 }
@@ -210,6 +212,7 @@ func (b *bfdSession) RunSessionSM(raw *WireRaw) {
 	b.Mutex.Lock()
 
 	b.RemMulti = raw.Multi
+	b.RemDisc = raw.Disc
 	b.RemDesMinTxInt = raw.DesMinTxInt
 	if b.RemDesMinTxInt > b.ReqMinRxInt {
 		b.TimeOut = uint32(b.RemMulti) * b.RemDesMinTxInt
@@ -254,6 +257,8 @@ func (b *bfdSession) checkSessTimeout() {
 	if b.State == BFDUp {
 		if time.Duration(time.Since(b.LastRxTS).Microseconds()) > time.Duration(b.TimeOut) {
 			b.State = BFDDown
+			disc := tk.Ntohl(b.RemDisc) + 100
+			b.MyDisc = tk.Htonl(disc)
 			tk.LogIt(tk.LogInfo, "%s: BFD State -> Down\n", b.RemoteName)
 		}
 	}
@@ -264,7 +269,7 @@ func (b *bfdSession) checkSessTimeout() {
 }
 
 func (b *bfdSession) sendStateNotification(newState, oldState SessionState, inst string, remote string) {
-	if newState == oldState {
+	if newState == oldState || b.RemDisc == 0 {
 		return
 	}
 
@@ -277,7 +282,7 @@ func (b *bfdSession) sendStateNotification(newState, oldState SessionState, inst
 	} else if newState == BFDDown && oldState == BFDUp {
 		ciState := "MASTER"
 		b.Notify.BFDSessionNotify(inst, remote, ciState)
-	} else {
+	} else if b.RemDisc == b.MyDisc {
 		b.Notify.BFDSessionNotify(inst, remote, "NOT_DEFINED")
 	}
 }
@@ -339,7 +344,7 @@ func (b *bfdSession) initialize(remoteIP string, port uint16, interval uint32, m
 		return errors.New("my discriminator not found")
 	}
 	b.MyDisc = tk.IPtonl(myIP)
-	b.RemDisc = tk.IPtonl(ip)
+	b.RemDisc = 0 //tk.IPtonl(ip)
 	b.MyMulti = multi
 	b.DesMinTxInt = interval
 	b.ReqMinRxInt = interval
