@@ -139,26 +139,32 @@ func LogString2Level(logStr string) tk.LogLevelT {
 }
 
 // KAString2Mode - Convert ka mode in string opts to spawn/KAMode
-func KAString2Mode(kaStr string) (bool, net.IP, int64) {
+func KAString2Mode(kaStr string) CIKAArgs {
 	spawnKa := false
-	kaExtraArgs := int64(0)
+	interval := int64(0)
+	sourceIP := net.ParseIP("0.0.0.0")
 
 	if kaStr == "none" {
-		return spawnKa, nil, kaExtraArgs
+		return CIKAArgs{SpawnKa: spawnKa, RemoteIP: nil, Interval: interval}
 	}
 
 	kaArgs := strings.Split(kaStr, ":")
 
 	remote := net.ParseIP(kaArgs[0])
 	if remote == nil {
-		return spawnKa, remote, kaExtraArgs
+		return CIKAArgs{SpawnKa: spawnKa, RemoteIP: nil, SourceIP: nil, Interval: interval}
 	}
 
 	if len(kaArgs) > 1 {
-		kaExtraArgs, _ = strconv.ParseInt(kaArgs[1], 10, 32)
+		sourceIP = net.ParseIP(kaArgs[1])
+	}
+
+	if len(kaArgs) > 2 {
+		interval, _ = strconv.ParseInt(kaArgs[2], 10, 32)
 	}
 	spawnKa = true
-	return spawnKa, remote, kaExtraArgs
+	return CIKAArgs{SpawnKa: spawnKa, RemoteIP: remote, SourceIP: sourceIP, Interval: interval}
+
 }
 
 // HTTPSProber - Do a https probe for given url

@@ -42,6 +42,15 @@ const (
 	BFDMinSysRXIntervalUs = 200000
 )
 
+type ConfigArgs struct {
+	RemoteIP string
+	SourceIP string
+	Port     uint16
+	Interval uint32
+	Multi    uint8
+	Instance string
+}
+
 type WireRaw struct {
 	Version       uint8
 	Length        uint8
@@ -94,45 +103,43 @@ func StructNew(port uint16) *Struct {
 	return bfdStruct
 }
 
-func (bs *Struct) BFDAddRemote(remoteIP string, port uint16, interval uint32, multi uint8, instance string, cbs Notifer) error {
+func (bs *Struct) BFDAddRemote(args ConfigArgs, cbs Notifer) error {
 	bs.BFDMtx.Lock()
 	defer bs.BFDMtx.Unlock()
 
-	sess := bs.BFDSessMap[remoteIP]
+	sess := bs.BFDSessMap[args.RemoteIP]
 	if sess != nil {
 		return errors.New("bfd existing session")
 	}
 
-	if interval < BFDMinSysTXIntervalUs || multi == 0 {
+	if args.Interval < BFDMinSysTXIntervalUs || args.Multi == 0 {
 		return errors.New("bfd malformed args")
 	}
 
 	sess = new(bfdSession)
-	sess.Instance = instance
+	sess.Instance = args.Instance
 	sess.Notify = cbs
-	err := sess.initialize(remoteIP, port, interval, multi)
+	err := sess.initialize(args.RemoteIP, args.SourceIP, args.Port, args.Interval, args.Multi)
 	if err != nil {
 		return errors.New("bfd failed to init session")
 	}
 
-	bs.BFDSessMap[remoteIP] = sess
+	bs.BFDSessMap[args.RemoteIP] = sess
 
 	return nil
 }
 
-func (bs *Struct) BFDDeleteRemote(remoteIP string, port uint16) error {
+func (bs *Struct) BFDDeleteRemote(args ConfigArgs) error {
 	bs.BFDMtx.Lock()
 	defer bs.BFDMtx.Unlock()
 
-	sess := bs.BFDSessMap[remoteIP]
+	sess := bs.BFDSessMap[args.RemoteIP]
 	if sess == nil {
 		return errors.New("no bfd session")
 	}
 
 	sess.destruct()
 	delete(bs.BFDSessMap, sess.RemoteName)
-
-	bs.BFDSessMap[remoteIP] = sess
 
 	return nil
 }
@@ -318,6 +325,7 @@ func getMyDisc(ip net.IP) net.IP {
 			// check if IPv4 or IPv6 is not nil
 			if ipnet.IP.To4() != nil || ipnet.IP.To16() != nil {
 				if ipnet.Contains(ip) {
+					tk.LogIt(tk.LogDebug, "bfd mydisc : %s\n", ipnet.IP.String())
 					return ipnet.IP
 				}
 				if first == nil {
@@ -327,10 +335,12 @@ func getMyDisc(ip net.IP) net.IP {
 		}
 	}
 
+	tk.LogIt(tk.LogDebug, "bfd mydisc : %s\n", first.String())
+
 	return first
 }
 
-func (b *bfdSession) initialize(remoteIP string, port uint16, interval uint32, multi uint8) error {
+func (b *bfdSession) initialize(remoteIP string, sourceIP string, port uint16, interval uint32, multi uint8) error {
 	var err error
 	b.RemoteName = fmt.Sprintf("%s:%d", remoteIP, port)
 
@@ -339,9 +349,18 @@ func (b *bfdSession) initialize(remoteIP string, port uint16, interval uint32, m
 		return errors.New("address malformed")
 	}
 
-	myIP := getMyDisc(ip)
+	myIP := net.ParseIP(sourceIP)
 	if myIP == nil {
-		return errors.New("my discriminator not found")
+		return errors.New("source address malformed")
+	}
+
+	if myIP.IsUnspecified() {
+		myIP = getMyDisc(ip)
+		if myIP == nil {
+			return errors.New("my discriminator not found")
+		}
+	} else {
+		tk.LogIt(tk.LogDebug, "using bfd bind mydisc  : %s\n", myIP.String())
 	}
 	b.MyDisc = tk.IPtonl(myIP)
 	b.RemDisc = 0 //tk.IPtonl(ip)
