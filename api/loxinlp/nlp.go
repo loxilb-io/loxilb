@@ -1321,6 +1321,10 @@ func RUWorkSingle(m nlp.RouteUpdate) int {
 		return -1
 	}
 
+	if m.Route.Scope.String() == "link" && tk.IsNetIPv4(m.Dst.IP.String()) {
+		return -1
+	}
+
 	if m.Type == syscall.RTM_NEWROUTE {
 		ret = AddRoute(m.Route)
 	} else {
@@ -1525,6 +1529,10 @@ func NlpGet(ch chan bool) int {
 			tk.LogIt(tk.LogDebug, "[NLP] No STATIC routes found for intf %s\n", link.Attrs().Name)
 		} else {
 			for _, route := range routes {
+				if route.Scope.String() == "link" && tk.IsNetIPv4(route.Dst.IP.String()) {
+					continue
+				}
+
 				AddRoute(route)
 			}
 		}
