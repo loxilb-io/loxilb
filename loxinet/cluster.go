@@ -36,13 +36,6 @@ const (
 	CIStateErr
 )
 
-// Config related constants
-const (
-	KAConfigFile = "/etc/keepalived/keepalived.conf"
-	KAPidFile1   = "/var/run/keepalived.pid"
-	KAPidFile2   = "/var/run/vrrp.pid"
-)
-
 // ClusterInstance - Struct for Cluster Instance information
 type ClusterInstance struct {
 	State    int
@@ -56,11 +49,20 @@ type ClusterNode struct {
 	Status DpStatusT
 }
 
+// CIKAArgs - Struct for cluster BFD args
+type CIKAArgs struct {
+	SpawnKa  bool
+	RemoteIP net.IP
+	SourceIP net.IP
+	Interval int64
+}
+
 // CIStateH - Cluster context handler
 type CIStateH struct {
 	SpawnKa    bool
 	RemoteIP   net.IP
-	KaArgsVal  int64
+	SourceIP   net.IP
+	Interval   int64
 	ClusterMap map[string]*ClusterInstance
 	StateMap   map[string]int
 	NodeMap    map[string]*ClusterNode
@@ -93,17 +95,18 @@ func (ci *CIStateH) startBFDProto() {
 	time.Sleep(KAInitTiVal * time.Second)
 
 	txInterval := uint32(bfd.BFDDflSysTXIntervalUs)
-	if ci.KaArgsVal != 0 && ci.KaArgsVal >= bfd.BFDMinSysTXIntervalUs {
-		txInterval = uint32(ci.KaArgsVal)
+	if ci.Interval != 0 && ci.Interval >= bfd.BFDMinSysTXIntervalUs {
+		txInterval = uint32(ci.Interval)
 	}
 
 	bs := bfd.StructNew(3784)
-	err := bs.BFDAddRemote(ci.RemoteIP.String(), 3784, txInterval, 3, cmn.CIDefault, ci)
+	bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: ci.RemoteIP.String(), SourceIP: ci.SourceIP.String(), Port: 3784, Interval: txInterval, Multi: 3, Instance: cmn.CIDefault}
+	err := bs.BFDAddRemote(bfdSessConfigArgs, ci)
 	if err != nil {
 		tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote\n")
 		os.Exit(1)
 	}
-	tk.LogIt(tk.LogInfo, "KA - Added BFD remote %s:%vus\n", ci.RemoteIP.String(), txInterval)
+	tk.LogIt(tk.LogInfo, "KA - Added BFD remote %s:%s:%vus\n", ci.RemoteIP.String(), ci.SourceIP.String(), txInterval)
 }
 
 // CITicker - Periodic ticker for Cluster module
@@ -119,7 +122,7 @@ func (ci *CIStateH) CISpawn() {
 }
 
 // CIInit - routine to initialize Cluster context
-func CIInit(spawnKa bool, remoteIP net.IP, extArgs int64) *CIStateH {
+func CIInit(args CIKAArgs) *CIStateH {
 	var nCIh = new(CIStateH)
 	nCIh.StateMap = make(map[string]int)
 	nCIh.StateMap["MASTER"] = cmn.CIStateMaster
@@ -127,9 +130,10 @@ func CIInit(spawnKa bool, remoteIP net.IP, extArgs int64) *CIStateH {
 	nCIh.StateMap["FAULT"] = cmn.CIStateConflict
 	nCIh.StateMap["STOP"] = cmn.CIStateNotDefined
 	nCIh.StateMap["NOT_DEFINED"] = cmn.CIStateNotDefined
-	nCIh.SpawnKa = spawnKa
-	nCIh.RemoteIP = remoteIP
-	nCIh.KaArgsVal = extArgs
+	nCIh.SpawnKa = args.SpawnKa
+	nCIh.RemoteIP = args.RemoteIP
+	nCIh.SourceIP = args.SourceIP
+	nCIh.Interval = args.Interval
 	nCIh.ClusterMap = make(map[string]*ClusterInstance)
 
 	if _, ok := nCIh.ClusterMap[cmn.CIDefault]; !ok {
