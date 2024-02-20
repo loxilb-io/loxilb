@@ -264,8 +264,7 @@ func (b *bfdSession) checkSessTimeout() {
 	if b.State == BFDUp {
 		if time.Duration(time.Since(b.LastRxTS).Microseconds()) > time.Duration(b.TimeOut) {
 			b.State = BFDDown
-			disc := tk.Ntohl(b.RemDisc) + 100
-			b.MyDisc = tk.Htonl(disc)
+			b.MyDisc = b.RemDisc + 100
 			tk.LogIt(tk.LogInfo, "%s: BFD State -> Down\n", b.RemoteName)
 		}
 	}
