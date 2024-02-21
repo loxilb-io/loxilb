@@ -24,6 +24,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 	"time"
 
@@ -1158,7 +1159,8 @@ func (gbh *GoBgpH) BGPGlobalConfigAdd(config cmn.GoBGPGlobalConfig) (int, error)
 		},
 	})
 
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "address already in use") {
+		tk.LogIt(tk.LogError, "[GoBGP] Error to start BGP %s \n", err.Error())
 		return -1, err
 	}
 
