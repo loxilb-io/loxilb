@@ -109,6 +109,24 @@ func (bs *Struct) BFDAddRemote(args ConfigArgs, cbs Notifer) error {
 
 	sess := bs.BFDSessMap[args.RemoteIP]
 	if sess != nil {
+		if sess.Instance == args.Instance {
+			if sess.DesMinTxInt != args.Interval {
+				sess.Fin <- true
+				sess.TxTicker.Stop()
+				sess.RxTicker.Stop()
+				sess.State = BFDDown
+
+				sess.DesMinTxInt = args.Interval
+				sess.ReqMinRxInt = args.Interval
+				sess.ReqMinEchoInt = args.Interval
+
+				sess.TxTicker = time.NewTicker(time.Duration(sess.DesMinTxInt) * time.Microsecond)
+				sess.RxTicker = time.NewTicker(time.Duration(BFDMinSysRXIntervalUs) * time.Microsecond)
+				go sess.bfdSessionTicker()
+
+				return nil
+			}
+		}
 		return errors.New("bfd existing session")
 	}
 
@@ -385,6 +403,8 @@ func (b *bfdSession) initialize(remoteIP string, sourceIP string, port uint16, i
 func (b *bfdSession) destruct() {
 	b.State = BFDAdminDown
 	b.Fin <- true
+	b.TxTicker.Stop()
+	b.RxTicker.Stop()
 	// Signal ADMIN Down to peer
 	b.encodeCtrlPacket()
 	b.sendBFDPacket()
