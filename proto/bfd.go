@@ -21,13 +21,13 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
-	"strings"
-	"strconv"
 
-	tk "github.com/loxilb-io/loxilib"
 	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 type SessionState uint8
@@ -39,11 +39,11 @@ const (
 	BFDUp
 )
 
-var BFDStateMap = map[uint8]string {
-	uint8(BFDAdminDown):"BFDAdminDown",
-	uint8(BFDDown): "BFDDown",
-	uint8(BFDInit): "BFDInit",
-	uint8(BFDUp): "BFDUp",
+var BFDStateMap = map[uint8]string{
+	uint8(BFDAdminDown): "BFDAdminDown",
+	uint8(BFDDown):      "BFDDown",
+	uint8(BFDInit):      "BFDInit",
+	uint8(BFDUp):        "BFDUp",
 }
 
 const (
@@ -154,7 +154,7 @@ func (bs *Struct) BFDAddRemote(args ConfigArgs, cbs Notifer) error {
 	sess = new(bfdSession)
 	sess.Instance = args.Instance
 	sess.Notify = cbs
-	
+
 	err := sess.initialize(args.RemoteIP, args.SourceIP, args.Port, args.Interval, args.Multi)
 	if err != nil {
 		return errors.New("bfd failed to init session")
