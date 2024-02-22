@@ -28,7 +28,7 @@ do
 done
 
 ## Any routing updates  ??
-sleep 30
+sleep 60
 
 echo "ExternalIP $extIP"
 
@@ -45,6 +45,8 @@ print_debug_info() {
   $dexec llb1 loxicmd get ep -o wide
   echo "**** llb1 route-info ****"
   $dexec llb1 ip route
+  echo "**** llb1 bfd-info ****"
+  $dexec llb1 loxicmd get ha
 
   echo "**** llb2 lb-info ****"
   $dexec llb2 loxicmd get lb -o wide
@@ -52,6 +54,8 @@ print_debug_info() {
   $dexec llb1 loxicmd get ep -o wide
   echo "**** llb2 route-info ****"
   $dexec llb2 ip route
+  echo "**** llb2 bfd-info ****"
+  $dexec llb2 loxicmd get ha
 
   echo "**** r1 route-info ****"
   $dexec r1 ip route
@@ -61,7 +65,9 @@ print_debug_info() {
 }
 
 code=0
-#print_debug_info
+echo "********************"
+print_debug_info
+echo "********************"
 
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:55002) 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
