@@ -100,10 +100,9 @@ func (ci *CIStateH) startBFDProto() {
 		txInterval = uint32(ci.Interval)
 	}
 
-	bs := bfd.StructNew(cmn.BFDPort)
-	bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: ci.RemoteIP.String(), SourceIP: ci.SourceIP.String(), 
+	bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: ci.RemoteIP.String(), SourceIP: ci.SourceIP.String(),
 		Port: cmn.BFDPort, Interval: txInterval, Multi: cmn.BFDDefRetryCount, Instance: cmn.CIDefault}
-	err := bs.BFDAddRemote(bfdSessConfigArgs, ci)
+	err := ci.Bs.BFDAddRemote(bfdSessConfigArgs, ci)
 	if err != nil {
 		tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote\n")
 		os.Exit(1)
@@ -281,7 +280,7 @@ func (h *CIStateH) CIBFDSessionAdd(bm cmn.BFDMod) (int, error) {
 		tk.LogIt(tk.LogError, "[CLUSTER] BFD SU - Cluster Instance %s not found\n", bm.Instance)
 		return -1, errors.New("cluster instance not found")
 	}
-	
+
 	bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: h.RemoteIP.String(), SourceIP: h.SourceIP.String(), Port: 3784, Interval: uint32(bm.Interval), Multi: bm.RetryCount, Instance: bm.Instance}
 	err := h.Bs.BFDAddRemote(bfdSessConfigArgs, h)
 	if err != nil {
@@ -298,7 +297,7 @@ func (h *CIStateH) CIBFDSessionGet() ([]cmn.BFDMod, error) {
 		tk.LogIt(tk.LogError, "[CLUSTER] BFD sessions not running\n")
 		return nil, errors.New("bfd session not running")
 	}
-	
+
 	return h.Bs.BFDGet()
 }
 
