@@ -33,6 +33,8 @@ const (
 	CIStateNotDefined
 )
 
+const BFDPort = 3784
+const BFDDefRetryCount = 3
 const (
 	// CIDefault - Default CI Instance name
 	CIDefault = "default"
@@ -660,6 +662,24 @@ type HASMod struct {
 	Vip net.IP `json:"Addr"`
 }
 
+// BFDMod - information related to a BFD session
+type BFDMod struct {
+	// Instance - Cluster Instance
+	Instance string `json:"instance"`
+	// RemoteIP - Remote IP for BFD session
+	RemoteIP net.IP `json:"remoteIp"`
+	// Interval - Tx Interval between BFD packets
+	SourceIP net.IP `json:"sourceIp"`
+	// Port - BFD session port
+	Port uint16 `json:"port"`
+	// Interval - Tx Interval between BFD packets
+	Interval uint64 `json:"interval"`
+	// RetryCount - Retry Count for detecting failure
+	RetryCount uint8 `json:"retryCount"`
+	// State - BFD session state
+	State string `json:"state"`
+}
+
 // ClusterNodeMod - information related to a cluster node instance
 type ClusterNodeMod struct {
 	// Instance - Cluster Instance
@@ -835,5 +855,7 @@ type NetHookInterface interface {
 	NetGoBGPNeighAdd(nm *GoBGPNeighMod) (int, error)
 	NetGoBGPNeighDel(nm *GoBGPNeighMod) (int, error)
 	NetGoBGPGCAdd(gc *GoBGPGlobalConfig) (int, error)
+	NetBFDGet() ([]BFDMod, error)
+	NetBFDAdd(bm *BFDMod) (int, error)
 	NetHandlePanic()
 }

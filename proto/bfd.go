@@ -23,8 +23,11 @@ import (
 	"net"
 	"sync"
 	"time"
+	"strings"
+	"strconv"
 
 	tk "github.com/loxilb-io/loxilib"
+	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 type SessionState uint8
@@ -35,6 +38,13 @@ const (
 	BFDInit
 	BFDUp
 )
+
+var BFDStateMap = map[uint8]string {
+	uint8(BFDAdminDown):"BFDAdminDown",
+	uint8(BFDDown): "BFDDown",
+	uint8(BFDInit): "BFDInit",
+	uint8(BFDUp): "BFDUp",
+}
 
 const (
 	BFDMinSysTXIntervalUs = 100000
@@ -109,16 +119,23 @@ func (bs *Struct) BFDAddRemote(args ConfigArgs, cbs Notifer) error {
 
 	sess := bs.BFDSessMap[args.RemoteIP]
 	if sess != nil {
+		var update bool
 		if sess.Instance == args.Instance {
-			if sess.DesMinTxInt != args.Interval {
+			if args.Interval != 0 && sess.DesMinTxInt != args.Interval {
+				sess.DesMinTxInt = args.Interval
+				sess.ReqMinRxInt = args.Interval
+				sess.ReqMinEchoInt = args.Interval
+				update = true
+			}
+			if args.Multi != 0 && sess.MyMulti != args.Multi {
+				sess.MyMulti = args.Multi
+				update = true
+			}
+			if update {
 				sess.Fin <- true
 				sess.TxTicker.Stop()
 				sess.RxTicker.Stop()
 				sess.State = BFDDown
-
-				sess.DesMinTxInt = args.Interval
-				sess.ReqMinRxInt = args.Interval
-				sess.ReqMinEchoInt = args.Interval
 
 				sess.TxTicker = time.NewTicker(time.Duration(sess.DesMinTxInt) * time.Microsecond)
 				sess.RxTicker = time.NewTicker(time.Duration(BFDMinSysRXIntervalUs) * time.Microsecond)
@@ -137,6 +154,7 @@ func (bs *Struct) BFDAddRemote(args ConfigArgs, cbs Notifer) error {
 	sess = new(bfdSession)
 	sess.Instance = args.Instance
 	sess.Notify = cbs
+	
 	err := sess.initialize(args.RemoteIP, args.SourceIP, args.Port, args.Interval, args.Multi)
 	if err != nil {
 		return errors.New("bfd failed to init session")
@@ -160,6 +178,29 @@ func (bs *Struct) BFDDeleteRemote(args ConfigArgs) error {
 	delete(bs.BFDSessMap, sess.RemoteName)
 
 	return nil
+}
+
+func (bs *Struct) BFDGet() ([]cmn.BFDMod, error) {
+	var res []cmn.BFDMod
+
+	bs.BFDMtx.Lock()
+	defer bs.BFDMtx.Unlock()
+
+	for _, s := range bs.BFDSessMap {
+		var temp cmn.BFDMod
+		pair := strings.Split(s.RemoteName, ":")
+		temp.Instance = s.Instance
+		temp.RemoteIP = net.ParseIP(pair[0])
+		temp.SourceIP = tk.NltoIP(s.MyDisc)
+		port, _ := strconv.Atoi(pair[1])
+		temp.Port = uint16(port)
+		temp.Interval = uint64(s.DesMinTxInt)
+		temp.RetryCount = s.MyMulti
+		temp.State = BFDStateMap[uint8(s.State)]
+		res = append(res, temp)
+	}
+
+	return res, nil
 }
 
 func decodeCtrlPacket(buf []byte, size int) *WireRaw {

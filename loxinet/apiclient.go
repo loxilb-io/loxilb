@@ -499,6 +499,33 @@ func (na *NetAPIStruct) NetCIStateMod(hm *cmn.HASMod) (int, error) {
 	return 0, nil
 }
 
+// NetCIStateMod - Modify cluster state
+func (na *NetAPIStruct) NetBFDGet() ([]cmn.BFDMod, error) {
+	if na.BgpPeerMode {
+		return nil, errors.New("running in bgp only mode")
+	}
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	return mh.has.CIBFDSessionGet()
+}
+
+// NetCIStateMod - Modify cluster state
+func (na *NetAPIStruct) NetBFDAdd(bm *cmn.BFDMod) (int, error) {
+	if na.BgpPeerMode {
+		return CIErrBase, errors.New("running in bgp only mode")
+	}
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	_, err := mh.has.CIBFDSessionAdd(*bm)
+	if err != nil {
+		return -1, err
+	}
+
+	return 0, nil
+}
+
 // NetFwRuleAdd - Add a firewall rule in loxinet
 func (na *NetAPIStruct) NetFwRuleAdd(fm *cmn.FwRuleMod) (int, error) {
 	if na.BgpPeerMode {

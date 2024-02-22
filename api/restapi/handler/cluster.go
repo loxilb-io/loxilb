@@ -62,3 +62,50 @@ func ConfigPostCIState(params operations.PostConfigCistateParams) middleware.Res
 	}
 	return &ResultResponse{Result: "Success"}
 }
+
+func ConfigGetBFDSession(params operations.GetConfigBfdAllParams) middleware.Responder {
+	var result []*models.BfdGetEntry
+	result = make([]*models.BfdGetEntry, 0)
+	tk.LogIt(tk.LogDebug, "[API] Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	bfdMod, err := ApiHooks.NetBFDGet()
+	if err != nil {
+		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		return &ResultResponse{Result: err.Error()}
+	}
+	for _, h := range bfdMod {
+		var tempResult models.BfdGetEntry
+		tempResult.Instance = h.Instance
+		tempResult.RemoteIP = h.RemoteIP.String()
+		tempResult.SourceIP = h.SourceIP.String()
+		tempResult.Interval = h.Interval
+		tempResult.Port = h.Port
+		tempResult.RetryCount = h.RetryCount
+		tempResult.State = h.State
+
+		result = append(result, &tempResult)
+	}
+
+	return operations.NewGetConfigBfdAllOK().WithPayload(&operations.GetConfigBfdAllOKBody{Attr: result})
+}
+
+func ConfigPostBFDSession(params operations.PostConfigBfdParams) middleware.Responder {
+	tk.LogIt(tk.LogDebug, "[API] HA %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+
+	var bfdMod cmn.BFDMod
+
+	// Update BFD Session
+	bfdMod.Instance = params.Attr.Instance
+	bfdMod.RemoteIP = net.ParseIP(params.Attr.RemoteIP)
+	bfdMod.SourceIP = net.ParseIP(params.Attr.SourceIP)
+	bfdMod.Interval = params.Attr.Interval
+	bfdMod.RetryCount = params.Attr.RetryCount
+
+	tk.LogIt(tk.LogDebug, "[API] Instance %s BFD session update : %s, Interval: %d, RetryCount: %d\n",
+		bfdMod.Instance, bfdMod.RemoteIP, bfdMod.Interval, bfdMod.RetryCount)
+	_, err := ApiHooks.NetBFDAdd(&bfdMod)
+	if err != nil {
+		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		return &ResultResponse{Result: err.Error()}
+	}
+	return &ResultResponse{Result: "Success"}
+}
