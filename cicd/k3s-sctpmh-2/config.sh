@@ -110,11 +110,11 @@ $hexec r1 ip route add 20.20.20.1/32 via 11.11.11.11
 #add_route llb2 1.1.1.0/24 11.11.11.254
 
 # Route back to user
-sudo ip route add 11.11.11.0/24 via 12.12.12.1
-sudo ip route add 1.1.1.1 via 12.12.12.1
-sudo ip route add 123.123.123.1 via 12.12.12.1
-sudo ip route add 133.133.133.1 via 12.12.12.1
-sudo ip route add 133.133.133.2 via 12.12.12.1
+#sudo ip route add 11.11.11.0/24 via 12.12.12.1
+#sudo ip route add 1.1.1.1 via 12.12.12.1
+#sudo ip route add 123.123.123.1 via 12.12.12.1
+#sudo ip route add 133.133.133.1 via 12.12.12.1
+#sudo ip route add 133.133.133.2 via 12.12.12.1
 
 # Change default route in llb1
 $hexec llb1 ip route del default 

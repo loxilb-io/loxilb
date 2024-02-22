@@ -212,6 +212,25 @@ else
 fi
 echo -e "------------------------------------------------------------------------------------\n\n\n"
 
+for((i=0; i<120; i++))
+do
+  extLB=$(sudo kubectl $KUBECONFIG get svc | grep "nginx-lb1")
+  read -a strarr <<< "$extLB"
+  len=${#strarr[*]}
+  if [[ $((len)) -lt 6 ]]; then
+    echo "Can't find nginx-lb service"
+    sleep 1
+    continue
+  fi 
+  if [[ ${strarr[3]} != *"none"* ]]; then
+    extIP="$(cut -d'-' -f2 <<<${strarr[3]})"
+    port=${strarr[4]}
+    break
+  fi
+  echo "No external LB allocated"
+  sleep 1
+done
+
 
 echo "TCP service tcp-lb1 -> $extIP:55002(del+add)"
 echo -e "------------------------------------------------------------------------------------\n"
