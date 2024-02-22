@@ -55,6 +55,9 @@ print_debug_info() {
 
   echo "**** r1 route-info ****"
   $dexec r1 ip route
+
+  echo "**** sys route-info ****"
+  ip route
 }
 
 code=0
