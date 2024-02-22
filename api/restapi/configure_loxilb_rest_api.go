@@ -135,6 +135,10 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.GetConfigCistateAllHandler = operations.GetConfigCistateAllHandlerFunc(handler.ConfigGetCIState)
 	api.PostConfigCistateHandler = operations.PostConfigCistateHandlerFunc(handler.ConfigPostCIState)
 
+	// BFD
+	api.GetConfigBfdAllHandler = operations.GetConfigBfdAllHandlerFunc(handler.ConfigGetBFDSession)
+	api.PostConfigBfdHandler = operations.PostConfigBfdHandlerFunc(handler.ConfigPostBFDSession)
+
 	// Firewall
 	api.GetConfigFirewallAllHandler = operations.GetConfigFirewallAllHandlerFunc(handler.ConfigGetFW)
 	api.PostConfigFirewallHandler = operations.PostConfigFirewallHandlerFunc(handler.ConfigPostFW)

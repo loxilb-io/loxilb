@@ -66,6 +66,7 @@ type CIStateH struct {
 	ClusterMap map[string]*ClusterInstance
 	StateMap   map[string]int
 	NodeMap    map[string]*ClusterNode
+	Bs         *bfd.Struct
 }
 
 func (ci *CIStateH) BFDSessionNotify(instance string, remote string, ciState string) {
@@ -99,8 +100,9 @@ func (ci *CIStateH) startBFDProto() {
 		txInterval = uint32(ci.Interval)
 	}
 
-	bs := bfd.StructNew(3784)
-	bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: ci.RemoteIP.String(), SourceIP: ci.SourceIP.String(), Port: 3784, Interval: txInterval, Multi: 3, Instance: cmn.CIDefault}
+	bs := bfd.StructNew(cmn.BFDPort)
+	bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: ci.RemoteIP.String(), SourceIP: ci.SourceIP.String(), 
+		Port: cmn.BFDPort, Interval: txInterval, Multi: cmn.BFDDefRetryCount, Instance: cmn.CIDefault}
 	err := bs.BFDAddRemote(bfdSessConfigArgs, ci)
 	if err != nil {
 		tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote\n")
@@ -116,6 +118,8 @@ func (h *CIStateH) CITicker() {
 
 // CISpawn - Spawn CI application
 func (ci *CIStateH) CISpawn() {
+	bs := bfd.StructNew(3784)
+	ci.Bs = bs
 	if ci.SpawnKa {
 		go ci.startBFDProto()
 	}
@@ -262,6 +266,40 @@ func (h *CIStateH) ClusterNodeDelete(node cmn.ClusterNodeMod) (int, error) {
 
 	cNode.DP(DpRemove)
 	return 0, nil
+}
+
+// CIStateUpdate - routine to update cluster state
+func (h *CIStateH) CIBFDSessionAdd(bm cmn.BFDMod) (int, error) {
+
+	if !h.SpawnKa {
+		tk.LogIt(tk.LogError, "[CLUSTER] Cluster Instance %s not running BFD\n", bm.Instance)
+		return -1, errors.New("bfd session not running")
+	}
+
+	_, found := h.ClusterMap[bm.Instance]
+	if !found {
+		tk.LogIt(tk.LogError, "[CLUSTER] BFD SU - Cluster Instance %s not found\n", bm.Instance)
+		return -1, errors.New("cluster instance not found")
+	}
+	
+	bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: h.RemoteIP.String(), SourceIP: h.SourceIP.String(), Port: 3784, Interval: uint32(bm.Interval), Multi: bm.RetryCount, Instance: bm.Instance}
+	err := h.Bs.BFDAddRemote(bfdSessConfigArgs, h)
+	if err != nil {
+		tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote\n")
+		os.Exit(1)
+	}
+	tk.LogIt(tk.LogInfo, "KA - Updated BFD remote %s:%s:%vus\n", h.RemoteIP.String(), h.SourceIP.String(), bm.Interval)
+	return 0, nil
+}
+
+// CIStateUpdate - routine to update cluster state
+func (h *CIStateH) CIBFDSessionGet() ([]cmn.BFDMod, error) {
+	if !h.SpawnKa {
+		tk.LogIt(tk.LogError, "[CLUSTER] BFD sessions not running\n")
+		return nil, errors.New("bfd session not running")
+	}
+	
+	return h.Bs.BFDGet()
 }
 
 // DP - sync state of cluster-node entity to data-path

@@ -37,6 +37,110 @@ func init() {
   "host": "0.0.0.0:11111",
   "basePath": "/netlox/v1",
   "paths": {
+    "/config/bfd": {
+      "post": {
+        "description": "Create vlan interface in the device",
+        "summary": "Create vlan interface in the device",
+        "parameters": [
+          {
+            "description": "Attributes for Vlan Interface",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BfdEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. BFD session not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bfd/all": {
+      "get": {
+        "description": "Get BFD session inforrmation",
+        "summary": "Get BFD session inforrmation in the device",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "Attr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/BfdGetEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/bgp/global": {
       "post": {
         "description": "Adds a BGP global config",
@@ -3355,6 +3459,69 @@ func init() {
         },
         "updowntime": {
           "description": "Current uptime",
+          "type": "string"
+        }
+      }
+    },
+    "BfdEntry": {
+      "type": "object",
+      "properties": {
+        "instance": {
+          "description": "Instance name running BFD session",
+          "type": "string"
+        },
+        "interval": {
+          "description": "Tx interval between BFD packets(in microseconds)",
+          "type": "integer",
+          "format": "uint64"
+        },
+        "remoteIp": {
+          "description": "Remote IP",
+          "type": "string"
+        },
+        "retryCount": {
+          "description": "Retry Count to detect failure",
+          "type": "integer",
+          "format": "uint8"
+        },
+        "sourceIp": {
+          "description": "Remote IP",
+          "type": "string"
+        }
+      }
+    },
+    "BfdGetEntry": {
+      "type": "object",
+      "properties": {
+        "instance": {
+          "description": "Instance name",
+          "type": "string"
+        },
+        "interval": {
+          "description": "Tx interval between BFD packets(in microseconds)",
+          "type": "integer",
+          "format": "uint64"
+        },
+        "port": {
+          "description": "port number to be used for BFD session",
+          "type": "integer",
+          "format": "uint16"
+        },
+        "remoteIp": {
+          "description": "Remote IP",
+          "type": "string"
+        },
+        "retryCount": {
+          "description": "Retry Count to detect failure",
+          "type": "integer",
+          "format": "uint8"
+        },
+        "sourceIP": {
+          "description": "Source IP to be used for BFD session",
+          "type": "string"
+        },
+        "state": {
+          "description": "Current state for BFD session",
           "type": "string"
         }
       }
@@ -4512,6 +4679,110 @@ func init() {
   "host": "0.0.0.0:11111",
   "basePath": "/netlox/v1",
   "paths": {
+    "/config/bfd": {
+      "post": {
+        "description": "Create vlan interface in the device",
+        "summary": "Create vlan interface in the device",
+        "parameters": [
+          {
+            "description": "Attributes for Vlan Interface",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BfdEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. BFD session not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bfd/all": {
+      "get": {
+        "description": "Get BFD session inforrmation",
+        "summary": "Get BFD session inforrmation in the device",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "Attr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/BfdGetEntry"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/bgp/global": {
       "post": {
         "description": "Adds a BGP global config",
@@ -7830,6 +8101,69 @@ func init() {
         },
         "updowntime": {
           "description": "Current uptime",
+          "type": "string"
+        }
+      }
+    },
+    "BfdEntry": {
+      "type": "object",
+      "properties": {
+        "instance": {
+          "description": "Instance name running BFD session",
+          "type": "string"
+        },
+        "interval": {
+          "description": "Tx interval between BFD packets(in microseconds)",
+          "type": "integer",
+          "format": "uint64"
+        },
+        "remoteIp": {
+          "description": "Remote IP",
+          "type": "string"
+        },
+        "retryCount": {
+          "description": "Retry Count to detect failure",
+          "type": "integer",
+          "format": "uint8"
+        },
+        "sourceIp": {
+          "description": "Remote IP",
+          "type": "string"
+        }
+      }
+    },
+    "BfdGetEntry": {
+      "type": "object",
+      "properties": {
+        "instance": {
+          "description": "Instance name",
+          "type": "string"
+        },
+        "interval": {
+          "description": "Tx interval between BFD packets(in microseconds)",
+          "type": "integer",
+          "format": "uint64"
+        },
+        "port": {
+          "description": "port number to be used for BFD session",
+          "type": "integer",
+          "format": "uint16"
+        },
+        "remoteIp": {
+          "description": "Remote IP",
+          "type": "string"
+        },
+        "retryCount": {
+          "description": "Retry Count to detect failure",
+          "type": "integer",
+          "format": "uint8"
+        },
+        "sourceIP": {
+          "description": "Source IP to be used for BFD session",
+          "type": "string"
+        },
+        "state": {
+          "description": "Current state for BFD session",
           "type": "string"
         }
       }

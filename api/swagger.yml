@@ -2290,6 +2290,78 @@ paths:
           schema:
             type: string
 
+#----------------------------------------------
+# BFD
+#----------------------------------------------
+  '/config/bfd/all':
+    get:
+      summary: Get BFD session inforrmation in the device
+      description: Get BFD session inforrmation
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              Attr:
+                type: array
+                items:
+                  $ref: '#/definitions/BfdGetEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+            
+  '/config/bfd':
+    post:
+      summary: Create vlan interface in the device
+      description: Create vlan interface in the device
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes for Vlan Interface
+          schema:
+            $ref: '#/definitions/BfdEntry'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. BFD session not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
 
 #----------------------------------------------
 # Schema definitions
@@ -3185,3 +3257,53 @@ definitions:
       listenPort:
         type: integer
         description: Listen port (default 179)
+
+  BfdGetEntry:
+    type: object
+    properties:
+      instance:
+        type: string
+        description: Instance name
+      remoteIp:
+        type: string
+        description: Remote IP
+      sourceIP:
+        type: string
+        description: Source IP to be used for BFD session
+      port:
+        type: integer
+        format: uint16
+        description: port number to be used for BFD session
+      interval:
+        type: integer
+        format: uint64
+        description: Tx interval between BFD packets(in microseconds)
+      retryCount:
+        type: integer
+        format: uint8
+        description: Retry Count to detect failure
+      state:
+        type: string
+        description: Current state for BFD session
+    
+
+  BfdEntry:
+    type: object
+    properties:
+      instance:
+        type: string
+        description: Instance name running BFD session
+      remoteIp:
+        type: string
+        description: Remote IP
+      sourceIp:
+        type: string
+        description: Remote IP
+      interval:
+        type: integer
+        format: uint64
+        description: Tx interval between BFD packets(in microseconds)
+      retryCount:
+        type: integer
+        format: uint8
+        description: Retry Count to detect failure      

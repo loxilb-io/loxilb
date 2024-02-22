@@ -93,6 +93,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler: DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandlerFunc(func(params DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigVlanVlanIDMemberIfNameTaggedTagged has not yet been implemented")
 		}),
+		GetConfigBfdAllHandler: GetConfigBfdAllHandlerFunc(func(params GetConfigBfdAllParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigBfdAll has not yet been implemented")
+		}),
 		GetConfigBgpNeighAllHandler: GetConfigBgpNeighAllHandlerFunc(func(params GetConfigBgpNeighAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigBgpNeighAll has not yet been implemented")
 		}),
@@ -158,6 +161,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		}),
 		GetStatusProcessHandler: GetStatusProcessHandlerFunc(func(params GetStatusProcessParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetStatusProcess has not yet been implemented")
+		}),
+		PostConfigBfdHandler: PostConfigBfdHandlerFunc(func(params PostConfigBfdParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigBfd has not yet been implemented")
 		}),
 		PostConfigBgpGlobalHandler: PostConfigBgpGlobalHandlerFunc(func(params PostConfigBgpGlobalParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigBgpGlobal has not yet been implemented")
@@ -286,6 +292,8 @@ type LoxilbRestAPIAPI struct {
 	DeleteConfigVlanVlanIDHandler DeleteConfigVlanVlanIDHandler
 	// DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler sets the operation handler for the delete config vlan vlan ID member if name tagged tagged operation
 	DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler
+	// GetConfigBfdAllHandler sets the operation handler for the get config bfd all operation
+	GetConfigBfdAllHandler GetConfigBfdAllHandler
 	// GetConfigBgpNeighAllHandler sets the operation handler for the get config bgp neigh all operation
 	GetConfigBgpNeighAllHandler GetConfigBgpNeighAllHandler
 	// GetConfigCistateAllHandler sets the operation handler for the get config cistate all operation
@@ -330,6 +338,8 @@ type LoxilbRestAPIAPI struct {
 	GetStatusFilesystemHandler GetStatusFilesystemHandler
 	// GetStatusProcessHandler sets the operation handler for the get status process operation
 	GetStatusProcessHandler GetStatusProcessHandler
+	// PostConfigBfdHandler sets the operation handler for the post config bfd operation
+	PostConfigBfdHandler PostConfigBfdHandler
 	// PostConfigBgpGlobalHandler sets the operation handler for the post config bgp global operation
 	PostConfigBgpGlobalHandler PostConfigBgpGlobalHandler
 	// PostConfigBgpNeighHandler sets the operation handler for the post config bgp neigh operation
@@ -496,6 +506,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler")
 	}
+	if o.GetConfigBfdAllHandler == nil {
+		unregistered = append(unregistered, "GetConfigBfdAllHandler")
+	}
 	if o.GetConfigBgpNeighAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigBgpNeighAllHandler")
 	}
@@ -561,6 +574,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.GetStatusProcessHandler == nil {
 		unregistered = append(unregistered, "GetStatusProcessHandler")
+	}
+	if o.PostConfigBfdHandler == nil {
+		unregistered = append(unregistered, "PostConfigBfdHandler")
 	}
 	if o.PostConfigBgpGlobalHandler == nil {
 		unregistered = append(unregistered, "PostConfigBgpGlobalHandler")
@@ -778,6 +794,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
+	o.handlers["GET"]["/config/bfd/all"] = NewGetConfigBfdAll(o.context, o.GetConfigBfdAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
 	o.handlers["GET"]["/config/bgp/neigh/all"] = NewGetConfigBgpNeighAll(o.context, o.GetConfigBgpNeighAllHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
@@ -863,6 +883,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/status/process"] = NewGetStatusProcess(o.context, o.GetStatusProcessHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/bfd"] = NewPostConfigBfd(o.context, o.PostConfigBfdHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
