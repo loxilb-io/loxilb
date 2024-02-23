@@ -5,11 +5,6 @@ if [ "$#" -eq 2 ]; then
   echo "version: $ubuntu"
 fi
 
-
-echo "num args: $#"
-echo "arg1: $1"
-echo "arg2: $2"
-
 if [[ "$ubuntu" == "20.04" ]]; then
   export VAGRANT_BOX="sysnet4admin/Ubuntu-k8s"
   export VAGRANT_BOX_VERSION="0.7.1"
