@@ -156,7 +156,7 @@ get_llb_peerIP() {
         llb2IP="$A.$B.$C.$((D+1))"
       fi
       cluster_opts=" --cluster=$llb2IP --self=0"
-      ka_opts=" --ka=$llb2IP"
+      ka_opts=" --ka=$llb2IP:$llb1IP"
     elif [[ "$1" == "llb2" ]]; then
       llb2IP=$(docker inspect --format='{{.NetworkSettings.IPAddress}}' llb2)
       if [[ "lb$llb2IP" == "lb" ]];then
@@ -166,7 +166,7 @@ get_llb_peerIP() {
         llb1IP="$A.$B.$C.$((D-1))"
       fi
       cluster_opts=" --cluster=$llb1IP --self=1"
-      ka_opts=" --ka=$llb1IP"
+      ka_opts=" --ka=$llb1IP:$llb2IP"
     fi
 }
 
