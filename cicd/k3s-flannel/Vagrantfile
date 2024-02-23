@@ -1,0 +1,26 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+workers = (ENV['WORKERS'] || "1").to_i
+#box_name = (ENV['VAGRANT_BOX'] || "ubuntu/focal64")
+box_name = (ENV['VAGRANT_BOX'] || "sysnet4admin/Ubuntu-k8s")
+box_version = (ENV['VAGRANT_BOX_VERSION'] || "0.7.1")
+Vagrant.configure("2") do |config|
+  config.vm.box = "#{box_name}"
+  config.vm.box_version = "#{box_version}"
+
+  if Vagrant.has_plugin?("vagrant-vbguest")
+    config.vbguest.auto_update = false
+  end
+
+  config.vm.define "k3s" do |k3s|
+    k3s.vm.hostname = 'k3s'
+    k3s.vm.network :private_network, ip: "192.168.80.9", :netmask => "255.255.255.0"
+    k3s.vm.network :private_network, ip: "192.168.90.9", :netmask => "255.255.255.0"
+    k3s.vm.provision :shell, :path => "config-k3s.sh"
+    k3s.vm.provider :virtualbox do |vbox|
+        vbox.customize ["modifyvm", :id, "--memory", 16384]
+        vbox.customize ["modifyvm", :id, "--cpus", 8]
+    end
+  end
+end
