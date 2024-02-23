@@ -18,7 +18,7 @@ jobs:
     name: k3s-base-sanity
     runs-on: ubuntu-latest
     steps:
-      - run: sudo apt update && sudo apt install -y bridge-utils net-utils iperf curl wget
+      - run: sudo apt update && sudo apt install -y bridge-utils net-tools iperf curl wget
       - run: |
          echo "KUBECONFIG=--kubeconfig=/etc/rancher/k3s/k3s.yaml" >> $GITHUB_ENV
       - uses: actions/checkout@v2
