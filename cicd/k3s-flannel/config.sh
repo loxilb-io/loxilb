@@ -2,6 +2,7 @@
 
 if [ "$#" -eq 2 ]; then
   ubuntu=$2
+  echo "version: $ubuntu"
 fi
 
 if [[ "$ubuntu" == "20.04" ]]; then
