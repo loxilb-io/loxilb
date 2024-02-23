@@ -23,9 +23,9 @@ jobs:
          echo "KUBECONFIG=--kubeconfig=/etc/rancher/k3s/k3s.yaml" >> $GITHUB_ENV
          echo "ubuntu=22.04" >> $GITHUB_ENV
          cd cicd/k3s-flannel/
-         ./config.sh "${{ env.KUBECONFIG }}" "${{ env.ubuntu }}"
-         ./validation.sh "${{ env.KUBECONFIG }}"
-         ./rmconfig.sh "${{ env.KUBECONFIG }}"
+         ./config.sh "ubuntu" "22.04"
+         ./validation.sh
+         ./rmconfig.sh
          cd -
       - name: Clean test-bed
         if: success() || failure()
