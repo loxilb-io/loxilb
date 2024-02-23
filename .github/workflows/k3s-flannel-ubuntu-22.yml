@@ -27,3 +27,9 @@ jobs:
          ./validation.sh "${{ env.KUBECONFIG }}"
          ./rmconfig.sh "${{ env.KUBECONFIG }}"
          cd -
+      - name: Clean test-bed
+        if: success() || failure()
+        run: |
+          cd cicd/k3s-flannel/ || true
+          ./rmconfig.sh
+          cd -
