@@ -1,4 +1,9 @@
 #!/bin/bash
+
+if [ "$#" -eq 2 ]; then
+  ubuntu=$2
+fi
+
 if [[ "$ubuntu" == "20.04" ]]; then
   export VAGRANT_BOX="sysnet4admin/Ubuntu-k8s"
   export VAGRANT_BOX_VERSION="0.7.1"
