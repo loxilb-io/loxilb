@@ -18,7 +18,7 @@ jobs:
         with:
           submodules: recursive
       - name: Run k3s-flannel CICD
-        if: github.repository == 'TrekkieCoder/loxilb'
+        if: github.repository == 'loxilb-io/loxilb'
         run: |
          echo "KUBECONFIG=--kubeconfig=/etc/rancher/k3s/k3s.yaml" >> $GITHUB_ENV
          echo "ubuntu=20.04" >> $GITHUB_ENV
