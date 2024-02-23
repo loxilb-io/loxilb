@@ -73,4 +73,4 @@ RUN mkdir -p /opt/loxilb && \
 ENTRYPOINT ["/root/loxilb-io/loxilb/loxilb"]
 
 # Expose Ports
-EXPOSE 11111 22222
+EXPOSE 11111 22222 3784
