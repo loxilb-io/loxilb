@@ -336,6 +336,12 @@ type LoadbalanceEntryServiceArguments struct {
 	// port number for the access
 	Port int64 `json:"port,omitempty"`
 
+	// value for probe retries
+	ProbeRetries int32 `json:"probeRetries,omitempty"`
+
+	// value for probe timer (in seconds)
+	ProbeTimeout uint32 `json:"probeTimeout,omitempty"`
+
 	// probe port if probetype is tcp/udp/sctp
 	Probeport uint16 `json:"probeport,omitempty"`
 

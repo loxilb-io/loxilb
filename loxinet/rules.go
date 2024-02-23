@@ -253,11 +253,13 @@ type ruleStat struct {
 }
 
 type ruleProbe struct {
-	actChk  bool
-	prbType string
-	prbPort uint16
-	prbReq  string
-	prbResp string
+	actChk     bool
+	prbType    string
+	prbPort    uint16
+	prbReq     string
+	prbResp    string
+	prbTimeo   uint32
+	prbRetries int
 }
 
 type ruleEnt struct {
@@ -820,8 +822,16 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool, li
 	var hopts epHostOpts
 	pType := ""
 	pPort := uint16(0)
-	hopts.inActTryThr = DflLbaInactiveTries
-	hopts.probeDuration = DflHostProbeTimeout
+	if r.hChk.prbRetries == 0 {
+		hopts.inActTryThr = DflLbaInactiveTries
+	} else {
+		hopts.inActTryThr = r.hChk.prbRetries
+	}
+	if r.hChk.prbTimeo == 0 {
+		hopts.probeDuration = DflHostProbeTimeout
+	} else {
+		hopts.probeDuration = r.hChk.prbTimeo
+	}
 	for _, nep := range endpoints {
 		if r.tuples.l4Prot.val == 6 {
 			pType = HostProbeConnectTCP
@@ -1373,6 +1383,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		eRule.hChk.prbPort = serv.ProbePort
 		eRule.hChk.prbReq = serv.ProbeReq
 		eRule.hChk.prbResp = serv.ProbeResp
+		eRule.hChk.prbRetries = serv.ProbeRetries
+		eRule.hChk.prbTimeo = serv.ProbeTimeout
 		eRule.act.action.(*ruleNatActs).sel = natActs.sel
 		eRule.act.action.(*ruleNatActs).endPoints = eEps
 		eRule.act.action.(*ruleNatActs).mode = natActs.mode
@@ -1408,6 +1420,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	r.hChk.prbPort = serv.ProbePort
 	r.hChk.prbReq = serv.ProbeReq
 	r.hChk.prbResp = serv.ProbeResp
+	r.hChk.prbRetries = serv.ProbeRetries
+	r.hChk.prbTimeo = serv.ProbeTimeout
 	r.hChk.actChk = serv.Monitor
 	r.act.action = &natActs
 	r.ruleNum, err = R.tables[RtLB].Mark.GetCounter()

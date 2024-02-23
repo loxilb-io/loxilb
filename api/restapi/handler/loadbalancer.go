@@ -42,6 +42,8 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv.ProbePort = params.Attr.ServiceArguments.Probeport
 	lbRules.Serv.ProbeReq = params.Attr.ServiceArguments.Probereq
 	lbRules.Serv.ProbeResp = params.Attr.ServiceArguments.Proberesp
+	lbRules.Serv.ProbeTimeout = params.Attr.ServiceArguments.ProbeTimeout
+	lbRules.Serv.ProbeRetries = int(params.Attr.ServiceArguments.ProbeRetries)
 	lbRules.Serv.Name = params.Attr.ServiceArguments.Name
 
 	if lbRules.Serv.Proto == "sctp" {

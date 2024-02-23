@@ -2445,6 +2445,14 @@ definitions:
             type: integer
             format: int32
             description: value for inactivity timeout (in seconds)
+          probeTimeout:
+            type: integer
+            format: uint32
+            description: value for probe timer (in seconds)
+          probeRetries:
+            type: integer
+            format: int32
+            description: value for probe retries
           name:
             type: string
             description: service name
