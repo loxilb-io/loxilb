@@ -23,7 +23,7 @@ jobs:
          echo "KUBECONFIG=--kubeconfig=/etc/rancher/k3s/k3s.yaml" >> $GITHUB_ENV
          echo "ubuntu=20.04" >> $GITHUB_ENV
          cd cicd/k3s-flannel/
-         ./config.sh "${{ env.KUBECONFIG }}" "${{ env.ubuntu }}"
+         ./config.sh "ubuntu" "20.04"
          ./validation.sh "${{ env.KUBECONFIG }}"
          ./rmconfig.sh "${{ env.KUBECONFIG }}"
          cd -
