@@ -4011,6 +4011,16 @@ func init() {
               "description": "port number for the access",
               "type": "integer"
             },
+            "probeRetries": {
+              "description": "value for probe retries",
+              "type": "integer",
+              "format": "int32"
+            },
+            "probeTimeout": {
+              "description": "value for probe timer (in seconds)",
+              "type": "integer",
+              "format": "uint32"
+            },
             "probeport": {
               "description": "probe port if probetype is tcp/udp/sctp",
               "type": "integer",
@@ -8627,6 +8637,16 @@ func init() {
               "description": "port number for the access",
               "type": "integer"
             },
+            "probeRetries": {
+              "description": "value for probe retries",
+              "type": "integer",
+              "format": "int32"
+            },
+            "probeTimeout": {
+              "description": "value for probe timer (in seconds)",
+              "type": "integer",
+              "format": "uint32"
+            },
             "probeport": {
               "description": "probe port if probetype is tcp/udp/sctp",
               "type": "integer",
@@ -8729,6 +8749,16 @@ func init() {
         "port": {
           "description": "port number for the access",
           "type": "integer"
+        },
+        "probeRetries": {
+          "description": "value for probe retries",
+          "type": "integer",
+          "format": "int32"
+        },
+        "probeTimeout": {
+          "description": "value for probe timer (in seconds)",
+          "type": "integer",
+          "format": "uint32"
         },
         "probeport": {
           "description": "probe port if probetype is tcp/udp/sctp",

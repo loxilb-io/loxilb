@@ -517,6 +517,10 @@ type LbServiceArg struct {
 	ProbeReq string `json:"probereq"`
 	// ProbeResp - Response string for liveness check
 	ProbeResp string `json:"proberesp"`
+	// ProbeTimeout - Probe Timeout
+	ProbeTimeout uint32 `json:"probeTimeout"`
+	// ProbeRetries - Probe Retries
+	ProbeRetries int `json:"probeRetries"`
 	// Name - Service name
 	Name string `json:"name"`
 }
