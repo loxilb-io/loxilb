@@ -11,6 +11,7 @@ on:
         default: 'k3s-flannel'
 jobs:
   build:
+    if: github.repository == 'loxilb-io/loxilb'
     name: k3s-flannel-sanity
     runs-on: self-hosted
     steps:
@@ -18,7 +19,6 @@ jobs:
         with:
           submodules: recursive
       - name: Run k3s-flannel CICD
-        if: github.repository == 'loxilb-io/loxilb'
         run: |
          echo "KUBECONFIG=--kubeconfig=/etc/rancher/k3s/k3s.yaml" >> $GITHUB_ENV
          echo "ubuntu=20.04" >> $GITHUB_ENV
