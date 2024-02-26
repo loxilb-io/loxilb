@@ -37,6 +37,7 @@ package loxinet
 int bpf_map_get_next_key(int fd, const void *key, void *next_key);
 int bpf_map_lookup_elem(int fd, const void *key, void *value);
 extern void goMapNotiHandler(struct ll_dp_map_notif *);
+extern void goLinuxArpResolver(unsigned int);
 #cgo CFLAGS:  -I./../loxilb-ebpf/libbpf/src/ -I./../loxilb-ebpf/common
 #cgo LDFLAGS: -L. -L/lib64 -L./../loxilb-ebpf/kernel -L./../loxilb-ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=/lib64/ -lloxilbdp -lbpf -lelf -lz
 */
@@ -1034,6 +1035,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 	switch {
 	case w.Name == MapNameNat4:
 		tbl = append(tbl, int(C.LL_DP_NAT_STATS_MAP))
+		sync = 1
 	case w.Name == MapNameBD:
 		tbl = append(tbl, int(C.LL_DP_BD_STATS_MAP), int(C.LL_DP_TX_BD_STATS_MAP))
 	case w.Name == MapNameRxBD:
@@ -2058,4 +2060,10 @@ func (e *DpEbpfH) DpRelLock() {
 // DpTableGC - Work on table garbage collection
 func (e *DpEbpfH) DpTableGC() {
 	e.trigGC <- true
+}
+
+//export goLinuxArpResolver
+func goLinuxArpResolver(dIP C.uint) {
+	goDest := uint32(dIP)
+	ArpResolver(goDest)
 }

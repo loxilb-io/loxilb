@@ -24,7 +24,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	tk "github.com/loxilb-io/loxilib"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -34,6 +33,10 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"unsafe"
+
+	tk "github.com/loxilb-io/loxilib"
+	nlp "github.com/vishvananda/netlink"
 )
 
 // IterIntf - interface implementation to iterate various loxinet
@@ -340,4 +343,151 @@ func FormatTimedelta(t time.Time) string {
 		return fmt.Sprintf("%02d:%02d:%02d", hours, mins, secs)
 	}
 	return fmt.Sprintf("%dd ", days) + fmt.Sprintf("%02d:%02d:%02d", hours, mins, secs)
+}
+
+// Ntohll - Network to host byte-order long long
+func Ntohll(i uint64) uint64 {
+	return binary.BigEndian.Uint64((*(*[8]byte)(unsafe.Pointer(&i)))[:])
+}
+
+// GetIfaceIpAddr - Get interface IP address
+func GetIfaceIpAddr(ifName string) (addr net.IP, err error) {
+	var (
+		ief    *net.Interface
+		addrs  []net.Addr
+		ipAddr net.IP
+	)
+	if ief, err = net.InterfaceByName(ifName); err != nil {
+		return
+	}
+	if addrs, err = ief.Addrs(); err != nil {
+		return
+	}
+	for _, addr := range addrs {
+		if ipAddr = addr.(*net.IPNet).IP.To4(); ipAddr != nil {
+			break
+		}
+	}
+	if ipAddr == nil {
+		return nil, errors.New(fmt.Sprintf("%s - no ipv4 address\n", ifName))
+	}
+	return ipAddr, nil
+}
+
+// SendArpReq - sends a  arp request given the DIP, SIP and interface name
+func SendArpReq(AdvIP net.IP, ifName string) (int, error) {
+	zeroAddr := []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+
+	srcIP, err := GetIfaceIpAddr(ifName)
+	if err != nil {
+		return -1, errors.New(fmt.Sprintf("%s", err))
+	}
+	fd, err := syscall.Socket(syscall.AF_PACKET, syscall.SOCK_DGRAM, int(tk.Htons(syscall.ETH_P_ARP)))
+	if err != nil {
+		return -1, errors.New("af-packet-err")
+	}
+	defer syscall.Close(fd)
+
+	if err := syscall.BindToDevice(fd, ifName); err != nil {
+		return -1, errors.New("bind-err")
+	}
+
+	ifi, err := net.InterfaceByName(ifName)
+	if err != nil {
+		return -1, errors.New("intf-err")
+	}
+
+	ll := syscall.SockaddrLinklayer{
+		Protocol: tk.Htons(syscall.ETH_P_ARP),
+		Ifindex:  ifi.Index,
+		Pkttype:  0, // syscall.PACKET_HOST
+		Hatype:   1,
+		Halen:    6,
+	}
+
+	for i := 0; i < 8; i++ {
+		ll.Addr[i] = 0xff
+	}
+
+	buf := new(bytes.Buffer)
+
+	var sb = make([]byte, 2)
+	binary.BigEndian.PutUint16(sb, 1) // HwType = 1
+	buf.Write(sb)
+
+	binary.BigEndian.PutUint16(sb, 0x0800) // protoType
+	buf.Write(sb)
+
+	buf.Write([]byte{6}) // hwAddrLen
+	buf.Write([]byte{4}) // protoAddrLen
+
+	binary.BigEndian.PutUint16(sb, 0x1) // OpCode
+	buf.Write(sb)
+
+	buf.Write(ifi.HardwareAddr) // senderHwAddr
+	buf.Write(srcIP.To4())      // senderProtoAddr
+
+	buf.Write(zeroAddr)    // targetHwAddr
+	buf.Write(AdvIP.To4()) // targetProtoAddr
+
+	if err := syscall.Bind(fd, &ll); err != nil {
+		return -1, errors.New("bind-err")
+	}
+	if err := syscall.Sendto(fd, buf.Bytes(), 0, &ll); err != nil {
+		return -1, errors.New("send-err")
+	}
+
+	return 0, nil
+}
+
+// ArpReqWithCtx - sends a arp req given the DIP, SIP and interface name
+func ArpReqWithCtx(ctx context.Context, rCh chan<- int, AdvIP net.IP, ifName string) (int, error) {
+	for {
+		select {
+		case <-ctx.Done():
+			return -1, ctx.Err()
+		default:
+			ret, _ := SendArpReq(AdvIP, ifName)
+			rCh <- ret
+			return 0, nil
+		}
+	}
+}
+
+func ArpResolver(dIP uint32) {
+	var gw net.IP
+	var ifName string
+	dest := tk.NltoIP(dIP)
+
+	routes, err := nlp.RouteGet(dest)
+	if err != nil {
+		return
+	}
+
+	for _, r := range routes {
+		if r.Gw == nil {
+			gw = r.Dst.IP
+		} else {
+			gw = r.Gw
+		}
+		if gw == nil {
+			continue
+		}
+		link, err := nlp.LinkByIndex(r.LinkIndex)
+		if err != nil {
+			return
+		}
+		ifName = link.Attrs().Name
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		rCh := make(chan int)
+		go ArpReqWithCtx(ctx, rCh, gw, ifName)
+		select {
+		case <-rCh:
+			break
+		case <-ctx.Done():
+			tk.LogIt(tk.LogInfo, "%s - iface %s : ARP timeout\n", gw.String(), ifName)
+		}
+		return
+	}
 }
