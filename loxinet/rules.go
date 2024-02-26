@@ -746,6 +746,8 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 			ret.Serv.Proto = "icmp"
 		} else if data.tuples.l4Prot.val == 132 {
 			ret.Serv.Proto = "sctp"
+		} else if data.tuples.l4Prot.val == 0 {
+			ret.Serv.Proto = "none"
 		} else {
 			return []cmn.LbRuleMod{}, errors.New("malformed service proto")
 		}
@@ -907,6 +909,8 @@ func (R *RuleH) GetNatLbRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
 		ipProto = 1
 	} else if serv.Proto == "sctp" {
 		ipProto = 132
+	} else if serv.Proto == "none" {
+		ipProto = 0
 	} else {
 		return nil
 	}
@@ -1252,6 +1256,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		ipProto = 1
 	} else if serv.Proto == "sctp" {
 		ipProto = 132
+	} else if serv.Proto == "none" {
+		ipProto = 0
 	} else {
 		return RuleUnknownServiceErr, errors.New("malformed-proto error")
 	}
@@ -1483,6 +1489,8 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 		ipProto = 1
 	} else if serv.Proto == "sctp" {
 		ipProto = 132
+	} else if serv.Proto == "none" {
+		ipProto = 0
 	} else {
 		return RuleUnknownServiceErr, errors.New("malformed-proto error")
 	}
@@ -2213,6 +2221,8 @@ func (R *RuleH) RuleDestructAll() {
 			lbs.Proto = "udp"
 		} else if r.tuples.l4Prot.val == 132 {
 			lbs.Proto = "sctp"
+		} else if r.tuples.l4Prot.val == 0 {
+			lbs.Proto = "none"
 		} else {
 			continue
 		}

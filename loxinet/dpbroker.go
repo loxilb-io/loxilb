@@ -372,6 +372,12 @@ func (ct *DpCtInfo) Key() string {
 	return str
 }
 
+// KeyState - outputs a key string for given DpCtInfo pointer with state info
+func (ct *DpCtInfo) KeyState() string {
+	str := fmt.Sprintf("%s%s%d%d%s-%s", ct.DIP.String(), ct.SIP.String(), ct.Dport, ct.Sport, ct.Proto, ct.CState)
+	return str
+}
+
 // String - stringify the given DpCtInfo
 func (ct *DpCtInfo) String() string {
 	str := fmt.Sprintf("%s:%d->%s:%d (%s), ", ct.SIP.String(), ct.Sport, ct.DIP.String(), ct.Dport, ct.Proto)
