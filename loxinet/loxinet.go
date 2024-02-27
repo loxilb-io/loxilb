@@ -301,7 +301,7 @@ func loxiNetInit() {
 		prometheus.Init()
 	}
 
-	if !opts.Opts.BgpPeerMode && clusterMode {
+	if !opts.Opts.BgpPeerMode {
 		// Spawn CI maintenance application
 		mh.has.CISpawn()
 	}
