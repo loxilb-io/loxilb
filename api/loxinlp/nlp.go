@@ -217,6 +217,27 @@ func applyEPConfig() bool {
 	return true
 }
 
+func ApplyBFDConfig() bool {
+	var resp struct {
+		Attr []cmn.BFDMod `json:"Attr"`
+	}
+	byteBuf, err := os.ReadFile("/etc/loxilb/BFDconfig.txt")
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+
+	// Unmashal to Json
+	if err := json.Unmarshal(byteBuf, &resp); err != nil {
+		fmt.Printf("Error: Failed to unmarshal File: (%s)\n", err.Error())
+		return false
+	}
+	for _, bfd := range resp.Attr {
+		hooks.NetBFDAdd(&bfd)
+	}
+	return true
+}
+
 func applyRoutes(name string) {
 	tk.LogIt(tk.LogDebug, "[NLP] Applying Route Config for %s \n", name)
 	command := "loxicmd apply --per-intf " + name + " -r -c /etc/loxilb/ipconfig/"
