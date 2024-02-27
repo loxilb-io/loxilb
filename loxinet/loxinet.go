@@ -301,9 +301,16 @@ func loxiNetInit() {
 		prometheus.Init()
 	}
 
-	if !opts.Opts.BgpPeerMode {
+	if !opts.Opts.BgpPeerMode && clusterMode {
 		// Spawn CI maintenance application
 		mh.has.CISpawn()
+		if _, err := os.Stat("/etc/loxilb/BFDconfig.txt"); errors.Is(err, os.ErrNotExist) {
+			if err != nil {
+				tk.LogIt(tk.LogInfo, "[Init] No BFD config file : %s \n", err.Error())
+			}
+		} else {
+			nlp.ApplyBFDConfig()
+		}
 	}
 	// Initialize the loxinet global ticker(s)
 	mh.tDone = make(chan bool)
