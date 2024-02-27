@@ -31,4 +31,5 @@ var Opts struct {
 	K8sApi            string         `long:"k8s-api" description:"Enable k8s watcher(experimental)" default:"none"`
 	IPVSCompat        bool           `long:"ipvs-compat" description:"Enable ipvs-compat(experimental)"`
 	FallBack          bool           `long:"fallback" description:"Fallback to system default networking(experimental)"`
+	Cloud             string         `long:"cloud" description:"cloud type if any e.g aws, oci, gcp" default:"on-prem"`
 }
