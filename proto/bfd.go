@@ -79,6 +79,7 @@ type Notifer interface {
 
 type bfdSession struct {
 	RemoteName     string
+	SourceIP	   string
 	Instance       string
 	Cxn            net.Conn
 	State          SessionState
@@ -191,7 +192,7 @@ func (bs *Struct) BFDGet() ([]cmn.BFDMod, error) {
 		pair := strings.Split(s.RemoteName, ":")
 		temp.Instance = s.Instance
 		temp.RemoteIP = net.ParseIP(pair[0])
-		temp.SourceIP = tk.NltoIP(s.MyDisc)
+		temp.SourceIP = net.ParseIP(s.SourceIP)
 		port, _ := strconv.Atoi(pair[1])
 		temp.Port = uint16(port)
 		temp.Interval = uint64(s.DesMinTxInt)
@@ -411,7 +412,8 @@ func (b *bfdSession) initialize(remoteIP string, sourceIP string, port uint16, i
 	if myIP == nil {
 		return errors.New("source address malformed")
 	}
-
+    b.SourceIP = sourceIP
+	
 	if myIP.IsUnspecified() {
 		myIP = getMyDisc(ip)
 		if myIP == nil {
