@@ -19,10 +19,10 @@ package loxinet
 import (
 	"errors"
 	"fmt"
+	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
 	"net"
 	"os"
 	"time"
-	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
 
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"

@@ -84,6 +84,7 @@ type bfdSession struct {
 	State          SessionState
 	MyMulti        uint8
 	RemMulti       uint8
+	MyIP           net.IP
 	MyDisc         uint32
 	RemDisc        uint32
 	DesMinTxInt    uint32
@@ -191,7 +192,7 @@ func (bs *Struct) BFDGet() ([]cmn.BFDMod, error) {
 		pair := strings.Split(s.RemoteName, ":")
 		temp.Instance = s.Instance
 		temp.RemoteIP = net.ParseIP(pair[0])
-		temp.SourceIP = tk.NltoIP(s.MyDisc)
+		temp.SourceIP = s.MyIP
 		port, _ := strconv.Atoi(pair[1])
 		temp.Port = uint16(port)
 		temp.Interval = uint64(s.DesMinTxInt)
@@ -420,6 +421,7 @@ func (b *bfdSession) initialize(remoteIP string, sourceIP string, port uint16, i
 	} else {
 		tk.LogIt(tk.LogDebug, "using bfd bind mydisc  : %s\n", myIP.String())
 	}
+	b.MyIP = myIP
 	b.MyDisc = tk.IPtonl(myIP)
 	b.RemDisc = 0 //tk.IPtonl(ip)
 	b.MyMulti = multi
