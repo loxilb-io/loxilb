@@ -22,6 +22,7 @@ import (
 	"net"
 	"os"
 	"time"
+	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
 
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
@@ -108,6 +109,13 @@ func (ci *CIStateH) startBFDProto() {
 		os.Exit(1)
 	}
 	tk.LogIt(tk.LogInfo, "KA - Added BFD remote %s:%s:%vus\n", ci.RemoteIP.String(), ci.SourceIP.String(), txInterval)
+	if _, err := os.Stat("/etc/loxilb/BFDconfig.txt"); errors.Is(err, os.ErrNotExist) {
+		if err != nil {
+			tk.LogIt(tk.LogInfo, "[Init] No BFD config file : %s \n", err.Error())
+		}
+	} else {
+		nlp.ApplyBFDConfig()
+	}
 }
 
 // CITicker - Periodic ticker for Cluster module
