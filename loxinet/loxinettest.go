@@ -32,6 +32,7 @@ func TestLoxinet(t *testing.T) {
 	opts.Opts.CPUProfile = "none"
 	opts.Opts.Prometheus = false
 	opts.Opts.K8sApi = "none"
+	opts.Opts.ClusterNodes = "none"
 
 	fmt.Printf("LoxiLB Net Unit-Test \n")
 	loxiNetInit()
