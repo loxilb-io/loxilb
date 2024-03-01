@@ -34,7 +34,7 @@ jobs:
             sudo ip netns add test
             sudo ip netns del test
       - run: |
-            git clone https://github.com/loxilb-io/iproute2 iproute2-main
+            git clone --recurse-submodules https://github.com/loxilb-io/iproute2 iproute2-main
             cd iproute2-main/libbpf/src/
             sudo make install
             mkdir build

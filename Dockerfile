@@ -19,18 +19,19 @@ RUN mkdir -p /opt/loxilb && \
     apt-get update && apt-get install -y wget && \
     arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && if [ "$arch" = "arm64" ] ; then apt-get install -y gcc-multilib-arm-linux-gnueabihf; else apt-get update && apt-get install -y  gcc-multilib;fi && \
     # Arch specific packages - GoLang
-    wget https://go.dev/dl/go1.21.5.linux-${arch}.tar.gz && tar -xzf go1.21.5.linux-${arch}.tar.gz --directory /usr/local/ && rm go1.21.5.linux-${arch}.tar.gz && \
+    wget https://go.dev/dl/go1.22.0.linux-${arch}.tar.gz && tar -xzf go1.22.0.linux-${arch}.tar.gz --directory /usr/local/ && rm go1.22.0.linux-${arch}.tar.gz && \
     # Dev and util packages
     apt-get install -y clang llvm libelf-dev libpcap-dev vim net-tools \
     elfutils dwarves git libbsd-dev bridge-utils wget unzip build-essential \
     bison flex sudo iproute2 pkg-config tcpdump iputils-ping curl bash-completion && \
     # Install loxilb's custom ntc tool
     wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
-    unzip main.zip && cd iproute2-main/libbpf/src/ && mkdir build && \
-    DESTDIR=build make install && cd - && cd iproute2-main/ && \
+    unzip main.zip && cd iproute2-main/ && rm -fr libbpf && wget https://github.com/loxilb-io/libbpf/archive/refs/heads/main.zip && \
+    unzip main.zip && mv libbpf-main libbpf && cd libbpf/src/ && mkdir build && \
+    DESTDIR=build make install && cd - && \
     export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:`pwd`/libbpf/src/ && \
     LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && \
-    cp -f tc/tc /usr/local/sbin/ntc && cd - && cd iproute2-main/libbpf/src/ && \
+    cp -f tc/tc /usr/local/sbin/ntc && cd .. && cd iproute2-main/libbpf/src/ && \
     make install && cd - && rm -fr main.zip iproute2-main && \
     # Install bpftool
     git clone --recurse-submodules https://github.com/libbpf/bpftool.git && cd bpftool/src/ && \
