@@ -28,11 +28,10 @@ RUN mkdir -p /opt/loxilb && \
     wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
     unzip main.zip && cd iproute2-main/ && rm -fr libbpf && wget https://github.com/loxilb-io/libbpf/archive/refs/heads/main.zip && \
     unzip main.zip && mv libbpf-main libbpf && cd libbpf/src/ && mkdir build && \
-    DESTDIR=build OBJDIR=build make install && cd - && \
+    make install && DESTDIR=build OBJDIR=build make install && cd - && \
     export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:`pwd`/libbpf/src/ && \
     LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && \
-    cp -f tc/tc /usr/local/sbin/ntc && cd .. && cd iproute2-main/libbpf/src/ && \
-    make install && cd - && rm -fr main.zip iproute2-main && \
+    cp -f tc/tc /usr/local/sbin/ntc && cd .. && rm -fr main.zip iproute2-main && \
     # Install bpftool
     git clone --recurse-submodules https://github.com/libbpf/bpftool.git && cd bpftool/src/ && \
     git switch --detach v7.2.0 && \
