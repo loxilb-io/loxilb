@@ -1,11 +1,17 @@
 name: Sanity-CI-Ubuntu-22
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'Sanity-BuildCI-u22'
+  workflow_run:
+    workflows: ["Build-CI"]
+    types:
+      - completed
 jobs:
   build:
     name: basic-sanity-ubuntu-22
@@ -34,11 +40,11 @@ jobs:
             sudo ip netns add test
             sudo ip netns del test
       - run: |
-            git clone https://github.com/loxilb-io/iproute2 iproute2-main
+            git clone --recurse-submodules https://github.com/loxilb-io/iproute2 iproute2-main
             cd iproute2-main/libbpf/src/
             sudo make install
             mkdir build
-            DESTDIR=build make install
+            DESTDIR=build OBJDIR=build make install
             cd -
             cd iproute2-main/
             export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:`pwd`/libbpf/src/ && LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && sudo cp -f tc/tc /usr/local/sbin/ntc && cd -
@@ -66,5 +72,5 @@ jobs:
  
       - name: Publish the latest loxilb Docker image
         if: | 
-          github.repository == 'loxilb-io/loxilb' && github.event_name != 'pull_request'
+          github.repository == 'loxilb-io/loxilb' && (github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch')
         run: docker push ghcr.io/loxilb-io/loxilb:latestu22
