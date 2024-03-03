@@ -1,11 +1,17 @@
 name: Sanity-CI-Ubuntu-22
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'Sanity-BuildCI-u22'
+  workflow_run:
+    workflows: ["Build-CI"]
+    types:
+      - completed
 jobs:
   build:
     name: basic-sanity-ubuntu-22
@@ -66,5 +72,5 @@ jobs:
  
       - name: Publish the latest loxilb Docker image
         if: | 
-          github.repository == 'loxilb-io/loxilb' && github.event_name != 'pull_request'
+          github.repository == 'loxilb-io/loxilb' && (github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch')
         run: docker push ghcr.io/loxilb-io/loxilb:latestu22
