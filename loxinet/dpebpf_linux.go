@@ -942,6 +942,8 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 			dat.sel_type = C.NAT_LB_SEL_HASH
 		case w.EpSel == EpRRPersist:
 			dat.sel_type = C.NAT_LB_SEL_RR_PERSIST
+		case w.EpSel == EpLeastConn:
+			dat.sel_type = C.NAT_LB_SEL_LC
 		/* Currently not implemented in DP */
 		/*case w.EpSel == EP_PRIO:
 		  dat.sel_type = C.NAT_LB_SEL_PRIO*/
