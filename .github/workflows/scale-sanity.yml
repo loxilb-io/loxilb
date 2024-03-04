@@ -30,11 +30,11 @@ jobs:
       - run: sudo apt-get update
       - run: sudo apt-get -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat
       - run: |
-            git clone https://github.com/loxilb-io/iproute2 iproute2-main
+            git clone --recurse-submodules https://github.com/loxilb-io/iproute2 iproute2-main
             cd iproute2-main/libbpf/src/
             sudo make install
             mkdir build
-            DESTDIR=build make install
+            DESTDIR=build OBJDIR=build make install
             cd -
             cd iproute2-main/
             export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:`pwd`/libbpf/src/ && LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && sudo cp -f tc/tc /usr/local/sbin/ntc && cd -

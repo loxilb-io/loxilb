@@ -50,6 +50,7 @@ const (
 	BFDMinSysTXIntervalUs = 100000
 	BFDDflSysTXIntervalUs = 200000
 	BFDMinSysRXIntervalUs = 200000
+	BFDIncrDiscVal        = 0x10000000
 )
 
 type ConfigArgs struct {
@@ -83,8 +84,10 @@ type bfdSession struct {
 	Instance       string
 	Cxn            net.Conn
 	State          SessionState
+	CiState        string
 	MyMulti        uint8
 	RemMulti       uint8
+	MyIP           net.IP
 	MyDisc         uint32
 	RemDisc        uint32
 	DesMinTxInt    uint32
@@ -192,7 +195,7 @@ func (bs *Struct) BFDGet() ([]cmn.BFDMod, error) {
 		pair := strings.Split(s.RemoteName, ":")
 		temp.Instance = s.Instance
 		temp.RemoteIP = net.ParseIP(pair[0])
-		temp.SourceIP = net.ParseIP(s.SourceIP)
+		temp.SourceIP = s.MyIP
 		port, _ := strconv.Atoi(pair[1])
 		temp.Port = uint16(port)
 		temp.Interval = uint64(s.DesMinTxInt)
@@ -308,6 +311,12 @@ func (b *bfdSession) RunSessionSM(raw *WireRaw) {
 			tk.LogIt(tk.LogInfo, "%s: BFD State -> UP\n", b.RemoteName)
 		}
 		b.State = BFDUp
+		if b.CiState == "MASTER" {
+			// Force reelection
+			if b.MyDisc <= b.RemDisc {
+				oldState = BFDDown
+			}
+		}
 	}
 	newState := b.State
 	b.Mutex.Unlock()
@@ -324,8 +333,8 @@ func (b *bfdSession) checkSessTimeout() {
 	if b.State == BFDUp {
 		if time.Duration(time.Since(b.LastRxTS).Microseconds()) > time.Duration(b.TimeOut) {
 			b.State = BFDDown
-			b.MyDisc = b.RemDisc + 100
-			tk.LogIt(tk.LogInfo, "%s: BFD State -> Down\n", b.RemoteName)
+			b.MyDisc = b.RemDisc + BFDIncrDiscVal
+			tk.LogIt(tk.LogInfo, "%s: BFD State -> Down (%v:%v)\n", b.RemoteName, b.MyDisc, b.RemDisc)
 		}
 	}
 	newState := b.State
@@ -344,12 +353,17 @@ func (b *bfdSession) sendStateNotification(newState, oldState SessionState, inst
 		if b.MyDisc > b.RemDisc {
 			ciState = "MASTER"
 		}
+		tk.LogIt(tk.LogInfo, "%s: State change (%v:%v)\n", b.RemoteName, b.MyDisc, b.RemDisc)
+		b.CiState = ciState
 		b.Notify.BFDSessionNotify(inst, remote, ciState)
 	} else if newState == BFDDown && oldState == BFDUp {
 		ciState := "MASTER"
+		b.CiState = ciState
 		b.Notify.BFDSessionNotify(inst, remote, ciState)
 	} else if b.RemDisc == b.MyDisc {
-		b.Notify.BFDSessionNotify(inst, remote, "NOT_DEFINED")
+		ciState := "NOT_DEFINED"
+		b.CiState = ciState
+		b.Notify.BFDSessionNotify(inst, remote, ciState)
 	}
 }
 
@@ -422,6 +436,7 @@ func (b *bfdSession) initialize(remoteIP string, sourceIP string, port uint16, i
 	} else {
 		tk.LogIt(tk.LogDebug, "using bfd bind mydisc  : %s\n", myIP.String())
 	}
+	b.MyIP = myIP
 	b.MyDisc = tk.IPtonl(myIP)
 	b.RemDisc = 0 //tk.IPtonl(ip)
 	b.MyMulti = multi
