@@ -261,6 +261,7 @@ const (
 	EpHash
 	EpPrio
 	EpRRPersist
+	EpLeastConn
 )
 
 // NatEP - a nat end-point
