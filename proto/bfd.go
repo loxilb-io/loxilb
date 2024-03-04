@@ -80,6 +80,7 @@ type Notifer interface {
 
 type bfdSession struct {
 	RemoteName     string
+	SourceIP	   string
 	Instance       string
 	Cxn            net.Conn
 	State          SessionState
@@ -425,7 +426,8 @@ func (b *bfdSession) initialize(remoteIP string, sourceIP string, port uint16, i
 	if myIP == nil {
 		return errors.New("source address malformed")
 	}
-
+    b.SourceIP = sourceIP
+	
 	if myIP.IsUnspecified() {
 		myIP = getMyDisc(ip)
 		if myIP == nil {
