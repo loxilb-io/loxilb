@@ -28,7 +28,7 @@ do
 done
 
 ## Any routing updates  ??
-sleep 30
+#sleep 30
 
 echo Service IP : $extIP
 echo -e "\nEnd Points List"
