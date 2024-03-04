@@ -2306,6 +2306,8 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 			nWork.EpSel = EpRR
 		case at.sel == cmn.LbSelRrPersist:
 			nWork.EpSel = EpRRPersist
+		case at.sel == cmn.LbSelLeastConnections:
+			nWork.EpSel = EpLeastConn
 		default:
 			nWork.EpSel = EpRR
 		}

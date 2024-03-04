@@ -471,6 +471,8 @@ const (
 	LbSelPrio
 	// LbSelRrPersist - persist connectons from same client
 	LbSelRrPersist
+	// LbSelLeastConnections - select client based on least connections
+	LbSelLeastConnections
 )
 
 // LBMode - Variable to define LB mode
