@@ -51,6 +51,7 @@ done
 done
 
 $hexec l3h1 nohup nc -d ${servIP[0]} 2020  &
+sleep 5
 
 echo "Testing Service IP: ${servIP[0]}"
 lcode=0
