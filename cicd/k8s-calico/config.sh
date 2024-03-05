@@ -68,5 +68,6 @@ do
 done
 
 if [[ $fin == 0 ]]; then
+    echo "Cluster is not ready"
     exit 1
 fi
