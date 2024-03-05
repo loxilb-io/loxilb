@@ -40,7 +40,7 @@ Additionally, loxilb can also support cluster-ip and node-port services, thereby
 - L4/NAT stateful loadbalancer
     * NAT44, NAT66, NAT64 with One-ARM, FullNAT, DSR etc
     * Support for TCP, UDP, SCTP (w/ multi-homing), QUIC, FTP, TFTP etc
-- High-availability support with hitless/maglev/cgnat clustering
+- High-availability support with BFD detection for hitless/maglev/cgnat clustering
 - Extensive and scalable end-point liveness probes for cloud-native environments
 - Stateful firewalling and IPSEC/Wireguard support
 - Optimized implementation for features like [Conntrack](https://thermalcircle.de/doku.php?id=blog:linux:connection_tracking_1_modules_and_hooks), QoS etc
