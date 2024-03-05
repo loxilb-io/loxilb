@@ -82,7 +82,7 @@ func (ci *CIStateH) BFDSessionNotify(instance string, remote string, ciState str
 	ci.CIStateUpdate(sm)
 }
 
-func (ci *CIStateH) startBFDProto() {
+func (ci *CIStateH) startBFDProto(bfdSessConfigArgs bfd.ConfigArgs) {
 	url := fmt.Sprintf("http://127.0.0.1:%d/config/params", opts.Opts.Port)
 	for {
 		if IsLoxiAPIActive(url) {
@@ -101,21 +101,13 @@ func (ci *CIStateH) startBFDProto() {
 		txInterval = uint32(ci.Interval)
 	}
 
-	bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: ci.RemoteIP.String(), SourceIP: ci.SourceIP.String(),
-		Port: cmn.BFDPort, Interval: txInterval, Multi: cmn.BFDDefRetryCount, Instance: cmn.CIDefault}
 	err := ci.Bs.BFDAddRemote(bfdSessConfigArgs, ci)
 	if err != nil {
-		tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote\n")
-		os.Exit(1)
+		tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote: %s\n", err.Error())
+		//os.Exit(1)
+		return
 	}
 	tk.LogIt(tk.LogInfo, "KA - Added BFD remote %s:%s:%vus\n", ci.RemoteIP.String(), ci.SourceIP.String(), txInterval)
-	if _, err := os.Stat("/etc/loxilb/BFDconfig.txt"); errors.Is(err, os.ErrNotExist) {
-		if err != nil {
-			tk.LogIt(tk.LogInfo, "[Init] No BFD config file : %s \n", err.Error())
-		}
-	} else {
-		nlp.ApplyBFDConfig()
-	}
 }
 
 // CITicker - Periodic ticker for Cluster module
@@ -127,8 +119,15 @@ func (h *CIStateH) CITicker() {
 func (ci *CIStateH) CISpawn() {
 	bs := bfd.StructNew(3784)
 	ci.Bs = bs
+	if _, err := os.Stat("/etc/loxilb/BFDconfig.txt"); !errors.Is(err, os.ErrNotExist) {
+		nlp.ApplyBFDConfig()
+		return
+	}
+
 	if ci.SpawnKa {
-		go ci.startBFDProto()
+		bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: ci.RemoteIP.String(), SourceIP: ci.SourceIP.String(),
+			Port: cmn.BFDPort, Interval: bfd.BFDMinSysTXIntervalUs, Multi: cmn.BFDDefRetryCount, Instance: cmn.CIDefault}
+		go ci.startBFDProto(bfdSessConfigArgs)
 	}
 }
 
@@ -275,8 +274,47 @@ func (h *CIStateH) ClusterNodeDelete(node cmn.ClusterNodeMod) (int, error) {
 	return 0, nil
 }
 
-// CIStateUpdate - routine to update cluster state
+// CIBFDSessionAdd - routine to add BFD session
 func (h *CIStateH) CIBFDSessionAdd(bm cmn.BFDMod) (int, error) {
+
+	if bm.Interval != 0 && bm.Interval < bfd.BFDMinSysTXIntervalUs {
+		tk.LogIt(tk.LogError, "[CLUSTER] BFD session Interval value too low\n")
+		return -1, errors.New("bfd interval too low")
+	}
+
+	_, found := h.ClusterMap[bm.Instance]
+	if !found {
+		tk.LogIt(tk.LogError, "[CLUSTER] BFD SU - Cluster Instance %s not found\n", bm.Instance)
+		return -1, errors.New("cluster instance not found")
+	}
+
+	if !h.SpawnKa {
+		tk.LogIt(tk.LogInfo, "[CLUSTER] Cluster Instance %s starting BFD..\n", bm.Instance)
+		h.SpawnKa = true
+		
+	    h.RemoteIP = bm.RemoteIP
+	    h.SourceIP = bm.SourceIP
+	    h.Interval = int64(bm.Interval)
+		bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: bm.RemoteIP.String(), SourceIP: bm.SourceIP.String(),
+			Port: cmn.BFDPort, Interval: uint32(bm.Interval), 
+			Multi: bm.RetryCount, Instance: bm.Instance}
+		go h.startBFDProto(bfdSessConfigArgs)
+	} else {
+		bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: h.RemoteIP.String(), SourceIP: h.SourceIP.String(), 
+			Port: cmn.BFDPort, Interval: uint32(bm.Interval), 
+			Multi: bm.RetryCount, Instance: bm.Instance}
+		err := h.Bs.BFDAddRemote(bfdSessConfigArgs, h)
+		if err != nil {
+			tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote: %s\n",err.Error())
+			return -1, err
+		}
+		tk.LogIt(tk.LogInfo, "KA - BFD remote %s:%s:%vus Added\n", h.RemoteIP.String(), h.SourceIP.String(), bm.Interval)
+	}
+	return 0, nil
+}
+
+// CIBFDSessionDel - routine to delete BFD session
+func (h *CIStateH) CIBFDSessionDel(bm cmn.BFDMod) (int, error) {
 
 	if !h.SpawnKa {
 		tk.LogIt(tk.LogError, "[CLUSTER] Cluster Instance %s not running BFD\n", bm.Instance)
@@ -289,17 +327,18 @@ func (h *CIStateH) CIBFDSessionAdd(bm cmn.BFDMod) (int, error) {
 		return -1, errors.New("cluster instance not found")
 	}
 
-	bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: h.RemoteIP.String(), SourceIP: h.SourceIP.String(), Port: 3784, Interval: uint32(bm.Interval), Multi: bm.RetryCount, Instance: bm.Instance}
-	err := h.Bs.BFDAddRemote(bfdSessConfigArgs, h)
+	bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: h.RemoteIP.String()}
+	err := h.Bs.BFDDeleteRemote(bfdSessConfigArgs)
 	if err != nil {
-		tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote\n")
-		os.Exit(1)
+		tk.LogIt(tk.LogCritical, "KA - Cant delete BFD remote\n")
+		return -1, err
 	}
-	tk.LogIt(tk.LogInfo, "KA - Updated BFD remote %s:%s:%vus\n", h.RemoteIP.String(), h.SourceIP.String(), bm.Interval)
+	h.SpawnKa = false
+	tk.LogIt(tk.LogInfo, "KA - BFD remote %s:%s:%vus deleted\n", h.RemoteIP.String(), h.SourceIP.String(), bm.Interval)
 	return 0, nil
 }
 
-// CIStateUpdate - routine to update cluster state
+// CIBFDSessionGet - routine to get BFD session info
 func (h *CIStateH) CIBFDSessionGet() ([]cmn.BFDMod, error) {
 	if !h.SpawnKa {
 		tk.LogIt(tk.LogError, "[CLUSTER] BFD sessions not running\n")
