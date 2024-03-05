@@ -160,7 +160,8 @@ func (bs *Struct) BFDAddRemote(args ConfigArgs, cbs Notifer) error {
 
 	err := sess.initialize(args.RemoteIP, args.SourceIP, args.Port, args.Interval, args.Multi)
 	if err != nil {
-		return errors.New("bfd failed to init session")
+		return err
+		//return errors.New("bfd failed to init session")
 	}
 
 	bs.BFDSessMap[args.RemoteIP] = sess
@@ -178,7 +179,7 @@ func (bs *Struct) BFDDeleteRemote(args ConfigArgs) error {
 	}
 
 	sess.destruct()
-	delete(bs.BFDSessMap, sess.RemoteName)
+	delete(bs.BFDSessMap, args.RemoteIP)
 
 	return nil
 }
@@ -304,7 +305,7 @@ func (b *bfdSession) RunSessionSM(raw *WireRaw) {
 		if b.State != BFDAdminDown {
 			tk.LogIt(tk.LogInfo, "%s: BFD State -> AdminDown\n", b.RemoteName)
 		}
-		b.State = BFDAdminDown
+		b.State = BFDInit
 	} else if raw.State == BFDUp {
 		if b.State != BFDUp {
 			tk.LogIt(tk.LogInfo, "%s: BFD State -> UP\n", b.RemoteName)

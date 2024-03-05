@@ -510,7 +510,7 @@ func (na *NetAPIStruct) NetBFDGet() ([]cmn.BFDMod, error) {
 	return mh.has.CIBFDSessionGet()
 }
 
-// NetCIStateMod - Modify cluster state
+// NetBFDAdd - Add BFD Session
 func (na *NetAPIStruct) NetBFDAdd(bm *cmn.BFDMod) (int, error) {
 	if na.BgpPeerMode {
 		return CIErrBase, errors.New("running in bgp only mode")
@@ -519,6 +519,22 @@ func (na *NetAPIStruct) NetBFDAdd(bm *cmn.BFDMod) (int, error) {
 	defer mh.mtx.Unlock()
 
 	_, err := mh.has.CIBFDSessionAdd(*bm)
+	if err != nil {
+		return -1, err
+	}
+
+	return 0, nil
+}
+
+// NetBFDDel - Delete BFD Session
+func (na *NetAPIStruct) NetBFDDel(bm *cmn.BFDMod) (int, error) {
+	if na.BgpPeerMode {
+		return CIErrBase, errors.New("running in bgp only mode")
+	}
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	_, err := mh.has.CIBFDSessionDel(*bm)
 	if err != nil {
 		return -1, err
 	}

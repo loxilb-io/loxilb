@@ -42,6 +42,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
+		DeleteConfigBfdRemoteIPRemoteIPHandler: DeleteConfigBfdRemoteIPRemoteIPHandlerFunc(func(params DeleteConfigBfdRemoteIPRemoteIPParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigBfdRemoteIPRemoteIP has not yet been implemented")
+		}),
 		DeleteConfigBgpNeighIPAddressHandler: DeleteConfigBgpNeighIPAddressHandlerFunc(func(params DeleteConfigBgpNeighIPAddressParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigBgpNeighIPAddress has not yet been implemented")
 		}),
@@ -258,6 +261,8 @@ type LoxilbRestAPIAPI struct {
 	//   - application/json
 	JSONProducer runtime.Producer
 
+	// DeleteConfigBfdRemoteIPRemoteIPHandler sets the operation handler for the delete config bfd remote IP remote IP operation
+	DeleteConfigBfdRemoteIPRemoteIPHandler DeleteConfigBfdRemoteIPRemoteIPHandler
 	// DeleteConfigBgpNeighIPAddressHandler sets the operation handler for the delete config bgp neigh IP address operation
 	DeleteConfigBgpNeighIPAddressHandler DeleteConfigBgpNeighIPAddressHandler
 	// DeleteConfigEndpointEpipaddressIPAddressHandler sets the operation handler for the delete config endpoint epipaddress IP address operation
@@ -455,6 +460,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.DeleteConfigBfdRemoteIPRemoteIPHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigBfdRemoteIPRemoteIPHandler")
+	}
 	if o.DeleteConfigBgpNeighIPAddressHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigBgpNeighIPAddressHandler")
 	}
@@ -723,6 +731,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/config/bfd/remoteIP/{remote_ip}"] = NewDeleteConfigBfdRemoteIPRemoteIP(o.context, o.DeleteConfigBfdRemoteIPRemoteIPHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}

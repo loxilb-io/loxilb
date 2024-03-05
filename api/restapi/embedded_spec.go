@@ -141,6 +141,74 @@ func init() {
         }
       }
     },
+    "/config/bfd/remoteIP/{remote_ip}": {
+      "delete": {
+        "description": "Delete a BFD session",
+        "summary": "Delete a BFD session",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Remote IP address",
+            "name": "remote_ip",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Cluster instance name",
+            "name": "instance",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. BFD session already exists",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/bgp/global": {
       "post": {
         "description": "Adds a BGP global config",
@@ -4774,6 +4842,74 @@ func init() {
           },
           "401": {
             "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bfd/remoteIP/{remote_ip}": {
+      "delete": {
+        "description": "Delete a BFD session",
+        "summary": "Delete a BFD session",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Remote IP address",
+            "name": "remote_ip",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Cluster instance name",
+            "name": "instance",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. BFD session already exists",
             "schema": {
               "$ref": "#/definitions/Error"
             }

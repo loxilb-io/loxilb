@@ -863,5 +863,6 @@ type NetHookInterface interface {
 	NetGoBGPGCAdd(gc *GoBGPGlobalConfig) (int, error)
 	NetBFDGet() ([]BFDMod, error)
 	NetBFDAdd(bm *BFDMod) (int, error)
+	NetBFDDel(bm *BFDMod) (int, error)
 	NetHandlePanic()
 }

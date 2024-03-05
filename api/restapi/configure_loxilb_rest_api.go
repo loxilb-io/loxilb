@@ -138,6 +138,7 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	// BFD
 	api.GetConfigBfdAllHandler = operations.GetConfigBfdAllHandlerFunc(handler.ConfigGetBFDSession)
 	api.PostConfigBfdHandler = operations.PostConfigBfdHandlerFunc(handler.ConfigPostBFDSession)
+	api.DeleteConfigBfdRemoteIPRemoteIPHandler = operations.DeleteConfigBfdRemoteIPRemoteIPHandlerFunc(handler.ConfigDeleteBFDSession)
 
 	// Firewall
 	api.GetConfigFirewallAllHandler = operations.GetConfigFirewallAllHandlerFunc(handler.ConfigGetFW)

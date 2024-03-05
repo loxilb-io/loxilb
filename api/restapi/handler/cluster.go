@@ -100,9 +100,31 @@ func ConfigPostBFDSession(params operations.PostConfigBfdParams) middleware.Resp
 	bfdMod.Interval = params.Attr.Interval
 	bfdMod.RetryCount = params.Attr.RetryCount
 
-	tk.LogIt(tk.LogDebug, "[API] Instance %s BFD session update : %s, Interval: %d, RetryCount: %d\n",
+	tk.LogIt(tk.LogDebug, "[API] Instance %s BFD session add : %s, Interval: %d, RetryCount: %d\n",
 		bfdMod.Instance, bfdMod.RemoteIP, bfdMod.Interval, bfdMod.RetryCount)
 	_, err := ApiHooks.NetBFDAdd(&bfdMod)
+	if err != nil {
+		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		return &ResultResponse{Result: err.Error()}
+	}
+	return &ResultResponse{Result: "Success"}
+}
+
+func ConfigDeleteBFDSession(params operations.DeleteConfigBfdRemoteIPRemoteIPParams) middleware.Responder {
+	tk.LogIt(tk.LogDebug, "[API] HA %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+
+	var bfdMod cmn.BFDMod
+
+	// Delete BFD Session
+	if params.Instance != nil {
+		bfdMod.Instance = *params.Instance
+	}
+
+	bfdMod.RemoteIP = net.ParseIP(params.RemoteIP)
+
+	tk.LogIt(tk.LogDebug, "[API] Instance %s BFD session delete : %s\n",
+		bfdMod.Instance, bfdMod.RemoteIP)
+	_, err := ApiHooks.NetBFDDel(&bfdMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
