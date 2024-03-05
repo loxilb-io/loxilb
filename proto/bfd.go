@@ -50,7 +50,7 @@ const (
 	BFDMinSysTXIntervalUs = 100000
 	BFDDflSysTXIntervalUs = 200000
 	BFDMinSysRXIntervalUs = 200000
-	BFDIncrDiscVal        = 0x10000000
+	BFDIncrDiscVal        = 0x00000001
 )
 
 type ConfigArgs struct {
@@ -247,9 +247,9 @@ func (bs *Struct) processBFD(conn *net.UDPConn) {
 		sess := bs.BFDSessMap[remIP.String()]
 		if sess != nil {
 			sess.RunSessionSM(raw)
-		} else {
+		} /* else {
 			tk.LogIt(tk.LogDebug, "bfd session(%s) not found\n", remIP.String())
-		}
+		} */
 	}
 }
 
