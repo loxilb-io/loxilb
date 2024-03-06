@@ -81,6 +81,7 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 - [Code organization](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/code.md)
 - [eBPF internals of loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/loxilbebpf.md)
 - [What are loxilb NAT Modes](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/nat.md)
+- [loxilb load-balancer algorithms](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/lb-algo.md)
 - [Developer's guide to loxicmd](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/cmd-dev.md)
 - [Developer's guide to loxilb API](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/api-dev.md)
 - [API Reference - loxilb web-Api](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/api.md)
