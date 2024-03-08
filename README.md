@@ -40,7 +40,7 @@ Additionally, loxilb can also support cluster-ip and node-port services, thereby
 - L4/NAT stateful loadbalancer
     * NAT44, NAT66, NAT64 with One-ARM, FullNAT, DSR etc
     * Support for TCP, UDP, SCTP (w/ multi-homing), QUIC, FTP, TFTP etc
-- High-availability support with hitless/maglev/cgnat clustering
+- High-availability support with BFD detection for hitless/maglev/cgnat clustering
 - Extensive and scalable end-point liveness probes for cloud-native environments
 - Stateful firewalling and IPSEC/Wireguard support
 - Optimized implementation for features like [Conntrack](https://thermalcircle.de/doku.php?id=blog:linux:connection_tracking_1_modules_and_hooks), QoS etc
@@ -81,6 +81,7 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 - [Code organization](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/code.md)
 - [eBPF internals of loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/loxilbebpf.md)
 - [What are loxilb NAT Modes](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/nat.md)
+- [loxilb load-balancer algorithms](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/lb-algo.md)
 - [Developer's guide to loxicmd](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/cmd-dev.md)
 - [Developer's guide to loxilb API](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/api-dev.md)
 - [API Reference - loxilb web-Api](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/api.md)
