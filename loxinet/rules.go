@@ -978,7 +978,7 @@ func (R *RuleH) electEPSrc(r *ruleEnt) bool {
 				sip = np.rIP
 				if na.mode == cmn.LBModeOneArm {
 					mode = "onearm"
-					e, sip, _ = R.zone.L3.IfaSelectAny(np.xIP, false)
+					e, sip, _ = R.zone.L3.IfaSelectAny(np.xIP, true)
 					if e != 0 {
 						tk.LogIt(tk.LogDebug, "Failed to find suitable source for %s\n", np.xIP.String())
 						addrRslv = true
