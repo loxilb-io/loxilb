@@ -61,7 +61,7 @@ docker:
 	docker build -t ghcr.io/loxilb-io/loxilb:latest .
 
 docker-arm64:
-	docker  buildx build --platform linux/arm64 -t ghcr.io/loxilb-io/loxilb:latest-arm64 .
+	docker  buildx build --platform linux/arm64 --load -t ghcr.io/loxilb-io/loxilb:latest-arm64 .
 
 lint:
 	golangci-lint run --enable-all
