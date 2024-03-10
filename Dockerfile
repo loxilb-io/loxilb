@@ -7,8 +7,9 @@ LABEL description="loxilb official docker image"
 # Disable Prompt During Packages Installation
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Env for golang
+# Env variables
 ENV PATH="${PATH}:/usr/local/go/bin"
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
 
 # Install loxilb related packages
 RUN mkdir -p /opt/loxilb && \
@@ -43,8 +44,8 @@ RUN mkdir -p /opt/loxilb && \
     /usr/local/sbin/loxicmd completion bash > /etc/bash_completion.d/loxi_completion && \
     # Install loxilb
     git clone --recurse-submodules https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && \
-    cd /root/loxilb-io/loxilb/ && go get . && make && \
-    cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
+    cd /root/loxilb-io/loxilb/ && go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
+    else make ;fi && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
     cp api/certification/* /opt/loxilb/cert/ && cd - && \
     cp /root/loxilb-io/loxilb/loxilb-ebpf/kernel/loxilb_dp_debug  /usr/local/sbin/loxilb_dp_debug && \
     cp /root/loxilb-io/loxilb/loxilb /usr/local/sbin/loxilb && \
