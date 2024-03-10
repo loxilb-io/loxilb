@@ -34,8 +34,8 @@ jobs:
     - name: Build and run the latest loxilb Docker image
       if: github.event.inputs.tagName == ''
       run: |
-          docker build . --tag ghcr.io/loxilb-io/loxilb:latest
-          docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
+          docker build . --tag ghcr.io/loxilb-io/loxilb:latest-amd64
+          docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest-amd64
       
     - name: Build and run the loxilb Docker image with given tag
       if: github.event.inputs.tagName != ''
