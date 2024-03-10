@@ -4,11 +4,6 @@ on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
-    inputs:
-      tagName:
-        description: 'Tag Name'     
-        required: true
-        default: 'latest'
         
 jobs:
   build:
@@ -42,7 +37,7 @@ jobs:
         context: .
         platforms: linux/amd64, linux/arm64
         push: false
-        tags: ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }} 
+        tags: ghcr.io/loxilb-io/loxilb:latest
           
     - name: Build and push
       if: |
@@ -52,4 +47,4 @@ jobs:
         context: .
         platforms: linux/amd64, linux/arm64
         push: true
-        tags: ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }} 
+        tags: ghcr.io/loxilb-io/loxilb:latest
