@@ -12,12 +12,13 @@ dexec="sudo docker exec -i "
 hns="sudo ip netns "
 hexist="$vrn$hn"
 lxdocker="ghcr.io/loxilb-io/loxilb:latest"
+hostdocker="ghcr.io/nicolaka/netshoot:latest"
 cluster_opts=""
 ka_opts=""
 var=$(lsb_release -r | cut -f2)
-if [[ $var == *"22.04"* ]];then
-  lxdocker="ghcr.io/loxilb-io/loxilb:latestu22"
-fi
+#if [[ $var == *"22.04"* ]];then
+#  lxdocker="ghcr.io/loxilb-io/loxilb:latestu22"
+#fi
 
 loxilbs=()
 
@@ -32,11 +33,9 @@ pull_dockers() {
   ## loxilb docker
   docker pull $lxdocker
   ## Host docker 
-  docker pull eyes852/ubuntu-iperf-test:0.5
+  docker pull docker pull $hostdocker
   ## BGP host docker
   docker pull ewindisch/quagga
-  ## Keepalive docker
-  docker pull osixia/keepalived:2.0.20
 }
 
 ## Creates a docker host
@@ -119,7 +118,7 @@ spawn_docker_host() {
     if [[ "$bgp" == "yes" || ! -z "$bpath" ]]; then
       docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit $bgp_conf --name $dname ewindisch/quagga
     else
-      docker run -u root --cap-add SYS_ADMIN -dit --name $dname eyes852/ubuntu-iperf-test:0.5
+      docker run -u root --cap-add SYS_ADMIN -dit --name $dname $hostdocker
     fi
   elif [[ "$dtype" == "seahost" ]]; then
       docker run -u root --cap-add SYS_ADMIN -i -t --rm --detach --entrypoint /bin/bash --name $dname  ghcr.io/loxilb-io/seagull:ubuntu1804
@@ -173,13 +172,13 @@ get_llb_peerIP() {
 ## Deletes a docker host
 ## arg1 - hostname 
 delete_docker_host() {
-  if docker stop $1 2>&1 >> /dev/null
+  if docker kill $1 2>&1 >> /dev/null
   then
     hd="true"
     ka=`docker ps -f name=ka_$1| grep -w ka_$1 | cut  -d " "  -f 1 | grep -iv  "CONTAINER"`
     loxilbs=( "${loxilbs[@]/$1}" )
     if [ "$ka" != "" ]; then
-      docker stop ka_$1 2>&1 >> /dev/null
+      docker kill ka_$1 2>&1 >> /dev/null
       docker rm ka_$1 2>&1 >> /dev/null
     fi
   fi
