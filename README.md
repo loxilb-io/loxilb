@@ -65,7 +65,7 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 - Hitless failover support might be essential for mission-critical applications
 - E2 might require SCTP-LB with OpenVPN bundled together
 
-## Getting Started
+## How-To Guides
 - [How-To : Deploy loxilb in K8s with kube-loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/kube-loxilb.md)
 - [How-To : Run in K8s with in-cluster mode](https://www.loxilb.io/post/k8s-nuances-of-in-cluster-external-service-lb-with-loxilb)
 - [How-To : High-availability with loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/ha-deploy.md)
@@ -74,8 +74,7 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 - [How-To : Standalone configuration](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/cmd.md)
 - [How-To : debug](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/debugging.md)
 
-## Getting started with different K8s distributions & tools
-
+## Getting started with different K8s distributions/tools
 - [K3s : loxilb with default flannel](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s_quick_start_flannel.md)
 - [K3s : loxilb with cilium](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/quick_start_with_cilium.md)
 - [K0s : loxilb with default kube-router networking](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k0s_quick_start.md)
