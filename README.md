@@ -78,6 +78,7 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 
 - [K3s : loxilb with default flannel](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s_quick_start_flannel.md)
 - [K3s : loxilb with cilium](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/quick_start_with_cilium.md)
+- [K0s : loxilb with default kube-router networking](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k0s_quick_start.md)
 
 ## Knowledge-Base   
 - [What is eBPF](ebpf.md)
