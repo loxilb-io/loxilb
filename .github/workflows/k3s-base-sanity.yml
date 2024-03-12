@@ -10,7 +10,7 @@ on:
         required: true
         default: 'k3s-base'
  workflow_run:
-    workflows: ["Build-CI"]
+    workflows: ["Docker-Multi-Arch"]
     types:
       - completed
 jobs:

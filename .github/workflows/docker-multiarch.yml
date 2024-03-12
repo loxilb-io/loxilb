@@ -1,8 +1,10 @@
 name:  Docker-Multi-Arch
   
 on:
+  push:
+    branches: [ "main" ]
   workflow_dispatch:
-    inputs:
+     inputs:
       tagName:
         description: 'Tag Name'     
         required: true
@@ -40,14 +42,27 @@ jobs:
         context: .
         platforms: linux/amd64, linux/arm64
         push: false
-        tags: ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }} 
+        tags: ghcr.io/loxilb-io/loxilb:latest
           
-    - name: Build and push
+    - name: Build and push to latest
       if: |
-          github.repository == 'loxilb-io/loxilb'
+          github.repository == 'loxilb-io/loxilb' 
+          &&  github.event.inputs.tagName == ''          
       uses: docker/build-push-action@v4
       with:
         context: .
         platforms: linux/amd64, linux/arm64
         push: true
-        tags: ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }} 
+        tags: ghcr.io/loxilb-io/loxilb:latest
+
+    - name: Build and push to given tag
+      if: |
+          github.repository == 'loxilb-io/loxilb' 
+          &&  github.event.inputs.tagName != ''          
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        platforms: linux/amd64, linux/arm64
+        push: true
+        tags: ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }}
+    

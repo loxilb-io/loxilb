@@ -226,9 +226,7 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 		ci.StateStr = cm.State
 		ci.State = h.StateMap[cm.State]
 		ci.Vip = cm.Vip
-		if h.SpawnKa && (cm.State == "FAULT" || cm.State == "STOP") {
-			RunCommand("pkill keepalived", false)
-		}
+
 		if mh.bgp != nil {
 			mh.bgp.UpdateCIState(cm.Instance, ci.State, ci.Vip)
 		}
@@ -301,21 +299,21 @@ func (h *CIStateH) CIBFDSessionAdd(bm cmn.BFDMod) (int, error) {
 	if !h.SpawnKa {
 		tk.LogIt(tk.LogInfo, "[CLUSTER] Cluster Instance %s starting BFD..\n", bm.Instance)
 		h.SpawnKa = true
-		
-	    h.RemoteIP = bm.RemoteIP
-	    h.SourceIP = bm.SourceIP
-	    h.Interval = int64(bm.Interval)
+
+		h.RemoteIP = bm.RemoteIP
+		h.SourceIP = bm.SourceIP
+		h.Interval = int64(bm.Interval)
 		bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: bm.RemoteIP.String(), SourceIP: bm.SourceIP.String(),
-			Port: cmn.BFDPort, Interval: uint32(bm.Interval), 
+			Port: cmn.BFDPort, Interval: uint32(bm.Interval),
 			Multi: bm.RetryCount, Instance: bm.Instance}
 		go h.startBFDProto(bfdSessConfigArgs)
 	} else {
-		bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: h.RemoteIP.String(), SourceIP: h.SourceIP.String(), 
-			Port: cmn.BFDPort, Interval: uint32(bm.Interval), 
+		bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: h.RemoteIP.String(), SourceIP: h.SourceIP.String(),
+			Port: cmn.BFDPort, Interval: uint32(bm.Interval),
 			Multi: bm.RetryCount, Instance: bm.Instance}
 		err := h.Bs.BFDAddRemote(bfdSessConfigArgs, h)
 		if err != nil {
-			tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote: %s\n",err.Error())
+			tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote: %s\n", err.Error())
 			return -1, err
 		}
 		tk.LogIt(tk.LogInfo, "KA - BFD remote %s:%s:%vus Added\n", h.RemoteIP.String(), h.SourceIP.String(), bm.Interval)
