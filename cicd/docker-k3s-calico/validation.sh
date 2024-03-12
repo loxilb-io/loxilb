@@ -1,6 +1,6 @@
 #!/bin/bash
 source ../common.sh
-echo docker-k3s-cilium
+echo docker-k3s-calico
 
 if [ "$1" ]; then
   KUBECONFIG="$1"
@@ -61,9 +61,9 @@ res=`curl -s --connect-time 10 http://192.168.163.247:56002`
 echo "Result"
 echo $res
 if [[ "$res" == *"Welcome to nginx"* ]]; then
-    echo -e "\n\ndocker-k3s-cilium TCP service (loxilb) [OK]"
+    echo -e "\n\ndocker-k3s-calico TCP service (loxilb) [OK]"
 else
-    echo -e "\n\ndocker-k3s-cilium TCP service (loxilb) [NOK]"
+    echo -e "\n\ndocker-k3s-calico TCP service (loxilb) [NOK]"
     exit 1
 fi
 
