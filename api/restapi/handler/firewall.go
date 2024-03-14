@@ -156,6 +156,7 @@ func ConfigGetFW(params operations.GetConfigFirewallAllParams) middleware.Respon
 		tmpOpts.Trap = FW.Opts.Trap
 		tmpOpts.Record = FW.Opts.Record
 		tmpOpts.FwMark = int64(FW.Opts.Mark)
+		tmpOpts.Counter = FW.Opts.Counter
 
 		tmpResult.RuleArguments = &tmpRule
 		tmpResult.Opts = &tmpOpts

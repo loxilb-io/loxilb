@@ -20,6 +20,9 @@ type FirewallOptionEntry struct {
 	// Allow any matching rule
 	Allow bool `json:"allow,omitempty"`
 
+	// traffic counters
+	Counter string `json:"counter,omitempty"`
+
 	// Drop any matching rule
 	Drop bool `json:"drop,omitempty"`
 
