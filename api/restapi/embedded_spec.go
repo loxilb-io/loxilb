@@ -3892,6 +3892,10 @@ func init() {
           "description": "Allow any matching rule",
           "type": "boolean"
         },
+        "counter": {
+          "description": "traffic counters",
+          "type": "string"
+        },
         "drop": {
           "description": "Drop any matching rule",
           "type": "boolean"
@@ -8611,6 +8615,10 @@ func init() {
         "allow": {
           "description": "Allow any matching rule",
           "type": "boolean"
+        },
+        "counter": {
+          "description": "traffic counters",
+          "type": "string"
         },
         "drop": {
           "description": "Drop any matching rule",

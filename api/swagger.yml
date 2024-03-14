@@ -3215,6 +3215,10 @@ definitions:
       fwMark:
         type: integer
         description: Set a fwmark for any matching rule
+      counter:
+        type: string
+        description: traffic counters
+
 
   FirewallRuleEntry:
     type: object
@@ -3359,4 +3363,4 @@ definitions:
       retryCount:
         type: integer
         format: uint8
-        description: Retry Count to detect failure      
+        description: Retry Count to detect failure

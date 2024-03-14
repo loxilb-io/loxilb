@@ -398,6 +398,8 @@ type FwOptArg struct {
 	Allow bool `json:"allow"`
 	// Mark - Mark the matching rule
 	Mark uint32 `json:"fwMark"`
+	// Counter - Traffic counter
+	Counter string `json:"counter"`
 }
 
 // FwRuleArg - Information related to firewall rule

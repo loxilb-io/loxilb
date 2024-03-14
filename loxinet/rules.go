@@ -1584,6 +1584,9 @@ func (R *RuleH) GetFwRule() ([]cmn.FwRuleMod, error) {
 		ret.Opts.Mark = fwOpts.opt.fwMark
 		ret.Opts.Record = fwOpts.opt.record
 
+		data.Fw2DP(DpStatsGetImm)
+		ret.Opts.Counter = fmt.Sprintf("%v:%v", data.stat.packets, data.stat.bytes)
+
 		// Make FwRule
 		res = append(res, ret)
 	}
@@ -2416,6 +2419,22 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 
 // Fw2DP - Sync state of fw-rule entity to data-path
 func (r *ruleEnt) Fw2DP(work DpWorkT) int {
+
+	if work == DpStatsGet || work == DpStatsGetImm {
+		nStat := new(StatDpWorkQ)
+		nStat.Work = work
+		nStat.Mark = uint32(r.ruleNum)
+		nStat.Name = MapNameFw4
+		nStat.Bytes = &r.stat.bytes
+		nStat.Packets = &r.stat.packets
+
+		if work != DpStatsGetImm {
+			mh.dp.ToDpCh <- nStat
+		} else {
+			DpWorkSingle(mh.dp, nStat)
+		}
+		return 0
+	}
 
 	nWork := new(FwDpWorkQ)
 
