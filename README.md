@@ -127,7 +127,6 @@ Feel free to post your queries in github [discussion](https://github.com/loxilb-
 | [![liveness-sanity-CI](https://github.com/loxilb-io/loxilb/actions/workflows/liveness-sanity.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/liveness-sanity.yml)  | |
 | ![nat66-sanity-CI](https://github.com/loxilb-io/loxilb/actions/workflows/nat66-sanity.yml/badge.svg)   | | 
 | [![perf-CI](https://github.com/loxilb-io/loxilb/actions/workflows/perf.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/perf.yml)  | |
-|    |  | 
 
 | K3s Tests | K8s Cluster Tests | EKS Test |
 |:-------------|:-------------|:-------------|
