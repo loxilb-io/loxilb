@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
         struct sockaddr_in laddr = {0};
         int    sockfd, in, flags;
         char   *saddr;
-        int    sport, lport, error = 0;
+        int    sport, lport, error = 0, secs = 0;
         struct sctp_status status = {0};
         struct sctp_sndrcvinfo sndrcvinfo = {0};
         struct sctp_event_subscribe events = {0};
@@ -51,6 +51,9 @@ int main(int argc, char* argv[])
 
         saddr = argv[3];
         sport = atoi(argv[4]);
+        if (argv[5]) {
+           secs = atoi(argv[5]);
+        }
         bzero( (void *)&servaddr, sizeof(servaddr) );
         servaddr.sin_family = AF_INET;
         servaddr.sin_port = htons(sport);
@@ -75,9 +78,11 @@ int main(int argc, char* argv[])
                 {
                         buff[in] = 0;
                         printf("%s",buff);
+                        fflush(stdout);
                         break;
                 }
         } 
+        if(secs) sleep(secs);
 
         close(sockfd);
         return 0;
