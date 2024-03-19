@@ -1,8 +1,5 @@
-# Download base image ubuntu 20.04
-FROM ubuntu:20.04
-
-# LABEL about the loxilb image
-LABEL description="loxilb official docker image"
+# Download base image ubuntu 20.04 for build
+FROM ubuntu:20.04 as build
 
 # Disable Prompt During Packages Installation
 ARG DEBIAN_FRONTEND=noninteractive
@@ -70,6 +67,33 @@ RUN mkdir -p /opt/loxilb && \
 # COPY ./loxilb.rep* /root/loxilb-io/loxilb/loxilb
 # COPY ./llb_ebpf_main.o.rep* /opt/loxilb/llb_ebpf_main.o
 # COPY ./llb_xdp_main.o.rep* /opt/loxilb/llb_xdp_main.o
+
+FROM ubuntu:20.04
+
+# LABEL about the loxilb image
+LABEL description="loxilb official docker image"
+
+# Disable Prompt During Packages Installation
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Env variables
+ENV PATH="${PATH}:/usr/local/go/bin"
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
+
+RUN apt-get update && apt-get install -y --no-install-recommends sudo libbsd-dev iproute2 tcpdump bridge-utils net-tools && \
+    rm -rf /var/lib/apt/lists/* && apt clean
+
+COPY --from=build /usr/lib64/libbpf* /usr/lib64/
+COPY --from=build /usr/local/go/bin /usr/local/go/bin
+COPY --from=build /usr/local/sbin/mkllb_bpffs /usr/local/sbin/mkllb_bpffs
+COPY --from=build /usr/local/sbin/loxilb_dp_debug /usr/local/sbin/loxilb_dp_debug
+COPY --from=build /usr/local/sbin/loxicmd /usr/local/sbin/loxicmd
+COPY --from=build /opt/loxilb /opt/loxilb
+COPY --from=build /root/loxilb-io/loxilb/loxilb /root/loxilb-io/loxilb/loxilb
+COPY --from=build /usr/local/sbin/ntc /usr/local/sbin/ntc
+COPY --from=build /usr/local/sbin/bpftool /usr/local/sbin/bpftool
+COPY --from=build /usr/sbin/gobgp* /usr/sbin/
+COPY --from=build /root/.bashrc /root/.bashrc
 
 ENTRYPOINT ["/root/loxilb-io/loxilb/loxilb"]
 
