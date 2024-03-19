@@ -2,6 +2,8 @@
 source ../common.sh
 echo SCENARIO-httpsep
 
+$dexec llb1 bash -c "apt update && apt install -y curl"
+
 servArr=( "server1" "server2" "server3" )
 ep=( "31.31.31.1" "32.32.32.1" "33.33.33.1" )
 code=0
