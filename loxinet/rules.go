@@ -78,18 +78,19 @@ const (
 
 // constants
 const (
-	MaxNatEndPoints          = 16
-	DflLbaInactiveTries      = 2         // Default number of inactive tries before LB arm is turned off
-	MaxDflLbaInactiveTries   = 100       // Max number of inactive tries before LB arm is turned off
-	DflLbaCheckTimeout       = 10        // Default timeout for checking LB arms
-	DflHostProbeTimeout      = 60        // Default probe timeout for end-point host
-	InitHostProbeTimeout     = 15        // Initial probe timeout for end-point host
-	MaxHostProbeTime         = 24 * 3600 // Max possible host health check duration
-	LbDefaultInactiveTimeout = 4 * 60    // Default inactive timeout for established sessions
-	LbMaxInactiveTimeout     = 24 * 3600 // Maximum inactive timeout for established sessions
-	MaxEndPointCheckers      = 4         // Maximum helpers to check endpoint health
-	EndPointCheckerDuration  = 2         // Duration at which ep-helpers will run
-	MaxEndPointSweeps        = 20        // Maximum end-point sweeps per round
+	MaxNatEndPoints            = 16
+	DflLbaInactiveTries        = 2         // Default number of inactive tries before LB arm is turned off
+	MaxDflLbaInactiveTries     = 100       // Max number of inactive tries before LB arm is turned off
+	DflLbaCheckTimeout         = 10        // Default timeout for checking LB arms
+	DflHostProbeTimeout        = 60        // Default probe timeout for end-point host
+	InitHostProbeTimeout       = 15        // Initial probe timeout for end-point host
+	MaxHostProbeTime           = 24 * 3600 // Max possible host health check duration
+	LbDefaultInactiveTimeout   = 4 * 60    // Default inactive timeout for established sessions
+	LbDefaultInactiveNSTimeout = 20        // Default inactive timeout for non-session oriented protocols
+	LbMaxInactiveTimeout       = 24 * 3600 // Maximum inactive timeout for established sessions
+	MaxEndPointCheckers        = 4         // Maximum helpers to check endpoint health
+	EndPointCheckerDuration    = 2         // Duration at which ep-helpers will run
+	MaxEndPointSweeps          = 20        // Maximum end-point sweeps per round
 )
 
 type ruleTType uint
@@ -1206,6 +1207,9 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		return RuleArgsErr, errors.New("service-args error")
 	} else if serv.InactiveTimeout == 0 {
 		serv.InactiveTimeout = LbDefaultInactiveTimeout
+		if serv.Proto != "tcp" && serv.Proto != "sctp" {
+			serv.InactiveTimeout = LbDefaultInactiveNSTimeout
+		}
 	}
 
 	// Validate liveness probetype and port
