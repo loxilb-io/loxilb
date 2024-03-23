@@ -71,10 +71,18 @@ func L3Init(zone *Zone) *L3H {
 // IfaAdd - Adds an interface IP address (primary or secondary) and associate it with Obj
 // Obj can be anything but usually it is the name of a valid interface
 func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
-	var sec bool = false
+	sec := false
 	addr, network, err := net.ParseCIDR(Cidr)
 	if err != nil {
 		return L3AddrErr, errors.New("ip address parse error")
+	}
+
+	dev := fmt.Sprintf("llb-rule-%s", addr.String())
+	if Obj != dev {
+		ret, _ := l3.IfaFind(dev, addr)
+		if ret == 0 {
+			l3.IfaDelete(dev, addr.String()+"/32")
+		}
 	}
 
 	ifObjID := -1
@@ -294,16 +302,41 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP, findAny bool) (int, net.IP, st
 	return L3AddrErr, net.IPv4(0, 0, 0, 0), ""
 }
 
-// IfaFindAny - Given any ip address, check if it matches ip address in any ifa list
+// IfaAddrLocal - Given any ip address, check if it matches ip address in any ifa list
 // This is useful to determine if ip address is already assigned to some interface
-func (l3 *L3H) IfaFindAny(addr net.IP) (int, net.IP) {
+func (l3 *L3H) IfaAddrLocal(addr net.IP) (int, net.IP) {
 	for ifName := range l3.IfaMap {
-		ret, rAddr := l3.IfaFind(ifName.Obj, addr)
+		ret, rAddr := l3.IfaFindAddr(ifName.Obj, addr)
 		if ret == 0 {
 			return 0, rAddr
 		}
 	}
 	return L3AddrErr, nil
+}
+
+// IfaFindAddr - Given any ip address, check if it matches ip address from Obj's ifa list
+// This is useful to determine if ip address is already assigned to some interface
+func (l3 *L3H) IfaFindAddr(Obj string, addr net.IP) (int, net.IP) {
+
+	key := IfaKey{Obj}
+	ifa := l3.IfaMap[key]
+
+	if ifa == nil {
+		return L3ObjErr, net.IPv4(0, 0, 0, 0)
+	}
+
+	for _, ifaEnt := range ifa.Ifas {
+
+		if tk.IsNetIPv6(addr.String()) && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String()) {
+			continue
+		}
+
+		if ifaEnt.IfaAddr.Equal(addr) {
+			return 0, ifaEnt.IfaAddr
+		}
+	}
+
+	return L3AddrErr, net.IPv4(0, 0, 0, 0)
 }
 
 // IfaFind - Given any ip address, check if it matches ip address from Obj's ifa list
