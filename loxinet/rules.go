@@ -2589,9 +2589,9 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 	ciState, _ := mh.has.CIStateGetInst(cmn.CIDefault)
 	if ciState == "MASTER" {
 		dev := fmt.Sprintf("llb-rule-%s", IP.String())
-		ret, _ := mh.zr.L3.IfaFind(dev, IP)
+		ret, _ := R.zone.L3.IfaFind(dev, IP)
 		if ret == 0 {
-			mh.zr.L3.IfaDelete(dev, IP.String()+"/32")
+			R.zone.L3.IfaDelete(dev, IP.String()+"/32")
 		}
 		ev, _, iface := R.zone.L3.IfaSelectAny(IP, false)
 		if ev == 0 {
@@ -2624,12 +2624,14 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 			}
 		}
 	} else {
-		dev := fmt.Sprintf("llb-rule-%s", IP.String())
-		ret, _ := mh.zr.L3.IfaFind(dev, IP)
-		if ret != 0 {
-			_, err := mh.zr.L3.IfaAdd(dev, IP.String()+"/32")
-			if err != nil {
-				fmt.Printf("Failed to add IP : %s:%s\n", dev, err)
+		if _, foundIP := R.zone.L3.IfaAddrLocal(IP); foundIP == nil {
+			dev := fmt.Sprintf("llb-rule-%s", IP.String())
+			ret, _ := R.zone.L3.IfaFind(dev, IP)
+			if ret != 0 {
+				_, err := R.zone.L3.IfaAdd(dev, IP.String()+"/32")
+				if err != nil {
+					fmt.Printf("Failed to add IP : %s:%s\n", dev, err)
+				}
 			}
 		}
 	}
