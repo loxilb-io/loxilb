@@ -26,4 +26,6 @@ sudo ifconfig eth2 promisc
 
 sudo kubectl apply -f /vagrant/multus/multus-pod.yml
 sudo kubectl apply -f /vagrant/multus/multus-service.yml
+sudo kubectl apply -f /vagrant/multus/multus-sctp-pod.yml
+sudo kubectl apply -f /vagrant/multus/multus-sctp-service.yml
 /vagrant/wait_ready.sh
