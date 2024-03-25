@@ -356,6 +356,15 @@ type UlClDpWorkQ struct {
 	Type   DpTunT
 }
 
+// SockVIPDpWorkQ - work queue entry for local VIP-port rewrite
+type SockVIPDpWorkQ struct {
+	Work   DpWorkT
+	VIP    net.IP
+	Port   uint16
+	RwPort uint16
+	Status *DpStatusT
+}
+
 // DpSyncOpT - Sync Operation type
 type DpSyncOpT uint8
 
@@ -417,6 +426,8 @@ type DpHookInterface interface {
 	DpTableGet(w *TableDpWorkQ) (DpRetT, error)
 	DpCtAdd(w *DpCtInfo) int
 	DpCtDel(w *DpCtInfo) int
+	DpSockVIPAdd(w *SockVIPDpWorkQ) int
+	DpSockVIPDel(w *SockVIPDpWorkQ) int
 	DpTableGC()
 	DpCtGetAsync()
 	DpGetLock()
@@ -718,6 +729,17 @@ func (dp *DpH) DpWorkOnFw(fWq *FwDpWorkQ) DpRetT {
 		return dp.DpHooks.DpFwRuleAdd(fWq)
 	} else if fWq.Work == DpRemove {
 		return dp.DpHooks.DpFwRuleDel(fWq)
+	}
+
+	return DpWqUnkErr
+}
+
+// DpWorkOnSockVIP - routine to work on local VIP-port rewrite
+func (dp *DpH) DpWorkOnSockVIP(vsWq *SockVIPDpWorkQ) DpRetT {
+	if vsWq.Work == DpCreate {
+		return dp.DpHooks.DpSockVIPAdd(vsWq)
+	} else if vsWq.Work == DpRemove {
+		return dp.DpHooks.DpSockVIPDel(vsWq)
 	}
 
 	return DpWqUnkErr

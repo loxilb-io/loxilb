@@ -2418,6 +2418,18 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 
 	mh.dp.ToDpCh <- nWork
 
+	if mh.locVIP {
+		switch at := r.act.action.(type) {
+		case *ruleNatActs:
+			for _, ep := range at.endPoints {
+				nVIPWork := new(SockVIPDpWorkQ)
+				nVIPWork.VIP = nWork.ServiceIP
+				nVIPWork.Port = nWork.L4Port
+				nVIPWork.RwPort = ep.xPort
+				mh.dp.ToDpCh <- nVIPWork
+			}
+		}
+	}
 	return 0
 }
 

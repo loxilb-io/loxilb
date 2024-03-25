@@ -90,6 +90,9 @@ const (
 	EbpfErrFwDel
 	EbpfErrCtAdd
 	EbpfErrCtDel
+	EbpfErrSockVIPMod
+	EbpfErrSockVIPAdd
+	EbpfErrSockVIPDel
 	EbpfErrWqUnk
 )
 
@@ -135,6 +138,8 @@ type (
 	fw4Ent     C.struct_dp_fwv4_ent
 	portAct    C.struct_dp_rdr_act
 	mapNoti    C.struct_ll_dp_map_notif
+	vipKey     C.struct_sock_rwr_key
+	vipAct     C.struct_sock_rwr_action
 )
 
 // DpEbpfH - context container
@@ -256,7 +261,7 @@ func DpEbpfSetLogLevel(logLevel tk.LogLevelT) {
 }
 
 // DpEbpfInit - initialize the ebpf dp subsystem
-func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, egrHooks bool, logLevel tk.LogLevelT) *DpEbpfH {
+func DpEbpfInit(clusterEn, rssEn, egrHooks, localVIP bool, nodeNum int, logLevel tk.LogLevelT) *DpEbpfH {
 	var cfg C.struct_ebpfcfg
 
 	if clusterEn {
@@ -268,6 +273,11 @@ func DpEbpfInit(clusterEn bool, nodeNum int, rssEn bool, egrHooks bool, logLevel
 		cfg.egr_hooks = 1
 	} else {
 		cfg.egr_hooks = 0
+	}
+	if localVIP {
+		cfg.have_sockrwr = 1
+	} else {
+		cfg.have_sockrwr = 0
 	}
 
 	cfg.nodenum = C.int(nodeNum)
@@ -355,6 +365,10 @@ func (e *DpEbpfH) DpEbpfUnInit() {
 		C.llb_dp_link_attach(ifStr, section, C.LL_BPF_MOUNT_TC, 1)
 		C.free(unsafe.Pointer(ifStr))
 		C.free(unsafe.Pointer(section))
+	}
+
+	if mh.locVIP {
+		C.llb_unload_kern_sock()
 	}
 }
 
@@ -1664,6 +1678,63 @@ func (e *DpEbpfH) DpFwRuleAdd(w *FwDpWorkQ) int {
 // DpFwRuleDel - routine to work on a ebpf fw delete request
 func (e *DpEbpfH) DpFwRuleDel(w *FwDpWorkQ) int {
 	return e.DpFwRuleMod(w)
+}
+
+// DpSockVIPMod - routine to work on a ebpf local VIP-port rewrite modification
+func (e *DpEbpfH) DpSockVIPMod(w *SockVIPDpWorkQ) int {
+	key := new(vipKey)
+
+	if tk.IsNetIPv6(w.VIP.String()) {
+		return EbpfErrSockVIPMod
+	}
+
+	C.memset(unsafe.Pointer(key), 0, C.sizeof_struct_sock_rwr_key)
+	key.vip[0] = C.uint(tk.IPtonl(w.VIP))
+	key.port = C.ushort(tk.Htons(w.Port))
+
+	if w.Work == DpCreate {
+		dat := new(vipAct)
+		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_sock_rwr_action)
+		dat.rw_port = C.ushort(tk.Htons(w.RwPort))
+
+		ret := C.llb_add_map_elem(C.LL_DP_SOCK_RWR_MAP,
+			unsafe.Pointer(key),
+			unsafe.Pointer(dat))
+
+		if ret != 0 {
+			*w.Status = 1
+			return EbpfErrSockVIPAdd
+		}
+
+		*w.Status = 0
+
+	} else if w.Work == DpRemove {
+		C.llb_del_map_elem(C.LL_DP_POL_MAP, unsafe.Pointer(key))
+		return 0
+	}
+	return 0
+}
+
+// DpSockVIPAdd - routine to work on a ebpf local VIP-port rewrite addition
+func (e *DpEbpfH) DpSockVIPAdd(w *SockVIPDpWorkQ) int {
+	ec := e.DpSockVIPMod(w)
+	if ec != 0 {
+		*w.Status = DpCreateErr
+	} else {
+		*w.Status = 0
+	}
+	return ec
+}
+
+// DpSockVIPDel - routine to work on a ebpf local VIP-port rewrite delete
+func (e *DpEbpfH) DpSockVIPDel(w *SockVIPDpWorkQ) int {
+	ec := e.DpSockVIPMod(w)
+	if ec != 0 {
+		*w.Status = DpRemoveErr
+	} else {
+		*w.Status = 0
+	}
+	return ec
 }
 
 //export goMapNotiHandler

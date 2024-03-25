@@ -19,13 +19,6 @@ package loxinet
 import (
 	"errors"
 	"fmt"
-	apiserver "github.com/loxilb-io/loxilb/api"
-	k8s "github.com/loxilb-io/loxilb/api/k8s"
-	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
-	prometheus "github.com/loxilb-io/loxilb/api/prometheus"
-	cmn "github.com/loxilb-io/loxilb/common"
-	opts "github.com/loxilb-io/loxilb/options"
-	tk "github.com/loxilb-io/loxilib"
 	"net"
 	_ "net/http/pprof"
 	"os"
@@ -36,6 +29,14 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	apiserver "github.com/loxilb-io/loxilb/api"
+	k8s "github.com/loxilb-io/loxilb/api/k8s"
+	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
+	prometheus "github.com/loxilb-io/loxilb/api/prometheus"
+	cmn "github.com/loxilb-io/loxilb/common"
+	opts "github.com/loxilb-io/loxilb/options"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 // string constant representing root security zone
@@ -77,6 +78,7 @@ type loxiNetH struct {
 	self   int
 	rssEn  bool
 	eHooks bool
+	locVIP bool
 	pFile  *os.File
 }
 
@@ -209,6 +211,7 @@ func loxiNetInit() {
 	mh.eHooks = opts.Opts.EgrHooks
 	mh.sumDis = opts.Opts.CSumDisable
 	mh.pProbe = opts.Opts.PassiveEPProbe
+	mh.locVIP = opts.Opts.LocalVIP
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 
@@ -226,7 +229,7 @@ func loxiNetInit() {
 			return
 		}
 	}
-	if opts.Opts.Rpc == "netrpc" {
+	if opts.Opts.RPC == "netrpc" {
 		rpcMode = RPCTypeNetRPC
 	} else {
 		rpcMode = RPCTypeGRPC
@@ -234,7 +237,7 @@ func loxiNetInit() {
 
 	if !opts.Opts.BgpPeerMode {
 		// Initialize the ebpf datapath subsystem
-		mh.dpEbpf = DpEbpfInit(clusterMode, mh.self, mh.rssEn, mh.eHooks, -1)
+		mh.dpEbpf = DpEbpfInit(clusterMode, mh.rssEn, mh.eHooks, mh.locVIP, mh.self, -1)
 		mh.dp = DpBrokerInit(mh.dpEbpf, rpcMode)
 
 		// Initialize the security zone subsystem
@@ -291,8 +294,8 @@ func loxiNetInit() {
 	}
 
 	// Initialize the k8s subsystem
-	if opts.Opts.K8sApi != "none" {
-		k8s.K8sApiInit(opts.Opts.K8sApi, NetAPIInit(opts.Opts.BgpPeerMode))
+	if opts.Opts.K8sAPI != "none" {
+		k8s.K8sApiInit(opts.Opts.K8sAPI, NetAPIInit(opts.Opts.BgpPeerMode))
 	}
 
 	// Initialize the Prometheus subsystem
