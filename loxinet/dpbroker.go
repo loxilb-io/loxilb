@@ -502,7 +502,7 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
 
 	rpcRetries := 0
 	rpcErr := false
-	var cti *DpCtInfo = nil
+	var cti *DpCtInfo
 	var blkCti []DpCtInfo
 
 	switch na := arg.(type) {
@@ -805,6 +805,8 @@ func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 		ret = dp.DpWorkOnFw(mq)
 	case *PeerDpWorkQ:
 		ret = dp.DpWorkOnPeerOp(mq)
+	case *SockVIPDpWorkQ:
+		ret = dp.DpWorkOnSockVIP(mq)
 	default:
 		tk.LogIt(tk.LogError, "unexpected type %T\n", mq)
 		ret = DpWqUnkErr

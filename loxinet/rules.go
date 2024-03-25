@@ -1341,7 +1341,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		// If a NAT rule already exists, we try not reschuffle the order of the end-points.
 		// We will try to append the new end-points at the end, while marking any other end-points
 		// not in the new list as inactive
-		var ruleChg bool = false
+		ruleChg := false
 		eEps := eRule.act.action.(*ruleNatActs).endPoints
 		for i, eEp := range eEps {
 			for j, nEp := range natActs.endPoints {
@@ -1436,7 +1436,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	r.act.action = &natActs
 	r.ruleNum, err = R.tables[RtLB].Mark.GetCounter()
 	if err != nil {
-		tk.LogIt(tk.LogError, "nat lb-rule - %s:%s hwm error\n", eRule.tuples.String(), eRule.act.String())
+		tk.LogIt(tk.LogError, "nat lb-rule - %s:%s hwm error\n", r.tuples.String(), r.act.String())
 		return RuleAllocErr, errors.New("rule-hwm error")
 	}
 	r.sT = time.Now()
@@ -1682,7 +1682,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	r.act.action = &fwOpts
 	r.ruleNum, err = R.tables[RtFw].Mark.GetCounter()
 	if err != nil {
-		tk.LogIt(tk.LogError, "fw-rule - %s:%s mark error\n", eFw.tuples.String(), eFw.act.String())
+		tk.LogIt(tk.LogError, "fw-rule - %s:%s mark error\n", r.tuples.String(), r.act.String())
 		return RuleAllocErr, errors.New("rule-mark error")
 	}
 	r.sT = time.Now()
