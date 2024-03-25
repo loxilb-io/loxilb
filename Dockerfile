@@ -80,7 +80,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV PATH="${PATH}:/usr/local/go/bin"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
 
-RUN apt-get update && apt-get install -y --no-install-recommends sudo libbsd-dev iproute2 tcpdump bridge-utils net-tools && \
+RUN apt-get update && apt-get install -y --no-install-recommends sudo \
+    libbsd-dev iproute2 tcpdump bridge-utils net-tools libllvm10 && \
     rm -rf /var/lib/apt/lists/* && apt clean
 
 COPY --from=build /usr/lib64/libbpf* /usr/lib64/
