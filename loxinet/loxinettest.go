@@ -18,10 +18,11 @@ package loxinet
 
 import (
 	"fmt"
-	cmn "github.com/loxilb-io/loxilb/common"
-	opts "github.com/loxilb-io/loxilb/options"
 	"net"
 	"testing"
+
+	cmn "github.com/loxilb-io/loxilb/common"
+	opts "github.com/loxilb-io/loxilb/options"
 )
 
 // TestLoxinet - Go unit test entry point
@@ -31,7 +32,7 @@ func TestLoxinet(t *testing.T) {
 	opts.Opts.NoAPI = true
 	opts.Opts.CPUProfile = "none"
 	opts.Opts.Prometheus = false
-	opts.Opts.K8sApi = "none"
+	opts.Opts.K8sAPI = "none"
 	opts.Opts.ClusterNodes = "none"
 
 	fmt.Printf("LoxiLB Net Unit-Test \n")

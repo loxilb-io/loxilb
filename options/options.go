@@ -27,8 +27,9 @@ var Opts struct {
 	EgrHooks          bool           `long:"egr-hooks" description:"Enable eBPF egress hooks(experimental)"`
 	BgpPeerMode       bool           `short:"r" long:"peer" description:"Run loxilb with goBGP only, no Datapath"`
 	BlackList         string         `long:"blacklist" description:"Regex string of blacklisted ports" default:"none"`
-	Rpc               string         `long:"rpc" description:"RPC mode for syncing - netrpc or grpc" default:"netrpc"`
-	K8sApi            string         `long:"k8s-api" description:"Enable k8s watcher(experimental)" default:"none"`
+	RPC               string         `long:"rpc" description:"RPC mode for syncing - netrpc or grpc" default:"netrpc"`
+	K8sAPI            string         `long:"k8s-api" description:"Enable k8s watcher(experimental)" default:"none"`
 	IPVSCompat        bool           `long:"ipvs-compat" description:"Enable ipvs-compat(experimental)"`
 	FallBack          bool           `long:"fallback" description:"Fallback to system default networking(experimental)"`
+	LocalVIP          bool           `long:"localvip" description:"support vip availability from lb node(experimental)"`
 }

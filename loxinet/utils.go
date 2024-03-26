@@ -250,7 +250,7 @@ func IsIPHostNetAddr(ip net.IP) bool {
 	return false
 }
 
-// GratArpReq - sends a gratuitious arp reply given the DIP, SIP and interface name
+// GratArpReq - sends a gratuitous arp reply given the DIP, SIP and interface name
 func GratArpReq(AdvIP net.IP, ifName string) (int, error) {
 	bcAddr := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
 	fd, err := syscall.Socket(syscall.AF_PACKET, syscall.SOCK_DGRAM, int(tk.Htons(syscall.ETH_P_ARP)))
@@ -311,7 +311,7 @@ func GratArpReq(AdvIP net.IP, ifName string) (int, error) {
 	return 0, nil
 }
 
-// GratArpReq - sends a gratuitious arp reply given the DIP, SIP and interface name
+// GratArpReq - sends a gratuitous arp reply given the DIP, SIP and interface name
 func GratArpReqWithCtx(ctx context.Context, rCh chan<- int, AdvIP net.IP, ifName string) (int, error) {
 	for {
 		select {

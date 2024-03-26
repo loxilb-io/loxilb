@@ -23,8 +23,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
+	"os"
 	"reflect"
 	"sort"
 	"strconv"
@@ -362,7 +362,7 @@ func RulesInit(zone *Zone) *RuleH {
 	// Check if there exist a common CA certificate
 	if exists := FileExists(rootCACertile); exists {
 
-		rootCA, err := ioutil.ReadFile(rootCACertile)
+		rootCA, err := os.ReadFile(rootCACertile)
 		if err != nil {
 			tk.LogIt(tk.LogError, "RootCA cert load failed : %v\n", err)
 		} else {
@@ -1341,7 +1341,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		// If a NAT rule already exists, we try not reschuffle the order of the end-points.
 		// We will try to append the new end-points at the end, while marking any other end-points
 		// not in the new list as inactive
-		var ruleChg bool = false
+		ruleChg := false
 		eEps := eRule.act.action.(*ruleNatActs).endPoints
 		for i, eEp := range eEps {
 			for j, nEp := range natActs.endPoints {
@@ -1436,7 +1436,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	r.act.action = &natActs
 	r.ruleNum, err = R.tables[RtLB].Mark.GetCounter()
 	if err != nil {
-		tk.LogIt(tk.LogError, "nat lb-rule - %s:%s hwm error\n", eRule.tuples.String(), eRule.act.String())
+		tk.LogIt(tk.LogError, "nat lb-rule - %s:%s hwm error\n", r.tuples.String(), r.act.String())
 		return RuleAllocErr, errors.New("rule-hwm error")
 	}
 	r.sT = time.Now()
@@ -1682,7 +1682,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	r.act.action = &fwOpts
 	r.ruleNum, err = R.tables[RtFw].Mark.GetCounter()
 	if err != nil {
-		tk.LogIt(tk.LogError, "fw-rule - %s:%s mark error\n", eFw.tuples.String(), eFw.act.String())
+		tk.LogIt(tk.LogError, "fw-rule - %s:%s mark error\n", r.tuples.String(), r.act.String())
 		return RuleAllocErr, errors.New("rule-mark error")
 	}
 	r.sT = time.Now()
@@ -1864,10 +1864,10 @@ func (R *RuleH) AddEPHost(apiCall bool, hostName string, name string, args epHos
 	}
 	// Load CA cert into pool
 	if args.probeType == HostProbeHTTPS {
-		// Check if there exist a CA certificate particularily for this EP
+		// Check if there exist a CA certificate particularly for this EP
 		rootCACertile := cmn.CertPath + hostName + "/" + cmn.CACertFileName
 		if exists := FileExists(rootCACertile); exists {
-			rootCA, err := ioutil.ReadFile(rootCACertile)
+			rootCA, err := os.ReadFile(rootCACertile)
 			if err != nil {
 				tk.LogIt(tk.LogError, "RootCA cert load failed : %v", err)
 				return RuleArgsErr, errors.New("rootca cert load failed")
@@ -2266,6 +2266,33 @@ func (R *RuleH) RuleDestructAll() {
 	return
 }
 
+// VIP2DP - Sync state of nat-rule for local sock VIP-port rewrite
+func (r *ruleEnt) VIP2DP(work DpWorkT) int {
+	portMap := make(map[int]struct{})
+	if mh.locVIP {
+		switch at := r.act.action.(type) {
+		case *ruleNatActs:
+			for _, ep := range at.endPoints {
+				if _, ok := portMap[int(ep.xPort)]; ok {
+					continue
+				}
+				portMap[int(ep.xPort)] = struct{}{}
+				nVIPWork := new(SockVIPDpWorkQ)
+				nVIPWork.Work = work
+				if ep.inActive {
+					nVIPWork.Work = DpRemove
+				}
+				nVIPWork.VIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
+				nVIPWork.Port = r.tuples.l4Dst.val
+				nVIPWork.RwPort = ep.xPort
+				nVIPWork.Status = new(DpStatusT)
+				mh.dp.ToDpCh <- nVIPWork
+			}
+		}
+	}
+	return 0
+}
+
 // Nat2DP - Sync state of nat-rule entity to data-path
 func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 
@@ -2417,6 +2444,8 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	}
 
 	mh.dp.ToDpCh <- nWork
+
+	r.VIP2DP(nWork.Work)
 
 	return 0
 }

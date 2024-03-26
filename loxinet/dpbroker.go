@@ -356,6 +356,15 @@ type UlClDpWorkQ struct {
 	Type   DpTunT
 }
 
+// SockVIPDpWorkQ - work queue entry for local VIP-port rewrite
+type SockVIPDpWorkQ struct {
+	Work   DpWorkT
+	VIP    net.IP
+	Port   uint16
+	RwPort uint16
+	Status *DpStatusT
+}
+
 // DpSyncOpT - Sync Operation type
 type DpSyncOpT uint8
 
@@ -417,6 +426,8 @@ type DpHookInterface interface {
 	DpTableGet(w *TableDpWorkQ) (DpRetT, error)
 	DpCtAdd(w *DpCtInfo) int
 	DpCtDel(w *DpCtInfo) int
+	DpSockVIPAdd(w *SockVIPDpWorkQ) int
+	DpSockVIPDel(w *SockVIPDpWorkQ) int
 	DpTableGC()
 	DpCtGetAsync()
 	DpGetLock()
@@ -479,7 +490,7 @@ func (dp *DpH) WaitXsyncReady(who string) {
 
 // DpXsyncRPC - Routine for syncing connection information with peers
 func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
-	var reply, ret int
+	var ret int
 	var err error
 
 	dp.SyncMtx.Lock()
@@ -491,7 +502,7 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
 
 	rpcRetries := 0
 	rpcErr := false
-	var cti *DpCtInfo = nil
+	var cti *DpCtInfo
 	var blkCti []DpCtInfo
 
 	switch na := arg.(type) {
@@ -512,7 +523,7 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
 			}
 		}
 
-		reply = 0
+		reply := 0
 		rpcCallStr := ""
 		if op == DpSyncAdd || op == DpSyncBcast {
 			if len(blkCti) > 0 {
@@ -723,6 +734,17 @@ func (dp *DpH) DpWorkOnFw(fWq *FwDpWorkQ) DpRetT {
 	return DpWqUnkErr
 }
 
+// DpWorkOnSockVIP - routine to work on local VIP-port rewrite
+func (dp *DpH) DpWorkOnSockVIP(vsWq *SockVIPDpWorkQ) DpRetT {
+	if vsWq.Work == DpCreate {
+		return dp.DpHooks.DpSockVIPAdd(vsWq)
+	} else if vsWq.Work == DpRemove {
+		return dp.DpHooks.DpSockVIPDel(vsWq)
+	}
+
+	return DpWqUnkErr
+}
+
 // DpWorkOnPeerOp - routine to work on a peer request for clustering
 func (dp *DpH) DpWorkOnPeerOp(pWq *PeerDpWorkQ) DpRetT {
 	if pWq.Work == DpCreate {
@@ -783,6 +805,8 @@ func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 		ret = dp.DpWorkOnFw(mq)
 	case *PeerDpWorkQ:
 		ret = dp.DpWorkOnPeerOp(mq)
+	case *SockVIPDpWorkQ:
+		ret = dp.DpWorkOnSockVIP(mq)
 	default:
 		tk.LogIt(tk.LogError, "unexpected type %T\n", mq)
 		ret = DpWqUnkErr

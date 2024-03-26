@@ -18,11 +18,12 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/jessevdk/go-flags"
 	ln "github.com/loxilb-io/loxilb/loxinet"
 	opts "github.com/loxilb-io/loxilb/options"
-	"os"
-	"time"
 )
 
 var version string = "0.9.2-beta"
@@ -43,7 +44,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	go ln.LoxiXsyncMain(opts.Opts.Rpc)
+	go ln.LoxiXsyncMain(opts.Opts.RPC)
 	// Need some time for RPC Handler to be up
 	time.Sleep(2 * time.Second)
 

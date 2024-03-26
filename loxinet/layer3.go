@@ -182,7 +182,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 // IfaDelete - Deletes an interface IP address (primary or secondary) and de-associate from Obj
 // Obj can be anything but usually it is the name of a valid interface
 func (l3 *L3H) IfaDelete(Obj string, Cidr string) (int, error) {
-	var found bool = false
+	found := false
 	addr, network, err := net.ParseCIDR(Cidr)
 	if err != nil {
 		tk.LogIt(tk.LogError, "ifa delete - malformed %s:%s\n", Cidr, Obj)

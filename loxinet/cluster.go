@@ -245,7 +245,7 @@ func (h *CIStateH) ClusterNodeAdd(node cmn.ClusterNodeMod) (int, error) {
 	cNode := h.NodeMap[node.Addr.String()]
 
 	if cNode != nil {
-		return -1, errors.New("exisitng cnode")
+		return -1, errors.New("existing cnode")
 	}
 
 	cNode = new(ClusterNode)
