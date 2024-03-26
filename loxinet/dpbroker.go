@@ -490,7 +490,7 @@ func (dp *DpH) WaitXsyncReady(who string) {
 
 // DpXsyncRPC - Routine for syncing connection information with peers
 func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
-	var reply, ret int
+	var ret int
 	var err error
 
 	dp.SyncMtx.Lock()
@@ -523,7 +523,7 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
 			}
 		}
 
-		reply = 0
+		reply := 0
 		rpcCallStr := ""
 		if op == DpSyncAdd || op == DpSyncBcast {
 			if len(blkCti) > 0 {

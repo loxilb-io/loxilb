@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime/debug"
@@ -57,6 +56,8 @@ const (
 	BpfFsCheckFile = "/opt/loxilb/dp/bpf/intf_map"
 	ARPAcceptAll   = "sysctl net.ipv4.conf.all.arp_accept=1"
 	ARPAcceptDfl   = "sysctl net.ipv4.conf.default.arp_accept=1"
+	UnMountCG2     = "umount /sys/fs/cgroup/unified || mkdir -p /sys/fs/cgroup/unified"
+	MountCG2       = "mount -t cgroup2 -o rw,relatime,nsdelegate,memory_recursiveprot cgroup2 /sys/fs/cgroup/unified"
 )
 
 type loxiNetH struct {
@@ -236,6 +237,10 @@ func loxiNetInit() {
 	}
 
 	if !opts.Opts.BgpPeerMode {
+		if mh.locVIP {
+			RunCommand(UnMountCG2, false)
+			RunCommand(MountCG2, false)
+		}
 		// Initialize the ebpf datapath subsystem
 		mh.dpEbpf = DpEbpfInit(clusterMode, mh.rssEn, mh.eHooks, mh.locVIP, mh.self, -1)
 		mh.dp = DpBrokerInit(mh.dpEbpf, rpcMode)

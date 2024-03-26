@@ -1703,13 +1703,17 @@ func (e *DpEbpfH) DpSockVIPMod(w *SockVIPDpWorkQ) int {
 
 		if ret != 0 {
 			*w.Status = 1
+			tk.LogIt(tk.LogError, "sock-vip rwr add failed\n")
 			return EbpfErrSockVIPAdd
 		}
+
+		tk.LogIt(tk.LogDebug, "sock-vip (%s:%v) rwr (%v) added\n",
+			w.VIP.String(), w.Port, w.RwPort)
 
 		*w.Status = 0
 
 	} else if w.Work == DpRemove {
-		C.llb_del_map_elem(C.LL_DP_POL_MAP, unsafe.Pointer(key))
+		C.llb_del_map_elem(C.LL_DP_SOCK_RWR_MAP, unsafe.Pointer(key))
 		return 0
 	}
 	return 0
