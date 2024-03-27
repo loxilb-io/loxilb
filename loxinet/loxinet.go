@@ -56,7 +56,7 @@ const (
 	BpfFsCheckFile = "/opt/loxilb/dp/bpf/intf_map"
 	ARPAcceptAll   = "sysctl net.ipv4.conf.all.arp_accept=1"
 	ARPAcceptDfl   = "sysctl net.ipv4.conf.default.arp_accept=1"
-	MkMountCG2     = "/usr/local/sbin/mkllb_cgroup"
+	MkMountCG2     = "/usr/local/sbin/mkllb_cgroup 1"
 )
 
 type loxiNetH struct {
