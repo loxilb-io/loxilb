@@ -43,6 +43,7 @@ RUN mkdir -p /opt/loxilb && \
     git clone --recurse-submodules https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && \
     cd /root/loxilb-io/loxilb/ && go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
     else make ;fi && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
+    cp loxilb-ebpf/utils/mkllb_cgroup.sh /usr/local/sbin/mkllb_cgroup && \
     cp api/certification/* /opt/loxilb/cert/ && cd - && \
     cp /root/loxilb-io/loxilb/loxilb-ebpf/kernel/loxilb_dp_debug  /usr/local/sbin/loxilb_dp_debug && \
     cp /root/loxilb-io/loxilb/loxilb /usr/local/sbin/loxilb && \
@@ -87,6 +88,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends sudo \
 COPY --from=build /usr/lib64/libbpf* /usr/lib64/
 COPY --from=build /usr/local/go/bin /usr/local/go/bin
 COPY --from=build /usr/local/sbin/mkllb_bpffs /usr/local/sbin/mkllb_bpffs
+COPY --from=build /usr/local/sbin/mkllb_cgroup /usr/local/sbin/mkllb_cgroup
 COPY --from=build /usr/local/sbin/loxilb_dp_debug /usr/local/sbin/loxilb_dp_debug
 COPY --from=build /usr/local/sbin/loxicmd /usr/local/sbin/loxicmd
 COPY --from=build /opt/loxilb /opt/loxilb
