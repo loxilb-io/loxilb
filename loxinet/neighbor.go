@@ -221,7 +221,7 @@ func (ne *Neigh) NeighRemoveTunEP(i int) []*NeighTunEp {
 
 // NeighDelAllTunEP - delete all tun-eps from a neighbor
 func (n *NeighH) NeighDelAllTunEP(ne *Neigh) int {
-	var i int = 0
+	i := 0
 	for _, tep := range ne.TunEps {
 		tep.DP(DpRemove)
 		n.NeighTID.PutCounter(tep.Mark)
@@ -385,7 +385,7 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 		mask = net.CIDRMask(128, 128)
 	}
 	ipnet := net.IPNet{IP: Addr, Mask: mask}
-	ra := RtAttr{0, 0, true, Attr.OSLinkIndex}
+	ra := RtAttr{0, 0, true, Attr.OSLinkIndex, false}
 	na := []RtNhAttr{{Addr, Attr.OSLinkIndex}}
 
 	if found == true {
@@ -462,7 +462,7 @@ NhExist:
 
 		code, err := n.Zone.L2.L2FdbAdd(fdbKey, fdbAttr)
 		if err != nil && code != L2SameFdbErr {
-			n.Zone.Rt.RtDelete(ipnet, Zone)
+			n.Zone.Rt.RtDeleteHost(ipnet, Zone)
 			n.NeighDelete(Addr, Zone)
 			tk.LogIt(tk.LogError, "neigh add - %s:%s mac fail\n", Addr.String(), Zone)
 			return NeighMacErr, errors.New("nh-mac error")
@@ -525,7 +525,7 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 
 	// Delete the host specific to this NH
 	ipnet := net.IPNet{IP: Addr, Mask: mask}
-	_, err := n.Zone.Rt.RtDelete(ipnet, Zone)
+	_, err := n.Zone.Rt.RtDeleteHost(ipnet, Zone)
 	if err != nil {
 		tk.LogIt(tk.LogError, "neigh delete - %s:%s host-rt fail\n", Addr.String(), Zone)
 		/*return NeighHostRtErr, errors.New("nh-hostrt error" + err.Error())*/
@@ -582,7 +582,7 @@ func (n *NeighH) NeighFind(Addr net.IP, Zone string) (*Neigh, int) {
 		return nil, -1
 	}
 
-	return ne, -1
+	return ne, 0
 }
 
 // NeighPairRt - Associate a route with the given neighbor

@@ -39,10 +39,11 @@ const (
 
 // rt type constants
 const (
-	RtTypeInd  = 0x1
-	RtTypeDyn  = 0x2
-	RtTypeSelf = 0x4
-	RtTypeHost = 0x8
+	RtTypeInd = 1 << iota
+	RtTypeDyn
+	RtTypeSelf
+	RtTypeHost
+	RtTypeIntf
 )
 
 // constants
@@ -62,6 +63,7 @@ type RtAttr struct {
 	OSFlags   int
 	HostRoute bool
 	Ifi       int
+	IfRoute   bool
 }
 
 // RtNhAttr - neighbor attribs for a rt entry
@@ -178,6 +180,9 @@ func GetFlagToString(flag int) string {
 	if flag&RtTypeHost != 0 {
 		ret += "Host "
 	}
+	if flag&RtTypeIntf != 0 {
+		ret += "Interface "
+	}
 
 	return ret
 }
@@ -221,6 +226,23 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 				return RtModErr, errors.New("rt mod error")
 			}
 			return r.RtAdd(Dst, Zone, Ra, Na)
+		} else {
+			updtReason := ""
+
+			if !rt.Attr.IfRoute && Ra.IfRoute && rt.Attr.HostRoute {
+				rt.Attr.IfRoute = true
+				rt.TFlags |= RtTypeIntf
+				updtReason = "if-route"
+			} else if !rt.Attr.HostRoute && Ra.HostRoute && rt.Attr.IfRoute {
+				rt.Attr.HostRoute = true
+				rt.TFlags |= RtTypeHost
+				updtReason = "host-route"
+			}
+
+			if updtReason != "" {
+				tk.LogIt(tk.LogInfo, "rt add - %s:%s updated to (%s)\n", Dst.String(), Zone, updtReason)
+				return 0, nil
+			}
 		}
 
 		tk.LogIt(tk.LogError, "rt add - %s:%s exists\n", Dst.String(), Zone)
@@ -235,11 +257,20 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 
 	newNhs := make([]*Neigh, 0)
 
+	// If we cant allocate Mark, we don't care
+	rt.Mark, _ = r.Mark.GetCounter()
+
+	r.RtMap[rt.Key] = rt
+
 	if len(Na) != 0 {
 		rt.TFlags |= RtTypeInd
 
 		if Ra.HostRoute {
 			rt.TFlags |= RtTypeHost
+		}
+
+		if Ra.IfRoute {
+			rt.TFlags |= RtTypeIntf
 		}
 
 		hwmac, _ := net.ParseMAC("00:00:00:00:00:00")
@@ -250,7 +281,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 
 				// If this is a host route then neighbor has to exist
 				// Usually host route addition is triggered by neigh add
-				if Ra.HostRoute == true {
+				if Ra.HostRoute && !Ra.IfRoute {
 					tk.LogIt(tk.LogError, "rt add host - %s:%s no neigh\n", Dst.String(), Zone)
 					return RtNhErr, errors.New("rt-neigh host error")
 				}
@@ -270,6 +301,13 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 		rt.TFlags |= RtTypeSelf
 	}
 
+	// Pair this route with appropriate neighbor
+	//if rt.TFlags & RT_TYPE_HOST != RT_TYPE_HOST {
+	for i := 0; i < len(rt.NextHops); i++ {
+		r.Zone.Nh.NeighPairRt(rt.NextHops[i], rt)
+	}
+	//}
+
 	var tret int
 	var tR *tk.TrieRoot
 	if tk.IsNetIPv4(Dst.IP.String()) {
@@ -287,21 +325,10 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 		for i := 0; i < len(newNhs); i++ {
 			r.Zone.Nh.NeighDelete(newNhs[i].Addr, Zone)
 		}
+		fmt.Printf("rt add - %s:%s lpm add fail\n", Dst.String(), Zone)
 		tk.LogIt(tk.LogError, "rt add - %s:%s lpm add fail\n", Dst.String(), Zone)
 		return RtTrieAddErr, errors.New("RT Trie Err")
 	}
-
-	// If we cant allocate Mark, we don't care
-	rt.Mark, _ = r.Mark.GetCounter()
-
-	r.RtMap[rt.Key] = rt
-
-	// Pair this route with appropriate neighbor
-	//if rt.TFlags & RT_TYPE_HOST != RT_TYPE_HOST {
-	for i := 0; i < len(rt.NextHops); i++ {
-		r.Zone.Nh.NeighPairRt(rt.NextHops[i], rt)
-	}
-	//}
 
 	rt.DP(DpCreate)
 
@@ -329,8 +356,8 @@ func (rt *Rt) rtRemoveDepObj(i int) []RtDepObj {
 	return rt.RtDepObjs[:len(rt.RtDepObjs)-1]
 }
 
-// RtDelete - Delete a route
-func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
+// rtDeleteCommon - Internal routing to delete a route
+func (r *RtH) rtDeleteCommon(Dst net.IPNet, Zone string, host bool) (int, error) {
 	key := RtKey{Dst.String(), Zone}
 
 	if opts.Opts.FallBack {
@@ -346,15 +373,37 @@ func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 		return RtNoEntErr, errors.New("no such route")
 	}
 
+	if host {
+		if !rt.Attr.HostRoute {
+			tk.LogIt(tk.LogError, "rt delete - %s:%s host-route not found\n", Dst.String(), Zone)
+			return RtNoEntErr, errors.New("no such host-route")
+		}
+		if rt.Attr.IfRoute {
+			rt.Attr.HostRoute = false
+			rt.TFlags ^= RtTypeHost
+			tk.LogIt(tk.LogError, "rt delete - %s:%s updated to if-route\n", Dst.String(), Zone)
+			return 0, nil
+		}
+	} else {
+		if rt.Attr.HostRoute {
+			if rt.Attr.IfRoute {
+				rt.Attr.IfRoute = false
+				rt.TFlags ^= RtTypeIntf
+				tk.LogIt(tk.LogError, "rt delete - %s:%s updated to host-route\n", Dst.String(), Zone)
+				return 0, nil
+			}
+		}
+	}
+
 	// Take care of any dependencies on this route object
 	rt.rtClearDeps()
 
 	// UnPair route from related neighbor
-	//if rt.TFlags & RT_TYPE_HOST != RT_TYPE_HOST {
-	for _, nh := range rt.NextHops {
-		r.Zone.Nh.NeighUnPairRt(nh, rt)
+	if true {
+		for _, nh := range rt.NextHops {
+			r.Zone.Nh.NeighUnPairRt(nh, rt)
+		}
 	}
-	//}
 
 	var tR *tk.TrieRoot
 	if tk.IsNetIPv4(Dst.IP.String()) {
@@ -376,6 +425,16 @@ func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
 	tk.LogIt(tk.LogDebug, "rt deleted - %s:%s\n", Dst.String(), Zone)
 
 	return 0, nil
+}
+
+// RtDelete - Delete a route
+func (r *RtH) RtDelete(Dst net.IPNet, Zone string) (int, error) {
+	return r.rtDeleteCommon(Dst, Zone, false)
+}
+
+// RtDeleteHost - Delete a host route
+func (r *RtH) RtDeleteHost(Dst net.IPNet, Zone string) (int, error) {
+	return r.rtDeleteCommon(Dst, Zone, true)
 }
 
 // RtDeleteByPort - Delete a route which has specified port association
@@ -454,10 +513,6 @@ func (r *RtH) RtDestructAll() {
 // RoutesSync - grab statistics for a rt entry
 func (r *RtH) RoutesSync() {
 	for _, rt := range r.RtMap {
-		if rt.Stat.Packets != 0 {
-			rts := Rt2String(rt)
-			fmt.Printf("%s: pc %v bc %v\n", rts, rt.Stat.Packets, rt.Stat.Bytes)
-		}
 		rt.DP(DpStatsGet)
 	}
 }

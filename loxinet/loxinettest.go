@@ -229,7 +229,7 @@ func TestLoxinet(t *testing.T) {
 	mask := net.CIDRMask(24, 32)
 	route = route.Mask(mask)
 	ipnet := net.IPNet{IP: route, Mask: mask}
-	ra := RtAttr{0, 0, false, -1}
+	ra := RtAttr{0, 0, false, -1, false}
 	na := []RtNhAttr{{net.IPv4(8, 8, 8, 8), 12}}
 	_, err = mh.zr.Rt.RtAdd(ipnet, "default", ra, na)
 	if err != nil {

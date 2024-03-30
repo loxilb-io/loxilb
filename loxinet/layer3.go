@@ -105,7 +105,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 		l3.IfaMap[key] = ifa
 
 		// ifa needs related self-routes
-		ra := RtAttr{0, 0, false, ifObjID}
+		ra := RtAttr{0, 0, false, ifObjID, false}
 		_, err = mh.zr.Rt.RtAdd(*network, RootZone, ra, nil)
 		if err != nil {
 			tk.LogIt(tk.LogDebug, "ifa add - %s:%s subnet-rt error\n", addr.String(), Obj)
@@ -155,7 +155,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 
 	// ifa needs to related self-routes
 	// FIXME - Code duplication with primary address route above
-	ra := RtAttr{0, 0, false, ifObjID}
+	ra := RtAttr{0, 0, false, ifObjID, false}
 	_, err = mh.zr.Rt.RtAdd(*network, RootZone, ra, nil)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, " - %s:%s subnet-rt error\n", addr.String(), Obj)
