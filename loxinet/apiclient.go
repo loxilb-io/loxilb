@@ -282,10 +282,19 @@ func (na *NetAPIStruct) NetRouteAdd(rm *cmn.RouteMod) (int, error) {
 	if na.BgpPeerMode {
 		return RtNhErr, errors.New("running in bgp only mode")
 	}
+	intfRt := false
+	mlen, _ := rm.Dst.Mask.Size()
+	if rm.Gw == nil {
+		// This is an interface route
+		if (tk.IsNetIPv4(rm.Dst.IP.String()) && mlen == 32) || (tk.IsNetIPv6(rm.Dst.IP.String()) && mlen == 128) {
+			intfRt = true
+			rm.Gw = rm.Dst.IP
+		}
+	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
-	ra := RtAttr{rm.Protocol, rm.Flags, false, rm.LinkIndex}
+	ra := RtAttr{Protocol: rm.Protocol, OSFlags: rm.Flags, HostRoute: false, Ifi: rm.LinkIndex, IfRoute: intfRt}
 	if rm.Gw != nil {
 		na := []RtNhAttr{{rm.Gw, rm.LinkIndex}}
 		ret, err = mh.zr.Rt.RtAdd(rm.Dst, RootZone, ra, na)

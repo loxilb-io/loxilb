@@ -53,16 +53,16 @@ type ipVSEntry struct {
 	EndPoints []ipvsEndPoint
 }
 
-type IpVSH struct {
+type IPVSH struct {
 	RMap   map[ipVSKey]*ipVSEntry
 	ticker *time.Ticker
 	tDone  chan bool
 	handle *ipvs.Handle
 }
 
-var ipVSCtx *IpVSH
+var ipVSCtx *IPVSH
 
-func (ctx *IpVSH) BuildIpVSDB() []*ipVSEntry {
+func (ctx *IPVSH) buildIPVSDB() []*ipVSEntry {
 
 	var ipVSList []*ipVSEntry
 	svcs, err := ctx.handle.GetServices()
@@ -128,7 +128,7 @@ func (ctx *IpVSH) BuildIpVSDB() []*ipVSEntry {
 	return ipVSList
 }
 
-func IpVSSync() {
+func IPVSSync() {
 	for {
 		select {
 		case <-ipVSCtx.tDone:
@@ -139,7 +139,7 @@ func IpVSSync() {
 				ent.InValid = true
 			}
 
-			ipVSList := ipVSCtx.BuildIpVSDB()
+			ipVSList := ipVSCtx.buildIPVSDB()
 
 			for _, ent := range ipVSCtx.RMap {
 				if ent.InValid {
@@ -173,8 +173,8 @@ func IpVSSync() {
 	}
 }
 
-func IpVSInit() {
-	ipVSCtx = new(IpVSH)
+func IPVSInit() {
+	ipVSCtx = new(IPVSH)
 	ipVSCtx.ticker = time.NewTicker(10 * time.Second)
 	ipVSCtx.RMap = make(map[ipVSKey]*ipVSEntry)
 	ipVSCtx.tDone = make(chan bool)
@@ -184,5 +184,5 @@ func IpVSInit() {
 		os.Exit(1)
 	}
 	ipVSCtx.handle = handle
-	go IpVSSync()
+	go IPVSSync()
 }
