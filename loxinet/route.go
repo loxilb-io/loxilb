@@ -257,27 +257,6 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 
 	newNhs := make([]*Neigh, 0)
 
-	var tret int
-	var tR *tk.TrieRoot
-	if tk.IsNetIPv4(Dst.IP.String()) {
-		tR = r.Trie4
-	} else {
-		tR = r.Trie6
-	}
-	if len(rt.NextHops) > 0 {
-		tret = tR.AddTrie(Dst.String(), rt.NextHops[0])
-	} else {
-		tret = tR.AddTrie(Dst.String(), &rt.Attr.Ifi)
-	}
-	if tret != 0 {
-		// Delete any neigbors created here
-		for i := 0; i < len(newNhs); i++ {
-			r.Zone.Nh.NeighDelete(newNhs[i].Addr, Zone)
-		}
-		tk.LogIt(tk.LogError, "rt add - %s:%s lpm add fail\n", Dst.String(), Zone)
-		return RtTrieAddErr, errors.New("RT Trie Err")
-	}
-
 	// If we cant allocate Mark, we don't care
 	rt.Mark, _ = r.Mark.GetCounter()
 
@@ -302,7 +281,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 
 				// If this is a host route then neighbor has to exist
 				// Usually host route addition is triggered by neigh add
-				if Ra.HostRoute == true && !Ra.IfRoute {
+				if Ra.HostRoute && !Ra.IfRoute {
 					tk.LogIt(tk.LogError, "rt add host - %s:%s no neigh\n", Dst.String(), Zone)
 					return RtNhErr, errors.New("rt-neigh host error")
 				}
@@ -328,6 +307,28 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 		r.Zone.Nh.NeighPairRt(rt.NextHops[i], rt)
 	}
 	//}
+
+	var tret int
+	var tR *tk.TrieRoot
+	if tk.IsNetIPv4(Dst.IP.String()) {
+		tR = r.Trie4
+	} else {
+		tR = r.Trie6
+	}
+	if len(rt.NextHops) > 0 {
+		tret = tR.AddTrie(Dst.String(), rt.NextHops[0])
+	} else {
+		tret = tR.AddTrie(Dst.String(), &rt.Attr.Ifi)
+	}
+	if tret != 0 {
+		// Delete any neigbors created here
+		for i := 0; i < len(newNhs); i++ {
+			r.Zone.Nh.NeighDelete(newNhs[i].Addr, Zone)
+		}
+		fmt.Printf("rt add - %s:%s lpm add fail\n", Dst.String(), Zone)
+		tk.LogIt(tk.LogError, "rt add - %s:%s lpm add fail\n", Dst.String(), Zone)
+		return RtTrieAddErr, errors.New("RT Trie Err")
+	}
 
 	rt.DP(DpCreate)
 

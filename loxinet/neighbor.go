@@ -582,7 +582,7 @@ func (n *NeighH) NeighFind(Addr net.IP, Zone string) (*Neigh, int) {
 		return nil, -1
 	}
 
-	return ne, -1
+	return ne, 0
 }
 
 // NeighPairRt - Associate a route with the given neighbor
