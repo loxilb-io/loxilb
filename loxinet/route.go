@@ -282,6 +282,8 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 				// If this is a host route then neighbor has to exist
 				// Usually host route addition is triggered by neigh add
 				if Ra.HostRoute && !Ra.IfRoute {
+					delete(r.RtMap, rt.Key)
+					r.Mark.PutCounter(rt.Mark)
 					tk.LogIt(tk.LogError, "rt add host - %s:%s no neigh\n", Dst.String(), Zone)
 					return RtNhErr, errors.New("rt-neigh host error")
 				}
@@ -289,6 +291,8 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 				r.Zone.Nh.NeighAdd(Na[i].NhAddr, Zone, NeighAttr{Na[i].LinkIndex, 0, hwmac})
 				nh, _ = r.Zone.Nh.NeighFind(Na[i].NhAddr, Zone)
 				if nh == nil {
+					delete(r.RtMap, rt.Key)
+					r.Mark.PutCounter(rt.Mark)
 					tk.LogIt(tk.LogError, "rt add - %s:%s no neigh\n", Dst.String(), Zone)
 					return RtNhErr, errors.New("rt-neigh error")
 				}
@@ -325,6 +329,8 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 		for i := 0; i < len(newNhs); i++ {
 			r.Zone.Nh.NeighDelete(newNhs[i].Addr, Zone)
 		}
+		delete(r.RtMap, rt.Key)
+		r.Mark.PutCounter(rt.Mark)
 		fmt.Printf("rt add - %s:%s lpm add fail\n", Dst.String(), Zone)
 		tk.LogIt(tk.LogError, "rt add - %s:%s lpm add fail\n", Dst.String(), Zone)
 		return RtTrieAddErr, errors.New("RT Trie Err")
