@@ -18,16 +18,13 @@ package loxinet
 
 import (
 	"errors"
-	"fmt"
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
+	cmn "github.com/loxilb-io/loxilb/common"
+	bfd "github.com/loxilb-io/loxilb/pkg/proto"
+	tk "github.com/loxilb-io/loxilib"
 	"net"
 	"os"
 	"time"
-
-	cmn "github.com/loxilb-io/loxilb/common"
-	opts "github.com/loxilb-io/loxilb/options"
-	bfd "github.com/loxilb-io/loxilb/pkg/proto"
-	tk "github.com/loxilb-io/loxilib"
 )
 
 // error codes for cluster module
@@ -83,13 +80,9 @@ func (ci *CIStateH) BFDSessionNotify(instance string, remote string, ciState str
 }
 
 func (ci *CIStateH) startBFDProto(bfdSessConfigArgs bfd.ConfigArgs) {
-	url := fmt.Sprintf("http://127.0.0.1:%d/config/params", opts.Opts.Port)
-	for {
-		if IsLoxiAPIActive(url) {
-			break
-		}
-		tk.LogIt(tk.LogDebug, "KA - waiting for API server\n")
-		time.Sleep(1 * time.Second)
+
+	if ci.Bs == nil {
+		return
 	}
 
 	mh.dp.WaitXsyncReady("ka")
@@ -275,6 +268,10 @@ func (h *CIStateH) ClusterNodeDelete(node cmn.ClusterNodeMod) (int, error) {
 // CIBFDSessionAdd - routine to add BFD session
 func (h *CIStateH) CIBFDSessionAdd(bm cmn.BFDMod) (int, error) {
 
+	if h.Bs == nil {
+		return -1, errors.New("bfd not initialized")
+	}
+
 	if bm.Interval != 0 && bm.Interval < bfd.BFDMinSysTXIntervalUs {
 		tk.LogIt(tk.LogError, "[CLUSTER] BFD session Interval value too low\n")
 		return -1, errors.New("bfd interval too low")
@@ -308,7 +305,7 @@ func (h *CIStateH) CIBFDSessionAdd(bm cmn.BFDMod) (int, error) {
 			Multi: bm.RetryCount, Instance: bm.Instance}
 		go h.startBFDProto(bfdSessConfigArgs)
 	} else {
-		bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: h.RemoteIP.String(), SourceIP: h.SourceIP.String(),
+		bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: bm.RemoteIP.String(), SourceIP: bm.SourceIP.String(),
 			Port: cmn.BFDPort, Interval: uint32(bm.Interval),
 			Multi: bm.RetryCount, Instance: bm.Instance}
 		err := h.Bs.BFDAddRemote(bfdSessConfigArgs, h)
@@ -316,7 +313,7 @@ func (h *CIStateH) CIBFDSessionAdd(bm cmn.BFDMod) (int, error) {
 			tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote: %s\n", err.Error())
 			return -1, err
 		}
-		tk.LogIt(tk.LogInfo, "KA - BFD remote %s:%s:%vus Added\n", h.RemoteIP.String(), h.SourceIP.String(), bm.Interval)
+		tk.LogIt(tk.LogInfo, "KA - BFD remote %s:%s:%vus Added\n", bm.RemoteIP.String(), bm.SourceIP.String(), bm.Interval)
 	}
 	return 0, nil
 }
@@ -335,20 +332,20 @@ func (h *CIStateH) CIBFDSessionDel(bm cmn.BFDMod) (int, error) {
 		return -1, errors.New("cluster instance not found")
 	}
 
-	bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: h.RemoteIP.String()}
+	bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: bm.RemoteIP.String()}
 	err := h.Bs.BFDDeleteRemote(bfdSessConfigArgs)
 	if err != nil {
 		tk.LogIt(tk.LogCritical, "KA - Cant delete BFD remote\n")
 		return -1, err
 	}
 	h.SpawnKa = false
-	tk.LogIt(tk.LogInfo, "KA - BFD remote %s:%s:%vus deleted\n", h.RemoteIP.String(), h.SourceIP.String(), bm.Interval)
+	tk.LogIt(tk.LogInfo, "KA - BFD remote %s:%s deleted\n", bm.Instance, bm.RemoteIP.String())
 	return 0, nil
 }
 
 // CIBFDSessionGet - routine to get BFD session info
 func (h *CIStateH) CIBFDSessionGet() ([]cmn.BFDMod, error) {
-	if !h.SpawnKa {
+	if !h.SpawnKa || h.Bs == nil {
 		tk.LogIt(tk.LogError, "[CLUSTER] BFD sessions not running\n")
 		return nil, errors.New("bfd session not running")
 	}

@@ -22,8 +22,8 @@ import (
 	"time"
 
 	"github.com/jessevdk/go-flags"
-	ln "github.com/loxilb-io/loxilb/pkg/loxinet"
 	opts "github.com/loxilb-io/loxilb/options"
+	ln "github.com/loxilb-io/loxilb/pkg/loxinet"
 )
 
 var version string = "0.9.2-beta"
