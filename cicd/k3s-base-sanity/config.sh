@@ -179,7 +179,8 @@ kubectl $KUBECONFIG apply -f nginx-svc-lb1.yml
 sleep 10
 kubectl $KUBECONFIG apply -f udp-svc-lb.yml
 sleep 30
-
+kubectl $KUBECONFIG apply -f sctp-svc-lb.yml
+sleep 10
 # External LB service must be created by now
 kubectl $KUBECONFIG get svc
 
