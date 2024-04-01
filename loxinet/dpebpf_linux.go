@@ -357,12 +357,12 @@ func (e *DpEbpfH) DpEbpfUnInit() {
 		tk.LogIt(tk.LogInfo, "ebpf unload - %s\n", intf.Name)
 		ifStr := C.CString(intf.Name)
 		section := C.CString(string(C.TC_LL_SEC_DEFAULT))
-		if e.RssEn {
+		C.llb_dp_link_attach(ifStr, section, C.LL_BPF_MOUNT_TC, 1)
+		if e.RssEn || intf.Name == "llb0" {
 			xSection := C.CString(string(C.XDP_LL_SEC_DEFAULT))
 			C.llb_dp_link_attach(ifStr, xSection, C.LL_BPF_MOUNT_XDP, 1)
 			C.free(unsafe.Pointer(xSection))
 		}
-		C.llb_dp_link_attach(ifStr, section, C.LL_BPF_MOUNT_TC, 1)
 		C.free(unsafe.Pointer(ifStr))
 		C.free(unsafe.Pointer(section))
 	}
