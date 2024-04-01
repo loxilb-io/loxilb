@@ -33,13 +33,13 @@ package loxinet
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <pthread.h>
-#include "../loxilb-ebpf/kernel/loxilb_libdp.h"
+#include "../../loxilb-ebpf/kernel/loxilb_libdp.h"
 int bpf_map_get_next_key(int fd, const void *key, void *next_key);
 int bpf_map_lookup_elem(int fd, const void *key, void *value);
 extern void goMapNotiHandler(struct ll_dp_map_notif *);
 extern void goLinuxArpResolver(unsigned int);
-#cgo CFLAGS:  -I./../loxilb-ebpf/libbpf/src/ -I./../loxilb-ebpf/common
-#cgo LDFLAGS: -L. -L/lib64 -L./../loxilb-ebpf/kernel -L./../loxilb-ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=/lib64/ -lloxilbdp -lbpf -lelf -lz
+#cgo CFLAGS:  -I./../../loxilb-ebpf/libbpf/src/ -I./../../loxilb-ebpf/common
+#cgo LDFLAGS: -L. -L/lib64 -L./../../loxilb-ebpf/kernel -L./../../loxilb-ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=/lib64/ -lloxilbdp -lbpf -lelf -lz
 */
 import "C"
 import (
