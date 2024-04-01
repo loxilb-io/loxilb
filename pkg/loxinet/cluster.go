@@ -26,7 +26,7 @@ import (
 
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
-	bfd "github.com/loxilb-io/loxilb/proto"
+	bfd "github.com/loxilb-io/loxilb/pkg/proto"
 	tk "github.com/loxilb-io/loxilib"
 )
 

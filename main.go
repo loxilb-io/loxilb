@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/jessevdk/go-flags"
-	ln "github.com/loxilb-io/loxilb/loxinet"
+	ln "github.com/loxilb-io/loxilb/pkg/loxinet"
 	opts "github.com/loxilb-io/loxilb/options"
 )
 
