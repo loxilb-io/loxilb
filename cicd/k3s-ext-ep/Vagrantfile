@@ -1,0 +1,36 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+workers = (ENV['WORKERS'] || "2").to_i
+#box_name = (ENV['VAGRANT_BOX'] || "ubuntu/focal64")
+box_name = (ENV['VAGRANT_BOX'] || "sysnet4admin/Ubuntu-k8s")
+box_version = "0.7.1"
+Vagrant.configure("2") do |config|
+  config.vm.box = "#{box_name}"
+  config.vm.box_version = "#{box_version}"
+
+  if Vagrant.has_plugin?("vagrant-vbguest")
+    config.vbguest.auto_update = false
+  end
+
+  config.vm.define "host" do |host|
+    host.vm.hostname = 'host'
+    host.vm.network :private_network, ip: "192.168.82.2", :netmask => "255.255.255.0"
+    host.vm.provision :shell, :path => "host.sh"
+    host.vm.provider :virtualbox do |vbox|
+        vbox.customize ["modifyvm", :id, "--memory", 2048]
+        vbox.customize ["modifyvm", :id, "--cpus", 2]
+    end
+  end
+
+  config.vm.define "master" do |master|
+    master.vm.hostname = 'master'
+    master.vm.network :private_network, ip: "192.168.82.128", :netmask => "255.255.255.0"
+    master.vm.provision :shell, :path => "master.sh"
+    master.vm.provider :virtualbox do |vbox|
+        vbox.customize ["modifyvm", :id, "--memory", 8192]
+        vbox.customize ["modifyvm", :id, "--cpus", 8]
+        vbox.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+    end
+  end
+end
