@@ -19,10 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	cmn "github.com/loxilb-io/loxilb/common"
-	tk "github.com/loxilb-io/loxilib"
-	nlp "github.com/vishvananda/netlink"
-	"golang.org/x/sys/unix"
 	"net"
 	"os"
 	"os/exec"
@@ -32,6 +28,11 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
+	nlp "github.com/vishvananda/netlink"
+	"golang.org/x/sys/unix"
 )
 
 const (
@@ -86,7 +87,10 @@ type NlH struct {
 	BLRgx     *regexp.Regexp
 }
 
-var hooks cmn.NetHookInterface
+var (
+	skipIfRoute bool
+	hooks       cmn.NetHookInterface
+)
 
 func NlpRegister(hook cmn.NetHookInterface) {
 	hooks = hook
@@ -1342,8 +1346,10 @@ func RUWorkSingle(m nlp.RouteUpdate) int {
 		return -1
 	}
 
-	if m.Route.Scope.String() == "link" && tk.IsNetIPv4(m.Dst.IP.String()) {
-		return -1
+	if skipIfRoute {
+		if m.Route.Scope.String() == "link" && tk.IsNetIPv4(m.Dst.IP.String()) {
+			return -1
+		}
 	}
 
 	if m.Type == syscall.RTM_NEWROUTE {
@@ -1550,8 +1556,10 @@ func NlpGet(ch chan bool) int {
 			tk.LogIt(tk.LogDebug, "[NLP] No STATIC routes found for intf %s\n", link.Attrs().Name)
 		} else {
 			for _, route := range routes {
-				if route.Scope.String() == "link" && tk.IsNetIPv4(route.Dst.IP.String()) {
-					continue
+				if skipIfRoute {
+					if route.Scope.String() == "link" && tk.IsNetIPv4(route.Dst.IP.String()) {
+						continue
+					}
 				}
 
 				AddRoute(route)
@@ -1690,7 +1698,7 @@ func NlpInit(bgpPeerMode bool, blackList string, ipvsCompat bool) *NlH {
 	go LbSessionGet(done)
 
 	if ipvsCompat {
-		IpVSInit()
+		IPVSInit()
 	}
 
 	return nNl

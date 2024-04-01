@@ -89,3 +89,9 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - run: |
+             cd cicd/tcplb-local/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -

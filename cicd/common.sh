@@ -14,6 +14,7 @@ hexist="$vrn$hn"
 lxdocker="ghcr.io/loxilb-io/loxilb:latest"
 hostdocker="ghcr.io/nicolaka/netshoot:latest"
 cluster_opts=""
+extra_opts=""
 ka_opts=""
 var=$(lsb_release -r | cut -f2)
 #if [[ $var == *"22.04"* ]];then
@@ -82,6 +83,10 @@ spawn_docker_host() {
       fi
       shift 2
       ;;
+    -e | --extra-args)
+      extra_opts="$2"
+      shift 2
+      ;;
     -*|--*)
       echo "Unknown option $1"
       exit
@@ -104,12 +109,12 @@ spawn_docker_host() {
     fi
     if [[ ! -z ${ka+x} ]]; then
       sudo mkdir -p /etc/shared/$dname/
-      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config --name $dname $lxdocker
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --pid=host --cgroupns=host --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config --name $dname $lxdocker
       get_llb_peerIP $dname
-      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $ka_opts
+      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $ka_opts $extra_opts
     else
-      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname $lxdocker $bgp_opts
-      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --pid=host --cgroupns=host --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname $lxdocker $bgp_opts
+      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $extra_opts
     fi
   elif [[ "$dtype" == "host" ]]; then
     if [[ ! -z "$bpath" ]]; then
