@@ -54,10 +54,10 @@ import (
 	"time"
 	"unsafe"
 
+	cmn "github.com/loxilb-io/loxilb/common"
+	utils "github.com/loxilb-io/loxilb/pkg/utils"
 	tk "github.com/loxilb-io/loxilib"
 	nlp "github.com/vishvananda/netlink"
-
-	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 // This file implements the interface DpHookInterface
@@ -2142,5 +2142,5 @@ func (e *DpEbpfH) DpTableGC() {
 //export goLinuxArpResolver
 func goLinuxArpResolver(dIP C.uint) {
 	goDest := uint32(dIP)
-	ArpResolver(goDest)
+	utils.ArpResolver(goDest)
 }

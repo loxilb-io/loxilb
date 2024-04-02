@@ -29,8 +29,8 @@ import (
 	"time"
 
 	cmn "github.com/loxilb-io/loxilb/common"
+	utils "github.com/loxilb-io/loxilb/pkg/utils"
 	tk "github.com/loxilb-io/loxilib"
-
 	api "github.com/osrg/gobgp/v3/api"
 	"github.com/osrg/gobgp/v3/pkg/apiutil"
 	"github.com/osrg/gobgp/v3/pkg/packet/bgp"
@@ -219,7 +219,7 @@ func (gbh *GoBgpH) syncRoute(p *goBgpRouteInfo, showIdentifier bgp.BGPAddPathMod
 		return err
 	}
 
-	if IsIPHostNetAddr(dstIP) {
+	if utils.IsIPHostNetAddr(dstIP) {
 		return nil
 	}
 
@@ -681,7 +681,7 @@ func (gbh *GoBgpH) AddCurrBgpRoutesToIPRoute() error {
 			return err
 		}
 
-		if IsIPHostNetAddr(dstIP) {
+		if utils.IsIPHostNetAddr(dstIP) {
 			continue
 		}
 

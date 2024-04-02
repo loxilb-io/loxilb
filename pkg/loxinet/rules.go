@@ -32,11 +32,11 @@ import (
 	"sync"
 	"time"
 
-	tk "github.com/loxilb-io/loxilib"
-	probing "github.com/prometheus-community/pro-bing"
-
 	"github.com/loxilb-io/loxilb/api/loxinlp"
 	cmn "github.com/loxilb-io/loxilb/common"
+	utils "github.com/loxilb-io/loxilb/pkg/utils"
+	tk "github.com/loxilb-io/loxilib"
+	probing "github.com/prometheus-community/pro-bing"
 )
 
 // error codes
@@ -360,7 +360,7 @@ func RulesInit(zone *Zone) *RuleH {
 	rootCACertile := cmn.CertPath + cmn.CACertFileName
 
 	// Check if there exist a common CA certificate
-	if exists := FileExists(rootCACertile); exists {
+	if exists := utils.FileExists(rootCACertile); exists {
 
 		rootCA, err := os.ReadFile(rootCACertile)
 		if err != nil {
@@ -374,8 +374,8 @@ func RulesInit(zone *Zone) *RuleH {
 	certFile := cmn.CertPath + cmn.PrivateCertName
 	keyFile := cmn.CertPath + cmn.PrivateKeyName
 
-	certExists := FileExists(certFile)
-	keyExists := FileExists(keyFile)
+	certExists := utils.FileExists(certFile)
+	keyExists := utils.FileExists(keyFile)
 
 	if certExists == true && keyExists == true {
 		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
@@ -993,7 +993,7 @@ func (R *RuleH) electEPSrc(r *ruleEnt) bool {
 						sip = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
 						if np.xIP.Equal(sip) {
 							sip = net.IPv4(0, 0, 0, 0)
-						} else if IsIPHostAddr(np.xIP.String()) {
+						} else if utils.IsIPHostAddr(np.xIP.String()) {
 							sip = net.IPv4(0, 0, 0, 0)
 						}
 					} else {
@@ -1528,7 +1528,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 		R.vipMap[sNetAddr.IP.String()]--
 
 		if R.vipMap[sNetAddr.IP.String()] == 0 {
-			if IsIPHostAddr(sNetAddr.IP.String()) {
+			if utils.IsIPHostAddr(sNetAddr.IP.String()) {
 				loxinlp.DelAddrNoHook(sNetAddr.IP.String()+"/32", "lo")
 			}
 			dev := fmt.Sprintf("llb-rule-%s", sNetAddr.IP.String())
@@ -1866,7 +1866,7 @@ func (R *RuleH) AddEPHost(apiCall bool, hostName string, name string, args epHos
 	if args.probeType == HostProbeHTTPS {
 		// Check if there exist a CA certificate particularly for this EP
 		rootCACertile := cmn.CertPath + hostName + "/" + cmn.CACertFileName
-		if exists := FileExists(rootCACertile); exists {
+		if exists := utils.FileExists(rootCACertile); exists {
 			rootCA, err := os.ReadFile(rootCACertile)
 			if err != nil {
 				tk.LogIt(tk.LogError, "RootCA cert load failed : %v", err)
@@ -2084,7 +2084,7 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 		}
 
 		urlStr := fmt.Sprintf("https://%s:%d/%s", addr.String(), ep.opts.probePort, ep.opts.probeReq)
-		sOk := HTTPSProber(urlStr, R.tlsCert, R.rootCAPool, ep.opts.probeResp)
+		sOk := utils.HTTPSProber(urlStr, R.tlsCert, R.rootCAPool, ep.opts.probeResp)
 		//tk.LogIt(tk.LogDebug, "[PROBE] https ep - URL[%s:%s] Resp[%s] %v\n", ep.hostName, urlStr, ep.opts.probeResp, sOk)
 		ep.transitionEPState(sOk, inActTryThr)
 	} else {
@@ -2624,7 +2624,7 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 		}
 		ev, _, iface := R.zone.L3.IfaSelectAny(IP, false)
 		if ev == 0 {
-			if !IsIPHostAddr(IP.String()) {
+			if !utils.IsIPHostAddr(IP.String()) {
 				if loxinlp.AddAddrNoHook(IP.String()+"/32", "lo") != 0 {
 					tk.LogIt(tk.LogError, "nat lb-rule vip %s:%s add failed\n", IP.String(), "lo")
 				} else {
@@ -2635,7 +2635,7 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer cancel()
 			rCh := make(chan int)
-			go GratArpReqWithCtx(ctx, rCh, IP, iface)
+			go utils.GratArpReqWithCtx(ctx, rCh, IP, iface)
 			select {
 			case <-rCh:
 				break
@@ -2645,7 +2645,7 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 		}
 
 	} else if ciState != "NOT_DEFINED" {
-		if IsIPHostAddr(IP.String()) {
+		if utils.IsIPHostAddr(IP.String()) {
 			if loxinlp.DelAddrNoHook(IP.String()+"/32", "lo") != 0 {
 				tk.LogIt(tk.LogError, "nat lb-rule vip %s:%s delete failed\n", IP.String(), "lo")
 			} else {
