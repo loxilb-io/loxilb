@@ -35,6 +35,7 @@ import (
 	prometheus "github.com/loxilb-io/loxilb/api/prometheus"
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
+	utils "github.com/loxilb-io/loxilb/pkg/utils"
 	tk "github.com/loxilb-io/loxilib"
 )
 
@@ -54,8 +55,6 @@ const (
 const (
 	MkfsScript     = "/usr/local/sbin/mkllb_bpffs"
 	BpfFsCheckFile = "/opt/loxilb/dp/bpf/intf_map"
-	ARPAcceptAll   = "sysctl net.ipv4.conf.all.arp_accept=1"
-	ARPAcceptDfl   = "sysctl net.ipv4.conf.default.arp_accept=1"
 	MkMountCG2     = "/usr/local/sbin/mkllb_cgroup 1"
 )
 
@@ -181,6 +180,12 @@ func loxiNetTicker(bgpPeerMode bool) {
 
 var mh loxiNetH
 
+func sysctlInit() {
+	utils.WriteFile("/proc/sys/net/ipv4/conf/all/arp_accept", "1")
+	utils.WriteFile("/proc/sys/net/ipv4/conf/default/arp_accept", "1")
+	utils.WriteFile("/proc/sys/net/ipv4/ip_forward", "1")
+}
+
 func loxiNetInit() {
 	var rpcMode int
 
@@ -197,14 +202,13 @@ func loxiNetInit() {
 
 	// It is important to make sure loxilb's eBPF filesystem
 	// is in place and mounted to make sure maps are pinned properly
-	if !FileExists(BpfFsCheckFile) {
-		if FileExists(MkfsScript) {
+	if !utils.FileExists(BpfFsCheckFile) {
+		if utils.FileExists(MkfsScript) {
 			RunCommand(MkfsScript, true)
 		}
 	}
 
-	RunCommand(ARPAcceptAll, false)
-	RunCommand(ARPAcceptDfl, false)
+	sysctlInit()
 
 	mh.self = opts.Opts.ClusterSelf
 	mh.rssEn = opts.Opts.RssEnable
