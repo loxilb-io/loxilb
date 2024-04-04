@@ -1,9 +1,9 @@
 name: TCP-LB-Sanity-CI-RH9
 
 on:
-  #schedule:
-  # Runs "At 01:00 UTC every day-of-week"
-  #- cron: '0 10 * * *'
+  schedule:
+  # Runs "At 14:00 UTC every day-of-week"
+  - cron: '0 14 * * *'
   workflow_dispatch:
     inputs:
       logLevel:
@@ -17,6 +17,8 @@ jobs:
   build:
     name: tcp-lb-sanity-rh9
     runs-on: [self-hosted, redhat]
+    if: github.repository == 'loxilb-io/loxilb' 
+          &&  github.event.inputs.tagName == ''
     steps:
       - uses: actions/checkout@v2
         with:
