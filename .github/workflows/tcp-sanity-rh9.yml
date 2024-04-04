@@ -1,9 +1,9 @@
 name: TCP-LB-Sanity-CI-RH9
 
 on:
-  schedule:
+  #schedule:
   # Runs "At 01:00 UTC every day-of-week"
-  - cron: '0 10 * * *'
+  #- cron: '0 10 * * *'
   workflow_dispatch:
     inputs:
       logLevel:
