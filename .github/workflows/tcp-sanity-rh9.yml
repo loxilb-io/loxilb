@@ -1,0 +1,59 @@
+name: TCP-LB-Sanity-CI-RH9
+
+on:
+  schedule:
+  # Runs "At 01:00 UTC every day-of-week"
+  - cron: '0 10 * * *'
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'     
+        required: true
+        default: 'warning'
+      tags:
+        description: 'TCP LB Sanity RedHat9'
+       
+jobs:
+  build:
+    name: tcp-lb-sanity-rh9
+    runs-on: [self-hosted, redhat]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - run: |
+             cd cicd/tcplb/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/tcplbmark/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/tcplbdsr1/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/tcplbdsr2/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/tcplbl3dsr/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/tcplbhash/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
