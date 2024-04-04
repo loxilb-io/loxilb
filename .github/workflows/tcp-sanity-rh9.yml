@@ -57,3 +57,7 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - name: Clean test-bed
+        if: success() || failure()
+        run: |
+            sudo docker image rm ghcr.io/loxilb-io/loxilb:latest
