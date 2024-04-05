@@ -1,60 +1,66 @@
-name: TCP-LB-Sanity-CI-RH9
+name: Liveness-LB-Sanity-CI-RH9
 
 on:
   schedule:
-  # Runs "At 14:00 UTC every day-of-week"
-  - cron: '0 14 * * *'
+  # Runs "At 20:00 UTC every day-of-week"
+  - cron: '0 20 * * *'
   workflow_dispatch:
     inputs:
       logLevel:
-        description: 'Log level'     
+        description: 'Log level'
         required: true
         default: 'warning'
       tags:
-        description: 'TCP LB Sanity RedHat9'
+        description: 'Liveness LB Sanity Ubuntu 22'
        
 jobs:
   build:
-    name: tcp-lb-sanity-rh9
+    name: liveness-lb-sanity-rh9
     runs-on: [self-hosted, redhat]
-    if: github.repository == 'loxilb-io/loxilb' 
+    if: github.repository == 'loxilb-io/loxilb'
           &&  github.event.inputs.tagName == ''
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
       - run: |
-             cd cicd/tcplb/
+             cd cicd/tcplbmon/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/tcplbmark/
+             cd cicd/udplbmon/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/tcplbdsr1/
+             cd cicd/sctplbmon/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/tcplbdsr2/
+             cd cicd/tcplbmon6/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/tcplbl3dsr/
+             cd cicd/tcplbepmod/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/tcplbhash/
+             cd cicd/httpsep/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/http2ep/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh

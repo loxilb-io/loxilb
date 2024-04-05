@@ -1,0 +1,43 @@
+name: Sanity-CI-RH9
+on:
+  schedule:
+  # Runs "At 16:00 UTC every day-of-week"
+  - cron: '0 16 * * *'
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+      tags:
+        description: 'Sanity RedHat9'
+jobs:
+  build:
+    name: basic-sanity-rh9
+    runs-on: [self-hosted, redhat]
+    if: github.repository == 'loxilb-io/loxilb'
+          &&  github.event.inputs.tagName == ''
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - run: |
+             cd cicd/sconnect/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/tcplb/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - name: Clean test-bed
+        if: success() || failure()
+        run: |
+            xdps=$(sudo docker ps -a -q)
+            if [[ x$dps != x ]]; then
+              sudo docker stop $(sudo docker ps -a -q)
+            fi
+            sudo docker image rm ghcr.io/loxilb-io/loxilb:latest

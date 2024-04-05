@@ -1,63 +1,45 @@
-name: TCP-LB-Sanity-CI-RH9
+name: NAT66-LB-Sanity-CI-RH9
 
 on:
   schedule:
-  # Runs "At 14:00 UTC every day-of-week"
-  - cron: '0 14 * * *'
+  # Runs "At 21:00 UTC every day-of-week"
+  - cron: '0 21 * * *'
   workflow_dispatch:
     inputs:
       logLevel:
-        description: 'Log level'     
+        description: 'Log level'
         required: true
         default: 'warning'
       tags:
-        description: 'TCP LB Sanity RedHat9'
+        description: 'NAT66 LB Sanity RH9'
        
 jobs:
   build:
-    name: tcp-lb-sanity-rh9
+    name: nat66-lb-sanity-rh9
     runs-on: [self-hosted, redhat]
-    if: github.repository == 'loxilb-io/loxilb' 
+    if: github.repository == 'loxilb-io/loxilb'
           &&  github.event.inputs.tagName == ''
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
       - run: |
-             cd cicd/tcplb/
+             cd cicd/nat66tcp/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/tcplbmark/
+             cd cicd/nat66udp/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/tcplbdsr1/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/tcplbdsr2/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/tcplbl3dsr/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/tcplbhash/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
+             cd cicd/nat66sctp/
+             #./config.sh
+             #./validation.sh
+             #./rmconfig.sh
              cd -
       - name: Clean test-bed
         if: success() || failure()
