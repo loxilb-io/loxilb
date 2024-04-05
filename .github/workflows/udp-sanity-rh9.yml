@@ -32,5 +32,8 @@ jobs:
       - name: Clean test-bed
         if: success() || failure()
         run: |
-            sudo docker stop $(sudo docker ps -a -q)
+            xdps=$(sudo docker ps -a -q)
+            if [[ x$dps != x ]]; then
+              sudo docker stop $(sudo docker ps -a -q)
+            fi
             sudo docker image rm ghcr.io/loxilb-io/loxilb:latest
