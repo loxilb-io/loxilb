@@ -16,7 +16,7 @@ hostdocker="ghcr.io/nicolaka/netshoot:latest"
 cluster_opts=""
 extra_opts=""
 ka_opts=""
-var=$(lsb_release -r | cut -f2)
+#var=$(lsb_release -r | cut -f2)
 #if [[ $var == *"22.04"* ]];then
 #  lxdocker="ghcr.io/loxilb-io/loxilb:latestu22"
 #fi

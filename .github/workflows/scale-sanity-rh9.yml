@@ -1,0 +1,36 @@
+name: Scale-Sanity-CI-RH9
+
+on:
+  schedule:
+  # Runs "At 22:00 UTC every day-of-week"
+  - cron: '0 22 * * *'
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+      tags:
+        description: 'Scale Sanity RH9'
+       
+jobs:
+  build:
+    name: scale-sanity-rh9
+    runs-on: [self-hosted, redhat]
+    if: github.repository == 'loxilb-io/loxilb'
+          &&  github.event.inputs.tagName == ''
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - run: |
+             cd cicd/tcpepscale/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - name: Clean test-bed
+        if: success() || failure()
+        run: |
+            sudo docker stop $(sudo docker ps -a -q)
+            sudo docker image rm ghcr.io/loxilb-io/loxilb:latest

@@ -1,64 +1,47 @@
-name: TCP-LB-Sanity-CI-RH9
+name: IPsec-Sanity-CI-RH9
 
 on:
   schedule:
-  # Runs "At 14:00 UTC every day-of-week"
-  - cron: '0 14 * * *'
+  # Runs "At 19:00 UTC every day-of-week"
+  - cron: '0 19 * * *'
   workflow_dispatch:
     inputs:
       logLevel:
-        description: 'Log level'     
+        description: 'Log level'
         required: true
         default: 'warning'
       tags:
-        description: 'TCP LB Sanity RedHat9'
+        description: 'IPSEC LB Sanity RedHat9'
        
 jobs:
   build:
-    name: tcp-lb-sanity-rh9
+    name: ipsec-sanity-rh9
     runs-on: [self-hosted, redhat]
-    if: github.repository == 'loxilb-io/loxilb' 
+    if: github.repository == 'loxilb-io/loxilb'
           &&  github.event.inputs.tagName == ''
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
       - run: |
-             cd cicd/tcplb/
+             cd cicd/ipsec1/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/tcplbmark/
+             cd cicd/ipsec2/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/tcplbdsr1/
+             cd cicd/ipsec3/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh
              cd -
-      - run: |
-             cd cicd/tcplbdsr2/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/tcplbl3dsr/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/tcplbhash/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
+      - run: echo ${{ github.event.inputs.userInput }}
       - name: Clean test-bed
         if: success() || failure()
         run: |
