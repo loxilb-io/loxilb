@@ -71,5 +71,12 @@ $hexec l3ep3 ip addr add 47.47.47.1/24 dev ipip0
 $hexec l3ep3 ip addr add 58.58.58.1/32 dev lo
 $hexec l3ep3 ip addr add 20.20.20.1/32 dev lo
 
+$hexec l3ep1 sysctl net.ipv4.conf.el3ep1llb1.rp_filter=0 2>&1 >> /dev/null
+$hexec l3ep2 sysctl net.ipv4.conf.el3ep2llb1.rp_filter=0 2>&1 >> /dev/null
+$hexec l3ep3 sysctl net.ipv4.conf.el3ep3llb1.rp_filter=0 2>&1 >> /dev/null
+$hexec l3ep1 sysctl net.ipv4.conf.ipip0.rp_filter=0 2>&1 >> /dev/null
+$hexec l3ep2 sysctl net.ipv4.conf.ipip0.rp_filter=0 2>&1 >> /dev/null
+$hexec l3ep3 sysctl net.ipv4.conf.ipip0.rp_filter=0 2>&1 >> /dev/null
+
 sleep 5
 create_lb_rule llb1 20.20.20.1 --select=hash --tcp=8080:8080 --endpoints=56.56.56.1:1,57.57.57.1:1,58.58.58.1:1 --mode=dsr

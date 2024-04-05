@@ -177,7 +177,11 @@ get_llb_peerIP() {
 ## Deletes a docker host
 ## arg1 - hostname 
 delete_docker_host() {
-  if docker kill $1 2>&1 >> /dev/null
+  dcmd="kill"
+  if [[ $1 == "llb"* ]] || [[ $1 == "loxilb"* ]]; then
+    dcmd="stop"
+  fi
+  if docker $dcmd $1 2>&1 >> /dev/null
   then
     hd="true"
     ka=`docker ps -f name=ka_$1| grep -w ka_$1 | cut  -d " "  -f 1 | grep -iv  "CONTAINER"`
