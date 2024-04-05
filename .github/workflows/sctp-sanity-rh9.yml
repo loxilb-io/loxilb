@@ -41,12 +41,6 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
-      - run: |
-             cd cicd/sctplblc/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
       - name: Clean test-bed
         if: success() || failure()
         run: |
