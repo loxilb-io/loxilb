@@ -1218,6 +1218,8 @@ func (ct *DpCtInfo) convDPCt2GoObjFixup(ctKey *C.struct_dp_ct_key, ctDat *C.stru
 		ct.Proto = "sctp"
 		s := (*C.ct_sctp_pinf_t)(unsafe.Pointer(&ctDat.pi))
 		switch {
+		case s.state == C.CT_SCTP_PRE_EST:
+			ct.CState = "pre-est"
 		case s.state == C.CT_SCTP_EST:
 			ct.CState = "est"
 		case s.state == C.CT_SCTP_CLOSED:
