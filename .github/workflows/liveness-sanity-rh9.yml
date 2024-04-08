@@ -1,9 +1,9 @@
 name: Liveness-LB-Sanity-CI-RH9
 
 on:
-  schedule:
+  #schedule:
   # Runs "At 20:00 UTC every day-of-week"
-  - cron: '0 20 * * *'
+  #- cron: '0 20 * * *'
   workflow_dispatch:
     inputs:
       logLevel:
