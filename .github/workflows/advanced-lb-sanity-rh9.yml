@@ -30,12 +30,6 @@ jobs:
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/onearml2/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
              cd cicd/ulcltcplb/
              ./config.sh
              ./validation.sh
