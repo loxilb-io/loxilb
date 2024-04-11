@@ -49,6 +49,7 @@ do
     sleep 1
 done
 done
+sudo pkill socat >/dev/null 2>&1
 sudo pkill sctp_server >/dev/null 2>&1
 if [[ $code == 0 ]]
 then
