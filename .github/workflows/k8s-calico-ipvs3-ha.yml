@@ -12,7 +12,7 @@ on:
 jobs:
   test-runner:
     name: k8s-calico-cluster-ipvs3-ha-sanity
-    runs-on: self-hosted
+    runs-on: [self-hosted, large]
     if: github.repository == 'loxilb-io/loxilb' 
           &&  github.event.inputs.tagName == ''
     steps:
