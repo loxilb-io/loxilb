@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     name: k3s-flannel-incluster-sanity
-    runs-on: self-hosted
+    runs-on: [self-hosted, large]
     if: github.repository == 'loxilb-io/loxilb' 
           &&  github.event.inputs.tagName == ''
     steps:

@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     name: k3s-cilium-cluster-sanity
-    runs-on: self-hosted
+    runs-on: [self-hosted, large]
     steps:
       - uses: actions/checkout@v2
         with:
