@@ -1050,8 +1050,8 @@ func (p *Port) DP(work DpWorkT) int {
 				zn, _ := mh.zn.Zonefind(p.Zone)
 				if zn != nil {
 					match := false
-					for _, pe := range zn.Ports.portImap {
-						if pe.Name != p.Name {
+					for _, pe := range zn.Ports.portSmap {
+						if pe != nil && pe.Name != p.Name {
 							if pe.HInfo.MacAddr == p.HInfo.MacAddr {
 								match = true
 								break
