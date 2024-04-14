@@ -59,26 +59,27 @@ const (
 )
 
 type loxiNetH struct {
-	dpEbpf *DpEbpfH
-	dp     *DpH
-	zn     *ZoneH
-	zr     *Zone
-	mtx    sync.RWMutex
-	ticker *time.Ticker
-	tDone  chan bool
-	sigCh  chan os.Signal
-	wg     sync.WaitGroup
-	bgp    *GoBgpH
-	sumDis bool
-	pProbe bool
-	has    *CIStateH
-	logger *tk.Logger
-	ready  bool
-	self   int
-	rssEn  bool
-	eHooks bool
-	locVIP bool
-	pFile  *os.File
+	dpEbpf     *DpEbpfH
+	dp         *DpH
+	zn         *ZoneH
+	zr         *Zone
+	mtx        sync.RWMutex
+	ticker     *time.Ticker
+	tDone      chan bool
+	sigCh      chan os.Signal
+	wg         sync.WaitGroup
+	bgp        *GoBgpH
+	sumDis     bool
+	pProbe     bool
+	has        *CIStateH
+	logger     *tk.Logger
+	ready      bool
+	self       int
+	rssEn      bool
+	eHooks     bool
+	locVIP     bool
+	cloudLabel string
+	pFile      *os.File
 }
 
 // NodeWalker - an implementation of node walker interface
@@ -216,6 +217,7 @@ func loxiNetInit() {
 	mh.sumDis = opts.Opts.CSumDisable
 	mh.pProbe = opts.Opts.PassiveEPProbe
 	mh.locVIP = opts.Opts.LocalVIP
+	mh.cloudLabel = opts.Opts.Cloud
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 
