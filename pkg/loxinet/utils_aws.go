@@ -101,9 +101,11 @@ func AWSCreatePrivateIp(ni string, vIP net.IP) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
 	defer cancel()
 
+	allowReassign := true
 	input := &ec2.AssignPrivateIpAddressesInput{
 		NetworkInterfaceId: &ni,
 		PrivateIpAddresses: []string{vIP.String()},
+		AllowReassignment:  &allowReassign,
 	}
 	_, err := ec2Client.AssignPrivateIpAddresses(ctx, input)
 	if err != nil {
