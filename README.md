@@ -86,6 +86,10 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 - [K0s : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k0s_quick_start_incluster.md)
 - [MicroK8s : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/microk8s_quick_start_incluster.md)
 
+#### loxilb as service-proxy
+- [K3s : loxilb service-proxy with flannel](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/service-proxy-flannel.md)
+- [K3s : loxilb service-proxy with calico](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/service-proxy-calico.md)
+
 ## Knowledge-Base   
 - [What is eBPF](ebpf.md)
 - [What is k8s service - load-balancer](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/lb.md)
@@ -122,7 +126,7 @@ Feel free to post your queries in github [discussion](https://github.com/loxilb-
 | [![udp-lb-sanity-CI](https://github.com/loxilb-io/loxilb/actions/workflows/udp-sanity.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/udp-sanity.yml) | [![udp-lb-sanity-CI](https://github.com/loxilb-io/loxilb/actions/workflows/udp-sanity-ubuntu-22.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/udp-sanity-ubuntu-22.yml) | [![UDP-LB-Sanity-CI-RH9](https://github.com/loxilb-io/loxilb/actions/workflows/udp-sanity-rh9.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/udp-sanity-rh9.yml) |
 | [![sctp-lb-sanity-CI](https://github.com/loxilb-io/loxilb/actions/workflows/sctp-sanity.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/sctp-sanity.yml)  | ![ipsec-sanity-CI](https://github.com/loxilb-io/loxilb/actions/workflows/ipsec-sanity-ubuntu-22.yml/badge.svg)  | [![IPsec-Sanity-CI-RH9](https://github.com/loxilb-io/loxilb/actions/workflows/ipsec-sanity-rh9.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/ipsec-sanity-rh9.yml) |
 | ![extlb workflow](https://github.com/loxilb-io/loxilb/actions/workflows/advanced-lb-sanity.yml/badge.svg) | ![nat66-sanity-CI](https://github.com/loxilb-io/loxilb/actions/workflows/nat66-sanity-ubuntu-22.yml/badge.svg)  | [![NAT66-LB-Sanity-CI-RH9](https://github.com/loxilb-io/loxilb/actions/workflows/nat66-sanity-rh9.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/nat66-sanity-rh9.yml) | 
-| ![ipsec-sanity-CI](https://github.com/loxilb-io/loxilb/actions/workflows/ipsec-sanity.yml/badge.svg)   | [![Scale-Sanity-CI-Ubuntu-22](https://github.com/loxilb-io/loxilb/actions/workflows/scale-sanity-ubuntu-22.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/scale-sanity-ubuntu-22.yml) | |
+| ![ipsec-sanity-CI](https://github.com/loxilb-io/loxilb/actions/workflows/ipsec-sanity.yml/badge.svg)   | [![Scale-Sanity-CI-Ubuntu-22](https://github.com/loxilb-io/loxilb/actions/workflows/scale-sanity-ubuntu-22.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/scale-sanity-ubuntu-22.yml) | [![Adv-LB-Sanity-CI-RH9](https://github.com/loxilb-io/loxilb/actions/workflows/advanced-lb-sanity-rh9.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/advanced-lb-sanity-rh9.yml) |
 | ![scale-sanity-CI](https://github.com/loxilb-io/loxilb/actions/workflows/scale-sanity.yml/badge.svg)  | [![perf-CI](https://github.com/loxilb-io/loxilb/actions/workflows/perf.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/perf.yml) | | 
 | [![liveness-sanity-CI](https://github.com/loxilb-io/loxilb/actions/workflows/liveness-sanity.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/liveness-sanity.yml)  | | |
 | ![nat66-sanity-CI](https://github.com/loxilb-io/loxilb/actions/workflows/nat66-sanity.yml/badge.svg)   | | |
