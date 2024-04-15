@@ -41,7 +41,7 @@ const (
 
 // constants
 const (
-	NeighAts       = 10
+	NeighAts       = 20
 	NeighRslvdAts  = 40
 	MaxSysNeigh    = 3 * 1024
 	MaxTunnelNeigh = 1024
@@ -130,7 +130,8 @@ func (n *NeighH) Activate(ne *Neigh) {
 	}
 
 	if ne.Resolved {
-		interval = NeighRslvdAts * time.Second
+		//interval = NeighRslvdAts * time.Second
+		return
 	}
 
 	if (time.Since(ne.Ats) < interval) || ne.OifPort.Name == "lo" {
@@ -158,7 +159,7 @@ func (n *NeighH) Activate(ne *Neigh) {
 	}
 
 doIT:
-	tk.ArpPing(addr, Sip, name)
+	go tk.ArpPing(addr, Sip, name)
 
 	ne.Ats = time.Now()
 }
