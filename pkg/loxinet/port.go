@@ -393,12 +393,14 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 
 	P.portSmap[name] = p
 	P.portImap[rid] = p
-	P.portOmap[osid] = p
+	if osid > 0 {
+		P.portOmap[osid] = p
+	}
 
 	mh.zn.ZonePortAdd(name, zone)
 	p.DP(DpCreate)
 
-	tk.LogIt(tk.LogDebug, "port added - %s:%d\n", name, p.PortNo)
+	tk.LogIt(tk.LogDebug, "port added - %s:%d OSID %d\n", name, p.PortNo, osid)
 
 	return 0, nil
 }
