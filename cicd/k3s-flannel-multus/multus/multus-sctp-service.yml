@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: multus-sctp-service
+  annotations:
+    loxilb.io/num-secondary-networks: "2"
+    loxilb.io/multus-nets: macvlan1,macvlan2
+    loxilb.io/lbmode: "fullnat"
+spec:
+  externalTrafficPolicy: Local
+  loadBalancerClass: loxilb.io/loxilb
+  selector:
+    app: sctp-pod-01
+  ports:
+    - port: 55002
+      protocol: SCTP
+      targetPort: 9999
+  type: LoadBalancer
