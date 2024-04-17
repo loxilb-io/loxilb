@@ -13,7 +13,7 @@ jobs:
   build:
     if: github.repository == 'loxilb-io/loxilb'
     name: k3s-flannel-sanity
-    runs-on: self-hosted
+    runs-on: [self-hosted, large]
     steps:
       - uses: actions/checkout@v2
         with:

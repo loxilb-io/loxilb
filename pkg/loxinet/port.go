@@ -21,13 +21,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 	"io"
 	"net"
 	"strings"
-
-	tk "github.com/loxilb-io/loxilib"
-
-	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 // error codes
@@ -1023,8 +1021,7 @@ func (p *Port) DP(work DpWorkT) int {
 		return -1
 	}
 
-	if (work == DpCreate || work == DpRemove) &&
-		(p.IsLeafPort() == true && p.L2.IsPvid == true) {
+	if (work == DpCreate || work == DpRemove) && (p.IsLeafPort() == true && p.L2.IsPvid == true) {
 		if work == DpCreate {
 			if p.SInfo.BpfLoaded == false {
 				pWq.LoadEbpf = p.Name
@@ -1032,10 +1029,47 @@ func (p *Port) DP(work DpWorkT) int {
 			} else {
 				pWq.LoadEbpf = ""
 			}
+			if strings.Contains(p.Name, "cali") {
+				rmWq := new(RouterMacDpWorkQ)
+				rmWq.Work = work
+
+				for i := 0; i < 6; i++ {
+					rmWq.L2Addr[i] = uint8(p.HInfo.MacAddr[i])
+				}
+				rmWq.Status = &p.Sync
+				rmWq.PortNum = p.PortNo
+				DpWorkSingle(mh.dp, rmWq)
+			}
 		} else if work == DpRemove {
 			if p.SInfo.BpfLoaded == true {
 				pWq.LoadEbpf = p.Name
 				p.SInfo.BpfLoaded = false
+			}
+
+			if strings.Contains(p.Name, "cali") {
+				zn, _ := mh.zn.Zonefind(p.Zone)
+				if zn != nil {
+					match := false
+					for _, pe := range zn.Ports.portSmap {
+						if pe != nil && pe.Name != p.Name {
+							if pe.HInfo.MacAddr == p.HInfo.MacAddr {
+								match = true
+								break
+							}
+						}
+					}
+					if !match {
+						rmWq := new(RouterMacDpWorkQ)
+						rmWq.Work = work
+
+						for i := 0; i < 6; i++ {
+							rmWq.L2Addr[i] = uint8(p.HInfo.MacAddr[i])
+						}
+						rmWq.Status = &p.Sync
+						rmWq.PortNum = p.PortNo
+						DpWorkSingle(mh.dp, rmWq)
+					}
+				}
 			}
 		}
 	} else {

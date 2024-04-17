@@ -273,6 +273,16 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP, findAny bool) (int, net.IP, st
 	ifa := l3.IfaMap[key]
 
 	if ifa == nil {
+		if findAny {
+			for _, ifa := range l3.IfaMap {
+				if ifa.Key.Obj == "lo" {
+					continue
+				}
+				if len(ifa.Ifas) > 0 {
+					return 0, ifa.Ifas[0].IfaAddr, Obj
+				}
+			}
+		}
 		return L3ObjErr, net.IPv4(0, 0, 0, 0), ""
 	}
 

@@ -13,7 +13,7 @@ jobs:
              go-version: '>=1.18.0'
       - run: |
          sudo apt-get update
-         sudo apt-get -y install bridge-utils net-tools iperf curl wget clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat ethtool
+         sudo apt-get -y install bridge-utils net-tools iperf curl lksctp-tools wget clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat ethtool
          git clone --recursive https://github.com/loxilb-io/loxilb
       - working-directory: ./loxilb
         run: |

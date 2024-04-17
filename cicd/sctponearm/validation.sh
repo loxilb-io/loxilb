@@ -3,8 +3,8 @@ source ../common.sh
 echo SCENARIO-SCTP-ONEARM
 servArr=( "server1" "server2" )
 ep=( "10.75.188.218" "10.75.188.220" )
-$hexec ep1 ../common/sctp_server ${ep[0]} 38412 server1 >/dev/null 2>&1 &
-$hexec ep2 ../common/sctp_server ${ep[1]} 38412 server2 >/dev/null 2>&1 &
+$hexec ep1 socat -v -T0.5 sctp-l:38412,reuseaddr,fork system:"echo 'server1'; cat" >/dev/null 2>&1 &
+$hexec ep2 socat -v -T0.5 sctp-l:38412,reuseaddr,fork system:"echo 'server2'; cat" >/dev/null 2>&1 &
 
 sleep 60
 $dexec llb1 loxicmd get ep
@@ -18,7 +18,7 @@ j=2
 waitCount=0
 while [ $j -le 1 ]
 do
-    res=$($hexec c1 timeout 10 ../common/sctp_client 10.75.191.224 0 ${ep[j]} 38412)
+    res=$($hexec c1 timeout 10 ../common/sctp_socat_client 10.75.191.224 0 ${ep[j]} 38412)
     #echo $res
     if [[ $res == "${servArr[j]}" ]]
     then
@@ -43,7 +43,7 @@ for i in {1..4}
 do
 for j in {0..1}
 do
-    res=$($hexec c1 timeout 10 ../common/sctp_client 10.75.191.224 0 123.123.123.1 38412)
+    res=$($hexec c1 timeout 10 ../common/sctp_socat_client 10.75.191.224 0 123.123.123.1 38412)
     echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
@@ -58,6 +58,7 @@ then
 else
     echo SCENARIO-SCTP-ONEARM [FAILED]
 fi
+sudo pkill -9 -x  socat >/dev/null 2>&1
 sudo pkill -9 -x  sctp_server >/dev/null 2>&1
 exit $code
 
