@@ -91,6 +91,7 @@ const (
 	MaxEndPointCheckers        = 4         // Maximum helpers to check endpoint health
 	EndPointCheckerDuration    = 2         // Duration at which ep-helpers will run
 	MaxEndPointSweeps          = 20        // Maximum end-point sweeps per round
+	VIPSweepDuration           = 30        // Duration of periodic VIP maintenance
 )
 
 type ruleTType uint
@@ -329,6 +330,7 @@ type RuleH struct {
 	epMx       sync.RWMutex
 	rootCAPool *x509.CertPool
 	tlsCert    tls.Certificate
+	vipST      time.Time
 }
 
 // RulesInit - initialize the Rules subsystem
@@ -386,6 +388,7 @@ func RulesInit(zone *Zone) *RuleH {
 		nRh.tlsCert = cert
 	}
 	nRh.wg.Add(MaxEndPointCheckers)
+	nRh.vipST = time.Now()
 
 	return nRh
 }
@@ -1461,6 +1464,14 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		if R.vipMap[sNetAddr.IP.String()] == 1 {
 			R.AdvRuleVIPIfL2(sNetAddr.IP)
 		}
+
+		// Take care of any secondary VIPs
+		for _, sVIP := range r.secIP {
+			R.vipMap[sVIP.sIP.String()]++
+			if R.vipMap[sVIP.sIP.String()] == 1 {
+				R.AdvRuleVIPIfL2(sVIP.sIP)
+			}
+		}
 	}
 
 	r.DP(DpCreate)
@@ -1537,6 +1548,22 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 				mh.zr.L3.IfaDelete(dev, sNetAddr.IP.String()+"/32")
 			}
 			delete(R.vipMap, sNetAddr.IP.String())
+		}
+
+		// Take care of any secondary VIPs
+		for _, sVIP := range rule.secIP {
+			R.vipMap[sVIP.sIP.String()]--
+			if R.vipMap[sVIP.sIP.String()] == 0 {
+				if utils.IsIPHostAddr(sVIP.sIP.String()) {
+					loxinlp.DelAddrNoHook(sVIP.sIP.String()+"/32", "lo")
+				}
+				dev := fmt.Sprintf("llb-rule-%s", sVIP.sIP.String())
+				ret, _ := mh.zr.L3.IfaFind(dev, sVIP.sIP)
+				if ret == 0 {
+					mh.zr.L3.IfaDelete(dev, sVIP.sIP.String()+"/32")
+				}
+				delete(R.vipMap, sVIP.sIP.String())
+			}
 		}
 	}
 
@@ -2185,11 +2212,14 @@ func (R *RuleH) RulesSync() {
 		}
 	}
 
-	for vip := range R.vipMap {
-		ip := net.ParseIP(vip)
-		if ip != nil {
-			R.AdvRuleVIPIfL2(ip)
+	if time.Duration(time.Since(R.vipST).Seconds()) > time.Duration(VIPSweepDuration) {
+		for vip := range R.vipMap {
+			ip := net.ParseIP(vip)
+			if ip != nil {
+				R.AdvRuleVIPIfL2(ip)
+			}
 		}
+		R.vipST = time.Now()
 	}
 
 	for _, rule := range R.tables[RtFw].eMap {
@@ -2606,7 +2636,7 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 		return 0
 	}
 
-	if isNat == true {
+	if isNat {
 		return r.Nat2DP(work)
 	}
 
@@ -2632,7 +2662,7 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 				}
 				loxinlp.DelNeighNoHook(IP.String(), "")
 			}
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
 			defer cancel()
 			rCh := make(chan int)
 			go utils.GratArpReqWithCtx(ctx, rCh, IP, iface)
@@ -2675,4 +2705,11 @@ func (R *RuleH) RuleVIPSyncToClusterState() {
 			R.AdvRuleVIPIfL2(ip)
 		}
 	}
+}
+
+func (R *RuleH) IsIPRuleVIP(IP net.IP) bool {
+	if _, found := R.vipMap[IP.String()]; found {
+		return true
+	}
+	return false
 }

@@ -312,17 +312,20 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 	}
 	//}
 
-	var tret int
+	tret := 0
 	var tR *tk.TrieRoot
 	if tk.IsNetIPv4(Dst.IP.String()) {
 		tR = r.Trie4
 	} else {
 		tR = r.Trie6
 	}
-	if len(rt.NextHops) > 0 {
-		tret = tR.AddTrie(Dst.String(), rt.NextHops[0])
-	} else {
-		tret = tR.AddTrie(Dst.String(), &rt.Attr.Ifi)
+	ones, _ := Dst.Mask.Size()
+	if (ones != 32 && ones != 128) || !r.Zone.Rules.IsIPRuleVIP(Dst.IP) {
+		if len(rt.NextHops) > 0 {
+			tret = tR.AddTrie(Dst.String(), rt.NextHops[0])
+		} else {
+			tret = tR.AddTrie(Dst.String(), &rt.Attr.Ifi)
+		}
 	}
 	if tret != 0 {
 		// Delete any neigbors created here
@@ -417,10 +420,13 @@ func (r *RtH) rtDeleteCommon(Dst net.IPNet, Zone string, host bool) (int, error)
 	} else {
 		tR = r.Trie6
 	}
-	tret := tR.DelTrie(Dst.String())
-	if tret != 0 {
-		tk.LogIt(tk.LogError, "rt delete - %s:%s lpm not found\n", Dst.String(), Zone)
-		return RtTrieDelErr, errors.New("rt-lpm delete error")
+	ones, _ := Dst.Mask.Size()
+	if (ones != 32 && ones != 128) || !r.Zone.Rules.IsIPRuleVIP(Dst.IP) {
+		tret := tR.DelTrie(Dst.String())
+		if tret != 0 {
+			tk.LogIt(tk.LogError, "rt delete - %s:%s lpm not found\n", Dst.String(), Zone)
+			return RtTrieDelErr, errors.New("rt-lpm delete error")
+		}
 	}
 
 	delete(r.RtMap, rt.Key)
