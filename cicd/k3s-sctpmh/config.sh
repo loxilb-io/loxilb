@@ -101,6 +101,8 @@ $hexec r1 ip route add 20.20.20.1/32 via 11.11.11.11
 # Route back to user
 sudo ip route add 11.11.11.0/24 via 14.14.14.1
 sudo ip route add 123.123.123.0/24 via 14.14.14.1
+sudo ip route add 124.124.124.0/24 via 14.14.14.1
+sudo ip route add 125.125.125.0/24 via 14.14.14.1
 
 # Change default route in llb1
 $hexec llb1 ip route del default 
@@ -132,7 +134,9 @@ else
   echo "Start K3s installation"
 
   # Install k3s without external cloud-manager and disabled servicelb
-  curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.22.9+k3s1 INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" K3S_KUBECONFIG_MODE="644" sh -
+  sudo apt install ipset ipvsadm
+  curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik,metrics-server,servicelb" K3S_KUBECONFIG_MODE="644" sh -s - server --kube-proxy-arg proxy-mode=ipvs
+  #curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.22.9+k3s1 INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" K3S_KUBECONFIG_MODE="644" sh -
   #curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" K3S_KUBECONFIG_MODE="644" sh -
 
   sleep 10
