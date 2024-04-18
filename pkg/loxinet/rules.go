@@ -1076,9 +1076,9 @@ func (R *RuleH) syncEPHostState2Rule(rule *ruleEnt, checkNow bool) bool {
 	return rChg
 }
 
-// FoldRecursiveEPs - Check if this rule's key matches endpoint of another rule.
+// foldRecursiveEPs - Check if this rule's key matches endpoint of another rule.
 // If so, replace that rule's endpoints to this rule's endpoints
-func (R *RuleH) FoldRecursiveEPs(r *ruleEnt) {
+func (R *RuleH) foldRecursiveEPs(r *ruleEnt) {
 
 	for _, tr := range R.tables[RtLB].eMap {
 		switch atr := r.act.action.(type) {
@@ -1143,9 +1143,9 @@ func (R *RuleH) FoldRecursiveEPs(r *ruleEnt) {
 	}
 }
 
-// UnFoldRecursiveEPs - Check if this rule's key matches endpoint of another rule.
+// unFoldRecursiveEPs - Check if this rule's key matches endpoint of another rule.
 // If so, replace that rule's original endpoint
-func (R *RuleH) UnFoldRecursiveEPs(r *ruleEnt) {
+func (R *RuleH) unFoldRecursiveEPs(r *ruleEnt) {
 
 	selPolicy := cmn.LbSelRr
 	switch at := r.act.action.(type) {
@@ -1180,6 +1180,25 @@ func (R *RuleH) UnFoldRecursiveEPs(r *ruleEnt) {
 					tr.DP(DpCreate)
 					tk.LogIt(tk.LogDebug, "nat lb-rule unfolded - %d:%s-%s\n", tr.ruleNum, tr.tuples.String(), tr.act.String())
 				}
+			}
+		}
+	}
+}
+
+// addVIPSys - system specific operations for VIPs of a LB rule
+func (R *RuleH) addVIPSys(r *ruleEnt) {
+	if !strings.Contains(r.name, "ipvs") {
+		R.vipMap[r.tuples.l3Dst.addr.IP.String()]++
+
+		if R.vipMap[r.tuples.l3Dst.addr.IP.String()] == 1 {
+			R.AdvRuleVIPIfL2(r.tuples.l3Dst.addr.IP)
+		}
+
+		// Take care of any secondary VIPs
+		for _, sVIP := range r.secIP {
+			R.vipMap[sVIP.sIP.String()]++
+			if R.vipMap[sVIP.sIP.String()] == 1 {
+				R.AdvRuleVIPIfL2(sVIP.sIP)
 			}
 		}
 	}
@@ -1447,7 +1466,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	r.bgp = serv.Bgp
 	r.ci = cmn.CIDefault
 
-	R.FoldRecursiveEPs(r)
+	R.foldRecursiveEPs(r)
 
 	R.modNatEpHost(r, natActs.endPoints, true, activateProbe)
 	R.electEPSrc(r)
@@ -1458,25 +1477,46 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	if r.ruleNum < RtMaximumLbs {
 		R.tables[RtLB].rArr[r.ruleNum] = r
 	}
-	if !strings.Contains(r.name, "ipvs") {
-		R.vipMap[sNetAddr.IP.String()]++
-
-		if R.vipMap[sNetAddr.IP.String()] == 1 {
-			R.AdvRuleVIPIfL2(sNetAddr.IP)
-		}
-
-		// Take care of any secondary VIPs
-		for _, sVIP := range r.secIP {
-			R.vipMap[sVIP.sIP.String()]++
-			if R.vipMap[sVIP.sIP.String()] == 1 {
-				R.AdvRuleVIPIfL2(sVIP.sIP)
-			}
-		}
-	}
+	R.addVIPSys(r)
 
 	r.DP(DpCreate)
 
 	return 0, nil
+}
+
+// deleteVIPSys - system specific operations for deleting VIPs of a LB rule
+func (R *RuleH) deleteVIPSys(r *ruleEnt) {
+	if !strings.Contains(r.name, "ipvs") {
+		R.vipMap[r.tuples.l3Dst.addr.IP.String()]--
+
+		if R.vipMap[r.tuples.l3Dst.addr.IP.String()] == 0 {
+			if utils.IsIPHostAddr(r.tuples.l3Dst.addr.IP.String()) {
+				loxinlp.DelAddrNoHook(r.tuples.l3Dst.addr.IP.String()+"/32", "lo")
+			}
+			dev := fmt.Sprintf("llb-rule-%s", r.tuples.l3Dst.addr.IP.String())
+			ret, _ := mh.zr.L3.IfaFind(dev, r.tuples.l3Dst.addr.IP)
+			if ret == 0 {
+				mh.zr.L3.IfaDelete(dev, r.tuples.l3Dst.addr.IP.String()+"/32")
+			}
+			delete(R.vipMap, r.tuples.l3Dst.addr.IP.String())
+		}
+
+		// Take care of any secondary VIPs
+		for _, sVIP := range r.secIP {
+			R.vipMap[sVIP.sIP.String()]--
+			if R.vipMap[sVIP.sIP.String()] == 0 {
+				if utils.IsIPHostAddr(sVIP.sIP.String()) {
+					loxinlp.DelAddrNoHook(sVIP.sIP.String()+"/32", "lo")
+				}
+				dev := fmt.Sprintf("llb-rule-%s", sVIP.sIP.String())
+				ret, _ := mh.zr.L3.IfaFind(dev, sVIP.sIP)
+				if ret == 0 {
+					mh.zr.L3.IfaDelete(dev, sVIP.sIP.String()+"/32")
+				}
+				delete(R.vipMap, sVIP.sIP.String())
+			}
+		}
+	}
 }
 
 // DeleteNatLbRule - Delete a service LB nat rule. The service details are passed in serv argument.
@@ -1528,44 +1568,14 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 		activatedProbe = true
 	}
 	R.modNatEpHost(rule, eEps, false, activatedProbe)
-	R.UnFoldRecursiveEPs(rule)
+	R.unFoldRecursiveEPs(rule)
 
 	delete(R.tables[RtLB].eMap, rt.ruleKey())
 	if rule.ruleNum < RtMaximumLbs {
 		R.tables[RtLB].rArr[rule.ruleNum] = nil
 	}
 
-	if !strings.Contains(rule.name, "ipvs") {
-		R.vipMap[sNetAddr.IP.String()]--
-
-		if R.vipMap[sNetAddr.IP.String()] == 0 {
-			if utils.IsIPHostAddr(sNetAddr.IP.String()) {
-				loxinlp.DelAddrNoHook(sNetAddr.IP.String()+"/32", "lo")
-			}
-			dev := fmt.Sprintf("llb-rule-%s", sNetAddr.IP.String())
-			ret, _ := mh.zr.L3.IfaFind(dev, sNetAddr.IP)
-			if ret == 0 {
-				mh.zr.L3.IfaDelete(dev, sNetAddr.IP.String()+"/32")
-			}
-			delete(R.vipMap, sNetAddr.IP.String())
-		}
-
-		// Take care of any secondary VIPs
-		for _, sVIP := range rule.secIP {
-			R.vipMap[sVIP.sIP.String()]--
-			if R.vipMap[sVIP.sIP.String()] == 0 {
-				if utils.IsIPHostAddr(sVIP.sIP.String()) {
-					loxinlp.DelAddrNoHook(sVIP.sIP.String()+"/32", "lo")
-				}
-				dev := fmt.Sprintf("llb-rule-%s", sVIP.sIP.String())
-				ret, _ := mh.zr.L3.IfaFind(dev, sVIP.sIP)
-				if ret == 0 {
-					mh.zr.L3.IfaDelete(dev, sVIP.sIP.String()+"/32")
-				}
-				delete(R.vipMap, sVIP.sIP.String())
-			}
-		}
-	}
+	R.deleteVIPSys(rule)
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
 
