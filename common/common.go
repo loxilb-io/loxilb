@@ -527,6 +527,8 @@ type LbServiceArg struct {
 	ProbeRetries int `json:"probeRetries"`
 	// Name - Service name
 	Name string `json:"name"`
+	// PersistTimeout - Persistence timeout in seconds
+	PersistTimeout uint32 `json:"persistTimeout"`
 }
 
 // LbEndPointArg - Information related to load-balancer end-point

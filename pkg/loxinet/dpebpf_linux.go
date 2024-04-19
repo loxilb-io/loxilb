@@ -940,6 +940,7 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 
 		// seconds to nanoseconds
 		dat.ito = C.uint64_t(w.InActTo * 1000000000)
+		dat.pto = C.uint64_t(w.PersistTo * 1000000000)
 
 		/*dat.npmhh = 2
 		dat.pmhh[0] = 0x64646464

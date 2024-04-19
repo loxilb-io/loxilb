@@ -92,6 +92,7 @@ const (
 	EndPointCheckerDuration    = 2         // Duration at which ep-helpers will run
 	MaxEndPointSweeps          = 20        // Maximum end-point sweeps per round
 	VIPSweepDuration           = 30        // Duration of periodic VIP maintenance
+	DefaultPersistTimeOut      = 10800     // Default persistent LB session timeout
 )
 
 type ruleTType uint
@@ -275,7 +276,8 @@ type ruleEnt struct {
 	bgp      bool
 	addrRslv bool
 	sT       time.Time
-	iTo      uint32
+	iTO      uint32
+	pTO      uint32
 	act      ruleAct
 	secIP    []ruleNatSIP
 	stat     ruleStat
@@ -759,7 +761,7 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.Sel = data.act.action.(*ruleNatActs).sel
 		ret.Serv.Mode = data.act.action.(*ruleNatActs).mode
 		ret.Serv.Monitor = data.hChk.actChk
-		ret.Serv.InactiveTimeout = data.iTo
+		ret.Serv.InactiveTimeout = data.iTO
 		ret.Serv.Bgp = data.bgp
 		ret.Serv.BlockNum = data.tuples.pref
 		ret.Serv.Managed = data.managed
@@ -1402,7 +1404,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		}
 
 		if eRule.hChk.prbType != serv.ProbeType || eRule.hChk.prbPort != serv.ProbePort ||
-			eRule.hChk.prbReq != serv.ProbeReq || eRule.hChk.prbResp != serv.ProbeResp {
+			eRule.hChk.prbReq != serv.ProbeReq || eRule.hChk.prbResp != serv.ProbeResp ||
+			eRule.pTO != serv.PersistTimeout {
 			ruleChg = true
 		}
 
@@ -1417,6 +1420,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		eRule.hChk.prbResp = serv.ProbeResp
 		eRule.hChk.prbRetries = serv.ProbeRetries
 		eRule.hChk.prbTimeo = serv.ProbeTimeout
+		eRule.pTO = serv.PersistTimeout
 		eRule.act.action.(*ruleNatActs).sel = natActs.sel
 		eRule.act.action.(*ruleNatActs).endPoints = eEps
 		eRule.act.action.(*ruleNatActs).mode = natActs.mode
@@ -1427,7 +1431,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		R.electEPSrc(eRule)
 
 		eRule.sT = time.Now()
-		eRule.iTo = serv.InactiveTimeout
+		eRule.iTO = serv.InactiveTimeout
 		tk.LogIt(tk.LogDebug, "nat lb-rule updated - %s:%s\n", eRule.tuples.String(), eRule.act.String())
 		eRule.DP(DpCreate)
 
@@ -1462,9 +1466,17 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		return RuleAllocErr, errors.New("rule-hwm error")
 	}
 	r.sT = time.Now()
-	r.iTo = serv.InactiveTimeout
+	r.iTO = serv.InactiveTimeout
 	r.bgp = serv.Bgp
 	r.ci = cmn.CIDefault
+	r.pTO = 0
+	if serv.Sel == cmn.LbSelRrPersist {
+		if serv.PersistTimeout == 0 || serv.PersistTimeout > 24*60*60 {
+			r.pTO = DefaultPersistTimeOut
+		} else {
+			r.pTO = serv.PersistTimeout
+		}
+	}
 
 	R.foldRecursiveEPs(r)
 
@@ -2350,7 +2362,8 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.Proto = r.tuples.l4Prot.val
 	nWork.Mark = int(r.ruleNum)
 	nWork.BlockNum = r.tuples.pref
-	nWork.InActTo = uint64(r.iTo)
+	nWork.InActTo = uint64(r.iTO)
+	nWork.PersistTo = uint64(r.pTO)
 
 	if r.act.actType == RtActDnat {
 		nWork.NatType = DpDnat
