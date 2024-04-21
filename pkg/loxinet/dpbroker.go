@@ -288,6 +288,7 @@ type NatDpWorkQ struct {
 	NatType   NatT
 	EpSel     NatSel
 	InActTo   uint64
+	PersistTo uint64
 	endPoints []NatEP
 	secIP     []net.IP
 }
