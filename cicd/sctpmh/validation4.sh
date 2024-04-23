@@ -1,13 +1,16 @@
 #!/bin/bash
 source ../common.sh
-
+source check_ha.sh
 echo -e "sctpmh: SCTP Multihoming - Multipath Failover Test. Client, LB and EP all Multihomed\n"
 extIP="133.133.133.1"
 port=2020
 
+check_ha
+
 echo "SCTP Multihoming service sctp-lb(Multipath traffic) -> $extIP:$port"
 echo -e "------------------------------------------------------------------------------------\n"
 
+echo -e "\nHA state Master:$master BACKUP-$backup\n"
 echo -e "\nTraffic Flow: EP ---> LB ---> User"
 
 $hexec user sctp_test -H 1.1.1.1 -B 2.2.2.1  -P 9999 -l > user.out &
@@ -31,11 +34,11 @@ for((i=0;i<200;i++)) do
         echo "sctp_test done."
         break;
     fi
-    $dexec llb1 loxicmd get ct
+    $dexec $master loxicmd get ct --servName=sctpmh2
     echo -e "\n"
-    p1c_new=$(sudo docker exec -i llb1 loxicmd get ct | grep "133.133.133.1 | 31.31.31.1" | xargs | cut -d '|' -f 10)
-    p2c_new=$(sudo docker exec -i llb1 loxicmd get ct | grep "134.134.134.1 | 32.32.32.1" | xargs | cut -d '|' -f 10)
-    p3c_new=$(sudo docker exec -i llb1 loxicmd get ct | grep "135.135.135.1 | 31.31.31.1" | xargs | cut -d '|' -f 10)
+    p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "133.133.133.1 | 31.31.31.1" | xargs | cut -d '|' -f 10)
+    p2c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "134.134.134.1 | 32.32.32.1" | xargs | cut -d '|' -f 10)
+    p3c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "135.135.135.1 | 31.31.31.1" | xargs | cut -d '|' -f 10)
     
     echo "Counters: $p1c_new $p2c_new $p3c_new"
 
@@ -49,7 +52,7 @@ for((i=0;i<200;i++)) do
         echo -e "Turning off this path at User.\nEP----->LB--x-->User"
         $hexec user ip link set euserr1 down;
         down=1
-        p1c_new=$(sudo docker exec -i llb1 loxicmd get ct | grep "133.133.133.1 | 31.31.31.1" | xargs | cut -d '|' -f 10)
+        p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "133.133.133.1 | 31.31.31.1" | xargs | cut -d '|' -f 10)
     else
         if [[ $down == 1 ]]; then
             p1dok=1
@@ -98,6 +101,8 @@ else
     sudo ip netns exec r2 ip route
     echo -e "\nllb1"
     sudo ip netns exec llb1 ip route
+    echo -e "\nllb2"
+    sudo ip netns exec llb2 ip route
     echo -e "\nr3"
     sudo ip netns exec r3 ip route
     echo -e "\nr4"
@@ -108,6 +113,11 @@ else
     $dexec llb1 loxicmd get lb
     echo "llb1 ep-info"
     $dexec llb1 loxicmd get ep
+    echo "-----------------------------"
+    echo -e "\nllb2 lb-info"
+    $dexec llb2 loxicmd get lb
+    echo "llb2 ep-info"
+    $dexec llb2 loxicmd get ep
     exit 1
 fi
 echo -e "------------------------------------------------------------------------------------\n\n\n"
