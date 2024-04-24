@@ -71,7 +71,7 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 - [How-To : Run loxilb in standalone mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/standalone.md)
 - [How-To : Manual build/run](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/run.md)
 - [How-To : Standalone configuration](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/cmd.md)
-- [How-To : debug](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/debugging.md)
+- [How-To : Debug loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/debugging.md)
 - [How-To : Access end-points outside K8s](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/ext-ep.md)
 - [How-To : Deploy multi-server K3s HA with loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s-multi-master.md)
 
