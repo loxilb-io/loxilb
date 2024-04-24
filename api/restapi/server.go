@@ -3,6 +3,7 @@
 package restapi
 
 import (
+	"github.com/loxilb-io/loxilb/options"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -226,7 +227,7 @@ func (s *Server) Serve() (err error) {
 		}(s.httpServerL)
 	}
 
-	if s.hasScheme(schemeHTTPS) {
+	if s.hasScheme(schemeHTTPS) && options.Opts.TLS {
 		httpsServer := new(http.Server)
 		httpsServer.MaxHeaderBytes = int(s.MaxHeaderSize)
 		httpsServer.ReadTimeout = s.TLSReadTimeout
@@ -332,7 +333,7 @@ func (s *Server) Listen() error {
 		return nil
 	}
 
-	if s.hasScheme(schemeHTTPS) {
+	if s.hasScheme(schemeHTTPS) && options.Opts.TLS {
 		// Use http host if https host wasn't defined
 		if s.TLSHost == "" {
 			s.TLSHost = s.Host
@@ -378,7 +379,7 @@ func (s *Server) Listen() error {
 		s.httpServerL = listener
 	}
 
-	if s.hasScheme(schemeHTTPS) {
+	if s.hasScheme(schemeHTTPS) && options.Opts.TLS {
 		tlsListener, err := net.Listen("tcp", net.JoinHostPort(s.TLSHost, strconv.Itoa(s.TLSPort)))
 		if err != nil {
 			return err

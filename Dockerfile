@@ -10,7 +10,6 @@ ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
 
 # Install loxilb related packages
 RUN mkdir -p /opt/loxilb && \
-    mkdir -p /opt/loxilb/cert/ && \
     mkdir -p /root/loxilb-io/loxilb/ && \
     mkdir -p /etc/bash_completion.d/ && \
     # Update Ubuntu Software repository
@@ -44,7 +43,6 @@ RUN mkdir -p /opt/loxilb && \
     cd /root/loxilb-io/loxilb/ && go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
     else make ;fi && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
     cp loxilb-ebpf/utils/mkllb_cgroup.sh /usr/local/sbin/mkllb_cgroup && \
-    cp api/certification/* /opt/loxilb/cert/ && cd - && \
     cp /root/loxilb-io/loxilb/loxilb-ebpf/kernel/loxilb_dp_debug  /usr/local/sbin/loxilb_dp_debug && \
     cp /root/loxilb-io/loxilb/loxilb /usr/local/sbin/loxilb && \
     rm -fr /root/loxilb-io/loxilb/* && rm -fr /root/loxilb-io/loxilb/.git && \
