@@ -35,17 +35,20 @@ nsyncOk=0
 function restart_mloxilb() {
     if [[ $master == "llb1" ]]; then
         pat="cluster=172.17.0.3"
-        self="--self=0"
-        ka="--ka=172.17.0.3:172.17.0.2"
+        copts=" --cluster=172.17.0.3"
+        self=" --self=0"
+        ka=" --ka=172.17.0.3:172.17.0.2"
     else
         pat="cluster=172.17.0.2"
-        self="--self=1"
-        ka="--ka=172.17.0.2:172.17.0.3"
+        copts=" --cluster=172.17.0.2"
+        self=" --self=1"
+        ka=" --ka=172.17.0.2:172.17.0.3"
     fi
     pid=$(docker exec -i $master ps -aef | grep $pat | xargs | cut -d ' ' -f 2)
     echo Killing $pid >&2
     docker exec -dt $master kill -9 $pid
-    docker exec -dt $master /root/loxilb-io/loxilb/loxilb "--$pat $self $ka" > /dev/null &
+    docker exec -dt $master ip link del llb0
+    docker exec -dt $master nohup /root/loxilb-io/loxilb/loxilb $copts $self $ka > /dev/null &
     pid=$(docker exec -i $master ps -aef | grep $pat | xargs | cut -d ' ' -f 2)
     echo "New loxilb pid: $pid" >&2
 }
