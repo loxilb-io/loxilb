@@ -11,6 +11,7 @@ ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
 # Install loxilb related packages
 RUN mkdir -p /opt/loxilb && \
     mkdir -p /root/loxilb-io/loxilb/ && \
+    mkdir -p /opt/loxilb/cert/ && \
     mkdir -p /etc/bash_completion.d/ && \
     # Update Ubuntu Software repository
     apt-get update && apt-get install -y wget && \
