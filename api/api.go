@@ -17,6 +17,11 @@
 package api
 
 import (
+	"log"
+	"os"
+	"runtime/debug"
+	"time"
+
 	"github.com/go-openapi/loads"
 	flags "github.com/jessevdk/go-flags"
 	"github.com/loxilb-io/loxilb/api/restapi"
@@ -25,10 +30,6 @@ import (
 	cmn "github.com/loxilb-io/loxilb/common"
 	"github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
-	"log"
-	"os"
-	"runtime/debug"
-	"time"
 )
 
 var (
@@ -117,17 +118,23 @@ func RunAPIServer() {
 	server.ConfigureAPI()
 	// API server host list
 	server.Host = options.Opts.Host
-	server.TLSHost = options.Opts.TLSHost
-	server.TLSCertificateKey = options.Opts.TLSCertificateKey
-	server.TLSCertificate = options.Opts.TLSCertificate
 	server.Port = options.Opts.Port
-	server.TLSPort = options.Opts.TLSPort
+
+	// HTTPs List
+	if options.Opts.TLS {
+		server.TLSHost = options.Opts.TLSHost
+		server.TLSPort = options.Opts.TLSPort
+		
+		server.TLSCertificateKey = options.Opts.TLSCertificateKey
+		server.TLSCertificate = options.Opts.TLSCertificate
+	}
+
 	api.ServerShutdown = func() {
 		waitApiServerShutOk()
 		os.Exit(0)
 	}
 	ApiReady = true
-
+	
 	if err := server.Serve(); err != nil {
 		log.Fatalln(err)
 	}
