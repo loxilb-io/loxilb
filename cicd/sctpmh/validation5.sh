@@ -18,8 +18,8 @@ echo -e "\nTraffic Flow: User -> LB -> EP "
 $hexec ep1 sctp_test -H 0.0.0.0  -P 9999 -l > ep1.out &
 sleep 2
 
-$hexec user stdbuf -oL sctp_test -H 1.1.1.1 -B 2.2.2.1 -P 20000 -h $extIP -p $port -s -m 100 -x 500000 > user.out &
-sleep 5
+$hexec user stdbuf -oL sctp_test -H 1.1.1.1 -B 2.2.2.1 -P 20000 -h $extIP -p $port -s -m 100 -x 200000 > user.out &
+
 #Path counters
 p1c_old=0
 p1c_new=0
@@ -54,7 +54,7 @@ function restart_mloxilb() {
 }
 
 for((i=0;i<200;i++)) do
-    fin=`tail -n 100 user.out | grep "Client: Sending packets.(500000/500000)"`
+    fin=`tail -n 100 user.out | grep "Client: Sending packets.(200000/200000)"`
     if [[ ! -z $fin ]]; then
         fin=1
         echo "sctp_test done."
@@ -65,6 +65,9 @@ for((i=0;i<200;i++)) do
         check_ha
         echo -e "\nHA state Master:$master BACKUP-$backup\n"
         nsyncOk=$(checkSync)
+        if [[ $nsyncOk == 2 ]]; then
+            break;
+        fi
     fi
     $dexec $master loxicmd get ct --servName=sctpmh1 
     echo -e "\n"
