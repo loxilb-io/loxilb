@@ -395,7 +395,7 @@ func (l3 *L3H) IfaSelectAny(addr net.IP, findAny bool) (int, net.IP, string) {
 	if err == 0 {
 		switch rtn := tDat.(type) {
 		case *Neigh:
-			if rtn != nil {
+			if rtn != nil && rtn.OifPort != nil {
 				IfObj = rtn.OifPort.Name
 			}
 		case *int:

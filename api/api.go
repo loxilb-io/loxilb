@@ -124,7 +124,7 @@ func RunAPIServer() {
 	if options.Opts.TLS {
 		server.TLSHost = options.Opts.TLSHost
 		server.TLSPort = options.Opts.TLSPort
-		
+
 		server.TLSCertificateKey = options.Opts.TLSCertificateKey
 		server.TLSCertificate = options.Opts.TLSCertificate
 	}
@@ -134,7 +134,7 @@ func RunAPIServer() {
 		os.Exit(0)
 	}
 	ApiReady = true
-	
+
 	if err := server.Serve(); err != nil {
 		log.Fatalln(err)
 	}

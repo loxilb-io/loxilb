@@ -125,7 +125,7 @@ func NeighInit(zone *Zone) *NeighH {
 func (n *NeighH) Activate(ne *Neigh) {
 
 	interval := NeighAts * time.Second
-	if tk.IsNetIPv6(ne.Addr.String()) || ne.Dummy {
+	if tk.IsNetIPv6(ne.Addr.String()) || ne.Dummy || ne.OifPort == nil {
 		return
 	}
 
@@ -366,6 +366,9 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 		tk.LogIt(tk.LogError, "neigh add - %s:%s no oport\n", Addr.String(), Zone)
 		if !found {
 			n.NeighMap[key] = &Neigh{Dummy: true, Attr: Attr, NhRtm: make(map[RtKey]*Rt)}
+		} else {
+			ne.Dummy = true
+			ne.OifPort = nil
 		}
 		return NeighOifErr, errors.New("nh-oif error")
 	}
