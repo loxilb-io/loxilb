@@ -26,7 +26,7 @@ import (
 	ln "github.com/loxilb-io/loxilb/pkg/loxinet"
 )
 
-var version string = "0.9.3-dev"
+var version string = "0.9.3-beta"
 var buildInfo string = ""
 
 func main() {
