@@ -44,7 +44,7 @@ nres2=$($hexec $backup curl -sX 'GET' 'http://0.0.0.0:11111/netlox/v1/config/con
 
 if [[ $nres1 == 0 ]]; then
     echo -e "No active connections in Master:$master. Exiting!" >&2
-    return 0
+    return 2
 fi
 
 if [[ $nres1 == $nres2 && $nres1 != 0 ]]; then

@@ -1,11 +1,11 @@
 name: SCTP-MH-LB-Sanity-CI
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches: [ "main" ]
+  #push:
+  #  branches:
+  #    - main
+  #pull_request:
+  #  branches: [ "main" ]
   workflow_dispatch:
     inputs:
       logLevel:
@@ -28,7 +28,7 @@ jobs:
         with:
              go-version: '>=1.18.0'
       - run: sudo apt-get update
-      - run: sudo apt-get -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat ethtool curl
+      - run: sudo apt-get -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat ethtool curl lksctp-tools
       - run: |
             git clone --recurse-submodules https://github.com/loxilb-io/iproute2 iproute2-main
             cd iproute2-main/libbpf/src/
