@@ -1,0 +1,7 @@
+## Test Case Description
+
+This scenario will have K3s(2 Master Nodes & 2 Worker Nodes) cluster with flannel CNI. LoxiLB will be running in the in-cluster Active-Backup High Availabity mode(in both the master nodes) but without State Syncronization. Workloads will be spawned in all the cluster nodes.
+
+Client will be connected directly to the cluster with L2 network. Service CIDR will also be a Virtual IP from the K3s cluster network.
+
+In in-cluster scenarios, it is advised to create LB services in either one-arm or fullnat mode for ease of connectivity.
