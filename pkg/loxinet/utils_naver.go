@@ -97,7 +97,7 @@ func (n *NcloudClient) NcloudGetMetadataInterfaceID() (string, error) {
 }
 
 func (n *NcloudClient) NcloudCreatePrivateIp(ni string, vIP net.IP) error {
-	urls := fmt.Sprintf("%s?networkInterfaceNo=%s&secondaryIpList.1=%s&allowReassign=yes&responseFormatType=json", "/vserver/v2/assignSecondaryIps", ni, vIP.String())
+	urls := fmt.Sprintf("%s?networkInterfaceNo=%s&secondaryIpList.1=%s&allowReassign=true&responseFormatType=json", "/vserver/v2/assignSecondaryIps", ni, vIP.String())
 	req, err := http.NewRequest(http.MethodGet, n.serverURL+urls, nil)
 	if err != nil {
 		return err
