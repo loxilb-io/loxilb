@@ -20,6 +20,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -44,7 +45,7 @@ type NcloudConfig struct {
 
 type NcloudClient struct {
 	config    *NcloudConfig
-	client    http.Client
+	client    *http.Client
 	serverURL string
 }
 
@@ -96,7 +97,7 @@ func (n *NcloudClient) NcloudGetMetadataInterfaceID() (string, error) {
 }
 
 func (n *NcloudClient) NcloudCreatePrivateIp(ni string, vIP net.IP) error {
-	urls := fmt.Sprintf("%s?networkInterfaceNo=%s&secondaryIpList.1=%s&allowReassign=yes", "/vserver/v2/assignSecondaryIps", ni, vIP.String())
+	urls := fmt.Sprintf("%s?networkInterfaceNo=%s&secondaryIpList.1=%s&allowReassign=yes&responseFormatType=json", "/vserver/v2/assignSecondaryIps", ni, vIP.String())
 	req, err := http.NewRequest(http.MethodGet, n.serverURL+urls, nil)
 	if err != nil {
 		return err
@@ -109,16 +110,32 @@ func (n *NcloudClient) NcloudCreatePrivateIp(ni string, vIP net.IP) error {
 	}
 
 	defer res.Body.Close()
-	_, err = io.ReadAll(res.Body)
+	respBody, err := io.ReadAll(res.Body)
 	if err != nil {
 		return err
+	}
+
+	type AssignSecondaryIpsResponse struct {
+		ReturnMessage string `json:"returnMessage"`
+	}
+	type ncloudResponse struct {
+		AssignSecondaryIpsResponse AssignSecondaryIpsResponse `json:"assignSecondaryIpsResponse"`
+	}
+
+	checkReturn := ncloudResponse{}
+	if err := json.Unmarshal(respBody, &checkReturn); err != nil {
+		return err
+	}
+
+	if checkReturn.AssignSecondaryIpsResponse.ReturnMessage != "success" {
+		return fmt.Errorf(string(respBody))
 	}
 
 	return nil
 }
 
 func (n *NcloudClient) NcloudDeletePrivateIp(ni string, vIP net.IP) error {
-	urls := fmt.Sprintf("%s?networkInterfaceNo=%s&secondaryIpList.1=%s", "/vserver/v2/unassignSecondaryIps", ni, vIP.String())
+	urls := fmt.Sprintf("%s?networkInterfaceNo=%s&secondaryIpList.1=%s&responseFormatType=json", "/vserver/v2/unassignSecondaryIps", ni, vIP.String())
 	req, err := http.NewRequest(http.MethodGet, n.serverURL+urls, nil)
 	if err != nil {
 		return err
@@ -131,9 +148,25 @@ func (n *NcloudClient) NcloudDeletePrivateIp(ni string, vIP net.IP) error {
 	}
 
 	defer res.Body.Close()
-	_, err = io.ReadAll(res.Body)
+	respBody, err := io.ReadAll(res.Body)
 	if err != nil {
 		return err
+	}
+
+	type UnassignSecondaryIpsResponse struct {
+		ReturnMessage string `json:"returnMessage"`
+	}
+	type ncloudResponse struct {
+		UnassignSecondaryIpsResponse UnassignSecondaryIpsResponse `json:"unassignSecondaryIpsResponse"`
+	}
+
+	checkReturn := ncloudResponse{}
+	if err := json.Unmarshal(respBody, &checkReturn); err != nil {
+		return err
+	}
+
+	if checkReturn.UnassignSecondaryIpsResponse.ReturnMessage != "success" {
+		return fmt.Errorf(string(respBody))
 	}
 
 	return nil
@@ -142,7 +175,7 @@ func (n *NcloudClient) NcloudDeletePrivateIp(ni string, vIP net.IP) error {
 func (n *NcloudClient) NcloudUpdatePrivateIp(vIP net.IP, add bool) error {
 	niID, err := n.NcloudGetMetadataInterfaceID()
 	if err != nil {
-		tk.LogIt(tk.LogError, "AWS get instance failed: %v\n", err)
+		tk.LogIt(tk.LogError, "NCloud get instance failed: %v\n", err)
 		return err
 	}
 
@@ -192,7 +225,7 @@ func NcloudApiInit() error {
 func newFromConfig(cfg *NcloudConfig) *NcloudClient {
 	return &NcloudClient{
 		config:    cfg,
-		client:    http.Client{},
+		client:    &http.Client{},
 		serverURL: "https://ncloud.apigw.ntruss.com",
 	}
 }
