@@ -75,7 +75,7 @@ func (n *NcloudClient) NcloudGetMetadataInterfaceNo() ([]string, error) {
 
 func (n *NcloudClient) NcloudGetMetadataInterfaceID() (string, error) {
 	metadataURL := "http://169.254.169.254"
-	urls := fmt.Sprintf("%s/%d", "/latest/meta-data/networkInterfaceNoList/0")
+	urls := fmt.Sprintf("%s/%d", "/latest/meta-data/networkInterfaceNoList", 0)
 	req, err := http.NewRequest(http.MethodGet, metadataURL+urls, nil)
 	if err != nil {
 		return "", err
