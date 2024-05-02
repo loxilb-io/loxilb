@@ -1576,7 +1576,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 
 	eEps := rule.act.action.(*ruleNatActs).endPoints
 	activatedProbe := false
-	if rule.act.action.(*ruleNatActs).mode == cmn.LBModeOneArm || rule.hChk.actChk {
+	if rule.act.action.(*ruleNatActs).mode == cmn.LBModeOneArm || rule.act.action.(*ruleNatActs).mode == cmn.LBModeFullNAT || rule.hChk.actChk {
 		activatedProbe = true
 	}
 	R.modNatEpHost(rule, eEps, false, activatedProbe)

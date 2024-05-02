@@ -85,7 +85,7 @@ func (ctx *IPVSH) buildIPVSDB() []*ipVSEntry {
 		}
 
 		newEntry.sel = cmn.LbSelRr
-		newEntry.pType = ""
+		newEntry.pType = "none"
 		newEntry.timeout = svc.Timeout
 		if svc.Flags&0x1 == 0x1 {
 			newEntry.sel = cmn.LbSelRrPersist
@@ -107,7 +107,7 @@ func (ctx *IPVSH) buildIPVSDB() []*ipVSEntry {
 		newEntry.mode = cmn.LBModeDefault
 		if svc.Port >= K8sNodePortMin && svc.Port <= K8sNodePortMax {
 			newEntry.mode = cmn.LBModeFullNAT
-			newEntry.pType = "ping"
+			//newEntry.pType = "ping"
 		}
 
 		key := ipVSKey{Address: svc.Address.String(), Protocol: proto, Port: svc.Port}

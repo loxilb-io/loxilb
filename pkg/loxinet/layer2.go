@@ -223,8 +223,8 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 	if p.SInfo.PortType&cmn.PortVxlanBr == cmn.PortVxlanBr {
 		unRch, ret, err := nfdb.L2FdbResolveNh()
 		if err != nil {
-			tk.LogIt(tk.LogDebug, "tun-fdb ent resolve error, %v", key)
-			return ret, err
+			tk.LogIt(tk.LogDebug, "tun-fdb ent resolve error, %v:%s(%d)", key, err, ret)
+			//return ret, err
 		}
 		nfdb.unReach = unRch
 	}
