@@ -6,7 +6,7 @@
             "port":6443,
             "protocol":"tcp",
             "sel":0,
-            "mode":2,
+            "mode":1,
             "BGP":false,
             "Monitor":true,
             "inactiveTimeOut":240,

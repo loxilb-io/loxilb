@@ -4,7 +4,7 @@ metadata:
   name: iperf-service
   annotations:
     loxilb.io/lbmode: "onearm" 
-    #loxilb.io/prefLocalPod: "yes"
+    loxilb.io/prefLocalPod: "yes"
 spec:
   externalTrafficPolicy: Local
   loadBalancerClass: loxilb.io/loxilb
@@ -31,15 +31,6 @@ spec:
         app: iperf-app
     spec:
       dnsPolicy: ClusterFirstWithHostNet
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: "node-role.kubernetes.io/master"
-                operator: DoesNotExist
-              - key: "node-role.kubernetes.io/control-plane"
-                operator: DoesNotExist
       containers:
       - name: iperf
         image: eyes852/ubuntu-iperf-test:0.5
