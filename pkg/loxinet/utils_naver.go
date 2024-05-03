@@ -49,30 +49,6 @@ type NcloudClient struct {
 	serverURL string
 }
 
-func (n *NcloudClient) NcloudGetMetadataInterfaceNo() ([]string, error) {
-	metadataURL := "http://169.254.169.254"
-	urls := "/latest/meta-data/networkInterfaceNoList"
-	req, err := http.NewRequest(http.MethodGet, metadataURL+urls, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	n.setHeaders(req, urls)
-
-	res, err := n.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer res.Body.Close()
-	resBody, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return strings.Split(string(resBody), "\n"), nil
-}
-
 func (n *NcloudClient) NcloudGetMetadataInterfaceID() (string, error) {
 	metadataURL := "http://169.254.169.254"
 	urls := "/latest/meta-data/networkInterfaceNoList/0"
@@ -192,6 +168,7 @@ func (n *NcloudClient) getUnixMilliTimeString() string {
 }
 
 func (n *NcloudClient) createSignature(method string, urls string, timestamp string) string {
+	n.checkNcloudCredential()
 	message := fmt.Sprintf("%s %s\n%s\n%s", method, urls, timestamp, n.config.AccessKey)
 
 	hmac256 := hmac.New(sha256.New, []byte(n.config.SecretKey))
@@ -209,10 +186,23 @@ func (n *NcloudClient) setHeaders(req *http.Request, urls string) {
 	req.Header.Set("x-ncp-apigw-signature-v2", signature)
 }
 
+func (n *NcloudClient) checkNcloudCredential() {
+	if n.config != nil {
+		return
+	}
+
+	cfg, err := loadDefaultConfig()
+	if err != nil {
+		tk.LogIt(tk.LogInfo, "failed to get NCloud credential")
+		return
+	}
+	n.config = cfg
+}
+
 func NcloudApiInit() error {
 	cfg, err := loadDefaultConfig()
 	if err != nil {
-		return err
+		tk.LogIt(tk.LogInfo, "failed to get NCloud credential")
 	}
 
 	// Using the Config value, create the DynamoDB client
