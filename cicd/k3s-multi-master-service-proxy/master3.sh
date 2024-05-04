@@ -7,7 +7,7 @@ sudo mkdir -p /etc/loxilb
 sudo cp /vagrant/lbconfig.txt /etc/loxilb/
 sudo cp /vagrant/EPconfig.txt /etc/loxilb/
 curl -sfL https://github.com/loxilb-io/loxilb-ebpf/raw/main/kprobe/install.sh | sh -
-curl -fL https://get.k3s.io | K3S_TOKEN=${NODE_TOKEN} sh -s - server --server https://192.168.80.10:6443 --disable traefik --disable servicelb --node-ip=192.168.80.12 --node-external-ip=192.168.80.80 --disable-cloud-controller -t ${NODE_TOKEN} --flannel-iface=eth2 --kube-proxy-arg proxy-mode=ipvs
+curl -fL https://get.k3s.io | K3S_TOKEN=${NODE_TOKEN} sh -s - server --server https://192.168.80.10:6443 --disable traefik --disable servicelb --node-ip=192.168.80.12 --node-external-ip=192.168.80.80 --disable-cloud-controller -t ${NODE_TOKEN} --flannel-iface=eth2 --kube-proxy-arg proxy-mode=ipvs --disable-network-policy --kube-apiserver-arg=kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
 kubectl taint nodes master2  node.cloudprovider.kubernetes.io/uninitialized:NoSchedule-
 sed -i -e "s/127.0.0.1/192.168.80.80/g" /etc/rancher/k3s/k3s.yaml
 sudo kubectl apply -f /vagrant/kube-loxilb.yml
