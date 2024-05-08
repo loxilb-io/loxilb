@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: seagull-pod-01
+  labels:
+    app: seagull-pod-01
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[{
+      "name": "macvlan1",
+      "default-route": ["4.0.6.100"]
+    }]'
+spec:
+  containers:
+    - name: seagull-test
+      image: ghcr.io/loxilb-io/seagull:ubuntu1804
+      imagePullPolicy: Always
+      command: ["sleep"]
+      args: [ "infinity" ]
+      ports:
+        - containerPort: 8080

@@ -1,0 +1,27 @@
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: macvlan1
+spec:
+  config: '{
+            "cniVersion": "0.3.1",
+            "type": "macvlan",
+            "master": "eth2",
+            "mode": "bridge",
+            "ipam": {
+                "type": "host-local",
+                "ranges": [
+                    [ {
+                         "subnet": "4.0.6.0/24",
+                         "rangeStart": "4.0.6.3",
+                         "rangeEnd": "4.0.6.100",
+                         "routes": [
+                            {
+                              "dst": "0.0.0.0/0"
+                            }
+                         ],
+                         "gateway": "4.0.6.149"
+                    } ]
+                ]
+            }
+        }'
