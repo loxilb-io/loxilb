@@ -1,0 +1,85 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+workers = (ENV['WORKERS'] || "2").to_i
+box_name = (ENV['VAGRANT_BOX'] || "sysnet4admin/Ubuntu-k8s")
+box_version = "0.7.1"
+Vagrant.configure("2") do |config|
+  config.vm.box = "#{box_name}"
+  config.vm.box_version = "#{box_version}"
+
+  if Vagrant.has_plugin?("vagrant-vbguest")
+    config.vbguest.auto_update = false
+  end
+
+  config.vm.define "host" do |host|
+    host.vm.hostname = 'host1'
+    host.vm.network :private_network, ip: "192.168.80.9", :netmask => "255.255.255.0"
+    host.vm.network :private_network, ip: "192.168.90.9", :netmask => "255.255.255.0"
+    host.vm.provision :shell, :path => "host.sh"
+    host.vm.provider :virtualbox do |vbox|
+        vbox.memory = "4096"
+        vbox.cpus = "4"
+        vbox.default_nic_type = "virtio"
+        vbox.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+        vbox.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
+    end
+  end
+
+  config.vm.define "master1" do |master|
+    master.vm.hostname = 'master1'
+    master.vm.network :private_network, ip: "192.168.90.10", :netmask => "255.255.255.0"
+    master.vm.network :private_network, ip: "192.168.80.10", :netmask => "255.255.255.0"
+    master.vm.provision :shell, :path => "master1.sh"
+    master.vm.provider :virtualbox do |vbox|
+        vbox.memory = "8192"
+        vbox.cpus = "3"
+        vbox.default_nic_type = "virtio"
+        vbox.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+        vbox.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
+    end
+  end
+
+  config.vm.define "master2" do |master|
+    master.vm.hostname = 'master2'
+    master.vm.network :private_network, ip: "192.168.90.11", :netmask => "255.255.255.0"
+    master.vm.network :private_network, ip: "192.168.80.11", :netmask => "255.255.255.0"
+    master.vm.provision :shell, :path => "master2.sh"
+    master.vm.provider :virtualbox do |vbox|
+        vbox.memory = "8192"
+        vbox.cpus = "3"
+        vbox.default_nic_type = "virtio"
+        vbox.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+        vbox.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
+    end
+  end
+
+  config.vm.define "master3" do |master|
+    master.vm.hostname = 'master3'
+    master.vm.network :private_network, ip: "192.168.90.12", :netmask => "255.255.255.0"
+    master.vm.network :private_network, ip: "192.168.80.12", :netmask => "255.255.255.0"
+    master.vm.provision :shell, :path => "master3.sh"
+    master.vm.provider :virtualbox do |vbox|
+        vbox.memory = "8192"
+        vbox.cpus = "3"
+        vbox.default_nic_type = "virtio"
+        vbox.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+        vbox.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
+    end
+  end
+
+  (1..workers).each do |node_number|
+    config.vm.define "worker#{node_number}" do |worker|
+      worker.vm.hostname = "worker#{node_number}"
+      ip = node_number + 100
+      worker.vm.network :private_network, ip: "192.168.80.#{ip}", :netmask => "255.255.255.0"
+      worker.vm.provision :shell, :path => "worker.sh"
+      worker.vm.provider :virtualbox do |vbox|
+          vbox.memory = "4096"
+          vbox.cpus = "3"
+          vbox.default_nic_type = "virtio"
+          vbox.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+      end
+    end
+  end
+end

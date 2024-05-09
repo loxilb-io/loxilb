@@ -1,0 +1,36 @@
+# This section includes base Calico installation configuration.
+# For more information, see: https://projectcalico.docs.tigera.io/master/reference/installation/api#operator.tigera.io/v1.Installation
+apiVersion: operator.tigera.io/v1
+kind: Installation
+metadata:
+  name: default
+spec:
+  # Configures Calico networking.
+  calicoNetwork:
+    # Note: The ipPools section cannot be modified post-install.
+    ipPools:
+    - blockSize: 26
+      cidr: 10.42.0.0/16
+      encapsulation: VXLAN
+      natOutgoing: Enabled
+      nodeSelector: all()
+
+---
+
+# This section configures the Calico API server.
+# For more information, see: https://projectcalico.docs.tigera.io/master/reference/installation/api#operator.tigera.io/v1.APIServer
+apiVersion: operator.tigera.io/v1
+kind: APIServer
+metadata:
+  name: default
+spec: {}
+
+---
+
+# This section configures the Calico Felix configuration .
+apiVersion: projectcalico.org/v3
+kind: FelixConfiguration 
+metadata:
+  name: default
+spec:
+  vxlanPort: 8472

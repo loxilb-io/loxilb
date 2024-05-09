@@ -1,0 +1,3 @@
+## Test Case Description
+
+This scenario will have K3s(3 Master Nodes & 2 Worker Nodes) cluster with calcio. LoxiLB will be running in the in-cluster mode and provide cluster-networking(replacing kube-proxy) as well as serviceLB functionality.
