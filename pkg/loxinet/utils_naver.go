@@ -149,6 +149,10 @@ func (n *NcloudClient) NcloudDeletePrivateIp(ni string, vIP net.IP) error {
 }
 
 func (n *NcloudClient) NcloudUpdatePrivateIp(vIP net.IP, add bool) error {
+	if n.checkNcloudCredential(); n.config == nil {
+		return fmt.Errorf("failed to load Ncloud credential")
+	}
+
 	niID, err := n.NcloudGetMetadataInterfaceID()
 	if err != nil {
 		tk.LogIt(tk.LogError, "NCloud get instance failed: %v\n", err)
@@ -168,7 +172,6 @@ func (n *NcloudClient) getUnixMilliTimeString() string {
 }
 
 func (n *NcloudClient) createSignature(method string, urls string, timestamp string) string {
-	n.checkNcloudCredential()
 	message := fmt.Sprintf("%s %s\n%s\n%s", method, urls, timestamp, n.config.AccessKey)
 
 	hmac256 := hmac.New(sha256.New, []byte(n.config.SecretKey))
