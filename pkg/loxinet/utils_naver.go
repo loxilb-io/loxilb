@@ -205,7 +205,7 @@ func (n *NcloudClient) checkNcloudCredential() {
 func NcloudApiInit() error {
 	cfg, err := loadDefaultConfig()
 	if err != nil {
-		tk.LogIt(tk.LogInfo, "failed to get NCloud credential")
+		tk.LogIt(tk.LogInfo, "failed to get NCloud credential. error: %s", err.Error())
 	}
 
 	// Using the Config value, create the DynamoDB client
