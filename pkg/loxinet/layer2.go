@@ -111,6 +111,25 @@ func l2FdbAttrCopy(dst *FdbAttr, src *FdbAttr) {
 	dst.Dst = src.Dst
 }
 
+
+func (f *FdbEnt) tryResolveUpper(zn *Zone, addr net.IP) {
+	if f.Port == nil {
+		return
+	}
+	name := f.Port.Name
+	if f.Port.SInfo.PortReal != nil {
+		name = f.Port.SInfo.PortReal.Name
+	}
+
+    ret, Sip, _ :=  zn.L3.IfaSelect(name, addr, true)
+	if ret != 0 {
+		tk.LogIt(tk.LogDebug, "tryResolve: failed to select l3 ifa select (%s:%s)\n", name, addr.String())
+		return
+	}
+
+	go tk.ArpPing(addr, Sip, name)
+}
+
 // L2FdbResolveNh - For TunFDB, try to associate with appropriate neighbor
 func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 	p := f.Port
@@ -142,9 +161,11 @@ func (f *FdbEnt) L2FdbResolveNh() (bool, int, error) {
 			switch rtn := tDat.(type) {
 			case *Neigh:
 				if rtn == nil {
+					f.tryResolveUpper(zone, attr.Dst)
 					return true, -1, errors.New("no neigh found")
 				}
 			default:
+				f.tryResolveUpper(zone, attr.Dst)
 				return true, -1, errors.New("no neigh found")
 			}
 			if nh, ok := tDat.(*Neigh); ok && !nh.Inactive && !nh.Dummy {
