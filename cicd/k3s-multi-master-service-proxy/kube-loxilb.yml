@@ -128,6 +128,7 @@ spec:
         - --externalCIDR=192.168.80.200/32
         #- --setBGP=64512
         - --setRoles=0.0.0.0
+        - --excludeRoleList=192.168.80.101,192.168.80.102
         #- --monitor
         #- --setBGP
         #- --setLBMode=1
