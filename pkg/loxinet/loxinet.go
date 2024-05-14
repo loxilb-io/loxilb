@@ -207,6 +207,7 @@ func loxiNetInit() {
 			RunCommand(MkfsScript, true)
 		}
 	}
+	utils.MkTunFsIfNotExist()
 
 	sysctlInit()
 

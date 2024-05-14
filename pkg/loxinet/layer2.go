@@ -111,7 +111,6 @@ func l2FdbAttrCopy(dst *FdbAttr, src *FdbAttr) {
 	dst.Dst = src.Dst
 }
 
-
 func (f *FdbEnt) tryResolveUpper(zn *Zone, addr net.IP) {
 	if f.Port == nil {
 		return
@@ -121,7 +120,7 @@ func (f *FdbEnt) tryResolveUpper(zn *Zone, addr net.IP) {
 		name = f.Port.SInfo.PortReal.Name
 	}
 
-    ret, Sip, _ :=  zn.L3.IfaSelect(name, addr, true)
+	ret, Sip, _ := zn.L3.IfaSelect(name, addr, true)
 	if ret != 0 {
 		tk.LogIt(tk.LogDebug, "tryResolve: failed to select l3 ifa select (%s:%s)\n", name, addr.String())
 		return
