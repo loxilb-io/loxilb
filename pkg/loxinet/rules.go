@@ -1535,6 +1535,11 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 					if err != nil {
 						tk.LogIt(tk.LogError, "aws lb-rule vip %s delete failed. err: %v\n", sNetAddr.IP.String(), err)
 					}
+				} else if mh.cloudLabel == "ncloud" {
+					err := nClient.NcloudUpdatePrivateIp(sNetAddr.IP, false)
+					if err != nil {
+						tk.LogIt(tk.LogError, "ncloud lb-rule vip %s delete failed. err: %v\n", sNetAddr.IP.String(), err)
+					}
 				}
 			}
 			dev := fmt.Sprintf("llb-rule-%s", sNetAddr.IP.String())
@@ -2635,6 +2640,12 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 					err := AWSUpdatePrivateIp(IP, true)
 					if err != nil {
 						tk.LogIt(tk.LogError, "aws lb-rule vip %s add failed. err: %v\n", IP.String(), err)
+						return err
+					}
+				} else if mh.cloudLabel == "ncloud" {
+					err := nClient.NcloudUpdatePrivateIp(IP, true)
+					if err != nil {
+						tk.LogIt(tk.LogError, "ncloud lb-rule vip %s add failed. err: %v\n", IP.String(), err)
 						return err
 					}
 				}

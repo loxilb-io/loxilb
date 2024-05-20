@@ -223,6 +223,8 @@ func loxiNetInit() {
 
 	if mh.cloudLabel == "aws" {
 		AWSApiInit()
+	} else if mh.cloudLabel == "ncloud" {
+		NcloudApiInit()
 	}
 
 	// Check if profiling is enabled

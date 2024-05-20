@@ -32,5 +32,5 @@ var Opts struct {
 	IPVSCompat        bool           `long:"ipvs-compat" description:"Enable ipvs-compat(experimental)"`
 	FallBack          bool           `long:"fallback" description:"Fallback to system default networking(experimental)"`
 	LocalVIP          bool           `long:"localvip" description:"support vip availability from lb node(experimental)"`
-	Cloud             string         `long:"cloud" description:"cloud type if any e.g aws" default:"on-prem"`
+	Cloud             string         `long:"cloud" description:"cloud type if any e.g aws,ncloud" default:"on-prem"`
 }
