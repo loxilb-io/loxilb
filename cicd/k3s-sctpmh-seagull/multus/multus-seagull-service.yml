@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: multus-seagull-service
+  annotations:
+    loxilb.io/num-secondary-networks: "1"
+    loxilb.io/multus-nets: macvlan1,macvlan2
+    loxilb.io/lbmode: "fullnat"
+    loxilb.io/probetype: "ping"
+spec:
+  externalTrafficPolicy: Local
+  loadBalancerClass: loxilb.io/loxilb
+  selector:
+    app: seagull-pod-01
+  ports:
+    - port: 55003
+      protocol: SCTP
+      targetPort: 8080
+  type: LoadBalancer
