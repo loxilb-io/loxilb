@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sctp-onearm-svc
+  annotations:
+    loxilb.io/lbmode: "onearm"
+    loxilb.io/liveness: "yes"
+spec:
+  externalTrafficPolicy: Local
+  loadBalancerClass: loxilb.io/loxilb
+  selector:
+    what: sctp-onearm-test
+  ports:
+    - port: 55003
+      protocol: SCTP
+      targetPort: 9999
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: sctp-onearm-ds
+  labels:
+    what: sctp-onearm-test
+spec:
+  selector:
+    matchLabels:
+      what: sctp-onearm-test
+  template:
+    metadata:
+      labels:
+        what: sctp-onearm-test
+    spec:
+      containers:
+      - name: sctp-onearm-pod
+        image: loxilbio/sctp-darn:latest
+        command: ["sctp_darn","-H", "0.0.0.0","-P", "9999", "-l"]
+        ports:
+        - containerPort: 9999

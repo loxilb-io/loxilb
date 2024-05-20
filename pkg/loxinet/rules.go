@@ -1189,7 +1189,7 @@ func (R *RuleH) unFoldRecursiveEPs(r *ruleEnt) {
 
 // addVIPSys - system specific operations for VIPs of a LB rule
 func (R *RuleH) addVIPSys(r *ruleEnt) {
-	if !strings.Contains(r.name, "ipvs") {
+	if !strings.Contains(r.name, "ipvs") && !strings.Contains(r.name, "static") {
 		R.vipMap[r.tuples.l3Dst.addr.IP.String()]++
 
 		if R.vipMap[r.tuples.l3Dst.addr.IP.String()] == 1 {
@@ -1498,7 +1498,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 
 // deleteVIPSys - system specific operations for deleting VIPs of a LB rule
 func (R *RuleH) deleteVIPSys(r *ruleEnt) {
-	if !strings.Contains(r.name, "ipvs") {
+	if !strings.Contains(r.name, "ipvs") && !strings.Contains(r.name, "static") {
 		R.vipMap[r.tuples.l3Dst.addr.IP.String()]--
 
 		if R.vipMap[r.tuples.l3Dst.addr.IP.String()] == 0 {

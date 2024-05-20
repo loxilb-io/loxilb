@@ -18,7 +18,7 @@ All these services are provided by load-balancers/proxies operating at Layer4/La
 
 Service type load-balancer is usually provided by public cloud-provider(s) as a managed entity. But for on-prem and self-managed clusters, there are only a few good options available. Even for provider-managed K8s like EKS, there are many who would want to bring their own LB to clusters running anywhere. <b>loxilb provides service type load-balancer as its main use-case</b>. loxilb can be run in-cluster or ext-to-cluster as per user need.  
 
-Additionally, loxilb can also support cluster-ip and node-port services, thereby providing end-to-end connectivity for Kubernetes.
+Additionally, loxilb can also support cluster-ip and node-port services, thereby providing full cluster-mesh implementation for Kubernetes (replacment of kube-proxy).
 
 ## Why choose loxilb?
    
@@ -30,6 +30,7 @@ Additionally, loxilb can also support cluster-ip and node-port services, thereby
 - Utitlizes ebpf which makes it ```flexible``` as well as ```customizable```
 - Advanced ```quality of service``` for workloads (per LB, per end-point or per client)
 - Works with ```any``` Kubernetes distribution/CNI - k8s/k3s/k0s/kind/OpenShift + Calico/Flannel/Cilium/Weave/Multus etc
+- Kube-proxy replacement with loxilb allows ```simple plug-in``` with any existing/deployed pod-networking software
 - Extensive support for ```SCTP workloads``` (with multi-homing) on K8s
 - Dual stack with ```NAT66, NAT64``` support for K8s
 - K8s ```multi-cluster``` support (planned 🚧)
@@ -53,10 +54,10 @@ Additionally, loxilb can also support cluster-ip and node-port services, thereby
 - A kubernetes agent [kube-loxilb](https://github.com/loxilb-io/kube-loxilb) written in Go
 
 ## Layer4 Vs Layer7
-loxilb works as a L4 load-balancer/service-mesh by default. Although it provides great performance, at times, L7 load-balancing might become necessary in K8s. There are many good L7 proxies already available for K8s. Still, we are working on providing a great L7 solution natively in eBPF. It is a tough endeavor one which should reap great benefits once completed. Please keep an eye for updates on this.
+loxilb works as a L4 load-balancer/service-proxy by default. Although it provides great performance, at times, L7 load-balancing might become necessary in K8s. There are many good L7 proxies already available for K8s. Still, we are working on providing a great L7 solution natively in eBPF. It is a tough endeavor one which should reap great benefits once completed. Please keep an eye for updates on this.
 
 ## Telco-Cloud with loxilb
-For deploying telco-cloud with cloud-native functions, loxilb can be used as a SCP(service communication proxy). SCP is nothing but a glorified term for Kubernetes load-balancing/proxy. But telco-cloud requires load-balancing across various interfaces/standards like N2, N4, E2(ORAN), S6x, 5GLAN, GTP etc. Each of these present its own unique challenges which loxilb aims to solve e.g.
+For deploying telco-cloud with cloud-native functions, loxilb can be used as a SCP(service communication proxy). SCP is nothing but a communication hub for telco micro-services running in Kubernetes. But telco-cloud requires load-balancing and communication across various interfaces/standards like N2, N4, E2(ORAN), S6x, 5GLAN, GTP etc. Each of these present its own unique challenges which loxilb aims to solve e.g.
 - N4 requires PFCP level session-intelligence
 - N2 requires NGAP parsing capability
 - S6x requires Diameter/SCTP multi-homing LB support
@@ -89,7 +90,7 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 - [K0s : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k0s_quick_start_incluster.md)
 - [MicroK8s : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/microk8s_quick_start_incluster.md)
 
-#### loxilb as service-proxy
+#### loxilb as service-proxy (kube-proxy replacement)
 - [K3s : loxilb service-proxy with flannel](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/service-proxy-flannel.md)
 - [K3s : loxilb service-proxy with calico](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/service-proxy-calico.md)
 

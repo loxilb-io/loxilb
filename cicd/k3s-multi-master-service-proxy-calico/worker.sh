@@ -6,6 +6,9 @@ export NODE_TOKEN=$(cat /vagrant/node-token)
 mkdir -p /etc/rancher/k3s/
 #If you need to login to docker registry
 #cp -f /vagrant/registries.yaml /etc/rancher/k3s/registries.yaml
+sudo mkdir -p /etc/loxilb
+sudo cp /vagrant/lbconfig.txt /etc/loxilb/
+sudo cp /vagrant/EPconfig.txt /etc/loxilb/
 curl -sfL https://github.com/loxilb-io/loxilb-ebpf/raw/main/kprobe/install.sh | sh -
 mkdir -p /etc/rancher/k3s
 cp -f /vagrant/k3s.yaml /etc/rancher/k3s/k3s.yaml

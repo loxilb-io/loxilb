@@ -23,9 +23,11 @@ import (
 	"crypto/x509"
 	"encoding/binary"
 	"errors"
+	"golang.org/x/sys/unix"
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"syscall"
 	"time"
 	"unsafe"
@@ -335,4 +337,22 @@ func ArpResolver(dIP uint32) {
 		}
 		return
 	}
+}
+
+func MkTunFsIfNotExist() error {
+	tunPath := "/dev/net"
+	tunFile := "/dev/net/tun"
+	if _, err := os.Stat(tunPath); os.IsNotExist(err) {
+		if err := os.MkdirAll("/dev/net", 0751); err != nil {
+			return err
+		}
+	}
+
+	if _, err := os.Stat(tunFile); os.IsNotExist(err) {
+		dev := unix.Mkdev(10, 200)
+		if err := unix.Mknod("/dev/net/tun", 0600|unix.S_IFCHR, int(dev)); err != nil {
+			return err
+		}
+	}
+	return nil
 }
