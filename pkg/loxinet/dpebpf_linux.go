@@ -367,9 +367,7 @@ func (e *DpEbpfH) DpEbpfUnInit() {
 		C.free(unsafe.Pointer(section))
 	}
 
-	if mh.locVIP {
-		C.llb_unload_kern_sock()
-	}
+	C.llb_unload_kern_all()
 }
 
 func convNetIP2DPv6Addr(addr unsafe.Pointer, goIP net.IP) {
@@ -932,7 +930,8 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		if w.NatType == DpSnat {
 			dat.ca.act_type = C.DP_SET_SNAT
 		} else if w.NatType == DpDnat || w.NatType == DpFullNat {
-			dat.ca.act_type = C.DP_SET_DNAT
+			//dat.ca.act_type = C.DP_SET_DNAT
+			dat.ca.act_type = C.DP_SET_FULLPROXY
 		} else {
 			tk.LogIt(tk.LogDebug, "[DP] LB rule %s add[NOK] - EbpfErrNat4Add\n", w.ServiceIP.String())
 			return EbpfErrNat4Add

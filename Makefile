@@ -31,6 +31,9 @@ docker-cp: build
 	docker cp /opt/loxilb/llb_ebpf_emain.o $(loxilbid):/opt/loxilb/llb_ebpf_emain.o
 	docker cp /opt/loxilb/llb_xdp_main.o $(loxilbid):/opt/loxilb/llb_xdp_main.o
 	docker cp /opt/loxilb/llb_kern_sock.o $(loxilbid):/opt/loxilb/llb_kern_sock.o
+	docker cp /opt/loxilb/llb_kern_sockmap.o $(loxilbid):/opt/loxilb/llb_kern_sockmap.o
+	docker cp /opt/loxilb/llb_kern_sockstream.o $(loxilbid):/opt/loxilb/llb_kern_sockstream.o
+	docker cp /opt/loxilb/llb_kern_sockdirect.o $(loxilbid):/opt/loxilb/llb_kern_sockdirect.o
 	docker cp loxilb-ebpf/kernel/loxilb_dp_debug  $(loxilbid):/usr/local/sbin/
 	docker cp loxilb-ebpf/libbpf/src/libbpf.so.0.8.1 $(loxilbid):/usr/lib64/
 	docker cp loxilb-ebpf/utils/loxilb_dp_tool $(loxilbid):/usr/local/sbin/
