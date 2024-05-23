@@ -117,11 +117,15 @@ func RunAPIServer() {
 	server.ConfigureAPI()
 	// API server host list
 	server.Host = options.Opts.Host
-	server.TLSHost = options.Opts.TLSHost
-	server.TLSCertificateKey = options.Opts.TLSCertificateKey
-	server.TLSCertificate = options.Opts.TLSCertificate
 	server.Port = options.Opts.Port
-	server.TLSPort = options.Opts.TLSPort
+
+	if options.Opts.TLS {
+		server.TLSHost = options.Opts.TLSHost
+		server.TLSCertificateKey = options.Opts.TLSCertificateKey
+		server.TLSCertificate = options.Opts.TLSCertificate
+		server.TLSPort = options.Opts.TLSPort
+	}
+
 	api.ServerShutdown = func() {
 		waitApiServerShutOk()
 		os.Exit(0)

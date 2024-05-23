@@ -167,3 +167,7 @@ func AWSApiInit() error {
 	tk.LogIt(tk.LogInfo, "AWS API init\n")
 	return nil
 }
+
+func AWSPrivateIpMapper(vip net.IP) (net.IP, error) {
+	return vip, nil
+}

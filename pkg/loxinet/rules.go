@@ -276,6 +276,7 @@ type ruleEnt struct {
 	sT       time.Time
 	iTo      uint32
 	act      ruleAct
+	privIP   net.IP
 	secIP    []ruleNatSIP
 	stat     ruleStat
 	name     string
@@ -1443,6 +1444,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	r.iTo = serv.InactiveTimeout
 	r.bgp = serv.Bgp
 	r.ci = cmn.CIDefault
+	r.privIP, _ = R.RuleVIP2PrivIP(sNetAddr.IP)
 
 	R.FoldRecursiveEPs(r)
 
@@ -2316,7 +2318,11 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.Work = work
 	nWork.Status = &r.sync
 	nWork.ZoneNum = r.zone.ZoneNum
-	nWork.ServiceIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
+	if r.privIP == nil || r.privIP.IsUnspecified() {
+		nWork.ServiceIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
+	} else {
+		nWork.ServiceIP = r.privIP
+	}
 	nWork.L4Port = r.tuples.l4Dst.val
 	nWork.Proto = r.tuples.l4Prot.val
 	nWork.Mark = int(r.ruleNum)
@@ -2699,4 +2705,11 @@ func (R *RuleH) RuleVIPSyncToClusterState() {
 			R.AdvRuleVIPIfL2(ip)
 		}
 	}
+}
+
+func (R *RuleH) RuleVIP2PrivIP(vip net.IP) (net.IP, error) {
+	if mh.cloudLabel == "aws" {
+		return AWSPrivateIpMapper(vip)
+	}
+	return nil, nil
 }
