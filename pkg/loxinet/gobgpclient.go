@@ -24,6 +24,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -1068,6 +1069,655 @@ func (gbh *GoBgpH) createSetLocalPrefPolicy(name string, val uint32) (int, error
 			Statement: st,
 		})
 	return 0, err
+}
+
+// MakePrefixDefinedSet - Make Prefix DefinedSet
+func (gbh *GoBgpH) MakePrefixDefinedSet(prefixList []cmn.Prefix) ([]*api.Prefix, error) {
+	var ret []*api.Prefix
+	for _, prefix := range prefixList {
+		// Make Prefix
+		Prefix := api.Prefix{}
+		Prefix.IpPrefix = prefix.IpPrefix
+		// Parse prefix.MasklengthRange
+		Masks := strings.Split(prefix.MasklengthRange, "..")
+		if len(Masks) == 2 {
+			MaskLengthMin, _ := strconv.Atoi(Masks[0])
+			Prefix.MaskLengthMin = uint32(MaskLengthMin)
+			MaskLengthMax, _ := strconv.Atoi(Masks[1])
+			Prefix.MaskLengthMax = uint32(MaskLengthMax)
+		} else {
+			return nil, errors.New("Mask format is wrong")
+		}
+		ret = append(ret, &Prefix)
+	}
+
+	return ret, nil
+}
+
+// GetPolicyDefinedSet - Get Policy Defined Set
+func (gbh *GoBgpH) GetPolicyDefinedSet(name string, DefinedTypeString string) ([]cmn.GoBGPPolicyDefinedSetMod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	var DefinedType api.DefinedType
+	var ret []cmn.GoBGPPolicyDefinedSetMod
+	var req api.ListDefinedSetRequest
+	switch DefinedTypeString {
+	case "prefix", "Prefix":
+		DefinedType = api.DefinedType_PREFIX
+	case "neigh", "neighbor", "nei", "Neighbor", "Neigh", "Nei":
+		DefinedType = api.DefinedType_NEIGHBOR
+	case "Community", "community":
+		DefinedType = api.DefinedType_COMMUNITY
+	case "ExtCommunity", "extCommunity", "extcommunity":
+		DefinedType = api.DefinedType_EXT_COMMUNITY
+	case "LargeCommunity", "largecommunity", "largeCommunity", "Largecommunity":
+		DefinedType = api.DefinedType_LARGE_COMMUNITY
+	case "AsPath", "asPath", "ASPath", "aspath":
+		DefinedType = api.DefinedType_AS_PATH
+	default:
+		return ret, fmt.Errorf("Unsupported type")
+	}
+
+	if name == "all" {
+		req.DefinedType = DefinedType
+	} else {
+		req.DefinedType = DefinedType
+		req.Name = name
+	}
+	stream, err := gbh.client.ListDefinedSet(ctx, &req)
+	if err != nil {
+		return ret, err
+	}
+
+	for {
+		r, err := stream.Recv()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			fmt.Println(err)
+			return ret, err
+		}
+		var tmp cmn.GoBGPPolicyDefinedSetMod
+		switch DefinedTypeString {
+		case "prefix", "Prefix":
+			tmp.Name = r.DefinedSet.Name
+			for _, prefix := range r.DefinedSet.Prefixes {
+				if prefix != nil {
+					tmpprefix := cmn.Prefix{
+						IpPrefix:        prefix.IpPrefix,
+						MasklengthRange: fmt.Sprintf("%d..%d", prefix.MaskLengthMin, prefix.MaskLengthMax),
+					}
+					tmp.PrefixList = append(tmp.PrefixList, tmpprefix)
+				}
+			}
+		default:
+			tmp.Name = r.DefinedSet.Name
+			tmp.List = r.DefinedSet.List
+		}
+		ret = append(ret, tmp)
+	}
+	return ret, nil
+}
+
+// GetPolicyDefinitions - Get Policy Definitions
+func (gbh *GoBgpH) GetPolicyDefinitions() ([]cmn.GoBGPPolicyDefinitionsMod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	var ret []cmn.GoBGPPolicyDefinitionsMod
+	stream, err := gbh.client.ListPolicy(ctx, &api.ListPolicyRequest{})
+	if err != nil {
+		return nil, err
+	}
+	for {
+		r, err := stream.Recv()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		tmpPolicy := cmn.GoBGPPolicyDefinitionsMod{
+			Name: r.Policy.Name,
+		}
+
+		for _, statement := range r.Policy.GetStatements() {
+			tmpStatement := cmn.Statement{
+				Name: statement.Name,
+			}
+			// Condition Match
+			var PrefixSet cmn.MatchPrefixSet
+			var NeighborSet cmn.MatchNeighborSet
+			var BGPConditions cmn.BGPConditions
+
+			fmt.Println(statement)
+			if t := statement.Conditions.GetPrefixSet(); t != nil {
+				PrefixSet.PrefixSet = t.Name
+				PrefixSet.MatchSetOption = gbh.GetTypeMatchSet(t.Type)
+				tmpStatement.Conditions.PrefixSet = PrefixSet
+			}
+
+			if t := statement.Conditions.GetNeighborSet(); t != nil {
+				NeighborSet.NeighborSet = t.Name
+				NeighborSet.MatchSetOption = gbh.GetTypeMatchSet(t.Type)
+				tmpStatement.Conditions.NeighborSet = NeighborSet
+			}
+			if t := statement.Conditions.GetAfiSafiIn(); t != nil {
+				for _, afi := range t {
+					BGPConditions.AfiSafiIn = append(BGPConditions.AfiSafiIn, bgp.AfiSafiToRouteFamily(uint16(afi.Afi), uint8(afi.Safi)).String())
+				}
+				tmpStatement.Conditions.BGPConditions.AfiSafiIn = BGPConditions.AfiSafiIn
+			}
+			if t := statement.Conditions.GetAsPathLength(); t != nil {
+				tmpStatement.Conditions.BGPConditions.AsPathLength.Value = int(t.Length)
+				switch t.Type {
+				case api.AsPathLength_EQ:
+					tmpStatement.Conditions.BGPConditions.AsPathLength.Operator = "eq"
+				case api.AsPathLength_GE:
+					tmpStatement.Conditions.BGPConditions.AsPathLength.Operator = "ge"
+				case api.AsPathLength_LE:
+					tmpStatement.Conditions.BGPConditions.AsPathLength.Operator = "le"
+				}
+			}
+			if t := statement.Conditions.GetAsPathSet(); t != nil {
+				tmpStatement.Conditions.BGPConditions.AsPathSet.AsPathSet = t.Name
+				tmpStatement.Conditions.BGPConditions.AsPathSet.MatchSetOptions = gbh.GetTypeMatchSet(t.Type)
+			}
+			if t := statement.Conditions.GetCommunitySet(); t != nil {
+				tmpStatement.Conditions.BGPConditions.CommunitySet.CommunitySet = t.Name
+				tmpStatement.Conditions.BGPConditions.CommunitySet.MatchSetOptions = gbh.GetTypeMatchSet(t.Type)
+			}
+			if t := statement.Conditions.GetExtCommunitySet(); t != nil {
+				tmpStatement.Conditions.BGPConditions.ExtCommunitySet.CommunitySet = t.Name
+				tmpStatement.Conditions.BGPConditions.ExtCommunitySet.MatchSetOptions = gbh.GetTypeMatchSet(t.Type)
+			}
+			if t := statement.Conditions.GetLargeCommunitySet(); t != nil {
+				tmpStatement.Conditions.BGPConditions.LargeCommunitySet.CommunitySet = t.Name
+				tmpStatement.Conditions.BGPConditions.LargeCommunitySet.MatchSetOptions = gbh.GetTypeMatchSet(t.Type)
+			}
+
+			if t := statement.Conditions.GetNextHopInList(); t != nil {
+				tmpStatement.Conditions.BGPConditions.NextHopInList = t
+			}
+
+			if t := statement.Conditions.GetRouteType(); t != api.Conditions_ROUTE_TYPE_NONE {
+				switch t {
+				case api.Conditions_ROUTE_TYPE_INTERNAL:
+					tmpStatement.Conditions.BGPConditions.RouteType = "internal"
+				case api.Conditions_ROUTE_TYPE_EXTERNAL:
+					tmpStatement.Conditions.BGPConditions.RouteType = "external"
+				case api.Conditions_ROUTE_TYPE_LOCAL:
+					tmpStatement.Conditions.BGPConditions.RouteType = "local"
+				}
+			}
+
+			if t := statement.Conditions.GetRpkiResult(); t != 0 {
+				switch t {
+				case 1: // RPKI_VALIDATION_RESULT_TYPE_NOT_FOUND
+					tmpStatement.Conditions.BGPConditions.Rpki = "not-found"
+				case 2: //RPKI_VALIDATION_RESULT_TYPE_VALID
+					tmpStatement.Conditions.BGPConditions.Rpki = "valid"
+				case 3: //RPKI_VALIDATION_RESULT_TYPE_INVALID
+					tmpStatement.Conditions.BGPConditions.Rpki = "invalid"
+				}
+			}
+			// Action Match
+			if t := statement.Actions.GetAsPrepend(); t != nil {
+				tmpStatement.Actions.BGPActions.SetAsPathPrepend.ASN = fmt.Sprintf("%d", t.Asn)
+				tmpStatement.Actions.BGPActions.SetAsPathPrepend.RepeatN = int(t.Repeat)
+			}
+			if t := statement.Actions.GetCommunity(); t != nil {
+				tmpStatement.Actions.BGPActions.SetCommunity.Options = gbh.GetTypeCommunityAction(t.Type)
+				tmpStatement.Actions.BGPActions.SetCommunity.SetCommunityMethod = t.Communities
+			}
+			if t := statement.Actions.GetExtCommunity(); t != nil {
+				tmpStatement.Actions.BGPActions.SetExtCommunity.Options = gbh.GetTypeCommunityAction(t.Type)
+				tmpStatement.Actions.BGPActions.SetExtCommunity.SetCommunityMethod = t.Communities
+			}
+			if t := statement.Actions.GetLargeCommunity(); t != nil {
+				tmpStatement.Actions.BGPActions.SetLargeCommunity.Options = gbh.GetTypeCommunityAction(t.Type)
+				tmpStatement.Actions.BGPActions.SetLargeCommunity.SetCommunityMethod = t.Communities
+			}
+			if t := statement.Actions.GetLocalPref(); t != nil {
+				tmpStatement.Actions.BGPActions.SetLocalPerf = int(t.Value)
+			}
+			if t := statement.Actions.GetMed(); t != nil {
+				tmpStatement.Actions.BGPActions.SetMed = fmt.Sprintf("%d", t.Value)
+			}
+			if t := statement.Actions.GetNexthop(); t != nil {
+				tmpStatement.Actions.BGPActions.SetNextHop = t.Address
+			}
+
+			if t := statement.Actions.GetRouteAction(); t != api.RouteAction_NONE {
+				tmpStatement.Actions.RouteDisposition = gbh.GetActionRoute(t)
+			}
+
+			tmpPolicy.Statement = append(tmpPolicy.Statement, tmpStatement)
+		}
+
+		ret = append(ret, tmpPolicy)
+	}
+	fmt.Println(ret)
+	return ret, nil
+}
+
+// AddPolicyDefinedSets - Add Policy Defined Set like a Prefix, neighbor. etc
+func (gbh *GoBgpH) AddPolicyDefinedSets(df cmn.GoBGPPolicyDefinedSetMod) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	var DefinedType api.DefinedType
+	var DefinedSet api.DefinedSet
+	switch df.DefinedTypeString {
+	case "prefix", "Prefix":
+		DefinedType = api.DefinedType_PREFIX
+	case "neigh", "neighbor", "nei", "Neighbor", "Neigh", "Nei":
+		DefinedType = api.DefinedType_NEIGHBOR
+	case "Community", "community":
+		DefinedType = api.DefinedType_COMMUNITY
+	case "ExtCommunity", "extCommunity", "extcommunity":
+		DefinedType = api.DefinedType_EXT_COMMUNITY
+	case "LargeCommunity", "largecommunity", "largeCommunity", "Largecommunity":
+		DefinedType = api.DefinedType_LARGE_COMMUNITY
+	case "AsPath", "asPath", "ASPath":
+		DefinedType = api.DefinedType_AS_PATH
+	}
+	Prefixes, err := gbh.MakePrefixDefinedSet(df.PrefixList)
+	if err != nil {
+		return 0, err
+	}
+	DefinedSet = api.DefinedSet{
+		DefinedType: DefinedType,
+		Name:        df.Name,
+		List:        df.List,
+		Prefixes:    Prefixes,
+	}
+
+	_, err = gbh.client.AddDefinedSet(ctx, &api.AddDefinedSetRequest{DefinedSet: &DefinedSet})
+	return 0, err
+}
+
+// DelDefinedSets - Delete DefinedSet
+func (gbh *GoBgpH) DelPolicyDefinedSets(Name string, DefinedTypeString string) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	var DefinedType api.DefinedType
+
+	switch DefinedTypeString {
+	case "prefix", "Prefix":
+		DefinedType = api.DefinedType_PREFIX
+	case "neigh", "neighbor", "nei", "Neighbor", "Neigh", "Nei":
+		DefinedType = api.DefinedType_NEIGHBOR
+	case "Community", "community":
+		DefinedType = api.DefinedType_COMMUNITY
+	case "ExtCommunity", "extCommunity", "extcommunity":
+		DefinedType = api.DefinedType_EXT_COMMUNITY
+	case "LargeCommunity", "largecommunity", "largeCommunity", "Largecommunity":
+		DefinedType = api.DefinedType_LARGE_COMMUNITY
+	case "AsPath", "asPath", "ASPath":
+		DefinedType = api.DefinedType_AS_PATH
+	}
+	// Make DefinedSet
+	DefineSet := api.DefinedSet{
+		DefinedType: DefinedType,
+		Name:        Name,
+	}
+
+	_, err := gbh.client.DeleteDefinedSet(ctx, &api.DeleteDefinedSetRequest{
+		DefinedSet: &DefineSet,
+		All:        true,
+	})
+	return 0, err
+}
+
+// AddPolicyDefinitions - Add Policy with definitions
+func (gbh *GoBgpH) AddPolicyDefinitions(name string, stmt []cmn.Statement) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	stmts := make([]*api.Statement, 0)
+
+	// Common statement to goBGP statement
+	for _, statement := range stmt {
+		tmpStatement := &api.Statement{
+			Name:       statement.Name,
+			Conditions: &api.Conditions{},
+			Actions:    &api.Actions{},
+		}
+		// Prefix and Neigh Condition add (any(), invert)
+		if statement.Conditions.PrefixSet.PrefixSet != "" {
+			var PrefixSet api.MatchSet
+			PrefixSet.Name = statement.Conditions.PrefixSet.PrefixSet
+			PrefixSet.Type = gbh.GetMatchSetType(statement.Conditions.PrefixSet.MatchSetOption)
+			tmpStatement.Conditions.PrefixSet = &PrefixSet
+		}
+		if statement.Conditions.NeighborSet.NeighborSet != "" {
+			var NeighborSet api.MatchSet
+			NeighborSet.Name = statement.Conditions.NeighborSet.NeighborSet
+			NeighborSet.Type = gbh.GetMatchSetType(statement.Conditions.NeighborSet.MatchSetOption)
+			tmpStatement.Conditions.NeighborSet = &NeighborSet
+		}
+		// BGP condition
+		if statement.Conditions.BGPConditions.AsPathSet.AsPathSet != "" {
+			var AsPathSet api.MatchSet
+			AsPathSet.Name = statement.Conditions.BGPConditions.AsPathSet.AsPathSet
+			AsPathSet.Type = gbh.GetMatchSetType(statement.Conditions.BGPConditions.AsPathSet.MatchSetOptions)
+			tmpStatement.Conditions.AsPathSet = &AsPathSet
+		}
+		if statement.Conditions.BGPConditions.CommunitySet.CommunitySet != "" {
+			var CommunitySet api.MatchSet
+			CommunitySet.Name = statement.Conditions.BGPConditions.CommunitySet.CommunitySet
+			CommunitySet.Type = gbh.GetMatchSetType(statement.Conditions.BGPConditions.CommunitySet.MatchSetOptions)
+			tmpStatement.Conditions.CommunitySet = &CommunitySet
+		}
+		if statement.Conditions.BGPConditions.ExtCommunitySet.CommunitySet != "" {
+			var ExtCommunitySet api.MatchSet
+			ExtCommunitySet.Name = statement.Conditions.BGPConditions.ExtCommunitySet.CommunitySet
+			ExtCommunitySet.Type = gbh.GetMatchSetType(statement.Conditions.BGPConditions.ExtCommunitySet.MatchSetOptions)
+			tmpStatement.Conditions.ExtCommunitySet = &ExtCommunitySet
+		}
+		if statement.Conditions.BGPConditions.LargeCommunitySet.CommunitySet != "" {
+			var LargeCommunitySet api.MatchSet
+			LargeCommunitySet.Name = statement.Conditions.BGPConditions.LargeCommunitySet.CommunitySet
+			LargeCommunitySet.Type = gbh.GetMatchSetType(statement.Conditions.BGPConditions.LargeCommunitySet.MatchSetOptions)
+			tmpStatement.Conditions.LargeCommunitySet = &LargeCommunitySet
+		}
+		if len(statement.Conditions.BGPConditions.AfiSafiIn) != 0 {
+			afiSafisInList := make([]*api.Family, 0, len(statement.Conditions.BGPConditions.AfiSafiIn))
+			for _, afisafi := range statement.Conditions.BGPConditions.AfiSafiIn {
+				afi, safi := bgp.RouteFamilyToAfiSafi(bgp.AddressFamilyValueMap[afisafi])
+				afiSafisInList = append(afiSafisInList, apiutil.ToApiFamily(afi, safi))
+			}
+			tmpStatement.Conditions.AfiSafiIn = afiSafisInList
+		}
+		if statement.Conditions.BGPConditions.AsPathLength.Operator != "" {
+			var AsPathLength api.AsPathLength
+			switch strings.ToLower(statement.Conditions.BGPConditions.AsPathLength.Operator) {
+			case "eq":
+				AsPathLength.Type = api.AsPathLength_EQ
+			case "ge":
+				AsPathLength.Type = api.AsPathLength_GE
+			case "le":
+				AsPathLength.Type = api.AsPathLength_LE
+			}
+			AsPathLength.Length = uint32(statement.Conditions.BGPConditions.AsPathLength.Value)
+			tmpStatement.Conditions.AsPathLength = &AsPathLength
+		}
+		// From gobgp code
+		type RpkiValidationResultType string
+		const (
+			RPKI_VALIDATION_RESULT_TYPE_NONE      RpkiValidationResultType = "none"
+			RPKI_VALIDATION_RESULT_TYPE_NOT_FOUND RpkiValidationResultType = "not-found"
+			RPKI_VALIDATION_RESULT_TYPE_VALID     RpkiValidationResultType = "valid"
+			RPKI_VALIDATION_RESULT_TYPE_INVALID   RpkiValidationResultType = "invalid"
+		)
+
+		var RpkiValidationResultTypeToIntMap = map[RpkiValidationResultType]int{
+			RPKI_VALIDATION_RESULT_TYPE_NONE:      0,
+			RPKI_VALIDATION_RESULT_TYPE_NOT_FOUND: 1,
+			RPKI_VALIDATION_RESULT_TYPE_VALID:     2,
+			RPKI_VALIDATION_RESULT_TYPE_INVALID:   3,
+		}
+		if statement.Conditions.BGPConditions.Rpki != "" {
+			switch strings.ToLower(statement.Conditions.BGPConditions.Rpki) {
+			case "valid":
+				tmpStatement.Conditions.RpkiResult = int32(RpkiValidationResultTypeToIntMap[RPKI_VALIDATION_RESULT_TYPE_VALID])
+			case "invalid":
+				tmpStatement.Conditions.RpkiResult = int32(RpkiValidationResultTypeToIntMap[RPKI_VALIDATION_RESULT_TYPE_INVALID])
+			case "not-found":
+				tmpStatement.Conditions.RpkiResult = int32(RpkiValidationResultTypeToIntMap[RPKI_VALIDATION_RESULT_TYPE_NOT_FOUND])
+			}
+		}
+		if statement.Conditions.BGPConditions.RouteType != "" {
+			switch strings.ToLower(statement.Conditions.BGPConditions.RouteType) {
+			case "internal":
+				tmpStatement.Conditions.RouteType = api.Conditions_ROUTE_TYPE_INTERNAL
+			case "external":
+				tmpStatement.Conditions.RouteType = api.Conditions_ROUTE_TYPE_EXTERNAL
+			case "local":
+				tmpStatement.Conditions.RouteType = api.Conditions_ROUTE_TYPE_LOCAL
+			}
+		}
+
+		if len(statement.Conditions.BGPConditions.NextHopInList) != 0 {
+			tmpStatement.Conditions.NextHopInList = statement.Conditions.BGPConditions.NextHopInList
+		}
+
+		// Action
+		tmpStatement.Actions.RouteAction = gbh.GetRouteAction(statement.Actions.RouteDisposition)
+
+		if statement.Actions.BGPActions.SetAsPathPrepend.ASN != "" {
+			var AsPrepend api.AsPrependAction
+			tmpASN, _ := strconv.Atoi(statement.Actions.BGPActions.SetAsPathPrepend.ASN)
+			AsPrepend.Asn = uint32(tmpASN)
+			AsPrepend.Repeat = uint32(statement.Actions.BGPActions.SetAsPathPrepend.RepeatN)
+			tmpStatement.Actions.AsPrepend = &AsPrepend
+		}
+
+		if len(statement.Actions.BGPActions.SetCommunity.SetCommunityMethod) != 0 {
+			var Community api.CommunityAction
+			Community.Communities = statement.Actions.BGPActions.SetCommunity.SetCommunityMethod
+			Community.Type = gbh.GetCommunityActionType(statement.Actions.BGPActions.SetCommunity.Options)
+			tmpStatement.Actions.Community = &Community
+		}
+		if len(statement.Actions.BGPActions.SetExtCommunity.SetCommunityMethod) != 0 {
+			var Community api.CommunityAction
+			Community.Communities = statement.Actions.BGPActions.SetExtCommunity.SetCommunityMethod
+			Community.Type = gbh.GetCommunityActionType(statement.Actions.BGPActions.SetExtCommunity.Options)
+			tmpStatement.Actions.ExtCommunity = &Community
+		}
+		if len(statement.Actions.BGPActions.SetLargeCommunity.SetCommunityMethod) != 0 {
+			var Community api.CommunityAction
+			Community.Communities = statement.Actions.BGPActions.SetLargeCommunity.SetCommunityMethod
+			Community.Type = gbh.GetCommunityActionType(statement.Actions.BGPActions.SetLargeCommunity.Options)
+			tmpStatement.Actions.LargeCommunity = &Community
+		}
+
+		if statement.Actions.BGPActions.SetMed != "" {
+			var Med api.MedAction
+			med, err := strconv.ParseInt(statement.Actions.BGPActions.SetMed, 10, 32)
+			if err != nil {
+				return 0, err
+			}
+			Med.Value = med
+			Med.Type = api.MedAction_REPLACE // Cause set-med
+			tmpStatement.Actions.Med = &Med
+		}
+		if statement.Actions.BGPActions.SetLocalPerf != 0 {
+			var LocalPref api.LocalPrefAction
+			LocalPref.Value = uint32(statement.Actions.BGPActions.SetLocalPerf)
+			tmpStatement.Actions.LocalPref = &LocalPref
+		}
+		if statement.Actions.BGPActions.SetNextHop != "" {
+			var Nexthop api.NexthopAction
+			Nexthop.Address = statement.Actions.BGPActions.SetNextHop
+			tmpStatement.Actions.Nexthop = &Nexthop
+		}
+
+		stmts = append(stmts, tmpStatement)
+	}
+	p := &api.Policy{
+		Name:       name,
+		Statements: stmts,
+	}
+
+	_, err := gbh.client.AddPolicy(ctx,
+		&api.AddPolicyRequest{
+			Policy: p,
+		})
+	return 0, err
+}
+
+// DelPolicyDefinitions - Del Policy Definitions
+func (gbh *GoBgpH) DelPolicyDefinitions(name string) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	p := &api.Policy{
+		Name: name,
+	}
+
+	_, err := gbh.client.DeletePolicy(ctx,
+		&api.DeletePolicyRequest{
+			Policy: p,
+			All:    true,
+		})
+	return 0, err
+}
+
+// GetCommunityActionType - String to CommunityAction_Type
+func (gbh *GoBgpH) GetCommunityActionType(name string) api.CommunityAction_Type {
+	var ret api.CommunityAction_Type // add remove replace
+	if name == "add" {
+		ret = api.CommunityAction_ADD
+	} else if name == "remove" {
+		ret = api.CommunityAction_REMOVE
+	} else {
+		ret = api.CommunityAction_REPLACE
+	}
+	return ret
+}
+
+// GetCommunityActionType - String to CommunityAction_Type
+func (gbh *GoBgpH) GetTypeCommunityAction(CommunityActionType api.CommunityAction_Type) string {
+	var ret string // add remove replace
+	if CommunityActionType == api.CommunityAction_ADD {
+		ret = "add"
+	} else if CommunityActionType == api.CommunityAction_REMOVE {
+		ret = "remove"
+	} else {
+		ret = "replace"
+	}
+	return ret
+}
+
+// GetMatchSetType - String to MatchSet_Type
+func (gbh *GoBgpH) GetMatchSetType(name string) api.MatchSet_Type {
+	var ret api.MatchSet_Type
+	if name == "any" {
+		ret = api.MatchSet_ANY
+	} else if name == "all" {
+		ret = api.MatchSet_ALL
+	} else if name == "invert" {
+		ret = api.MatchSet_INVERT
+	} else {
+		ret = api.MatchSet_ANY
+	}
+	return ret
+}
+
+// GetTypeMatchSet - MatchSet_Type to String
+func (gbh *GoBgpH) GetTypeMatchSet(matchSet api.MatchSet_Type) string {
+	var ret string
+	if matchSet == api.MatchSet_ANY {
+		ret = "any"
+	} else if matchSet == api.MatchSet_ALL {
+		ret = "all"
+	} else if matchSet == api.MatchSet_INVERT {
+		ret = "invert"
+	} else {
+		ret = "any"
+	}
+	return ret
+}
+
+// GetRouteAction - String to RouteAction
+func (gbh *GoBgpH) GetRouteAction(name string) api.RouteAction {
+	var ret api.RouteAction
+	if name == "accept-route" {
+		ret = api.RouteAction_ACCEPT
+	} else if name == "reject-route" {
+		ret = api.RouteAction_REJECT
+	} else {
+		ret = api.RouteAction_NONE
+	}
+	return ret
+}
+
+// GetActionRoute - RouteAction to String
+func (gbh *GoBgpH) GetActionRoute(route api.RouteAction) string {
+	var ret string
+	if route == api.RouteAction_ACCEPT {
+		ret = "accept-route"
+	} else if route == api.RouteAction_REJECT {
+		ret = "reject-route"
+	} else {
+		ret = "none"
+	}
+	return ret
+}
+
+// BGPApplyPolicyToNeighbor - Routine to add BGP Policy to goBGP server
+func (gbh *GoBgpH) BGPApplyPolicyToNeighbor(cmdType, neigh string, polType string, policies []string, routeAction string) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	var err error
+	assign := &api.PolicyAssignment{
+		Name: neigh,
+	}
+
+	switch strings.ToLower(polType) {
+	case "import":
+		assign.Direction = api.PolicyDirection_IMPORT
+	case "export":
+		assign.Direction = api.PolicyDirection_EXPORT
+	}
+	switch cmdType {
+	case "add", "set":
+		switch routeAction {
+		case "accept":
+			assign.DefaultAction = api.RouteAction_ACCEPT
+		case "reject":
+			assign.DefaultAction = api.RouteAction_REJECT
+		}
+	}
+	ps := make([]*api.Policy, 0, len(policies))
+	for _, name := range policies {
+		ps = append(ps, &api.Policy{Name: name})
+	}
+	assign.Policies = ps
+	switch cmdType {
+	case "add":
+		_, err = gbh.client.AddPolicyAssignment(ctx, &api.AddPolicyAssignmentRequest{
+			Assignment: assign,
+		})
+	case "set":
+		_, err = gbh.client.SetPolicyAssignment(ctx, &api.SetPolicyAssignmentRequest{
+			Assignment: assign,
+		})
+	case "del":
+		all := false
+		if len(policies) == 0 {
+			all = true
+		}
+		_, err = gbh.client.DeletePolicyAssignment(ctx, &api.DeletePolicyAssignmentRequest{
+			Assignment: assign,
+			All:        all,
+		})
+	}
+	if err != nil {
+		return 0, err
+	}
+	return 0, nil
+}
+
+// GetPolicy - Routine to apply global policy statement
+func (gbh *GoBgpH) GetPolicy(name string) (*api.Policy, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	policies := make([]*api.Policy, 0)
+	stream, err := gbh.client.ListPolicy(ctx, &api.ListPolicyRequest{
+		Name: name,
+	})
+	if err != nil {
+		return nil, err
+	}
+	for {
+		r, err := stream.Recv()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		policies = append(policies, r.Policy)
+	}
+
+	return policies[0], nil
 }
 
 // addPolicy - Routine to apply global policy statement
