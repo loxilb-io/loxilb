@@ -163,6 +163,18 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.PostConfigBgpNeighHandler = operations.PostConfigBgpNeighHandlerFunc(handler.ConfigPostBGPNeigh)
 	api.DeleteConfigBgpNeighIPAddressHandler = operations.DeleteConfigBgpNeighIPAddressHandlerFunc(handler.ConfigDeleteBGPNeigh)
 
+	// BGP Policy Defined set
+	api.GetConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler = operations.GetConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandlerFunc(handler.ConfigGetBGPPolicyDefinedSetGet)
+	api.PostConfigBgpPolicyDefinedsetsDefinesetTypeHandler = operations.PostConfigBgpPolicyDefinedsetsDefinesetTypeHandlerFunc(handler.ConfigPostBGPPolicyDefinedsets)
+	api.DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler = operations.DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandlerFunc(handler.ConfigDeleteBGPPolicyDefinedsets)
+
+	// BGP Policy Definitions
+	api.PostConfigBgpPolicyDefinitionsHandler = operations.PostConfigBgpPolicyDefinitionsHandlerFunc(handler.ConfigPostBGPPolicyDefinitions)
+	api.DeleteConfigBgpPolicyDefinitionsPolicyNameHandler = operations.DeleteConfigBgpPolicyDefinitionsPolicyNameHandlerFunc(handler.ConfigDeleteBGPPolicyDefinitions)
+	api.GetConfigBgpPolicyDefinitionsAllHandler = operations.GetConfigBgpPolicyDefinitionsAllHandlerFunc(handler.ConfigGetBGPPolicyDefinitions)
+
+	// BGP Policy Apply
+	api.PostConfigBgpPolicyApplyHandler = operations.PostConfigBgpPolicyApplyHandlerFunc(handler.ConfigPostBGPPolicyApply)
 	api.PreServerShutdown = func() {}
 
 	api.ServerShutdown = func() {}

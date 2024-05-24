@@ -634,6 +634,140 @@ type GoBGPNeighGetMod struct {
 	Uptime   string `json:"uptime"`
 }
 
+type GoBGPPolicyDefinedSetMod struct {
+	Name              string   `json:"name"`
+	DefinedTypeString string   `json:"definedTypeString"`
+	List              []string `json:"list,omitempty"`
+	PrefixList        []Prefix `json:"prefixList,omitempty"`
+}
+
+// GoBGPPolicyNeighMod - Info related to goBGP policy about neigh
+type GoBGPPolicyNeighMod struct {
+	Name             string   `json:"name"`
+	NeighborInfoList []string `json:"neighborInfoList"`
+}
+
+// GoBGPPolicyCommunityMod - Info related to goBGP policy about neigh
+type GoBGPPolicyCommunityMod struct {
+	Name          string   `json:"name"`
+	CommunityList []string `json:"communityList"`
+}
+
+// GoBGPPolicyExtCommunityListMod - Info related to goBGP policy about neigh
+type GoBGPPolicyExtCommunityMod struct {
+	Name             string   `json:"name"`
+	ExtCommunityList []string `json:"extCommunityList"`
+}
+
+// GoBGPPolicyAsPAthMod - Info related to goBGP policy about neigh
+type GoBGPPolicyAsPathMod struct {
+	Name       string   `json:"name"`
+	AsPathList []string `json:"asPathList"`
+}
+
+// GoBGPPolicyLargeCommunityMod - Info related to goBGP policy about neigh
+type GoBGPPolicyLargeCommunityMod struct {
+	Name               string   `json:"name"`
+	LargeCommunityList []string `json:"largeCommunityList"`
+}
+
+// GoBGPPolicyPrefixSetMod - Info related to goBGP Policy prefix
+type GoBGPPolicyPrefixSetMod struct {
+	Name       string   `json:"name"`
+	PrefixList []Prefix `json:"prefixList"`
+}
+
+// Prefix - Info related to goBGP Policy Prefix
+type Prefix struct {
+	IpPrefix        string `json:"ipPrefix"`
+	MasklengthRange string `json:"masklengthRange"`
+}
+
+// GoBGPPolicyDefineSetMod -
+type GoBGPPolicyDefinitionsMod struct {
+	Name      string      `json:"name"`
+	Statement []Statement `json:"prefixList"`
+}
+
+type Statement struct {
+	Name       string     `json:"name,omitempty"`
+	Conditions Conditions `json:"conditions,omitempty"`
+	Actions    Actions    `json:"actions,omitempty"`
+}
+
+type Actions struct {
+	RouteDisposition string     `json:"routeDisposition"`
+	BGPActions       BGPActions `json:"bgpActions,omitempty"`
+}
+
+type BGPActions struct {
+	SetMed            string           `json:"setMed,omitempty"`
+	SetCommunity      SetCommunity     `json:"setCommunity,omitempty"`
+	SetExtCommunity   SetCommunity     `json:"setExtCommunity,omitempty"`
+	SetLargeCommunity SetCommunity     `json:"setLargeCommunity,omitempty"`
+	SetNextHop        string           `json:"setNextHop,omitempty"`
+	SetLocalPerf      int              `json:"setLocalPerf,omitempty"`
+	SetAsPathPrepend  SetAsPathPrepend `json:"setAsPathPrepend,omitempty"`
+}
+
+type SetCommunity struct {
+	Options            string   `json:"options,omitempty"`
+	SetCommunityMethod []string `json:"setCommunityMethod,omitempty"`
+}
+
+type SetAsPathPrepend struct {
+	ASN     string `json:"as,omitempty"`
+	RepeatN int    `json:"repeatN,omitempty"`
+}
+
+type Conditions struct {
+	PrefixSet     MatchPrefixSet   `json:"matchPrefixSet,omitempty"`
+	NeighborSet   MatchNeighborSet `json:"matchNeighborSet,omitempty"`
+	BGPConditions BGPConditions    `json:"bgpconditions"`
+}
+
+type MatchNeighborSet struct {
+	MatchSetOption string `json:"matchSetOption,omitempty"`
+	NeighborSet    string `json:"NeighborSet,omitempty"`
+}
+
+type MatchPrefixSet struct {
+	MatchSetOption string `json:"matchSetOption,omitempty"`
+	PrefixSet      string `json:"prefixSet,omitempty"`
+}
+
+type BGPConditions struct {
+	AfiSafiIn         []string        `json:"afiSafiIn,omitempty"`
+	AsPathSet         BGPAsPathSet    `json:"matchAsPathSet,omitempty"`
+	AsPathLength      BGPAsPathLength `json:"asPathLength,omitempty"`
+	CommunitySet      BGPCommunitySet `json:"matchCommunitySet,omitempty"`
+	ExtCommunitySet   BGPCommunitySet `json:"matchExtCommunitySet,omitempty"`
+	LargeCommunitySet BGPCommunitySet `json:"largeCommunitySet,omitempty"`
+	RouteType         string          `json:"routeType,omitempty"`
+	NextHopInList     []string        `json:"nextHopInList,omitempty"`
+	Rpki              string          `json:"rpki,omitempty"`
+}
+
+type BGPAsPathLength struct {
+	Operator string `json:"Operator,omitempty"`
+	Value    int    `json:"Value,omitempty"`
+}
+type BGPAsPathSet struct {
+	AsPathSet       string `json:"asPathSet,omitempty"`
+	MatchSetOptions string `json:"matchSetOptions,omitempty"`
+}
+type BGPCommunitySet struct {
+	CommunitySet    string `json:"communitySet,omitempty"`
+	MatchSetOptions string `json:"matchSetOptions,omitempty"`
+}
+
+type GoBGPPolicyApply struct {
+	NeighIPAddress string   `json:"ipAddress,omitempty"`
+	PolicyType     string   `json:"policyType,omitempty"`
+	Polices        []string `json:"polices,omitempty"`
+	RouteAction    string   `json:"routeAction,omitempty"`
+}
+
 // Equal - check if two session tunnel entries are equal
 func (ut *SessTun) Equal(ut1 *SessTun) bool {
 	if ut.TeID == ut1.TeID && ut.Addr.Equal(ut1.Addr) {
@@ -864,6 +998,17 @@ type NetHookInterface interface {
 	NetGoBGPNeighGet() ([]GoBGPNeighGetMod, error)
 	NetGoBGPNeighAdd(nm *GoBGPNeighMod) (int, error)
 	NetGoBGPNeighDel(nm *GoBGPNeighMod) (int, error)
+	
+	NetGoBGPPolicyDefinedSetGet(string, string) ([]GoBGPPolicyDefinedSetMod, error)
+	NetGoBGPPolicyDefinedSetAdd(nm *GoBGPPolicyDefinedSetMod) (int, error)
+	NetGoBGPPolicyDefinedSetDel(nm *GoBGPPolicyDefinedSetMod) (int, error)
+
+	NetGoBGPPolicyDefinitionsGet() ([]GoBGPPolicyDefinitionsMod, error)
+	NetGoBGPPolicyDefinitionAdd(nm *GoBGPPolicyDefinitionsMod) (int, error)
+	NetGoBGPPolicyDefinitionDel(nm *GoBGPPolicyDefinitionsMod) (int, error)
+
+	NetGoBGPPolicyApplyAdd(nm *GoBGPPolicyApply) (int, error)
+
 	NetGoBGPGCAdd(gc *GoBGPGlobalConfig) (int, error)
 	NetBFDGet() ([]BFDMod, error)
 	NetBFDAdd(bm *BFDMod) (int, error)

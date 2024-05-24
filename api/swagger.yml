@@ -2235,6 +2235,313 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+
+  '/config/bgp/policy/definedsets/{defineset_type}/{type_name}':
+    get:
+      summary: Get the all of BGP definedsets
+      description: Get the all of BGP, prefix/neighbor/community/extcommunity/aspath/largecommunity
+      parameters:
+        - name: defineset_type
+          in: path
+          type: string
+          required: true
+          description: defineset type one of prefix/neighbor/community/extcommunity/aspath/largecommunity
+        - name: type_name
+          in: path
+          type: string
+          required: true
+          description: type name
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              definedsetsAttr:
+                type: array
+                items:
+                  $ref: '#/definitions/BGPPolicyDefinedSetGetEntry'
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+    
+    delete:
+      summary: Delete a BGP definedsets
+      description: Delete a BGP definedsets
+      parameters:
+        - name: defineset_type
+          in: path
+          type: string
+          required: true
+          description: defineset type one of prefix/neighbor/community/extcommunity/aspath/largecommunity
+        - name: type_name
+          in: path
+          type: string
+          required: true
+          description: type name
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. Neigh already exists
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/config/bgp/policy/definedsets/{defineset_type}':
+    post:
+      summary: Adds a BGP  definedsets for making Policy
+      description: Adds a BGP definedsets for making Policy
+      parameters:
+        - name: defineset_type
+          in: path
+          type: string
+          required: true
+          description: defineset type one of prefix/neighbor/community/extcommunity/aspath/largecommunity
+        - name: attr
+          in: body
+          required: true
+          description: Attributes of bgp neighbor
+          schema:
+            $ref: '#/definitions/BGPPolicyDefinedSetsMod'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict.
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+  '/config/bgp/policy/definitions/all':
+    get:
+      summary: Get BGP Policy definitions
+      description: Get BGP Policy definitions
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              bgpPolicyAttr:
+                type: array
+                items:
+                  $ref: '#/definitions/BGPPolicyDefinitionsMod'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+            
+  '/config/bgp/policy/definitions':
+    post:
+      summary: Adds a BGP Policy
+      description: Adds a BGP Policy
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes of bgp neighbor
+          schema:
+            $ref: '#/definitions/BGPPolicyDefinitionsMod'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict.
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/config/bgp/policy/definitions/{policy_name}':
+    delete:
+      summary: Delete a BGP policy
+      description: Delete a BGP Policy
+      parameters:
+        - name: policy_name
+          in: path
+          type: string
+          required: true
+          description: The name of the community
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. Neigh already exists
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
+
+  '/config/bgp/policy/apply':
+    post:
+      summary: Apply BGP Policy in neighbor
+      description: Apply BGP Policy in neighbor
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes of bgp neighbor
+          schema:
+            $ref: '#/definitions/BGPApplyPolicyToNeighborMod'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict.
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
+
+            
   '/config/bgp/global':
     post:
       summary: Adds a BGP global config
@@ -3282,7 +3589,193 @@ definitions:
         type: boolean
         description: Enable multi-hop peering (if needed)
 
+  BGPPolicyDefinedSetGetEntry:
+    type: object
+    properties:
+      name:
+        type: string
+        description: BGP Defined set Entries
+      prefixList:
+        type: array
+        items:
+          $ref: '#/definitions/BGPPolicyPrefix'
+      list:
+        type: array
+        items:
+          type: string
+          
+  BGPPolicyDefinedSetsMod:
+    type: object
+    properties:
+      name:
+        type: string
+        description: BGP Neighbor IP address
+      List:
+        type: array
+        items:
+          type: string
+      prefixList:
+        type: array
+        items:
+          $ref: '#/definitions/BGPPolicyPrefix'
 
+  BGPPolicyPrefix:
+    type: object
+    properties:
+      ipPrefix:
+        type: string
+        description: BGP Neighbor IP address
+      masklengthRange:
+        type: string
+        description: Remote AS number
+  
+  BGPPolicyDefinitionsMod:
+    type: object
+    properties:
+      name:
+        type: string
+        description: BGP Neighbor IP address
+      statements:
+        type: array
+        items:
+          $ref: '#/definitions/BGPPolicyDefinitionsStatement'
+
+  BGPPolicyDefinitionsStatement:
+    type: object
+    properties:
+      name:
+        type: string
+      conditions:
+        type: object
+        properties:
+          bgpConditions:
+            type: object
+            properties:
+              afiSafiIn:
+                type: array
+                items:
+                  type: string
+              asPathLength: 
+                type: object
+                properties:
+                  operator:
+                    type: string
+                  value: 
+                    type: integer
+              matchAsPathSet: 
+                type: object
+                properties:
+                  asPathSet: 
+                    type: string
+                  matchSetOptions: 
+                    type: string
+              matchCommunitySet:
+                type: object
+                properties:
+                  communitySet:
+                    type: string
+                  matchSetOptions:
+                    type: string
+              matchExtCommunitySet:
+                type: object
+                properties:
+                  communitySet:
+                    type: string
+                  matchSetOptions:
+                    type: string
+              matchLargeCommunitySet:
+                type: object
+                properties:
+                  communitySet:
+                    type: string
+                  matchSetOptions:
+                    type: string
+              nextHopInList:
+                type: array
+                items:
+                  type: string
+              rpki: 
+                type: string
+              routeType: 
+                type: string
+          matchNeighborSet:
+            type: object
+            properties:
+              matchSetOption:
+                type: string
+              neighborSet:
+                type: string
+          matchPrefixSet:
+            type: object
+            properties:
+              matchSetOption:
+                type: string
+              prefixSet:
+                type: string
+      actions:
+        type: object
+        properties:
+          routeDisposition:
+            type: string
+          bgpActions:
+            type: object
+            properties:
+              setMed: 
+                type: string
+              setNextHop: 
+                type: string
+              setLocalPerf:
+                type: integer
+              setCommunity:
+                type: object
+                properties:
+                  options:
+                    type: string
+                  setCommunityMethod:
+                    type: array
+                    items:
+                      type: string
+              setExtCommunity:
+                type: object
+                properties:
+                  options:
+                    type: string
+                  setCommunityMethod:
+                    type: array
+                    items:
+                      type: string
+              setLargeCommunity:
+                type: object
+                properties:
+                  options:
+                    type: string
+                  setCommunityMethod:
+                    type: array
+                    items:
+                      type: string
+              setAsPathPrepend:
+                type: object
+                properties:
+                  as:
+                    type: string
+                  repeatN:
+                    type: integer
+      
+  BGPApplyPolicyToNeighborMod:
+    type: object
+    properties:
+      ipAddress:
+        type: string
+        description: BGP Neighbor IP address
+      policyType:
+        type: string
+      policies:
+        type: array
+        items:
+          type: string
+      routeAction:
+        type: string
+        
   BGPNeighGetEntry:
     type: object
     properties:
@@ -3364,3 +3857,4 @@ definitions:
         type: integer
         format: uint8
         description: Retry Count to detect failure
+      
