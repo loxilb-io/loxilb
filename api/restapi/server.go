@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"github.com/loxilb-io/loxilb/options"
 	"log"
 	"net"
 	"net/http"
@@ -226,7 +227,7 @@ func (s *Server) Serve() (err error) {
 		}(s.httpServerL)
 	}
 
-	if s.hasScheme(schemeHTTPS) {
+	if s.hasScheme(schemeHTTPS) && options.Opts.TLS {
 		httpsServer := new(http.Server)
 		httpsServer.MaxHeaderBytes = int(s.MaxHeaderSize)
 		httpsServer.ReadTimeout = s.TLSReadTimeout

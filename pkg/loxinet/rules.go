@@ -1533,7 +1533,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 			if utils.IsIPHostAddr(sNetAddr.IP.String()) {
 				loxinlp.DelAddrNoHook(sNetAddr.IP.String()+"/32", "lo")
 				if mh.cloudLabel == "aws" {
-					err := AWSUpdatePrivateIp(sNetAddr.IP, false)
+					err := AWSUpdatePrivateIP(sNetAddr.IP, false)
 					if err != nil {
 						tk.LogIt(tk.LogError, "aws lb-rule vip %s delete failed. err: %v\n", sNetAddr.IP.String(), err)
 					}
@@ -2643,7 +2643,7 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 		if ev == 0 {
 			if !utils.IsIPHostAddr(IP.String()) {
 				if mh.cloudLabel == "aws" {
-					err := AWSUpdatePrivateIp(IP, true)
+					err := AWSUpdatePrivateIP(IP, true)
 					if err != nil {
 						tk.LogIt(tk.LogError, "aws lb-rule vip %s add failed. err: %v\n", IP.String(), err)
 						return err
