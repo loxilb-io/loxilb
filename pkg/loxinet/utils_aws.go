@@ -224,7 +224,7 @@ func AWSPrepVIPNetwork() error {
 		return nil
 	}
 
-	fmt.Printf("Attacfed interface (%d) for loxilb instance %v\n", *aniOut.NetworkCardIndex, vpcID)
+	fmt.Printf("Attached interface (%d) for loxilb instance %v\n", *aniOut.NetworkCardIndex, vpcID)
 
 	return nil
 }
