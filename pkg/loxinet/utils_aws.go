@@ -103,7 +103,7 @@ func AWSGetInstanceAvailabilityZone() (string, error) {
 }
 
 func AWSPrepVIPNetwork() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*5))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
 	defer cancel()
 
 	filterStr := "tag:loxiType"
@@ -120,17 +120,38 @@ func AWSPrepVIPNetwork() error {
 	subnets := []string{}
 	for _, intf := range output.NetworkInterfaces {
 		subnets = append(subnets, *intf.SubnetId)
-		_, err := ec2Client.DeleteNetworkInterface(ctx, &ec2.DeleteNetworkInterfaceInput{NetworkInterfaceId: intf.NetworkInterfaceId})
-		if err != nil {
-			fmt.Printf("failed to delete intf (%s)\n", *intf.NetworkInterfaceId)
-			return err
+		if intf.Attachment != nil {
+			force := true
+			_, err := ec2Client.DetachNetworkInterface(ctx, &ec2.DetachNetworkInterfaceInput{AttachmentId: intf.Attachment.AttachmentId, Force: &force})
+			if err != nil {
+				fmt.Printf("failed to detach intf (%s):%s\n", *intf.NetworkInterfaceId, err)
+				return err
+			}
+		}
+		loop := 20
+		for loop > 0 {
+			ctx2, cancel2 := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
+			_, err2 := ec2Client.DeleteNetworkInterface(ctx2, &ec2.DeleteNetworkInterfaceInput{NetworkInterfaceId: intf.NetworkInterfaceId})
+			cancel2()
+			if err2 != nil {
+				fmt.Printf("failed to delete intf (%s):%s\n", *intf.NetworkInterfaceId, err2)
+				time.Sleep(2 * time.Second)
+				loop--
+				if loop <= 0 {
+					return err2
+				}
+				continue
+			}
+			break
 		}
 	}
 
+	ctx3, cancel3 := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
+	defer cancel3()
 	for _, subnet := range subnets {
-		_, err := ec2Client.DeleteSubnet(ctx, &ec2.DeleteSubnetInput{SubnetId: &subnet})
+		_, err := ec2Client.DeleteSubnet(ctx3, &ec2.DeleteSubnetInput{SubnetId: &subnet})
 		if err != nil {
-			fmt.Printf("failed to delete subnet (%s)\n", subnet)
+			fmt.Printf("failed to delete subnet (%s):%s\n", subnet, err)
 			return err
 		}
 	}
@@ -145,14 +166,14 @@ func AWSPrepVIPNetwork() error {
 
 	azName, err := AWSGetInstanceAvailabilityZone()
 	if err != nil {
-		fmt.Printf("failed to find az for instance %v\n", vpcID)
+		fmt.Printf("failed to find az for instance %v:%s\n", vpcID, err)
 		return nil
 	}
 	fmt.Printf("AZ for instance:%s\n", azName)
 
 	instanceID, err := AWSGetInstanceIDInfo()
 	if err != nil {
-		fmt.Printf("failed to find instanceID for instance %v\n", vpcID)
+		fmt.Printf("failed to find instanceID for instance %v:%s\n", vpcID, err)
 		return nil
 	}
 
@@ -170,7 +191,7 @@ func AWSPrepVIPNetwork() error {
 		},
 	})
 	if err != nil {
-		fmt.Printf("failed to create subnet for loxilb instance %v\n", vpcID)
+		fmt.Printf("failed to create subnet for loxilb instance %v:%s\n", vpcID, err)
 		return nil
 	}
 
@@ -187,17 +208,23 @@ func AWSPrepVIPNetwork() error {
 		},
 	})
 	if err != nil {
-		fmt.Printf("failed to create interface for loxilb instance %v\n", vpcID)
+		fmt.Printf("failed to create interface for loxilb instance %v:%s\n", vpcID, err)
 		return nil
 	}
 
 	fmt.Printf("Create interface (%s) for loxilb instance %v\n", *intfOutput.NetworkInterface.NetworkInterfaceId, vpcID)
 
 	devIdx := int32(1)
-	ec2Client.AttachNetworkInterface(ctx, &ec2.AttachNetworkInterfaceInput{DeviceIndex: &devIdx,
+	aniOut, err := ec2Client.AttachNetworkInterface(ctx, &ec2.AttachNetworkInterfaceInput{DeviceIndex: &devIdx,
 		InstanceId:         &instanceID,
 		NetworkInterfaceId: intfOutput.NetworkInterface.NetworkInterfaceId,
 	})
+	if err != nil {
+		fmt.Printf("failed to attach interface for loxilb instance %v:%s\n", vpcID, err)
+		return nil
+	}
+
+	fmt.Printf("Attacfed interface (%d) for loxilb instance %v\n", *aniOut.NetworkCardIndex, vpcID)
 
 	return nil
 }
