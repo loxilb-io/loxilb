@@ -317,13 +317,18 @@ type epChecker struct {
 	tD   chan bool
 }
 
+type vipElem struct {
+	ref  int
+	pVIP net.IP
+}
+
 // RuleH - context container
 type RuleH struct {
 	zone       *Zone
 	cfg        RuleCfg
 	tables     [RtMax]ruleTable
 	epMap      map[string]*epHost
-	vipMap     map[string]int
+	vipMap     map[string]*vipElem
 	epCs       [MaxEndPointCheckers]epChecker
 	wg         sync.WaitGroup
 	lepHID     uint8
@@ -340,7 +345,7 @@ func RulesInit(zone *Zone) *RuleH {
 	nRh.cfg.RuleInactChkTime = DflLbaCheckTimeout
 	nRh.cfg.RuleInactTries = DflLbaInactiveTries
 
-	nRh.vipMap = make(map[string]int)
+	nRh.vipMap = make(map[string]*vipElem)
 	nRh.epMap = make(map[string]*epHost)
 	nRh.tables[RtFw].tableMatch = RmMax - 1
 	nRh.tables[RtFw].tableType = RtMf
@@ -1190,6 +1195,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	var natActs ruleNatActs
 	var nSecIP []ruleNatSIP
 	var ipProto uint8
+	var privIP net.IP
 
 	// Validate service args
 	service := ""
@@ -1201,6 +1207,14 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	_, sNetAddr, err := net.ParseCIDR(service)
 	if err != nil {
 		return RuleUnknownServiceErr, errors.New("malformed-service error")
+	}
+
+	privIP = nil
+	if serv.PrivateIP != "" {
+		privIP = net.ParseIP(serv.PrivateIP)
+		if privIP == nil {
+			return RuleUnknownServiceErr, errors.New("malformed-service privateIP error")
+		}
 	}
 
 	// Validate inactivity timeout
@@ -1444,7 +1458,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	r.iTo = serv.InactiveTimeout
 	r.bgp = serv.Bgp
 	r.ci = cmn.CIDefault
-	r.privIP, _ = R.RuleVIP2PrivIP(sNetAddr.IP)
+	r.privIP = privIP
 
 	R.FoldRecursiveEPs(r)
 
@@ -1457,12 +1471,9 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	if r.ruleNum < RtMaximumLbs {
 		R.tables[RtLB].rArr[r.ruleNum] = r
 	}
-	if !strings.Contains(r.name, "ipvs") {
-		R.vipMap[sNetAddr.IP.String()]++
 
-		if R.vipMap[sNetAddr.IP.String()] == 1 {
-			R.AdvRuleVIPIfL2(sNetAddr.IP)
-		}
+	if !strings.Contains(r.name, "ipvs") {
+		R.AddRuleVIP(sNetAddr.IP, r.RuleVIP2PrivIP())
 	}
 
 	r.DP(DpCreate)
@@ -1527,23 +1538,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	}
 
 	if !strings.Contains(rule.name, "ipvs") {
-		R.vipMap[sNetAddr.IP.String()]--
-
-		if R.vipMap[sNetAddr.IP.String()] == 0 {
-			if utils.IsIPHostAddr(sNetAddr.IP.String()) {
-				loxinlp.DelAddrNoHook(sNetAddr.IP.String()+"/32", "lo")
-				err := CloudUpdatePrivateIP(sNetAddr.IP, false)
-				if err != nil {
-					tk.LogIt(tk.LogError, "%s: lb-rule vip %s delete failed. err: %v\n", mh.cloudLabel, sNetAddr.IP.String(), err)
-				}
-			}
-			dev := fmt.Sprintf("llb-rule-%s", sNetAddr.IP.String())
-			ret, _ := mh.zr.L3.IfaFind(dev, sNetAddr.IP)
-			if ret == 0 {
-				mh.zr.L3.IfaDelete(dev, sNetAddr.IP.String()+"/32")
-			}
-			delete(R.vipMap, sNetAddr.IP.String())
-		}
+		R.DeleteRuleVIP(sNetAddr.IP)
 	}
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
@@ -2311,11 +2306,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.Work = work
 	nWork.Status = &r.sync
 	nWork.ZoneNum = r.zone.ZoneNum
-	if r.privIP == nil || r.privIP.IsUnspecified() {
-		nWork.ServiceIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
-	} else {
-		nWork.ServiceIP = r.privIP
-	}
+	nWork.ServiceIP = r.RuleVIP2PrivIP()
 	nWork.L4Port = r.tuples.l4Dst.val
 	nWork.Proto = r.tuples.l4Prot.val
 	nWork.Mark = int(r.ruleNum)
@@ -2685,17 +2676,69 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 }
 
 func (R *RuleH) RuleVIPSyncToClusterState() {
-	for vip := range R.vipMap {
-		ip := net.ParseIP(vip)
+	for vip, vipElem := range R.vipMap {
+		ip := vipElem.pVIP
+		if ip == nil {
+			ip = net.ParseIP(vip)
+		}
 		if ip != nil {
 			R.AdvRuleVIPIfL2(ip)
 		}
 	}
 }
 
-func (R *RuleH) RuleVIP2PrivIP(vip net.IP) (net.IP, error) {
-	if mh.cloudLabel == "aws" {
-		return AWSPrivateIpMapper(vip)
+func (r *ruleEnt) RuleVIP2PrivIP() net.IP {
+	if r.privIP == nil || r.privIP.IsUnspecified() {
+		return r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
+	} else {
+		return r.privIP
 	}
-	return nil, nil
+}
+
+func (R *RuleH) AddRuleVIP(VIP net.IP, pVIP net.IP) {
+	vipEnt := R.vipMap[VIP.String()]
+	if vipEnt == nil {
+		vipEnt = new(vipElem)
+		vipEnt.ref = 1
+		vipEnt.pVIP = pVIP
+		R.vipMap[VIP.String()] = vipEnt
+	} else {
+		vipEnt.ref++
+	}
+
+	if vipEnt.ref == 1 {
+		if pVIP == nil {
+			R.AdvRuleVIPIfL2(pVIP)
+		} else {
+			R.AdvRuleVIPIfL2(VIP)
+		}
+	}
+}
+
+func (R *RuleH) DeleteRuleVIP(VIP net.IP) {
+
+	vipEnt := R.vipMap[VIP.String()]
+	if vipEnt != nil {
+		vipEnt.ref--
+	}
+
+	if vipEnt != nil && vipEnt.ref == 0 {
+		xVIP := VIP
+		if vipEnt.pVIP != nil {
+			xVIP = vipEnt.pVIP
+		}
+		if utils.IsIPHostAddr(xVIP.String()) {
+			loxinlp.DelAddrNoHook(xVIP.String()+"/32", "lo")
+			err := CloudUpdatePrivateIP(xVIP, false)
+			if err != nil {
+				tk.LogIt(tk.LogError, "%s: lb-rule vip %s delete failed. err: %v\n", mh.cloudLabel, xVIP.String(), err)
+			}
+		}
+		dev := fmt.Sprintf("llb-rule-%s", xVIP.String())
+		ret, _ := mh.zr.L3.IfaFind(dev, xVIP)
+		if ret == 0 {
+			mh.zr.L3.IfaDelete(dev, xVIP.String()+"/32")
+		}
+		delete(R.vipMap, VIP.String())
+	}
 }
