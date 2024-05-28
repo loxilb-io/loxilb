@@ -1532,16 +1532,9 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 		if R.vipMap[sNetAddr.IP.String()] == 0 {
 			if utils.IsIPHostAddr(sNetAddr.IP.String()) {
 				loxinlp.DelAddrNoHook(sNetAddr.IP.String()+"/32", "lo")
-				if mh.cloudLabel == "aws" {
-					err := AWSUpdatePrivateIP(sNetAddr.IP, false)
-					if err != nil {
-						tk.LogIt(tk.LogError, "aws lb-rule vip %s delete failed. err: %v\n", sNetAddr.IP.String(), err)
-					}
-				} else if mh.cloudLabel == "ncloud" {
-					err := nClient.NcloudUpdatePrivateIp(sNetAddr.IP, false)
-					if err != nil {
-						tk.LogIt(tk.LogError, "ncloud lb-rule vip %s delete failed. err: %v\n", sNetAddr.IP.String(), err)
-					}
+				err := CloudUpdatePrivateIP(sNetAddr.IP, false)
+				if err != nil {
+					tk.LogIt(tk.LogError, "%s: lb-rule vip %s delete failed. err: %v\n", mh.cloudLabel, sNetAddr.IP.String(), err)
 				}
 			}
 			dev := fmt.Sprintf("llb-rule-%s", sNetAddr.IP.String())
@@ -2642,19 +2635,12 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 		ev, _, iface := R.zone.L3.IfaSelectAny(IP, false)
 		if ev == 0 {
 			if !utils.IsIPHostAddr(IP.String()) {
-				if mh.cloudLabel == "aws" {
-					err := AWSUpdatePrivateIP(IP, true)
-					if err != nil {
-						tk.LogIt(tk.LogError, "aws lb-rule vip %s add failed. err: %v\n", IP.String(), err)
-						return err
-					}
-				} else if mh.cloudLabel == "ncloud" {
-					err := nClient.NcloudUpdatePrivateIp(IP, true)
-					if err != nil {
-						tk.LogIt(tk.LogError, "ncloud lb-rule vip %s add failed. err: %v\n", IP.String(), err)
-						return err
-					}
+				err := CloudUpdatePrivateIP(IP, true)
+				if err != nil {
+					tk.LogIt(tk.LogError, "%s: lb-rule vip %s add failed. err: %v\n", mh.cloudLabel, IP.String(), err)
+					return err
 				}
+
 				if loxinlp.AddAddrNoHook(IP.String()+"/32", "lo") != 0 {
 					tk.LogIt(tk.LogError, "nat lb-rule vip %s:%s add failed\n", IP.String(), "lo")
 				} else {

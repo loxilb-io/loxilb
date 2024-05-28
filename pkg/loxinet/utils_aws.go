@@ -206,9 +206,10 @@ func AWSPrepVIPNetwork() error {
 		return nil
 	}
 
+	loxiEniPrivIP := *intfOutput.NetworkInterface.PrivateIpAddress
 	loxiEniID = *intfOutput.NetworkInterface.NetworkInterfaceId
 
-	tk.LogIt(tk.LogInfo, "Created interface (%s) for loxilb instance %v\n", *intfOutput.NetworkInterface.NetworkInterfaceId, vpcID)
+	tk.LogIt(tk.LogInfo, "Created interface (%s:%s) for loxilb instance %v\n", *intfOutput.NetworkInterface.NetworkInterfaceId, loxiEniPrivIP, vpcID)
 
 	devIdx := int32(1)
 	aniOut, err := ec2Client.AttachNetworkInterface(ctx3, &ec2.AttachNetworkInterfaceInput{DeviceIndex: &devIdx,
@@ -254,6 +255,16 @@ retry:
 			err = nl.LinkSetMTU(link, 9000)
 			if err != nil {
 				tk.LogIt(tk.LogError, "failed to set link (%s) mtu:%s\n", nintf.Name, err)
+			}
+
+			Address, err := nl.ParseAddr(loxiEniPrivIP + "/32")
+			if err != nil {
+				tk.LogIt(tk.LogWarning, "privIP  %s parse fail\n", loxiEniPrivIP)
+				return err
+			}
+			err = nl.AddrAdd(link, Address)
+			if err != nil {
+				tk.LogIt(tk.LogWarning, "privIP %s:%s add failed\n", loxiEniPrivIP, nintf.Name)
 			}
 			newIntfName = nintf.Name
 		}
