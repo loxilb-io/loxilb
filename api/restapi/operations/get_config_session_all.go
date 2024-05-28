@@ -132,6 +132,11 @@ func (o *GetConfigSessionAllOKBody) contextValidateSessionAttr(ctx context.Conte
 	for i := 0; i < len(o.SessionAttr); i++ {
 
 		if o.SessionAttr[i] != nil {
+
+			if swag.IsZero(o.SessionAttr[i]) { // not required
+				return nil
+			}
+
 			if err := o.SessionAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigSessionAllOK" + "." + "sessionAttr" + "." + strconv.Itoa(i))

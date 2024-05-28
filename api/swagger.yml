@@ -2447,7 +2447,10 @@ definitions:
         properties:
           externalIP:
             type: string
-            description: IP address for externel access
+            description: IP address for external access
+          privateIP:
+            type: string
+            description: private IP (NAT'd) address for external access
           port:
             type: integer
             description:  port number for the access

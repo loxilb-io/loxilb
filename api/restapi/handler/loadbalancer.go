@@ -29,6 +29,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	var lbRules cmn.LbRuleMod
 
 	lbRules.Serv.ServIP = params.Attr.ServiceArguments.ExternalIP
+	lbRules.Serv.PrivateIP = params.Attr.ServiceArguments.PrivateIP
 	lbRules.Serv.ServPort = uint16(params.Attr.ServiceArguments.Port)
 	lbRules.Serv.Proto = params.Attr.ServiceArguments.Protocol
 	lbRules.Serv.BlockNum = params.Attr.ServiceArguments.Block

@@ -132,6 +132,11 @@ func (o *GetConfigRouteAllOKBody) contextValidateRouteAttr(ctx context.Context, 
 	for i := 0; i < len(o.RouteAttr); i++ {
 
 		if o.RouteAttr[i] != nil {
+
+			if swag.IsZero(o.RouteAttr[i]) { // not required
+				return nil
+			}
+
 			if err := o.RouteAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigRouteAllOK" + "." + "routeAttr" + "." + strconv.Itoa(i))

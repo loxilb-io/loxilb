@@ -4054,7 +4054,7 @@ func init() {
               "format": "uint16"
             },
             "externalIP": {
-              "description": "IP address for externel access",
+              "description": "IP address for external access",
               "type": "string"
             },
             "inactiveTimeOut": {
@@ -4082,6 +4082,10 @@ func init() {
             "port": {
               "description": "port number for the access",
               "type": "integer"
+            },
+            "privateIP": {
+              "description": "private IP (NAT'd) address for external access",
+              "type": "string"
             },
             "probeRetries": {
               "description": "value for probe retries",
@@ -8752,7 +8756,7 @@ func init() {
               "format": "uint16"
             },
             "externalIP": {
-              "description": "IP address for externel access",
+              "description": "IP address for external access",
               "type": "string"
             },
             "inactiveTimeOut": {
@@ -8780,6 +8784,10 @@ func init() {
             "port": {
               "description": "port number for the access",
               "type": "integer"
+            },
+            "privateIP": {
+              "description": "private IP (NAT'd) address for external access",
+              "type": "string"
             },
             "probeRetries": {
               "description": "value for probe retries",
@@ -8865,7 +8873,7 @@ func init() {
           "format": "uint16"
         },
         "externalIP": {
-          "description": "IP address for externel access",
+          "description": "IP address for external access",
           "type": "string"
         },
         "inactiveTimeOut": {
@@ -8893,6 +8901,10 @@ func init() {
         "port": {
           "description": "port number for the access",
           "type": "integer"
+        },
+        "privateIP": {
+          "description": "private IP (NAT'd) address for external access",
+          "type": "string"
         },
         "probeRetries": {
           "description": "value for probe retries",

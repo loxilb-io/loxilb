@@ -132,6 +132,11 @@ func (o *GetConfigFdbAllOKBody) contextValidateFdbAttr(ctx context.Context, form
 	for i := 0; i < len(o.FdbAttr); i++ {
 
 		if o.FdbAttr[i] != nil {
+
+			if swag.IsZero(o.FdbAttr[i]) { // not required
+				return nil
+			}
+
 			if err := o.FdbAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigFdbAllOK" + "." + "fdbAttr" + "." + strconv.Itoa(i))

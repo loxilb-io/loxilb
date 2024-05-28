@@ -132,6 +132,11 @@ func (o *GetStatusFilesystemOKBody) contextValidateFilesystemAttr(ctx context.Co
 	for i := 0; i < len(o.FilesystemAttr); i++ {
 
 		if o.FilesystemAttr[i] != nil {
+
+			if swag.IsZero(o.FilesystemAttr[i]) { // not required
+				return nil
+			}
+
 			if err := o.FilesystemAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getStatusFilesystemOK" + "." + "filesystemAttr" + "." + strconv.Itoa(i))
