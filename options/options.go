@@ -34,4 +34,5 @@ var Opts struct {
 	FallBack          bool           `long:"fallback" description:"Fallback to system default networking(experimental)"`
 	LocalVIP          bool           `long:"localvip" description:"support vip availability from lb node(experimental)"`
 	Cloud             string         `long:"cloud" description:"cloud type if any e.g aws,ncloud" default:"on-prem"`
+	CloudCIDRBlock    string         `long:"cloudcidrblock" description:"cloud implementations need VIP cidr blocks(experimental)"`
 }

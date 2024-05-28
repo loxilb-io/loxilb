@@ -222,9 +222,15 @@ func loxiNetInit() {
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 
 	if mh.cloudLabel == "aws" {
-		AWSApiInit()
+		err := AWSApiInit(opts.Opts.CloudCIDRBlock)
+		if err != nil {
+			os.Exit(1)
+		}
 	} else if mh.cloudLabel == "ncloud" {
-		NcloudApiInit()
+		err := NcloudApiInit()
+		if err != nil {
+			os.Exit(1)
+		}
 	}
 
 	// Check if profiling is enabled

@@ -36,6 +36,8 @@ var (
 	vpcID      string
 	instanceID string
 	azName     string
+	awsCIDRnet *net.IPNet
+	loxiEniID  string
 )
 
 func AWSGetInstanceIDInfo() (string, error) {
@@ -105,6 +107,10 @@ func AWSGetInstanceAvailabilityZone() (string, error) {
 }
 
 func AWSPrepVIPNetwork() error {
+	if awsCIDRnet == nil {
+		return nil
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
 	defer cancel()
 
@@ -158,7 +164,7 @@ func AWSPrepVIPNetwork() error {
 		}
 	}
 
-	cidrBlock := "123.123.123.0/28"
+	cidrBlock := awsCIDRnet.String()
 	loxilbSubNetKey := "loxiType"
 	loxilbSubNetKeyVal := "loxilb-subnet"
 	subnetTag := types.Tag{Key: &loxilbSubNetKey, Value: &loxilbSubNetKeyVal}
@@ -192,6 +198,8 @@ func AWSPrepVIPNetwork() error {
 		tk.LogIt(tk.LogError, "failed to create interface for loxilb instance %v:%s\n", vpcID, err)
 		return nil
 	}
+
+	loxiEniID = *intfOutput.NetworkInterface.NetworkInterfaceId
 
 	tk.LogIt(tk.LogInfo, "Created interface (%s) for loxilb instance %v\n", *intfOutput.NetworkInterface.NetworkInterfaceId, vpcID)
 
@@ -294,10 +302,16 @@ func AWSUpdatePrivateIP(vIP net.IP, add bool) error {
 		return err
 	}
 
-	niID, err := AWSGetNetworkInterface(instanceID, vIP)
-	if err != nil {
-		tk.LogIt(tk.LogError, "AWS get network interface failed: %v\n", err)
-		return err
+	niID := ""
+
+	if awsCIDRnet == nil || loxiEniID == "" {
+		niID, err = AWSGetNetworkInterface(instanceID, vIP)
+		if err != nil {
+			tk.LogIt(tk.LogError, "AWS get network interface failed: %v\n", err)
+			return err
+		}
+	} else {
+		niID = loxiEniID
 	}
 
 	if !add {
@@ -307,13 +321,22 @@ func AWSUpdatePrivateIP(vIP net.IP, add bool) error {
 	return AWSCreatePrivateIp(niID, vIP)
 }
 
-func AWSApiInit() error {
+func AWSApiInit(cloudCIDRBlock string) error {
+
 	// Using the SDK's default configuration, loading additional config
 	// and credentials values from the environment variables, shared
 	// credentials, and shared configuration files
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		return err
+	}
+
+	if cloudCIDRBlock != "" {
+		_, awsCIDRnet, err = net.ParseCIDR(cloudCIDRBlock)
+		if err != nil {
+			tk.LogIt(tk.LogError, "failed to parse cloud cidr block %s\n", cloudCIDRBlock)
+			return err
+		}
 	}
 
 	// Using the Config value, create the DynamoDB client
