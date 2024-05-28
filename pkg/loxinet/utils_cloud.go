@@ -17,21 +17,41 @@
 package loxinet
 
 import (
-	tk "github.com/loxilb-io/loxilib"
 	"net"
+
+	tk "github.com/loxilb-io/loxilib"
 )
 
-func CloudUpdatePrivateIP(vIP net.IP, add bool) error {
+func CloudUpdatePrivateIP(vIP net.IP, eIP net.IP, add bool) error {
+	var actionStr string
+	if add {
+		actionStr = "create"
+	} else {
+		actionStr = "delete"
+	}
+
 	if mh.cloudLabel == "aws" {
-		err := AWSUpdatePrivateIP(vIP, false)
+		var err error
+		if vIP.Equal(eIP) { // no use EIP
+			err = AWSUpdatePrivateIP(vIP, add)
+		} else { // use EIP
+			err = AWSAssociateElasticIp(vIP, eIP, add)
+		}
+
 		if err != nil {
-			tk.LogIt(tk.LogError, "aws lb-rule vip %s delete failed. err: %v\n", vIP.String(), err)
+			tk.LogIt(tk.LogError, "aws lb-rule vip %s %s failed. err: %v\n", vIP.String(), actionStr, err)
 		}
 	} else if mh.cloudLabel == "ncloud" {
-		err := nClient.NcloudUpdatePrivateIp(vIP, false)
+		err := nClient.NcloudUpdatePrivateIp(vIP, add)
 		if err != nil {
-			tk.LogIt(tk.LogError, "ncloud lb-rule vip %s delete failed. err: %v\n", vIP.String(), err)
+			tk.LogIt(tk.LogError, "ncloud lb-rule vip %s %s failed. err: %v\n", vIP.String(), actionStr, err)
 		}
 	}
 	return nil
+}
+
+func CloudPrepareVIPNetWork() {
+	if mh.cloudLabel == "aws" {
+		AWSPrepVIPNetwork()
+	}
 }

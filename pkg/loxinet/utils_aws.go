@@ -20,15 +20,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"net"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	tk "github.com/loxilb-io/loxilib"
 	nl "github.com/vishvananda/netlink"
-	"io"
-	"net"
-	"time"
 )
 
 var (
@@ -41,8 +42,8 @@ var (
 	loxiEniID  string
 )
 
-func AWSGetInstanceIDInfo() (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
+func AWSGetInstanceIDInfo(ctx context.Context) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
 	defer cancel()
 	resp, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
 		Path: "instance-id",
@@ -60,7 +61,7 @@ func AWSGetInstanceIDInfo() (string, error) {
 }
 
 func AWSGetInstanceVPCInfo() (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
 	defer cancel()
 	resp, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
 		Path: "mac",
@@ -89,9 +90,7 @@ func AWSGetInstanceVPCInfo() (string, error) {
 	return string(vpc), nil
 }
 
-func AWSGetInstanceAvailabilityZone() (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
-	defer cancel()
+func AWSGetInstanceAvailabilityZone(ctx context.Context) (string, error) {
 	resp, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
 		Path: "placement/availability-zone",
 	})
@@ -112,7 +111,7 @@ func AWSPrepVIPNetwork() error {
 		return nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*30))
 	defer cancel()
 
 	filterStr := "tag:loxiType"
@@ -139,7 +138,7 @@ func AWSPrepVIPNetwork() error {
 		}
 		loop := 20
 		for loop > 0 {
-			ctx2, cancel2 := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
+			ctx2, cancel2 := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
 			_, err2 := ec2Client.DeleteNetworkInterface(ctx2, &ec2.DeleteNetworkInterfaceInput{NetworkInterfaceId: intf.NetworkInterfaceId})
 			cancel2()
 			if err2 != nil {
@@ -155,7 +154,7 @@ func AWSPrepVIPNetwork() error {
 		}
 	}
 
-	ctx3, cancel3 := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
+	ctx3, cancel3 := context.WithTimeout(context.Background(), time.Duration(time.Second*30))
 	defer cancel3()
 	for _, subnet := range subnets {
 		_, err := ec2Client.DeleteSubnet(ctx3, &ec2.DeleteSubnetInput{SubnetId: &subnet})
@@ -280,10 +279,7 @@ retry:
 	return nil
 }
 
-func AWSGetNetworkInterface(instanceID string, vIP net.IP) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*5))
-	defer cancel()
-
+func AWSGetNetworkInterface(ctx context.Context, instanceID string, vIP net.IP) (string, error) {
 	filterStr := "attachment.instance-id"
 	output, err := ec2Client.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
 		Filters: []types.Filter{
@@ -323,10 +319,7 @@ func AWSGetNetworkInterface(instanceID string, vIP net.IP) (string, error) {
 	return "", errors.New("not found interface")
 }
 
-func AWSCreatePrivateIp(ni string, vIP net.IP) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
-	defer cancel()
-
+func AWSCreatePrivateIp(ctx context.Context, ni string, vIP net.IP) error {
 	allowReassign := true
 	input := &ec2.AssignPrivateIpAddressesInput{
 		NetworkInterfaceId: &ni,
@@ -341,10 +334,7 @@ func AWSCreatePrivateIp(ni string, vIP net.IP) error {
 	return nil
 }
 
-func AWSDeletePrivateIp(ni string, vIP net.IP) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*2))
-	defer cancel()
-
+func AWSDeletePrivateIp(ctx context.Context, ni string, vIP net.IP) error {
 	input := &ec2.UnassignPrivateIpAddressesInput{
 		NetworkInterfaceId: &ni,
 		PrivateIpAddresses: []string{vIP.String()},
@@ -358,16 +348,13 @@ func AWSDeletePrivateIp(ni string, vIP net.IP) error {
 }
 
 func AWSUpdatePrivateIP(vIP net.IP, add bool) error {
-	instanceID, err := AWSGetInstanceIDInfo()
-	if err != nil {
-		tk.LogIt(tk.LogError, "AWS get instance failed: %v\n", err)
-		return err
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*30))
+	defer cancel()
 
-	niID := ""
-
+	var niID string
+	var err error
 	if awsCIDRnet == nil || loxiEniID == "" {
-		niID, err = AWSGetNetworkInterface(instanceID, vIP)
+		niID, err = AWSGetNetworkInterface(ctx, instanceID, vIP)
 		if err != nil {
 			tk.LogIt(tk.LogError, "AWS get network interface failed: %v\n", err)
 			return err
@@ -377,10 +364,85 @@ func AWSUpdatePrivateIP(vIP net.IP, add bool) error {
 	}
 
 	if !add {
-		return AWSDeletePrivateIp(niID, vIP)
+		return AWSDeletePrivateIp(ctx, niID, vIP)
 	}
 
-	return AWSCreatePrivateIp(niID, vIP)
+	return AWSCreatePrivateIp(ctx, niID, vIP)
+}
+
+func AWSAssociateElasticIp(vIP, eIP net.IP, add bool) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+
+	var niID string
+	var err error
+	if awsCIDRnet == nil || loxiEniID == "" {
+		niID, err = AWSGetNetworkInterface(ctx, instanceID, vIP)
+		if err != nil {
+			tk.LogIt(tk.LogError, "AWS get network interface failed: %v\n", err)
+			return err
+		}
+	} else {
+		niID = loxiEniID
+	}
+
+	eipID, eipAssociateID, err := AWSGetElasticIpId(ctx, eIP)
+	if err != nil {
+		tk.LogIt(tk.LogError, "AWS get elastic IP failed: %v\n", err)
+		return err
+	}
+	if !add {
+		return AWSDisassociateElasticIpWithInterface(ctx, eipAssociateID, niID)
+	}
+	return AWSAssociateElasticIpWithInterface(ctx, eipID, niID, vIP)
+}
+
+func AWSAssociateElasticIpWithInterface(ctx context.Context, eipID, niID string, privateIP net.IP) error {
+	allowReassign := true
+	input := &ec2.AssociateAddressInput{
+		AllocationId:       &eipID,
+		NetworkInterfaceId: &niID,
+		AllowReassociation: &allowReassign,
+	}
+	if privateIP != nil {
+		if err := AWSCreatePrivateIp(ctx, niID, privateIP); err != nil {
+			return err
+		}
+		ipstr := privateIP.String()
+		input.PrivateIpAddress = &ipstr
+	}
+	_, err := ec2Client.AssociateAddress(ctx, input)
+	return err
+}
+
+func AWSDisassociateElasticIpWithInterface(ctx context.Context, eipAssociateID, niID string) error {
+	_, err := ec2Client.DisassociateAddress(ctx, &ec2.DisassociateAddressInput{
+		AssociationId: &eipAssociateID,
+	})
+	return err
+}
+
+func AWSGetElasticIpId(ctx context.Context, eIP net.IP) (string, string, error) {
+	filterStr := "public-ip"
+	output, err := ec2Client.DescribeAddresses(ctx, &ec2.DescribeAddressesInput{
+		Filters: []types.Filter{
+			{Name: &filterStr, Values: []string{eIP.String()}},
+		}},
+	)
+	if err != nil {
+		return "", "", err
+	}
+	if len(output.Addresses) <= 0 {
+		return "", "", fmt.Errorf("not found Elastic IP %s", eIP.String())
+	}
+	var allocateId, associateId string
+	if output.Addresses[0].AllocationId != nil {
+		allocateId = *output.Addresses[0].AllocationId
+	}
+	if output.Addresses[0].AssociationId != nil {
+		associateId = *output.Addresses[0].AssociationId
+	}
+	return allocateId, associateId, nil
 }
 
 func AWSApiInit(cloudCIDRBlock string) error {
@@ -411,13 +473,16 @@ func AWSApiInit(cloudCIDRBlock string) error {
 		return nil
 	}
 
-	azName, err = AWSGetInstanceAvailabilityZone()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
+	defer cancel()
+
+	azName, err = AWSGetInstanceAvailabilityZone(ctx)
 	if err != nil {
 		tk.LogIt(tk.LogError, "failed to find az for instance %v:%s\n", vpcID, err)
 		return nil
 	}
 
-	instanceID, err = AWSGetInstanceIDInfo()
+	instanceID, err = AWSGetInstanceIDInfo(ctx)
 	if err != nil {
 		tk.LogIt(tk.LogError, "failed to find instanceID for instance %v:%s\n", vpcID, err)
 		return nil
