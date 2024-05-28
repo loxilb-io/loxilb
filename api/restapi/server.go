@@ -25,6 +25,7 @@ import (
 	"golang.org/x/net/netutil"
 
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
+	"github.com/loxilb-io/loxilb/options"
 )
 
 const (
@@ -226,7 +227,7 @@ func (s *Server) Serve() (err error) {
 		}(s.httpServerL)
 	}
 
-	if s.hasScheme(schemeHTTPS) {
+	if s.hasScheme(schemeHTTPS) && options.Opts.TLS {
 		httpsServer := new(http.Server)
 		httpsServer.MaxHeaderBytes = int(s.MaxHeaderSize)
 		httpsServer.ReadTimeout = s.TLSReadTimeout
