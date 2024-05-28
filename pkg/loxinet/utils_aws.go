@@ -451,6 +451,7 @@ func AWSApiInit(cloudCIDRBlock string) error {
 	// credentials, and shared configuration files
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
+		tk.LogIt(tk.LogError, "failed to load cloud config\n")
 		return err
 	}
 
@@ -469,7 +470,7 @@ func AWSApiInit(cloudCIDRBlock string) error {
 	vpcID, err = AWSGetInstanceVPCInfo()
 	if err != nil {
 		tk.LogIt(tk.LogError, "failed to find vpcid for instance\n")
-		return nil
+		return err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
@@ -478,13 +479,13 @@ func AWSApiInit(cloudCIDRBlock string) error {
 	azName, err = AWSGetInstanceAvailabilityZone(ctx)
 	if err != nil {
 		tk.LogIt(tk.LogError, "failed to find az for instance %v:%s\n", vpcID, err)
-		return nil
+		return err
 	}
 
 	instanceID, err = AWSGetInstanceIDInfo(ctx)
 	if err != nil {
 		tk.LogIt(tk.LogError, "failed to find instanceID for instance %v:%s\n", vpcID, err)
-		return nil
+		return err
 	}
 
 	tk.LogIt(tk.LogInfo, "AWS API init - instance %s vpc %s az %s\n", instanceID, vpcID, instanceID)
