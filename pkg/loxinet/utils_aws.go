@@ -20,20 +20,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"net"
-	"time"
-
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	tk "github.com/loxilb-io/loxilib"
+	"io"
+	"net"
+	"time"
 )
 
 var (
 	imdsClient *imds.Client
 	ec2Client  *ec2.Client
+	vpcID      string
+	instanceID string
+	azName     string
 )
 
 func AWSGetInstanceIDInfo() (string, error) {
@@ -113,7 +115,7 @@ func AWSPrepVIPNetwork() error {
 		},
 	})
 	if err != nil {
-		fmt.Printf("no loxiType intf found \n")
+		tk.LogIt(tk.LogError, "no loxiType intf found\n")
 		return err
 	}
 
@@ -124,7 +126,7 @@ func AWSPrepVIPNetwork() error {
 			force := true
 			_, err := ec2Client.DetachNetworkInterface(ctx, &ec2.DetachNetworkInterfaceInput{AttachmentId: intf.Attachment.AttachmentId, Force: &force})
 			if err != nil {
-				fmt.Printf("failed to detach intf (%s):%s\n", *intf.NetworkInterfaceId, err)
+				tk.LogIt(tk.LogError, "failed to detach intf (%s):%s\n", *intf.NetworkInterfaceId, err)
 				return err
 			}
 		}
@@ -134,7 +136,7 @@ func AWSPrepVIPNetwork() error {
 			_, err2 := ec2Client.DeleteNetworkInterface(ctx2, &ec2.DeleteNetworkInterfaceInput{NetworkInterfaceId: intf.NetworkInterfaceId})
 			cancel2()
 			if err2 != nil {
-				fmt.Printf("failed to delete intf (%s):%s\n", *intf.NetworkInterfaceId, err2)
+				tk.LogIt(tk.LogError, "failed to delete intf (%s):%s\n", *intf.NetworkInterfaceId, err2)
 				time.Sleep(2 * time.Second)
 				loop--
 				if loop <= 0 {
@@ -151,30 +153,9 @@ func AWSPrepVIPNetwork() error {
 	for _, subnet := range subnets {
 		_, err := ec2Client.DeleteSubnet(ctx3, &ec2.DeleteSubnetInput{SubnetId: &subnet})
 		if err != nil {
-			fmt.Printf("failed to delete subnet (%s):%s\n", subnet, err)
+			tk.LogIt(tk.LogError, "failed to delete subnet (%s):%s\n", subnet, err)
 			return err
 		}
-	}
-
-	vpcID, err := AWSGetInstanceVPCInfo()
-	if err != nil {
-		fmt.Printf("failed to find vpcid for instance\n")
-		return nil
-	}
-
-	fmt.Printf("vpcid for instance:%s\n", vpcID)
-
-	azName, err := AWSGetInstanceAvailabilityZone()
-	if err != nil {
-		fmt.Printf("failed to find az for instance %v:%s\n", vpcID, err)
-		return nil
-	}
-	fmt.Printf("AZ for instance:%s\n", azName)
-
-	instanceID, err := AWSGetInstanceIDInfo()
-	if err != nil {
-		fmt.Printf("failed to find instanceID for instance %v:%s\n", vpcID, err)
-		return nil
 	}
 
 	cidrBlock := "123.123.123.0/28"
@@ -191,7 +172,7 @@ func AWSPrepVIPNetwork() error {
 		},
 	})
 	if err != nil {
-		fmt.Printf("failed to create subnet for loxilb instance %v:%s\n", vpcID, err)
+		tk.LogIt(tk.LogError, "failed to create subnet for loxilb instance %v:%s\n", vpcID, err)
 		return nil
 	}
 
@@ -208,11 +189,11 @@ func AWSPrepVIPNetwork() error {
 		},
 	})
 	if err != nil {
-		fmt.Printf("failed to create interface for loxilb instance %v:%s\n", vpcID, err)
+		tk.LogIt(tk.LogError, "failed to create interface for loxilb instance %v:%s\n", vpcID, err)
 		return nil
 	}
 
-	fmt.Printf("Create interface (%s) for loxilb instance %v\n", *intfOutput.NetworkInterface.NetworkInterfaceId, vpcID)
+	tk.LogIt(tk.LogInfo, "Created interface (%s) for loxilb instance %v\n", *intfOutput.NetworkInterface.NetworkInterfaceId, vpcID)
 
 	devIdx := int32(1)
 	aniOut, err := ec2Client.AttachNetworkInterface(ctx, &ec2.AttachNetworkInterfaceInput{DeviceIndex: &devIdx,
@@ -220,11 +201,11 @@ func AWSPrepVIPNetwork() error {
 		NetworkInterfaceId: intfOutput.NetworkInterface.NetworkInterfaceId,
 	})
 	if err != nil {
-		fmt.Printf("failed to attach interface for loxilb instance %v:%s\n", vpcID, err)
+		tk.LogIt(tk.LogError, "failed to attach interface for loxilb instance %v:%s\n", vpcID, err)
 		return nil
 	}
 
-	fmt.Printf("Attached interface (%d) for loxilb instance %v\n", *aniOut.NetworkCardIndex, vpcID)
+	tk.LogIt(tk.LogInfo, "Attached interface (%d) for loxilb instance %v\n", *aniOut.NetworkCardIndex, vpcID)
 
 	return nil
 }
@@ -339,7 +320,25 @@ func AWSApiInit() error {
 	imdsClient = imds.NewFromConfig(cfg)
 	ec2Client = ec2.NewFromConfig(cfg)
 
-	tk.LogIt(tk.LogInfo, "AWS API init\n")
+	vpcID, err = AWSGetInstanceVPCInfo()
+	if err != nil {
+		tk.LogIt(tk.LogError, "failed to find vpcid for instance\n")
+		return nil
+	}
+
+	azName, err = AWSGetInstanceAvailabilityZone()
+	if err != nil {
+		tk.LogIt(tk.LogError, "failed to find az for instance %v:%s\n", vpcID, err)
+		return nil
+	}
+
+	instanceID, err = AWSGetInstanceIDInfo()
+	if err != nil {
+		tk.LogIt(tk.LogError, "failed to find instanceID for instance %v:%s\n", vpcID, err)
+		return nil
+	}
+
+	tk.LogIt(tk.LogInfo, "AWS API init - instance %s vpc %s az %s\n", instanceID, vpcID, instanceID)
 	return nil
 }
 
