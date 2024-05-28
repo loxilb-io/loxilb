@@ -25,6 +25,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	tk "github.com/loxilb-io/loxilib"
+	nl "github.com/vishvananda/netlink"
 	"io"
 	"net"
 	"time"
@@ -164,12 +165,18 @@ func AWSPrepVIPNetwork() error {
 		}
 	}
 
+	ointfs, err := net.Interfaces()
+	if err != nil {
+		tk.LogIt(tk.LogError, "failed to get sys ifs\n")
+		return err
+	}
+
 	cidrBlock := awsCIDRnet.String()
 	loxilbSubNetKey := "loxiType"
 	loxilbSubNetKeyVal := "loxilb-subnet"
 	subnetTag := types.Tag{Key: &loxilbSubNetKey, Value: &loxilbSubNetKeyVal}
 	subnetTags := []types.Tag{subnetTag}
-	subOutput, err := ec2Client.CreateSubnet(ctx, &ec2.CreateSubnetInput{
+	subOutput, err := ec2Client.CreateSubnet(ctx3, &ec2.CreateSubnetInput{
 		VpcId:            &vpcID,
 		AvailabilityZone: &azName,
 		CidrBlock:        &cidrBlock,
@@ -187,7 +194,7 @@ func AWSPrepVIPNetwork() error {
 	loxilbIntfKeyVal := "loxilb-eni"
 	intfTag := types.Tag{Key: &loxilbIntfKey, Value: &loxilbIntfKeyVal}
 	intfTags := []types.Tag{intfTag}
-	intfOutput, err := ec2Client.CreateNetworkInterface(ctx, &ec2.CreateNetworkInterfaceInput{
+	intfOutput, err := ec2Client.CreateNetworkInterface(ctx3, &ec2.CreateNetworkInterfaceInput{
 		SubnetId:    subOutput.Subnet.SubnetId,
 		Description: &intfDesc,
 		TagSpecifications: []types.TagSpecification{{ResourceType: types.ResourceTypeNetworkInterface,
@@ -204,7 +211,7 @@ func AWSPrepVIPNetwork() error {
 	tk.LogIt(tk.LogInfo, "Created interface (%s) for loxilb instance %v\n", *intfOutput.NetworkInterface.NetworkInterfaceId, vpcID)
 
 	devIdx := int32(1)
-	aniOut, err := ec2Client.AttachNetworkInterface(ctx, &ec2.AttachNetworkInterfaceInput{DeviceIndex: &devIdx,
+	aniOut, err := ec2Client.AttachNetworkInterface(ctx3, &ec2.AttachNetworkInterfaceInput{DeviceIndex: &devIdx,
 		InstanceId:         &instanceID,
 		NetworkInterfaceId: intfOutput.NetworkInterface.NetworkInterfaceId,
 	})
@@ -214,6 +221,50 @@ func AWSPrepVIPNetwork() error {
 	}
 
 	tk.LogIt(tk.LogInfo, "Attached interface (%d) for loxilb instance %v\n", *aniOut.NetworkCardIndex, vpcID)
+
+	tryCount := 0
+	newIntfName := ""
+
+retry:
+	nintfs, _ := net.Interfaces()
+	if err != nil {
+		tk.LogIt(tk.LogError, "failed to get sys ifs\n")
+		return err
+	}
+
+	for _, nintf := range nintfs {
+		found := false
+		for _, ointf := range ointfs {
+			if nintf.Name == ointf.Name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			tk.LogIt(tk.LogInfo, "aws: new interface config %s\n", nintf.Name)
+			link, err := nl.LinkByName(nintf.Name)
+			if err != nil {
+				tk.LogIt(tk.LogError, "failed to get link (%s)\n", nintf.Name)
+			}
+			err = nl.LinkSetUp(link)
+			if err != nil {
+				tk.LogIt(tk.LogError, "failed to set link (%s) up :%s\n", nintf.Name, err)
+			}
+
+			err = nl.LinkSetMTU(link, 9000)
+			if err != nil {
+				tk.LogIt(tk.LogError, "failed to set link (%s) mtu:%s\n", nintf.Name, err)
+			}
+			newIntfName = nintf.Name
+		}
+	}
+	if newIntfName == "" {
+		if tryCount < 10 {
+			time.Sleep(1 * time.Second)
+			tryCount++
+			goto retry
+		}
+	}
 
 	return nil
 }
