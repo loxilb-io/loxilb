@@ -223,7 +223,7 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 		if mh.bgp != nil {
 			mh.bgp.UpdateCIState(cm.Instance, ci.State, ci.Vip)
 		}
-		mh.zr.Rules.RuleVIPSyncToClusterState()
+		go mh.zr.Rules.RuleVIPSyncToClusterState()
 		return ci.State, nil
 	}
 

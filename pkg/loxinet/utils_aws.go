@@ -255,7 +255,9 @@ retry:
 				tk.LogIt(tk.LogError, "failed to set link (%s) mtu:%s\n", nintf.Name, err)
 			}
 
-			Address, err := nl.ParseAddr(loxiEniPrivIP + "/32")
+			ones, _ := awsCIDRnet.Mask.Size()
+			subStr := fmt.Sprintf("/%d", ones)
+			Address, err := nl.ParseAddr(loxiEniPrivIP + subStr)
 			if err != nil {
 				tk.LogIt(tk.LogWarning, "privIP  %s parse fail\n", loxiEniPrivIP)
 				return err
