@@ -114,6 +114,7 @@ func AWSPrepVIPNetwork() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*30))
 	defer cancel()
 
+	subnets := []string{}
 	filterStr := "tag:loxiType"
 	output, err := ec2Client.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
 		Filters: []types.Filter{
@@ -122,35 +123,33 @@ func AWSPrepVIPNetwork() error {
 	})
 	if err != nil {
 		tk.LogIt(tk.LogError, "no loxiType intf found\n")
-		return err
-	}
-
-	subnets := []string{}
-	for _, intf := range output.NetworkInterfaces {
-		subnets = append(subnets, *intf.SubnetId)
-		if intf.Attachment != nil {
-			force := true
-			_, err := ec2Client.DetachNetworkInterface(ctx, &ec2.DetachNetworkInterfaceInput{AttachmentId: intf.Attachment.AttachmentId, Force: &force})
-			if err != nil {
-				tk.LogIt(tk.LogError, "failed to detach intf (%s):%s\n", *intf.NetworkInterfaceId, err)
-				return err
-			}
-		}
-		loop := 20
-		for loop > 0 {
-			ctx2, cancel2 := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
-			_, err2 := ec2Client.DeleteNetworkInterface(ctx2, &ec2.DeleteNetworkInterfaceInput{NetworkInterfaceId: intf.NetworkInterfaceId})
-			cancel2()
-			if err2 != nil {
-				tk.LogIt(tk.LogError, "failed to delete intf (%s):%s\n", *intf.NetworkInterfaceId, err2)
-				time.Sleep(2 * time.Second)
-				loop--
-				if loop <= 0 {
-					return err2
+	} else {
+		for _, intf := range output.NetworkInterfaces {
+			subnets = append(subnets, *intf.SubnetId)
+			if intf.Attachment != nil {
+				force := true
+				_, err := ec2Client.DetachNetworkInterface(ctx, &ec2.DetachNetworkInterfaceInput{AttachmentId: intf.Attachment.AttachmentId, Force: &force})
+				if err != nil {
+					tk.LogIt(tk.LogError, "failed to detach intf (%s):%s\n", *intf.NetworkInterfaceId, err)
+					return err
 				}
-				continue
 			}
-			break
+			loop := 20
+			for loop > 0 {
+				ctx2, cancel2 := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
+				_, err2 := ec2Client.DeleteNetworkInterface(ctx2, &ec2.DeleteNetworkInterfaceInput{NetworkInterfaceId: intf.NetworkInterfaceId})
+				cancel2()
+				if err2 != nil {
+					tk.LogIt(tk.LogError, "failed to delete intf (%s):%s\n", *intf.NetworkInterfaceId, err2)
+					time.Sleep(2 * time.Second)
+					loop--
+					if loop <= 0 {
+						return err2
+					}
+					continue
+				}
+				break
+			}
 		}
 	}
 
