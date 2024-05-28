@@ -2186,10 +2186,13 @@ func (R *RuleH) RulesSync() {
 		}
 	}
 
-	for vip := range R.vipMap {
-		ip := net.ParseIP(vip)
+	for vip, vipElem := range R.vipMap {
+		ip := vipElem.pVIP
+		if ip == nil {
+			ip = net.ParseIP(vip)
+		}
 		if ip != nil {
-			R.AdvRuleVIPIfL2(ip)
+			R.AdvRuleVIPIfL2(ip, net.ParseIP(vip))
 		}
 	}
 
@@ -2615,7 +2618,7 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 
 }
 
-func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
+func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP) error {
 	ciState, _ := mh.has.CIStateGetInst(cmn.CIDefault)
 	if ciState == "MASTER" {
 		dev := fmt.Sprintf("llb-rule-%s", IP.String())
@@ -2626,7 +2629,7 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 		ev, _, iface := R.zone.L3.IfaSelectAny(IP, false)
 		if ev == 0 {
 			if !utils.IsIPHostAddr(IP.String()) {
-				err := CloudUpdatePrivateIP(IP, true)
+				err := CloudUpdatePrivateIP(IP, eIP, true)
 				if err != nil {
 					tk.LogIt(tk.LogError, "%s: lb-rule vip %s add failed. err: %v\n", mh.cloudLabel, IP.String(), err)
 					return err
@@ -2676,13 +2679,19 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP) error {
 }
 
 func (R *RuleH) RuleVIPSyncToClusterState() {
+
+	ciState, _ := mh.has.CIStateGetInst(cmn.CIDefault)
+	if ciState == "MASTER" {
+		CloudPrepareVIPNetWork()
+	}
+
 	for vip, vipElem := range R.vipMap {
 		ip := vipElem.pVIP
 		if ip == nil {
 			ip = net.ParseIP(vip)
 		}
 		if ip != nil {
-			R.AdvRuleVIPIfL2(ip)
+			R.AdvRuleVIPIfL2(ip, net.ParseIP(vip))
 		}
 	}
 }
@@ -2708,9 +2717,9 @@ func (R *RuleH) AddRuleVIP(VIP net.IP, pVIP net.IP) {
 
 	if vipEnt.ref == 1 {
 		if pVIP == nil {
-			R.AdvRuleVIPIfL2(pVIP)
+			R.AdvRuleVIPIfL2(VIP, VIP)
 		} else {
-			R.AdvRuleVIPIfL2(VIP)
+			R.AdvRuleVIPIfL2(pVIP, VIP)
 		}
 	}
 }
@@ -2729,7 +2738,7 @@ func (R *RuleH) DeleteRuleVIP(VIP net.IP) {
 		}
 		if utils.IsIPHostAddr(xVIP.String()) {
 			loxinlp.DelAddrNoHook(xVIP.String()+"/32", "lo")
-			err := CloudUpdatePrivateIP(xVIP, false)
+			err := CloudUpdatePrivateIP(xVIP, VIP, false)
 			if err != nil {
 				tk.LogIt(tk.LogError, "%s: lb-rule vip %s delete failed. err: %v\n", mh.cloudLabel, xVIP.String(), err)
 			}
