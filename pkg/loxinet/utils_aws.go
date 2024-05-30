@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -43,14 +44,13 @@ var (
 )
 
 func AWSGetInstanceIDInfo(ctx context.Context) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
-	defer cancel()
 	resp, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
 		Path: "instance-id",
 	})
 	if err != nil {
 		return "", err
 	}
+	defer resp.Content.Close()
 
 	instanceID, err := io.ReadAll(resp.Content)
 	if err != nil {
@@ -60,15 +60,14 @@ func AWSGetInstanceIDInfo(ctx context.Context) (string, error) {
 	return string(instanceID), nil
 }
 
-func AWSGetInstanceVPCInfo() (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
-	defer cancel()
+func AWSGetInstanceVPCInfo(ctx context.Context) (string, error) {
 	resp, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
 		Path: "mac",
 	})
 	if err != nil {
 		return "", err
 	}
+	defer resp.Content.Close()
 
 	mac, err := io.ReadAll(resp.Content)
 	if err != nil {
@@ -82,6 +81,8 @@ func AWSGetInstanceVPCInfo() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer resp2.Content.Close()
+
 	vpc, err := io.ReadAll(resp2.Content)
 	if err != nil {
 		return "", err
@@ -97,6 +98,7 @@ func AWSGetInstanceAvailabilityZone(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer resp.Content.Close()
 
 	az, err := io.ReadAll(resp.Content)
 	if err != nil {
@@ -187,6 +189,10 @@ func AWSPrepVIPNetwork() error {
 		return nil
 	}
 
+	sgList, err := AWSImdsGetSecurityGroups(ctx3)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "failed to get instance security groups: %s\n", err.Error())
+	}
 	intfDesc := "loxilb-eni"
 	loxilbIntfKey := "loxiType"
 	loxilbIntfKeyVal := "loxilb-eni"
@@ -195,6 +201,7 @@ func AWSPrepVIPNetwork() error {
 	intfOutput, err := ec2Client.CreateNetworkInterface(ctx3, &ec2.CreateNetworkInterfaceInput{
 		SubnetId:    subOutput.Subnet.SubnetId,
 		Description: &intfDesc,
+		Groups:      sgList,
 		TagSpecifications: []types.TagSpecification{{ResourceType: types.ResourceTypeNetworkInterface,
 			Tags: intfTags},
 		},
@@ -223,6 +230,15 @@ func AWSPrepVIPNetwork() error {
 
 	tryCount := 0
 	newIntfName := ""
+
+	sourceDestCheck := false
+	_, err = ec2Client.ModifyNetworkInterfaceAttribute(ctx3, &ec2.ModifyNetworkInterfaceAttributeInput{
+		NetworkInterfaceId: intfOutput.NetworkInterface.NetworkInterfaceId,
+		SourceDestCheck:    &types.AttributeBooleanValue{Value: &sourceDestCheck},
+	})
+	if err != nil {
+		tk.LogIt(tk.LogError, "failed to modify interface(disable source/dest check):%s\n", err.Error())
+	}
 
 retry:
 	nintfs, _ := net.Interfaces()
@@ -267,6 +283,19 @@ retry:
 				tk.LogIt(tk.LogWarning, "privIP %s:%s add failed\n", loxiEniPrivIP, nintf.Name)
 			}
 			newIntfName = nintf.Name
+
+			_, defaultDst, _ := net.ParseCIDR("0.0.0.0/0")
+			gw := awsCIDRnet.IP.Mask(awsCIDRnet.Mask)
+			gw[3]++
+			err = nl.RouteReplace(&nl.Route{
+				LinkIndex: link.Attrs().Index,
+				Gw:        gw,
+				Dst:       defaultDst,
+			})
+			if err != nil {
+				tk.LogIt(tk.LogError, "failed to set default gw %s\n", gw.String())
+				return err
+			}
 		}
 	}
 	if newIntfName == "" {
@@ -301,6 +330,7 @@ func AWSGetNetworkInterface(ctx context.Context, instanceID string, vIP net.IP) 
 		}
 
 		b, err := io.ReadAll(cidr.Content)
+		cidr.Content.Close()
 		if err != nil {
 			continue
 		}
@@ -469,14 +499,14 @@ func AWSApiInit(cloudCIDRBlock string) error {
 	imdsClient = imds.NewFromConfig(cfg)
 	ec2Client = ec2.NewFromConfig(cfg)
 
-	vpcID, err = AWSGetInstanceVPCInfo()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+
+	vpcID, err = AWSGetInstanceVPCInfo(ctx)
 	if err != nil {
 		tk.LogIt(tk.LogError, "failed to find vpcid for instance\n")
 		return err
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
-	defer cancel()
 
 	azName, err = AWSGetInstanceAvailabilityZone(ctx)
 	if err != nil {
@@ -494,6 +524,33 @@ func AWSApiInit(cloudCIDRBlock string) error {
 	return nil
 }
 
-func AWSPrivateIpMapper(vip net.IP) (net.IP, error) {
-	return vip, nil
+func AWSImdsGetSecurityGroups(ctx context.Context) ([]string, error) {
+	macResp, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
+		Path: "mac",
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer macResp.Content.Close()
+
+	macByte, err := io.ReadAll(macResp.Content)
+	if err != nil {
+		return nil, err
+	}
+
+	sgResp, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
+		Path: fmt.Sprintf("network/interfaces/macs/%s/security-group-ids", string(macByte)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer sgResp.Content.Close()
+
+	sgByte, err := io.ReadAll(sgResp.Content)
+	if err != nil {
+		return nil, err
+	}
+
+	sgList := strings.Split(string(sgByte), "\n")
+	return sgList, nil
 }
