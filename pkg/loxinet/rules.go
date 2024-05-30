@@ -996,7 +996,7 @@ func (R *RuleH) electEPSrc(r *ruleEnt) bool {
 				} else if na.mode == cmn.LBModeFullNAT {
 					mode = "fullnat"
 					if !mh.has.IsCIKAMode() {
-						sip = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
+						sip = r.RuleVIP2PrivIP()
 						if np.xIP.Equal(sip) {
 							sip = net.IPv4(0, 0, 0, 0)
 						} else if utils.IsIPHostAddr(np.xIP.String()) {
