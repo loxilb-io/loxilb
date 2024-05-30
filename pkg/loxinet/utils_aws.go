@@ -231,6 +231,15 @@ func AWSPrepVIPNetwork() error {
 	tryCount := 0
 	newIntfName := ""
 
+	sourceDestCheck := false
+	_, err = ec2Client.ModifyNetworkInterfaceAttribute(ctx3, &ec2.ModifyNetworkInterfaceAttributeInput{
+		NetworkInterfaceId: intfOutput.NetworkInterface.NetworkInterfaceId,
+		SourceDestCheck:    &types.AttributeBooleanValue{Value: &sourceDestCheck},
+	})
+	if err != nil {
+		tk.LogIt(tk.LogError, "failed to modify interface(disable source/dest check):%s\n", err.Error())
+	}
+
 retry:
 	nintfs, _ := net.Interfaces()
 	if err != nil {
@@ -274,6 +283,19 @@ retry:
 				tk.LogIt(tk.LogWarning, "privIP %s:%s add failed\n", loxiEniPrivIP, nintf.Name)
 			}
 			newIntfName = nintf.Name
+
+			_, defaultDst, _ := net.ParseCIDR("0.0.0.0/0")
+			gw := awsCIDRnet.IP.Mask(awsCIDRnet.Mask)
+			gw[3]++
+			err = nl.RouteReplace(&nl.Route{
+				LinkIndex: link.Attrs().Index,
+				Gw:        gw,
+				Dst:       defaultDst,
+			})
+			if err != nil {
+				tk.LogIt(tk.LogError, "failed to set default gw %s\n", gw.String())
+				return err
+			}
 		}
 	}
 	if newIntfName == "" {
