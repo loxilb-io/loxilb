@@ -157,6 +157,20 @@ func AWSPrepVIPNetwork() error {
 
 	ctx3, cancel3 := context.WithTimeout(context.Background(), time.Duration(time.Second*30))
 	defer cancel3()
+
+	loxilbSubNetKey := "loxiType"
+	loxilbSubNetKeyVal := "loxilb-subnet"
+	subnetOutput, err := ec2Client.DescribeSubnets(ctx3, &ec2.DescribeSubnetsInput{
+		Filters: []types.Filter{
+			{Name: &filterStr, Values: []string{loxilbSubNetKeyVal}},
+		},
+	})
+	if err == nil {
+		for _, subnet := range subnetOutput.Subnets {
+			subnets = append(subnets, *subnet.SubnetId)
+		}
+	}
+
 	for _, subnet := range subnets {
 		_, err := ec2Client.DeleteSubnet(ctx3, &ec2.DeleteSubnetInput{SubnetId: &subnet})
 		if err != nil {
@@ -172,8 +186,6 @@ func AWSPrepVIPNetwork() error {
 	}
 
 	cidrBlock := awsCIDRnet.String()
-	loxilbSubNetKey := "loxiType"
-	loxilbSubNetKeyVal := "loxilb-subnet"
 	subnetTag := types.Tag{Key: &loxilbSubNetKey, Value: &loxilbSubNetKeyVal}
 	subnetTags := []types.Tag{subnetTag}
 	subOutput, err := ec2Client.CreateSubnet(ctx3, &ec2.CreateSubnetInput{
