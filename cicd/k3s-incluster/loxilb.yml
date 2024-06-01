@@ -58,7 +58,7 @@ spec:
       - name: loxilb-app
         image: "ghcr.io/loxilb-io/loxilb:latest"
         imagePullPolicy: IfNotPresent
-        command: [ "/root/loxilb-io/loxilb/loxilb", "--egr-hooks", "--blacklist=cni[0-9a-z]|veth.|flannel.|cali.|tunl.|vxlan[.]calico", "--localvip" ]
+        command: [ "/root/loxilb-io/loxilb/loxilb", "--egr-hooks", "--blacklist=cni[0-9a-z]|veth.|flannel.|cali.|tunl.|vxlan[.]calico", "--localsockpolicy" ]
         ports:
         - containerPort: 11111
         - containerPort: 179

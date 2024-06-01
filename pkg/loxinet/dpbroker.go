@@ -250,6 +250,7 @@ const (
 	DpHsnat
 	DpHdnat
 	DpFullNat
+	DpFullProxy
 )
 
 // NatSel - type of nat end-point selection algorithm

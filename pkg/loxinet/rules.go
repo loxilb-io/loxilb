@@ -168,6 +168,7 @@ const (
 	RtActDnat
 	RtActSnat
 	RtActFullNat
+	RtActFullProxy
 )
 
 // possible types of end-point probe
@@ -646,11 +647,14 @@ func (a *ruleAct) String() string {
 		ks += fmt.Sprintf("%s", "trap")
 	} else if a.actType == RtActDnat ||
 		a.actType == RtActSnat ||
-		a.actType == RtActFullNat {
+		a.actType == RtActFullNat ||
+		a.actType == RtActFullProxy {
 		if a.actType == RtActSnat {
 			ks += fmt.Sprintf("%s", "do-snat:")
 		} else if a.actType == RtActDnat {
 			ks += fmt.Sprintf("%s", "do-dnat:")
+		} else if a.actType == RtActFullProxy {
+			ks += fmt.Sprintf("%s", "do-fullproxy:")
 		} else {
 			ks += fmt.Sprintf("%s", "do-fullnat:")
 		}
@@ -1444,6 +1448,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	r.name = serv.Name
 	if serv.Mode == cmn.LBModeFullNAT || serv.Mode == cmn.LBModeOneArm {
 		r.act.actType = RtActFullNat
+	} else if serv.Mode == cmn.LBModeFullProxy {
+		r.act.actType = RtActFullProxy
 	} else {
 		r.act.actType = RtActDnat
 	}
@@ -2321,7 +2327,7 @@ func (R *RuleH) RuleDestructAll() {
 // VIP2DP - Sync state of nat-rule for local sock VIP-port rewrite
 func (r *ruleEnt) VIP2DP(work DpWorkT) int {
 	portMap := make(map[int]struct{})
-	if mh.locVIP {
+	if mh.lSockPolicy {
 		switch at := r.act.action.(type) {
 		case *ruleNatActs:
 			for _, ep := range at.endPoints {
@@ -2371,6 +2377,8 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 		nWork.NatType = DpSnat
 	} else if r.act.actType == RtActFullNat {
 		nWork.NatType = DpFullNat
+	} else if r.act.actType == RtActFullProxy {
+		nWork.NatType = DpFullProxy
 	} else {
 		return -1
 	}
@@ -2592,7 +2600,8 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 
 	if r.act.actType == RtActDnat ||
 		r.act.actType == RtActSnat ||
-		r.act.actType == RtActFullNat {
+		r.act.actType == RtActFullNat ||
+		r.act.actType == RtActFullProxy {
 		isNat = true
 	}
 
