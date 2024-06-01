@@ -489,6 +489,8 @@ const (
 	LBModeFullNAT
 	// LBModeDSR - DSR Mode
 	LBModeDSR
+	// LBModeFullProxy
+	LBModeFullProxy
 )
 
 // LbServiceArg - Information related to load-balancer service

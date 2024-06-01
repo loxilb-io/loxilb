@@ -32,5 +32,6 @@ var Opts struct {
 	K8sAPI            string         `long:"k8s-api" description:"Enable k8s watcher(experimental)" default:"none"`
 	IPVSCompat        bool           `long:"ipvs-compat" description:"Enable ipvs-compat(experimental)"`
 	FallBack          bool           `long:"fallback" description:"Fallback to system default networking(experimental)"`
-	LocalVIP          bool           `long:"localvip" description:"support vip availability from lb node(experimental)"`
+	LocalSockPolicy   bool           `long:"localsockpolicy" description:"support local socket policies (experimental)"`
+	SockMapSupport    bool           `long:"sockmapsupport" description:"Support sockmap based L4 proxying (experimental)"`
 }
