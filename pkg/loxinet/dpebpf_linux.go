@@ -261,7 +261,7 @@ func DpEbpfSetLogLevel(logLevel tk.LogLevelT) {
 }
 
 // DpEbpfInit - initialize the ebpf dp subsystem
-func DpEbpfInit(clusterEn, rssEn, egrHooks, localVIP bool, nodeNum int, logLevel tk.LogLevelT) *DpEbpfH {
+func DpEbpfInit(clusterEn, rssEn, egrHooks, localSockPolicy, sockMapEn bool, nodeNum int, logLevel tk.LogLevelT) *DpEbpfH {
 	var cfg C.struct_ebpfcfg
 
 	if clusterEn {
@@ -274,10 +274,15 @@ func DpEbpfInit(clusterEn, rssEn, egrHooks, localVIP bool, nodeNum int, logLevel
 	} else {
 		cfg.egr_hooks = 0
 	}
-	if localVIP {
+	if localSockPolicy {
 		cfg.have_sockrwr = 1
 	} else {
 		cfg.have_sockrwr = 0
+	}
+	if sockMapEn {
+		cfg.have_sockmap = 1
+	} else {
+		cfg.have_sockmap = 0
 	}
 
 	cfg.nodenum = C.int(nodeNum)
@@ -367,9 +372,7 @@ func (e *DpEbpfH) DpEbpfUnInit() {
 		C.free(unsafe.Pointer(section))
 	}
 
-	if mh.locVIP {
-		C.llb_unload_kern_sock()
-	}
+	C.llb_unload_kern_all()
 }
 
 func convNetIP2DPv6Addr(addr unsafe.Pointer, goIP net.IP) {
@@ -933,6 +936,8 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 			dat.ca.act_type = C.DP_SET_SNAT
 		} else if w.NatType == DpDnat || w.NatType == DpFullNat {
 			dat.ca.act_type = C.DP_SET_DNAT
+		} else if w.NatType == DpFullProxy {
+			dat.ca.act_type = C.DP_SET_FULLPROXY
 		} else {
 			tk.LogIt(tk.LogDebug, "[DP] LB rule %s add[NOK] - EbpfErrNat4Add\n", w.ServiceIP.String())
 			return EbpfErrNat4Add
