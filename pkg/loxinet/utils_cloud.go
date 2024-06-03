@@ -40,6 +40,9 @@ func CloudUpdatePrivateIP(vIP net.IP, eIP net.IP, add bool) error {
 
 		if err != nil {
 			tk.LogIt(tk.LogError, "aws lb-rule vip %s %s failed. err: %v\n", vIP.String(), actionStr, err)
+			return err
+		} else {
+			return AWSPrepDFLRoute()
 		}
 	} else if mh.cloudLabel == "ncloud" {
 		err := nClient.NcloudUpdatePrivateIp(vIP, add)

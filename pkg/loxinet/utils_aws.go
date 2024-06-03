@@ -34,13 +34,15 @@ import (
 )
 
 var (
-	imdsClient *imds.Client
-	ec2Client  *ec2.Client
-	vpcID      string
-	instanceID string
-	azName     string
-	awsCIDRnet *net.IPNet
-	loxiEniID  string
+	imdsClient  *imds.Client
+	ec2Client   *ec2.Client
+	vpcID       string
+	instanceID  string
+	azName      string
+	awsCIDRnet  *net.IPNet
+	loxiEniID   string
+	intfENIName string
+	setDFLRoute bool
 )
 
 func AWSGetInstanceIDInfo(ctx context.Context) (string, error) {
@@ -108,10 +110,48 @@ func AWSGetInstanceAvailabilityZone(ctx context.Context) (string, error) {
 	return string(az), nil
 }
 
+func AWSPrepDFLRoute() error {
+
+	if !setDFLRoute {
+		return nil
+	}
+
+	if intfENIName == "" {
+		tk.LogIt(tk.LogError, "failed to get ENI intf name (%s)\n", intfENIName)
+		return nil
+	}
+
+	link, err := nl.LinkByName(intfENIName)
+	if err != nil {
+		tk.LogIt(tk.LogError, "failed to get ENI link (%s)\n", intfENIName)
+		return err
+	}
+
+	_, defaultDst, _ := net.ParseCIDR("0.0.0.0/0")
+	nl.RouteDel(&nl.Route{
+		Dst: defaultDst,
+	})
+	gw := awsCIDRnet.IP.Mask(awsCIDRnet.Mask)
+	gw[3]++
+	err = nl.RouteAdd(&nl.Route{
+		LinkIndex: link.Attrs().Index,
+		Gw:        gw,
+		Dst:       defaultDst,
+	})
+	if err != nil {
+		tk.LogIt(tk.LogError, "failed to set default gw %s\n", gw.String())
+		return err
+	}
+	setDFLRoute = false
+	return nil
+}
+
 func AWSPrepVIPNetwork() error {
 	if awsCIDRnet == nil {
 		return nil
 	}
+
+	setDFLRoute = true
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*30))
 	defer cancel()
@@ -283,22 +323,6 @@ retry:
 				tk.LogIt(tk.LogWarning, "privIP %s:%s add failed\n", loxiEniPrivIP, nintf.Name)
 			}
 			newIntfName = nintf.Name
-
-			_, defaultDst, _ := net.ParseCIDR("0.0.0.0/0")
-			nl.RouteDel(&nl.Route{
-				Dst: defaultDst,
-			})
-			gw := awsCIDRnet.IP.Mask(awsCIDRnet.Mask)
-			gw[3]++
-			err = nl.RouteAdd(&nl.Route{
-				LinkIndex: link.Attrs().Index,
-				Gw:        gw,
-				Dst:       defaultDst,
-			})
-			if err != nil {
-				tk.LogIt(tk.LogError, "failed to set default gw %s\n", gw.String())
-				return err
-			}
 		}
 	}
 	if newIntfName == "" {
@@ -307,6 +331,8 @@ retry:
 			tryCount++
 			goto retry
 		}
+	} else {
+		intfENIName = newIntfName
 	}
 
 	return nil
