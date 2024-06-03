@@ -29,6 +29,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/loxilb-io/loxilb/api/loxinlp"
+	utils "github.com/loxilb-io/loxilb/pkg/utils"
 	tk "github.com/loxilb-io/loxilib"
 	nl "github.com/vishvananda/netlink"
 )
@@ -121,26 +123,37 @@ func AWSPrepDFLRoute() error {
 		return nil
 	}
 
-	link, err := nl.LinkByName(intfENIName)
-	if err != nil {
-		tk.LogIt(tk.LogError, "failed to get ENI link (%s)\n", intfENIName)
-		return err
-	}
-
 	_, defaultDst, _ := net.ParseCIDR("0.0.0.0/0")
-	nl.RouteDel(&nl.Route{
-		Dst: defaultDst,
-	})
 	gw := awsCIDRnet.IP.Mask(awsCIDRnet.Mask)
 	gw[3]++
-	err = nl.RouteAdd(&nl.Route{
-		LinkIndex: link.Attrs().Index,
-		Gw:        gw,
-		Dst:       defaultDst,
-	})
-	if err != nil {
-		tk.LogIt(tk.LogError, "failed to set default gw %s\n", gw.String())
-		return err
+
+	if false {
+		link, err := nl.LinkByName(intfENIName)
+		if err != nil {
+			tk.LogIt(tk.LogError, "failed to get ENI link (%s)\n", intfENIName)
+			return err
+		}
+
+		nl.RouteDel(&nl.Route{
+			Dst: defaultDst,
+		})
+		err = nl.RouteAdd(&nl.Route{
+			LinkIndex: link.Attrs().Index,
+			Gw:        gw,
+			Dst:       defaultDst,
+		})
+		if err != nil {
+			tk.LogIt(tk.LogError, "failed to set default gw %s\n", gw.String())
+			return err
+		}
+	} else {
+		loxinlp.DelRouteNoHook(defaultDst.String())
+		rc := loxinlp.AddRouteNoHook(defaultDst.String(), gw.String())
+		if rc != 0 {
+			tk.LogIt(tk.LogError, "failed to set loxidefault gw %s\n", gw.String())
+			return errors.New("failed to set loxidefault gw")
+		}
+		utils.ArpResolver(tk.IPtonl(gw))
 	}
 	setDFLRoute = false
 	return nil
