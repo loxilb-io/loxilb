@@ -29,7 +29,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/loxilb-io/loxilb/api/loxinlp"
 	utils "github.com/loxilb-io/loxilb/pkg/utils"
 	tk "github.com/loxilb-io/loxilib"
 	nl "github.com/vishvananda/netlink"
@@ -153,17 +152,14 @@ func AWSPrepDFLRoute() error {
 			return err
 		}
 
-		loxinlp.DelRoute(nl.Route{
-			Dst: defaultDst,
-		})
-		rc := loxinlp.AddRoute(nl.Route{
-			LinkIndex: link.Attrs().Index,
-			Gw:        gw,
-			Dst:       defaultDst,
-		})
-		if rc != 0 {
+		mh.zr.Rt.RtDelete(*defaultDst, RootZone)
+
+		ra := RtAttr{HostRoute: false, Ifi: link.Attrs().Index, IfRoute: false}
+		na := []RtNhAttr{{gw, link.Attrs().Index}}
+		_, err = mh.zr.Rt.RtAdd(*defaultDst, RootZone, ra, na)
+		if err != nil {
 			tk.LogIt(tk.LogError, "failed to set loxidefault gw %s\n", gw.String())
-			return errors.New("failed to set loxidefault gw")
+			return err
 		}
 		utils.ArpResolver(tk.IPtonl(gw))
 	}
