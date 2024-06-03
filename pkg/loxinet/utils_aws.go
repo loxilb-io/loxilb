@@ -29,18 +29,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	utils "github.com/loxilb-io/loxilb/pkg/utils"
 	tk "github.com/loxilb-io/loxilib"
 	nl "github.com/vishvananda/netlink"
 )
 
 var (
-	imdsClient *imds.Client
-	ec2Client  *ec2.Client
-	vpcID      string
-	instanceID string
-	azName     string
-	awsCIDRnet *net.IPNet
-	loxiEniID  string
+	imdsClient  *imds.Client
+	ec2Client   *ec2.Client
+	vpcID       string
+	instanceID  string
+	azName      string
+	awsCIDRnet  *net.IPNet
+	loxiEniID   string
+	intfENIName string
+	setDFLRoute bool
 )
 
 func AWSGetInstanceIDInfo(ctx context.Context) (string, error) {
@@ -108,10 +111,68 @@ func AWSGetInstanceAvailabilityZone(ctx context.Context) (string, error) {
 	return string(az), nil
 }
 
+func AWSPrepDFLRoute() error {
+
+	if !setDFLRoute {
+		return nil
+	}
+
+	if intfENIName == "" {
+		tk.LogIt(tk.LogError, "failed to get ENI intf name (%s)\n", intfENIName)
+		return nil
+	}
+
+	_, defaultDst, _ := net.ParseCIDR("0.0.0.0/0")
+	gw := awsCIDRnet.IP.Mask(awsCIDRnet.Mask)
+	gw[3]++
+
+	if false {
+		link, err := nl.LinkByName(intfENIName)
+		if err != nil {
+			tk.LogIt(tk.LogError, "failed to get ENI link (%s)\n", intfENIName)
+			return err
+		}
+
+		nl.RouteDel(&nl.Route{
+			Dst: defaultDst,
+		})
+		err = nl.RouteAdd(&nl.Route{
+			LinkIndex: link.Attrs().Index,
+			Gw:        gw,
+			Dst:       defaultDst,
+		})
+		if err != nil {
+			tk.LogIt(tk.LogError, "failed to set default gw %s\n", gw.String())
+			return err
+		}
+	} else {
+		link, err := nl.LinkByName(intfENIName)
+		if err != nil {
+			tk.LogIt(tk.LogError, "failed to get ENI link (%s)\n", intfENIName)
+			return err
+		}
+
+		mh.zr.Rt.RtDelete(*defaultDst, RootZone)
+
+		ra := RtAttr{HostRoute: false, Ifi: link.Attrs().Index, IfRoute: false}
+		na := []RtNhAttr{{gw, link.Attrs().Index}}
+		_, err = mh.zr.Rt.RtAdd(*defaultDst, RootZone, ra, na)
+		if err != nil {
+			tk.LogIt(tk.LogError, "failed to set loxidefault gw %s\n", gw.String())
+			return err
+		}
+		utils.ArpResolver(tk.IPtonl(gw))
+	}
+	setDFLRoute = false
+	return nil
+}
+
 func AWSPrepVIPNetwork() error {
 	if awsCIDRnet == nil {
 		return nil
 	}
+
+	setDFLRoute = true
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*30))
 	defer cancel()
@@ -297,21 +358,6 @@ retry:
 				tk.LogIt(tk.LogWarning, "privIP %s:%s add failed\n", loxiEniPrivIP, nintf.Name)
 			}
 			newIntfName = nintf.Name
-
-			/*
-				_, defaultDst, _ := net.ParseCIDR("0.0.0.0/0")
-				gw := awsCIDRnet.IP.Mask(awsCIDRnet.Mask)
-				gw[3]++
-				err = nl.RouteReplace(&nl.Route{
-					LinkIndex: link.Attrs().Index,
-					Gw:        gw,
-					Dst:       defaultDst,
-				})
-				if err != nil {
-					tk.LogIt(tk.LogError, "failed to set default gw %s\n", gw.String())
-					return err
-				}
-			*/
 		}
 	}
 	if newIntfName == "" {
@@ -320,6 +366,8 @@ retry:
 			tryCount++
 			goto retry
 		}
+	} else {
+		intfENIName = newIntfName
 	}
 
 	return nil
