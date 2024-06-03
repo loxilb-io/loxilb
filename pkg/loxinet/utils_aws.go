@@ -285,9 +285,12 @@ retry:
 			newIntfName = nintf.Name
 
 			_, defaultDst, _ := net.ParseCIDR("0.0.0.0/0")
+			nl.RouteDel(&nl.Route{
+				Dst: defaultDst,
+			})
 			gw := awsCIDRnet.IP.Mask(awsCIDRnet.Mask)
 			gw[3]++
-			err = nl.RouteReplace(&nl.Route{
+			err = nl.RouteAdd(&nl.Route{
 				LinkIndex: link.Attrs().Index,
 				Gw:        gw,
 				Dst:       defaultDst,
