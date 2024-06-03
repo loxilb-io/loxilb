@@ -128,7 +128,7 @@ func AWSPrepVIPNetwork() error {
 		},
 	})
 
-	if err != nil {
+	if err != nil || (output != nil && len(output.NetworkInterfaces) <= 0) {
 		tk.LogIt(tk.LogError, "no loxiType intf found\n")
 		subnetOutput, err := ec2Client.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
 			Filters: []types.Filter{
@@ -298,18 +298,20 @@ retry:
 			}
 			newIntfName = nintf.Name
 
-			_, defaultDst, _ := net.ParseCIDR("0.0.0.0/0")
-			gw := awsCIDRnet.IP.Mask(awsCIDRnet.Mask)
-			gw[3]++
-			err = nl.RouteReplace(&nl.Route{
-				LinkIndex: link.Attrs().Index,
-				Gw:        gw,
-				Dst:       defaultDst,
-			})
-			if err != nil {
-				tk.LogIt(tk.LogError, "failed to set default gw %s\n", gw.String())
-				return err
-			}
+			/*
+				_, defaultDst, _ := net.ParseCIDR("0.0.0.0/0")
+				gw := awsCIDRnet.IP.Mask(awsCIDRnet.Mask)
+				gw[3]++
+				err = nl.RouteReplace(&nl.Route{
+					LinkIndex: link.Attrs().Index,
+					Gw:        gw,
+					Dst:       defaultDst,
+				})
+				if err != nil {
+					tk.LogIt(tk.LogError, "failed to set default gw %s\n", gw.String())
+					return err
+				}
+			*/
 		}
 	}
 	if newIntfName == "" {
