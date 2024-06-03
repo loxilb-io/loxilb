@@ -147,8 +147,20 @@ func AWSPrepDFLRoute() error {
 			return err
 		}
 	} else {
-		loxinlp.DelRouteNoHook(defaultDst.String())
-		rc := loxinlp.AddRouteNoHook(defaultDst.String(), gw.String())
+		link, err := nl.LinkByName(intfENIName)
+		if err != nil {
+			tk.LogIt(tk.LogError, "failed to get ENI link (%s)\n", intfENIName)
+			return err
+		}
+
+		loxinlp.DelRoute(nl.Route{
+			Dst: defaultDst,
+		})
+		rc := loxinlp.AddRoute(nl.Route{
+			LinkIndex: link.Attrs().Index,
+			Gw:        gw,
+			Dst:       defaultDst,
+		})
 		if rc != 0 {
 			tk.LogIt(tk.LogError, "failed to set loxidefault gw %s\n", gw.String())
 			return errors.New("failed to set loxidefault gw")
