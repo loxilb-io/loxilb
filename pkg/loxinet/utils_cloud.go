@@ -18,37 +18,21 @@ package loxinet
 
 import (
 	"net"
-
-	tk "github.com/loxilb-io/loxilib"
 )
 
 func CloudUpdatePrivateIP(vIP net.IP, eIP net.IP, add bool) error {
-	var actionStr string
-	if add {
-		actionStr = "create"
-	} else {
-		actionStr = "delete"
-	}
-
 	if mh.cloudLabel == "aws" {
-		var err error
 		if vIP.Equal(eIP) { // no use EIP
-			err = AWSUpdatePrivateIP(vIP, add)
+			return AWSUpdatePrivateIP(vIP, add)
 		} else { // use EIP
-			err = AWSAssociateElasticIp(vIP, eIP, add)
-		}
-
-		if err != nil {
-			tk.LogIt(tk.LogError, "aws lb-rule vip %s %s failed. err: %v\n", vIP.String(), actionStr, err)
-			return err
-		} else {
+			if err := AWSAssociateElasticIp(vIP, eIP, add); err != nil {
+				return err
+			}
 			return AWSPrepDFLRoute()
 		}
+
 	} else if mh.cloudLabel == "ncloud" {
-		err := nClient.NcloudUpdatePrivateIp(vIP, add)
-		if err != nil {
-			tk.LogIt(tk.LogError, "ncloud lb-rule vip %s %s failed. err: %v\n", vIP.String(), actionStr, err)
-		}
+		return nClient.NcloudUpdatePrivateIp(vIP, add)
 	}
 	return nil
 }
