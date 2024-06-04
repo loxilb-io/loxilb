@@ -475,6 +475,8 @@ const (
 	LbSelRrPersist
 	// LbSelLeastConnections - select client based on least connections
 	LbSelLeastConnections
+	// LbSelN2 - select client based on N2 SCTP interface
+	LbSelN2
 )
 
 // LBMode - Variable to define LB mode
@@ -1000,7 +1002,7 @@ type NetHookInterface interface {
 	NetGoBGPNeighGet() ([]GoBGPNeighGetMod, error)
 	NetGoBGPNeighAdd(nm *GoBGPNeighMod) (int, error)
 	NetGoBGPNeighDel(nm *GoBGPNeighMod) (int, error)
-	
+
 	NetGoBGPPolicyDefinedSetGet(string, string) ([]GoBGPPolicyDefinedSetMod, error)
 	NetGoBGPPolicyDefinedSetAdd(nm *GoBGPPolicyDefinedSetMod) (int, error)
 	NetGoBGPPolicyDefinedSetDel(nm *GoBGPPolicyDefinedSetMod) (int, error)

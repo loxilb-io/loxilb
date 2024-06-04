@@ -39,7 +39,7 @@ int bpf_map_lookup_elem(int fd, const void *key, void *value);
 extern void goMapNotiHandler(struct ll_dp_map_notif *);
 extern void goLinuxArpResolver(unsigned int);
 #cgo CFLAGS:  -I./../../loxilb-ebpf/libbpf/src/ -I./../../loxilb-ebpf/common
-#cgo LDFLAGS: -L. -L/lib64 -L./../../loxilb-ebpf/kernel -L./../../loxilb-ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=/lib64/ -l:./../../loxilb-ebpf/kernel/libloxilbdp.a -l:./../../loxilb-ebpf/libbpf/src/libbpf.a -lelf -lz
+#cgo LDFLAGS: -L. -L/lib64 -L./../../loxilb-ebpf/kernel -L./../../loxilb-ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=/lib64/ -l:./../../loxilb-ebpf/kernel/libloxilbdp.a -l:./../../loxilb-ebpf/libbpf/src/libbpf.a -l:./../../loxilb-ebpf/proto/ngap/lib-llbngap.a -lelf -lz
 */
 import "C"
 import (
@@ -965,6 +965,8 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 			dat.sel_type = C.NAT_LB_SEL_RR_PERSIST
 		case w.EpSel == EpLeastConn:
 			dat.sel_type = C.NAT_LB_SEL_LC
+		case w.EpSel == EpN2:
+			dat.sel_type = C.NAT_LB_SEL_N2
 		/* Currently not implemented in DP */
 		/*case w.EpSel == EP_PRIO:
 		  dat.sel_type = C.NAT_LB_SEL_PRIO*/
