@@ -132,6 +132,11 @@ func (o *GetConfigFirewallAllOKBody) contextValidateFwAttr(ctx context.Context, 
 	for i := 0; i < len(o.FwAttr); i++ {
 
 		if o.FwAttr[i] != nil {
+
+			if swag.IsZero(o.FwAttr[i]) { // not required
+				return nil
+			}
+
 			if err := o.FwAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigFirewallAllOK" + "." + "fwAttr" + "." + strconv.Itoa(i))

@@ -132,6 +132,11 @@ func (o *GetConfigIpv4addressAllOKBody) contextValidateIPAttr(ctx context.Contex
 	for i := 0; i < len(o.IPAttr); i++ {
 
 		if o.IPAttr[i] != nil {
+
+			if swag.IsZero(o.IPAttr[i]) { // not required
+				return nil
+			}
+
 			if err := o.IPAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigIpv4addressAllOK" + "." + "ipAttr" + "." + strconv.Itoa(i))

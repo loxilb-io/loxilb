@@ -91,6 +91,11 @@ func (m *RouteGetEntry) ContextValidate(ctx context.Context, formats strfmt.Regi
 func (m *RouteGetEntry) contextValidateStatistic(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Statistic != nil {
+
+		if swag.IsZero(m.Statistic) { // not required
+			return nil
+		}
+
 		if err := m.Statistic.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("statistic")

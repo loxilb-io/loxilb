@@ -132,6 +132,11 @@ func (o *GetConfigBgpPolicyDefinitionsAllOKBody) contextValidateBgpPolicyAttr(ct
 	for i := 0; i < len(o.BgpPolicyAttr); i++ {
 
 		if o.BgpPolicyAttr[i] != nil {
+
+			if swag.IsZero(o.BgpPolicyAttr[i]) { // not required
+				return nil
+			}
+
 			if err := o.BgpPolicyAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigBgpPolicyDefinitionsAllOK" + "." + "bgpPolicyAttr" + "." + strconv.Itoa(i))

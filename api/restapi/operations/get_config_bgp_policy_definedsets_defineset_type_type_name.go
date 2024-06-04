@@ -132,6 +132,11 @@ func (o *GetConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameOKBody) contextValida
 	for i := 0; i < len(o.DefinedsetsAttr); i++ {
 
 		if o.DefinedsetsAttr[i] != nil {
+
+			if swag.IsZero(o.DefinedsetsAttr[i]) { // not required
+				return nil
+			}
+
 			if err := o.DefinedsetsAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameOK" + "." + "definedsetsAttr" + "." + strconv.Itoa(i))

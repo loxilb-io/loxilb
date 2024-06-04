@@ -132,6 +132,11 @@ func (o *GetConfigPortAllOKBody) contextValidatePortAttr(ctx context.Context, fo
 	for i := 0; i < len(o.PortAttr); i++ {
 
 		if o.PortAttr[i] != nil {
+
+			if swag.IsZero(o.PortAttr[i]) { // not required
+				return nil
+			}
+
 			if err := o.PortAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigPortAllOK" + "." + "portAttr" + "." + strconv.Itoa(i))

@@ -63,6 +63,7 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler = operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(handler.ConfigDeleteLoadbalancer)
 	api.GetConfigLoadbalancerAllHandler = operations.GetConfigLoadbalancerAllHandlerFunc(handler.ConfigGetLoadbalancer)
 	api.DeleteConfigLoadbalancerAllHandler = operations.DeleteConfigLoadbalancerAllHandlerFunc(handler.ConfigDeleteAllLoadbalancer)
+	api.DeleteConfigLoadbalancerNameLbNameHandler = operations.DeleteConfigLoadbalancerNameLbNameHandlerFunc(handler.ConfigDeleteLoadbalancerByName)
 
 	// Conntrack get
 	api.GetConfigConntrackAllHandler = operations.GetConfigConntrackAllHandlerFunc(handler.ConfigGetConntrack)
