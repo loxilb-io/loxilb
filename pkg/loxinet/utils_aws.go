@@ -178,14 +178,29 @@ func AWSPrepVIPNetwork() error {
 	defer cancel()
 
 	subnets := []string{}
-	filterStr := "tag:loxiType"
+	loxilbKey := "loxiType"
+	loxilbIfKeyVal := "loxilb-eni"
+	loxilbSubNetKeyVal := "loxilb-subnet"
+	filterStr := fmt.Sprintf("%s:%s", "tag", loxilbKey)
+
 	output, err := ec2Client.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
 		Filters: []types.Filter{
-			{Name: &filterStr, Values: []string{"loxilb-eni"}},
+			{Name: &filterStr, Values: []string{loxilbIfKeyVal}},
 		},
 	})
-	if err != nil {
+
+	if err != nil || (output != nil && len(output.NetworkInterfaces) <= 0) {
 		tk.LogIt(tk.LogError, "no loxiType intf found\n")
+		subnetOutput, err := ec2Client.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
+			Filters: []types.Filter{
+				{Name: &filterStr, Values: []string{loxilbSubNetKeyVal}},
+			},
+		})
+		if err == nil {
+			for _, subnet := range subnetOutput.Subnets {
+				subnets = append(subnets, *subnet.SubnetId)
+			}
+		}
 	} else {
 		for _, intf := range output.NetworkInterfaces {
 			subnets = append(subnets, *intf.SubnetId)
@@ -218,6 +233,7 @@ func AWSPrepVIPNetwork() error {
 
 	ctx3, cancel3 := context.WithTimeout(context.Background(), time.Duration(time.Second*30))
 	defer cancel3()
+
 	for _, subnet := range subnets {
 		_, err := ec2Client.DeleteSubnet(ctx3, &ec2.DeleteSubnetInput{SubnetId: &subnet})
 		if err != nil {
@@ -233,9 +249,7 @@ func AWSPrepVIPNetwork() error {
 	}
 
 	cidrBlock := awsCIDRnet.String()
-	loxilbSubNetKey := "loxiType"
-	loxilbSubNetKeyVal := "loxilb-subnet"
-	subnetTag := types.Tag{Key: &loxilbSubNetKey, Value: &loxilbSubNetKeyVal}
+	subnetTag := types.Tag{Key: &loxilbKey, Value: &loxilbSubNetKeyVal}
 	subnetTags := []types.Tag{subnetTag}
 	subOutput, err := ec2Client.CreateSubnet(ctx3, &ec2.CreateSubnetInput{
 		VpcId:            &vpcID,
