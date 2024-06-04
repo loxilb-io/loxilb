@@ -1409,7 +1409,8 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 
 		if eRule.hChk.prbType != serv.ProbeType || eRule.hChk.prbPort != serv.ProbePort ||
 			eRule.hChk.prbReq != serv.ProbeReq || eRule.hChk.prbResp != serv.ProbeResp ||
-			eRule.pTO != serv.PersistTimeout {
+			eRule.pTO != serv.PersistTimeout || eRule.act.action.(*ruleNatActs).sel != natActs.sel ||
+			eRule.act.action.(*ruleNatActs).mode != natActs.mode {
 			ruleChg = true
 		}
 
