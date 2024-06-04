@@ -132,6 +132,11 @@ func (o *GetConfigSessionulclAllOKBody) contextValidateUlclAttr(ctx context.Cont
 	for i := 0; i < len(o.UlclAttr); i++ {
 
 		if o.UlclAttr[i] != nil {
+
+			if swag.IsZero(o.UlclAttr[i]) { // not required
+				return nil
+			}
+
 			if err := o.UlclAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigSessionulclAllOK" + "." + "ulclAttr" + "." + strconv.Itoa(i))

@@ -173,3 +173,27 @@ func ConfigDeleteAllLoadbalancer(params operations.DeleteConfigLoadbalancerAllPa
 
 	return &ResultResponse{Result: "Success"}
 }
+
+func ConfigDeleteLoadbalancerByName(params operations.DeleteConfigLoadbalancerNameLbNameParams) middleware.Responder {
+	tk.LogIt(tk.LogDebug, "[API] Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+
+	res, err := ApiHooks.NetLbRuleGet()
+	if err != nil {
+		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		return &ResultResponse{Result: err.Error()}
+	}
+	for _, lbRules := range res {
+
+		if lbRules.Serv.Name != params.LbName {
+			continue
+		}
+
+		tk.LogIt(tk.LogDebug, "[API] lbRules : %v\n", lbRules)
+		_, err := ApiHooks.NetLbRuleDel(&lbRules)
+		if err != nil {
+			tk.LogIt(tk.LogDebug, "[API] Error : %v\n", err)
+		}
+	}
+
+	return &ResultResponse{Result: "Success"}
+}

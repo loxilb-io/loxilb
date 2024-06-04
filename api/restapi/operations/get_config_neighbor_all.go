@@ -132,6 +132,11 @@ func (o *GetConfigNeighborAllOKBody) contextValidateNeighborAttr(ctx context.Con
 	for i := 0; i < len(o.NeighborAttr); i++ {
 
 		if o.NeighborAttr[i] != nil {
+
+			if swag.IsZero(o.NeighborAttr[i]) { // not required
+				return nil
+			}
+
 			if err := o.NeighborAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigNeighborAllOK" + "." + "neighborAttr" + "." + strconv.Itoa(i))
