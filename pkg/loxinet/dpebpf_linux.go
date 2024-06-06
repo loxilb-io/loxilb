@@ -1431,10 +1431,9 @@ func goProxyEntCollector(e *proxtCT) {
 	proxyCt.Bytes = uint64(e.st_out.bytes)
 	proxyCt.Bytes += uint64(e.st_in.bytes)
 	proxyCt.RuleID = uint32(e.rid)
+	proxyCt.CState = "est"
 
 	proxyCtInfo = append(proxyCtInfo, proxyCt)
-
-	fmt.Printf("Ent collector called\n")
 }
 
 // DpTableGet - routine to work on a ebpf map get request
@@ -1454,7 +1453,7 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 
 	if tbl == C.LL_DP_CT_MAP {
 		ctMap := make(map[string]*DpCtInfo)
-		var key *C.struct_dp_ct_key = nil
+		var key *C.struct_dp_ct_key
 		nextKey := new(C.struct_dp_ct_key)
 		var tact C.struct_dp_ct_tact
 		var act *C.struct_dp_ct_dat
