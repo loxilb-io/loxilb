@@ -1430,6 +1430,9 @@ func goProxyEntCollector(e *proxtCT) {
 	proxyCt.convDPCtProxy2ActString(&e.ct_out)
 	proxyCt.Bytes = uint64(e.st_out.bytes)
 	proxyCt.Bytes += uint64(e.st_in.bytes)
+
+	proxyCt.Packets = uint64(e.st_out.packets)
+	proxyCt.Packets += uint64(e.st_in.packets)
 	proxyCt.RuleID = uint32(e.rid)
 	proxyCt.CState = "est"
 
