@@ -266,6 +266,8 @@ func AWSPrepVIPNetwork() error {
 						if err != nil {
 							tk.LogIt(tk.LogError, "cidrBlock (%s) dissassociate failed in VPC %s:%s\n", cidrBlock, *vpcOut.Vpcs[0].VpcId, err)
 							return err
+						} else {
+							tk.LogIt(tk.LogInfo, "cidrBlock (%s) dissassociated from VPC %s\n", cidrBlock, *vpcOut.Vpcs[0].VpcId)
 						}
 						dissAssoc = true
 						break
@@ -279,8 +281,10 @@ func AWSPrepVIPNetwork() error {
 			_, err := ec2Client.AssociateVpcCidrBlock(ctx,
 				&ec2.AssociateVpcCidrBlockInput{VpcId: &vpcID, CidrBlock: &cidrBlock})
 			if err != nil {
-				tk.LogIt(tk.LogError, "cidrBlock (%s) asassociate failed in VPC %s:%s\n", cidrBlock, vpcID, err)
+				tk.LogIt(tk.LogError, "cidrBlock (%s) associate failed in VPC %s:%s\n", cidrBlock, vpcID, err)
 				return err
+			} else {
+				tk.LogIt(tk.LogError, "cidrBlock (%s) associated to VPC %s\n", cidrBlock, vpcID)
 			}
 		}
 	}
