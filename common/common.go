@@ -491,6 +491,8 @@ const (
 	LBModeDSR
 	// LBModeFullProxy
 	LBModeFullProxy
+	// LBModeHostOneArm
+	LBModeHostOneArm
 )
 
 // LbServiceArg - Information related to load-balancer service
@@ -1000,7 +1002,7 @@ type NetHookInterface interface {
 	NetGoBGPNeighGet() ([]GoBGPNeighGetMod, error)
 	NetGoBGPNeighAdd(nm *GoBGPNeighMod) (int, error)
 	NetGoBGPNeighDel(nm *GoBGPNeighMod) (int, error)
-	
+
 	NetGoBGPPolicyDefinedSetGet(string, string) ([]GoBGPPolicyDefinedSetMod, error)
 	NetGoBGPPolicyDefinedSetAdd(nm *GoBGPPolicyDefinedSetMod) (int, error)
 	NetGoBGPPolicyDefinedSetDel(nm *GoBGPPolicyDefinedSetMod) (int, error)

@@ -283,6 +283,7 @@ type ruleEnt struct {
 	secIP    []ruleNatSIP
 	stat     ruleStat
 	name     string
+	locIPs   map[string]struct{}
 }
 
 type ruleTable struct {
@@ -663,6 +664,8 @@ func (a *ruleAct) String() string {
 		case *ruleNatActs:
 			if na.mode == cmn.LBModeOneArm {
 				ks += fmt.Sprintf("%s", "onearm:")
+			} else if na.mode == cmn.LBModeHostOneArm {
+				ks += fmt.Sprintf("%s", "armhost:")
 			}
 			for _, n := range na.endPoints {
 				if len(n.foldEndPoints) > 0 {
@@ -986,7 +989,7 @@ func (R *RuleH) electEPSrc(r *ruleEnt) bool {
 					}
 				}
 				sip = np.rIP
-				if na.mode == cmn.LBModeOneArm {
+				if na.mode == cmn.LBModeOneArm || na.mode == cmn.LBModeHostOneArm {
 					mode = "onearm"
 					e, sip, _ = R.zone.L3.IfaSelectAny(np.xIP, true)
 					if e != 0 {
@@ -1036,6 +1039,51 @@ func (R *RuleH) electEPSrc(r *ruleEnt) bool {
 		}
 	}
 	r.addrRslv = addrRslv
+	return chg
+}
+
+func (R *RuleH) mkHostAssocs(r *ruleEnt) bool {
+	chg := false
+	curLocIPS := make(map[string]int)
+
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return chg
+	}
+
+	for _, addr := range addrs {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			// check if IPv4 or IPv6 is not nil
+			if ipnet.IP.To4() != nil || ipnet.IP.To16() != nil {
+				if tk.IsNetIPv4(ipnet.IP.String()) && r.tuples.l3Dst.addr.IP.String() != ipnet.IP.String() {
+					if _, found := curLocIPS[ipnet.IP.String()]; !found {
+						curLocIPS[ipnet.IP.String()] = 0
+					}
+				}
+			}
+		}
+	}
+
+	for locIP := range r.locIPs {
+		if _, found := curLocIPS[locIP]; found {
+			curLocIPS[locIP]++
+		} else {
+			curLocIPS[locIP] = -1
+		}
+	}
+
+	for clocIP, exists := range curLocIPS {
+		if exists == 0 {
+			chg = true
+			r.locIPs[clocIP] = struct{}{}
+			tk.LogIt(tk.LogInfo, "%s: added loc %s\n", r.tuples.String(), clocIP)
+		} else if exists < 0 {
+			chg = true
+			delete(r.locIPs, clocIP)
+			tk.LogIt(tk.LogInfo, "%s: deleted loc %s\n", r.tuples.String(), clocIP)
+		}
+	}
+
 	return chg
 }
 
@@ -1325,7 +1373,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	natActs.sel = serv.Sel
 	natActs.mode = cmn.LBMode(serv.Mode)
 
-	if natActs.mode == cmn.LBModeOneArm || natActs.mode == cmn.LBModeFullNAT || serv.Monitor {
+	if natActs.mode == cmn.LBModeOneArm || natActs.mode == cmn.LBModeFullNAT || natActs.mode == cmn.LBModeHostOneArm || serv.Monitor {
 		activateProbe = true
 	}
 
@@ -1447,7 +1495,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	r.tuples = rt
 	r.zone = R.zone
 	r.name = serv.Name
-	if serv.Mode == cmn.LBModeFullNAT || serv.Mode == cmn.LBModeOneArm {
+	if serv.Mode == cmn.LBModeFullNAT || serv.Mode == cmn.LBModeOneArm || serv.Mode == cmn.LBModeHostOneArm {
 		r.act.actType = RtActFullNat
 	} else if serv.Mode == cmn.LBModeFullProxy {
 		r.act.actType = RtActFullProxy
@@ -1484,11 +1532,14 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 			r.pTO = serv.PersistTimeout
 		}
 	}
+	r.locIPs = make(map[string]struct{})
 
 	R.foldRecursiveEPs(r)
-
 	R.modNatEpHost(r, natActs.endPoints, true, activateProbe)
 	R.electEPSrc(r)
+	if serv.Mode == cmn.LBModeHostOneArm {
+		R.mkHostAssocs(r)
+	}
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
@@ -1583,7 +1634,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 
 	eEps := rule.act.action.(*ruleNatActs).endPoints
 	activatedProbe := false
-	if rule.act.action.(*ruleNatActs).mode == cmn.LBModeOneArm || rule.act.action.(*ruleNatActs).mode == cmn.LBModeFullNAT || rule.hChk.actChk {
+	if rule.act.action.(*ruleNatActs).mode == cmn.LBModeOneArm || rule.act.action.(*ruleNatActs).mode == cmn.LBModeFullNAT || rule.act.action.(*ruleNatActs).mode == cmn.LBModeHostOneArm || rule.hChk.actChk {
 		activatedProbe = true
 	}
 	R.modNatEpHost(rule, eEps, false, activatedProbe)
@@ -2226,7 +2277,18 @@ func (R *RuleH) RulesSync() {
 		ruleKeys := rule.tuples.String()
 		ruleActs := rule.act.String()
 		rChg = R.electEPSrc(rule)
-		if rule.sync != 0 || rChg {
+		rlChg := false
+		switch at := rule.act.action.(type) {
+		case *ruleNatActs:
+			if at.mode == cmn.LBModeHostOneArm {
+				rlChg = R.mkHostAssocs(rule)
+			}
+		}
+		if rlChg {
+			// Dont support modify currently
+			rule.DP(DpRemove)
+			rule.DP(DpCreate)
+		} else if rule.sync != 0 || rChg {
 			rule.DP(DpCreate)
 		}
 
@@ -2500,14 +2562,23 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 				}
 			}
 		}
-		break
 	default:
 		return -1
 	}
 
 	mh.dp.ToDpCh <- nWork
-
 	r.VIP2DP(nWork.Work)
+
+	if mode == cmn.LBModeHostOneArm {
+		for locIP := range r.locIPs {
+			if sIP := net.ParseIP(locIP); sIP != nil {
+				nWork1 := new(NatDpWorkQ)
+				*nWork1 = *nWork
+				nWork1.ServiceIP = sIP
+				mh.dp.ToDpCh <- nWork1
+			}
+		}
+	}
 
 	return 0
 }
