@@ -231,6 +231,49 @@ func AWSPrepVIPNetwork() error {
 		}
 	}
 
+	cidrBlock := awsCIDRnet.String()
+	vpcFilterStr := "cidr-block-association.cidr-block"
+	vpcOut, err := ec2Client.DescribeVpcs(ctx, &ec2.DescribeVpcsInput{
+		Filters: []types.Filter{
+			{Name: &vpcFilterStr, Values: []string{cidrBlock}},
+		},
+	})
+
+	if err != nil {
+		tk.LogIt(tk.LogError, "DescribeVpcs failed (%s)\n", err)
+		return err
+	}
+	if len(vpcOut.Vpcs) > 1 {
+		// This is an improbable condition. We simply log it here
+		tk.LogIt(tk.LogError, "cidrBlock (%s) in multiple VPCs\n", cidrBlock)
+	} else if len(vpcOut.Vpcs) == 1 {
+		if vpcOut.Vpcs[0].VpcId != nil && *vpcOut.Vpcs[0].VpcId != vpcID {
+			dissAssoc := false
+			for _, cbAs := range vpcOut.Vpcs[0].CidrBlockAssociationSet {
+				if cbAs.CidrBlock != nil && *cbAs.CidrBlock == cidrBlock {
+					// CIDR is not in the current VPC. There should be no attached subnets/interfaces at this point
+					_, err := ec2Client.DisassociateVpcCidrBlock(ctx, &ec2.DisassociateVpcCidrBlockInput{AssociationId: cbAs.AssociationId})
+					if err != nil {
+						tk.LogIt(tk.LogError, "cidrBlock (%s) dissassociate failed in VPC %s:%s\n", cidrBlock, *vpcOut.Vpcs[0].VpcId, err)
+						return err
+					}
+					dissAssoc = true
+					break
+				}
+			}
+
+			if dissAssoc {
+				// Reassociate this CIDR block
+				_, err := ec2Client.AssociateVpcCidrBlock(ctx,
+					&ec2.AssociateVpcCidrBlockInput{VpcId: &vpcID, CidrBlock: &cidrBlock})
+				if err != nil {
+					tk.LogIt(tk.LogError, "cidrBlock (%s) asassociate failed in VPC %s:%s\n", cidrBlock, vpcID, err)
+					return err
+				}
+			}
+		}
+	}
+
 	ctx3, cancel3 := context.WithTimeout(context.Background(), time.Duration(time.Second*30))
 	defer cancel3()
 
@@ -248,7 +291,6 @@ func AWSPrepVIPNetwork() error {
 		return err
 	}
 
-	cidrBlock := awsCIDRnet.String()
 	subnetTag := types.Tag{Key: &loxilbKey, Value: &loxilbSubNetKeyVal}
 	subnetTags := []types.Tag{subnetTag}
 	subOutput, err := ec2Client.CreateSubnet(ctx3, &ec2.CreateSubnetInput{
