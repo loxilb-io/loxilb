@@ -368,7 +368,7 @@ func (e *DpEbpfH) DpEbpfUnInit() {
 	}
 
 	if mh.locVIP {
-		C.llb_unload_kern_sock()
+		C.llb_unload_kern_all()
 	}
 }
 
