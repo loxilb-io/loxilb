@@ -1363,7 +1363,7 @@ func RUWorkSingle(m nlp.RouteUpdate) int {
 
 func LUWorker(ch chan nlp.LinkUpdate, f chan struct{}) {
 
-	for n := 0; n < cmn.LuWorkQLen; n++ {
+	for n := 0; n < 32; n++ {
 		select {
 		case m := <-ch:
 			LUWorkSingle(m)
@@ -1375,7 +1375,7 @@ func LUWorker(ch chan nlp.LinkUpdate, f chan struct{}) {
 
 func AUWorker(ch chan nlp.AddrUpdate, f chan struct{}) {
 
-	for n := 0; n < cmn.AuWorkqLen; n++ {
+	for n := 0; n < 64; n++ {
 		select {
 		case m := <-ch:
 			AUWorkSingle(m)
@@ -1388,7 +1388,7 @@ func AUWorker(ch chan nlp.AddrUpdate, f chan struct{}) {
 
 func NUWorker(ch chan nlp.NeighUpdate, f chan struct{}) {
 
-	for n := 0; n < cmn.NuWorkQLen; n++ {
+	for n := 0; n < 128; n++ {
 		select {
 		case m := <-ch:
 			NUWorkSingle(m)
@@ -1400,7 +1400,7 @@ func NUWorker(ch chan nlp.NeighUpdate, f chan struct{}) {
 
 func RUWorker(ch chan nlp.RouteUpdate, f chan struct{}) {
 
-	for n := 0; n < cmn.RuWorkQLen; n++ {
+	for n := 0; n < 128; n++ {
 		select {
 		case m := <-ch:
 			RUWorkSingle(m)
@@ -1433,7 +1433,7 @@ func NLWorker(nNl *NlH, bgpPeerMode bool, ch chan bool, wch chan bool) {
 			AUWorker(nNl.FromAUCh, nNl.FromAUDone)
 			NUWorker(nNl.FromNUCh, nNl.FromNUDone)
 			RUWorker(nNl.FromRUCh, nNl.FromRUDone)
-			time.Sleep(1000 * time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 		}
 	}
 }

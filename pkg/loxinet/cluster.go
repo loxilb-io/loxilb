@@ -283,17 +283,17 @@ func (h *CIStateH) CIBFDSessionAdd(bm cmn.BFDMod) (int, error) {
 		return -1, errors.New("cluster instance not found")
 	}
 
-	ip := net.ParseIP(string(bm.RemoteIP))
+	ip := net.ParseIP(bm.RemoteIP.String())
 	if ip == nil {
 		return -1, errors.New("remoteIP address malformed")
 	}
 
-	myIP := net.ParseIP(string(bm.SourceIP))
-	if myIP == nil {
-		return -1, errors.New("source address malformed")
-	}
-
 	if !h.SpawnKa {
+		myIP := net.ParseIP(bm.SourceIP.String())
+		if myIP == nil {
+			return -1, errors.New("source address malformed")
+		}
+
 		tk.LogIt(tk.LogInfo, "[CLUSTER] Cluster Instance %s starting BFD..\n", bm.Instance)
 		h.SpawnKa = true
 

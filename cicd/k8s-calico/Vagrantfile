@@ -8,6 +8,10 @@ workers = settings["nodes"]["workers"]["count"]
 
 Vagrant.configure("2") do |config|
 
+  if Vagrant.has_plugin?("vagrant-vbguest")
+    config.vbguest.auto_update = false
+  end
+
   config.vm.define "loxilb" do |loxilb|
     loxilb.vm.box = settings["software"]["loxilb"]["box"]["name"]
     loxilb.vm.box_version = settings["software"]["loxilb"]["box"]["version"]

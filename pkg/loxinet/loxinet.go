@@ -59,27 +59,28 @@ const (
 )
 
 type loxiNetH struct {
-	dpEbpf     *DpEbpfH
-	dp         *DpH
-	zn         *ZoneH
-	zr         *Zone
-	mtx        sync.RWMutex
-	ticker     *time.Ticker
-	tDone      chan bool
-	sigCh      chan os.Signal
-	wg         sync.WaitGroup
-	bgp        *GoBgpH
-	sumDis     bool
-	pProbe     bool
-	has        *CIStateH
-	logger     *tk.Logger
-	ready      bool
-	self       int
-	rssEn      bool
-	eHooks     bool
-	locVIP     bool
-	cloudLabel string
-	pFile      *os.File
+	dpEbpf      *DpEbpfH
+	dp          *DpH
+	zn          *ZoneH
+	zr          *Zone
+	mtx         sync.RWMutex
+	ticker      *time.Ticker
+	tDone       chan bool
+	sigCh       chan os.Signal
+	wg          sync.WaitGroup
+	bgp         *GoBgpH
+	sumDis      bool
+	pProbe      bool
+	has         *CIStateH
+	logger      *tk.Logger
+	ready       bool
+	self        int
+	rssEn       bool
+	eHooks      bool
+	lSockPolicy bool
+	sockMapEn   bool
+	cloudLabel  string
+	pFile       *os.File
 }
 
 // NodeWalker - an implementation of node walker interface
@@ -208,6 +209,7 @@ func loxiNetInit() {
 			RunCommand(MkfsScript, true)
 		}
 	}
+	utils.MkTunFsIfNotExist()
 
 	sysctlInit()
 
@@ -216,7 +218,8 @@ func loxiNetInit() {
 	mh.eHooks = opts.Opts.EgrHooks
 	mh.sumDis = opts.Opts.CSumDisable
 	mh.pProbe = opts.Opts.PassiveEPProbe
-	mh.locVIP = opts.Opts.LocalVIP
+	mh.lSockPolicy = opts.Opts.LocalSockPolicy
+	mh.sockMapEn = opts.Opts.SockMapSupport
 	mh.cloudLabel = opts.Opts.Cloud
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
@@ -254,11 +257,11 @@ func loxiNetInit() {
 	}
 
 	if !opts.Opts.BgpPeerMode {
-		if mh.locVIP {
+		if mh.lSockPolicy {
 			RunCommand(MkMountCG2, false)
 		}
 		// Initialize the ebpf datapath subsystem
-		mh.dpEbpf = DpEbpfInit(clusterMode, mh.rssEn, mh.eHooks, mh.locVIP, mh.self, -1)
+		mh.dpEbpf = DpEbpfInit(clusterMode, mh.rssEn, mh.eHooks, mh.lSockPolicy, mh.sockMapEn, mh.self, -1)
 		mh.dp = DpBrokerInit(mh.dpEbpf, rpcMode)
 
 		// Initialize the security zone subsystem

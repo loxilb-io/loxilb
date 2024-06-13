@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sctp-pod-01
+  labels:
+    app: sctp-pod-01
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[{
+      "name": "macvlan1",
+      "default-route": ["4.0.6.149"]
+    }]'
+spec:
+  containers:
+    - name: sctp-test
+      image: loxilbio/sctp-darn:latest
+      imagePullPolicy: Always
+      #command: ["/bin/sh", "-ec", "while :; do echo '.'; sleep 6 ; done"]
+      command: ["sctp_darn","-H", "0.0.0.0","-P", "9999", "-l"]
+      ports:
+        - containerPort: 9999

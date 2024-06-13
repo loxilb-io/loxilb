@@ -287,7 +287,7 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP, findAny bool) (int, net.IP, st
 	}
 
 	for _, ifaEnt := range ifa.Ifas {
-		if ifaEnt.Secondary == true {
+		if ifaEnt.Secondary {
 			continue
 		}
 
@@ -300,7 +300,7 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP, findAny bool) (int, net.IP, st
 		}
 	}
 
-	if findAny == false {
+	if !findAny {
 		return L3AddrErr, net.IPv4(0, 0, 0, 0), ""
 	}
 
@@ -395,7 +395,7 @@ func (l3 *L3H) IfaSelectAny(addr net.IP, findAny bool) (int, net.IP, string) {
 	if err == 0 {
 		switch rtn := tDat.(type) {
 		case *Neigh:
-			if rtn != nil {
+			if rtn != nil && rtn.OifPort != nil {
 				IfObj = rtn.OifPort.Name
 			}
 		case *int:
@@ -418,7 +418,7 @@ func (l3 *L3H) IfaSelectAny(addr net.IP, findAny bool) (int, net.IP, string) {
 		}
 
 		for _, ifaEnt := range ifa.Ifas {
-			if ifaEnt.Secondary == true {
+			if ifaEnt.Secondary {
 				continue
 			}
 

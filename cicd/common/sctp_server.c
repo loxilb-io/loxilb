@@ -44,7 +44,6 @@ int main(int argc, char* argv[]) {
        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
             perror("setsockopt(SO_REUSEADDR) failed");
 
-       i = 1;
        if (strstr(saddrs, ",")) {
             saddr = strtok(saddrs, ",\n");
             laddr[0].sin_family = AF_INET;
@@ -52,6 +51,7 @@ int main(int argc, char* argv[]) {
             laddr[0].sin_addr.s_addr = inet_addr(saddr);
             printf("%s\n", saddr);
             saddr = strtok(NULL, ",\n");
+            i = 1;
             while(saddr != NULL) {
                 printf("%s\n", saddr);
                 laddr[i].sin_family = AF_INET;
@@ -77,14 +77,15 @@ int main(int argc, char* argv[]) {
 			" %s. ***\n", strerror(errno));
 		    exit(1);
 	   }
-
-       if (i > 1) {
-               error = sctp_bindx(sockfd,(struct sockaddr*) &laddr[1], i - 1, SCTP_BINDX_ADD_ADDR);
+       int j = 1;
+       while(j <= i) {
+               error = sctp_bindx(sockfd,(struct sockaddr*) &laddr[j], j - 1, SCTP_BINDX_ADD_ADDR);
                if (error != 0) {
                        printf("\n\n\t\t***r: error adding addrs:"
                                        " %s. ***\n", strerror(errno));
                        exit(1);
                }
+       j++;
        }
        listen(sockfd, 1);
 

@@ -45,12 +45,13 @@ type ipvsEndPoint struct {
 }
 
 type ipVSEntry struct {
-	Key       ipVSKey
+	key       ipVSKey
 	sel       cmn.EpSelect
 	mode      cmn.LBMode
 	pType     string
-	InValid   bool
-	EndPoints []ipvsEndPoint
+	timeout   uint32
+	inValid   bool
+	endPoints []ipvsEndPoint
 }
 
 type IPVSH struct {
@@ -84,7 +85,8 @@ func (ctx *IPVSH) buildIPVSDB() []*ipVSEntry {
 		}
 
 		newEntry.sel = cmn.LbSelRr
-		newEntry.pType = ""
+		newEntry.pType = "none"
+		newEntry.timeout = svc.Timeout
 		if svc.Flags&0x1 == 0x1 {
 			newEntry.sel = cmn.LbSelRrPersist
 		}
@@ -105,23 +107,23 @@ func (ctx *IPVSH) buildIPVSDB() []*ipVSEntry {
 		newEntry.mode = cmn.LBModeDefault
 		if svc.Port >= K8sNodePortMin && svc.Port <= K8sNodePortMax {
 			newEntry.mode = cmn.LBModeFullNAT
-			newEntry.pType = "ping"
+			//newEntry.pType = "ping"
 		}
 
 		key := ipVSKey{Address: svc.Address.String(), Protocol: proto, Port: svc.Port}
 		for _, endPoint := range endPoints {
-			newEntry.EndPoints = append(newEntry.EndPoints, ipvsEndPoint{EpIP: endPoint.Address.String(), EpPort: endPoint.Port, Weight: uint8(endPoint.Weight)})
+			newEntry.endPoints = append(newEntry.endPoints, ipvsEndPoint{EpIP: endPoint.Address.String(), EpPort: endPoint.Port, Weight: uint8(endPoint.Weight)})
 		}
 
-		if len(newEntry.EndPoints) != 0 {
+		if len(newEntry.endPoints) != 0 {
 			if eEnt := ctx.RMap[key]; eEnt != nil {
-				if reflect.DeepEqual(eEnt.EndPoints, newEntry.EndPoints) {
-					eEnt.InValid = false
+				if reflect.DeepEqual(eEnt.endPoints, newEntry.endPoints) {
+					eEnt.inValid = false
 					continue
 				}
 			}
 
-			newEntry.Key = key
+			newEntry.key = key
 			ipVSList = append(ipVSList, &newEntry)
 		}
 	}
@@ -136,38 +138,38 @@ func IPVSSync() {
 		case <-ipVSCtx.ticker.C:
 
 			for _, ent := range ipVSCtx.RMap {
-				ent.InValid = true
+				ent.inValid = true
 			}
 
 			ipVSList := ipVSCtx.buildIPVSDB()
 
 			for _, ent := range ipVSCtx.RMap {
-				if ent.InValid {
-					name := fmt.Sprintf("ipvs_%s:%d-%s", ent.Key.Address, ent.Key.Port, ent.Key.Protocol)
-					lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: ent.Key.Address, ServPort: ent.Key.Port, Proto: ent.Key.Protocol, Sel: ent.sel, Mode: ent.mode, Name: name, ProbeType: ent.pType}}
+				if ent.inValid {
+					name := fmt.Sprintf("ipvs_%s:%d-%s", ent.key.Address, ent.key.Port, ent.key.Protocol)
+					lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: ent.key.Address, ServPort: ent.key.Port, Proto: ent.key.Protocol, Sel: ent.sel, Mode: ent.mode, Name: name, ProbeType: ent.pType}}
 					_, err := hooks.NetLbRuleDel(&lbrule)
 					if err != nil {
-						tk.LogIt(tk.LogError, "IPVS LB %v delete failed\n", ent.Key)
+						tk.LogIt(tk.LogError, "IPVS LB %v delete failed\n", ent.key)
 					}
-					tk.LogIt(tk.LogInfo, "IPVS ent %v deleted\n", ent.Key)
-					delete(ipVSCtx.RMap, ent.Key)
+					tk.LogIt(tk.LogInfo, "IPVS ent %v deleted\n", ent.key)
+					delete(ipVSCtx.RMap, ent.key)
 				}
 			}
 
 			for _, newEnt := range ipVSList {
-				name := fmt.Sprintf("ipvs_%s:%d-%s", newEnt.Key.Address, newEnt.Key.Port, newEnt.Key.Protocol)
-				lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: newEnt.Key.Address, ServPort: newEnt.Key.Port, Proto: newEnt.Key.Protocol, Sel: newEnt.sel, Mode: newEnt.mode, Name: name, ProbeType: newEnt.pType}}
-				for _, ep := range newEnt.EndPoints {
+				name := fmt.Sprintf("ipvs_%s:%d-%s", newEnt.key.Address, newEnt.key.Port, newEnt.key.Protocol)
+				lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: newEnt.key.Address, ServPort: newEnt.key.Port, Proto: newEnt.key.Protocol, Sel: newEnt.sel, Mode: newEnt.mode, Name: name, ProbeType: newEnt.pType, PersistTimeout: newEnt.timeout}}
+				for _, ep := range newEnt.endPoints {
 					lbrule.Eps = append(lbrule.Eps, cmn.LbEndPointArg{EpIP: ep.EpIP, EpPort: ep.EpPort, Weight: 1})
 				}
 
 				_, err := hooks.NetLbRuleAdd(&lbrule)
 				if err != nil {
-					tk.LogIt(tk.LogError, "IPVS LB %v add failed\n", newEnt.Key)
+					tk.LogIt(tk.LogError, "IPVS LB %v add failed\n", newEnt.key)
 					continue
 				}
-				ipVSCtx.RMap[newEnt.Key] = newEnt
-				tk.LogIt(tk.LogError, "IPVS ent %v added\n", newEnt.Key)
+				ipVSCtx.RMap[newEnt.key] = newEnt
+				tk.LogIt(tk.LogError, "IPVS ent %v added\n", newEnt.key)
 			}
 		}
 	}

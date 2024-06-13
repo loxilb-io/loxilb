@@ -685,3 +685,80 @@ func (na *NetAPIStruct) NetGoBGPGCAdd(param *cmn.GoBGPGlobalConfig) (int, error)
 func (na *NetAPIStruct) NetHandlePanic() {
 	mh.dp.DpHooks.DpEbpfUnInit()
 }
+
+func (na *NetAPIStruct) NetGoBGPPolicyDefinedSetGet(name string, DefinedTypeString string) ([]cmn.GoBGPPolicyDefinedSetMod, error) {
+	if mh.bgp != nil {
+		a, err := mh.bgp.GetPolicyDefinedSet(name, DefinedTypeString)
+		if err != nil {
+			return nil, err
+		}
+		return a, nil
+	}
+	tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
+	return nil, errors.New("loxilb BGP mode is disabled")
+
+}
+
+// NetGoBGPPolicyPrefixAdd - Add Prefixset in bgp
+func (na *NetAPIStruct) NetGoBGPPolicyDefinedSetAdd(param *cmn.GoBGPPolicyDefinedSetMod) (int, error) {
+	if mh.bgp != nil {
+		return mh.bgp.AddPolicyDefinedSets(*param)
+	}
+	tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
+	return 0, errors.New("loxilb BGP mode is disabled")
+
+}
+
+// NetGoBGPPolicyPrefixAdd - Add Prefixset in bgp
+func (na *NetAPIStruct) NetGoBGPPolicyDefinedSetDel(param *cmn.GoBGPPolicyDefinedSetMod) (int, error) {
+	if mh.bgp != nil {
+		return mh.bgp.DelPolicyDefinedSets(param.Name, param.DefinedTypeString)
+	}
+	tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
+	return 0, errors.New("loxilb BGP mode is disabled")
+
+}
+
+// NetGoBGPPolicyDefinitionsGet - Add bgp neigh to gobgp
+func (na *NetAPIStruct) NetGoBGPPolicyDefinitionsGet() ([]cmn.GoBGPPolicyDefinitionsMod, error) {
+	if mh.bgp != nil {
+		a, err := mh.bgp.GetPolicyDefinitions()
+		if err != nil {
+			return nil, err
+		}
+		return a, nil
+	}
+	tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
+	return nil, errors.New("loxilb BGP mode is disabled")
+
+}
+
+// NetGoBGPPolicyNeighAdd - Add bgp neigh to gobgp
+func (na *NetAPIStruct) NetGoBGPPolicyDefinitionAdd(param *cmn.GoBGPPolicyDefinitionsMod) (int, error) {
+	if mh.bgp != nil {
+		return mh.bgp.AddPolicyDefinitions(param.Name, param.Statement)
+	}
+	tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
+	return 0, errors.New("loxilb BGP mode is disabled")
+
+}
+
+// NetGoBGPPolicyNeighAdd - Add bgp neigh to gobgp
+func (na *NetAPIStruct) NetGoBGPPolicyDefinitionDel(param *cmn.GoBGPPolicyDefinitionsMod) (int, error) {
+	if mh.bgp != nil {
+		return mh.bgp.DelPolicyDefinitions(param.Name)
+	}
+	tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
+	return 0, errors.New("loxilb BGP mode is disabled")
+
+}
+
+// NetGoBGPPolicyNeighAdd - Add bgp neigh to gobgp
+func (na *NetAPIStruct) NetGoBGPPolicyApplyAdd(param *cmn.GoBGPPolicyApply) (int, error) {
+	if mh.bgp != nil {
+		return mh.bgp.BGPApplyPolicyToNeighbor("add", param.NeighIPAddress, param.PolicyType, param.Polices, param.RouteAction)
+	}
+	tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
+	return 0, errors.New("loxilb BGP mode is disabled")
+
+}

@@ -473,6 +473,457 @@ func init() {
         }
       }
     },
+    "/config/bgp/policy/apply": {
+      "post": {
+        "description": "Apply BGP Policy in neighbor",
+        "summary": "Apply BGP Policy in neighbor",
+        "parameters": [
+          {
+            "description": "Attributes of bgp neighbor",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BGPApplyPolicyToNeighborMod"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bgp/policy/definedsets/{defineset_type}": {
+      "post": {
+        "description": "Adds a BGP definedsets for making Policy",
+        "summary": "Adds a BGP  definedsets for making Policy",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "defineset type one of prefix/neighbor/community/extcommunity/aspath/largecommunity",
+            "name": "defineset_type",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Attributes of bgp neighbor",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BGPPolicyDefinedSetsMod"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bgp/policy/definedsets/{defineset_type}/{type_name}": {
+      "get": {
+        "description": "Get the all of BGP, prefix/neighbor/community/extcommunity/aspath/largecommunity",
+        "summary": "Get the all of BGP definedsets",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "defineset type one of prefix/neighbor/community/extcommunity/aspath/largecommunity",
+            "name": "defineset_type",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "type name",
+            "name": "type_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "definedsetsAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/BGPPolicyDefinedSetGetEntry"
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete a BGP definedsets",
+        "summary": "Delete a BGP definedsets",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "defineset type one of prefix/neighbor/community/extcommunity/aspath/largecommunity",
+            "name": "defineset_type",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "type name",
+            "name": "type_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. Neigh already exists",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bgp/policy/definitions": {
+      "post": {
+        "description": "Adds a BGP Policy",
+        "summary": "Adds a BGP Policy",
+        "parameters": [
+          {
+            "description": "Attributes of bgp neighbor",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BGPPolicyDefinitionsMod"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bgp/policy/definitions/all": {
+      "get": {
+        "description": "Get BGP Policy definitions",
+        "summary": "Get BGP Policy definitions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "bgpPolicyAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/BGPPolicyDefinitionsMod"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bgp/policy/definitions/{policy_name}": {
+      "delete": {
+        "description": "Delete a BGP Policy",
+        "summary": "Delete a BGP policy",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the community",
+            "name": "policy_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. Neigh already exists",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/cistate": {
       "post": {
         "description": "Informs Current Cluster Instance state in the device",
@@ -1560,6 +2011,68 @@ func init() {
             "description": "block value if any",
             "name": "block",
             "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/loadbalancer/name/{lb_name}": {
+      "delete": {
+        "description": "Delete an existing load balancer service with name.",
+        "summary": "Delete an existing Load balancer service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes for load balance service name",
+            "name": "lb_name",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {
@@ -3468,6 +3981,27 @@ func init() {
     }
   },
   "definitions": {
+    "BGPApplyPolicyToNeighborMod": {
+      "type": "object",
+      "properties": {
+        "ipAddress": {
+          "description": "BGP Neighbor IP address",
+          "type": "string"
+        },
+        "policies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "policyType": {
+          "type": "string"
+        },
+        "routeAction": {
+          "type": "string"
+        }
+      }
+    },
     "BGPGlobalConfig": {
       "type": "object",
       "properties": {
@@ -3527,6 +4061,264 @@ func init() {
         },
         "updowntime": {
           "description": "Current uptime",
+          "type": "string"
+        }
+      }
+    },
+    "BGPPolicyDefinedSetGetEntry": {
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "description": "BGP Defined set Entries",
+          "type": "string"
+        },
+        "prefixList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BGPPolicyPrefix"
+          }
+        }
+      }
+    },
+    "BGPPolicyDefinedSetsMod": {
+      "type": "object",
+      "properties": {
+        "List": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "description": "BGP Neighbor IP address",
+          "type": "string"
+        },
+        "prefixList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BGPPolicyPrefix"
+          }
+        }
+      }
+    },
+    "BGPPolicyDefinitionsMod": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "BGP Neighbor IP address",
+          "type": "string"
+        },
+        "statements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BGPPolicyDefinitionsStatement"
+          }
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatement": {
+      "type": "object",
+      "properties": {
+        "actions": {
+          "type": "object",
+          "properties": {
+            "bgpActions": {
+              "type": "object",
+              "properties": {
+                "setAsPathPrepend": {
+                  "type": "object",
+                  "properties": {
+                    "as": {
+                      "type": "string"
+                    },
+                    "repeatN": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "setCommunity": {
+                  "type": "object",
+                  "properties": {
+                    "options": {
+                      "type": "string"
+                    },
+                    "setCommunityMethod": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "setExtCommunity": {
+                  "type": "object",
+                  "properties": {
+                    "options": {
+                      "type": "string"
+                    },
+                    "setCommunityMethod": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "setLargeCommunity": {
+                  "type": "object",
+                  "properties": {
+                    "options": {
+                      "type": "string"
+                    },
+                    "setCommunityMethod": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "setLocalPerf": {
+                  "type": "integer"
+                },
+                "setMed": {
+                  "type": "string"
+                },
+                "setNextHop": {
+                  "type": "string"
+                }
+              }
+            },
+            "routeDisposition": {
+              "type": "string"
+            }
+          }
+        },
+        "conditions": {
+          "type": "object",
+          "properties": {
+            "bgpConditions": {
+              "type": "object",
+              "properties": {
+                "afiSafiIn": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "asPathLength": {
+                  "type": "object",
+                  "properties": {
+                    "operator": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "matchAsPathSet": {
+                  "type": "object",
+                  "properties": {
+                    "asPathSet": {
+                      "type": "string"
+                    },
+                    "matchSetOptions": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "matchCommunitySet": {
+                  "type": "object",
+                  "properties": {
+                    "communitySet": {
+                      "type": "string"
+                    },
+                    "matchSetOptions": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "matchExtCommunitySet": {
+                  "type": "object",
+                  "properties": {
+                    "communitySet": {
+                      "type": "string"
+                    },
+                    "matchSetOptions": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "matchLargeCommunitySet": {
+                  "type": "object",
+                  "properties": {
+                    "communitySet": {
+                      "type": "string"
+                    },
+                    "matchSetOptions": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "nextHopInList": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "routeType": {
+                  "type": "string"
+                },
+                "rpki": {
+                  "type": "string"
+                }
+              }
+            },
+            "matchNeighborSet": {
+              "type": "object",
+              "properties": {
+                "matchSetOption": {
+                  "type": "string"
+                },
+                "neighborSet": {
+                  "type": "string"
+                }
+              }
+            },
+            "matchPrefixSet": {
+              "type": "object",
+              "properties": {
+                "matchSetOption": {
+                  "type": "string"
+                },
+                "prefixSet": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "BGPPolicyPrefix": {
+      "type": "object",
+      "properties": {
+        "ipPrefix": {
+          "description": "BGP Neighbor IP address",
+          "type": "string"
+        },
+        "masklengthRange": {
+          "description": "Remote AS number",
           "type": "string"
         }
       }
@@ -5201,6 +5993,457 @@ func init() {
         }
       }
     },
+    "/config/bgp/policy/apply": {
+      "post": {
+        "description": "Apply BGP Policy in neighbor",
+        "summary": "Apply BGP Policy in neighbor",
+        "parameters": [
+          {
+            "description": "Attributes of bgp neighbor",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BGPApplyPolicyToNeighborMod"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bgp/policy/definedsets/{defineset_type}": {
+      "post": {
+        "description": "Adds a BGP definedsets for making Policy",
+        "summary": "Adds a BGP  definedsets for making Policy",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "defineset type one of prefix/neighbor/community/extcommunity/aspath/largecommunity",
+            "name": "defineset_type",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Attributes of bgp neighbor",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BGPPolicyDefinedSetsMod"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bgp/policy/definedsets/{defineset_type}/{type_name}": {
+      "get": {
+        "description": "Get the all of BGP, prefix/neighbor/community/extcommunity/aspath/largecommunity",
+        "summary": "Get the all of BGP definedsets",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "defineset type one of prefix/neighbor/community/extcommunity/aspath/largecommunity",
+            "name": "defineset_type",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "type name",
+            "name": "type_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "definedsetsAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/BGPPolicyDefinedSetGetEntry"
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete a BGP definedsets",
+        "summary": "Delete a BGP definedsets",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "defineset type one of prefix/neighbor/community/extcommunity/aspath/largecommunity",
+            "name": "defineset_type",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "type name",
+            "name": "type_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. Neigh already exists",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bgp/policy/definitions": {
+      "post": {
+        "description": "Adds a BGP Policy",
+        "summary": "Adds a BGP Policy",
+        "parameters": [
+          {
+            "description": "Attributes of bgp neighbor",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BGPPolicyDefinitionsMod"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bgp/policy/definitions/all": {
+      "get": {
+        "description": "Get BGP Policy definitions",
+        "summary": "Get BGP Policy definitions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "bgpPolicyAttr": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/BGPPolicyDefinitionsMod"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/bgp/policy/definitions/{policy_name}": {
+      "delete": {
+        "description": "Delete a BGP Policy",
+        "summary": "Delete a BGP policy",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the community",
+            "name": "policy_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. Neigh already exists",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/cistate": {
       "post": {
         "description": "Informs Current Cluster Instance state in the device",
@@ -6288,6 +7531,68 @@ func init() {
             "description": "block value if any",
             "name": "block",
             "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/loadbalancer/name/{lb_name}": {
+      "delete": {
+        "description": "Delete an existing load balancer service with name.",
+        "summary": "Delete an existing Load balancer service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes for load balance service name",
+            "name": "lb_name",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {
@@ -8196,6 +9501,27 @@ func init() {
     }
   },
   "definitions": {
+    "BGPApplyPolicyToNeighborMod": {
+      "type": "object",
+      "properties": {
+        "ipAddress": {
+          "description": "BGP Neighbor IP address",
+          "type": "string"
+        },
+        "policies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "policyType": {
+          "type": "string"
+        },
+        "routeAction": {
+          "type": "string"
+        }
+      }
+    },
     "BGPGlobalConfig": {
       "type": "object",
       "properties": {
@@ -8255,6 +9581,719 @@ func init() {
         },
         "updowntime": {
           "description": "Current uptime",
+          "type": "string"
+        }
+      }
+    },
+    "BGPPolicyDefinedSetGetEntry": {
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "description": "BGP Defined set Entries",
+          "type": "string"
+        },
+        "prefixList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BGPPolicyPrefix"
+          }
+        }
+      }
+    },
+    "BGPPolicyDefinedSetsMod": {
+      "type": "object",
+      "properties": {
+        "List": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "description": "BGP Neighbor IP address",
+          "type": "string"
+        },
+        "prefixList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BGPPolicyPrefix"
+          }
+        }
+      }
+    },
+    "BGPPolicyDefinitionsMod": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "BGP Neighbor IP address",
+          "type": "string"
+        },
+        "statements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BGPPolicyDefinitionsStatement"
+          }
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatement": {
+      "type": "object",
+      "properties": {
+        "actions": {
+          "type": "object",
+          "properties": {
+            "bgpActions": {
+              "type": "object",
+              "properties": {
+                "setAsPathPrepend": {
+                  "type": "object",
+                  "properties": {
+                    "as": {
+                      "type": "string"
+                    },
+                    "repeatN": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "setCommunity": {
+                  "type": "object",
+                  "properties": {
+                    "options": {
+                      "type": "string"
+                    },
+                    "setCommunityMethod": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "setExtCommunity": {
+                  "type": "object",
+                  "properties": {
+                    "options": {
+                      "type": "string"
+                    },
+                    "setCommunityMethod": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "setLargeCommunity": {
+                  "type": "object",
+                  "properties": {
+                    "options": {
+                      "type": "string"
+                    },
+                    "setCommunityMethod": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "setLocalPerf": {
+                  "type": "integer"
+                },
+                "setMed": {
+                  "type": "string"
+                },
+                "setNextHop": {
+                  "type": "string"
+                }
+              }
+            },
+            "routeDisposition": {
+              "type": "string"
+            }
+          }
+        },
+        "conditions": {
+          "type": "object",
+          "properties": {
+            "bgpConditions": {
+              "type": "object",
+              "properties": {
+                "afiSafiIn": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "asPathLength": {
+                  "type": "object",
+                  "properties": {
+                    "operator": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "matchAsPathSet": {
+                  "type": "object",
+                  "properties": {
+                    "asPathSet": {
+                      "type": "string"
+                    },
+                    "matchSetOptions": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "matchCommunitySet": {
+                  "type": "object",
+                  "properties": {
+                    "communitySet": {
+                      "type": "string"
+                    },
+                    "matchSetOptions": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "matchExtCommunitySet": {
+                  "type": "object",
+                  "properties": {
+                    "communitySet": {
+                      "type": "string"
+                    },
+                    "matchSetOptions": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "matchLargeCommunitySet": {
+                  "type": "object",
+                  "properties": {
+                    "communitySet": {
+                      "type": "string"
+                    },
+                    "matchSetOptions": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "nextHopInList": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "routeType": {
+                  "type": "string"
+                },
+                "rpki": {
+                  "type": "string"
+                }
+              }
+            },
+            "matchNeighborSet": {
+              "type": "object",
+              "properties": {
+                "matchSetOption": {
+                  "type": "string"
+                },
+                "neighborSet": {
+                  "type": "string"
+                }
+              }
+            },
+            "matchPrefixSet": {
+              "type": "object",
+              "properties": {
+                "matchSetOption": {
+                  "type": "string"
+                },
+                "prefixSet": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatementActions": {
+      "type": "object",
+      "properties": {
+        "bgpActions": {
+          "type": "object",
+          "properties": {
+            "setAsPathPrepend": {
+              "type": "object",
+              "properties": {
+                "as": {
+                  "type": "string"
+                },
+                "repeatN": {
+                  "type": "integer"
+                }
+              }
+            },
+            "setCommunity": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "type": "string"
+                },
+                "setCommunityMethod": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "setExtCommunity": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "type": "string"
+                },
+                "setCommunityMethod": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "setLargeCommunity": {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "type": "string"
+                },
+                "setCommunityMethod": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "setLocalPerf": {
+              "type": "integer"
+            },
+            "setMed": {
+              "type": "string"
+            },
+            "setNextHop": {
+              "type": "string"
+            }
+          }
+        },
+        "routeDisposition": {
+          "type": "string"
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatementActionsBgpActions": {
+      "type": "object",
+      "properties": {
+        "setAsPathPrepend": {
+          "type": "object",
+          "properties": {
+            "as": {
+              "type": "string"
+            },
+            "repeatN": {
+              "type": "integer"
+            }
+          }
+        },
+        "setCommunity": {
+          "type": "object",
+          "properties": {
+            "options": {
+              "type": "string"
+            },
+            "setCommunityMethod": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "setExtCommunity": {
+          "type": "object",
+          "properties": {
+            "options": {
+              "type": "string"
+            },
+            "setCommunityMethod": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "setLargeCommunity": {
+          "type": "object",
+          "properties": {
+            "options": {
+              "type": "string"
+            },
+            "setCommunityMethod": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "setLocalPerf": {
+          "type": "integer"
+        },
+        "setMed": {
+          "type": "string"
+        },
+        "setNextHop": {
+          "type": "string"
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatementActionsBgpActionsSetAsPathPrepend": {
+      "type": "object",
+      "properties": {
+        "as": {
+          "type": "string"
+        },
+        "repeatN": {
+          "type": "integer"
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatementActionsBgpActionsSetCommunity": {
+      "type": "object",
+      "properties": {
+        "options": {
+          "type": "string"
+        },
+        "setCommunityMethod": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatementActionsBgpActionsSetExtCommunity": {
+      "type": "object",
+      "properties": {
+        "options": {
+          "type": "string"
+        },
+        "setCommunityMethod": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatementActionsBgpActionsSetLargeCommunity": {
+      "type": "object",
+      "properties": {
+        "options": {
+          "type": "string"
+        },
+        "setCommunityMethod": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatementConditions": {
+      "type": "object",
+      "properties": {
+        "bgpConditions": {
+          "type": "object",
+          "properties": {
+            "afiSafiIn": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "asPathLength": {
+              "type": "object",
+              "properties": {
+                "operator": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "integer"
+                }
+              }
+            },
+            "matchAsPathSet": {
+              "type": "object",
+              "properties": {
+                "asPathSet": {
+                  "type": "string"
+                },
+                "matchSetOptions": {
+                  "type": "string"
+                }
+              }
+            },
+            "matchCommunitySet": {
+              "type": "object",
+              "properties": {
+                "communitySet": {
+                  "type": "string"
+                },
+                "matchSetOptions": {
+                  "type": "string"
+                }
+              }
+            },
+            "matchExtCommunitySet": {
+              "type": "object",
+              "properties": {
+                "communitySet": {
+                  "type": "string"
+                },
+                "matchSetOptions": {
+                  "type": "string"
+                }
+              }
+            },
+            "matchLargeCommunitySet": {
+              "type": "object",
+              "properties": {
+                "communitySet": {
+                  "type": "string"
+                },
+                "matchSetOptions": {
+                  "type": "string"
+                }
+              }
+            },
+            "nextHopInList": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "routeType": {
+              "type": "string"
+            },
+            "rpki": {
+              "type": "string"
+            }
+          }
+        },
+        "matchNeighborSet": {
+          "type": "object",
+          "properties": {
+            "matchSetOption": {
+              "type": "string"
+            },
+            "neighborSet": {
+              "type": "string"
+            }
+          }
+        },
+        "matchPrefixSet": {
+          "type": "object",
+          "properties": {
+            "matchSetOption": {
+              "type": "string"
+            },
+            "prefixSet": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatementConditionsBgpConditions": {
+      "type": "object",
+      "properties": {
+        "afiSafiIn": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "asPathLength": {
+          "type": "object",
+          "properties": {
+            "operator": {
+              "type": "string"
+            },
+            "value": {
+              "type": "integer"
+            }
+          }
+        },
+        "matchAsPathSet": {
+          "type": "object",
+          "properties": {
+            "asPathSet": {
+              "type": "string"
+            },
+            "matchSetOptions": {
+              "type": "string"
+            }
+          }
+        },
+        "matchCommunitySet": {
+          "type": "object",
+          "properties": {
+            "communitySet": {
+              "type": "string"
+            },
+            "matchSetOptions": {
+              "type": "string"
+            }
+          }
+        },
+        "matchExtCommunitySet": {
+          "type": "object",
+          "properties": {
+            "communitySet": {
+              "type": "string"
+            },
+            "matchSetOptions": {
+              "type": "string"
+            }
+          }
+        },
+        "matchLargeCommunitySet": {
+          "type": "object",
+          "properties": {
+            "communitySet": {
+              "type": "string"
+            },
+            "matchSetOptions": {
+              "type": "string"
+            }
+          }
+        },
+        "nextHopInList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "routeType": {
+          "type": "string"
+        },
+        "rpki": {
+          "type": "string"
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatementConditionsBgpConditionsAsPathLength": {
+      "type": "object",
+      "properties": {
+        "operator": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer"
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatementConditionsBgpConditionsMatchAsPathSet": {
+      "type": "object",
+      "properties": {
+        "asPathSet": {
+          "type": "string"
+        },
+        "matchSetOptions": {
+          "type": "string"
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatementConditionsBgpConditionsMatchCommunitySet": {
+      "type": "object",
+      "properties": {
+        "communitySet": {
+          "type": "string"
+        },
+        "matchSetOptions": {
+          "type": "string"
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatementConditionsBgpConditionsMatchExtCommunitySet": {
+      "type": "object",
+      "properties": {
+        "communitySet": {
+          "type": "string"
+        },
+        "matchSetOptions": {
+          "type": "string"
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatementConditionsBgpConditionsMatchLargeCommunitySet": {
+      "type": "object",
+      "properties": {
+        "communitySet": {
+          "type": "string"
+        },
+        "matchSetOptions": {
+          "type": "string"
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatementConditionsMatchNeighborSet": {
+      "type": "object",
+      "properties": {
+        "matchSetOption": {
+          "type": "string"
+        },
+        "neighborSet": {
+          "type": "string"
+        }
+      }
+    },
+    "BGPPolicyDefinitionsStatementConditionsMatchPrefixSet": {
+      "type": "object",
+      "properties": {
+        "matchSetOption": {
+          "type": "string"
+        },
+        "prefixSet": {
+          "type": "string"
+        }
+      }
+    },
+    "BGPPolicyPrefix": {
+      "type": "object",
+      "properties": {
+        "ipPrefix": {
+          "description": "BGP Neighbor IP address",
+          "type": "string"
+        },
+        "masklengthRange": {
+          "description": "Remote AS number",
           "type": "string"
         }
       }

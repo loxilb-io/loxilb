@@ -393,12 +393,14 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 
 	P.portSmap[name] = p
 	P.portImap[rid] = p
-	P.portOmap[osid] = p
+	if osid > 0 {
+		P.portOmap[osid] = p
+	}
 
 	mh.zn.ZonePortAdd(name, zone)
 	p.DP(DpCreate)
 
-	tk.LogIt(tk.LogDebug, "port added - %s:%d\n", name, p.PortNo)
+	tk.LogIt(tk.LogDebug, "port added - %s:%d OSID %d\n", name, p.PortNo, osid)
 
 	return 0, nil
 }
@@ -912,8 +914,8 @@ func (p *Port) DP(work DpWorkT) int {
 		ipts.Qfi = 0
 		ipts.TTeID = 0
 
-		//mh.dp.ToDpCh <- ipts
-		DpWorkSingle(mh.dp, ipts)
+		mh.dp.ToDpCh <- ipts
+		//DpWorkSingle(mh.dp, ipts)
 		return 0
 	}
 
@@ -943,8 +945,8 @@ func (p *Port) DP(work DpWorkT) int {
 		rmWq.TunType = DpTunVxlan
 		rmWq.BD = p.L2.Vid
 
-		//mh.dp.ToDpCh <- rmWq
-		DpWorkSingle(mh.dp, rmWq)
+		mh.dp.ToDpCh <- rmWq
+		//DpWorkSingle(mh.dp, rmWq)
 
 		return 0
 	}
@@ -961,8 +963,8 @@ func (p *Port) DP(work DpWorkT) int {
 		pWq.IngVlan = p.L2.Vid
 		pWq.SetBD = p.L2.Vid
 		pWq.SetZoneNum = zoneNum
-		//mh.dp.ToDpCh <- pWq
-		DpWorkSingle(mh.dp, pWq)
+		mh.dp.ToDpCh <- pWq
+		//DpWorkSingle(mh.dp, pWq)
 
 		return 0
 	}
@@ -982,8 +984,8 @@ func (p *Port) DP(work DpWorkT) int {
 			pWq.SetPol = p.SInfo.PortPolNum
 			pWq.SetMirr = p.SInfo.PortMirNum
 
-			//mh.dp.ToDpCh <- pWq
-			DpWorkSingle(mh.dp, pWq)
+			mh.dp.ToDpCh <- pWq
+			//DpWorkSingle(mh.dp, pWq)
 		}
 		return 0
 	}
@@ -1038,7 +1040,8 @@ func (p *Port) DP(work DpWorkT) int {
 				}
 				rmWq.Status = &p.Sync
 				rmWq.PortNum = p.PortNo
-				DpWorkSingle(mh.dp, rmWq)
+				//DpWorkSingle(mh.dp, rmWq)
+				mh.dp.ToDpCh <- rmWq
 			}
 		} else if work == DpRemove {
 			if p.SInfo.BpfLoaded == true {
@@ -1067,7 +1070,8 @@ func (p *Port) DP(work DpWorkT) int {
 						}
 						rmWq.Status = &p.Sync
 						rmWq.PortNum = p.PortNo
-						DpWorkSingle(mh.dp, rmWq)
+						//DpWorkSingle(mh.dp, rmWq)
+						mh.dp.ToDpCh <- rmWq
 					}
 				}
 			}
@@ -1077,8 +1081,8 @@ func (p *Port) DP(work DpWorkT) int {
 	}
 
 	// TODO - Need to unload eBPF when port properties change
-	//mh.dp.ToDpCh <- pWq
-	DpWorkSingle(mh.dp, pWq)
+	mh.dp.ToDpCh <- pWq
+	//DpWorkSingle(mh.dp, pWq)
 
 	return 0
 }
