@@ -2294,6 +2294,9 @@ func (R *RuleH) RulesSync() {
 			if ip == nil {
 				ip = net.ParseIP(vip)
 			}
+			if ip != nil {
+				R.AdvRuleVIPIfL2(ip, net.ParseIP(vip))
+			}
 		}
 		R.vipST = time.Now()
 	}
