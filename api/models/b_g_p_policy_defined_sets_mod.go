@@ -88,6 +88,11 @@ func (m *BGPPolicyDefinedSetsMod) contextValidatePrefixList(ctx context.Context,
 	for i := 0; i < len(m.PrefixList); i++ {
 
 		if m.PrefixList[i] != nil {
+
+			if swag.IsZero(m.PrefixList[i]) { // not required
+				return nil
+			}
+
 			if err := m.PrefixList[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("prefixList" + "." + strconv.Itoa(i))

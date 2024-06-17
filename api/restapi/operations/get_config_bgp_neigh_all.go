@@ -132,6 +132,11 @@ func (o *GetConfigBgpNeighAllOKBody) contextValidateBgpNeiAttr(ctx context.Conte
 	for i := 0; i < len(o.BgpNeiAttr); i++ {
 
 		if o.BgpNeiAttr[i] != nil {
+
+			if swag.IsZero(o.BgpNeiAttr[i]) { // not required
+				return nil
+			}
+
 			if err := o.BgpNeiAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigBgpNeighAllOK" + "." + "bgpNeiAttr" + "." + strconv.Itoa(i))

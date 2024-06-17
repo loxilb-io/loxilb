@@ -493,6 +493,8 @@ const (
 	LBModeDSR
 	// LBModeFullProxy
 	LBModeFullProxy
+	// LBModeHostOneArm
+	LBModeHostOneArm
 )
 
 // LbServiceArg - Information related to load-balancer service

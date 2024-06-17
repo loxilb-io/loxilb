@@ -204,6 +204,11 @@ func (m *PortEntry) ContextValidate(ctx context.Context, formats strfmt.Registry
 func (m *PortEntry) contextValidatePortHardwareInformation(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.PortHardwareInformation != nil {
+
+		if swag.IsZero(m.PortHardwareInformation) { // not required
+			return nil
+		}
+
 		if err := m.PortHardwareInformation.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("portHardwareInformation")
@@ -220,6 +225,11 @@ func (m *PortEntry) contextValidatePortHardwareInformation(ctx context.Context, 
 func (m *PortEntry) contextValidatePortL2Information(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.PortL2Information != nil {
+
+		if swag.IsZero(m.PortL2Information) { // not required
+			return nil
+		}
+
 		if err := m.PortL2Information.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("portL2Information")
@@ -236,6 +246,11 @@ func (m *PortEntry) contextValidatePortL2Information(ctx context.Context, format
 func (m *PortEntry) contextValidatePortL3Information(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.PortL3Information != nil {
+
+		if swag.IsZero(m.PortL3Information) { // not required
+			return nil
+		}
+
 		if err := m.PortL3Information.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("portL3Information")
@@ -252,6 +267,11 @@ func (m *PortEntry) contextValidatePortL3Information(ctx context.Context, format
 func (m *PortEntry) contextValidatePortSoftwareInformation(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.PortSoftwareInformation != nil {
+
+		if swag.IsZero(m.PortSoftwareInformation) { // not required
+			return nil
+		}
+
 		if err := m.PortSoftwareInformation.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("portSoftwareInformation")
@@ -268,6 +288,11 @@ func (m *PortEntry) contextValidatePortSoftwareInformation(ctx context.Context, 
 func (m *PortEntry) contextValidatePortStatisticInformation(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.PortStatisticInformation != nil {
+
+		if swag.IsZero(m.PortStatisticInformation) { // not required
+			return nil
+		}
+
 		if err := m.PortStatisticInformation.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("portStatisticInformation")
