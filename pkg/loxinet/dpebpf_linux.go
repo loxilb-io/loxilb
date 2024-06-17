@@ -37,9 +37,10 @@ package loxinet
 int bpf_map_get_next_key(int fd, const void *key, void *next_key);
 int bpf_map_lookup_elem(int fd, const void *key, void *value);
 extern void goMapNotiHandler(struct ll_dp_map_notif *);
+extern void goProxyEntCollector(struct dp_proxy_ct_ent *);
 extern void goLinuxArpResolver(unsigned int);
 #cgo CFLAGS:  -I./../../loxilb-ebpf/libbpf/src/ -I./../../loxilb-ebpf/common
-#cgo LDFLAGS: -L. -L/lib64 -L./../../loxilb-ebpf/kernel -L./../../loxilb-ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=/lib64/ -l:./../../loxilb-ebpf/kernel/libloxilbdp.a -l:./../../loxilb-ebpf/libbpf/src/libbpf.a -lelf -lz
+#cgo LDFLAGS: -L. -L/lib64 -L./../../loxilb-ebpf/kernel -L./../../loxilb-ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=/lib64/ -l:./../../loxilb-ebpf/kernel/libloxilbdp.a -l:./../../loxilb-ebpf/libbpf/src/libbpf.a -l:./../../loxilb-ebpf/proto/ngap/lib-llbngap.a -lelf -lz
 */
 import "C"
 import (
@@ -140,6 +141,11 @@ type (
 	mapNoti    C.struct_ll_dp_map_notif
 	vipKey     C.struct_sock_rwr_key
 	vipAct     C.struct_sock_rwr_action
+	proxtCT    C.struct_dp_proxy_ct_ent
+)
+
+var (
+	proxyCtInfo []*DpCtInfo
 )
 
 // DpEbpfH - context container
@@ -965,6 +971,8 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 			dat.sel_type = C.NAT_LB_SEL_RR_PERSIST
 		case w.EpSel == EpLeastConn:
 			dat.sel_type = C.NAT_LB_SEL_LC
+		case w.EpSel == EpN2:
+			dat.sel_type = C.NAT_LB_SEL_N2
 		/* Currently not implemented in DP */
 		/*case w.EpSel == EP_PRIO:
 		  dat.sel_type = C.NAT_LB_SEL_PRIO*/
@@ -1347,6 +1355,90 @@ func (ct *DpCtInfo) convDPCt2GoObj(ctKey *C.struct_dp_ct_key, ctDat *C.struct_dp
 	return ct.convDPCt2GoObjFixup(ctKey, ctDat, false)
 }
 
+func (ct *DpCtInfo) convDPCtKey2GoObj(ctKey *C.struct_dp_ct_key) *DpCtInfo {
+	if ctKey.v6 == 0 {
+		ct.DIP = tk.NltoIP(uint32(ctKey.daddr[0]))
+		ct.SIP = tk.NltoIP(uint32(ctKey.saddr[0]))
+	} else {
+		ct.SIP = convDPv6Addr2NetIP(unsafe.Pointer(&ctKey.saddr[0]))
+		ct.DIP = convDPv6Addr2NetIP(unsafe.Pointer(&ctKey.daddr[0]))
+	}
+	ct.Dport = tk.Ntohs(uint16(ctKey.dport))
+	ct.Sport = tk.Ntohs(uint16(ctKey.sport))
+
+	p := uint8(ctKey.l4proto)
+	switch {
+	case p == 1 || p == 58:
+		if p == 1 {
+			ct.Proto = "icmp"
+		} else {
+			ct.Proto = "icmp6"
+		}
+	case p == 6:
+		ct.Proto = "tcp"
+	case p == 17:
+		ct.Proto = "udp"
+	case p == 132:
+		ct.Proto = "sctp"
+	default:
+		ct.Proto = fmt.Sprintf("%d", p)
+	}
+	return ct
+}
+
+func (ct *DpCtInfo) convDPCtProxy2ActString(ctKey *C.struct_dp_ct_key) {
+	var DIP net.IP
+	var SIP net.IP
+
+	if ctKey.v6 == 0 {
+		DIP = tk.NltoIP(uint32(ctKey.daddr[0]))
+		SIP = tk.NltoIP(uint32(ctKey.saddr[0]))
+	} else {
+		SIP = convDPv6Addr2NetIP(unsafe.Pointer(&ctKey.saddr[0]))
+		DIP = convDPv6Addr2NetIP(unsafe.Pointer(&ctKey.daddr[0]))
+	}
+	Dport := tk.Ntohs(uint16(ctKey.dport))
+	Sport := tk.Ntohs(uint16(ctKey.sport))
+	Proto := ""
+
+	p := uint8(ctKey.l4proto)
+	switch {
+	case p == 1 || p == 58:
+		if p == 1 {
+			Proto = "icmp"
+		} else {
+			Proto = "icmp6"
+		}
+	case p == 6:
+		Proto = "tcp"
+	case p == 17:
+		Proto = "udp"
+	case p == 132:
+		Proto = "sctp"
+	default:
+		Proto = fmt.Sprintf("%d", p)
+	}
+
+	ct.CAct = fmt.Sprintf(" fp|%s:%d->%s:%d|%s", SIP.String(), Sport, DIP.String(), Dport, Proto)
+}
+
+//export goProxyEntCollector
+func goProxyEntCollector(e *proxtCT) {
+
+	proxyCt := new(DpCtInfo)
+	proxyCt.convDPCtKey2GoObj(&e.ct_in)
+	proxyCt.convDPCtProxy2ActString(&e.ct_out)
+	proxyCt.Bytes = uint64(e.st_out.bytes)
+	proxyCt.Bytes += uint64(e.st_in.bytes)
+
+	proxyCt.Packets = uint64(e.st_out.packets)
+	proxyCt.Packets += uint64(e.st_in.packets)
+	proxyCt.RuleID = uint32(e.rid)
+	proxyCt.CState = "est"
+
+	proxyCtInfo = append(proxyCtInfo, proxyCt)
+}
+
 // DpTableGet - routine to work on a ebpf map get request
 func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 	var tbl int
@@ -1364,12 +1456,12 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 
 	if tbl == C.LL_DP_CT_MAP {
 		ctMap := make(map[string]*DpCtInfo)
-		var n int = 0
-		var key *C.struct_dp_ct_key = nil
+		var key *C.struct_dp_ct_key
 		nextKey := new(C.struct_dp_ct_key)
 		var tact C.struct_dp_ct_tact
 		var act *C.struct_dp_ct_dat
 
+		n := 0
 		fd := C.llb_map2fd(C.int(tbl))
 
 		for C.bpf_map_get_next_key(C.int(fd), (unsafe.Pointer)(key), (unsafe.Pointer)(nextKey)) == 0 {
@@ -1398,6 +1490,21 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 			key = nextKey
 			n++
 		}
+
+		proxyCtInfo = nil
+		C.llb_trigger_get_proxy_entries()
+		for _, proxyCt := range proxyCtInfo {
+			ePCT := ctMap[proxyCt.Key()]
+			if ePCT != nil {
+				ePCT.CAct += proxyCt.CAct
+				ePCT.Bytes += proxyCt.Bytes
+				ePCT.Packets += proxyCt.Packets
+			} else {
+				ctMap[proxyCt.Key()] = proxyCt
+			}
+		}
+		proxyCtInfo = nil
+
 		return ctMap, nil
 	}
 
