@@ -1476,6 +1476,10 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 			return RuleExistsErr, errors.New("lbrule-exists error")
 		}
 
+		if eRule.act.action.(*ruleNatActs).mode == cmn.LBModeFullProxy || natActs.mode == cmn.LBModeFullProxy {
+			return RuleExistsErr, errors.New("lbrule-exist error: cant modify fullproxy rule")
+		}
+
 		// Update the rule
 		eRule.hChk.prbType = serv.ProbeType
 		eRule.hChk.prbPort = serv.ProbePort
