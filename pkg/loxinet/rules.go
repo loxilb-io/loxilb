@@ -1263,6 +1263,70 @@ func (R *RuleH) addVIPSys(r *ruleEnt) {
 	}
 }
 
+func getLBArms(oldEps []ruleNatEp, newEps []ruleNatEp, oper cmn.LBOp) (bool, []ruleNatEp) {
+	var retEps []ruleNatEp
+	ruleChg := false
+	found := false
+
+	for i, eEp := range oldEps {
+		for j, nEp := range newEps {
+			if eEp.xIP.Equal(nEp.xIP) &&
+				eEp.xPort == nEp.xPort {
+				e := &oldEps[i]
+				n := &newEps[j]
+				if eEp.inActive && oper != cmn.LBOPDetach {
+					ruleChg = true
+					e.inActive = false
+				}
+				if e.weight != nEp.weight {
+					ruleChg = true
+					e.weight = nEp.weight
+				}
+				e.chkVal = true
+				n.chkVal = true
+				found = true
+				break
+			}
+		}
+	}
+
+	// Remove LB arms from an existing LB
+	if oper == cmn.LBOPDetach {
+		if !found {
+			return false, oldEps
+		}
+		for i := range oldEps {
+			e := &oldEps[i]
+			if !e.chkVal {
+				retEps = append(retEps, *e)
+			}
+		}
+		return true, retEps
+	}
+
+	retEps = oldEps
+
+	// Attach LB arms to an existing LB
+	for i, nEp := range newEps {
+		n := &newEps[i]
+		if !nEp.chkVal {
+			ruleChg = true
+			n.chkVal = true
+			retEps = append(retEps, *n)
+		}
+	}
+
+	for i, eEp := range retEps {
+		e := &retEps[i]
+		if !eEp.chkVal && oper == cmn.LBOPAdd {
+			ruleChg = true
+			e.inActive = true
+		}
+		e.chkVal = false
+	}
+	return ruleChg, retEps
+}
+
 // AddNatLbRule - Add a service LB nat rule. The service details are passed in serv argument,
 // and end-point information is passed in the slice servEndPoints. On success,
 // it will return 0 and nil error, else appropriate return code and error string will be set
@@ -1427,43 +1491,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		// If a NAT rule already exists, we try not reschuffle the order of the end-points.
 		// We will try to append the new end-points at the end, while marking any other end-points
 		// not in the new list as inactive
-		ruleChg := false
-		eEps := eRule.act.action.(*ruleNatActs).endPoints
-		for i, eEp := range eEps {
-			for j, nEp := range natActs.endPoints {
-				if eEp.xIP.Equal(nEp.xIP) &&
-					eEp.xPort == nEp.xPort &&
-					eEp.weight == nEp.weight {
-					e := &eEps[i]
-					n := &natActs.endPoints[j]
-					if eEp.inActive {
-						ruleChg = true
-						e.inActive = false
-					}
-					e.chkVal = true
-					n.chkVal = true
-					break
-				}
-			}
-		}
-
-		for i, nEp := range natActs.endPoints {
-			n := &natActs.endPoints[i]
-			if !nEp.chkVal {
-				ruleChg = true
-				n.chkVal = true
-				eEps = append(eEps, *n)
-			}
-		}
-
-		for i, eEp := range eEps {
-			e := &eEps[i]
-			if !eEp.chkVal {
-				ruleChg = true
-				e.inActive = true
-			}
-			e.chkVal = false
-		}
+		ruleChg, retEps := getLBArms(eRule.act.action.(*ruleNatActs).endPoints, natActs.endPoints, serv.Oper)
 
 		if eRule.hChk.prbType != serv.ProbeType || eRule.hChk.prbPort != serv.ProbePort ||
 			eRule.hChk.prbReq != serv.ProbeReq || eRule.hChk.prbResp != serv.ProbeResp ||
@@ -1476,8 +1504,14 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 			return RuleExistsErr, errors.New("lbrule-exists error")
 		}
 
-		if eRule.act.action.(*ruleNatActs).mode == cmn.LBModeFullProxy || natActs.mode == cmn.LBModeFullProxy {
-			return RuleExistsErr, errors.New("lbrule-exist error: cant modify fullproxy rule")
+		if len(retEps) == 0 {
+			tk.LogIt(tk.LogDebug, "nat lb-rule %s has no-endpoints: to be deleted\n", eRule.tuples.String())
+			return R.DeleteNatLbRule(serv)
+    }
+
+		if eRule.act.action.(*ruleNatActs).mode == cmn.LBModeFullProxy && natActs.mode != cmn.LBModeFullProxy || 
+      eRule.act.action.(*ruleNatActs).mode != cmn.LBModeFullProxy && natActs.mode == cmn.LBModeFullProxy {
+			return RuleExistsErr, errors.New("lbrule-exist error: cant modify fullproxy rule mode")
 		}
 
 		// Update the rule
@@ -1489,12 +1523,12 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		eRule.hChk.prbTimeo = serv.ProbeTimeout
 		eRule.pTO = serv.PersistTimeout
 		eRule.act.action.(*ruleNatActs).sel = natActs.sel
-		eRule.act.action.(*ruleNatActs).endPoints = eEps
+		eRule.act.action.(*ruleNatActs).endPoints = retEps
 		eRule.act.action.(*ruleNatActs).mode = natActs.mode
 		// Managed flag can't be modified on the fly
 		// eRule.managed = serv.Managed
 
-		R.modNatEpHost(eRule, eEps, true, activateProbe)
+		R.modNatEpHost(eRule, retEps, true, activateProbe)
 		R.electEPSrc(eRule)
 
 		eRule.sT = time.Now()
@@ -1503,6 +1537,9 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		eRule.DP(DpCreate)
 
 		return 0, nil
+	} else if serv.Oper == cmn.LBOPDetach {
+		tk.LogIt(tk.LogInfo, "nat lb-rule %s-%v-%s does not exist\n", serv.ServIP, serv.ServPort, serv.Proto)
+		return RuleNotExistsErr, errors.New("lbrule not-exists error")
 	}
 
 	r := new(ruleEnt)

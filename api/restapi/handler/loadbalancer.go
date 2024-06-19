@@ -45,6 +45,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv.ProbeTimeout = params.Attr.ServiceArguments.ProbeTimeout
 	lbRules.Serv.ProbeRetries = int(params.Attr.ServiceArguments.ProbeRetries)
 	lbRules.Serv.Name = params.Attr.ServiceArguments.Name
+	lbRules.Serv.Oper = cmn.LBOp(params.Attr.ServiceArguments.Oper)
 
 	if lbRules.Serv.Proto == "sctp" {
 		for _, data := range params.Attr.SecondaryIPs {

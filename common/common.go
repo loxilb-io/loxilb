@@ -497,6 +497,18 @@ const (
 	LBModeHostOneArm
 )
 
+// LBOp - Variable to LB operation
+type LBOp int32
+
+const (
+	// LBOPAdd - Add te LB rule (replace if existing)
+	LBOPAdd LBOp = iota
+	// LBModeOneArm - Attach End-Points
+	LBOPAttach
+	// LBOPDetach - Detach End-Points
+	LBOPDetach
+)
+
 // LbServiceArg - Information related to load-balancer service
 type LbServiceArg struct {
 	// ServIP - the service ip or vip  of the load-balancer rule
@@ -513,6 +525,8 @@ type LbServiceArg struct {
 	Bgp bool `json:"bgp"`
 	// Monitor - monitor end-points of this rule
 	Monitor bool `json:"monitor"`
+	// Oper - Attach/Detach if the LB already exists
+	Oper LBOp `json:"oper"`
 	// Mode - NAT mode
 	Mode LBMode `json:"mode"`
 	// InactiveTimeout - Forced session reset after inactive timeout

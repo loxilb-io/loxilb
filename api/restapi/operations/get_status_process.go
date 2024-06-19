@@ -132,11 +132,6 @@ func (o *GetStatusProcessOKBody) contextValidateProcessAttr(ctx context.Context,
 	for i := 0; i < len(o.ProcessAttr); i++ {
 
 		if o.ProcessAttr[i] != nil {
-
-			if swag.IsZero(o.ProcessAttr[i]) { // not required
-				return nil
-			}
-
 			if err := o.ProcessAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getStatusProcessOK" + "." + "processAttr" + "." + strconv.Itoa(i))
