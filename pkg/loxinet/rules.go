@@ -1499,6 +1499,11 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 			return RuleExistsErr, errors.New("lbrule-exists error")
 		}
 
+		if len(retEps) == 0 {
+			tk.LogIt(tk.LogDebug, "nat lb-rule %s has no-endpoints: to be deleted\n", eRule.tuples.String())
+			return R.DeleteNatLbRule(serv)
+		}
+
 		// Update the rule
 		eRule.hChk.prbType = serv.ProbeType
 		eRule.hChk.prbPort = serv.ProbePort
