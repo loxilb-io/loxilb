@@ -1507,6 +1507,11 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		if len(retEps) == 0 {
 			tk.LogIt(tk.LogDebug, "nat lb-rule %s has no-endpoints: to be deleted\n", eRule.tuples.String())
 			return R.DeleteNatLbRule(serv)
+    }
+
+		if eRule.act.action.(*ruleNatActs).mode == cmn.LBModeFullProxy && natActs.mode != cmn.LBModeFullProxy || 
+      eRule.act.action.(*ruleNatActs).mode != cmn.LBModeFullProxy && natActs.mode == cmn.LBModeFullProxy {
+			return RuleExistsErr, errors.New("lbrule-exist error: cant modify fullproxy rule mode")
 		}
 
 		// Update the rule
@@ -2517,6 +2522,8 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 			nWork.EpSel = EpRRPersist
 		case at.sel == cmn.LbSelLeastConnections:
 			nWork.EpSel = EpLeastConn
+		case at.sel == cmn.LbSelN2:
+			nWork.EpSel = EpN2
 		default:
 			nWork.EpSel = EpRR
 		}

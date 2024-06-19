@@ -475,6 +475,8 @@ const (
 	LbSelRrPersist
 	// LbSelLeastConnections - select client based on least connections
 	LbSelLeastConnections
+	// LbSelN2 - select client based on N2 SCTP interface
+	LbSelN2
 )
 
 // LBMode - Variable to define LB mode
