@@ -1507,10 +1507,10 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		if len(retEps) == 0 {
 			tk.LogIt(tk.LogDebug, "nat lb-rule %s has no-endpoints: to be deleted\n", eRule.tuples.String())
 			return R.DeleteNatLbRule(serv)
-    }
+		}
 
-		if eRule.act.action.(*ruleNatActs).mode == cmn.LBModeFullProxy && natActs.mode != cmn.LBModeFullProxy || 
-      eRule.act.action.(*ruleNatActs).mode != cmn.LBModeFullProxy && natActs.mode == cmn.LBModeFullProxy {
+		if eRule.act.action.(*ruleNatActs).mode == cmn.LBModeFullProxy && natActs.mode != cmn.LBModeFullProxy ||
+			eRule.act.action.(*ruleNatActs).mode != cmn.LBModeFullProxy && natActs.mode == cmn.LBModeFullProxy {
 			return RuleExistsErr, errors.New("lbrule-exist error: cant modify fullproxy rule mode")
 		}
 
