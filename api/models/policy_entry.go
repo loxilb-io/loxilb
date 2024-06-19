@@ -105,11 +105,6 @@ func (m *PolicyEntry) ContextValidate(ctx context.Context, formats strfmt.Regist
 func (m *PolicyEntry) contextValidatePolicyInfo(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.PolicyInfo != nil {
-
-		if swag.IsZero(m.PolicyInfo) { // not required
-			return nil
-		}
-
 		if err := m.PolicyInfo.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("policyInfo")
@@ -126,11 +121,6 @@ func (m *PolicyEntry) contextValidatePolicyInfo(ctx context.Context, formats str
 func (m *PolicyEntry) contextValidateTargetObject(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.TargetObject != nil {
-
-		if swag.IsZero(m.TargetObject) { // not required
-			return nil
-		}
-
 		if err := m.TargetObject.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("targetObject")

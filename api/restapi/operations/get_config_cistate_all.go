@@ -132,11 +132,6 @@ func (o *GetConfigCistateAllOKBody) contextValidateAttr(ctx context.Context, for
 	for i := 0; i < len(o.Attr); i++ {
 
 		if o.Attr[i] != nil {
-
-			if swag.IsZero(o.Attr[i]) { // not required
-				return nil
-			}
-
 			if err := o.Attr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigCistateAllOK" + "." + "Attr" + "." + strconv.Itoa(i))
