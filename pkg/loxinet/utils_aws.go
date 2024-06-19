@@ -532,6 +532,8 @@ func AWSAssociateElasticIp(vIP, eIP net.IP, add bool) error {
 		tk.LogIt(tk.LogError, "AWS get elastic IP failed: %v\n", err)
 		return err
 	}
+
+	tk.LogIt(tk.LogInfo, "AWS adding elastic IP : %s\n", eIP.String())
 	if !add {
 		return AWSDisassociateElasticIpWithInterface(ctx, eipAssociateID, niID)
 	}
@@ -547,12 +549,16 @@ func AWSAssociateElasticIpWithInterface(ctx context.Context, eipID, niID string,
 	}
 	if privateIP != nil {
 		if err := AWSCreatePrivateIp(ctx, niID, privateIP); err != nil {
+			tk.LogIt(tk.LogError, "AWS create priv IP failed: %s\n", err)
 			return err
 		}
 		ipstr := privateIP.String()
 		input.PrivateIpAddress = &ipstr
 	}
 	_, err := ec2Client.AssociateAddress(ctx, input)
+	if err != nil {
+		tk.LogIt(tk.LogError, "AWS associate address eIP failed: %s\n", err)
+	}
 	return err
 }
 
