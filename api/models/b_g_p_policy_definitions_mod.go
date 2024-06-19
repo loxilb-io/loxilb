@@ -85,11 +85,6 @@ func (m *BGPPolicyDefinitionsMod) contextValidateStatements(ctx context.Context,
 	for i := 0; i < len(m.Statements); i++ {
 
 		if m.Statements[i] != nil {
-
-			if swag.IsZero(m.Statements[i]) { // not required
-				return nil
-			}
-
 			if err := m.Statements[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("statements" + "." + strconv.Itoa(i))

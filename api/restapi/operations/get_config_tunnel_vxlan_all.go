@@ -132,11 +132,6 @@ func (o *GetConfigTunnelVxlanAllOKBody) contextValidateVxlanAttr(ctx context.Con
 	for i := 0; i < len(o.VxlanAttr); i++ {
 
 		if o.VxlanAttr[i] != nil {
-
-			if swag.IsZero(o.VxlanAttr[i]) { // not required
-				return nil
-			}
-
 			if err := o.VxlanAttr[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getConfigTunnelVxlanAllOK" + "." + "vxlanAttr" + "." + strconv.Itoa(i))

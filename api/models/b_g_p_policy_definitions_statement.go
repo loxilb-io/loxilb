@@ -105,11 +105,6 @@ func (m *BGPPolicyDefinitionsStatement) ContextValidate(ctx context.Context, for
 func (m *BGPPolicyDefinitionsStatement) contextValidateActions(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Actions != nil {
-
-		if swag.IsZero(m.Actions) { // not required
-			return nil
-		}
-
 		if err := m.Actions.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("actions")
@@ -126,11 +121,6 @@ func (m *BGPPolicyDefinitionsStatement) contextValidateActions(ctx context.Conte
 func (m *BGPPolicyDefinitionsStatement) contextValidateConditions(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Conditions != nil {
-
-		if swag.IsZero(m.Conditions) { // not required
-			return nil
-		}
-
 		if err := m.Conditions.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("conditions")
@@ -224,11 +214,6 @@ func (m *BGPPolicyDefinitionsStatementActions) ContextValidate(ctx context.Conte
 func (m *BGPPolicyDefinitionsStatementActions) contextValidateBgpActions(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.BgpActions != nil {
-
-		if swag.IsZero(m.BgpActions) { // not required
-			return nil
-		}
-
 		if err := m.BgpActions.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("actions" + "." + "bgpActions")
@@ -418,11 +403,6 @@ func (m *BGPPolicyDefinitionsStatementActionsBgpActions) ContextValidate(ctx con
 func (m *BGPPolicyDefinitionsStatementActionsBgpActions) contextValidateSetAsPathPrepend(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.SetAsPathPrepend != nil {
-
-		if swag.IsZero(m.SetAsPathPrepend) { // not required
-			return nil
-		}
-
 		if err := m.SetAsPathPrepend.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("actions" + "." + "bgpActions" + "." + "setAsPathPrepend")
@@ -439,11 +419,6 @@ func (m *BGPPolicyDefinitionsStatementActionsBgpActions) contextValidateSetAsPat
 func (m *BGPPolicyDefinitionsStatementActionsBgpActions) contextValidateSetCommunity(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.SetCommunity != nil {
-
-		if swag.IsZero(m.SetCommunity) { // not required
-			return nil
-		}
-
 		if err := m.SetCommunity.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("actions" + "." + "bgpActions" + "." + "setCommunity")
@@ -460,11 +435,6 @@ func (m *BGPPolicyDefinitionsStatementActionsBgpActions) contextValidateSetCommu
 func (m *BGPPolicyDefinitionsStatementActionsBgpActions) contextValidateSetExtCommunity(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.SetExtCommunity != nil {
-
-		if swag.IsZero(m.SetExtCommunity) { // not required
-			return nil
-		}
-
 		if err := m.SetExtCommunity.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("actions" + "." + "bgpActions" + "." + "setExtCommunity")
@@ -481,11 +451,6 @@ func (m *BGPPolicyDefinitionsStatementActionsBgpActions) contextValidateSetExtCo
 func (m *BGPPolicyDefinitionsStatementActionsBgpActions) contextValidateSetLargeCommunity(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.SetLargeCommunity != nil {
-
-		if swag.IsZero(m.SetLargeCommunity) { // not required
-			return nil
-		}
-
 		if err := m.SetLargeCommunity.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("actions" + "." + "bgpActions" + "." + "setLargeCommunity")
@@ -796,11 +761,6 @@ func (m *BGPPolicyDefinitionsStatementConditions) ContextValidate(ctx context.Co
 func (m *BGPPolicyDefinitionsStatementConditions) contextValidateBgpConditions(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.BgpConditions != nil {
-
-		if swag.IsZero(m.BgpConditions) { // not required
-			return nil
-		}
-
 		if err := m.BgpConditions.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("conditions" + "." + "bgpConditions")
@@ -817,11 +777,6 @@ func (m *BGPPolicyDefinitionsStatementConditions) contextValidateBgpConditions(c
 func (m *BGPPolicyDefinitionsStatementConditions) contextValidateMatchNeighborSet(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.MatchNeighborSet != nil {
-
-		if swag.IsZero(m.MatchNeighborSet) { // not required
-			return nil
-		}
-
 		if err := m.MatchNeighborSet.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("conditions" + "." + "matchNeighborSet")
@@ -838,11 +793,6 @@ func (m *BGPPolicyDefinitionsStatementConditions) contextValidateMatchNeighborSe
 func (m *BGPPolicyDefinitionsStatementConditions) contextValidateMatchPrefixSet(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.MatchPrefixSet != nil {
-
-		if swag.IsZero(m.MatchPrefixSet) { // not required
-			return nil
-		}
-
 		if err := m.MatchPrefixSet.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("conditions" + "." + "matchPrefixSet")
@@ -1065,11 +1015,6 @@ func (m *BGPPolicyDefinitionsStatementConditionsBgpConditions) ContextValidate(c
 func (m *BGPPolicyDefinitionsStatementConditionsBgpConditions) contextValidateAsPathLength(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.AsPathLength != nil {
-
-		if swag.IsZero(m.AsPathLength) { // not required
-			return nil
-		}
-
 		if err := m.AsPathLength.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("conditions" + "." + "bgpConditions" + "." + "asPathLength")
@@ -1086,11 +1031,6 @@ func (m *BGPPolicyDefinitionsStatementConditionsBgpConditions) contextValidateAs
 func (m *BGPPolicyDefinitionsStatementConditionsBgpConditions) contextValidateMatchAsPathSet(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.MatchAsPathSet != nil {
-
-		if swag.IsZero(m.MatchAsPathSet) { // not required
-			return nil
-		}
-
 		if err := m.MatchAsPathSet.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("conditions" + "." + "bgpConditions" + "." + "matchAsPathSet")
@@ -1107,11 +1047,6 @@ func (m *BGPPolicyDefinitionsStatementConditionsBgpConditions) contextValidateMa
 func (m *BGPPolicyDefinitionsStatementConditionsBgpConditions) contextValidateMatchCommunitySet(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.MatchCommunitySet != nil {
-
-		if swag.IsZero(m.MatchCommunitySet) { // not required
-			return nil
-		}
-
 		if err := m.MatchCommunitySet.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("conditions" + "." + "bgpConditions" + "." + "matchCommunitySet")
@@ -1128,11 +1063,6 @@ func (m *BGPPolicyDefinitionsStatementConditionsBgpConditions) contextValidateMa
 func (m *BGPPolicyDefinitionsStatementConditionsBgpConditions) contextValidateMatchExtCommunitySet(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.MatchExtCommunitySet != nil {
-
-		if swag.IsZero(m.MatchExtCommunitySet) { // not required
-			return nil
-		}
-
 		if err := m.MatchExtCommunitySet.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("conditions" + "." + "bgpConditions" + "." + "matchExtCommunitySet")
@@ -1149,11 +1079,6 @@ func (m *BGPPolicyDefinitionsStatementConditionsBgpConditions) contextValidateMa
 func (m *BGPPolicyDefinitionsStatementConditionsBgpConditions) contextValidateMatchLargeCommunitySet(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.MatchLargeCommunitySet != nil {
-
-		if swag.IsZero(m.MatchLargeCommunitySet) { // not required
-			return nil
-		}
-
 		if err := m.MatchLargeCommunitySet.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("conditions" + "." + "bgpConditions" + "." + "matchLargeCommunitySet")
