@@ -2850,6 +2850,10 @@ definitions:
           name:
             type: string
             description: service name
+          oper:
+            type: integer
+            format: int32
+            description: end-point specific op (0-create, 1-attachEP, 2-detachEP)
       
       endpoints:
         type: array

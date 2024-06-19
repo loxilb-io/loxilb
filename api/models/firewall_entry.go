@@ -102,11 +102,6 @@ func (m *FirewallEntry) ContextValidate(ctx context.Context, formats strfmt.Regi
 func (m *FirewallEntry) contextValidateOpts(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Opts != nil {
-
-		if swag.IsZero(m.Opts) { // not required
-			return nil
-		}
-
 		if err := m.Opts.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("opts")
@@ -123,11 +118,6 @@ func (m *FirewallEntry) contextValidateOpts(ctx context.Context, formats strfmt.
 func (m *FirewallEntry) contextValidateRuleArguments(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.RuleArguments != nil {
-
-		if swag.IsZero(m.RuleArguments) { // not required
-			return nil
-		}
-
 		if err := m.RuleArguments.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("ruleArguments")

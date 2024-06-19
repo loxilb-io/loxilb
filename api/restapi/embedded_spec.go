@@ -4871,6 +4871,11 @@ func init() {
               "description": "service name",
               "type": "string"
             },
+            "oper": {
+              "description": "end-point specific op (0-create, 1-attachEP, 2-detachEP)",
+              "type": "integer",
+              "format": "int32"
+            },
             "port": {
               "description": "port number for the access",
               "type": "integer"
@@ -10816,6 +10821,11 @@ func init() {
               "description": "service name",
               "type": "string"
             },
+            "oper": {
+              "description": "end-point specific op (0-create, 1-attachEP, 2-detachEP)",
+              "type": "integer",
+              "format": "int32"
+            },
             "port": {
               "description": "port number for the access",
               "type": "integer"
@@ -10928,6 +10938,11 @@ func init() {
         "name": {
           "description": "service name",
           "type": "string"
+        },
+        "oper": {
+          "description": "end-point specific op (0-create, 1-attachEP, 2-detachEP)",
+          "type": "integer",
+          "format": "int32"
         },
         "port": {
           "description": "port number for the access",
