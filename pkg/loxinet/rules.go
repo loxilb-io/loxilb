@@ -1242,17 +1242,22 @@ func (R *RuleH) unFoldRecursiveEPs(r *ruleEnt) {
 // addVIPSys - system specific operations for VIPs of a LB rule
 func (R *RuleH) addVIPSys(r *ruleEnt) {
 	if !strings.Contains(r.name, "ipvs") && !strings.Contains(r.name, "static") {
-		R.vipMap[r.tuples.l3Dst.addr.IP.String()]++
 
-		if R.vipMap[r.tuples.l3Dst.addr.IP.String()] == 1 {
-			R.AdvRuleVIPIfL2(r.tuples.l3Dst.addr.IP)
+		if !r.tuples.l3Dst.addr.IP.IsUnspecified() {
+			R.vipMap[r.tuples.l3Dst.addr.IP.String()]++
+
+			if R.vipMap[r.tuples.l3Dst.addr.IP.String()] == 1 {
+				R.AdvRuleVIPIfL2(r.tuples.l3Dst.addr.IP)
+			}
 		}
 
 		// Take care of any secondary VIPs
 		for _, sVIP := range r.secIP {
-			R.vipMap[sVIP.sIP.String()]++
-			if R.vipMap[sVIP.sIP.String()] == 1 {
-				R.AdvRuleVIPIfL2(sVIP.sIP)
+			if !sVIP.sIP.IsUnspecified() {
+				R.vipMap[sVIP.sIP.String()]++
+				if R.vipMap[sVIP.sIP.String()] == 1 {
+					R.AdvRuleVIPIfL2(sVIP.sIP)
+				}
 			}
 		}
 	}
@@ -1593,33 +1598,38 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 // deleteVIPSys - system specific operations for deleting VIPs of a LB rule
 func (R *RuleH) deleteVIPSys(r *ruleEnt) {
 	if !strings.Contains(r.name, "ipvs") && !strings.Contains(r.name, "static") {
-		R.vipMap[r.tuples.l3Dst.addr.IP.String()]--
 
-		if R.vipMap[r.tuples.l3Dst.addr.IP.String()] == 0 {
-			if utils.IsIPHostAddr(r.tuples.l3Dst.addr.IP.String()) {
-				loxinlp.DelAddrNoHook(r.tuples.l3Dst.addr.IP.String()+"/32", "lo")
+		if !r.tuples.l3Dst.addr.IP.IsUnspecified() {
+			R.vipMap[r.tuples.l3Dst.addr.IP.String()]--
+
+			if R.vipMap[r.tuples.l3Dst.addr.IP.String()] == 0 {
+				if utils.IsIPHostAddr(r.tuples.l3Dst.addr.IP.String()) {
+					loxinlp.DelAddrNoHook(r.tuples.l3Dst.addr.IP.String()+"/32", "lo")
+				}
+				dev := fmt.Sprintf("llb-rule-%s", r.tuples.l3Dst.addr.IP.String())
+				ret, _ := mh.zr.L3.IfaFind(dev, r.tuples.l3Dst.addr.IP)
+				if ret == 0 {
+					mh.zr.L3.IfaDelete(dev, r.tuples.l3Dst.addr.IP.String()+"/32")
+				}
+				delete(R.vipMap, r.tuples.l3Dst.addr.IP.String())
 			}
-			dev := fmt.Sprintf("llb-rule-%s", r.tuples.l3Dst.addr.IP.String())
-			ret, _ := mh.zr.L3.IfaFind(dev, r.tuples.l3Dst.addr.IP)
-			if ret == 0 {
-				mh.zr.L3.IfaDelete(dev, r.tuples.l3Dst.addr.IP.String()+"/32")
-			}
-			delete(R.vipMap, r.tuples.l3Dst.addr.IP.String())
 		}
 
 		// Take care of any secondary VIPs
 		for _, sVIP := range r.secIP {
-			R.vipMap[sVIP.sIP.String()]--
-			if R.vipMap[sVIP.sIP.String()] == 0 {
-				if utils.IsIPHostAddr(sVIP.sIP.String()) {
-					loxinlp.DelAddrNoHook(sVIP.sIP.String()+"/32", "lo")
+			if !sVIP.sIP.IsUnspecified() {
+				R.vipMap[sVIP.sIP.String()]--
+				if R.vipMap[sVIP.sIP.String()] == 0 {
+					if utils.IsIPHostAddr(sVIP.sIP.String()) {
+						loxinlp.DelAddrNoHook(sVIP.sIP.String()+"/32", "lo")
+					}
+					dev := fmt.Sprintf("llb-rule-%s", sVIP.sIP.String())
+					ret, _ := mh.zr.L3.IfaFind(dev, sVIP.sIP)
+					if ret == 0 {
+						mh.zr.L3.IfaDelete(dev, sVIP.sIP.String()+"/32")
+					}
+					delete(R.vipMap, sVIP.sIP.String())
 				}
-				dev := fmt.Sprintf("llb-rule-%s", sVIP.sIP.String())
-				ret, _ := mh.zr.L3.IfaFind(dev, sVIP.sIP)
-				if ret == 0 {
-					mh.zr.L3.IfaDelete(dev, sVIP.sIP.String()+"/32")
-				}
-				delete(R.vipMap, sVIP.sIP.String())
 			}
 		}
 	}

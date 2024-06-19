@@ -84,11 +84,13 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 - [K3s : loxilb with calico](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s_quick_start_calico.md)
 - [K3s : loxilb with cilium](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/quick_start_with_cilium.md)
 - [K0s : loxilb with default kube-router networking](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k0s_quick_start.md)
+- [EKS : loxilb ext-mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/eks-external.md)
 
 #### loxilb as in-cluster pod   
 - [K3s : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s_quick_start_incluster.md)
 - [K0s : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k0s_quick_start_incluster.md)
 - [MicroK8s : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/microk8s_quick_start_incluster.md)
+- [EKS : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/eks-incluster.md)
 
 #### loxilb as service-proxy (kube-proxy replacement)
 - [K3s : loxilb service-proxy with flannel](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/service-proxy-flannel.md)
