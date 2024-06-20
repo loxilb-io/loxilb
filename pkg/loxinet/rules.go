@@ -2801,6 +2801,8 @@ func (R *RuleH) RuleVIPSyncToClusterState() {
 	ciState, _ := mh.has.CIStateGetInst(cmn.CIDefault)
 	if ciState == "MASTER" {
 		CloudPrepareVIPNetWork()
+	} else if ciState == "BACKUP" {
+		CloudUnPrepareVIPNetWork()
 	}
 
 	for vip, vipElem := range R.vipMap {

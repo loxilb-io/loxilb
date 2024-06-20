@@ -419,6 +419,41 @@ retry:
 	return nil
 }
 
+func AWSUnPrepVIPNetwork() error {
+	_, defaultDst, _ := net.ParseCIDR("0.0.0.0/0")
+	if intfENIName == "" {
+		tk.LogIt(tk.LogError, "failed to get ENI intf name (%s)\n", intfENIName)
+		return nil
+	}
+
+	_, err := nl.LinkByName(intfENIName)
+	if err != nil {
+		intfENIName = ""
+		tk.LogIt(tk.LogError, "failed to get ENI link (%s)\n", intfENIName)
+		return err
+	}
+
+	mh.zr.Rt.RtDelete(*defaultDst, RootZone)
+	intfENIName = ""
+
+	chkIP := net.ParseIP("8.8.8.8")
+	defaultRT, err := nl.RouteGet(chkIP)
+	if err != nil {
+		tk.LogIt(tk.LogError, "AWSUnPrepVIPNetwork(): failed to get sys default route\n")
+		return err
+	}
+
+	ra := RtAttr{HostRoute: false, Ifi: defaultRT[0].LinkIndex, IfRoute: false}
+	na := []RtNhAttr{{defaultRT[0].Gw, defaultRT[0].LinkIndex}}
+	_, err = mh.zr.Rt.RtAdd(*defaultDst, RootZone, ra, na)
+	if err != nil {
+		tk.LogIt(tk.LogError, "failed to set loxidefault gw %s\n", defaultRT[0].Gw.String())
+		return err
+	}
+
+	return nil
+}
+
 func AWSGetNetworkInterface(ctx context.Context, instanceID string, vIP net.IP) (string, error) {
 	filterStr := "attachment.instance-id"
 	output, err := ec2Client.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
@@ -512,6 +547,12 @@ func AWSUpdatePrivateIP(vIP net.IP, add bool) error {
 }
 
 func AWSAssociateElasticIp(vIP, eIP net.IP, add bool) error {
+
+	if intfENIName == "" {
+		tk.LogIt(tk.LogError, "associate elasticIP: failed to get ENI intf name\n")
+		return errors.New("no loxi-eni found")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 

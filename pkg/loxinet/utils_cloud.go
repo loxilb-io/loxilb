@@ -42,3 +42,9 @@ func CloudPrepareVIPNetWork() {
 		AWSPrepVIPNetwork()
 	}
 }
+
+func CloudUnPrepareVIPNetWork() {
+	if mh.cloudLabel == "aws" {
+		AWSUnPrepVIPNetwork()
+	}
+}
