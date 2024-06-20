@@ -254,13 +254,17 @@ func AWSPrepVIPNetwork() error {
 		tk.LogIt(tk.LogError, "DescribeVpcs failed (%s)\n", err)
 		return err
 	}
+	needCIDRAssoc := true
 	if len(vpcOut.Vpcs) >= 1 {
-		dissAssoc := false
 		for _, vpc := range vpcOut.Vpcs {
-			if vpc.VpcId != nil && *vpc.VpcId != vpcID {
+			if vpc.VpcId != nil {
 				for _, cbAs := range vpc.CidrBlockAssociationSet {
 					if cbAs.CidrBlockState != nil && cbAs.CidrBlockState.State == types.VpcCidrBlockStateCodeAssociated &&
 						cbAs.CidrBlock != nil && *cbAs.CidrBlock == cidrBlock {
+						if *vpc.VpcId == vpcID {
+							needCIDRAssoc = false
+							break
+						}
 						// CIDR is not in the current VPC. There should be no attached subnets/interfaces at this point
 						_, err := ec2Client.DisassociateVpcCidrBlock(ctx3, &ec2.DisassociateVpcCidrBlockInput{AssociationId: cbAs.AssociationId})
 						if err != nil {
@@ -269,23 +273,22 @@ func AWSPrepVIPNetwork() error {
 						} else {
 							tk.LogIt(tk.LogInfo, "cidrBlock (%s) dissassociated from VPC %s\n", cidrBlock, *vpcOut.Vpcs[0].VpcId)
 						}
-						dissAssoc = true
 						break
 					}
 				}
 			}
 		}
+	}
 
-		if dissAssoc {
-			// Reassociate this CIDR block
-			_, err := ec2Client.AssociateVpcCidrBlock(ctx,
-				&ec2.AssociateVpcCidrBlockInput{VpcId: &vpcID, CidrBlock: &cidrBlock})
-			if err != nil {
-				tk.LogIt(tk.LogError, "cidrBlock (%s) associate failed in VPC %s:%s\n", cidrBlock, vpcID, err)
-				return err
-			} else {
-				tk.LogIt(tk.LogError, "cidrBlock (%s) associated to VPC %s\n", cidrBlock, vpcID)
-			}
+	if needCIDRAssoc {
+		// Reassociate this CIDR block
+		_, err := ec2Client.AssociateVpcCidrBlock(ctx,
+			&ec2.AssociateVpcCidrBlockInput{VpcId: &vpcID, CidrBlock: &cidrBlock})
+		if err != nil {
+			tk.LogIt(tk.LogError, "cidrBlock (%s) associate failed in VPC %s:%s\n", cidrBlock, vpcID, err)
+			return err
+		} else {
+			tk.LogIt(tk.LogError, "cidrBlock (%s) associated to VPC %s\n", cidrBlock, vpcID)
 		}
 	}
 
