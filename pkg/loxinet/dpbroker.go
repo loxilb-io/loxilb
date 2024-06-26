@@ -285,6 +285,7 @@ type NatDpWorkQ struct {
 	BlockNum  uint16
 	DsrMode   bool
 	CsumDis   bool
+	TermHTTPs bool
 	Proto     uint8
 	Mark      int
 	NatType   NatT

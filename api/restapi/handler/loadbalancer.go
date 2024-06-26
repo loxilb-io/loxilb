@@ -36,6 +36,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv.Bgp = params.Attr.ServiceArguments.Bgp
 	lbRules.Serv.Monitor = params.Attr.ServiceArguments.Monitor
 	lbRules.Serv.Mode = cmn.LBMode(params.Attr.ServiceArguments.Mode)
+	lbRules.Serv.Security = cmn.LBSec(params.Attr.ServiceArguments.Security)
 	lbRules.Serv.InactiveTimeout = uint32(params.Attr.ServiceArguments.InactiveTimeOut)
 	lbRules.Serv.Managed = params.Attr.ServiceArguments.Managed
 	lbRules.Serv.ProbeType = params.Attr.ServiceArguments.Probetype
@@ -124,6 +125,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tmpSvc.Block = uint16(lb.Serv.BlockNum)
 		tmpSvc.Sel = int64(lb.Serv.Sel)
 		tmpSvc.Mode = int32(lb.Serv.Mode)
+		tmpSvc.Security = int32(lb.Serv.Security)
 		tmpSvc.InactiveTimeOut = int32(lb.Serv.InactiveTimeout)
 		tmpSvc.Monitor = lb.Serv.Monitor
 		tmpSvc.Managed = lb.Serv.Managed

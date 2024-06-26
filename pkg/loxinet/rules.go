@@ -283,6 +283,7 @@ type ruleEnt struct {
 	secIP    []ruleNatSIP
 	stat     ruleStat
 	name     string
+	secMode  cmn.LBSec
 	locIPs   map[string]struct{}
 }
 
@@ -772,6 +773,7 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.Bgp = data.bgp
 		ret.Serv.BlockNum = data.tuples.pref
 		ret.Serv.Managed = data.managed
+		ret.Serv.Security = data.secMode
 		ret.Serv.ProbeType = data.hChk.prbType
 		ret.Serv.ProbePort = data.hChk.prbPort
 		ret.Serv.ProbeReq = data.hChk.prbReq
@@ -1555,6 +1557,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	}
 	r.managed = serv.Managed
 	r.secIP = nSecIP
+	r.secMode = serv.Security
 	// Per LB end-point health-check is supposed to be handled at kube-loxilb/CCM,
 	// but it certain cases like stand-alone mode, loxilb can do its own
 	// lb end-point health monitoring
@@ -2482,6 +2485,9 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.Work = work
 	nWork.Status = &r.sync
 	nWork.ZoneNum = r.zone.ZoneNum
+	if r.secMode == cmn.LBServHttps {
+		nWork.TermHTTPs = true
+	}
 	nWork.ServiceIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
 	nWork.L4Port = r.tuples.l4Dst.val
 	nWork.Proto = r.tuples.l4Prot.val

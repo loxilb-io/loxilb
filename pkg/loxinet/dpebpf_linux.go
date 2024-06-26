@@ -40,7 +40,7 @@ extern void goMapNotiHandler(struct ll_dp_map_notif *);
 extern void goProxyEntCollector(struct dp_proxy_ct_ent *);
 extern void goLinuxArpResolver(unsigned int);
 #cgo CFLAGS:  -I./../../loxilb-ebpf/libbpf/src/ -I./../../loxilb-ebpf/common
-#cgo LDFLAGS: -L. -L/lib64 -L./../../loxilb-ebpf/kernel -L./../../loxilb-ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=/lib64/ -l:./../../loxilb-ebpf/kernel/libloxilbdp.a -l:./../../loxilb-ebpf/libbpf/src/libbpf.a -l:./../../loxilb-ebpf/proto/ngap/lib-llbngap.a -lelf -lz
+#cgo LDFLAGS: -L. -L/lib64 -L./../../loxilb-ebpf/kernel -L./../../loxilb-ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=/lib64/ -l:./../../loxilb-ebpf/kernel/libloxilbdp.a -l:./../../loxilb-ebpf/libbpf/src/libbpf.a -l:./../../loxilb-ebpf/proto/ngap/lib-llbngap.a -lelf -lz -lssl -lcrypto
 */
 import "C"
 import (
@@ -1021,6 +1021,10 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 			dat.cdis = 1
 		} else {
 			dat.cdis = 0
+		}
+
+		if w.TermHTTPs {
+			dat.sec_mode = C.SEC_MODE_HTTPS
 		}
 
 		ret := C.llb_add_map_elem(C.LL_DP_NAT_MAP,

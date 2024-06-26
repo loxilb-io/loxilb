@@ -509,6 +509,16 @@ const (
 	LBOPDetach
 )
 
+// LBSec - Variable to define LB front-end security
+type LBSec int32
+
+const (
+	// LBServPlain - Plain mode
+	LBServPlain LBSec = iota
+	// LBServHttps - HTTPS termination
+	LBServHttps
+)
+
 // LbServiceArg - Information related to load-balancer service
 type LbServiceArg struct {
 	// ServIP - the service ip or vip  of the load-balancer rule
@@ -527,6 +537,8 @@ type LbServiceArg struct {
 	Monitor bool `json:"monitor"`
 	// Oper - Attach/Detach if the LB already exists
 	Oper LBOp `json:"oper"`
+	// Security - Security mode if any
+	Security LBSec `json:"lbsec"`
 	// Mode - NAT mode
 	Mode LBMode `json:"mode"`
 	// InactiveTimeout - Forced session reset after inactive timeout

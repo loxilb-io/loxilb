@@ -360,6 +360,9 @@ type LoadbalanceEntryServiceArguments struct {
 	// value for access protocol
 	Protocol string `json:"protocol,omitempty"`
 
+	// value for Security mode (0-Plain, 1-HTTPs)
+	Security int32 `json:"security,omitempty"`
+
 	// value for load balance algorithim
 	Sel int64 `json:"sel,omitempty"`
 }
