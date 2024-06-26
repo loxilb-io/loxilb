@@ -37,7 +37,7 @@ software:
   cluster:
     box: bento/ubuntu-22.04
     version: 202401.31.0
-  calico: 3.26.0
+  calico: 3.26.1
   # To skip the dashboard installation, set its version to an empty value or comment it out:
   kubernetes: 1.29.2
   os: xUbuntu_22.04
