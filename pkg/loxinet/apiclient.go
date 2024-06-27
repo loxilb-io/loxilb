@@ -754,10 +754,21 @@ func (na *NetAPIStruct) NetGoBGPPolicyDefinitionDel(param *cmn.GoBGPPolicyDefini
 
 }
 
-// NetGoBGPPolicyNeighAdd - Add bgp neigh to gobgp
+// NetGoBGPPolicyApplyAdd - Add bgp neigh to gobgp
 func (na *NetAPIStruct) NetGoBGPPolicyApplyAdd(param *cmn.GoBGPPolicyApply) (int, error) {
 	if mh.bgp != nil {
 		return mh.bgp.BGPApplyPolicyToNeighbor("add", param.NeighIPAddress, param.PolicyType, param.Polices, param.RouteAction)
+	}
+	tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
+	return 0, errors.New("loxilb BGP mode is disabled")
+
+}
+
+
+// NetGoBGPPolicyApplyDel - Del bgp neigh to gobgp
+func (na *NetAPIStruct) NetGoBGPPolicyApplyDel(param *cmn.GoBGPPolicyApply) (int, error) {
+	if mh.bgp != nil {
+		return mh.bgp.BGPApplyPolicyToNeighbor("del", param.NeighIPAddress, param.PolicyType, param.Polices, param.RouteAction)
 	}
 	tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
 	return 0, errors.New("loxilb BGP mode is disabled")

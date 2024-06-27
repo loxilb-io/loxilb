@@ -1027,6 +1027,7 @@ type NetHookInterface interface {
 
 	NetGoBGPPolicyApplyAdd(nm *GoBGPPolicyApply) (int, error)
 
+	NetGoBGPPolicyApplyDel(nm *GoBGPPolicyApply) (int, error)
 	NetGoBGPGCAdd(gc *GoBGPGlobalConfig) (int, error)
 	NetBFDGet() ([]BFDMod, error)
 	NetBFDAdd(bm *BFDMod) (int, error)
