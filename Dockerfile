@@ -12,6 +12,7 @@ ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
 RUN mkdir -p /opt/loxilb && \
     mkdir -p /root/loxilb-io/loxilb/ && \
     mkdir -p /opt/loxilb/cert/ && \
+    mkdir -p /etc/loxilb/certs/ && \
     mkdir -p /etc/bash_completion.d/ && \
     # Update Ubuntu Software repository
     apt-get update && apt-get install -y wget && \
@@ -22,6 +23,10 @@ RUN mkdir -p /opt/loxilb && \
     apt-get install -y clang llvm libelf-dev libpcap-dev vim net-tools \
     elfutils dwarves git libbsd-dev bridge-utils wget unzip build-essential \
     bison flex sudo iproute2 pkg-config tcpdump iputils-ping curl bash-completion && \
+    # Install openssl-3.0.0
+    wget https://www.openssl.org/source/openssl-3.0.0.tar.gz && tar -xvzf openssl-3.0.0.tar.gz && \
+    cd openssl-3.0.0 && ./Configure enable-ktls '-Wl,-rpath,$(LIBRPATH)' && \
+    make -j$(nproc) && make install_dev install_modules && cd - && rm -fr openssl-3.0.0*  && \
     # Install loxilb's custom ntc tool
     wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
     unzip main.zip && cd iproute2-main/ && rm -fr libbpf && wget https://github.com/loxilb-io/libbpf/archive/refs/heads/main.zip && \
@@ -40,7 +45,7 @@ RUN mkdir -p /opt/loxilb && \
     make && cp ./loxicmd /usr/local/sbin/loxicmd && cd - && rm -fr loxicmd && \
     /usr/local/sbin/loxicmd completion bash > /etc/bash_completion.d/loxi_completion && \
     # Install loxilb
-    git clone --recurse-submodules https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && \
+    git clone --recurse-submodules https://github.com/TrekkieCoder/loxilb  /root/loxilb-io/loxilb/ && \
     cd /root/loxilb-io/loxilb/ && go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
     else make ;fi && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
     cp loxilb-ebpf/utils/mkllb_cgroup.sh /usr/local/sbin/mkllb_cgroup && \
@@ -85,6 +90,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends sudo \
     rm -rf /var/lib/apt/lists/* && apt clean
 
 COPY --from=build /usr/lib64/libbpf* /usr/lib64/
+COPY --from=build /usr/local/lib64/* /usr/lib64
 COPY --from=build /usr/local/go/bin /usr/local/go/bin
 COPY --from=build /usr/local/sbin/mkllb_bpffs /usr/local/sbin/mkllb_bpffs
 COPY --from=build /usr/local/sbin/mkllb_cgroup /usr/local/sbin/mkllb_cgroup

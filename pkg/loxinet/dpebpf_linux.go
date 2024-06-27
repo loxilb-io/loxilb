@@ -1423,7 +1423,7 @@ func (ct *DpCtInfo) convDPCtProxy2ActString(ctKey *C.struct_dp_ct_key) {
 		Proto = fmt.Sprintf("%d", p)
 	}
 
-	ct.CAct = fmt.Sprintf(" fp|%s:%d->%s:%d|%s", SIP.String(), Sport, DIP.String(), Dport, Proto)
+	ct.CAct = fmt.Sprintf("fp|%s:%d->%s:%d|%s", SIP.String(), Sport, DIP.String(), Dport, Proto)
 }
 
 //export goProxyEntCollector
@@ -1497,9 +1497,12 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 
 		proxyCtInfo = nil
 		C.llb_trigger_get_proxy_entries()
-		for _, proxyCt := range proxyCtInfo {
+		for e, proxyCt := range proxyCtInfo {
 			ePCT := ctMap[proxyCt.Key()]
 			if ePCT != nil {
+				if e > 1 {
+					ePCT.CAct += " "
+				}
 				ePCT.CAct += proxyCt.CAct
 				ePCT.Bytes += proxyCt.Bytes
 				ePCT.Packets += proxyCt.Packets
