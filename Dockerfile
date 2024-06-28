@@ -4,6 +4,8 @@ FROM ubuntu:20.04 as build
 # Disable Prompt During Packages Installation
 ARG DEBIAN_FRONTEND=noninteractive
 
+ARG TAG=main
+
 # Env variables
 ENV PATH="${PATH}:/usr/local/go/bin"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
@@ -46,12 +48,15 @@ RUN mkdir -p /opt/loxilb && \
     make clean && 	make -j $(nproc) && cp -f ./bpftool /usr/local/sbin/bpftool && \
     cd - && rm -fr bpftool* && \
     # Install loxicmd
-    git clone https://github.com/loxilb-io/loxicmd.git && cd loxicmd && go get . && \
+    git clone https://github.com/loxilb-io/loxicmd.git && cd loxicmd && git fetch --all --tags && \
+    git checkout $TAG && go get . && \
     make && cp ./loxicmd /usr/local/sbin/loxicmd && cd - && rm -fr loxicmd && \
     /usr/local/sbin/loxicmd completion bash > /etc/bash_completion.d/loxi_completion && \
     # Install loxilb
     git clone --recurse-submodules https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && \
-    cd /root/loxilb-io/loxilb/ && go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
+    cd /root/loxilb-io/loxilb/ && git fetch --all --tags && git checkout $TAG && \
+    cd loxilb-ebpf && git fetch --all --tags && git checkout $TAG && cd .. \
+    go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
     else make ;fi && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
     cp loxilb-ebpf/utils/mkllb_cgroup.sh /usr/local/sbin/mkllb_cgroup && \
     cp /root/loxilb-io/loxilb/loxilb-ebpf/kernel/loxilb_dp_debug  /usr/local/sbin/loxilb_dp_debug && \
