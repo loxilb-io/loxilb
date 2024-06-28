@@ -263,6 +263,7 @@ const (
 	EpPrio
 	EpRRPersist
 	EpLeastConn
+	EpN2
 )
 
 // NatEP - a nat end-point
@@ -284,6 +285,7 @@ type NatDpWorkQ struct {
 	BlockNum  uint16
 	DsrMode   bool
 	CsumDis   bool
+	TermHTTPs bool
 	Proto     uint8
 	Mark      int
 	NatType   NatT
