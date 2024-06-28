@@ -2871,6 +2871,10 @@ definitions:
             type: integer
             format: int32
             description: value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)
+          security:
+            type: integer
+            format: int32
+            description: value for Security mode (0-Plain, 1-HTTPs)
           block:
             type: integer
             format: uint16

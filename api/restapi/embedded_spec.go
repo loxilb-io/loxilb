@@ -4973,6 +4973,11 @@ func init() {
               "description": "value for access protocol",
               "type": "string"
             },
+            "security": {
+              "description": "value for Security mode (0-Plain, 1-HTTPs)",
+              "type": "integer",
+              "format": "int32"
+            },
             "sel": {
               "description": "value for load balance algorithim",
               "type": "integer"
@@ -10989,6 +10994,11 @@ func init() {
               "description": "value for access protocol",
               "type": "string"
             },
+            "security": {
+              "description": "value for Security mode (0-Plain, 1-HTTPs)",
+              "type": "integer",
+              "format": "int32"
+            },
             "sel": {
               "description": "value for load balance algorithim",
               "type": "integer"
@@ -11106,6 +11116,11 @@ func init() {
         "protocol": {
           "description": "value for access protocol",
           "type": "string"
+        },
+        "security": {
+          "description": "value for Security mode (0-Plain, 1-HTTPs)",
+          "type": "integer",
+          "format": "int32"
         },
         "sel": {
           "description": "value for load balance algorithim",
