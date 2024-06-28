@@ -30,7 +30,7 @@ RUN mkdir -p /opt/loxilb && \
     make -j$(nproc) && make install_dev install_modules && cd - && \
     cp -a /usr/local/build/include/openssl /usr/include/ && \
     if [ -d /usr/local/build/lib64  ] ; then mv /usr/local/build/lib64  /usr/local/build/lib; fi && \
-    cp -fr /usr/local/build/lib/* /usr/lib64/ && \
+    cp -fr /usr/local/build/lib/* /usr/lib/ && ldconfig && \
     rm -fr openssl-3.0.0*  && \
     # Install loxilb's custom ntc tool
     wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
@@ -41,15 +41,16 @@ RUN mkdir -p /opt/loxilb && \
     LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && \
     cp -f tc/tc /usr/local/sbin/ntc && cd .. && rm -fr main.zip iproute2-main && \
     # Install bpftool
-    git clone --recurse-submodules https://github.com/libbpf/bpftool.git && cd bpftool/src/ && \
-    git switch --detach v7.2.0 && \
+    wget https://github.com/libbpf/bpftool/releases/download/v7.2.0/bpftool-libbpf-v7.2.0-sources.tar.gz && \
+    tar -xvzf bpftool-libbpf-v7.2.0-sources.tar.gz && cd bpftool/src/ && \
     make clean && 	make -j $(nproc) && cp -f ./bpftool /usr/local/sbin/bpftool && \
-    cd - && rm -fr bpftool && \
+    cd - && rm -fr bpftool* && \
     # Install loxicmd
     git clone https://github.com/loxilb-io/loxicmd.git && cd loxicmd && go get . && \
     make && cp ./loxicmd /usr/local/sbin/loxicmd && cd - && rm -fr loxicmd && \
     /usr/local/sbin/loxicmd completion bash > /etc/bash_completion.d/loxi_completion && \
     # Install loxilb
+    #git clone --recurse-submodules https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && \
     git clone --recurse-submodules https://github.com/TrekkieCoder/loxilb  /root/loxilb-io/loxilb/ && \
     cd /root/loxilb-io/loxilb/ && go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
     else make ;fi && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
