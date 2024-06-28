@@ -34,4 +34,5 @@ var Opts struct {
 	FallBack          bool           `long:"fallback" description:"Fallback to system default networking(experimental)"`
 	LocalSockPolicy   bool           `long:"localsockpolicy" description:"support local socket policies (experimental)"`
 	SockMapSupport    bool           `long:"sockmapsupport" description:"Support sockmap based L4 proxying (experimental)"`
+	ConfigPath        string         `long:"config-path" description:"Config file path" default:"/etc/loxilb/"`
 }

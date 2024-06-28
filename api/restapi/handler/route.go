@@ -28,7 +28,7 @@ import (
 
 func ConfigPostRoute(params operations.PostConfigRouteParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] Route  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	ret := loxinlp.AddRouteNoHook(params.Attr.DestinationIPNet, params.Attr.Gateway)
+	ret := loxinlp.AddRouteNoHook(params.Attr.DestinationIPNet, params.Attr.Gateway, params.Attr.Protocol)
 	if ret != 0 {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", ret)
 		return &ResultResponse{Result: "fail"}

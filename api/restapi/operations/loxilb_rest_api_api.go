@@ -48,6 +48,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		DeleteConfigBgpNeighIPAddressHandler: DeleteConfigBgpNeighIPAddressHandlerFunc(func(params DeleteConfigBgpNeighIPAddressParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigBgpNeighIPAddress has not yet been implemented")
 		}),
+		DeleteConfigBgpPolicyApplyHandler: DeleteConfigBgpPolicyApplyHandlerFunc(func(params DeleteConfigBgpPolicyApplyParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigBgpPolicyApply has not yet been implemented")
+		}),
 		DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler: DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandlerFunc(func(params DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeName has not yet been implemented")
 		}),
@@ -289,6 +292,8 @@ type LoxilbRestAPIAPI struct {
 	DeleteConfigBfdRemoteIPRemoteIPHandler DeleteConfigBfdRemoteIPRemoteIPHandler
 	// DeleteConfigBgpNeighIPAddressHandler sets the operation handler for the delete config bgp neigh IP address operation
 	DeleteConfigBgpNeighIPAddressHandler DeleteConfigBgpNeighIPAddressHandler
+	// DeleteConfigBgpPolicyApplyHandler sets the operation handler for the delete config bgp policy apply operation
+	DeleteConfigBgpPolicyApplyHandler DeleteConfigBgpPolicyApplyHandler
 	// DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler sets the operation handler for the delete config bgp policy definedsets defineset type type name operation
 	DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler
 	// DeleteConfigBgpPolicyDefinitionsPolicyNameHandler sets the operation handler for the delete config bgp policy definitions policy name operation
@@ -505,6 +510,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.DeleteConfigBgpNeighIPAddressHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigBgpNeighIPAddressHandler")
+	}
+	if o.DeleteConfigBgpPolicyApplyHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigBgpPolicyApplyHandler")
 	}
 	if o.DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler")
@@ -803,6 +811,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/config/bgp/neigh/{ip_address}"] = NewDeleteConfigBgpNeighIPAddress(o.context, o.DeleteConfigBgpNeighIPAddressHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/config/bgp/policy/apply"] = NewDeleteConfigBgpPolicyApply(o.context, o.DeleteConfigBgpPolicyApplyHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}

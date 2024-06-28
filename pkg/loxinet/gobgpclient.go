@@ -1316,7 +1316,7 @@ func (gbh *GoBgpH) AddPolicyDefinedSets(df cmn.GoBGPPolicyDefinedSetMod) (int, e
 		DefinedType = api.DefinedType_EXT_COMMUNITY
 	case "LargeCommunity", "largecommunity", "largeCommunity", "Largecommunity":
 		DefinedType = api.DefinedType_LARGE_COMMUNITY
-	case "AsPath", "asPath", "ASPath":
+	case "AsPath", "asPath", "ASPath", "aspath":
 		DefinedType = api.DefinedType_AS_PATH
 	}
 	Prefixes, err := gbh.MakePrefixDefinedSet(df.PrefixList)
@@ -1351,7 +1351,7 @@ func (gbh *GoBgpH) DelPolicyDefinedSets(Name string, DefinedTypeString string) (
 		DefinedType = api.DefinedType_EXT_COMMUNITY
 	case "LargeCommunity", "largecommunity", "largeCommunity", "Largecommunity":
 		DefinedType = api.DefinedType_LARGE_COMMUNITY
-	case "AsPath", "asPath", "ASPath":
+	case "AsPath", "asPath", "ASPath", "aspath":
 		DefinedType = api.DefinedType_AS_PATH
 	}
 	// Make DefinedSet
