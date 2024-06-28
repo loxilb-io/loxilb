@@ -30,6 +30,7 @@ import (
 	"time"
 
 	cmn "github.com/loxilb-io/loxilb/common"
+	opt "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
 	nlp "github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
@@ -105,7 +106,8 @@ func iSBlackListedIntf(name string, masterIdx int) bool {
 }
 
 func applyAllConfig(name string) bool {
-	command := "loxicmd apply --per-intf " + name + " -c /etc/loxilb/ipconfig/"
+
+	command := "loxicmd apply --per-intf " + name + " -c " + opt.Opts.ConfigPath + "/ipconfig/"
 	cmd := exec.Command("bash", "-c", command)
 	output, err := cmd.Output()
 	if err != nil {
@@ -120,7 +122,8 @@ func applyLoadBalancerConfig() bool {
 	var resp struct {
 		Attr []cmn.LbRuleMod `json:"lbAttr"`
 	}
-	byteBuf, err := os.ReadFile("/etc/loxilb/lbconfig.txt")
+	dpath := opt.Opts.ConfigPath + "/lbconfig.txt"
+	byteBuf, err := os.ReadFile(dpath)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -141,7 +144,8 @@ func applySessionConfig() bool {
 	var resp struct {
 		Attr []cmn.SessionMod `json:"sessionAttr"`
 	}
-	byteBuf, err := os.ReadFile("/etc/loxilb/sessionconfig.txt")
+	dpath := opt.Opts.ConfigPath + "/sessionconfig.txt"
+	byteBuf, err := os.ReadFile(dpath)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -162,7 +166,8 @@ func applyUlClConfig() bool {
 	var resp struct {
 		Attr []cmn.SessionUlClMod `json:"ulclAttr"`
 	}
-	byteBuf, err := os.ReadFile("/etc/loxilb/sessionulclconfig.txt")
+	dpath := opt.Opts.ConfigPath + "/sessionulclconfig.txt"
+	byteBuf, err := os.ReadFile(dpath)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -183,7 +188,8 @@ func applyFWConfig() bool {
 	var resp struct {
 		Attr []cmn.FwRuleMod `json:"fwAttr"`
 	}
-	byteBuf, err := os.ReadFile("/etc/loxilb/FWconfig.txt")
+	dpath := opt.Opts.ConfigPath + "/FWconfig.txt"
+	byteBuf, err := os.ReadFile(dpath)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -204,7 +210,8 @@ func applyEPConfig() bool {
 	var resp struct {
 		Attr []cmn.EndPointMod `json:"Attr"`
 	}
-	byteBuf, err := os.ReadFile("/etc/loxilb/EPconfig.txt")
+	dpath := opt.Opts.ConfigPath + "/EPconfig.txt"
+	byteBuf, err := os.ReadFile(dpath)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -225,7 +232,8 @@ func ApplyBFDConfig() bool {
 	var resp struct {
 		Attr []cmn.BFDMod `json:"Attr"`
 	}
-	byteBuf, err := os.ReadFile("/etc/loxilb/BFDconfig.txt")
+	dpath := opt.Opts.ConfigPath + "/BFDconfig.txt"
+	byteBuf, err := os.ReadFile(dpath)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -244,7 +252,7 @@ func ApplyBFDConfig() bool {
 
 func applyRoutes(name string) {
 	tk.LogIt(tk.LogDebug, "[NLP] Applying Route Config for %s \n", name)
-	command := "loxicmd apply --per-intf " + name + " -r -c /etc/loxilb/ipconfig/"
+	command := "loxicmd apply --per-intf " + name + " -r -c " + opt.Opts.ConfigPath + "/ipconfig/"
 	cmd := exec.Command("bash", "-c", command)
 	output, err := cmd.Output()
 	if err != nil {
@@ -257,7 +265,9 @@ func applyRoutes(name string) {
 func applyConfigMap(name string, state bool, add bool) {
 	var configApplied bool
 	var needRouteApply bool
-	if _, err := os.Stat("/etc/loxilb/ipconfig/"); errors.Is(err, os.ErrNotExist) {
+	dpath := opt.Opts.ConfigPath + "/ipconfig/"
+
+	if _, err := os.Stat(dpath); errors.Is(err, os.ErrNotExist) {
 		return
 	}
 	if add {
@@ -1200,7 +1210,7 @@ func AddRoute(route nlp.Route) int {
 	return ret
 }
 
-func AddRouteNoHook(DestinationIPNet, gateway string) int {
+func AddRouteNoHook(DestinationIPNet, gateway, proto string) int {
 	var ret int
 	var route nlp.Route
 	_, Ipnet, err := net.ParseCIDR(DestinationIPNet)
@@ -1210,6 +1220,10 @@ func AddRouteNoHook(DestinationIPNet, gateway string) int {
 	Gw := net.ParseIP(gateway)
 	route.Dst = Ipnet
 	route.Gw = Gw
+
+	if proto == "static" {
+		route.Protocol = 4 // 4 means Proto Static.
+	}
 	err = nlp.RouteAdd(&route)
 	if err != nil {
 		return -1
@@ -1577,7 +1591,7 @@ func LbSessionGet(done bool) int {
 
 	if done {
 
-		if _, err := os.Stat("/etc/loxilb/EPconfig.txt"); errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat(opt.Opts.ConfigPath + "/EPconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
 				tk.LogIt(tk.LogInfo, "[NLP] No EndPoint config file : %s \n", err.Error())
 			}
@@ -1586,7 +1600,7 @@ func LbSessionGet(done bool) int {
 		}
 		tk.LogIt(tk.LogInfo, "[NLP] EndPoint done\n")
 
-		if _, err := os.Stat("/etc/loxilb/lbconfig.txt"); errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat(opt.Opts.ConfigPath + "/lbconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
 				tk.LogIt(tk.LogInfo, "[NLP] No load balancer config file : %s \n", err.Error())
 			}
@@ -1595,7 +1609,7 @@ func LbSessionGet(done bool) int {
 		}
 
 		tk.LogIt(tk.LogInfo, "[NLP] LoadBalancer done\n")
-		if _, err := os.Stat("/etc/loxilb/sessionconfig.txt"); errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat(opt.Opts.ConfigPath + "/sessionconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
 				tk.LogIt(tk.LogInfo, "[NLP] No Session config file : %s \n", err.Error())
 			}
@@ -1604,7 +1618,7 @@ func LbSessionGet(done bool) int {
 		}
 
 		tk.LogIt(tk.LogInfo, "[NLP] Session done\n")
-		if _, err := os.Stat("/etc/loxilb/sessionulclconfig.txt"); errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat(opt.Opts.ConfigPath + "/sessionulclconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
 				tk.LogIt(tk.LogInfo, "[NLP] No UlCl config file : %s \n", err.Error())
 			}
@@ -1613,7 +1627,7 @@ func LbSessionGet(done bool) int {
 		}
 
 		tk.LogIt(tk.LogInfo, "[NLP] Session UlCl done\n")
-		if _, err := os.Stat("/etc/loxilb/FWconfig.txt"); errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat(opt.Opts.ConfigPath + "/FWconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
 				tk.LogIt(tk.LogInfo, "[NLP] No Firewall config file : %s \n", err.Error())
 			}
