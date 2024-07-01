@@ -40,7 +40,7 @@ extern void goMapNotiHandler(struct ll_dp_map_notif *);
 extern void goProxyEntCollector(struct dp_proxy_ct_ent *);
 extern void goLinuxArpResolver(unsigned int);
 #cgo CFLAGS:  -I./../../loxilb-ebpf/libbpf/src/ -I./../../loxilb-ebpf/common
-#cgo LDFLAGS: -L. -L/lib64 -L./../../loxilb-ebpf/kernel -L./../../loxilb-ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=/lib64/ -l:./../../loxilb-ebpf/kernel/libloxilbdp.a -l:./../../loxilb-ebpf/libbpf/src/libbpf.a -l:./../../loxilb-ebpf/proto/ngap/lib-llbngap.a -lelf -lz -lssl -lcrypto
+#cgo LDFLAGS: -L. -L/lib64 -L./../../loxilb-ebpf/kernel -L./../../loxilb-ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=/lib64/ -l:./../../loxilb-ebpf/kernel/libloxilbdp.a -l:./../../loxilb-ebpf/libbpf/src/libbpf.a -lelf -lz -lssl -lcrypto
 */
 import "C"
 import (
@@ -1423,7 +1423,7 @@ func (ct *DpCtInfo) convDPCtProxy2ActString(ctKey *C.struct_dp_ct_key) {
 		Proto = fmt.Sprintf("%d", p)
 	}
 
-	ct.CAct = fmt.Sprintf(" fp|%s:%d->%s:%d|%s", SIP.String(), Sport, DIP.String(), Dport, Proto)
+	ct.CAct = fmt.Sprintf("fp|%s:%d->%s:%d|%s", SIP.String(), Sport, DIP.String(), Dport, Proto)
 }
 
 //export goProxyEntCollector
@@ -1497,9 +1497,12 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 
 		proxyCtInfo = nil
 		C.llb_trigger_get_proxy_entries()
-		for _, proxyCt := range proxyCtInfo {
+		for e, proxyCt := range proxyCtInfo {
 			ePCT := ctMap[proxyCt.Key()]
 			if ePCT != nil {
+				if e > 1 {
+					ePCT.CAct += " "
+				}
 				ePCT.CAct += proxyCt.CAct
 				ePCT.Bytes += proxyCt.Bytes
 				ePCT.Packets += proxyCt.Packets

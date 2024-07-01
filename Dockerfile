@@ -4,6 +4,8 @@ FROM ubuntu:20.04 as build
 # Disable Prompt During Packages Installation
 ARG DEBIAN_FRONTEND=noninteractive
 
+ARG TAG=main
+
 # Env variables
 ENV PATH="${PATH}:/usr/local/go/bin"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
@@ -11,7 +13,9 @@ ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
 # Install loxilb related packages
 RUN mkdir -p /opt/loxilb && \
     mkdir -p /root/loxilb-io/loxilb/ && \
+    mkdir -p /usr/lib64/ && \
     mkdir -p /opt/loxilb/cert/ && \
+    mkdir -p /etc/loxilb/certs/ && \
     mkdir -p /etc/bash_completion.d/ && \
     # Update Ubuntu Software repository
     apt-get update && apt-get install -y wget && \
@@ -22,6 +26,14 @@ RUN mkdir -p /opt/loxilb && \
     apt-get install -y clang llvm libelf-dev libpcap-dev vim net-tools \
     elfutils dwarves git libbsd-dev bridge-utils wget unzip build-essential \
     bison flex sudo iproute2 pkg-config tcpdump iputils-ping curl bash-completion && \
+    # Install openssl-3.0.0
+    wget https://www.openssl.org/source/openssl-3.0.0.tar.gz && tar -xvzf openssl-3.0.0.tar.gz && \
+    cd openssl-3.0.0 && ./Configure enable-ktls '-Wl,-rpath,$(LIBRPATH)' --prefix=/usr/local/build && \
+    make -j$(nproc) && make install_dev install_modules && cd - && \
+    cp -a /usr/local/build/include/openssl /usr/include/ && \
+    if [ -d /usr/local/build/lib64  ] ; then mv /usr/local/build/lib64  /usr/local/build/lib; fi && \
+    cp -fr /usr/local/build/lib/* /usr/lib/ && ldconfig && \
+    rm -fr openssl-3.0.0*  && \
     # Install loxilb's custom ntc tool
     wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
     unzip main.zip && cd iproute2-main/ && rm -fr libbpf && wget https://github.com/loxilb-io/libbpf/archive/refs/heads/main.zip && \
@@ -31,17 +43,20 @@ RUN mkdir -p /opt/loxilb && \
     LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && \
     cp -f tc/tc /usr/local/sbin/ntc && cd .. && rm -fr main.zip iproute2-main && \
     # Install bpftool
-    git clone --recurse-submodules https://github.com/libbpf/bpftool.git && cd bpftool/src/ && \
-    git switch --detach v7.2.0 && \
+    wget https://github.com/libbpf/bpftool/releases/download/v7.2.0/bpftool-libbpf-v7.2.0-sources.tar.gz && \
+    tar -xvzf bpftool-libbpf-v7.2.0-sources.tar.gz && cd bpftool/src/ && \
     make clean && 	make -j $(nproc) && cp -f ./bpftool /usr/local/sbin/bpftool && \
-    cd - && rm -fr bpftool && \
+    cd - && rm -fr bpftool* && \
     # Install loxicmd
-    git clone https://github.com/loxilb-io/loxicmd.git && cd loxicmd && go get . && \
+    git clone https://github.com/loxilb-io/loxicmd.git && cd loxicmd && git fetch --all --tags && \
+    git checkout $TAG && go get . && \
     make && cp ./loxicmd /usr/local/sbin/loxicmd && cd - && rm -fr loxicmd && \
     /usr/local/sbin/loxicmd completion bash > /etc/bash_completion.d/loxi_completion && \
     # Install loxilb
     git clone --recurse-submodules https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && \
-    cd /root/loxilb-io/loxilb/ && go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
+    cd /root/loxilb-io/loxilb/ && git fetch --all --tags && git checkout $TAG && \
+    cd loxilb-ebpf && git fetch --all --tags && git checkout $TAG && cd .. \
+    go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
     else make ;fi && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
     cp loxilb-ebpf/utils/mkllb_cgroup.sh /usr/local/sbin/mkllb_cgroup && \
     cp /root/loxilb-io/loxilb/loxilb-ebpf/kernel/loxilb_dp_debug  /usr/local/sbin/loxilb_dp_debug && \
@@ -85,6 +100,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends sudo \
     rm -rf /var/lib/apt/lists/* && apt clean
 
 COPY --from=build /usr/lib64/libbpf* /usr/lib64/
+COPY --from=build /usr/local/build/lib/* /usr/lib64
 COPY --from=build /usr/local/go/bin /usr/local/go/bin
 COPY --from=build /usr/local/sbin/mkllb_bpffs /usr/local/sbin/mkllb_bpffs
 COPY --from=build /usr/local/sbin/mkllb_cgroup /usr/local/sbin/mkllb_cgroup

@@ -535,6 +535,68 @@ func init() {
             }
           }
         }
+      },
+      "delete": {
+        "description": "Delete BGP Policy in neighbor. It don't need \"routeAction\" in the attr body",
+        "summary": "Delete BGP Policy in neighbor",
+        "parameters": [
+          {
+            "description": "Attributes of bgp neighbor",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BGPApplyPolicyToNeighborMod"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. Neigh already exists",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
       }
     },
     "/config/bgp/policy/definedsets/{defineset_type}": {
@@ -5335,6 +5397,10 @@ func init() {
         "gateway": {
           "description": "IP address for nexthop",
           "type": "string"
+        },
+        "protocol": {
+          "description": "Protocol type of the route like \"static\"",
+          "type": "string"
         }
       }
     },
@@ -6044,6 +6110,68 @@ func init() {
           },
           "409": {
             "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete BGP Policy in neighbor. It don't need \"routeAction\" in the attr body",
+        "summary": "Delete BGP Policy in neighbor",
+        "parameters": [
+          {
+            "description": "Attributes of bgp neighbor",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BGPApplyPolicyToNeighborMod"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. Neigh already exists",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -11666,6 +11794,10 @@ func init() {
         },
         "gateway": {
           "description": "IP address for nexthop",
+          "type": "string"
+        },
+        "protocol": {
+          "description": "Protocol type of the route like \"static\"",
           "type": "string"
         }
       }
