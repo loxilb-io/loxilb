@@ -66,11 +66,11 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 - E2 might require SCTP-LB with OpenVPN bundled together
 - SIP support is needed to enable cloud-native VOIP
 
-## Architectural Considerations
+## Architectural Considerations   
 - [Understanding loxilb modes and deployment in K8s with kube-loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/kube-loxilb.md)
 - [Understanding High-availability with loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/ha-deploy.md)
 
-## Getting started  
+## Getting Started  
 #### loxilb as ext-cluster pod  
 - [K3s : loxilb with default flannel](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s_quick_start_flannel.md)
 - [K3s : loxilb with calico](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s_quick_start_calico.md)
