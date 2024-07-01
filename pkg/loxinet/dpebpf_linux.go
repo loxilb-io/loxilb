@@ -1500,7 +1500,7 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 		for e, proxyCt := range proxyCtInfo {
 			ePCT := ctMap[proxyCt.Key()]
 			if ePCT != nil {
-				if e > 1 {
+				if e > 0 {
 					ePCT.CAct += " "
 				}
 				ePCT.CAct += proxyCt.CAct
