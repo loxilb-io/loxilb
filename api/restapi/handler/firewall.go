@@ -56,6 +56,9 @@ func ConfigPostFW(params operations.PostConfigFirewallParams) middleware.Respond
 	Opts.Trap = params.Attr.Opts.Trap
 	Opts.Record = params.Attr.Opts.Record
 	Opts.Mark = uint32(params.Attr.Opts.FwMark)
+	Opts.DoSnat = params.Attr.Opts.DoSnat
+	Opts.ToIP = params.Attr.Opts.ToIP
+	Opts.ToPort = uint16(params.Attr.Opts.ToPort)
 
 	FW.Rule = Rules
 	FW.Opts = Opts
@@ -156,6 +159,9 @@ func ConfigGetFW(params operations.GetConfigFirewallAllParams) middleware.Respon
 		tmpOpts.Trap = FW.Opts.Trap
 		tmpOpts.Record = FW.Opts.Record
 		tmpOpts.FwMark = int64(FW.Opts.Mark)
+		tmpOpts.DoSnat = FW.Opts.DoSnat
+		tmpOpts.ToIP = FW.Opts.ToIP
+		tmpOpts.ToPort = int64(FW.Opts.ToPort)
 		tmpOpts.Counter = FW.Opts.Counter
 
 		tmpResult.RuleArguments = &tmpRule

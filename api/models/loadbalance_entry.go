@@ -365,6 +365,9 @@ type LoadbalanceEntryServiceArguments struct {
 
 	// value for load balance algorithim
 	Sel int64 `json:"sel,omitempty"`
+
+	// snat rule
+	Snat bool `json:"snat,omitempty"`
 }
 
 // Validate validates this loadbalance entry service arguments

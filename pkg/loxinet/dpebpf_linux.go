@@ -922,18 +922,24 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 
 	key := new(natKey)
 
-	key.daddr = [4]C.uint{0, 0, 0, 0}
-	if tk.IsNetIPv4(w.ServiceIP.String()) {
-		key.daddr[0] = C.uint(tk.IPtonl(w.ServiceIP))
-		key.v6 = 0
-	} else {
-		convNetIP2DPv6Addr(unsafe.Pointer(&key.daddr[0]), w.ServiceIP)
-		key.v6 = 1
-	}
 	key.mark = C.ushort(w.BlockNum)
-	key.dport = C.ushort(tk.Htons(w.L4Port))
-	key.l4proto = C.uchar(w.Proto)
-	key.zone = C.ushort(w.ZoneNum)
+
+	if w.NatType == DpSnat {
+		key.mark |= 0x1000
+	} else {
+		key.daddr = [4]C.uint{0, 0, 0, 0}
+		if tk.IsNetIPv4(w.ServiceIP.String()) {
+			key.daddr[0] = C.uint(tk.IPtonl(w.ServiceIP))
+			key.v6 = 0
+		} else {
+			convNetIP2DPv6Addr(unsafe.Pointer(&key.daddr[0]), w.ServiceIP)
+			key.v6 = 1
+		}
+		key.mark = C.ushort(w.BlockNum)
+		key.dport = C.ushort(tk.Htons(w.L4Port))
+		key.l4proto = C.uchar(w.Proto)
+		key.zone = C.ushort(w.ZoneNum)
+	}
 
 	if w.Work == DpCreate {
 		dat := new(natActs)
