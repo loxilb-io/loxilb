@@ -398,6 +398,10 @@ type FwOptArg struct {
 	Allow bool `json:"allow"`
 	// Mark - Mark the matching rule
 	Mark uint32 `json:"fwMark"`
+	// DoSnat - Do snat on matching rule
+	DoSnat bool   `json:"doSnat"`
+	ToIP   string `json:"toIP"`
+	ToPort uint16 `json:"toPort"`
 	// Counter - Traffic counter
 	Counter string `json:"counter"`
 }
@@ -561,6 +565,8 @@ type LbServiceArg struct {
 	Name string `json:"name"`
 	// PersistTimeout - Persistence timeout in seconds
 	PersistTimeout uint32 `json:"persistTimeout"`
+	// Snat - Do SNAT
+	Snat bool `json:"snat"`
 }
 
 // LbEndPointArg - Information related to load-balancer end-point

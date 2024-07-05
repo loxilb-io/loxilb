@@ -2894,6 +2894,9 @@ definitions:
           name:
             type: string
             description: service name
+          snat:
+            type: boolean
+            description: snat rule
           oper:
             type: integer
             format: int32
@@ -3614,6 +3617,15 @@ definitions:
       fwMark:
         type: integer
         description: Set a fwmark for any matching rule
+      doSnat:
+        type: boolean
+        description: Do SNAT on matching rule
+      toIP:
+        type: string
+        description: Modify to given IP in CIDR notation
+      toPort:
+        type: integer
+        description: Modify to given Port (Zero if port is not to be modified)
       counter:
         type: string
         description: traffic counters
@@ -3949,4 +3961,3 @@ definitions:
         type: integer
         format: uint8
         description: Retry Count to detect failure
-      

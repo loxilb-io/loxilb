@@ -132,6 +132,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tmpSvc.Probetype = lb.Serv.ProbeType
 		tmpSvc.Probeport = lb.Serv.ProbePort
 		tmpSvc.Name = lb.Serv.Name
+		tmpSvc.Snat = lb.Serv.Snat
 
 		tmpLB.ServiceArguments = &tmpSvc
 
