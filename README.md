@@ -57,7 +57,7 @@ Additionally, loxilb can also support cluster-ip and node-port services, thereby
 loxilb works as a L4 load-balancer/service-proxy by default. Although it provides great performance, at times, L7 load-balancing might become necessary in K8s. There are many good L7 proxies already available for K8s. Still, we are working on providing a great L7 solution natively in eBPF. It is a tough endeavor one which should reap great benefits once completed. Please keep an eye for updates on this.
 
 ## Telco-Cloud with loxilb
-For deploying telco-cloud with cloud-native functions, loxilb can be used as a SCP(service communication proxy). SCP is nothing but a communication hub for telco micro-services running in Kubernetes. But telco-cloud requires load-balancing and communication across various interfaces/standards like N2, N4, E2(ORAN), S6x, 5GLAN, GTP etc. Each of these present its own unique challenges which loxilb aims to solve e.g.
+For deploying telco-cloud with cloud-native functions, loxilb can be used as a SCP(service communication proxy). SCP is a communication proxy defined by [3GPP](https://www.etsi.org/deliver/etsi_ts/129500_129599/129500/16.04.00_60/ts_129500v160400p.pdf) and aimed at telco micro-services running in cloud-native environment. Telco-cloud requires load-balancing and communication across various interfaces/standards like N2, N4, E2(ORAN), S6x, 5GLAN, GTP etc. Each of these present its own unique challenges which loxilb aims to solve e.g.:    
 - N4 requires PFCP level session-intelligence
 - N2 requires NGAP parsing capability
 - S6x requires Diameter/SCTP multi-homing LB support
@@ -96,6 +96,7 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 - [How-To : Access end-points outside K8s](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/ext-ep.md)
 - [How-To : Deploy multi-server K3s HA with loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s-multi-master.md)
 - [How-To : Deploy loxilb with multi-AZ HA support in AWS](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/aws-multi-az.md)
+- [How-To : Deploy loxilb with Ingress](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/loxilb-nginx-ingress.md)
 
 ## Knowledge-Base   
 - [What is eBPF](ebpf.md)
