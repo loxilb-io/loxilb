@@ -2466,7 +2466,7 @@ func (R *RuleH) RulesSync() {
 		//ruleKeys := rule.tuples.String()
 		//ruleActs := rule.act.String()
 		if rule.sync != 0 {
-			rule.DP(DpCreate)
+			rule.Fw2DP(DpCreate)
 		}
 		//rule.DP(DpStatsGet)
 		//tk.LogIt(-1, "%d:%s,%s pc %v bc %v \n",
