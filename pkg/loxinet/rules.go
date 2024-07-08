@@ -1906,6 +1906,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 		servArg.Sel = cmn.LbSelRr
 		servArg.Mode = cmn.LBModeDefault
 		servArg.Snat = true
+		servArg.InactiveTimeout = LbDefaultInactiveTimeout
 		servArg.Name = fmt.Sprintf("%s:%s:%d", "snat", fwOpts.opt.snatIP, fwOpts.opt.snatPort)
 
 		snatEP := []cmn.LbEndPointArg{{EpIP: fwOpts.opt.snatIP, EpPort: fwOpts.opt.snatPort}}
