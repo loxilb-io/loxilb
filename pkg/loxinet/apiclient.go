@@ -764,7 +764,6 @@ func (na *NetAPIStruct) NetGoBGPPolicyApplyAdd(param *cmn.GoBGPPolicyApply) (int
 
 }
 
-
 // NetGoBGPPolicyApplyDel - Del bgp neigh to gobgp
 func (na *NetAPIStruct) NetGoBGPPolicyApplyDel(param *cmn.GoBGPPolicyApply) (int, error) {
 	if mh.bgp != nil {

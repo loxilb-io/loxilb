@@ -4750,6 +4750,10 @@ func init() {
           "description": "traffic counters",
           "type": "string"
         },
+        "doSnat": {
+          "description": "Do SNAT on matching rule",
+          "type": "boolean"
+        },
         "drop": {
           "description": "Drop any matching rule",
           "type": "boolean"
@@ -4769,6 +4773,14 @@ func init() {
         "redirectPortName": {
           "description": "Redirect any matching rule",
           "type": "string"
+        },
+        "toIP": {
+          "description": "Modify to given IP in CIDR notation",
+          "type": "string"
+        },
+        "toPort": {
+          "description": "Modify to given Port (Zero if port is not to be modified)",
+          "type": "integer"
         },
         "trap": {
           "description": "Trap anything matching rule",
@@ -4981,6 +4993,10 @@ func init() {
             "sel": {
               "description": "value for load balance algorithim",
               "type": "integer"
+            },
+            "snat": {
+              "description": "snat rule",
+              "type": "boolean"
             }
           }
         }
@@ -10797,6 +10813,10 @@ func init() {
           "description": "traffic counters",
           "type": "string"
         },
+        "doSnat": {
+          "description": "Do SNAT on matching rule",
+          "type": "boolean"
+        },
         "drop": {
           "description": "Drop any matching rule",
           "type": "boolean"
@@ -10816,6 +10836,14 @@ func init() {
         "redirectPortName": {
           "description": "Redirect any matching rule",
           "type": "string"
+        },
+        "toIP": {
+          "description": "Modify to given IP in CIDR notation",
+          "type": "string"
+        },
+        "toPort": {
+          "description": "Modify to given Port (Zero if port is not to be modified)",
+          "type": "integer"
         },
         "trap": {
           "description": "Trap anything matching rule",
@@ -11002,6 +11030,10 @@ func init() {
             "sel": {
               "description": "value for load balance algorithim",
               "type": "integer"
+            },
+            "snat": {
+              "description": "snat rule",
+              "type": "boolean"
             }
           }
         }
@@ -11125,6 +11157,10 @@ func init() {
         "sel": {
           "description": "value for load balance algorithim",
           "type": "integer"
+        },
+        "snat": {
+          "description": "snat rule",
+          "type": "boolean"
         }
       }
     },
