@@ -1563,7 +1563,9 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	r.tuples = rt
 	r.zone = R.zone
 	r.name = serv.Name
-	if serv.Mode == cmn.LBModeFullNAT || serv.Mode == cmn.LBModeOneArm || serv.Mode == cmn.LBModeHostOneArm {
+	if serv.Snat {
+		r.act.actType = RtActSnat
+	} else if serv.Mode == cmn.LBModeFullNAT || serv.Mode == cmn.LBModeOneArm || serv.Mode == cmn.LBModeHostOneArm {
 		r.act.actType = RtActFullNat
 	} else if serv.Mode == cmn.LBModeFullProxy {
 		r.act.actType = RtActFullProxy
@@ -1583,11 +1585,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	r.hChk.prbRetries = serv.ProbeRetries
 	r.hChk.prbTimeo = serv.ProbeTimeout
 	r.hChk.actChk = serv.Monitor
-	if serv.Snat {
-		r.act.actType = RtActSnat
-	} else {
-		r.act.actType = RtActDnat
-	}
+
 	r.act.action = &natActs
 	r.ruleNum, err = R.tables[RtLB].Mark.GetCounter()
 	if err != nil {
