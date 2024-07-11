@@ -575,7 +575,6 @@ func (ifa *Ifa) DP(work DpWorkT) int {
 		rmWq.L2Addr[i] = uint8(port.HInfo.MacAddr[i])
 	}
 
-	rmWq.Name = port.Name
 	rmWq.PortNum = port.PortNo
 
 	mh.dp.ToDpCh <- rmWq
@@ -599,7 +598,6 @@ func (ifa *Ifa) DP(work DpWorkT) int {
 		rmWq.TunID = port.HInfo.TunID
 		rmWq.TunType = DpTunVxlan
 		rmWq.BD = port.L2.Vid
-		rmWq.Name = up.Name
 
 		mh.dp.ToDpCh <- rmWq
 
