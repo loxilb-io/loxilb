@@ -341,7 +341,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 
 	rt.DP(DpCreate)
 
-	tk.LogIt(tk.LogDebug, "rt added - %s:%s\n", Dst.String(), Zone)
+	tk.LogIt(tk.LogDebug, "rt added - %s:%s mark:%v\n", Dst.String(), Zone, rt.RtGetNhMark())
 
 	return 0, nil
 }
