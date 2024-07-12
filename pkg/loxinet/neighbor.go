@@ -456,17 +456,11 @@ NhExist:
 	//Add a related L2 Pair entry if needed
 	if port.IsSlavePort() == false && port.IsLeafPort() == true && ne.Resolved {
 		var fdbAddr [6]byte
-		var vid int
 		for i := 0; i < 6; i++ {
 			fdbAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 		}
-		if port.SInfo.PortType&cmn.PortReal != 0 {
-			vid = port.PortNo + RealPortIDB
-		} else {
-			vid = port.PortNo + BondIDB
-		}
 
-		fdbKey := FdbKey{fdbAddr, vid}
+		fdbKey := FdbKey{fdbAddr, port.L2.Vid}
 		fdbAttr := FdbAttr{port.Name, net.ParseIP("0.0.0.0"), cmn.FdbPhy}
 
 		code, err := n.Zone.L2.L2FdbAdd(fdbKey, fdbAttr)
@@ -518,17 +512,11 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 	port := ne.OifPort
 	if port != nil && port.IsSlavePort() == false && port.IsLeafPort() == true && ne.Resolved {
 		var fdbAddr [6]byte
-		var vid int
 		for i := 0; i < 6; i++ {
 			fdbAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 		}
-		if port.SInfo.PortType&cmn.PortReal != 0 {
-			vid = port.PortNo + RealPortIDB
-		} else {
-			vid = port.PortNo + BondIDB
-		}
 
-		fdbKey := FdbKey{fdbAddr, vid}
+		fdbKey := FdbKey{fdbAddr, port.L2.Vid}
 		n.Zone.L2.L2FdbDel(fdbKey)
 	}
 

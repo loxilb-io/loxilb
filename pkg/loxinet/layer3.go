@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 
 	tk "github.com/loxilb-io/loxilib"
 
@@ -550,7 +551,7 @@ func (ifa *Ifa) DP(work DpWorkT) int {
 	port := ifa.Zone.Ports.PortFindByName(ifa.Key.Obj)
 
 	if port == nil {
-		if ifa.Key.Obj != "lo" {
+		if ifa.Key.Obj != "lo" && !strings.Contains(ifa.Key.Obj, "llb-rule") {
 			tk.LogIt(tk.LogError, "No such obj : %s\n", ifa.Key.Obj)
 			ifa.Sync = DpCreateErr
 		}
