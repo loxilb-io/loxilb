@@ -238,5 +238,6 @@ func (z *ZoneH) ZoneTicker() {
 		zone.Sess.SessionTicker()
 		zone.Pols.PolTicker()
 		zone.Mirrs.MirrTicker()
+		zone.L3.IfasTicker()
 	}
 }

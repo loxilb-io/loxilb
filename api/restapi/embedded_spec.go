@@ -5441,7 +5441,7 @@ func init() {
         },
         "protocol": {
           "description": "Route protocol",
-          "type": "integer"
+          "type": "string"
         },
         "statistic": {
           "type": "object",
@@ -11859,7 +11859,7 @@ func init() {
         },
         "protocol": {
           "description": "Route protocol",
-          "type": "integer"
+          "type": "string"
         },
         "statistic": {
           "type": "object",

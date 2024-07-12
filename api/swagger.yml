@@ -2958,7 +2958,7 @@ definitions:
         type: integer
         description: index of the route 
       protocol:
-        type: integer
+        type: string
         description: Route protocol
       flags:
         type: string

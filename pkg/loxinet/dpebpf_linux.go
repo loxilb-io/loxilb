@@ -723,7 +723,14 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
 			unsafe.Pointer(dat))
 
 		if ret != 0 {
+			if w.Status != nil {
+				*w.Status = DpCreateErr
+			}
 			return EbpfErrTmacAdd
+		}
+
+		if w.Status != nil {
+			*w.Status = 0
 		}
 
 		return 0
