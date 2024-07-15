@@ -138,7 +138,7 @@ func (r *RtH) RtFind(Dst net.IPNet, Zone string) *Rt {
 	key := RtKey{Dst.String(), Zone}
 	rt, found := r.RtMap[key]
 
-	if found == true {
+	if found {
 		return rt
 	}
 	return nil
@@ -151,9 +151,12 @@ func (r *RtH) RouteGet() ([]cmn.RouteGet, error) {
 		var tmpRt cmn.RouteGet
 		tmpRt.Dst = rk.RtCidr
 		tmpRt.Flags = GetFlagToString(r2.TFlags)
-		if len(r2.NhAttr) != 0 {
-			// TODO : Current multiple gw not showing. So I added as a static code
-			tmpRt.Gw = r2.NhAttr[0].NhAddr.String()
+		tmpRt.Gw = ""
+		for i, gw := range r2.NextHops {
+			if i != 0 {
+				tmpRt.Gw += ","
+			}
+			tmpRt.Gw += gw.Addr.String()
 		}
 		tmpRt.HardwareMark = int(r2.Mark)
 		tmpRt.Protocol = r2.Attr.Protocol
@@ -199,20 +202,15 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 		}
 	}
 
-	if nhLen > 1 {
-		tk.LogIt(tk.LogError, "rt add - %s:%s ecmp not supported\n", Dst.String(), Zone)
-		return RtNhErr, errors.New("ecmp-rt error not supported")
-	}
-
 	rt, found := r.RtMap[key]
-	if found == true {
+	if found {
 		rtMod := false
 		if len(rt.NhAttr) != nhLen {
 			rtMod = true
 		} else {
 			for i := 0; i < nhLen; i++ {
 				// FIXME - Need to sort before comparing
-				if Na[i].NhAddr.Equal(rt.NhAttr[i].NhAddr) == false {
+				if !Na[i].NhAddr.Equal(rt.NhAttr[i].NhAddr) {
 					rtMod = false
 					break
 				}
@@ -275,7 +273,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 
 		hwmac, _ := net.ParseMAC("00:00:00:00:00:00")
 
-		for i := 0; i < len(Na); i++ {
+		for i := range Na {
 			nh, _ := r.Zone.Nh.NeighFind(Na[i].NhAddr, Zone)
 			if nh == nil {
 
@@ -307,7 +305,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 
 	// Pair this route with appropriate neighbor
 	//if rt.TFlags & RT_TYPE_HOST != RT_TYPE_HOST {
-	for i := 0; i < len(rt.NextHops); i++ {
+	for i := range rt.NextHops {
 		r.Zone.Nh.NeighPairRt(rt.NextHops[i], rt)
 	}
 	//}
@@ -334,14 +332,13 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 		}
 		delete(r.RtMap, rt.Key)
 		r.Mark.PutCounter(rt.Mark)
-		fmt.Printf("rt add - %s:%s lpm add fail\n", Dst.String(), Zone)
 		tk.LogIt(tk.LogError, "rt add - %s:%s lpm add fail\n", Dst.String(), Zone)
 		return RtTrieAddErr, errors.New("RT Trie Err")
 	}
 
 	rt.DP(DpCreate)
 
-	tk.LogIt(tk.LogDebug, "rt added - %s:%s mark:%v\n", Dst.String(), Zone, rt.RtGetNhMark())
+	tk.LogIt(tk.LogDebug, "rt added - %s:%s mark:%s\n", Dst.String(), Zone, rt.RtNhMarkString())
 
 	return 0, nil
 }
@@ -534,10 +531,22 @@ func (r *RtH) RoutesTicker() {
 	r.RoutesSync()
 }
 
+// RtNhMarkString - get the rt-entry's neighbor in string format
+func (rt *Rt) RtNhMarkString() string {
+	str := ""
+	for i, nh := range rt.NextHops {
+		if i != 0 {
+			str += ","
+		}
+		str += fmt.Sprintf("%v", nh.Mark)
+	}
+	return str
+}
+
 // RtGetNhMark - get the rt-entry's neighbor identifier
-func (rt *Rt) RtGetNhMark() uint64 {
-	if len(rt.NextHops) > 0 {
-		return rt.NextHops[0].Mark
+func (rt *Rt) RtGetNhMark(n int) uint64 {
+	if len(rt.NextHops) > 0 && n < len(rt.NextHops) {
+		return rt.NextHops[n].Mark
 	}
 	return ^uint64(0)
 }
@@ -570,7 +579,10 @@ func (rt *Rt) DP(work DpWorkT) int {
 	rtWq.Dst = *rtNet
 	rtWq.RtType = rt.TFlags
 	rtWq.RtMark = int(rt.Mark)
-	rtWq.NMark = int(rt.RtGetNhMark())
+	rtWq.NMax = len(rt.NextHops)
+	for i := range rt.NextHops {
+		rtWq.NMark[i] = int(rt.RtGetNhMark(i))
+	}
 
 	mh.dp.ToDpCh <- rtWq
 
