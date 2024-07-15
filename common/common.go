@@ -369,16 +369,22 @@ type RouteGet struct {
 	Sync DpStatusT
 }
 
+// GWInfo - Info about gateway
+type GWInfo struct {
+	// Gw - gateway information if any
+	Gw net.IP
+	// LinkIndex - OS allocated index
+	LinkIndex int
+}
+
 // RouteMod - Info about a route
 type RouteMod struct {
 	// Protocol - Protocol type
 	Protocol int
 	// Flags - flag type
 	Flags int
-	// Gw - gateway information if any
-	Gw net.IP
-	// LinkIndex - OS allocated index
-	LinkIndex int
+	// GWs - gateway information if any
+	GWs []GWInfo
 	// Dst - ip addr
 	Dst net.IPNet
 }

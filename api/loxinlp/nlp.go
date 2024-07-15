@@ -1189,8 +1189,18 @@ func AddRoute(route nlp.Route) int {
 		ipNet = *route.Dst
 	}
 
-	ret, err := hooks.NetRouteAdd(&cmn.RouteMod{Protocol: int(route.Protocol), Flags: route.Flags,
-		Gw: route.Gw, LinkIndex: route.LinkIndex, Dst: ipNet})
+	var gws []cmn.GWInfo
+
+	if len(route.MultiPath) <= 0 {
+		gw := cmn.GWInfo{Gw: route.Gw, LinkIndex: route.LinkIndex}
+		gws = append(gws, gw)
+	} else {
+		for i := range route.MultiPath {
+			gws = append(gws, cmn.GWInfo{Gw: route.MultiPath[i].Gw, LinkIndex: route.MultiPath[i].LinkIndex})
+		}
+	}
+
+	ret, err := hooks.NetRouteAdd(&cmn.RouteMod{Protocol: int(route.Protocol), Flags: route.Flags, Dst: ipNet, GWs: gws})
 	if err != nil {
 		if route.Gw != nil {
 			tk.LogIt(tk.LogError, "[NLP] RT  %s via %s proto %d add failed-%s\n", ipNet.String(),
@@ -1350,14 +1360,28 @@ func NUWorkSingle(m nlp.NeighUpdate) int {
 func RUWorkSingle(m nlp.RouteUpdate) int {
 	var ret int
 
-	link, err := nlp.LinkByIndex(m.LinkIndex)
-	if err != nil {
-		fmt.Println(err)
-		return -1
-	}
+	if len(m.MultiPath) <= 0 {
+		link, err := nlp.LinkByIndex(m.LinkIndex)
+		if err != nil {
+			tk.LogIt(tk.LogError, "RUWorkSingle: link find error %s", err)
+			return -1
+		}
 
-	if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
-		return -1
+		if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+			return -1
+		}
+	} else {
+		for _, path := range m.MultiPath {
+			link, err := nlp.LinkByIndex(path.LinkIndex)
+			if err != nil {
+				tk.LogIt(tk.LogError, "RUWorkSingle: link find error %s", err)
+				return -1
+			}
+
+			if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+				return -1
+			}
+		}
 	}
 
 	if skipIfRoute {
@@ -1559,25 +1583,28 @@ func NlpGet(ch chan bool) int {
 				AddNeigh(neigh, link)
 			}
 		}
+	}
 
-		/* Get Routes */
-		routes, err := nlp.RouteList(link, nlp.FAMILY_ALL)
-		if err != nil {
-			tk.LogIt(tk.LogError, "[NLP] Error getting route list %v\n", err)
-		}
+	/* Get Routes */
+	routes, err := nlp.RouteList(nil, nlp.FAMILY_ALL)
+	if err != nil {
+		tk.LogIt(tk.LogError, "[NLP] Error getting route list %v\n", err)
+	}
 
-		if len(routes) == 0 {
-			tk.LogIt(tk.LogDebug, "[NLP] No STATIC routes found for intf %s\n", link.Attrs().Name)
-		} else {
-			for _, route := range routes {
-				if skipIfRoute {
-					if route.Scope.String() == "link" && tk.IsNetIPv4(route.Dst.IP.String()) {
-						continue
-					}
+	if len(routes) == 0 {
+		tk.LogIt(tk.LogDebug, "[NLP] No STATIC routes found\n")
+	} else {
+		for _, route := range routes {
+			var m nlp.RouteUpdate
+			if skipIfRoute {
+				if route.Scope.String() == "link" && tk.IsNetIPv4(route.Dst.IP.String()) {
+					continue
 				}
-
-				AddRoute(route)
 			}
+			m.Type = syscall.RTM_NEWROUTE
+			m.Route = route
+
+			RUWorkSingle(m)
 		}
 	}
 	tk.LogIt(tk.LogInfo, "[NLP] nlp get done\n")

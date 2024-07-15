@@ -168,7 +168,8 @@ type RouteDpWorkQ struct {
 	Dst     net.IPNet
 	RtType  int
 	RtMark  int
-	NMark   int
+	NMax    int
+	NMark   [8]int
 }
 
 // StatDpWorkQ - work queue entry for stat operation

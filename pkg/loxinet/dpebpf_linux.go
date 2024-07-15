@@ -698,7 +698,7 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
 				rtNhAct := (*rtNhAct)(getPtrOffset(unsafe.Pointer(dat),
 					C.sizeof_struct_dp_cmn_act))
 				C.memset(unsafe.Pointer(rtNhAct), 0, C.sizeof_struct_dp_rt_nh_act)
-				rtNhAct.nh_num = 0
+				rtNhAct.nh_num[0] = 0
 				rtNhAct.tid = 0
 				rtNhAct.bd = C.ushort(w.BD)
 			} else {
@@ -710,7 +710,7 @@ func DpRouterMacMod(w *RouterMacDpWorkQ) int {
 					C.sizeof_struct_dp_cmn_act))
 				C.memset(unsafe.Pointer(rtNhAct), 0, C.sizeof_struct_dp_rt_nh_act)
 
-				rtNhAct.nh_num = C.ushort(w.NhNum)
+				rtNhAct.nh_num[0] = C.ushort(w.NhNum)
 				tid := ((w.TunID << 8) & 0xffffff00)
 				rtNhAct.tid = C.uint(tk.Htonl(tid))
 			}
@@ -882,11 +882,16 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 		dat := new(rtDat)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_rt_tact)
 
-		if w.NMark >= 0 {
+		if w.NMax > 0 {
 			dat.ca.act_type = C.DP_SET_RT_NHNUM
 			act = (*rtL3NhAct)(getPtrOffset(unsafe.Pointer(dat),
 				C.sizeof_struct_dp_cmn_act))
-			act.nh_num = C.ushort(w.NMark)
+			act.naps = C.ushort(w.NMax)
+			for i := range w.NMark {
+				if i < C.DP_MAX_ACTIVE_PATHS {
+					act.nh_num[i] = C.ushort(w.NMark[i])
+				}
+			}
 		} else {
 			dat.ca.act_type = C.DP_SET_TOCP
 		}
