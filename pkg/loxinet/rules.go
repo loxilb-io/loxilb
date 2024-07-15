@@ -155,6 +155,7 @@ type ruleTuples struct {
 	inL4Src  rule16Tuple
 	inL4Dst  rule16Tuple
 	pref     uint16
+	path     string
 }
 
 type ruleTActType uint
@@ -476,9 +477,11 @@ func (r *ruleTuples) ruleMkKeyCompliance(match ruleTMatch) {
 }
 
 func (r *ruleTuples) ruleKey() string {
-	var ks string
-
-	ks = fmt.Sprintf("%s", r.port.val)
+	ks := ""
+	if r.path != "" {
+		ks += r.path
+	}
+	ks += fmt.Sprintf("%s", r.port.val)
 	ks += fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",
 		r.l2Dst.addr[0]&r.l2Dst.valid[0],
 		r.l2Dst.addr[1]&r.l2Dst.valid[1],
@@ -547,10 +550,14 @@ func checkValidMACTuple(mt ruleMacTuple) bool {
 }
 
 func (r *ruleTuples) String() string {
-	var ks string
+
+	ks := ""
+	if r.path != "" {
+		ks += fmt.Sprintf("%s:", r.path)
+	}
 
 	if r.port.val != "" {
-		ks = fmt.Sprintf("inp-%s,", r.port.val)
+		ks += fmt.Sprintf("inp-%s,", r.port.val)
 	}
 
 	if checkValidMACTuple(r.l2Dst) {
@@ -785,6 +792,7 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.ProbeReq = data.hChk.prbReq
 		ret.Serv.ProbeResp = data.hChk.prbResp
 		ret.Serv.Name = data.name
+		ret.Serv.Path = data.tuples.path
 		if data.act.actType == RtActSnat {
 			ret.Serv.Snat = true
 		}
@@ -942,7 +950,7 @@ func (R *RuleH) GetNatLbRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.Path}
 	return R.tables[RtLB].eMap[rt.ruleKey()]
 }
 
@@ -970,7 +978,7 @@ func (R *RuleH) GetNatLbRuleSecIPs(serv cmn.LbServiceArg) []string {
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.Path}
 	if R.tables[RtLB].eMap[rt.ruleKey()] != nil {
 		for _, ip := range R.tables[RtLB].eMap[rt.ruleKey()].secIP {
 			ips = append(ips, ip.sIP.String())
@@ -1491,7 +1499,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.Path}
 
 	eRule := R.tables[RtLB].eMap[rt.ruleKey()]
 
@@ -1702,7 +1710,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.Path}
 
 	rule := R.tables[RtLB].eMap[rt.ruleKey()]
 	if rule == nil {

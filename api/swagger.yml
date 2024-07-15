@@ -174,11 +174,16 @@ paths:
           description: Maintanence mode
           schema:
             $ref: '#/definitions/Error'
-  '/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}':
+  '/config/loadbalancer/urlpath/{urlpath}/externalipaddress/{ip_address}/port/{port}/protocol/{proto}':
     delete:
       summary: Delete an existing Load balancer service
       description: Delete an existing load balancer service with .
       parameters:
+        - name: urlpath
+          in: path
+          type: string
+          required: true
+          description: Attributes for load balance service
         - name: ip_address
           in: path
           type: string
@@ -2901,6 +2906,9 @@ definitions:
             type: integer
             format: int32
             description: end-point specific op (0-create, 1-attachEP, 2-detachEP)
+          path:
+            type: string
+            description: Ingress specific URL path
       
       endpoints:
         type: array

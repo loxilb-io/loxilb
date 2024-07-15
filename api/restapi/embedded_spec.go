@@ -2036,43 +2036,17 @@ func init() {
         }
       }
     },
-    "/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}": {
+    "/config/loadbalancer/name/{lb_name}": {
       "delete": {
-        "description": "Delete an existing load balancer service with .",
+        "description": "Delete an existing load balancer service with name.",
         "summary": "Delete an existing Load balancer service",
         "parameters": [
           {
             "type": "string",
-            "description": "Attributes for load balance service",
-            "name": "ip_address",
+            "description": "Attributes for load balance service name",
+            "name": "lb_name",
             "in": "path",
             "required": true
-          },
-          {
-            "type": "number",
-            "description": "Attributes for load balance service",
-            "name": "port",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Attributes for load balance service",
-            "name": "proto",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "boolean",
-            "description": "option for BGP enable",
-            "name": "bgp",
-            "in": "query"
-          },
-          {
-            "type": "number",
-            "description": "block value if any",
-            "name": "block",
-            "in": "query"
           }
         ],
         "responses": {
@@ -2124,17 +2098,50 @@ func init() {
         }
       }
     },
-    "/config/loadbalancer/name/{lb_name}": {
+    "/config/loadbalancer/urlpath/{urlpath}/externalipaddress/{ip_address}/port/{port}/protocol/{proto}": {
       "delete": {
-        "description": "Delete an existing load balancer service with name.",
+        "description": "Delete an existing load balancer service with .",
         "summary": "Delete an existing Load balancer service",
         "parameters": [
           {
             "type": "string",
-            "description": "Attributes for load balance service name",
-            "name": "lb_name",
+            "description": "Attributes for load balance service",
+            "name": "urlpath",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "number",
+            "description": "Attributes for load balance service",
+            "name": "port",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "proto",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "option for BGP enable",
+            "name": "bgp",
+            "in": "query"
+          },
+          {
+            "type": "number",
+            "description": "block value if any",
+            "name": "block",
+            "in": "query"
           }
         ],
         "responses": {
@@ -4950,6 +4957,10 @@ func init() {
               "type": "integer",
               "format": "int32"
             },
+            "path": {
+              "description": "Ingress specific URL path",
+              "type": "string"
+            },
             "port": {
               "description": "port number for the access",
               "type": "integer"
@@ -7644,43 +7655,17 @@ func init() {
         }
       }
     },
-    "/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}": {
+    "/config/loadbalancer/name/{lb_name}": {
       "delete": {
-        "description": "Delete an existing load balancer service with .",
+        "description": "Delete an existing load balancer service with name.",
         "summary": "Delete an existing Load balancer service",
         "parameters": [
           {
             "type": "string",
-            "description": "Attributes for load balance service",
-            "name": "ip_address",
+            "description": "Attributes for load balance service name",
+            "name": "lb_name",
             "in": "path",
             "required": true
-          },
-          {
-            "type": "number",
-            "description": "Attributes for load balance service",
-            "name": "port",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Attributes for load balance service",
-            "name": "proto",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "boolean",
-            "description": "option for BGP enable",
-            "name": "bgp",
-            "in": "query"
-          },
-          {
-            "type": "number",
-            "description": "block value if any",
-            "name": "block",
-            "in": "query"
           }
         ],
         "responses": {
@@ -7732,17 +7717,50 @@ func init() {
         }
       }
     },
-    "/config/loadbalancer/name/{lb_name}": {
+    "/config/loadbalancer/urlpath/{urlpath}/externalipaddress/{ip_address}/port/{port}/protocol/{proto}": {
       "delete": {
-        "description": "Delete an existing load balancer service with name.",
+        "description": "Delete an existing load balancer service with .",
         "summary": "Delete an existing Load balancer service",
         "parameters": [
           {
             "type": "string",
-            "description": "Attributes for load balance service name",
-            "name": "lb_name",
+            "description": "Attributes for load balance service",
+            "name": "urlpath",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "number",
+            "description": "Attributes for load balance service",
+            "name": "port",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "proto",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "option for BGP enable",
+            "name": "bgp",
+            "in": "query"
+          },
+          {
+            "type": "number",
+            "description": "block value if any",
+            "name": "block",
+            "in": "query"
           }
         ],
         "responses": {
@@ -10987,6 +11005,10 @@ func init() {
               "type": "integer",
               "format": "int32"
             },
+            "path": {
+              "description": "Ingress specific URL path",
+              "type": "string"
+            },
             "port": {
               "description": "port number for the access",
               "type": "integer"
@@ -11113,6 +11135,10 @@ func init() {
           "description": "end-point specific op (0-create, 1-attachEP, 2-detachEP)",
           "type": "integer",
           "format": "int32"
+        },
+        "path": {
+          "description": "Ingress specific URL path",
+          "type": "string"
         },
         "port": {
           "description": "port number for the access",

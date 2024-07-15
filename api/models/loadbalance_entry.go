@@ -336,6 +336,9 @@ type LoadbalanceEntryServiceArguments struct {
 	// end-point specific op (0-create, 1-attachEP, 2-detachEP)
 	Oper int32 `json:"oper,omitempty"`
 
+	// Ingress specific URL path
+	Path string `json:"path,omitempty"`
+
 	// port number for the access
 	Port int64 `json:"port,omitempty"`
 
