@@ -72,6 +72,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		DeleteConfigLoadbalancerAllHandler: DeleteConfigLoadbalancerAllHandlerFunc(func(params DeleteConfigLoadbalancerAllParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigLoadbalancerAll has not yet been implemented")
 		}),
+		DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler: DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto has not yet been implemented")
+		}),
 		DeleteConfigLoadbalancerNameLbNameHandler: DeleteConfigLoadbalancerNameLbNameHandlerFunc(func(params DeleteConfigLoadbalancerNameLbNameParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigLoadbalancerNameLbName has not yet been implemented")
 		}),
@@ -308,6 +311,8 @@ type LoxilbRestAPIAPI struct {
 	DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler
 	// DeleteConfigLoadbalancerAllHandler sets the operation handler for the delete config loadbalancer all operation
 	DeleteConfigLoadbalancerAllHandler DeleteConfigLoadbalancerAllHandler
+	// DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler sets the operation handler for the delete config loadbalancer externalipaddress IP address port port protocol proto operation
+	DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler
 	// DeleteConfigLoadbalancerNameLbNameHandler sets the operation handler for the delete config loadbalancer name lb name operation
 	DeleteConfigLoadbalancerNameLbNameHandler DeleteConfigLoadbalancerNameLbNameHandler
 	// DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoHandler sets the operation handler for the delete config loadbalancer urlpath urlpath externalipaddress IP address port port protocol proto operation
@@ -534,6 +539,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.DeleteConfigLoadbalancerAllHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigLoadbalancerAllHandler")
+	}
+	if o.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler")
 	}
 	if o.DeleteConfigLoadbalancerNameLbNameHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigLoadbalancerNameLbNameHandler")
@@ -843,6 +851,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/config/loadbalancer/all"] = NewDeleteConfigLoadbalancerAll(o.context, o.DeleteConfigLoadbalancerAllHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}"] = NewDeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto(o.context, o.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
