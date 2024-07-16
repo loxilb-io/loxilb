@@ -573,6 +573,8 @@ type LbServiceArg struct {
 	PersistTimeout uint32 `json:"persistTimeout"`
 	// Snat - Do SNAT
 	Snat bool `json:"snat"`
+	// Path - Ingress Specific URL path
+	Path string `json:"path"`
 }
 
 // LbEndPointArg - Information related to load-balancer end-point
