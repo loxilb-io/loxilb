@@ -129,7 +129,7 @@ type (
 	rtDat      C.struct_dp_rt_tact
 	rtL3NhAct  C.struct_dp_rt_nh_act
 	natKey     C.struct_dp_nat_key
-	natActs    C.struct_dp_nat_tacts
+	proxyActs  C.struct_dp_proxy_tacts
 	nxfrmAct   C.struct_mf_xfrm_inf
 	sess4Key   C.struct_dp_sess4_key
 	sessAct    C.struct_dp_sess_tact
@@ -953,98 +953,101 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		key.zone = C.ushort(w.ZoneNum)
 	}
 
-	if w.Work == DpCreate {
-		dat := new(natActs)
-		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_nat_tacts)
-		if w.NatType == DpSnat {
-			dat.ca.act_type = C.DP_SET_SNAT
-		} else if w.NatType == DpDnat || w.NatType == DpFullNat {
-			dat.ca.act_type = C.DP_SET_DNAT
-		} else if w.NatType == DpFullProxy {
-			dat.ca.act_type = C.DP_SET_FULLPROXY
+	dat := new(proxyActs)
+	C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_proxy_tacts)
+	if w.NatType == DpSnat {
+		dat.ca.act_type = C.DP_SET_SNAT
+	} else if w.NatType == DpDnat || w.NatType == DpFullNat {
+		dat.ca.act_type = C.DP_SET_DNAT
+	} else if w.NatType == DpFullProxy {
+		dat.ca.act_type = C.DP_SET_FULLPROXY
+	} else {
+		tk.LogIt(tk.LogDebug, "[DP] LB rule %s add[NOK] - EbpfErrNat4Add\n", w.ServiceIP.String())
+		return EbpfErrNat4Add
+	}
+
+	// seconds to nanoseconds
+	dat.ito = C.uint64_t(w.InActTo * 1000000000)
+	dat.pto = C.uint64_t(w.PersistTo * 1000000000)
+	dat.base_to = 0
+
+	/*dat.npmhh = 2
+	dat.pmhh[0] = 0x64646464
+	dat.pmhh[1] = 0x65656565*/
+	for i, k := range w.secIP {
+		dat.pmhh[i] = C.uint(tk.IPtonl(k))
+	}
+	dat.npmhh = C.uchar(len(w.secIP))
+
+	switch {
+	case w.EpSel == EpRR:
+		dat.sel_type = C.NAT_LB_SEL_RR
+	case w.EpSel == EpHash:
+		dat.sel_type = C.NAT_LB_SEL_HASH
+	case w.EpSel == EpRRPersist:
+		dat.sel_type = C.NAT_LB_SEL_RR_PERSIST
+	case w.EpSel == EpLeastConn:
+		dat.sel_type = C.NAT_LB_SEL_LC
+	case w.EpSel == EpN2:
+		dat.sel_type = C.NAT_LB_SEL_N2
+	/* Currently not implemented in DP */
+	/*case w.EpSel == EP_PRIO:
+	  dat.sel_type = C.NAT_LB_SEL_PRIO*/
+	default:
+		dat.sel_type = C.NAT_LB_SEL_RR
+	}
+	dat.ca.cidx = C.uint(w.Mark)
+	if w.DsrMode {
+		dat.ca.oaux = 1
+	}
+
+	nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[0]))
+
+	for _, k := range w.endPoints {
+		nxfa.wprio = C.uchar(k.Weight)
+		nxfa.nat_xport = C.ushort(tk.Htons(k.XPort))
+		if tk.IsNetIPv6(k.XIP.String()) {
+			convNetIP2DPv6Addr(unsafe.Pointer(&nxfa.nat_xip[0]), k.XIP)
+
+			if tk.IsNetIPv6(k.RIP.String()) {
+				convNetIP2DPv6Addr(unsafe.Pointer(&nxfa.nat_rip[0]), k.RIP)
+			}
+			nxfa.nv6 = 1
 		} else {
-			tk.LogIt(tk.LogDebug, "[DP] LB rule %s add[NOK] - EbpfErrNat4Add\n", w.ServiceIP.String())
-			return EbpfErrNat4Add
+			nxfa.nat_xip[0] = C.uint(tk.IPtonl(k.XIP))
+			nxfa.nat_rip[0] = C.uint(tk.IPtonl(k.RIP))
+			nxfa.nv6 = 0
 		}
 
-		// seconds to nanoseconds
-		dat.ito = C.uint64_t(w.InActTo * 1000000000)
-		dat.pto = C.uint64_t(w.PersistTo * 1000000000)
-		dat.base_to = 0
-
-		/*dat.npmhh = 2
-		dat.pmhh[0] = 0x64646464
-		dat.pmhh[1] = 0x65656565*/
-		for i, k := range w.secIP {
-			dat.pmhh[i] = C.uint(tk.IPtonl(k))
-		}
-		dat.npmhh = C.uchar(len(w.secIP))
-
-		switch {
-		case w.EpSel == EpRR:
-			dat.sel_type = C.NAT_LB_SEL_RR
-		case w.EpSel == EpHash:
-			dat.sel_type = C.NAT_LB_SEL_HASH
-		case w.EpSel == EpRRPersist:
-			dat.sel_type = C.NAT_LB_SEL_RR_PERSIST
-		case w.EpSel == EpLeastConn:
-			dat.sel_type = C.NAT_LB_SEL_LC
-		case w.EpSel == EpN2:
-			dat.sel_type = C.NAT_LB_SEL_N2
-		/* Currently not implemented in DP */
-		/*case w.EpSel == EP_PRIO:
-		  dat.sel_type = C.NAT_LB_SEL_PRIO*/
-		default:
-			dat.sel_type = C.NAT_LB_SEL_RR
-		}
-		dat.ca.cidx = C.uint(w.Mark)
-		if w.DsrMode {
-			dat.ca.oaux = 1
-		}
-
-		nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[0]))
-
-		for _, k := range w.endPoints {
-			nxfa.wprio = C.uchar(k.Weight)
-			nxfa.nat_xport = C.ushort(tk.Htons(k.XPort))
-			if tk.IsNetIPv6(k.XIP.String()) {
-				convNetIP2DPv6Addr(unsafe.Pointer(&nxfa.nat_xip[0]), k.XIP)
-
-				if tk.IsNetIPv6(k.RIP.String()) {
-					convNetIP2DPv6Addr(unsafe.Pointer(&nxfa.nat_rip[0]), k.RIP)
-				}
-				nxfa.nv6 = 1
-			} else {
-				nxfa.nat_xip[0] = C.uint(tk.IPtonl(k.XIP))
-				nxfa.nat_rip[0] = C.uint(tk.IPtonl(k.RIP))
-				nxfa.nv6 = 0
-			}
-
-			if k.InActive {
-				nxfa.inactive = 1
-			}
-
-			nxfa = (*nxfrmAct)(getPtrOffset(unsafe.Pointer(nxfa),
-				C.sizeof_struct_mf_xfrm_inf))
-		}
-
-		// Any unused end-points should be marked inactive
-		for i := len(w.endPoints); i < C.LLB_MAX_NXFRMS; i++ {
-			nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[i]))
+		if k.InActive {
 			nxfa.inactive = 1
 		}
 
-		dat.nxfrm = C.ushort(len(w.endPoints))
-		if w.CsumDis {
-			dat.cdis = 1
-		} else {
-			dat.cdis = 0
-		}
+		nxfa = (*nxfrmAct)(getPtrOffset(unsafe.Pointer(nxfa),
+			C.sizeof_struct_mf_xfrm_inf))
+	}
 
-		if w.TermHTTPs {
-			dat.sec_mode = C.SEC_MODE_HTTPS
-		}
+	// Any unused end-points should be marked inactive
+	for i := len(w.endPoints); i < C.LLB_MAX_NXFRMS; i++ {
+		nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[i]))
+		nxfa.inactive = 1
+	}
 
+	dat.nxfrm = C.ushort(len(w.endPoints))
+	if w.CsumDis {
+		dat.cdis = 1
+	} else {
+		dat.cdis = 0
+	}
+
+	if w.TermHTTPS {
+		dat.sec_mode = C.SEC_MODE_HTTPS
+	}
+
+	hostURLStr := C.CString(w.HostURL)
+	C.memcpy(unsafe.Pointer(&dat.host_url[0]), unsafe.Pointer(hostURLStr), C.ulong(len(w.HostURL))+1)
+
+	if w.Work == DpCreate {
 		ret := C.llb_add_map_elem(C.LL_DP_NAT_MAP,
 			unsafe.Pointer(key),
 			unsafe.Pointer(dat))
@@ -1056,7 +1059,9 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		tk.LogIt(tk.LogDebug, "[DP] LB rule %s add[OK]\n", w.ServiceIP.String())
 		return 0
 	} else if w.Work == DpRemove {
-		C.llb_del_map_elem(C.LL_DP_NAT_MAP, unsafe.Pointer(key))
+		C.llb_del_map_elem_wval(C.LL_DP_NAT_MAP,
+			unsafe.Pointer(key),
+			unsafe.Pointer(dat))
 		return 0
 	}
 
