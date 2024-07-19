@@ -792,7 +792,7 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.ProbeReq = data.hChk.prbReq
 		ret.Serv.ProbeResp = data.hChk.prbResp
 		ret.Serv.Name = data.name
-		ret.Serv.Path = data.tuples.path
+		ret.Serv.HostUrl = data.tuples.path
 		if data.act.actType == RtActSnat {
 			ret.Serv.Snat = true
 		}
@@ -950,7 +950,7 @@ func (R *RuleH) GetNatLbRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.Path}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 	return R.tables[RtLB].eMap[rt.ruleKey()]
 }
 
@@ -978,7 +978,7 @@ func (R *RuleH) GetNatLbRuleSecIPs(serv cmn.LbServiceArg) []string {
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.Path}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 	if R.tables[RtLB].eMap[rt.ruleKey()] != nil {
 		for _, ip := range R.tables[RtLB].eMap[rt.ruleKey()].secIP {
 			ips = append(ips, ip.sIP.String())
@@ -1499,7 +1499,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.Path}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 
 	eRule := R.tables[RtLB].eMap[rt.ruleKey()]
 
@@ -1710,7 +1710,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.Path}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 
 	rule := R.tables[RtLB].eMap[rt.ruleKey()]
 	if rule == nil {
@@ -2583,7 +2583,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.Status = &r.sync
 	nWork.ZoneNum = r.zone.ZoneNum
 	if r.secMode == cmn.LBServHttps {
-		nWork.TermHTTPs = true
+		nWork.TermHTTPS = true
 	}
 	nWork.ServiceIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
 	nWork.L4Port = r.tuples.l4Dst.val
@@ -2592,6 +2592,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.BlockNum = r.tuples.pref
 	nWork.InActTo = uint64(r.iTO)
 	nWork.PersistTo = uint64(r.pTO)
+	nWork.HostURL = r.tuples.path
 
 	if r.act.actType == RtActDnat {
 		nWork.NatType = DpDnat

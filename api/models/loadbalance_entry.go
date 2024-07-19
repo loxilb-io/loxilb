@@ -318,6 +318,9 @@ type LoadbalanceEntryServiceArguments struct {
 	// IP address for externel access
 	ExternalIP string `json:"externalIP,omitempty"`
 
+	// Ingress specific host URL path
+	Host string `json:"host,omitempty"`
+
 	// value for inactivity timeout (in seconds)
 	InactiveTimeOut int32 `json:"inactiveTimeOut,omitempty"`
 
@@ -335,9 +338,6 @@ type LoadbalanceEntryServiceArguments struct {
 
 	// end-point specific op (0-create, 1-attachEP, 2-detachEP)
 	Oper int32 `json:"oper,omitempty"`
-
-	// Ingress specific URL path
-	Path string `json:"path,omitempty"`
 
 	// port number for the access
 	Port int64 `json:"port,omitempty"`

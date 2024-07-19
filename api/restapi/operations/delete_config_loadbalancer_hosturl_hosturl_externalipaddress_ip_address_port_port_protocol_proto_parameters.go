@@ -15,19 +15,19 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// NewDeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams creates a new DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams object
+// NewDeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams creates a new DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams object
 //
 // There are no default values defined in the spec.
-func NewDeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams() DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams {
+func NewDeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams() DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams {
 
-	return DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams{}
+	return DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams{}
 }
 
-// DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams contains all the bound params for the delete config loadbalancer urlpath urlpath externalipaddress IP address port port protocol proto operation
+// DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams contains all the bound params for the delete config loadbalancer hosturl hosturl externalipaddress IP address port port protocol proto operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProto
-type DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams struct {
+// swagger:parameters DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProto
+type DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams struct {
 
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
@@ -44,6 +44,11 @@ type DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortPro
 	  Required: true
 	  In: path
 	*/
+	Hosturl string
+	/*Attributes for load balance service
+	  Required: true
+	  In: path
+	*/
 	IPAddress string
 	/*Attributes for load balance service
 	  Required: true
@@ -55,18 +60,13 @@ type DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortPro
 	  In: path
 	*/
 	Proto string
-	/*Attributes for load balance service
-	  Required: true
-	  In: path
-	*/
-	Urlpath string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls.
 //
-// To ensure default values, the struct must have been initialized with NewDeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams() beforehand.
-func (o *DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
+// To ensure default values, the struct must have been initialized with NewDeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams() beforehand.
+func (o *DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
 	o.HTTPRequest = r
@@ -80,6 +80,11 @@ func (o *DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPor
 
 	qBlock, qhkBlock, _ := qs.GetOK("block")
 	if err := o.bindBlock(qBlock, qhkBlock, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	rHosturl, rhkHosturl, _ := route.Params.GetOK("hosturl")
+	if err := o.bindHosturl(rHosturl, rhkHosturl, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -97,11 +102,6 @@ func (o *DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPor
 	if err := o.bindProto(rProto, rhkProto, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
-	rUrlpath, rhkUrlpath, _ := route.Params.GetOK("urlpath")
-	if err := o.bindUrlpath(rUrlpath, rhkUrlpath, route.Formats); err != nil {
-		res = append(res, err)
-	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -109,7 +109,7 @@ func (o *DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPor
 }
 
 // bindBgp binds and validates parameter Bgp from query.
-func (o *DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams) bindBgp(rawData []string, hasKey bool, formats strfmt.Registry) error {
+func (o *DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams) bindBgp(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
@@ -132,7 +132,7 @@ func (o *DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPor
 }
 
 // bindBlock binds and validates parameter Block from query.
-func (o *DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams) bindBlock(rawData []string, hasKey bool, formats strfmt.Registry) error {
+func (o *DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams) bindBlock(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
@@ -154,8 +154,22 @@ func (o *DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPor
 	return nil
 }
 
+// bindHosturl binds and validates parameter Hosturl from path.
+func (o *DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams) bindHosturl(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: true
+	// Parameter is provided by construction from the route
+	o.Hosturl = raw
+
+	return nil
+}
+
 // bindIPAddress binds and validates parameter IPAddress from path.
-func (o *DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams) bindIPAddress(rawData []string, hasKey bool, formats strfmt.Registry) error {
+func (o *DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams) bindIPAddress(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
@@ -169,7 +183,7 @@ func (o *DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPor
 }
 
 // bindPort binds and validates parameter Port from path.
-func (o *DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams) bindPort(rawData []string, hasKey bool, formats strfmt.Registry) error {
+func (o *DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams) bindPort(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
@@ -188,7 +202,7 @@ func (o *DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPor
 }
 
 // bindProto binds and validates parameter Proto from path.
-func (o *DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams) bindProto(rawData []string, hasKey bool, formats strfmt.Registry) error {
+func (o *DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams) bindProto(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
@@ -197,20 +211,6 @@ func (o *DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPor
 	// Required: true
 	// Parameter is provided by construction from the route
 	o.Proto = raw
-
-	return nil
-}
-
-// bindUrlpath binds and validates parameter Urlpath from path.
-func (o *DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams) bindUrlpath(rawData []string, hasKey bool, formats strfmt.Registry) error {
-	var raw string
-	if len(rawData) > 0 {
-		raw = rawData[len(rawData)-1]
-	}
-
-	// Required: true
-	// Parameter is provided by construction from the route
-	o.Urlpath = raw
 
 	return nil
 }

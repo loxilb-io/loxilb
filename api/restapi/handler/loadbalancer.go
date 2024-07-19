@@ -47,7 +47,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv.ProbeRetries = int(params.Attr.ServiceArguments.ProbeRetries)
 	lbRules.Serv.Name = params.Attr.ServiceArguments.Name
 	lbRules.Serv.Oper = cmn.LBOp(params.Attr.ServiceArguments.Oper)
-	lbRules.Serv.Path = params.Attr.ServiceArguments.Path
+	lbRules.Serv.HostUrl = params.Attr.ServiceArguments.Host
 
 	if lbRules.Serv.Proto == "sctp" {
 		for _, data := range params.Attr.SecondaryIPs {
@@ -78,7 +78,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerUrlpathUrlpathExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
+func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var lbServ cmn.LbServiceArg
@@ -86,10 +86,10 @@ func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerUrlpathU
 	lbServ.ServIP = params.IPAddress
 	lbServ.ServPort = uint16(params.Port)
 	lbServ.Proto = params.Proto
-	if params.Urlpath == "any" {
-		lbServ.Path = ""
+	if params.Hosturl == "any" {
+		lbServ.HostUrl = ""
 	} else {
-		lbServ.Path = params.Urlpath
+		lbServ.HostUrl = params.Hosturl
 	}
 	if params.Block != nil {
 		lbServ.BlockNum = uint16(*params.Block)
@@ -116,7 +116,7 @@ func ConfigDeleteLoadbalancerWithoutPath(params operations.DeleteConfigLoadbalan
 	lbServ.ServIP = params.IPAddress
 	lbServ.ServPort = uint16(params.Port)
 	lbServ.Proto = params.Proto
-	lbServ.Path = ""
+	lbServ.HostUrl = ""
 	if params.Block != nil {
 		lbServ.BlockNum = uint16(*params.Block)
 	}
@@ -165,7 +165,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tmpSvc.Probeport = lb.Serv.ProbePort
 		tmpSvc.Name = lb.Serv.Name
 		tmpSvc.Snat = lb.Serv.Snat
-		tmpSvc.Path = lb.Serv.Path
+		tmpSvc.Host = lb.Serv.HostUrl
 
 		tmpLB.ServiceArguments = &tmpSvc
 
