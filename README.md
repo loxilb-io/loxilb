@@ -57,11 +57,14 @@ Additionally, loxilb can also support cluster-ip and node-port services, thereby
 loxilb works as a L4 load-balancer/service-proxy by default. Although it provides great performance, at times, L7 load-balancing might become necessary in K8s. There are many good L7 proxies already available for K8s. Still, we are working on providing a great L7 solution natively in eBPF. It is a tough endeavor one which should reap great benefits once completed. Please keep an eye for updates on this.
 
 ## Telco-Cloud with loxilb
-For deploying telco-cloud with cloud-native functions, loxilb can be used as a SCP(service communication proxy). SCP is a communication proxy defined by [3GPP](https://www.etsi.org/deliver/etsi_ts/129500_129599/129500/16.04.00_60/ts_129500v160400p.pdf) and aimed at telco micro-services running in cloud-native environment. Telco-cloud requires load-balancing and communication across various interfaces/standards like N2, N4, E2(ORAN), S6x, 5GLAN, GTP etc. Each of these present its own unique challenges which loxilb aims to solve e.g.:    
+For deploying telco-cloud with cloud-native functions, loxilb can be used as a SCP(service communication proxy). SCP is a communication proxy defined by [3GPP](https://www.etsi.org/deliver/etsi_ts/129500_129599/129500/16.04.00_60/ts_129500v160400p.pdf) and aimed at telco micro-services running in cloud-native environment. Read more in this [blog](https://dev.to/nikhilmalik/5g-service-communication-proxy-with-loxilb-4242) 
+![image](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/photos/scp.svg)
+
+Telco-cloud requires load-balancing and communication across various interfaces/standards like N2, N4, E2(ORAN), S6x, 5GLAN, GTP etc. Each of these present its own unique challenges which loxilb aims to solve e.g.:    
 - N4 requires PFCP level session-intelligence
-- N2 requires NGAP parsing capability
-- S6x requires Diameter/SCTP multi-homing LB support
-- MEC use-cases might require UL-CL understanding
+- N2 requires NGAP parsing capability(Related Blogs - [Blog-1](https://www.loxilb.io/post/ngap-load-balancing-with-loxilb), [Blog-2](https://futuredon.medium.com/5g-sctp-loadbalancer-using-loxilb-b525198a9103), [Blog-3](https://medium.com/@ben0978327139/5g-sctp-loadbalancer-using-loxilb-applying-on-free5gc-b5c05bb723f0))
+- S6x requires Diameter/SCTP multi-homing LB support(Related [Blog](https://www.loxilb.io/post/k8s-introducing-sctp-multihoming-functionality-with-loxilb))
+- MEC use-cases might require UL-CL understanding(Related [Blog](https://futuredon.medium.com/5g-uplink-classifier-using-loxilb-7593a4d66f4c))
 - Hitless failover support might be essential for mission-critical applications
 - E2 might require SCTP-LB with OpenVPN bundled together
 - SIP support is needed to enable cloud-native VOIP
@@ -118,6 +121,7 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 - [System Requirements](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/requirements.md)
 - [Frequenctly Asked Questions- FAQs](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/faq.md)
 - [Blogs](https://www.loxilb.io/blog)
+- [Demo Videos](https://www.youtube.com/@loxilb697)
 
 ## Community 
 
