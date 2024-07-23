@@ -9,9 +9,9 @@ loxilb is an open source cloud-native load-balancer based on GoLang/eBPF with th
 
 ## Kubernetes with loxilb
 
-Kubernetes defines many service constructs like cluster-ip, node-port, load-balancer etc for pod to pod, pod to service and service from outside communication. 
+Kubernetes defines many service constructs like cluster-ip, node-port, load-balancer etc for pod to pod, pod to service and outside-world to service communication. 
 
-![Readme main](https://github.com/user-attachments/assets/12709c3f-08ca-429d-a9ec-c9efc90382b0)
+![LoxiLB Cover](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/photos/loxilb-cover.png)
 
 All these services are provided by load-balancers/proxies operating at Layer4/Layer7. Since Kubernetes's is highly modular,  these services can be provided by different software modules. For example, kube-proxy is used by default to provide cluster-ip and node-port services. 
 
@@ -20,7 +20,7 @@ Service type load-balancer is usually provided by public cloud-provider(s) as a 
 loxilb works as a L4 load-balancer/service-proxy by default. Although L4 load-balancing provides great performance and functionality, at times, an equally performant L7 load-balancer is also necessary in K8s for various use-cases. loxilb also supports L7 load-balancing in the form of Kubernetes Ingress implementation. This also benefit users who need L4 and L7 load-balancing under the same hood.
 
 Additionally, loxilb also supports:
-- [x] kube-proxy replacement with eBPF(full cluster-mesh implementation for Kubernetes).
+- [x] kube-proxy replacement with eBPF(full cluster-mesh implementation for Kubernetes)
 - [x] Ingress Support
 - [x] Kubernetes Gateway API
 - [ ] Kubernetes Network Policies 
@@ -162,9 +162,6 @@ Feel free to post your queries in github [discussion](https://github.com/loxilb-
 | [![k3s-sctpmh-CI](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-sctpmh.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-sctpmh.yml)  | | |
 | [![k3s-sctpmh-ubuntu22-CI](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-sctpmh-ubuntu-22.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-sctpmh-ubuntu22.yml) | | |
 | [![k3s-sctpmh-2-CI](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-sctpmh-2.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-sctpmh-2.yml)  | | |
-
-
-
 
 
 ## 📚 Please check loxilb [website](https://www.loxilb.io) for more detailed info.   
