@@ -1,0 +1,24 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: hello-world
+spec:
+  replicas: 3
+  service:
+    type: LoadBalancer
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+            - key: "node-role.kubernetes.io/master"
+              operator: DoesNotExist
+            - key: "node-role.kubernetes.io/control-plane"
+              operator: DoesNotExist
+  override:
+    service:
+      spec:
+        loadBalancerClass: loxilb.io/loxilb
+        externalTrafficPolicy: Local
+        ports:
+        - port: 5672
