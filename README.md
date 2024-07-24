@@ -63,13 +63,14 @@ Telco-cloud requires load-balancing and communication across various interfaces/
 - Stateful firewalling and IPSEC/Wireguard support
 - Optimized implementation for features like [Conntrack](https://thermalcircle.de/doku.php?id=blog:linux:connection_tracking_1_modules_and_hooks), QoS etc
 - Full compatibility for ipvs (ipvs policies can be auto inherited)
-- Policy oriented L7 proxy support - HTTP1.0, 1.1, 2.0 etc (planned 🚧)   
+- Policy oriented L7 proxy support - HTTP1.0, 1.1, 2.0, 3.0   
 
 ## Components of loxilb 
 - GoLang based control plane components
 - A scalable/efficient [eBPF](https://ebpf.io/) based data-path implementation
 - Integrated goBGP based routing stack
-- A kubernetes agent [kube-loxilb](https://github.com/loxilb-io/kube-loxilb) written in Go
+- A kubernetes operator [kube-loxilb](https://github.com/loxilb-io/kube-loxilb) written in Go
+- A kubernetes ingress implementation
 
 ## Architectural Considerations   
 - [Understanding loxilb modes and deployment in K8s with kube-loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/kube-loxilb.md)
