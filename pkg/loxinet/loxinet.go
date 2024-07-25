@@ -79,6 +79,7 @@ type loxiNetH struct {
 	eHooks      bool
 	lSockPolicy bool
 	sockMapEn   bool
+	disBPF      bool
 	pFile       *os.File
 }
 
@@ -219,6 +220,7 @@ func loxiNetInit() {
 	mh.pProbe = opts.Opts.PassiveEPProbe
 	mh.lSockPolicy = opts.Opts.LocalSockPolicy
 	mh.sockMapEn = opts.Opts.SockMapSupport
+	mh.disBPF = opts.Opts.ProxyModeOnly
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 
@@ -247,7 +249,7 @@ func loxiNetInit() {
 			RunCommand(MkMountCG2, false)
 		}
 		// Initialize the ebpf datapath subsystem
-		mh.dpEbpf = DpEbpfInit(clusterMode, mh.rssEn, mh.eHooks, mh.lSockPolicy, mh.sockMapEn, mh.self, -1)
+		mh.dpEbpf = DpEbpfInit(clusterMode, mh.rssEn, mh.eHooks, mh.lSockPolicy, mh.sockMapEn, mh.self, mh.disBPF, -1)
 		mh.dp = DpBrokerInit(mh.dpEbpf, rpcMode)
 
 		// Initialize the security zone subsystem

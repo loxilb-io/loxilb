@@ -267,7 +267,7 @@ func DpEbpfSetLogLevel(logLevel tk.LogLevelT) {
 }
 
 // DpEbpfInit - initialize the ebpf dp subsystem
-func DpEbpfInit(clusterEn, rssEn, egrHooks, localSockPolicy, sockMapEn bool, nodeNum int, logLevel tk.LogLevelT) *DpEbpfH {
+func DpEbpfInit(clusterEn, rssEn, egrHooks, localSockPolicy, sockMapEn bool, nodeNum int, disBPF bool, logLevel tk.LogLevelT) *DpEbpfH {
 	var cfg C.struct_ebpfcfg
 
 	if clusterEn {
@@ -289,6 +289,12 @@ func DpEbpfInit(clusterEn, rssEn, egrHooks, localSockPolicy, sockMapEn bool, nod
 		cfg.have_sockmap = 1
 	} else {
 		cfg.have_sockmap = 0
+	}
+
+	if disBPF {
+		cfg.have_noebpf = 1
+	} else {
+		cfg.have_noebpf = 0
 	}
 
 	cfg.nodenum = C.int(nodeNum)
@@ -404,6 +410,9 @@ func convDPv6Addr2NetIP(addr unsafe.Pointer) net.IP {
 
 // loadEbpfPgm - load loxilb eBPF program to an interface
 func (e *DpEbpfH) loadEbpfPgm(name string) int {
+	if mh.disBPF {
+		return 0
+	}
 	ifStr := C.CString(name)
 	xSection := C.CString(string(C.XDP_LL_SEC_DEFAULT))
 	link, err := nlp.LinkByName(name)
@@ -439,6 +448,9 @@ func (e *DpEbpfH) loadEbpfPgm(name string) int {
 
 // unLoadEbpfPgm - unload loxilb eBPF program from an interface
 func (e *DpEbpfH) unLoadEbpfPgm(name string) int {
+	if mh.disBPF {
+		return 0
+	}
 	ifStr := C.CString(name)
 	xSection := C.CString(string(C.XDP_LL_SEC_DEFAULT))
 
