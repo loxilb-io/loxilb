@@ -204,14 +204,16 @@ func loxiNetInit() {
 
 	// It is important to make sure loxilb's eBPF filesystem
 	// is in place and mounted to make sure maps are pinned properly
-	if !utils.FileExists(BpfFsCheckFile) {
-		if utils.FileExists(MkfsScript) {
-			RunCommand(MkfsScript, true)
-		}
-	}
-	utils.MkTunFsIfNotExist()
+	if !opts.Opts.ProxyModeOnly {
+		if !utils.FileExists(BpfFsCheckFile) {
+			if utils.FileExists(MkfsScript) {
+				RunCommand(MkfsScript, true)
+			}
 
-	sysctlInit()
+		}
+		utils.MkTunFsIfNotExist()
+		sysctlInit()
+	}
 
 	mh.self = opts.Opts.ClusterSelf
 	mh.rssEn = opts.Opts.RssEnable
