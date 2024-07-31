@@ -137,7 +137,7 @@ Join the loxilb [Slack](https://www.loxilb.io/members) channel to chat with loxi
 ### General Discussion
 Feel free to post your queries in github [discussion](https://github.com/loxilb-io/loxilb/discussions). If you find any issue/bugs, please raise an [issue](https://github.com/loxilb-io/loxilb/issues) in github and members from loxilb community will be happy to help.
 
-### Posts
+### Community Posts
 - [5G SCTP Load Balancer using LoxiLB](https://futuredon.medium.com/5g-sctp-loadbalancer-using-loxilb-b525198a9103)
 - [5G Uplink Classifier using LoxiLB](https://futuredon.medium.com/5g-uplink-classifier-using-loxilb-7593a4d66f4c)
 - [5G SCTP Load Balancer with free5gc](https://medium.com/@ben0978327139/5g-sctp-loadbalancer-using-loxilb-applying-on-free5gc-b5c05bb723f0)
