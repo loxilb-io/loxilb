@@ -26,7 +26,7 @@ Additionally, loxilb also supports:
 - [ ] Kubernetes Network Policies 
 
 ## Telco-Cloud with loxilb
-For deploying telco-cloud with cloud-native functions, loxilb can be used as a SCP(service communication proxy). SCP is a communication proxy defined by [3GPP](https://www.etsi.org/deliver/etsi_ts/129500_129599/129500/16.04.00_60/ts_129500v160400p.pdf) and aimed at telco micro-services running in cloud-native environment. Read more in this [blog](https://dev.to/nikhilmalik/5g-service-communication-proxy-with-loxilb-4242) 
+For deploying telco-cloud with cloud-native functions, loxilb can be used as an enhanced SCP(service communication proxy). SCP is a communication proxy defined by [3GPP](https://www.etsi.org/deliver/etsi_ts/129500_129599/129500/16.04.00_60/ts_129500v160400p.pdf) and aimed at telco micro-services running in cloud-native environment. Read more in this [blog](https://dev.to/nikhilmalik/5g-service-communication-proxy-with-loxilb-4242) 
 ![image](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/photos/scp.svg)
 
 Telco-cloud requires load-balancing and communication across various interfaces/standards like N2, N4, E2(ORAN), S6x, 5GLAN, GTP etc. Each of these present its own unique challenges which loxilb aims to solve e.g.:    
