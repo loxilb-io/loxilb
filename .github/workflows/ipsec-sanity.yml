@@ -65,4 +65,10 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - run: |
+             cd cicd/ipsec-e2e/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
       - run: echo ${{ github.event.inputs.userInput }}
