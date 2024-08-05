@@ -15,7 +15,7 @@ Feel free to edit this file and open a Pull-Request to get your organization lis
 
 | Organization | Contact/Reference | Status | Description of Use |
 | ------------ | ------- | ------| ------------------ |
-| [Samsung](https://upbound.io) | [Conference Presentation](https://m.blog.naver.com/PostView.naver?blogId=n_cloudplatform&logNo=223518118906&navType=by) | ![testing](https://img.shields.io/badge/development%20&%20testing-green) | Telco cloud-native LB/Ingress for N2 interface |
+| [Samsung](https://upbound.io) | [Conference Presentation](https://m.blog.naver.com/PostView.naver?blogId=n_cloudplatform&logNo=223518118906&navType=by) | ![testing](https://img.shields.io/badge/development%20&%20testing-green) | Telco cloud-native LB/Ingress for N2/N4 interface |
 | [Oracle OCI](https://www.oracle.com/) | @esirame | ![testing](https://img.shields.io/badge/development%20&%20testing-green) | Telco cloud-native LB/Ingress for N2 interface |
 | [Viettel](https://vietteltelecom.vn/) | @chuhuutiennam | ![testing](https://img.shields.io/badge/development%20&%20testing-green) | SCP for cloud-native telco deployments|
 | [BPFire](http://www.firebeeos.com/) | @vincentmli | ![deployment](https://img.shields.io/badge/deployment-blue) | eBPF based “BPFire” Distro | 
