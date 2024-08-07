@@ -525,8 +525,10 @@ type LBSec int32
 const (
 	// LBServPlain - Plain mode
 	LBServPlain LBSec = iota
-	// LBServHttps - HTTPS termination
-	LBServHttps
+	// LBServHTTPS - HTTPS termination
+	LBServHTTPS
+	// LBServE2EHTTPS - HTTPS proxy
+	LBServE2EHTTPS
 )
 
 // LbServiceArg - Information related to load-balancer service
