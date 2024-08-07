@@ -1523,6 +1523,10 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 			return RuleExistsErr, errors.New("lbrule-exists error")
 		}
 
+		if eRule.secMode != serv.Security {
+			return RuleExistsErr, errors.New("lbrule-exist error: cant modify rule security mode")
+		}
+
 		if len(retEps) == 0 {
 			tk.LogIt(tk.LogDebug, "nat lb-rule %s has no-endpoints: to be deleted\n", eRule.tuples.String())
 			return R.DeleteNatLbRule(serv)
@@ -2582,8 +2586,10 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.Work = work
 	nWork.Status = &r.sync
 	nWork.ZoneNum = r.zone.ZoneNum
-	if r.secMode == cmn.LBServHttps {
-		nWork.TermHTTPS = true
+	if r.secMode == cmn.LBServHTTPS {
+		nWork.SecMode = DpTermHTTPS
+	} else if r.secMode == cmn.LBServE2EHTTPS {
+		nWork.SecMode = DpE2EHTTPS
 	}
 	nWork.ServiceIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
 	nWork.L4Port = r.tuples.l4Dst.val

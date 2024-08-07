@@ -276,6 +276,15 @@ type NatEP struct {
 	InActive bool
 }
 
+// SecT - type of SecT
+type SecT uint8
+
+// security type constants
+const (
+	DpTermHTTPS SecT = iota + 1
+	DpE2EHTTPS
+)
+
 // NatDpWorkQ - work queue entry for nat related operation
 type NatDpWorkQ struct {
 	Work      DpWorkT
@@ -286,7 +295,7 @@ type NatDpWorkQ struct {
 	BlockNum  uint16
 	DsrMode   bool
 	CsumDis   bool
-	TermHTTPS bool
+	SecMode   SecT
 	HostURL   string
 	Proto     uint8
 	Mark      int

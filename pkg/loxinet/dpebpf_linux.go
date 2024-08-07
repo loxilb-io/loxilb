@@ -1052,8 +1052,10 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 		dat.cdis = 0
 	}
 
-	if w.TermHTTPS {
+	if w.SecMode == DpTermHTTPS {
 		dat.sec_mode = C.SEC_MODE_HTTPS
+	} else if w.SecMode == DpE2EHTTPS {
+		dat.sec_mode = C.SEC_MODE_HTTPS_E2E
 	}
 
 	hostURLStr := C.CString(w.HostURL)
