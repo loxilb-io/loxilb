@@ -1,0 +1,266 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app.kubernetes.io/instance: loxilb-ingress
+    app.kubernetes.io/name: loxilb-ingress
+  name: loxilb-ingress
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: loxilb-ingress
+    app.kubernetes.io/name: loxilb-ingress
+  name: loxilb-ingress
+  namespace: kube-system
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: loxilb-ingress
+  namespace: kube-system
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - watch
+      - list
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - watch
+      - list
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - endpoints
+      - services
+      - services/status
+    verbs:
+      - get
+      - watch
+      - list
+      - patch
+      - update
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups:
+      - authentication.k8s.io
+    resources:
+      - tokenreviews
+    verbs:
+      - create
+  - apiGroups:
+      - authorization.k8s.io
+    resources:
+      - subjectaccessreviews
+    verbs:
+      - create
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses/status
+    verbs:
+      - update
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingressclasses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - create
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - list
+      - watch
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: loxilb-ingress
+    app.kubernetes.io/name: loxilb-ingress
+  name: loxilb-ingress
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - endpoints
+  - nodes
+  - pods
+  - secrets
+  - namespaces
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networking.k8s.io
+  - extensions
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses/status
+  verbs:
+  - update
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingressclasses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - discovery.k8s.io
+  resources:
+  - endpointslices
+  verbs:
+  - list
+  - watch
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: loxilb-ingress
+    app.kubernetes.io/name: loxilb-ingress
+  name: loxilb-ingress
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: loxilb-ingress
+subjects:
+- kind: ServiceAccount
+  name: loxilb-ingress
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: loxilb-ingress
+    app.kubernetes.io/name: loxilb-ingress
+  name: loxilb-ingress
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: loxilb-ingress
+subjects:
+- kind: ServiceAccount
+  name: loxilb-ingress
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: loxilb-ingress
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: loxilb-ingress
+      app.kubernetes.io/instance: loxilb-ingress
+      app.kubernetes.io/name: loxilb-ingress
+  template:
+    metadata:
+      name: loxilb-ingress
+      labels:
+        app: loxilb-ingress
+        app.kubernetes.io/instance: loxilb-ingress
+        app.kubernetes.io/name: loxilb-ingress
+    spec:
+      #hostNetwork: true
+      #dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: loxilb-ingress
+      containers:
+      - name: loxilb-ingress
+        volumeMounts:
+          - mountPath: "/opt/loxilb/cert/"
+            name: loxilb-ssl
+        image: "ghcr.io/loxilb-io/loxilb-ingress:latest"
+        imagePullPolicy: Always
+        command: [ "/bin/loxilb-ingress" ]
+        ports:
+        - containerPort: 11111
+      volumes:
+        - name: loxilb-ssl
+          secret:
+            secretName: loxilb-ssl
