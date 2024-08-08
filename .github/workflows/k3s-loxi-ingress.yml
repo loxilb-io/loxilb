@@ -1,0 +1,25 @@
+name: K3s-Loxi-Ingress-Sanity-CI
+on:
+ # schedule:
+ # Runs "At 11:00 UTC every day-of-week"
+ # - cron: '0 11 * * *'
+ workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'k3s-loxi-ingress'
+jobs:
+  build:
+    name: k3s-loxi-ingress-sanity
+    runs-on: [self-hosted, large]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - run: |
+         cd cicd/k3s-flannel-loxilb-ingress
+         ./config.sh
+         ./validation.sh
+         ./rmconfig.sh
+         cd -
