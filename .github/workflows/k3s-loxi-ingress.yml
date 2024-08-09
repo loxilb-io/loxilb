@@ -17,9 +17,16 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-      - run: |
+      - name: Run K3s LoxiIngress CICD
+        run: |
          cd cicd/k3s-flannel-loxilb-ingress
          ./config.sh
          ./validation.sh
          ./rmconfig.sh
          cd -
+      - name: Clean test-bed
+        if: success() || failure()
+        run: |
+          cd cicd/k3s-flannel-loxilb-ingress/ || true
+          ./rmconfig.sh
+          cd -
