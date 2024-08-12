@@ -13,6 +13,7 @@ jobs:
   build:
     name: k3s-loxi-ingress-sanity
     runs-on: [self-hosted, large]
+    if: github.repository == 'loxilb-io/loxilb' 
     steps:
       - uses: actions/checkout@v2
         with:
