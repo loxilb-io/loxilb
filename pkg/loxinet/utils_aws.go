@@ -179,8 +179,8 @@ func AWSPrepVIPNetwork() error {
 
 	subnets := []string{}
 	loxilbKey := "loxiType"
-	loxilbIfKeyVal := "loxilb-eni"
-	loxilbSubNetKeyVal := "loxilb-subnet"
+	loxilbIfKeyVal := fmt.Sprintf("loxilb-eni%s", mh.cloudInst)
+	loxilbSubNetKeyVal := fmt.Sprintf("loxilb-subnet%s", mh.cloudInst)
 	filterStr := fmt.Sprintf("%s:%s", "tag", loxilbKey)
 
 	output, err := ec2Client.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
@@ -319,7 +319,7 @@ func AWSPrepVIPNetwork() error {
 	}
 	intfDesc := "loxilb-eni"
 	loxilbIntfKey := "loxiType"
-	loxilbIntfKeyVal := "loxilb-eni"
+	loxilbIntfKeyVal := fmt.Sprintf("loxilb-eni%s", mh.cloudInst)
 	intfTag := types.Tag{Key: &loxilbIntfKey, Value: &loxilbIntfKeyVal}
 	intfTags := []types.Tag{intfTag}
 	intfOutput, err := ec2Client.CreateNetworkInterface(ctx3, &ec2.CreateNetworkInterfaceInput{
