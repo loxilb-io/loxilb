@@ -366,7 +366,12 @@ func RulesInit(zone *Zone) *RuleH {
 		nRh.epCs[i].hChk = time.NewTicker(EndPointCheckerDuration * time.Second)
 		go epTicker(nRh, i)
 	}
-	nRh.rootCAPool = x509.NewCertPool()
+	rootCAPool, err := x509.SystemCertPool()
+	if err == nil {
+		nRh.rootCAPool = rootCAPool
+	} else {
+		nRh.rootCAPool = x509.NewCertPool()
+	}
 	rootCACertile := cmn.CertPath + cmn.CACertFileName
 
 	// Check if there exist a common CA certificate
