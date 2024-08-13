@@ -1,0 +1,43 @@
+name: Cluster-Sanity-CI-Ubuntu-24
+
+on:
+  workflow_dispatch:
+    inputs:
+      userInput:
+        description: 'Enter string to print at end'
+        required: true
+        default: 'Finished'
+      tags:
+        description: 'Cluster Sanity Ubuntu 24'
+       
+jobs:
+  build:
+    name: cluster-sanity-ubuntu-24
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v2
+      - uses: actions/setup-go@v3
+        with:
+             go-version: '>=1.18.0'
+      - run: sudo apt-get update
+      - run: sudo apt-get -y install linux-tools-$(uname -r) bridge-utils unzip iperf iproute2 nodejs socat lksctp-tools
+      - run: |
+             cd cicd/cluster1/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+             cd cicd/cluster2/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+             cd cicd/cluster3/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: echo ${{ github.event.inputs.userInput }}
