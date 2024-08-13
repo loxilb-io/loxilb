@@ -1,11 +1,11 @@
 name: Adv-LB-Sanity-CI-Ubuntu-22
 
 on:
-  #push:
-  #  branches:
-  #    - main
-  #pull_request:
-  #  branches: [ "main" ]
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
     inputs:
       logLevel:
@@ -28,25 +28,7 @@ jobs:
         with:
              go-version: '>=1.18.0'
       - run: sudo apt-get update
-      - run: sudo apt-get -y install clang-13 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat ethtool lksctp-tools
-      - run: |
-            git clone --recurse-submodules https://github.com/loxilb-io/iproute2 iproute2-main
-            cd iproute2-main/libbpf/src/
-            sudo make install
-            mkdir build
-            DESTDIR=build OBJDIR=build make install
-            cd -
-            cd iproute2-main/
-            export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:`pwd`/libbpf/src/ && LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && sudo cp -f tc/tc /usr/local/sbin/ntc && cd -
-      - run: loxilb-ebpf/utils/mkllb_bpffs.sh
-      - run: sudo -E env "PATH=$PATH" make
-      - run: sudo -E env "PATH=$PATH" make test
-      - run: docker pull ghcr.io/loxilb-io/loxilb:latest
-      - run: docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
-      - run: pwd && ls && sudo -E env "PATH=$PATH" make docker-cp
-      - run: docker exec -dit loxilb mkllb_bpffs
-      - run: id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"` && docker commit $id ghcr.io/loxilb-io/loxilb:latest
-      - run: docker stop loxilb && docker rm loxilb
+      - run: sudo apt-get -y install linux-tools-$(uname -r) bridge-utils iperf iproute2 nodejs socat ethtool lksctp-tools
       - run: |
              cd cicd/k8slbsim/
              ./config.sh
