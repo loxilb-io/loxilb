@@ -23,13 +23,14 @@ on:
           options:
             - ubuntu-20.04
             - ubuntu-22.04
+            - ubuntu-24.04
        
 jobs:
   build:
     name: data-store
     runs-on: ${{ github.event.inputs.runsOn }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: actions/setup-python@v2
@@ -37,24 +38,7 @@ jobs:
         with:
              go-version: '>=1.18.0'
       - run: sudo apt-get update
-      - run: if [[ ${{ github.event.inputs.runsOn }} == 'ubuntu-22.04' ]]; then sudo apt-get -y install clang-13 lksctp-tools; else sudo apt-get -y install clang-10; fi
-      - run: sudo apt-get -y install llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat
-      - run: |
-            git clone --recurse-submodules https://github.com/loxilb-io/iproute2 iproute2-main
-            cd iproute2-main/libbpf/src/
-            sudo make install
-            mkdir build
-            DESTDIR=build OBJDIR=build make install
-            cd -
-            cd iproute2-main/
-            export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:`pwd`/libbpf/src/ && LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && sudo cp -f tc/tc /usr/local/sbin/ntc && cd -
-      - run: loxilb-ebpf/utils/mkllb_bpffs.sh
-      - run: sudo -E env "PATH=$PATH" make
-      - run: docker pull ghcr.io/loxilb-io/loxilb:latest
-      - run: docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
-      - run: pwd && ls && sudo -E env "PATH=$PATH" make docker-cp
-      - run: id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"` && docker commit $id ghcr.io/loxilb-io/loxilb:latest
-      - run: docker stop loxilb && docker rm loxilb
+      - run: sudo apt-get -y install lksctp-tools linux-tools-$(uname -r) bridge-utils iperf iproute2 nodejs socat
       - run: |
              cd cicd/data-store/
              ./test.sh ${{ github.event.inputs.testName }}
