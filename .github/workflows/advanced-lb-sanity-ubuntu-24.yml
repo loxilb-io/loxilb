@@ -27,6 +27,8 @@ jobs:
       - uses: actions/setup-go@v3
         with:
              go-version: '>=1.18.0'
+      - run: sudo apt-get update
+      - run: sudo apt-get -y install  linux-tools-$(uname -r) bridge-utils iperf iproute2 nodejs socat ethtool lksctp-tools
       - run: |
              cd cicd/k8slbsim/
              ./config.sh
