@@ -179,8 +179,8 @@ func AWSPrepVIPNetwork() error {
 
 	subnets := []string{}
 	loxilbKey := "loxiType"
-	loxilbIfKeyVal := "loxilb-eni"
-	loxilbSubNetKeyVal := "loxilb-subnet"
+	loxilbIfKeyVal := fmt.Sprintf("loxilb-eni%s", mh.cloudInst)
+	loxilbSubNetKeyVal := fmt.Sprintf("loxilb-subnet%s", mh.cloudInst)
 	filterStr := fmt.Sprintf("%s:%s", "tag", loxilbKey)
 
 	output, err := ec2Client.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
@@ -254,13 +254,17 @@ func AWSPrepVIPNetwork() error {
 		tk.LogIt(tk.LogError, "DescribeVpcs failed (%s)\n", err)
 		return err
 	}
+	needCIDRAssoc := true
 	if len(vpcOut.Vpcs) >= 1 {
-		dissAssoc := false
 		for _, vpc := range vpcOut.Vpcs {
-			if vpc.VpcId != nil && *vpc.VpcId != vpcID {
+			if vpc.VpcId != nil {
 				for _, cbAs := range vpc.CidrBlockAssociationSet {
 					if cbAs.CidrBlockState != nil && cbAs.CidrBlockState.State == types.VpcCidrBlockStateCodeAssociated &&
 						cbAs.CidrBlock != nil && *cbAs.CidrBlock == cidrBlock {
+						if *vpc.VpcId == vpcID {
+							needCIDRAssoc = false
+							break
+						}
 						// CIDR is not in the current VPC. There should be no attached subnets/interfaces at this point
 						_, err := ec2Client.DisassociateVpcCidrBlock(ctx3, &ec2.DisassociateVpcCidrBlockInput{AssociationId: cbAs.AssociationId})
 						if err != nil {
@@ -269,23 +273,22 @@ func AWSPrepVIPNetwork() error {
 						} else {
 							tk.LogIt(tk.LogInfo, "cidrBlock (%s) dissassociated from VPC %s\n", cidrBlock, *vpcOut.Vpcs[0].VpcId)
 						}
-						dissAssoc = true
 						break
 					}
 				}
 			}
 		}
+	}
 
-		if dissAssoc {
-			// Reassociate this CIDR block
-			_, err := ec2Client.AssociateVpcCidrBlock(ctx,
-				&ec2.AssociateVpcCidrBlockInput{VpcId: &vpcID, CidrBlock: &cidrBlock})
-			if err != nil {
-				tk.LogIt(tk.LogError, "cidrBlock (%s) associate failed in VPC %s:%s\n", cidrBlock, vpcID, err)
-				return err
-			} else {
-				tk.LogIt(tk.LogError, "cidrBlock (%s) associated to VPC %s\n", cidrBlock, vpcID)
-			}
+	if needCIDRAssoc {
+		// Reassociate this CIDR block
+		_, err := ec2Client.AssociateVpcCidrBlock(ctx,
+			&ec2.AssociateVpcCidrBlockInput{VpcId: &vpcID, CidrBlock: &cidrBlock})
+		if err != nil {
+			tk.LogIt(tk.LogError, "cidrBlock (%s) associate failed in VPC %s:%s\n", cidrBlock, vpcID, err)
+			return err
+		} else {
+			tk.LogIt(tk.LogError, "cidrBlock (%s) associated to VPC %s\n", cidrBlock, vpcID)
 		}
 	}
 
@@ -316,7 +319,7 @@ func AWSPrepVIPNetwork() error {
 	}
 	intfDesc := "loxilb-eni"
 	loxilbIntfKey := "loxiType"
-	loxilbIntfKeyVal := "loxilb-eni"
+	loxilbIntfKeyVal := fmt.Sprintf("loxilb-eni%s", mh.cloudInst)
 	intfTag := types.Tag{Key: &loxilbIntfKey, Value: &loxilbIntfKeyVal}
 	intfTags := []types.Tag{intfTag}
 	intfOutput, err := ec2Client.CreateNetworkInterface(ctx3, &ec2.CreateNetworkInterfaceInput{
@@ -419,6 +422,41 @@ retry:
 	return nil
 }
 
+func AWSUnPrepVIPNetwork() error {
+	_, defaultDst, _ := net.ParseCIDR("0.0.0.0/0")
+	if intfENIName == "" {
+		tk.LogIt(tk.LogError, "failed to get ENI intf name (%s)\n", intfENIName)
+		return nil
+	}
+
+	_, err := nl.LinkByName(intfENIName)
+	if err != nil {
+		intfENIName = ""
+		tk.LogIt(tk.LogError, "failed to get ENI link (%s)\n", intfENIName)
+		return err
+	}
+
+	mh.zr.Rt.RtDelete(*defaultDst, RootZone)
+	intfENIName = ""
+
+	chkIP := net.ParseIP("8.8.8.8")
+	defaultRT, err := nl.RouteGet(chkIP)
+	if err != nil {
+		tk.LogIt(tk.LogError, "AWSUnPrepVIPNetwork(): failed to get sys default route\n")
+		return err
+	}
+
+	ra := RtAttr{HostRoute: false, Ifi: defaultRT[0].LinkIndex, IfRoute: false}
+	na := []RtNhAttr{{defaultRT[0].Gw, defaultRT[0].LinkIndex}}
+	_, err = mh.zr.Rt.RtAdd(*defaultDst, RootZone, ra, na)
+	if err != nil {
+		tk.LogIt(tk.LogError, "failed to set loxidefault gw %s\n", defaultRT[0].Gw.String())
+		return err
+	}
+
+	return nil
+}
+
 func AWSGetNetworkInterface(ctx context.Context, instanceID string, vIP net.IP) (string, error) {
 	filterStr := "attachment.instance-id"
 	output, err := ec2Client.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
@@ -512,6 +550,12 @@ func AWSUpdatePrivateIP(vIP net.IP, add bool) error {
 }
 
 func AWSAssociateElasticIp(vIP, eIP net.IP, add bool) error {
+
+	if intfENIName == "" {
+		tk.LogIt(tk.LogError, "associate elasticIP: failed to get ENI intf name\n")
+		return errors.New("no loxi-eni found")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 
@@ -532,6 +576,8 @@ func AWSAssociateElasticIp(vIP, eIP net.IP, add bool) error {
 		tk.LogIt(tk.LogError, "AWS get elastic IP failed: %v\n", err)
 		return err
 	}
+
+	tk.LogIt(tk.LogInfo, "AWS adding elastic IP : %s\n", eIP.String())
 	if !add {
 		return AWSDisassociateElasticIpWithInterface(ctx, eipAssociateID, niID)
 	}
@@ -547,12 +593,16 @@ func AWSAssociateElasticIpWithInterface(ctx context.Context, eipID, niID string,
 	}
 	if privateIP != nil {
 		if err := AWSCreatePrivateIp(ctx, niID, privateIP); err != nil {
+			tk.LogIt(tk.LogError, "AWS create priv IP failed: %s\n", err)
 			return err
 		}
 		ipstr := privateIP.String()
 		input.PrivateIpAddress = &ipstr
 	}
 	_, err := ec2Client.AssociateAddress(ctx, input)
+	if err != nil {
+		tk.LogIt(tk.LogError, "AWS associate address eIP failed: %s\n", err)
+	}
 	return err
 }
 
