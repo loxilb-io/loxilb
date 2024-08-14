@@ -24,6 +24,7 @@ import (
 type CloudHookInterface interface {
 	CloudAPIInit(cloudCIDRBlock string) error
 	CloudPrepareVIPNetWork() error
+	CloudUnPrepareVIPNetWork() error
 	CloudUpdatePrivateIP(vIP net.IP, eIP net.IP, add bool) error
 }
 
