@@ -1,6 +1,9 @@
 name: Cluster-Sanity-CI-Ubuntu-24
 
 on:
+  schedule:
+  # Runs "At 11:00 UTC every day-of-week"
+  - cron: '0 11 * * *'
   workflow_dispatch:
     inputs:
       userInput:
@@ -9,11 +12,17 @@ on:
         default: 'Finished'
       tags:
         description: 'Cluster Sanity Ubuntu 24'
+  workflow_run:
+    workflows: ["Docker-Multi-Arch"]
+    types:
+      - completed
        
 jobs:
   build:
     name: cluster-sanity-ubuntu-24
     runs-on: ubuntu-22.04
+    if: github.repository == 'loxilb-io/loxilb'
+          &&  github.event.inputs.tagName == ''
     steps:
       - uses: actions/checkout@v4
         with:

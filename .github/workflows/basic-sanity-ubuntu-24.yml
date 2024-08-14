@@ -1,5 +1,8 @@
 name: Sanity-CI-Ubuntu-24
 on:
+  schedule:
+  # Runs "At 11:00 UTC every day-of-week"
+  - cron: '0 11 * * *'
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -9,15 +12,15 @@ on:
         required: true
         default: 'Sanity-BuildCI-u24'
   workflow_run:
-    workflows: ["Build-CI"]
+    workflows: ["Docker-Multi-Arch"]
     types:
       - completed
 jobs:
   build:
     name: basic-sanity-ubuntu-24
     runs-on: ubuntu-24.04
-    permissions:
-      packages: write
+    if: github.repository == 'loxilb-io/loxilb'
+          &&  github.event.inputs.tagName == ''
     steps:
       - uses: actions/checkout@v4
         with:

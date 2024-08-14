@@ -1,11 +1,9 @@
 name: Adv-LB-Sanity-CI-Ubuntu-22
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches: [ "main" ]
+  schedule:
+  # Runs "At 18:00 UTC every day-of-week"
+  - cron: '0 18 * * *'
   workflow_dispatch:
     inputs:
       logLevel:
@@ -14,11 +12,17 @@ on:
         default: 'warning'
       tags:
         description: 'Advanced LB Sanity ubuntu 22'
+  workflow_run:
+    workflows: ["Docker-Multi-Arch"]
+    types:
+      - completed
        
 jobs:
   build:
     name: advanced-lb-sanity-ubuntu-22
     runs-on: ubuntu-22.04
+    if: github.repository == 'loxilb-io/loxilb'
+          &&  github.event.inputs.tagName == ''
     steps:
       - uses: actions/checkout@v2
         with:

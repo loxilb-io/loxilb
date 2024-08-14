@@ -9,10 +9,16 @@ on:
         description: 'Test Run-Name'     
         required: true
         default: 'k3s-sctpmh-ubuntu-24'
+  workflow_run:
+    workflows: ["Docker-Multi-Arch"]
+    types:
+      - completed
 jobs:
   build:
     name: k3s-sctpmh-sanity-ubuntu-24
     runs-on: ubuntu-24.04
+    if: github.repository == 'loxilb-io/loxilb'
+          &&  github.event.inputs.tagName == ''
     steps:
       - run: |
          for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done

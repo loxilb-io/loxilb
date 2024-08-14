@@ -9,10 +9,16 @@ on:
         description: 'Test Run-Name'     
         required: true
         default: 'k3s-calico-ubuntu-24'
+  workflow_run:
+    workflows: ["Docker-Multi-Arch"]
+    types:
+      - completed
 jobs:
   build:
     name: k3s-calico-sanity
     runs-on: ubuntu-24.04
+    if: github.repository == 'loxilb-io/loxilb'
+          &&  github.event.inputs.tagName == ''
     steps:
       - run: |
          echo "KUBECONFIG=--kubeconfig=/etc/rancher/k3s/k3s.yaml" >> $GITHUB_ENV

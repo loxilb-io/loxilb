@@ -1,6 +1,9 @@
 name: Cluster-Sanity-CI-Ubuntu-22
 
 on:
+  schedule:
+  # Runs "At 18:00 UTC every day-of-week"
+  - cron: '0 18 * * *'
   workflow_dispatch:
     inputs:
       userInput:
@@ -9,11 +12,17 @@ on:
         default: 'Finished'
       tags:
         description: 'Cluster Sanity Ubuntu 22'
+  workflow_run:
+    workflows: ["Docker-Multi-Arch"]
+    types:
+      - completed
        
 jobs:
   build:
     name: cluster-sanity-ubuntu-22
     runs-on: ubuntu-22.04
+    if: github.repository == 'loxilb-io/loxilb'
+          &&  github.event.inputs.tagName == ''
     steps:
       - uses: actions/checkout@v2
         with:
@@ -23,24 +32,7 @@ jobs:
         with:
              go-version: '>=1.18.0'
       - run: sudo apt-get update
-      - run: sudo apt-get -y install clang-13 llvm libelf-dev gcc-multilib libpcap-dev linux-tools-$(uname -r) elfutils dwarves git libbsd-dev bridge-utils unzip build-essential bison flex iperf iproute2 nodejs socat lksctp-tools
-      - run: |
-            git clone --recurse-submodules https://github.com/loxilb-io/iproute2 iproute2-main
-            cd iproute2-main/libbpf/src/
-            sudo make install
-            mkdir build
-            DESTDIR=build OBJDIR=build make install
-            cd -
-            cd iproute2-main/
-            export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:`pwd`/libbpf/src/ && LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && sudo cp -f tc/tc /usr/local/sbin/ntc && cd -
-      - run: loxilb-ebpf/utils/mkllb_bpffs.sh
-      - run: sudo -E env "PATH=$PATH" make
-      - run: sudo -E env "PATH=$PATH" make test
-      - run: docker pull ghcr.io/loxilb-io/loxilb:latest
-      - run: docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
-      - run: pwd && ls && sudo -E env "PATH=$PATH" make docker-cp
-      - run: id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"` && docker commit $id ghcr.io/loxilb-io/loxilb:latest
-      - run: docker stop loxilb && docker rm loxilb
+      - run: sudo apt-get -y install lksctp-tools
       - run: |
              cd cicd/cluster1/
              ./config.sh
