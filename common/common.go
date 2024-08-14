@@ -535,6 +535,8 @@ const (
 type LbServiceArg struct {
 	// ServIP - the service ip or vip  of the load-balancer rule
 	ServIP string `json:"externalIP"`
+	// PrivateIP - the private service ip or vip of the load-balancer rule
+	PrivateIP string `json:"privateIP"`
 	// ServPort - the service port of the load-balancer rule
 	ServPort uint16 `json:"port"`
 	// Proto - the service protocol of the load-balancer rule

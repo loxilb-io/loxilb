@@ -79,6 +79,9 @@ type loxiNetH struct {
 	eHooks      bool
 	lSockPolicy bool
 	sockMapEn   bool
+	cloudLabel  string
+	cloudHook   CloudHookInterface
+	cloudInst   string
 	disBPF      bool
 	pFile       *os.File
 }
@@ -222,9 +225,19 @@ func loxiNetInit() {
 	mh.pProbe = opts.Opts.PassiveEPProbe
 	mh.lSockPolicy = opts.Opts.LocalSockPolicy
 	mh.sockMapEn = opts.Opts.SockMapSupport
+	mh.cloudLabel = opts.Opts.Cloud
+	mh.cloudHook = CloudHookNew(mh.cloudLabel)
+	mh.cloudInst = opts.Opts.CloudInstance
 	mh.disBPF = opts.Opts.ProxyModeOnly
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
+
+	if mh.cloudHook != nil {
+		err := mh.cloudHook.CloudAPIInit(opts.Opts.CloudCIDRBlock)
+		if err != nil {
+			os.Exit(1)
+		}
+	}
 
 	// Check if profiling is enabled
 	if opts.Opts.CPUProfile != "none" {
