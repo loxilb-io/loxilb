@@ -2966,9 +2966,11 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP) error {
 func (R *RuleH) RuleVIPSyncToClusterState() {
 
 	ciState, _ := mh.has.CIStateGetInst(cmn.CIDefault)
-	if ciState == "MASTER" {
-		if mh.cloudHook != nil {
+	if mh.cloudHook != nil {
+		if ciState == "MASTER" {
 			mh.cloudHook.CloudPrepareVIPNetWork()
+		} else if ciState == "BACKUP" {
+			mh.cloudHook.CloudUnPrepareVIPNetWork()
 		}
 	}
 
