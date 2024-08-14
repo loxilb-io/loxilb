@@ -37,4 +37,6 @@ var Opts struct {
 	Cloud             string         `long:"cloud" description:"cloud type if any e.g aws,ncloud" default:"on-prem"`
 	CloudCIDRBlock    string         `long:"cloudcidrblock" description:"cloud implementations need VIP cidr blocks(experimental)"`
 	CloudInstance     string         `long:"cloudinstance" description:"instance-name to distinguish instance sets running in a same cloud-region"`
+	ConfigPath        string         `long:"config-path" description:"Config file path" default:"/etc/loxilb/"`
+	ProxyModeOnly     bool           `long:"proxyonlymode" description:"Run loxilb in proxy mode only, no Datapath"`
 }

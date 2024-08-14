@@ -149,11 +149,6 @@ func (m *LoadbalanceEntry) contextValidateEndpoints(ctx context.Context, formats
 	for i := 0; i < len(m.Endpoints); i++ {
 
 		if m.Endpoints[i] != nil {
-
-			if swag.IsZero(m.Endpoints[i]) { // not required
-				return nil
-			}
-
 			if err := m.Endpoints[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("endpoints" + "." + strconv.Itoa(i))
@@ -174,11 +169,6 @@ func (m *LoadbalanceEntry) contextValidateSecondaryIPs(ctx context.Context, form
 	for i := 0; i < len(m.SecondaryIPs); i++ {
 
 		if m.SecondaryIPs[i] != nil {
-
-			if swag.IsZero(m.SecondaryIPs[i]) { // not required
-				return nil
-			}
-
 			if err := m.SecondaryIPs[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("secondaryIPs" + "." + strconv.Itoa(i))
@@ -197,11 +187,6 @@ func (m *LoadbalanceEntry) contextValidateSecondaryIPs(ctx context.Context, form
 func (m *LoadbalanceEntry) contextValidateServiceArguments(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.ServiceArguments != nil {
-
-		if swag.IsZero(m.ServiceArguments) { // not required
-			return nil
-		}
-
 		if err := m.ServiceArguments.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("serviceArguments")
@@ -333,6 +318,9 @@ type LoadbalanceEntryServiceArguments struct {
 	// IP address for external access
 	ExternalIP string `json:"externalIP,omitempty"`
 
+	// Ingress specific host URL path
+	Host string `json:"host,omitempty"`
+
 	// value for inactivity timeout (in seconds)
 	InactiveTimeOut int32 `json:"inactiveTimeOut,omitempty"`
 
@@ -347,6 +335,9 @@ type LoadbalanceEntryServiceArguments struct {
 
 	// service name
 	Name string `json:"name,omitempty"`
+
+	// end-point specific op (0-create, 1-attachEP, 2-detachEP)
+	Oper int32 `json:"oper,omitempty"`
 
 	// port number for the access
 	Port int64 `json:"port,omitempty"`
@@ -375,8 +366,14 @@ type LoadbalanceEntryServiceArguments struct {
 	// value for access protocol
 	Protocol string `json:"protocol,omitempty"`
 
+	// value for Security mode (0-Plain, 1-HTTPs)
+	Security int32 `json:"security,omitempty"`
+
 	// value for load balance algorithim
 	Sel int64 `json:"sel,omitempty"`
+
+	// snat rule
+	Snat bool `json:"snat,omitempty"`
 }
 
 // Validate validates this loadbalance entry service arguments

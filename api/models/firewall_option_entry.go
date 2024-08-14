@@ -23,6 +23,9 @@ type FirewallOptionEntry struct {
 	// traffic counters
 	Counter string `json:"counter,omitempty"`
 
+	// Do SNAT on matching rule
+	DoSnat bool `json:"doSnat,omitempty"`
+
 	// Drop any matching rule
 	Drop bool `json:"drop,omitempty"`
 
@@ -37,6 +40,12 @@ type FirewallOptionEntry struct {
 
 	// Redirect any matching rule
 	RedirectPortName string `json:"redirectPortName,omitempty"`
+
+	// Modify to given IP in CIDR notation
+	ToIP string `json:"toIP,omitempty"`
+
+	// Modify to given Port (Zero if port is not to be modified)
+	ToPort int64 `json:"toPort,omitempty"`
 
 	// Trap anything matching rule
 	Trap bool `json:"trap,omitempty"`

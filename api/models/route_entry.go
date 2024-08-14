@@ -22,6 +22,9 @@ type RouteEntry struct {
 
 	// IP address for nexthop
 	Gateway string `json:"gateway,omitempty"`
+
+	// Protocol type of the route like "static"
+	Protocol string `json:"protocol,omitempty"`
 }
 
 // Validate validates this route entry

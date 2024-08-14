@@ -535,6 +535,68 @@ func init() {
             }
           }
         }
+      },
+      "delete": {
+        "description": "Delete BGP Policy in neighbor. It don't need \"routeAction\" in the attr body",
+        "summary": "Delete BGP Policy in neighbor",
+        "parameters": [
+          {
+            "description": "Attributes of bgp neighbor",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BGPApplyPolicyToNeighborMod"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. Neigh already exists",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
       }
     },
     "/config/bgp/policy/definedsets/{defineset_type}": {
@@ -1979,6 +2041,101 @@ func init() {
         "description": "Delete an existing load balancer service with .",
         "summary": "Delete an existing Load balancer service",
         "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "number",
+            "description": "Attributes for load balance service",
+            "name": "port",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "proto",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "option for BGP enable",
+            "name": "bgp",
+            "in": "query"
+          },
+          {
+            "type": "number",
+            "description": "block value if any",
+            "name": "block",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/loadbalancer/hosturl/{hosturl}/externalipaddress/{ip_address}/port/{port}/protocol/{proto}": {
+      "delete": {
+        "description": "Delete an existing load balancer service with .",
+        "summary": "Delete an existing Load balancer service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "hosturl",
+            "in": "path",
+            "required": true
+          },
           {
             "type": "string",
             "description": "Attributes for load balance service",
@@ -4688,6 +4845,10 @@ func init() {
           "description": "traffic counters",
           "type": "string"
         },
+        "doSnat": {
+          "description": "Do SNAT on matching rule",
+          "type": "boolean"
+        },
         "drop": {
           "description": "Drop any matching rule",
           "type": "boolean"
@@ -4707,6 +4868,14 @@ func init() {
         "redirectPortName": {
           "description": "Redirect any matching rule",
           "type": "string"
+        },
+        "toIP": {
+          "description": "Modify to given IP in CIDR notation",
+          "type": "string"
+        },
+        "toPort": {
+          "description": "Modify to given Port (Zero if port is not to be modified)",
+          "type": "integer"
         },
         "trap": {
           "description": "Trap anything matching rule",
@@ -4849,6 +5018,10 @@ func init() {
               "description": "IP address for external access",
               "type": "string"
             },
+            "host": {
+              "description": "Ingress specific host URL path",
+              "type": "string"
+            },
             "inactiveTimeOut": {
               "description": "value for inactivity timeout (in seconds)",
               "type": "integer",
@@ -4870,6 +5043,11 @@ func init() {
             "name": {
               "description": "service name",
               "type": "string"
+            },
+            "oper": {
+              "description": "end-point specific op (0-create, 1-attachEP, 2-detachEP)",
+              "type": "integer",
+              "format": "int32"
             },
             "port": {
               "description": "port number for the access",
@@ -4910,9 +5088,18 @@ func init() {
               "description": "value for access protocol",
               "type": "string"
             },
+            "security": {
+              "description": "value for Security mode (0-Plain, 1-HTTPs)",
+              "type": "integer",
+              "format": "int32"
+            },
             "sel": {
               "description": "value for load balance algorithim",
               "type": "integer"
+            },
+            "snat": {
+              "description": "snat rule",
+              "type": "boolean"
             }
           }
         }
@@ -5329,6 +5516,10 @@ func init() {
         "gateway": {
           "description": "IP address for nexthop",
           "type": "string"
+        },
+        "protocol": {
+          "description": "Protocol type of the route like \"static\"",
+          "type": "string"
         }
       }
     },
@@ -5353,7 +5544,7 @@ func init() {
         },
         "protocol": {
           "description": "Route protocol",
-          "type": "integer"
+          "type": "string"
         },
         "statistic": {
           "type": "object",
@@ -6038,6 +6229,68 @@ func init() {
           },
           "409": {
             "description": "Resource Conflict.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete BGP Policy in neighbor. It don't need \"routeAction\" in the attr body",
+        "summary": "Delete BGP Policy in neighbor",
+        "parameters": [
+          {
+            "description": "Attributes of bgp neighbor",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BGPApplyPolicyToNeighborMod"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. Neigh already exists",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7499,6 +7752,101 @@ func init() {
         "description": "Delete an existing load balancer service with .",
         "summary": "Delete an existing Load balancer service",
         "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "number",
+            "description": "Attributes for load balance service",
+            "name": "port",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "proto",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "option for BGP enable",
+            "name": "bgp",
+            "in": "query"
+          },
+          {
+            "type": "number",
+            "description": "block value if any",
+            "name": "block",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/loadbalancer/hosturl/{hosturl}/externalipaddress/{ip_address}/port/{port}/protocol/{proto}": {
+      "delete": {
+        "description": "Delete an existing load balancer service with .",
+        "summary": "Delete an existing Load balancer service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "hosturl",
+            "in": "path",
+            "required": true
+          },
           {
             "type": "string",
             "description": "Attributes for load balance service",
@@ -10663,6 +11011,10 @@ func init() {
           "description": "traffic counters",
           "type": "string"
         },
+        "doSnat": {
+          "description": "Do SNAT on matching rule",
+          "type": "boolean"
+        },
         "drop": {
           "description": "Drop any matching rule",
           "type": "boolean"
@@ -10682,6 +11034,14 @@ func init() {
         "redirectPortName": {
           "description": "Redirect any matching rule",
           "type": "string"
+        },
+        "toIP": {
+          "description": "Modify to given IP in CIDR notation",
+          "type": "string"
+        },
+        "toPort": {
+          "description": "Modify to given Port (Zero if port is not to be modified)",
+          "type": "integer"
         },
         "trap": {
           "description": "Trap anything matching rule",
@@ -10798,6 +11158,10 @@ func init() {
               "description": "IP address for external access",
               "type": "string"
             },
+            "host": {
+              "description": "Ingress specific host URL path",
+              "type": "string"
+            },
             "inactiveTimeOut": {
               "description": "value for inactivity timeout (in seconds)",
               "type": "integer",
@@ -10819,6 +11183,11 @@ func init() {
             "name": {
               "description": "service name",
               "type": "string"
+            },
+            "oper": {
+              "description": "end-point specific op (0-create, 1-attachEP, 2-detachEP)",
+              "type": "integer",
+              "format": "int32"
             },
             "port": {
               "description": "port number for the access",
@@ -10859,9 +11228,18 @@ func init() {
               "description": "value for access protocol",
               "type": "string"
             },
+            "security": {
+              "description": "value for Security mode (0-Plain, 1-HTTPs)",
+              "type": "integer",
+              "format": "int32"
+            },
             "sel": {
               "description": "value for load balance algorithim",
               "type": "integer"
+            },
+            "snat": {
+              "description": "snat rule",
+              "type": "boolean"
             }
           }
         }
@@ -10915,6 +11293,10 @@ func init() {
           "description": "IP address for external access",
           "type": "string"
         },
+        "host": {
+          "description": "Ingress specific host URL path",
+          "type": "string"
+        },
         "inactiveTimeOut": {
           "description": "value for inactivity timeout (in seconds)",
           "type": "integer",
@@ -10936,6 +11318,11 @@ func init() {
         "name": {
           "description": "service name",
           "type": "string"
+        },
+        "oper": {
+          "description": "end-point specific op (0-create, 1-attachEP, 2-detachEP)",
+          "type": "integer",
+          "format": "int32"
         },
         "port": {
           "description": "port number for the access",
@@ -10976,9 +11363,18 @@ func init() {
           "description": "value for access protocol",
           "type": "string"
         },
+        "security": {
+          "description": "value for Security mode (0-Plain, 1-HTTPs)",
+          "type": "integer",
+          "format": "int32"
+        },
         "sel": {
           "description": "value for load balance algorithim",
           "type": "integer"
+        },
+        "snat": {
+          "description": "snat rule",
+          "type": "boolean"
         }
       }
     },
@@ -11649,6 +12045,10 @@ func init() {
         "gateway": {
           "description": "IP address for nexthop",
           "type": "string"
+        },
+        "protocol": {
+          "description": "Protocol type of the route like \"static\"",
+          "type": "string"
         }
       }
     },
@@ -11673,7 +12073,7 @@ func init() {
         },
         "protocol": {
           "description": "Route protocol",
-          "type": "integer"
+          "type": "string"
         },
         "statistic": {
           "type": "object",

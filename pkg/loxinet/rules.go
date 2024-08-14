@@ -155,6 +155,7 @@ type ruleTuples struct {
 	inL4Src  rule16Tuple
 	inL4Dst  rule16Tuple
 	pref     uint16
+	path     string
 }
 
 type ruleTActType uint
@@ -233,10 +234,12 @@ type ruleNatActs struct {
 }
 
 type ruleFwOpt struct {
-	rdrMirr string
-	rdrPort string
-	fwMark  uint32
-	record  bool
+	rdrMirr  string
+	rdrPort  string
+	fwMark   uint32
+	record   bool
+	snatIP   string
+	snatPort uint16
 }
 
 type ruleFwOpts struct {
@@ -284,6 +287,7 @@ type ruleEnt struct {
 	secIP    []ruleNatSIP
 	stat     ruleStat
 	name     string
+	secMode  cmn.LBSec
 	locIPs   map[string]struct{}
 }
 
@@ -368,7 +372,12 @@ func RulesInit(zone *Zone) *RuleH {
 		nRh.epCs[i].hChk = time.NewTicker(EndPointCheckerDuration * time.Second)
 		go epTicker(nRh, i)
 	}
-	nRh.rootCAPool = x509.NewCertPool()
+	rootCAPool, err := x509.SystemCertPool()
+	if err == nil {
+		nRh.rootCAPool = rootCAPool
+	} else {
+		nRh.rootCAPool = x509.NewCertPool()
+	}
 	rootCACertile := cmn.CertPath + cmn.CACertFileName
 
 	// Check if there exist a common CA certificate
@@ -479,9 +488,11 @@ func (r *ruleTuples) ruleMkKeyCompliance(match ruleTMatch) {
 }
 
 func (r *ruleTuples) ruleKey() string {
-	var ks string
-
-	ks = fmt.Sprintf("%s", r.port.val)
+	ks := ""
+	if r.path != "" {
+		ks += r.path
+	}
+	ks += fmt.Sprintf("%s", r.port.val)
 	ks += fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",
 		r.l2Dst.addr[0]&r.l2Dst.valid[0],
 		r.l2Dst.addr[1]&r.l2Dst.valid[1],
@@ -550,10 +561,14 @@ func checkValidMACTuple(mt ruleMacTuple) bool {
 }
 
 func (r *ruleTuples) String() string {
-	var ks string
+
+	ks := ""
+	if r.path != "" {
+		ks += fmt.Sprintf("%s:", r.path)
+	}
 
 	if r.port.val != "" {
-		ks = fmt.Sprintf("inp-%s,", r.port.val)
+		ks += fmt.Sprintf("inp-%s,", r.port.val)
 	}
 
 	if checkValidMACTuple(r.l2Dst) {
@@ -694,6 +709,10 @@ func (a *ruleAct) String() string {
 					}
 				}
 			}
+		case *ruleFwOpts:
+			if a.actType == RtActSnat {
+				ks += fmt.Sprintf("%s:%d", na.opt.snatIP, na.opt.snatPort)
+			}
 		}
 	}
 
@@ -778,11 +797,16 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.Bgp = data.bgp
 		ret.Serv.BlockNum = data.tuples.pref
 		ret.Serv.Managed = data.managed
+		ret.Serv.Security = data.secMode
 		ret.Serv.ProbeType = data.hChk.prbType
 		ret.Serv.ProbePort = data.hChk.prbPort
 		ret.Serv.ProbeReq = data.hChk.prbReq
 		ret.Serv.ProbeResp = data.hChk.prbResp
 		ret.Serv.Name = data.name
+		ret.Serv.HostUrl = data.tuples.path
+		if data.act.actType == RtActSnat {
+			ret.Serv.Snat = true
+		}
 
 		for _, sip := range data.secIP {
 			ret.SecIPs = append(ret.SecIPs, cmn.LbSecIPArg{SecIP: sip.sIP.String()})
@@ -937,7 +961,7 @@ func (R *RuleH) GetNatLbRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 	return R.tables[RtLB].eMap[rt.ruleKey()]
 }
 
@@ -965,7 +989,7 @@ func (R *RuleH) GetNatLbRuleSecIPs(serv cmn.LbServiceArg) []string {
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 	if R.tables[RtLB].eMap[rt.ruleKey()] != nil {
 		for _, ip := range R.tables[RtLB].eMap[rt.ruleKey()].secIP {
 			ips = append(ips, ip.sIP.String())
@@ -1247,14 +1271,78 @@ func (R *RuleH) unFoldRecursiveEPs(r *ruleEnt) {
 
 // addVIPSys - system specific operations for VIPs of a LB rule
 func (R *RuleH) addVIPSys(r *ruleEnt) {
-	if !strings.Contains(r.name, "ipvs") && !strings.Contains(r.name, "static") {
+	if r.act.actType != RtActSnat && !strings.Contains(r.name, "ipvs") && !strings.Contains(r.name, "static") {
 		R.AddRuleVIP(r.tuples.l3Dst.addr.IP, r.RuleVIP2PrivIP())
 
 		// Take care of any secondary VIPs
 		for _, sVIP := range r.secIP {
 			R.AddRuleVIP(sVIP.sIP, sVIP.sIP)
+    }
+	}
+}
+
+func getLBArms(oldEps []ruleNatEp, newEps []ruleNatEp, oper cmn.LBOp) (bool, []ruleNatEp) {
+	var retEps []ruleNatEp
+	ruleChg := false
+	found := false
+
+	for i, eEp := range oldEps {
+		for j, nEp := range newEps {
+			if eEp.xIP.Equal(nEp.xIP) &&
+				eEp.xPort == nEp.xPort {
+				e := &oldEps[i]
+				n := &newEps[j]
+				if eEp.inActive && oper != cmn.LBOPDetach {
+					ruleChg = true
+					e.inActive = false
+				}
+				if e.weight != nEp.weight {
+					ruleChg = true
+					e.weight = nEp.weight
+				}
+				e.chkVal = true
+				n.chkVal = true
+				found = true
+				break
+			}
 		}
 	}
+
+	// Remove LB arms from an existing LB
+	if oper == cmn.LBOPDetach {
+		if !found {
+			return false, oldEps
+		}
+		for i := range oldEps {
+			e := &oldEps[i]
+			if !e.chkVal {
+				retEps = append(retEps, *e)
+			}
+		}
+		return true, retEps
+	}
+
+	retEps = oldEps
+
+	// Attach LB arms to an existing LB
+	for i, nEp := range newEps {
+		n := &newEps[i]
+		if !nEp.chkVal {
+			ruleChg = true
+			n.chkVal = true
+			retEps = append(retEps, *n)
+		}
+	}
+
+	for i, eEp := range retEps {
+		e := &retEps[i]
+		if !eEp.chkVal && oper == cmn.LBOPAdd {
+			ruleChg = true
+			e.inActive = true
+		}
+		e.chkVal = false
+	}
+	return ruleChg, retEps
 }
 
 // AddNatLbRule - Add a service LB nat rule. The service details are passed in serv argument,
@@ -1378,6 +1466,11 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		return a < b
 	})
 
+	if serv.Mode == cmn.LBModeHostOneArm && !sNetAddr.IP.IsUnspecified() {
+		tk.LogIt(tk.LogInfo, "nat lb-rule %s-%v-%s hostarm needs unspec VIP\n", serv.ServIP, serv.ServPort, serv.Proto)
+		return RuleArgsErr, errors.New("hostarm-args error")
+	}
+
 	natActs.sel = serv.Sel
 	natActs.mode = cmn.LBMode(serv.Mode)
 
@@ -1414,7 +1507,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 
 	eRule := R.tables[RtLB].eMap[rt.ruleKey()]
 
@@ -1425,43 +1518,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		// If a NAT rule already exists, we try not reschuffle the order of the end-points.
 		// We will try to append the new end-points at the end, while marking any other end-points
 		// not in the new list as inactive
-		ruleChg := false
-		eEps := eRule.act.action.(*ruleNatActs).endPoints
-		for i, eEp := range eEps {
-			for j, nEp := range natActs.endPoints {
-				if eEp.xIP.Equal(nEp.xIP) &&
-					eEp.xPort == nEp.xPort &&
-					eEp.weight == nEp.weight {
-					e := &eEps[i]
-					n := &natActs.endPoints[j]
-					if eEp.inActive {
-						ruleChg = true
-						e.inActive = false
-					}
-					e.chkVal = true
-					n.chkVal = true
-					break
-				}
-			}
-		}
-
-		for i, nEp := range natActs.endPoints {
-			n := &natActs.endPoints[i]
-			if !nEp.chkVal {
-				ruleChg = true
-				n.chkVal = true
-				eEps = append(eEps, *n)
-			}
-		}
-
-		for i, eEp := range eEps {
-			e := &eEps[i]
-			if !eEp.chkVal {
-				ruleChg = true
-				e.inActive = true
-			}
-			e.chkVal = false
-		}
+		ruleChg, retEps := getLBArms(eRule.act.action.(*ruleNatActs).endPoints, natActs.endPoints, serv.Oper)
 
 		if eRule.hChk.prbType != serv.ProbeType || eRule.hChk.prbPort != serv.ProbePort ||
 			eRule.hChk.prbReq != serv.ProbeReq || eRule.hChk.prbResp != serv.ProbeResp ||
@@ -1474,6 +1531,24 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 			return RuleExistsErr, errors.New("lbrule-exists error")
 		}
 
+		if eRule.secMode != serv.Security {
+			return RuleExistsErr, errors.New("lbrule-exist error: cant modify rule security mode")
+		}
+
+		if len(retEps) == 0 {
+			tk.LogIt(tk.LogDebug, "nat lb-rule %s has no-endpoints: to be deleted\n", eRule.tuples.String())
+			return R.DeleteNatLbRule(serv)
+		}
+
+		if eRule.act.action.(*ruleNatActs).mode == cmn.LBModeFullProxy && natActs.mode != cmn.LBModeFullProxy ||
+			eRule.act.action.(*ruleNatActs).mode != cmn.LBModeFullProxy && natActs.mode == cmn.LBModeFullProxy {
+			return RuleExistsErr, errors.New("lbrule-exist error: cant modify fullproxy rule mode")
+		}
+
+		if eRule.act.action.(*ruleNatActs).mode == cmn.LBModeFullProxy {
+			eRule.DP(DpRemove)
+		}
+
 		// Update the rule
 		eRule.hChk.prbType = serv.ProbeType
 		eRule.hChk.prbPort = serv.ProbePort
@@ -1483,13 +1558,15 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		eRule.hChk.prbTimeo = serv.ProbeTimeout
 		eRule.pTO = serv.PersistTimeout
 		eRule.act.action.(*ruleNatActs).sel = natActs.sel
-		eRule.act.action.(*ruleNatActs).endPoints = eEps
+		eRule.act.action.(*ruleNatActs).endPoints = retEps
 		eRule.act.action.(*ruleNatActs).mode = natActs.mode
 		// Managed flag can't be modified on the fly
 		// eRule.managed = serv.Managed
 
-		R.modNatEpHost(eRule, eEps, true, activateProbe)
-		R.electEPSrc(eRule)
+		if !serv.Snat {
+			R.modNatEpHost(eRule, retEps, true, activateProbe)
+			R.electEPSrc(eRule)
+		}
 
 		eRule.sT = time.Now()
 		eRule.iTO = serv.InactiveTimeout
@@ -1497,13 +1574,18 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		eRule.DP(DpCreate)
 
 		return 0, nil
+	} else if serv.Oper == cmn.LBOPDetach {
+		tk.LogIt(tk.LogInfo, "nat lb-rule %s-%v-%s does not exist\n", serv.ServIP, serv.ServPort, serv.Proto)
+		return RuleNotExistsErr, errors.New("lbrule not-exists error")
 	}
 
 	r := new(ruleEnt)
 	r.tuples = rt
 	r.zone = R.zone
 	r.name = serv.Name
-	if serv.Mode == cmn.LBModeFullNAT || serv.Mode == cmn.LBModeOneArm || serv.Mode == cmn.LBModeHostOneArm {
+	if serv.Snat {
+		r.act.actType = RtActSnat
+	} else if serv.Mode == cmn.LBModeFullNAT || serv.Mode == cmn.LBModeOneArm || serv.Mode == cmn.LBModeHostOneArm {
 		r.act.actType = RtActFullNat
 	} else if serv.Mode == cmn.LBModeFullProxy {
 		r.act.actType = RtActFullProxy
@@ -1512,6 +1594,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	}
 	r.managed = serv.Managed
 	r.secIP = nSecIP
+	r.secMode = serv.Security
 	// Per LB end-point health-check is supposed to be handled at kube-loxilb/CCM,
 	// but it certain cases like stand-alone mode, loxilb can do its own
 	// lb end-point health monitoring
@@ -1522,6 +1605,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	r.hChk.prbRetries = serv.ProbeRetries
 	r.hChk.prbTimeo = serv.ProbeTimeout
 	r.hChk.actChk = serv.Monitor
+
 	r.act.action = &natActs
 	r.ruleNum, err = R.tables[RtLB].Mark.GetCounter()
 	if err != nil {
@@ -1543,11 +1627,13 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	}
 	r.locIPs = make(map[string]struct{})
 
-	R.foldRecursiveEPs(r)
-	R.modNatEpHost(r, natActs.endPoints, true, activateProbe)
-	R.electEPSrc(r)
-	if serv.Mode == cmn.LBModeHostOneArm {
-		R.mkHostAssocs(r)
+	if !serv.Snat {
+		R.foldRecursiveEPs(r)
+		R.modNatEpHost(r, natActs.endPoints, true, activateProbe)
+		R.electEPSrc(r)
+		if serv.Mode == cmn.LBModeHostOneArm {
+			R.mkHostAssocs(r)
+		}
 	}
 
 	tk.LogIt(tk.LogDebug, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
@@ -1564,7 +1650,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 
 // deleteVIPSys - system specific operations for deleting VIPs of a LB rule
 func (R *RuleH) deleteVIPSys(r *ruleEnt) {
-	if !strings.Contains(r.name, "ipvs") && !strings.Contains(r.name, "static") {
+	if  r.act.actType != RtActSnat && !strings.Contains(r.name, "ipvs") && !strings.Contains(r.name, "static") {
 		R.DeleteRuleVIP(r.tuples.l3Dst.addr.IP)
 
 		// Take care of any secondary VIPs
@@ -1608,7 +1694,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
-	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum}
+	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 
 	rule := R.tables[RtLB].eMap[rt.ruleKey()]
 	if rule == nil {
@@ -1622,8 +1708,10 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 	if rule.act.action.(*ruleNatActs).mode == cmn.LBModeOneArm || rule.act.action.(*ruleNatActs).mode == cmn.LBModeFullNAT || rule.act.action.(*ruleNatActs).mode == cmn.LBModeHostOneArm || rule.hChk.actChk {
 		activatedProbe = true
 	}
-	R.modNatEpHost(rule, eEps, false, activatedProbe)
-	R.unFoldRecursiveEPs(rule)
+	if rule.act.actType != RtActSnat {
+		R.modNatEpHost(rule, eEps, false, activatedProbe)
+		R.unFoldRecursiveEPs(rule)
+	}
 
 	delete(R.tables[RtLB].eMap, rt.ruleKey())
 	if rule.ruleNum < RtMaximumLbs {
@@ -1676,8 +1764,14 @@ func (R *RuleH) GetFwRule() ([]cmn.FwRuleMod, error) {
 			ret.Opts.RdrPort = fwOpts.opt.rdrPort
 		} else if fwOpts.op == RtActTrap {
 			ret.Opts.Trap = true
+		} else if fwOpts.op == RtActSnat {
+			ret.Opts.DoSnat = true
+			ret.Opts.ToIP = fwOpts.opt.snatIP
+			ret.Opts.ToPort = uint16(fwOpts.opt.snatPort)
 		}
-		ret.Opts.Mark = fwOpts.opt.fwMark
+		if fwOpts.op != RtActSnat {
+			ret.Opts.Mark = fwOpts.opt.fwMark
+		}
 		ret.Opts.Record = fwOpts.opt.record
 
 		data.Fw2DP(DpStatsGetImm)
@@ -1769,6 +1863,19 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	} else if fwOptArgs.Trap {
 		r.act.actType = RtActTrap
 		fwOpts.op = RtActTrap
+	} else if fwOptArgs.DoSnat {
+		r.act.actType = RtActSnat
+		fwOpts.op = RtActSnat
+		fwOpts.opt.snatIP = fwOptArgs.ToIP
+		fwOpts.opt.snatPort = fwOptArgs.ToPort
+
+		if sIP := net.ParseIP(fwOptArgs.ToIP); sIP == nil {
+			return RuleArgsErr, errors.New("malformed-args error")
+		}
+
+		if fwOpts.opt.fwMark != 0 {
+			return RuleArgsErr, errors.New("malformed-args fwmark !=0 for snat-error")
+		}
 	}
 
 	r.act.action = &fwOpts
@@ -1779,11 +1886,36 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	}
 	r.sT = time.Now()
 
+	if fwOptArgs.DoSnat {
+		// Create SNAT Rule
+		var servArg cmn.LbServiceArg
+		servArg.ServIP = "0.0.0.0"
+		servArg.ServPort = 0
+		servArg.Proto = "none"
+		servArg.BlockNum = uint16(r.ruleNum) | 0x1000
+		servArg.Sel = cmn.LbSelRr
+		servArg.Mode = cmn.LBModeDefault
+		servArg.Snat = true
+		servArg.InactiveTimeout = LbDefaultInactiveTimeout
+		servArg.Name = fmt.Sprintf("%s:%s:%d", "snat", fwOpts.opt.snatIP, fwOpts.opt.snatPort)
+
+		snatEP := []cmn.LbEndPointArg{{EpIP: fwOpts.opt.snatIP, EpPort: fwOpts.opt.snatPort}}
+
+		_, err := R.AddNatLbRule(servArg, nil, snatEP)
+		if err != nil {
+			tk.LogIt(tk.LogError, "fw-rule - %s:%s (%s) snat create error\n", r.tuples.String(), r.act.String(), err)
+			return RuleArgsErr, errors.New("rule-snat error")
+		}
+
+		fwOpts.opt.fwMark = uint32(uint16((r.ruleNum) | 0x1000))
+
+	}
+
 	tk.LogIt(tk.LogDebug, "fw-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
 	R.tables[RtFw].eMap[rt.ruleKey()] = r
 
-	r.DP(DpCreate)
+	r.Fw2DP(DpCreate)
 
 	return 0, nil
 }
@@ -1842,13 +1974,36 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 		return RuleNotExistsErr, errors.New("no-rule error")
 	}
 
+	if rule.act.actType == RtActSnat {
+		// Delete implicit SNAT Rule
+
+		var servArg cmn.LbServiceArg
+		servArg.ServIP = "0.0.0.0"
+		servArg.ServPort = 0
+		servArg.Proto = "none"
+		servArg.BlockNum = uint16(rule.ruleNum) | 0x1000
+		servArg.Sel = cmn.LbSelRr
+		servArg.Mode = cmn.LBModeDefault
+		servArg.Snat = true
+
+		switch fwOpts := rule.act.action.(type) {
+		case *ruleFwOpts:
+			servArg.Name = fmt.Sprintf("%s:%s:%d", "Masq", fwOpts.opt.snatIP, fwOpts.opt.snatPort)
+		}
+
+		_, err := R.DeleteNatLbRule(servArg)
+		if err != nil {
+			tk.LogIt(tk.LogError, "fw-rule - %s:%s snat delete error\n", rule.tuples.String(), rule.act.String())
+		}
+	}
+
 	defer R.tables[RtFw].Mark.PutCounter(rule.ruleNum)
 
 	delete(R.tables[RtFw].eMap, rt.ruleKey())
 
 	tk.LogIt(tk.LogDebug, "fw-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
 
-	rule.DP(DpRemove)
+	rule.Fw2DP(DpRemove)
 
 	return 0, nil
 }
@@ -2302,15 +2457,15 @@ func (R *RuleH) RulesSync() {
 	}
 
 	for _, rule := range R.tables[RtFw].eMap {
-		ruleKeys := rule.tuples.String()
-		ruleActs := rule.act.String()
+		//ruleKeys := rule.tuples.String()
+		//ruleActs := rule.act.String()
 		if rule.sync != 0 {
-			rule.DP(DpCreate)
+			rule.Fw2DP(DpCreate)
 		}
-		rule.DP(DpStatsGet)
-		tk.LogIt(-1, "%d:%s,%s pc %v bc %v \n",
-			rule.ruleNum, ruleKeys, ruleActs,
-			rule.stat.packets, rule.stat.bytes)
+		//rule.DP(DpStatsGet)
+		//tk.LogIt(-1, "%d:%s,%s pc %v bc %v \n",
+		//	rule.ruleNum, ruleKeys, ruleActs,
+		//	rule.stat.packets, rule.stat.bytes)
 	}
 }
 
@@ -2415,12 +2570,18 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	nWork.Status = &r.sync
 	nWork.ZoneNum = r.zone.ZoneNum
 	nWork.ServiceIP = r.RuleVIP2PrivIP()
+	if r.secMode == cmn.LBServHTTPS {
+		nWork.SecMode = DpTermHTTPS
+	} else if r.secMode == cmn.LBServE2EHTTPS {
+		nWork.SecMode = DpE2EHTTPS
+	}
 	nWork.L4Port = r.tuples.l4Dst.val
 	nWork.Proto = r.tuples.l4Prot.val
 	nWork.Mark = int(r.ruleNum)
 	nWork.BlockNum = r.tuples.pref
 	nWork.InActTo = uint64(r.iTO)
 	nWork.PersistTo = uint64(r.pTO)
+	nWork.HostURL = r.tuples.path
 
 	if r.act.actType == RtActDnat {
 		nWork.NatType = DpDnat
@@ -2454,6 +2615,8 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 			nWork.EpSel = EpRRPersist
 		case at.sel == cmn.LbSelLeastConnections:
 			nWork.EpSel = EpLeastConn
+		case at.sel == cmn.LbSelN2:
+			nWork.EpSel = EpN2
 		default:
 			nWork.EpSel = EpRR
 		}
@@ -2640,6 +2803,8 @@ func (r *ruleEnt) Fw2DP(work DpWorkT) int {
 			nWork.FwVal1 = uint16(port.PortNo)
 		case RtActTrap:
 			nWork.FwType = DpFwTrap
+		case RtActSnat:
+			nWork.FwType = DpFwFwd
 		default:
 			nWork.FwType = DpFwDrop
 		}

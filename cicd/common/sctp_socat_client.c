@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define RECVBUFSIZE     4096
+#define RECVBUFSIZE     1024
 #define PPID            1234
 
 int main(int argc, char* argv[])
@@ -24,8 +24,7 @@ int main(int argc, char* argv[])
         struct sctp_sndrcvinfo sndrcvinfo = {0};
         struct sctp_event_subscribe events = {0};
         struct sctp_initmsg initmsg = {0};
-        char   msg[1024]  = {0};
-        char   buff[1024] = {0};
+        char   msg[RECVBUFSIZE]  = {0};
         socklen_t opt_len;
         socklen_t slen = (socklen_t) sizeof(struct sockaddr_in);
 
@@ -56,13 +55,11 @@ int main(int argc, char* argv[])
 
         while(1)
         {
-                in = sctp_recvmsg(sockfd, (void*)buff, RECVBUFSIZE, 
-                                  (struct sockaddr *)&servaddr, 
-                                  &slen, &sndrcvinfo, &flags);
+                in = recv(sockfd, (void*)msg, RECVBUFSIZE, 0);
                 if (in > 0 && in < RECVBUFSIZE - 1)
                 {
-                        buff[in] = 0;
-                        printf("%s",buff);
+                        msg[in] = 0;
+                        printf("%s",msg);
                         break;
                 }
         } 

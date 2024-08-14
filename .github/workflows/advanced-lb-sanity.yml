@@ -101,3 +101,15 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - run: |
+             cd cicd/ipmasquerade/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/httpsproxy/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
