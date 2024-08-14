@@ -9,7 +9,7 @@ on:
         description: 'Test Run-Name'     
         required: true
         default: 'k3s-sctpmh-ubuntu-24'
-  workflow_run:
+ workflow_run:
     workflows: ["Docker-Multi-Arch"]
     types:
       - completed
