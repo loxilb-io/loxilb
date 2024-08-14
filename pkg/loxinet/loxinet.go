@@ -79,6 +79,7 @@ type loxiNetH struct {
 	eHooks      bool
 	lSockPolicy bool
 	sockMapEn   bool
+	cloudLabel  string
 	disBPF      bool
 	pFile       *os.File
 }
@@ -222,9 +223,22 @@ func loxiNetInit() {
 	mh.pProbe = opts.Opts.PassiveEPProbe
 	mh.lSockPolicy = opts.Opts.LocalSockPolicy
 	mh.sockMapEn = opts.Opts.SockMapSupport
+	mh.cloudLabel = opts.Opts.Cloud
 	mh.disBPF = opts.Opts.ProxyModeOnly
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
+
+	if mh.cloudLabel == "aws" {
+		err := AWSApiInit(opts.Opts.CloudCIDRBlock)
+		if err != nil {
+			os.Exit(1)
+		}
+	} else if mh.cloudLabel == "ncloud" {
+		err := NcloudApiInit()
+		if err != nil {
+			os.Exit(1)
+		}
+	}
 
 	// Check if profiling is enabled
 	if opts.Opts.CPUProfile != "none" {
