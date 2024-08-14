@@ -23,7 +23,7 @@ RUN mkdir -p /opt/loxilb && \
     # Arch specific packages - GoLang
     wget https://go.dev/dl/go1.22.0.linux-${arch}.tar.gz && tar -xzf go1.22.0.linux-${arch}.tar.gz --directory /usr/local/ && rm go1.22.0.linux-${arch}.tar.gz && \
     # Dev and util packages
-    apt-get install -y clang llvm libelf-dev libpcap-dev vim net-tools \
+    apt-get install -y clang llvm libelf-dev libpcap-dev vim net-tools ca-certificates \
     elfutils dwarves git libbsd-dev bridge-utils wget unzip build-essential \
     bison flex sudo iproute2 pkg-config tcpdump iputils-ping curl bash-completion && \
     # Install openssl-3.0.7
