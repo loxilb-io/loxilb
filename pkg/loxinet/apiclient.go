@@ -308,7 +308,6 @@ func (na *NetAPIStruct) NetRouteAdd(rm *cmn.RouteMod) (int, error) {
 	} else {
 		ret, err = mh.zr.Rt.RtAdd(rm.Dst, RootZone, ra, nil)
 	}
-
 	return ret, err
 }
 
