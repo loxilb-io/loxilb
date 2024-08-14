@@ -80,6 +80,7 @@ type loxiNetH struct {
 	lSockPolicy bool
 	sockMapEn   bool
 	cloudLabel  string
+	cloudHook   CloudHookInterface
 	disBPF      bool
 	pFile       *os.File
 }
@@ -224,17 +225,13 @@ func loxiNetInit() {
 	mh.lSockPolicy = opts.Opts.LocalSockPolicy
 	mh.sockMapEn = opts.Opts.SockMapSupport
 	mh.cloudLabel = opts.Opts.Cloud
+	mh.cloudHook = CloudHookNew(mh.cloudLabel)
 	mh.disBPF = opts.Opts.ProxyModeOnly
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 
-	if mh.cloudLabel == "aws" {
-		err := AWSApiInit(opts.Opts.CloudCIDRBlock)
-		if err != nil {
-			os.Exit(1)
-		}
-	} else if mh.cloudLabel == "ncloud" {
-		err := NcloudApiInit()
+	if mh.cloudHook != nil {
+		err := mh.cloudHook.CloudAPIInit(opts.Opts.CloudCIDRBlock)
 		if err != nil {
 			os.Exit(1)
 		}

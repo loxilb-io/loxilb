@@ -20,11 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"net"
-	"strings"
-	"time"
-
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -32,6 +27,10 @@ import (
 	utils "github.com/loxilb-io/loxilb/pkg/utils"
 	tk "github.com/loxilb-io/loxilib"
 	nl "github.com/vishvananda/netlink"
+	"io"
+	"net"
+	"strings"
+	"time"
 )
 
 var (
@@ -46,7 +45,11 @@ var (
 	setDFLRoute bool
 )
 
-func AWSGetInstanceIDInfo(ctx context.Context) (string, error) {
+// AWSAPIStruct - empty struct for anchoring AWS routines
+type AWSAPIStruct struct {
+}
+
+func awsGetInstanceIDInfo(ctx context.Context) (string, error) {
 	resp, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
 		Path: "instance-id",
 	})
@@ -63,7 +66,7 @@ func AWSGetInstanceIDInfo(ctx context.Context) (string, error) {
 	return string(instanceID), nil
 }
 
-func AWSGetInstanceVPCInfo(ctx context.Context) (string, error) {
+func awsGetInstanceVPCInfo(ctx context.Context) (string, error) {
 	resp, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
 		Path: "mac",
 	})
@@ -94,7 +97,7 @@ func AWSGetInstanceVPCInfo(ctx context.Context) (string, error) {
 	return string(vpc), nil
 }
 
-func AWSGetInstanceAvailabilityZone(ctx context.Context) (string, error) {
+func awsGetInstanceAvailabilityZone(ctx context.Context) (string, error) {
 	resp, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
 		Path: "placement/availability-zone",
 	})
@@ -111,7 +114,7 @@ func AWSGetInstanceAvailabilityZone(ctx context.Context) (string, error) {
 	return string(az), nil
 }
 
-func AWSPrepDFLRoute() error {
+func awsPrepDFLRoute() error {
 
 	if !setDFLRoute {
 		return nil
@@ -167,7 +170,206 @@ func AWSPrepDFLRoute() error {
 	return nil
 }
 
-func AWSPrepVIPNetwork() error {
+func awsGetNetworkInterface(ctx context.Context, instanceID string, vIP net.IP) (string, error) {
+	filterStr := "attachment.instance-id"
+	output, err := ec2Client.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
+		Filters: []types.Filter{
+			{Name: &filterStr, Values: []string{instanceID}},
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+
+	for _, i := range output.NetworkInterfaces {
+		path := fmt.Sprintf("network/interfaces/macs/%s/subnet-ipv4-cidr-block", *i.MacAddress)
+		cidr, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
+			Path: path,
+		})
+		if err != nil {
+			continue
+		}
+
+		b, err := io.ReadAll(cidr.Content)
+		cidr.Content.Close()
+		if err != nil {
+			continue
+		}
+
+		_, ips, err := net.ParseCIDR(string(b))
+		if err != nil {
+			continue
+		}
+
+		if ips.Contains(vIP) {
+			if i.NetworkInterfaceId != nil {
+				return *i.NetworkInterfaceId, nil
+			}
+		}
+	}
+
+	return "", errors.New("not found interface")
+}
+
+func awsCreatePrivateIp(ctx context.Context, ni string, vIP net.IP) error {
+	allowReassign := true
+	input := &ec2.AssignPrivateIpAddressesInput{
+		NetworkInterfaceId: &ni,
+		PrivateIpAddresses: []string{vIP.String()},
+		AllowReassignment:  &allowReassign,
+	}
+	_, err := ec2Client.AssignPrivateIpAddresses(ctx, input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func awsDeletePrivateIp(ctx context.Context, ni string, vIP net.IP) error {
+	input := &ec2.UnassignPrivateIpAddressesInput{
+		NetworkInterfaceId: &ni,
+		PrivateIpAddresses: []string{vIP.String()},
+	}
+	_, err := ec2Client.UnassignPrivateIpAddresses(ctx, input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func awsUpdatePrivateIP(vIP net.IP, add bool) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*30))
+	defer cancel()
+
+	var niID string
+	var err error
+	if awsCIDRnet == nil || loxiEniID == "" {
+		niID, err = awsGetNetworkInterface(ctx, instanceID, vIP)
+		if err != nil {
+			tk.LogIt(tk.LogError, "AWS get network interface failed: %v\n", err)
+			return err
+		}
+	} else {
+		niID = loxiEniID
+	}
+
+	if !add {
+		return awsDeletePrivateIp(ctx, niID, vIP)
+	}
+
+	return awsCreatePrivateIp(ctx, niID, vIP)
+}
+
+func awsAssociateElasticIp(vIP, eIP net.IP, add bool) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+
+	var niID string
+	var err error
+	if awsCIDRnet == nil || loxiEniID == "" {
+		niID, err = awsGetNetworkInterface(ctx, instanceID, vIP)
+		if err != nil {
+			tk.LogIt(tk.LogError, "AWS get network interface failed: %v\n", err)
+			return err
+		}
+	} else {
+		niID = loxiEniID
+	}
+
+	eipID, eipAssociateID, err := awsGetElasticIpId(ctx, eIP)
+	if err != nil {
+		tk.LogIt(tk.LogError, "AWS get elastic IP failed: %v\n", err)
+		return err
+	}
+	if !add {
+		return awsDisassociateElasticIpWithInterface(ctx, eipAssociateID, niID)
+	}
+	return awsAssociateElasticIpWithInterface(ctx, eipID, niID, vIP)
+}
+
+func awsAssociateElasticIpWithInterface(ctx context.Context, eipID, niID string, privateIP net.IP) error {
+	allowReassign := true
+	input := &ec2.AssociateAddressInput{
+		AllocationId:       &eipID,
+		NetworkInterfaceId: &niID,
+		AllowReassociation: &allowReassign,
+	}
+	if privateIP != nil {
+		if err := awsCreatePrivateIp(ctx, niID, privateIP); err != nil {
+			return err
+		}
+		ipstr := privateIP.String()
+		input.PrivateIpAddress = &ipstr
+	}
+	_, err := ec2Client.AssociateAddress(ctx, input)
+	return err
+}
+
+func awsDisassociateElasticIpWithInterface(ctx context.Context, eipAssociateID, niID string) error {
+	_, err := ec2Client.DisassociateAddress(ctx, &ec2.DisassociateAddressInput{
+		AssociationId: &eipAssociateID,
+	})
+	return err
+}
+
+func awsGetElasticIpId(ctx context.Context, eIP net.IP) (string, string, error) {
+	filterStr := "public-ip"
+	output, err := ec2Client.DescribeAddresses(ctx, &ec2.DescribeAddressesInput{
+		Filters: []types.Filter{
+			{Name: &filterStr, Values: []string{eIP.String()}},
+		}},
+	)
+	if err != nil {
+		return "", "", err
+	}
+	if len(output.Addresses) <= 0 {
+		return "", "", fmt.Errorf("not found Elastic IP %s", eIP.String())
+	}
+	var allocateId, associateId string
+	if output.Addresses[0].AllocationId != nil {
+		allocateId = *output.Addresses[0].AllocationId
+	}
+	if output.Addresses[0].AssociationId != nil {
+		associateId = *output.Addresses[0].AssociationId
+	}
+	return allocateId, associateId, nil
+}
+
+func awsImdsGetSecurityGroups(ctx context.Context) ([]string, error) {
+	macResp, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
+		Path: "mac",
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer macResp.Content.Close()
+
+	macByte, err := io.ReadAll(macResp.Content)
+	if err != nil {
+		return nil, err
+	}
+
+	sgResp, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
+		Path: fmt.Sprintf("network/interfaces/macs/%s/security-group-ids", string(macByte)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer sgResp.Content.Close()
+
+	sgByte, err := io.ReadAll(sgResp.Content)
+	if err != nil {
+		return nil, err
+	}
+
+	sgList := strings.Split(string(sgByte), "\n")
+	return sgList, nil
+}
+
+// CloudPrepareVIPNetWork - Prepare the VIP network on mastership transition
+func (aws *AWSAPIStruct) CloudPrepareVIPNetWork() error {
 	if awsCIDRnet == nil {
 		return nil
 	}
@@ -310,7 +512,7 @@ func AWSPrepVIPNetwork() error {
 		return nil
 	}
 
-	sgList, err := AWSImdsGetSecurityGroups(ctx3)
+	sgList, err := awsImdsGetSecurityGroups(ctx3)
 	if err != nil {
 		tk.LogIt(tk.LogWarning, "failed to get instance security groups: %s\n", err.Error())
 	}
@@ -419,174 +621,20 @@ retry:
 	return nil
 }
 
-func AWSGetNetworkInterface(ctx context.Context, instanceID string, vIP net.IP) (string, error) {
-	filterStr := "attachment.instance-id"
-	output, err := ec2Client.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
-		Filters: []types.Filter{
-			{Name: &filterStr, Values: []string{instanceID}},
-		},
-	})
-	if err != nil {
-		return "", err
-	}
-
-	for _, i := range output.NetworkInterfaces {
-		path := fmt.Sprintf("network/interfaces/macs/%s/subnet-ipv4-cidr-block", *i.MacAddress)
-		cidr, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
-			Path: path,
-		})
-		if err != nil {
-			continue
-		}
-
-		b, err := io.ReadAll(cidr.Content)
-		cidr.Content.Close()
-		if err != nil {
-			continue
-		}
-
-		_, ips, err := net.ParseCIDR(string(b))
-		if err != nil {
-			continue
-		}
-
-		if ips.Contains(vIP) {
-			if i.NetworkInterfaceId != nil {
-				return *i.NetworkInterfaceId, nil
-			}
-		}
-	}
-
-	return "", errors.New("not found interface")
-}
-
-func AWSCreatePrivateIp(ctx context.Context, ni string, vIP net.IP) error {
-	allowReassign := true
-	input := &ec2.AssignPrivateIpAddressesInput{
-		NetworkInterfaceId: &ni,
-		PrivateIpAddresses: []string{vIP.String()},
-		AllowReassignment:  &allowReassign,
-	}
-	_, err := ec2Client.AssignPrivateIpAddresses(ctx, input)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func AWSDeletePrivateIp(ctx context.Context, ni string, vIP net.IP) error {
-	input := &ec2.UnassignPrivateIpAddressesInput{
-		NetworkInterfaceId: &ni,
-		PrivateIpAddresses: []string{vIP.String()},
-	}
-	_, err := ec2Client.UnassignPrivateIpAddresses(ctx, input)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func AWSUpdatePrivateIP(vIP net.IP, add bool) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*30))
-	defer cancel()
-
-	var niID string
-	var err error
-	if awsCIDRnet == nil || loxiEniID == "" {
-		niID, err = AWSGetNetworkInterface(ctx, instanceID, vIP)
-		if err != nil {
-			tk.LogIt(tk.LogError, "AWS get network interface failed: %v\n", err)
+// CloudUpdatePrivateIP - Update private IP related to an elastic IP
+func (aws *AWSAPIStruct) CloudUpdatePrivateIP(vIP net.IP, eIP net.IP, add bool) error {
+	if vIP.Equal(eIP) { // no use EIP
+		return awsUpdatePrivateIP(vIP, add)
+	} else { // use EIP
+		if err := awsAssociateElasticIp(vIP, eIP, add); err != nil {
 			return err
 		}
-	} else {
-		niID = loxiEniID
+		return awsPrepDFLRoute()
 	}
-
-	if !add {
-		return AWSDeletePrivateIp(ctx, niID, vIP)
-	}
-
-	return AWSCreatePrivateIp(ctx, niID, vIP)
 }
 
-func AWSAssociateElasticIp(vIP, eIP net.IP, add bool) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
-	defer cancel()
-
-	var niID string
-	var err error
-	if awsCIDRnet == nil || loxiEniID == "" {
-		niID, err = AWSGetNetworkInterface(ctx, instanceID, vIP)
-		if err != nil {
-			tk.LogIt(tk.LogError, "AWS get network interface failed: %v\n", err)
-			return err
-		}
-	} else {
-		niID = loxiEniID
-	}
-
-	eipID, eipAssociateID, err := AWSGetElasticIpId(ctx, eIP)
-	if err != nil {
-		tk.LogIt(tk.LogError, "AWS get elastic IP failed: %v\n", err)
-		return err
-	}
-	if !add {
-		return AWSDisassociateElasticIpWithInterface(ctx, eipAssociateID, niID)
-	}
-	return AWSAssociateElasticIpWithInterface(ctx, eipID, niID, vIP)
-}
-
-func AWSAssociateElasticIpWithInterface(ctx context.Context, eipID, niID string, privateIP net.IP) error {
-	allowReassign := true
-	input := &ec2.AssociateAddressInput{
-		AllocationId:       &eipID,
-		NetworkInterfaceId: &niID,
-		AllowReassociation: &allowReassign,
-	}
-	if privateIP != nil {
-		if err := AWSCreatePrivateIp(ctx, niID, privateIP); err != nil {
-			return err
-		}
-		ipstr := privateIP.String()
-		input.PrivateIpAddress = &ipstr
-	}
-	_, err := ec2Client.AssociateAddress(ctx, input)
-	return err
-}
-
-func AWSDisassociateElasticIpWithInterface(ctx context.Context, eipAssociateID, niID string) error {
-	_, err := ec2Client.DisassociateAddress(ctx, &ec2.DisassociateAddressInput{
-		AssociationId: &eipAssociateID,
-	})
-	return err
-}
-
-func AWSGetElasticIpId(ctx context.Context, eIP net.IP) (string, string, error) {
-	filterStr := "public-ip"
-	output, err := ec2Client.DescribeAddresses(ctx, &ec2.DescribeAddressesInput{
-		Filters: []types.Filter{
-			{Name: &filterStr, Values: []string{eIP.String()}},
-		}},
-	)
-	if err != nil {
-		return "", "", err
-	}
-	if len(output.Addresses) <= 0 {
-		return "", "", fmt.Errorf("not found Elastic IP %s", eIP.String())
-	}
-	var allocateId, associateId string
-	if output.Addresses[0].AllocationId != nil {
-		allocateId = *output.Addresses[0].AllocationId
-	}
-	if output.Addresses[0].AssociationId != nil {
-		associateId = *output.Addresses[0].AssociationId
-	}
-	return allocateId, associateId, nil
-}
-
-func AWSApiInit(cloudCIDRBlock string) error {
+// CloudAPIInit - Initialize the AWS cloud API
+func (aws *AWSAPIStruct) CloudAPIInit(cloudCIDRBlock string) error {
 
 	// Using the SDK's default configuration, loading additional config
 	// and credentials values from the environment variables, shared
@@ -612,19 +660,19 @@ func AWSApiInit(cloudCIDRBlock string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 
-	vpcID, err = AWSGetInstanceVPCInfo(ctx)
+	vpcID, err = awsGetInstanceVPCInfo(ctx)
 	if err != nil {
 		tk.LogIt(tk.LogError, "failed to find vpcid for instance\n")
 		return err
 	}
 
-	azName, err = AWSGetInstanceAvailabilityZone(ctx)
+	azName, err = awsGetInstanceAvailabilityZone(ctx)
 	if err != nil {
 		tk.LogIt(tk.LogError, "failed to find az for instance %v:%s\n", vpcID, err)
 		return err
 	}
 
-	instanceID, err = AWSGetInstanceIDInfo(ctx)
+	instanceID, err = awsGetInstanceIDInfo(ctx)
 	if err != nil {
 		tk.LogIt(tk.LogError, "failed to find instanceID for instance %v:%s\n", vpcID, err)
 		return err
@@ -634,33 +682,7 @@ func AWSApiInit(cloudCIDRBlock string) error {
 	return nil
 }
 
-func AWSImdsGetSecurityGroups(ctx context.Context) ([]string, error) {
-	macResp, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
-		Path: "mac",
-	})
-	if err != nil {
-		return nil, err
-	}
-	defer macResp.Content.Close()
-
-	macByte, err := io.ReadAll(macResp.Content)
-	if err != nil {
-		return nil, err
-	}
-
-	sgResp, err := imdsClient.GetMetadata(ctx, &imds.GetMetadataInput{
-		Path: fmt.Sprintf("network/interfaces/macs/%s/security-group-ids", string(macByte)),
-	})
-	if err != nil {
-		return nil, err
-	}
-	defer sgResp.Content.Close()
-
-	sgByte, err := io.ReadAll(sgResp.Content)
-	if err != nil {
-		return nil, err
-	}
-
-	sgList := strings.Split(string(sgByte), "\n")
-	return sgList, nil
+// AWSCloudHookNew - Create AWS specific API hooks
+func AWSCloudHookNew() *AWSAPIStruct {
+	return &AWSAPIStruct{}
 }

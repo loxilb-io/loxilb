@@ -20,25 +20,16 @@ import (
 	"net"
 )
 
-func CloudUpdatePrivateIP(vIP net.IP, eIP net.IP, add bool) error {
-	if mh.cloudLabel == "aws" {
-		if vIP.Equal(eIP) { // no use EIP
-			return AWSUpdatePrivateIP(vIP, add)
-		} else { // use EIP
-			if err := AWSAssociateElasticIp(vIP, eIP, add); err != nil {
-				return err
-			}
-			return AWSPrepDFLRoute()
-		}
-
-	} else if mh.cloudLabel == "ncloud" {
-		return nClient.NcloudUpdatePrivateIp(vIP, add)
-	}
-	return nil
+// CloudHookInterface - Go interface which needs to be implemented to
+type CloudHookInterface interface {
+	CloudAPIInit(cloudCIDRBlock string) error
+	CloudPrepareVIPNetWork() error
+	CloudUpdatePrivateIP(vIP net.IP, eIP net.IP, add bool) error
 }
 
-func CloudPrepareVIPNetWork() {
+func CloudHookNew(cloudLabel string) CloudHookInterface {
 	if mh.cloudLabel == "aws" {
-		AWSPrepVIPNetwork()
+		return AWSCloudHookNew()
 	}
+	return nil
 }

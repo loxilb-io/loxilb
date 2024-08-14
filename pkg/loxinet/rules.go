@@ -1277,7 +1277,7 @@ func (R *RuleH) addVIPSys(r *ruleEnt) {
 		// Take care of any secondary VIPs
 		for _, sVIP := range r.secIP {
 			R.AddRuleVIP(sVIP.sIP, sVIP.sIP)
-    }
+		}
 	}
 }
 
@@ -1650,7 +1650,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 
 // deleteVIPSys - system specific operations for deleting VIPs of a LB rule
 func (R *RuleH) deleteVIPSys(r *ruleEnt) {
-	if  r.act.actType != RtActSnat && !strings.Contains(r.name, "ipvs") && !strings.Contains(r.name, "static") {
+	if r.act.actType != RtActSnat && !strings.Contains(r.name, "ipvs") && !strings.Contains(r.name, "static") {
 		R.DeleteRuleVIP(r.tuples.l3Dst.addr.IP)
 
 		// Take care of any secondary VIPs
@@ -2912,10 +2912,12 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP) error {
 		ev, _, iface := R.zone.L3.IfaSelectAny(IP, false)
 		if ev == 0 {
 			if !utils.IsIPHostAddr(IP.String()) {
-				err := CloudUpdatePrivateIP(IP, eIP, true)
-				if err != nil {
-					tk.LogIt(tk.LogError, "%s: lb-rule vip %s add failed. err: %v\n", mh.cloudLabel, IP.String(), err)
-					return err
+				if mh.cloudHook != nil {
+					err := mh.cloudHook.CloudUpdatePrivateIP(IP, eIP, true)
+					if err != nil {
+						tk.LogIt(tk.LogError, "%s: lb-rule vip %s add failed. err: %v\n", mh.cloudLabel, IP.String(), err)
+						return err
+					}
 				}
 
 				if loxinlp.AddAddrNoHook(IP.String()+"/32", "lo") != 0 {
@@ -2965,7 +2967,9 @@ func (R *RuleH) RuleVIPSyncToClusterState() {
 
 	ciState, _ := mh.has.CIStateGetInst(cmn.CIDefault)
 	if ciState == "MASTER" {
-		CloudPrepareVIPNetWork()
+		if mh.cloudHook != nil {
+			mh.cloudHook.CloudPrepareVIPNetWork()
+		}
 	}
 
 	for vip, vipElem := range R.vipMap {
@@ -3021,9 +3025,11 @@ func (R *RuleH) DeleteRuleVIP(VIP net.IP) {
 		}
 		if utils.IsIPHostAddr(xVIP.String()) {
 			loxinlp.DelAddrNoHook(xVIP.String()+"/32", "lo")
-			err := CloudUpdatePrivateIP(xVIP, VIP, false)
-			if err != nil {
-				tk.LogIt(tk.LogError, "%s: lb-rule vip %s delete failed. err: %v\n", mh.cloudLabel, xVIP.String(), err)
+			if mh.cloudHook != nil {
+				err := mh.cloudHook.CloudUpdatePrivateIP(xVIP, VIP, false)
+				if err != nil {
+					tk.LogIt(tk.LogError, "%s: lb-rule vip %s delete failed. err: %v\n", mh.cloudLabel, xVIP.String(), err)
+				}
 			}
 		}
 		dev := fmt.Sprintf("llb-rule-%s", xVIP.String())
