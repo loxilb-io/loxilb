@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: loxilb-lb
+  namespace: kube-system
+  labels:
+    app: loxilb-app
+spec:
+  selector:
+    matchLabels:
+      app: loxilb-app
+  template:
+    metadata:
+      labels:
+        app: loxilb-app
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      tolerations:
+      - key: "node-role.kubernetes.io/master"
+        operator: Exists
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: Exists
+      #affinity:
+      #  nodeAffinity:
+      #    requiredDuringSchedulingIgnoredDuringExecution:
+      #      nodeSelectorTerms:
+      #      - matchExpressions:
+      #        - key: "node-role.kubernetes.io/master"
+      #          operator: Exists
+      #        - key: "node-role.kubernetes.io/control-plane"
+      #          operator: Exists
+      priorityClassName: system-node-critical
+      serviceAccountName: kube-loxilb
+      containers:
+      - name: loxilb-lb
+        image: "ghcr.io/loxilb-io/loxilb:latest"
+        imagePullPolicy: Always
+        #command: [ "/root/loxilb-io/loxilb/loxilb", "--egr-hooks", "--blacklist=cni.|veth.|flannel.|cali.|tunl.|vxlan[.]calico", "--ipvs-compat", "--k8s-api=cluster" ]
+        command: [ "/root/loxilb-io/loxilb/loxilb", "--ipvs-compat"]
+        ports:
+        - containerPort: 11111
+        - containerPort: 179
+        - containerPort: 50051
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - SYS_ADMIN
+        env:
+          - name: MY_NODE_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loxilb-lb-service
+  namespace: kube-system
+spec:
+  clusterIP: None
+  selector:
+    app: loxilb-app
+  ports:
+  - name: loxilb-app
+    port: 11111
+    targetPort: 11111
+    protocol: TCP
+  - name: loxilb-app-bgp
+    port: 179
+    targetPort: 179
+    protocol: TCP
+  - name: loxilb-app-gobgp
+    port: 50051
+    targetPort: 50051
+    protocol: TCP

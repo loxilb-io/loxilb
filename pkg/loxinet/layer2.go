@@ -213,7 +213,10 @@ func (l2 *L2H) L2FdbAdd(key FdbKey, attr FdbAttr) (int, error) {
 	p := l2.Zone.Ports.PortFindByName(attr.Oif)
 	if p == nil || !p.SInfo.PortActive {
 		tk.LogIt(tk.LogDebug, "fdb port not found %s\n", attr.Oif)
-		return L2OifErr, errors.New("no such port")
+		p = l2.Zone.Ports.PortFindByName("lo")
+		if p == nil {
+			return L2OifErr, errors.New("no such port")
+		}
 	}
 
 	fdb, found := l2.FdbMap[key]
@@ -315,7 +318,19 @@ func (l2 *L2H) FdbTicker(f *FdbEnt) {
 		// This scans for inconsistencies in a fdb
 		// 1. Do garbage cleaning if underlying oif or vlan is not valid anymore
 		// 2. If FDB is a TunFDB, we need to make sure NH is reachable
-		if f.Port.SInfo.PortActive == false {
+		if f.Port.Name == "lo" || f.FdbKey.BridgeID != f.Port.L2.Vid {
+			p := l2.Zone.Ports.PortFindByName(f.FdbAttr.Oif)
+			if p != nil && p.SInfo.PortActive {
+				if f.Port.L2.Vid != f.FdbKey.BridgeID {
+					tk.LogIt(tk.LogDebug, "fdb ent, %v BD mismatch\n", f)
+					return
+				}
+				tk.LogIt(tk.LogDebug, "fdb ent, %v - reset port: %s\n", f, p.Name)
+				f.Port = p
+				// Force Resync
+				f.Sync = DpCreateErr
+			}
+		} else if f.Port.SInfo.PortActive == false {
 			l2.L2FdbDel(f.FdbKey)
 		} else if f.unReach == true {
 			tk.LogIt(tk.LogDebug, "unrch scan - %v\n", f)
@@ -383,8 +398,19 @@ func (l2 *L2H) L2DestructAll() {
 // DP - Sync state of L2 entities to data-path
 func (f *FdbEnt) DP(work DpWorkT) int {
 
+	if f.Port.Name == "lo" {
+		f.Sync = DpCreateErr
+		return -1
+	}
+
 	if work == DpCreate && f.unReach == true {
 		return 0
+	}
+
+	if f.Port.L2.Vid != f.FdbKey.BridgeID {
+		tk.LogIt(tk.LogDebug, "fdb ent, can't sync %v (%v)\n", f.FdbKey, f.Port.L2.Vid)
+		f.Sync = DpCreateErr
+		return -1
 	}
 
 	l2Wq := new(L2AddrDpWorkQ)

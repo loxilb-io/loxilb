@@ -17,18 +17,18 @@ package handler
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/loxilb-io/loxilb/api/loxinlp"
 	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	tk "github.com/loxilb-io/loxilib"
+	"strconv"
+	"strings"
 )
 
 func ConfigPostRoute(params operations.PostConfigRouteParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] Route  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	ret := loxinlp.AddRouteNoHook(params.Attr.DestinationIPNet, params.Attr.Gateway)
+	ret := loxinlp.AddRouteNoHook(params.Attr.DestinationIPNet, params.Attr.Gateway, params.Attr.Protocol)
 	if ret != 0 {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", ret)
 		return &ResultResponse{Result: "fail"}
@@ -58,7 +58,20 @@ func ConfigGetRoute(params operations.GetConfigRouteAllParams) middleware.Respon
 		tmpResult.Flags = strings.TrimSpace(route.Flags)
 		tmpResult.Gateway = route.Gw
 		tmpResult.HardwareMark = int64(route.HardwareMark)
-		tmpResult.Protocol = int64(route.Protocol)
+		protoStr := strconv.Itoa(route.Protocol)
+		switch route.Protocol {
+		case 0:
+			protoStr = "unspec"
+		case 1:
+			protoStr = "redirect"
+		case 2:
+			protoStr = "kernel"
+		case 3:
+			protoStr = "boot"
+		case 4:
+			protoStr = "static"
+		}
+		tmpResult.Protocol = protoStr
 		tmpResult.Sync = int64(route.Sync)
 
 		tmpStats := new(models.RouteGetEntryStatistic)

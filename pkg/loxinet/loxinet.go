@@ -80,6 +80,7 @@ type loxiNetH struct {
 	lSockPolicy bool
 	sockMapEn   bool
 	cloudLabel  string
+	disBPF      bool
 	pFile       *os.File
 }
 
@@ -204,14 +205,16 @@ func loxiNetInit() {
 
 	// It is important to make sure loxilb's eBPF filesystem
 	// is in place and mounted to make sure maps are pinned properly
-	if !utils.FileExists(BpfFsCheckFile) {
-		if utils.FileExists(MkfsScript) {
-			RunCommand(MkfsScript, true)
-		}
-	}
-	utils.MkTunFsIfNotExist()
+	if !opts.Opts.ProxyModeOnly {
+		if !utils.FileExists(BpfFsCheckFile) {
+			if utils.FileExists(MkfsScript) {
+				RunCommand(MkfsScript, true)
+			}
 
-	sysctlInit()
+		}
+		utils.MkTunFsIfNotExist()
+		sysctlInit()
+	}
 
 	mh.self = opts.Opts.ClusterSelf
 	mh.rssEn = opts.Opts.RssEnable
@@ -221,6 +224,7 @@ func loxiNetInit() {
 	mh.lSockPolicy = opts.Opts.LocalSockPolicy
 	mh.sockMapEn = opts.Opts.SockMapSupport
 	mh.cloudLabel = opts.Opts.Cloud
+	mh.disBPF = opts.Opts.ProxyModeOnly
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 
@@ -261,7 +265,7 @@ func loxiNetInit() {
 			RunCommand(MkMountCG2, false)
 		}
 		// Initialize the ebpf datapath subsystem
-		mh.dpEbpf = DpEbpfInit(clusterMode, mh.rssEn, mh.eHooks, mh.lSockPolicy, mh.sockMapEn, mh.self, -1)
+		mh.dpEbpf = DpEbpfInit(clusterMode, mh.rssEn, mh.eHooks, mh.lSockPolicy, mh.sockMapEn, mh.self, mh.disBPF, -1)
 		mh.dp = DpBrokerInit(mh.dpEbpf, rpcMode)
 
 		// Initialize the security zone subsystem

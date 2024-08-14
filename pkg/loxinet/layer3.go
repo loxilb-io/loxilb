@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 
 	tk "github.com/loxilb-io/loxilib"
 
@@ -523,11 +524,37 @@ func (l3 *L3H) IfaGet() []cmn.IPAddrGet {
 	return ret
 }
 
+// IfaTicker - Periodic ticker for checking Ifas
+func (l3 *L3H) IfasTicker() {
+	for _, ifa := range l3.IfaMap {
+		if ifa.Key.Obj == "lo" {
+			continue
+		}
+
+		canSync := false
+		for _, ifaEnt := range ifa.Ifas {
+			canSync = true
+			if ifaEnt.Secondary {
+				continue
+			}
+		}
+
+		if canSync && ifa.Sync != 0 {
+			tk.LogIt(tk.LogDebug, "defer resync ifa obj : %s\n", ifa.Key.Obj)
+			ifa.DP(DpCreate)
+		}
+	}
+}
+
 // DP - Sync state of L3 entities to data-path
 func (ifa *Ifa) DP(work DpWorkT) int {
 	port := ifa.Zone.Ports.PortFindByName(ifa.Key.Obj)
 
 	if port == nil {
+		if ifa.Key.Obj != "lo" && !strings.Contains(ifa.Key.Obj, "llb-rule") {
+			tk.LogIt(tk.LogError, "No such obj : %s\n", ifa.Key.Obj)
+			ifa.Sync = DpCreateErr
+		}
 		return -1
 	}
 

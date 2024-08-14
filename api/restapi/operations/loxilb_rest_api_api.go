@@ -48,6 +48,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		DeleteConfigBgpNeighIPAddressHandler: DeleteConfigBgpNeighIPAddressHandlerFunc(func(params DeleteConfigBgpNeighIPAddressParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigBgpNeighIPAddress has not yet been implemented")
 		}),
+		DeleteConfigBgpPolicyApplyHandler: DeleteConfigBgpPolicyApplyHandlerFunc(func(params DeleteConfigBgpPolicyApplyParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigBgpPolicyApply has not yet been implemented")
+		}),
 		DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler: DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandlerFunc(func(params DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeName has not yet been implemented")
 		}),
@@ -71,6 +74,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		}),
 		DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler: DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto has not yet been implemented")
+		}),
+		DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoHandler: DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProto has not yet been implemented")
 		}),
 		DeleteConfigLoadbalancerNameLbNameHandler: DeleteConfigLoadbalancerNameLbNameHandlerFunc(func(params DeleteConfigLoadbalancerNameLbNameParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigLoadbalancerNameLbName has not yet been implemented")
@@ -289,6 +295,8 @@ type LoxilbRestAPIAPI struct {
 	DeleteConfigBfdRemoteIPRemoteIPHandler DeleteConfigBfdRemoteIPRemoteIPHandler
 	// DeleteConfigBgpNeighIPAddressHandler sets the operation handler for the delete config bgp neigh IP address operation
 	DeleteConfigBgpNeighIPAddressHandler DeleteConfigBgpNeighIPAddressHandler
+	// DeleteConfigBgpPolicyApplyHandler sets the operation handler for the delete config bgp policy apply operation
+	DeleteConfigBgpPolicyApplyHandler DeleteConfigBgpPolicyApplyHandler
 	// DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler sets the operation handler for the delete config bgp policy definedsets defineset type type name operation
 	DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler
 	// DeleteConfigBgpPolicyDefinitionsPolicyNameHandler sets the operation handler for the delete config bgp policy definitions policy name operation
@@ -305,6 +313,8 @@ type LoxilbRestAPIAPI struct {
 	DeleteConfigLoadbalancerAllHandler DeleteConfigLoadbalancerAllHandler
 	// DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler sets the operation handler for the delete config loadbalancer externalipaddress IP address port port protocol proto operation
 	DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler
+	// DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoHandler sets the operation handler for the delete config loadbalancer hosturl hosturl externalipaddress IP address port port protocol proto operation
+	DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoHandler DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoHandler
 	// DeleteConfigLoadbalancerNameLbNameHandler sets the operation handler for the delete config loadbalancer name lb name operation
 	DeleteConfigLoadbalancerNameLbNameHandler DeleteConfigLoadbalancerNameLbNameHandler
 	// DeleteConfigMirrorIdentIdentHandler sets the operation handler for the delete config mirror ident ident operation
@@ -506,6 +516,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.DeleteConfigBgpNeighIPAddressHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigBgpNeighIPAddressHandler")
 	}
+	if o.DeleteConfigBgpPolicyApplyHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigBgpPolicyApplyHandler")
+	}
 	if o.DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler")
 	}
@@ -529,6 +542,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler")
+	}
+	if o.DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoHandler == nil {
+		unregistered = append(unregistered, "DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoHandler")
 	}
 	if o.DeleteConfigLoadbalancerNameLbNameHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigLoadbalancerNameLbNameHandler")
@@ -806,6 +822,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
+	o.handlers["DELETE"]["/config/bgp/policy/apply"] = NewDeleteConfigBgpPolicyApply(o.context, o.DeleteConfigBgpPolicyApplyHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
 	o.handlers["DELETE"]["/config/bgp/policy/definedsets/{defineset_type}/{type_name}"] = NewDeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeName(o.context, o.DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
@@ -835,6 +855,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}"] = NewDeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto(o.context, o.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/config/loadbalancer/hosturl/{hosturl}/externalipaddress/{ip_address}/port/{port}/protocol/{proto}"] = NewDeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProto(o.context, o.DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
@@ -1112,6 +1136,6 @@ func (o *LoxilbRestAPIAPI) AddMiddlewareFor(method, path string, builder middlew
 	}
 	o.Init()
 	if h, ok := o.handlers[um][path]; ok {
-		o.handlers[um][path] = builder(h)
+		o.handlers[method][path] = builder(h)
 	}
 }

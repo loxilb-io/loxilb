@@ -5,20 +5,39 @@
 ![apache](https://img.shields.io/badge/license-Apache-blue.svg) [![Info][docs-shield]][docs-url] [![Slack](https://img.shields.io/badge/community-join%20slack-blue)](https://join.slack.com/t/loxilb/shared_invite/zt-2b3xx14wg-P7WHj5C~OEON_jviF0ghcQ) 
 
 ## What is loxilb
-loxilb is an open source cloud-native load-balancer based on GoLang/eBPF with the goal of achieving cross-compatibility across a wide range of on-prem, public-cloud or hybrid K8s environments.
+loxilb is an open source cloud-native load-balancer based on GoLang/eBPF with the goal of achieving cross-compatibility across a wide range of on-prem, public-cloud or hybrid K8s environments. loxilb is being developed to support the adoption of cloud-native tech in telco, mobility, and edge computing.
 
 ## Kubernetes with loxilb
 
-Kubernetes defines many service constructs like cluster-ip, node-port, load-balancer etc for pod to pod, pod to service and service from outside communication. 
-<p align="center">
-<img src="https://github.com/loxilb-io/loxilb/assets/75648333/6f933bcf-96b7-42ba-bfe2-ea4b85b9a73b" width=50% height=50%>
-</p>
+Kubernetes defines many service constructs like cluster-ip, node-port, load-balancer, ingress etc for pod to pod, pod to service and outside-world to service communication. 
 
-All these services are provided by load-balancers/proxies operating at Layer4/Layer7. Since Kubernetes's is highly modular,  these services can be provided by different software modules. For example, kube-proxy is used by default to provide cluster-ip and node-port services. 
+![LoxiLB Cover](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/photos/loxilb-cover.png)
 
-Service type load-balancer is usually provided by public cloud-provider(s) as a managed entity. But for on-prem and self-managed clusters, there are only a few good options available. Even for provider-managed K8s like EKS, there are many who would want to bring their own LB to clusters running anywhere. <b>loxilb provides service type load-balancer as its main use-case</b>. loxilb can be run in-cluster or ext-to-cluster as per user need.  
+All these services are provided by load-balancers/proxies operating at Layer4/Layer7. Since Kubernetes's is highly modular,  these services can be provided by different software modules. For example, kube-proxy is used by default to provide cluster-ip and node-port services. For some services like LB and Ingress, no default is usually provided.
 
-Additionally, loxilb can also support cluster-ip and node-port services, thereby providing full cluster-mesh implementation for Kubernetes (replacment of kube-proxy).
+Service type load-balancer is usually provided by public cloud-provider(s) as a managed entity. But for on-prem and self-managed clusters, there are only a few good options available. Even for provider-managed K8s like EKS, there are many who would want to bring their own LB to clusters running anywhere. Additionally, Telco 5G and edge services introduce unique challenges due to the variety of exotic protocols involved, including GTP, SCTP, SRv6, SEPP, and DTLS, making seamless integration particularly challenging. <b>loxilb provides service type load-balancer as its main use-case</b>. loxilb can be run in-cluster or ext-to-cluster as per user need.
+
+loxilb works as a L4 load-balancer/service-proxy by default. Although L4 load-balancing provides great performance and functionality, an equally performant L7 load-balancer is also necessary in K8s for various use-cases. loxilb also supports L7 load-balancing in the form of Kubernetes Ingress implementation which is enhanced with eBPF sockmap helpers. This also benefit users who need L4 and L7 load-balancing under the same hood.
+
+Additionally, loxilb also supports:
+- [x] kube-proxy replacement with eBPF(full cluster-mesh implementation for Kubernetes)
+- [x] Ingress Support
+- [x] Kubernetes Gateway API
+- [ ] Kubernetes Network Policies 
+
+## Telco-Cloud with loxilb
+For deploying telco-cloud with cloud-native functions, loxilb can be used as an enhanced SCP(service communication proxy). SCP is a communication proxy defined by [3GPP](https://www.etsi.org/deliver/etsi_ts/129500_129599/129500/16.04.00_60/ts_129500v160400p.pdf) and aimed at telco micro-services running in cloud-native environment. Read more in this [blog](https://dev.to/nikhilmalik/5g-service-communication-proxy-with-loxilb-4242) 
+![image](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/photos/scp.svg)
+
+Telco-cloud requires load-balancing and communication across various interfaces/standards like N2, N4, E2(ORAN), S6x, 5GLAN, GTP etc. Each of these present its own unique challenges which loxilb aims to solve e.g.:    
+- N4 requires PFCP level session-intelligence
+- N2 requires NGAP parsing capability(Related Blogs - [Blog-1](https://www.loxilb.io/post/ngap-load-balancing-with-loxilb), [Blog-2](https://futuredon.medium.com/5g-sctp-loadbalancer-using-loxilb-b525198a9103), [Blog-3](https://medium.com/@ben0978327139/5g-sctp-loadbalancer-using-loxilb-applying-on-free5gc-b5c05bb723f0))
+- S6x requires Diameter/SCTP multi-homing LB support(Related [Blog](https://www.loxilb.io/post/k8s-introducing-sctp-multihoming-functionality-with-loxilb))
+- MEC use-cases might require UL-CL understanding(Related [Blog](https://futuredon.medium.com/5g-uplink-classifier-using-loxilb-7593a4d66f4c))
+- Hitless failover support might be essential for mission-critical applications
+- E2 might require SCTP-LB with OpenVPN bundled together
+- SIP support is needed to enable cloud-native VOIP
+- N32 requires support for Security Edge Protection Proxy(SEPP)
 
 ## Why choose loxilb?
    
@@ -45,54 +64,50 @@ Additionally, loxilb can also support cluster-ip and node-port services, thereby
 - Stateful firewalling and IPSEC/Wireguard support
 - Optimized implementation for features like [Conntrack](https://thermalcircle.de/doku.php?id=blog:linux:connection_tracking_1_modules_and_hooks), QoS etc
 - Full compatibility for ipvs (ipvs policies can be auto inherited)
-- Policy oriented L7 proxy support - HTTP1.0, 1.1, 2.0 etc (planned 🚧)   
+- Policy oriented L7 proxy support - HTTP1.0, 1.1, 2.0, 3.0   
 
 ## Components of loxilb 
 - GoLang based control plane components
 - A scalable/efficient [eBPF](https://ebpf.io/) based data-path implementation
 - Integrated goBGP based routing stack
-- A kubernetes agent [kube-loxilb](https://github.com/loxilb-io/kube-loxilb) written in Go
+- A kubernetes operator [kube-loxilb](https://github.com/loxilb-io/kube-loxilb) written in Go
+- A kubernetes ingress implementation
 
-## Layer4 Vs Layer7
-loxilb works as a L4 load-balancer/service-proxy by default. Although it provides great performance, at times, L7 load-balancing might become necessary in K8s. There are many good L7 proxies already available for K8s. Still, we are working on providing a great L7 solution natively in eBPF. It is a tough endeavor one which should reap great benefits once completed. Please keep an eye for updates on this.
+## Architectural Considerations   
+- [Understanding loxilb modes and deployment in K8s with kube-loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/kube-loxilb.md)
+- [Understanding High-availability with loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/ha-deploy.md)
 
-## Telco-Cloud with loxilb
-For deploying telco-cloud with cloud-native functions, loxilb can be used as a SCP(service communication proxy). SCP is nothing but a communication hub for telco micro-services running in Kubernetes. But telco-cloud requires load-balancing and communication across various interfaces/standards like N2, N4, E2(ORAN), S6x, 5GLAN, GTP etc. Each of these present its own unique challenges which loxilb aims to solve e.g.
-- N4 requires PFCP level session-intelligence
-- N2 requires NGAP parsing capability
-- S6x requires Diameter/SCTP multi-homing LB support
-- MEC use-cases might require UL-CL understanding
-- Hitless failover support might be essential for mission-critical applications
-- E2 might require SCTP-LB with OpenVPN bundled together
-- SIP support is needed to enable cloud-native VOIP
-
-## How-To Guides
-- [How-To : Deploy loxilb in K8s with kube-loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/kube-loxilb.md)
-- [How-To : Run in K8s with in-cluster mode](https://www.loxilb.io/post/k8s-nuances-of-in-cluster-external-service-lb-with-loxilb)
-- [How-To : High-availability with loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/ha-deploy.md)
-- [How-To : Run loxilb in standalone mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/standalone.md)
-- [How-To : Manual build/run](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/run.md)
-- [How-To : Standalone configuration](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/cmd.md)
-- [How-To : Debug loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/debugging.md)
-- [How-To : Access end-points outside K8s](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/ext-ep.md)
-- [How-To : Deploy multi-server K3s HA with loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s-multi-master.md)
-
-## Getting started with different K8s distributions/tools   
-
+## Getting Started  
 #### loxilb as ext-cluster pod  
 - [K3s : loxilb with default flannel](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s_quick_start_flannel.md)
 - [K3s : loxilb with calico](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s_quick_start_calico.md)
 - [K3s : loxilb with cilium](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/quick_start_with_cilium.md)
 - [K0s : loxilb with default kube-router networking](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k0s_quick_start.md)
+- [EKS : loxilb ext-mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/eks-external.md)
 
 #### loxilb as in-cluster pod   
 - [K3s : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s_quick_start_incluster.md)
 - [K0s : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k0s_quick_start_incluster.md)
 - [MicroK8s : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/microk8s_quick_start_incluster.md)
+- [EKS : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/eks-incluster.md)
 
 #### loxilb as service-proxy (kube-proxy replacement)
 - [K3s : loxilb service-proxy with flannel](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/service-proxy-flannel.md)
 - [K3s : loxilb service-proxy with calico](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/service-proxy-calico.md)
+
+#### loxilb as Kubernetes Ingress
+- [K3s: How to run loxilb-ingress](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/loxilb-ingress.md)
+
+#### loxilb in standalone mode
+- [Run loxilb standalone](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/standalone.md)
+
+## Advanced Guides    
+- [How-To : Service-group zones with loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/service-zones.md)
+- [How-To : Access end-points outside K8s](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/ext-ep.md)
+- [How-To : Deploy multi-server K3s HA with loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s-multi-master.md)
+- [How-To : Deploy loxilb with multi-AZ HA support in AWS](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/aws-multi-az.md)
+- [How-To : Deploy loxilb with multi-cloud HA support](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/multi-cloud-ha.md)
+- [How-To : Deploy loxilb with ingress-nginx](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/loxilb-nginx-ingress.md)
 
 ## Knowledge-Base   
 - [What is eBPF](ebpf.md)
@@ -102,6 +117,9 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 - [eBPF internals of loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/loxilbebpf.md)
 - [What are loxilb NAT Modes](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/nat.md)
 - [loxilb load-balancer algorithms](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/lb-algo.md)
+- [Manual steps to build/run](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/run.md)
+- [Debugging loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/debugging.md)
+- [loxicmd command-line tool usage](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/cmd.md)
 - [Developer's guide to loxicmd](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/cmd-dev.md)
 - [Developer's guide to loxilb API](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/api-dev.md)
 - [API Reference - loxilb web-Api](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/api.md)
@@ -111,6 +129,7 @@ For deploying telco-cloud with cloud-native functions, loxilb can be used as a S
 - [System Requirements](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/requirements.md)
 - [Frequenctly Asked Questions- FAQs](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/faq.md)
 - [Blogs](https://www.loxilb.io/blog)
+- [Demo Videos](https://www.youtube.com/@loxilb697)
 
 ## Community 
 
@@ -119,6 +138,14 @@ Join the loxilb [Slack](https://www.loxilb.io/members) channel to chat with loxi
 
 ### General Discussion
 Feel free to post your queries in github [discussion](https://github.com/loxilb-io/loxilb/discussions). If you find any issue/bugs, please raise an [issue](https://github.com/loxilb-io/loxilb/issues) in github and members from loxilb community will be happy to help.
+
+### Community Posts
+- [5G SCTP Load Balancer using LoxiLB](https://futuredon.medium.com/5g-sctp-loadbalancer-using-loxilb-b525198a9103)
+- [5G Uplink Classifier using LoxiLB](https://futuredon.medium.com/5g-uplink-classifier-using-loxilb-7593a4d66f4c)
+- [5G SCTP Load Balancer with free5gc](https://medium.com/@ben0978327139/5g-sctp-loadbalancer-using-loxilb-applying-on-free5gc-b5c05bb723f0)
+- [K8s - Bring load balancing to Multus workloads with LoxiLB](https://cloudybytes.medium.com/k8s-bringing-load-balancing-to-multus-workloads-with-loxilb-a0746f270abe)
+- [K3s - Using LoxiLB as External Service Load Balancer](https://cloudybytes.medium.com/k3s-using-loxilb-as-external-service-lb-2ea4ce61e159)
+- [Kubernetes Services - Achieving Optimal performance is elusive](https://cloudybytes.medium.com/kubernetes-services-achieving-optimal-performance-is-elusive-5def5183c281)
 
 ## CICD Workflow Status
 
@@ -149,9 +176,6 @@ Feel free to post your queries in github [discussion](https://github.com/loxilb-
 | [![k3s-sctpmh-CI](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-sctpmh.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-sctpmh.yml)  | | |
 | [![k3s-sctpmh-ubuntu22-CI](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-sctpmh-ubuntu-22.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-sctpmh-ubuntu22.yml) | | |
 | [![k3s-sctpmh-2-CI](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-sctpmh-2.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-sctpmh-2.yml)  | | |
-
-
-
 
 
 ## 📚 Please check loxilb [website](https://www.loxilb.io) for more detailed info.   

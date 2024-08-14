@@ -60,7 +60,8 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 
 	// Load balancer add and delete and get
 	api.PostConfigLoadbalancerHandler = operations.PostConfigLoadbalancerHandlerFunc(handler.ConfigPostLoadbalancer)
-	api.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler = operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(handler.ConfigDeleteLoadbalancer)
+	api.DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoHandler = operations.DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(handler.ConfigDeleteLoadbalancer)
+	api.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler = operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(handler.ConfigDeleteLoadbalancerWithoutPath)
 	api.GetConfigLoadbalancerAllHandler = operations.GetConfigLoadbalancerAllHandlerFunc(handler.ConfigGetLoadbalancer)
 	api.DeleteConfigLoadbalancerAllHandler = operations.DeleteConfigLoadbalancerAllHandlerFunc(handler.ConfigDeleteAllLoadbalancer)
 	api.DeleteConfigLoadbalancerNameLbNameHandler = operations.DeleteConfigLoadbalancerNameLbNameHandlerFunc(handler.ConfigDeleteLoadbalancerByName)
@@ -176,8 +177,9 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 
 	// BGP Policy Apply
 	api.PostConfigBgpPolicyApplyHandler = operations.PostConfigBgpPolicyApplyHandlerFunc(handler.ConfigPostBGPPolicyApply)
-	api.PreServerShutdown = func() {}
+	api.DeleteConfigBgpPolicyApplyHandler = operations.DeleteConfigBgpPolicyApplyHandlerFunc(handler.ConfigDeleteBGPPolicyApply)
 
+	api.PreServerShutdown = func() {}
 	api.ServerShutdown = func() {}
 
 	return setupGlobalMiddleware(api.Serve(setupMiddlewares))

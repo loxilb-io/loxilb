@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-headless
+  namespace: test-rabbitmq
+spec:
+  clusterIP: None
+  ports:
+  - name: epmd
+    port: 4369
+    protocol: TCP
+    targetPort: 4369
+  - name: cluster-rpc
+    port: 25672
+    protocol: TCP
+    targetPort: 25672
+  selector:
+    app: rabbitmq
+  type: ClusterIP
+  sessionAffinity: None

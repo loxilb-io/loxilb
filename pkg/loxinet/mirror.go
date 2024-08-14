@@ -262,8 +262,7 @@ func (M *MirrH) MirrTicker() {
 		} else {
 
 			for idx, mObj := range m.MObjs {
-				var pM *MirrObjInfo
-				pM = &m.MObjs[idx]
+				pM := &m.MObjs[idx]
 				if pM.Sync != 0 {
 					pM.MirrObj2DP(DpCreate)
 				} else {

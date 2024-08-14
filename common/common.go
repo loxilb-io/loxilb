@@ -369,16 +369,22 @@ type RouteGet struct {
 	Sync DpStatusT
 }
 
+// GWInfo - Info about gateway
+type GWInfo struct {
+	// Gw - gateway information if any
+	Gw net.IP
+	// LinkIndex - OS allocated index
+	LinkIndex int
+}
+
 // RouteMod - Info about a route
 type RouteMod struct {
 	// Protocol - Protocol type
 	Protocol int
 	// Flags - flag type
 	Flags int
-	// Gw - gateway information if any
-	Gw net.IP
-	// LinkIndex - OS allocated index
-	LinkIndex int
+	// GWs - gateway information if any
+	GWs []GWInfo
 	// Dst - ip addr
 	Dst net.IPNet
 }
@@ -398,6 +404,10 @@ type FwOptArg struct {
 	Allow bool `json:"allow"`
 	// Mark - Mark the matching rule
 	Mark uint32 `json:"fwMark"`
+	// DoSnat - Do snat on matching rule
+	DoSnat bool   `json:"doSnat"`
+	ToIP   string `json:"toIP"`
+	ToPort uint16 `json:"toPort"`
 	// Counter - Traffic counter
 	Counter string `json:"counter"`
 }
@@ -475,6 +485,8 @@ const (
 	LbSelRrPersist
 	// LbSelLeastConnections - select client based on least connections
 	LbSelLeastConnections
+	// LbSelN2 - select client based on N2 SCTP interface
+	LbSelN2
 )
 
 // LBMode - Variable to define LB mode
@@ -495,6 +507,30 @@ const (
 	LBModeHostOneArm
 )
 
+// LBOp - Variable to LB operation
+type LBOp int32
+
+const (
+	// LBOPAdd - Add te LB rule (replace if existing)
+	LBOPAdd LBOp = iota
+	// LBModeOneArm - Attach End-Points
+	LBOPAttach
+	// LBOPDetach - Detach End-Points
+	LBOPDetach
+)
+
+// LBSec - Variable to define LB front-end security
+type LBSec int32
+
+const (
+	// LBServPlain - Plain mode
+	LBServPlain LBSec = iota
+	// LBServHTTPS - HTTPS termination
+	LBServHTTPS
+	// LBServE2EHTTPS - HTTPS proxy
+	LBServE2EHTTPS
+)
+
 // LbServiceArg - Information related to load-balancer service
 type LbServiceArg struct {
 	// ServIP - the service ip or vip  of the load-balancer rule
@@ -513,6 +549,10 @@ type LbServiceArg struct {
 	Bgp bool `json:"bgp"`
 	// Monitor - monitor end-points of this rule
 	Monitor bool `json:"monitor"`
+	// Oper - Attach/Detach if the LB already exists
+	Oper LBOp `json:"oper"`
+	// Security - Security mode if any
+	Security LBSec `json:"lbsec"`
 	// Mode - NAT mode
 	Mode LBMode `json:"mode"`
 	// InactiveTimeout - Forced session reset after inactive timeout
@@ -535,6 +575,10 @@ type LbServiceArg struct {
 	Name string `json:"name"`
 	// PersistTimeout - Persistence timeout in seconds
 	PersistTimeout uint32 `json:"persistTimeout"`
+	// Snat - Do SNAT
+	Snat bool `json:"snat"`
+	// HostUrl - Ingress Specific URL path
+	HostUrl string `json:"path"`
 }
 
 // LbEndPointArg - Information related to load-balancer end-point
@@ -1015,6 +1059,7 @@ type NetHookInterface interface {
 
 	NetGoBGPPolicyApplyAdd(nm *GoBGPPolicyApply) (int, error)
 
+	NetGoBGPPolicyApplyDel(nm *GoBGPPolicyApply) (int, error)
 	NetGoBGPGCAdd(gc *GoBGPGlobalConfig) (int, error)
 	NetBFDGet() ([]BFDMod, error)
 	NetBFDAdd(bm *BFDMod) (int, error)

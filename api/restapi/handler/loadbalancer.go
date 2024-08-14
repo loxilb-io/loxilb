@@ -37,6 +37,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv.Bgp = params.Attr.ServiceArguments.Bgp
 	lbRules.Serv.Monitor = params.Attr.ServiceArguments.Monitor
 	lbRules.Serv.Mode = cmn.LBMode(params.Attr.ServiceArguments.Mode)
+	lbRules.Serv.Security = cmn.LBSec(params.Attr.ServiceArguments.Security)
 	lbRules.Serv.InactiveTimeout = uint32(params.Attr.ServiceArguments.InactiveTimeOut)
 	lbRules.Serv.Managed = params.Attr.ServiceArguments.Managed
 	lbRules.Serv.ProbeType = params.Attr.ServiceArguments.Probetype
@@ -46,6 +47,8 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv.ProbeTimeout = params.Attr.ServiceArguments.ProbeTimeout
 	lbRules.Serv.ProbeRetries = int(params.Attr.ServiceArguments.ProbeRetries)
 	lbRules.Serv.Name = params.Attr.ServiceArguments.Name
+	lbRules.Serv.Oper = cmn.LBOp(params.Attr.ServiceArguments.Oper)
+	lbRules.Serv.HostUrl = params.Attr.ServiceArguments.Host
 
 	if lbRules.Serv.Proto == "sctp" {
 		for _, data := range params.Attr.SecondaryIPs {
@@ -76,7 +79,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
+func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var lbServ cmn.LbServiceArg
@@ -84,6 +87,11 @@ func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerExternal
 	lbServ.ServIP = params.IPAddress
 	lbServ.ServPort = uint16(params.Port)
 	lbServ.Proto = params.Proto
+	if params.Hosturl == "any" {
+		lbServ.HostUrl = ""
+	} else {
+		lbServ.HostUrl = params.Hosturl
+	}
 	if params.Block != nil {
 		lbServ.BlockNum = uint16(*params.Block)
 	}
@@ -93,6 +101,32 @@ func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerExternal
 
 	lbRules.Serv = lbServ
 	tk.LogIt(tk.LogDebug, "[API] lbRules : %v\n", lbRules)
+	_, err := ApiHooks.NetLbRuleDel(&lbRules)
+	if err != nil {
+		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		return &ResultResponse{Result: err.Error()}
+	}
+	return &ResultResponse{Result: "Success"}
+}
+
+func ConfigDeleteLoadbalancerWithoutPath(params operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
+	tk.LogIt(tk.LogDebug, "[API] Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+
+	var lbServ cmn.LbServiceArg
+	var lbRules cmn.LbRuleMod
+	lbServ.ServIP = params.IPAddress
+	lbServ.ServPort = uint16(params.Port)
+	lbServ.Proto = params.Proto
+	lbServ.HostUrl = ""
+	if params.Block != nil {
+		lbServ.BlockNum = uint16(*params.Block)
+	}
+	if params.Bgp != nil {
+		lbServ.Bgp = *params.Bgp
+	}
+
+	lbRules.Serv = lbServ
+	tk.LogIt(tk.LogDebug, "[API] lbRules (w/o Path): %v\n", lbRules)
 	_, err := ApiHooks.NetLbRuleDel(&lbRules)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
@@ -124,12 +158,15 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tmpSvc.Block = uint16(lb.Serv.BlockNum)
 		tmpSvc.Sel = int64(lb.Serv.Sel)
 		tmpSvc.Mode = int32(lb.Serv.Mode)
+		tmpSvc.Security = int32(lb.Serv.Security)
 		tmpSvc.InactiveTimeOut = int32(lb.Serv.InactiveTimeout)
 		tmpSvc.Monitor = lb.Serv.Monitor
 		tmpSvc.Managed = lb.Serv.Managed
 		tmpSvc.Probetype = lb.Serv.ProbeType
 		tmpSvc.Probeport = lb.Serv.ProbePort
 		tmpSvc.Name = lb.Serv.Name
+		tmpSvc.Snat = lb.Serv.Snat
+		tmpSvc.Host = lb.Serv.HostUrl
 
 		tmpLB.ServiceArguments = &tmpSvc
 
