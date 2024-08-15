@@ -1,9 +1,9 @@
-name: Adv-LB-Sanity-CI-Ubuntu-22
+name: Adv-LB-Sanity-CI-Ubuntu-24
 
 on:
   schedule:
-  # Runs "At 18:00 UTC every day-of-week"
-  - cron: '0 18 * * *'
+  # Runs "At 11:00 UTC every day-of-week"
+  - cron: '0 11 * * *'
   workflow_dispatch:
     inputs:
       logLevel:
@@ -11,7 +11,7 @@ on:
         required: true
         default: 'warning'
       tags:
-        description: 'Advanced LB Sanity ubuntu 22'
+        description: 'Advanced LB Sanity ubuntu 24'
   workflow_run:
     workflows: ["Docker-Multi-Arch"]
     types:
@@ -19,12 +19,12 @@ on:
        
 jobs:
   build:
-    name: advanced-lb-sanity-ubuntu-22
-    runs-on: ubuntu-22.04
+    name: advanced-lb-sanity-ubuntu-24
+    runs-on: ubuntu-24.04
     if: github.repository == 'loxilb-io/loxilb'
           &&  github.event.inputs.tagName == ''
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: actions/setup-python@v2
@@ -32,7 +32,7 @@ jobs:
         with:
              go-version: '>=1.18.0'
       - run: sudo apt-get update
-      - run: sudo apt-get -y install linux-tools-$(uname -r) bridge-utils iperf iproute2 nodejs socat ethtool lksctp-tools
+      - run: sudo apt-get -y install  linux-tools-$(uname -r) bridge-utils iperf iproute2 nodejs socat ethtool lksctp-tools
       - run: |
              cd cicd/k8slbsim/
              ./config.sh

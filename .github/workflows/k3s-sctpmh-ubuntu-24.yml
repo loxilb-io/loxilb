@@ -1,0 +1,58 @@
+name: K3s-SCTPMH-Sanity-CI-Ubuntu-24
+on:
+ schedule:
+ # Runs "At 11:00 UTC every day-of-week"
+ - cron: '0 11 * * *'
+ workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'k3s-sctpmh-ubuntu-24'
+ workflow_run:
+    workflows: ["Docker-Multi-Arch"]
+    types:
+      - completed
+jobs:
+  build:
+    name: k3s-sctpmh-sanity-ubuntu-24
+    runs-on: ubuntu-24.04
+    if: github.repository == 'loxilb-io/loxilb'
+          &&  github.event.inputs.tagName == ''
+    steps:
+      - run: |
+         for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
+         sudo apt-get update
+         sudo apt-get install ca-certificates curl gnupg
+         sudo install -m 0755 -d /etc/apt/keyrings
+         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+         sudo chmod a+r /etc/apt/keyrings/docker.gpg
+         echo \
+          "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+          "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+         sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+         sudo apt-get update
+         sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      - run: sudo apt-get -y install bridge-utils iproute2 lksctp-tools iputils-ping net-tools
+      - run: |
+         echo "KUBECONFIG=--kubeconfig=/etc/rancher/k3s/k3s.yaml" >> $GITHUB_ENV
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - run: curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" K3S_KUBECONFIG_MODE="644" sh -
+      - run: |
+         sleep 10
+         kubectl "${{ env.KUBECONFIG }}" taint nodes --all node.cloudprovider.kubernetes.io/uninitialized=false:NoSchedule-
+         sleep 60
+         kubectl "${{ env.KUBECONFIG }}" get nodes
+         kubectl "${{ env.KUBECONFIG }}" get pods -A
+         wget https://github.com/loxilb-io/loxi-ccm/raw/master/manifests/loxi-ccm-k3s.yaml
+         kubectl "${{ env.KUBECONFIG }}" apply -f ./loxi-ccm-k3s.yaml
+         sleep 60
+         kubectl "${{ env.KUBECONFIG }}" get pods -A
+      - run: |
+         cd cicd/k3s-sctpmh/
+         ./config.sh "${{ env.KUBECONFIG }}"
+         ./validation.sh "${{ env.KUBECONFIG }}"
+         ./rmconfig.sh "${{ env.KUBECONFIG }}"
+         cd -
