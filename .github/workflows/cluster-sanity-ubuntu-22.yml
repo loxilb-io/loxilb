@@ -1,9 +1,9 @@
 name: Cluster-Sanity-CI-Ubuntu-22
 
 on:
-  schedule:
+  #  schedule:
   # Runs "At 18:00 UTC every day-of-week"
-  - cron: '0 18 * * *'
+  #- cron: '0 18 * * *'
   workflow_dispatch:
     inputs:
       userInput:
@@ -12,10 +12,10 @@ on:
         default: 'Finished'
       tags:
         description: 'Cluster Sanity Ubuntu 22'
-  workflow_run:
-    workflows: ["Docker-Multi-Arch"]
-    types:
-      - completed
+  #workflow_run:
+  #  workflows: ["Docker-Multi-Arch"]
+  #  types:
+  #    - completed
        
 jobs:
   build:
