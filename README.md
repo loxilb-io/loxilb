@@ -71,7 +71,7 @@ Telco-cloud requires load-balancing and communication across various interfaces/
 - A scalable/efficient [eBPF](https://ebpf.io/) based data-path implementation
 - Integrated goBGP based routing stack
 - A kubernetes operator [kube-loxilb](https://github.com/loxilb-io/kube-loxilb) written in Go
-- A kubernetes ingress implementation
+- A kubernetes ingress [implementation](https://github.com/loxilb-io/loxilb-ingress)
 
 ## Architectural Considerations   
 - [Understanding loxilb modes and deployment in K8s with kube-loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/kube-loxilb.md)
