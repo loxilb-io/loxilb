@@ -20,6 +20,7 @@ jobs:
   build:
     name: liveness-lb-sanity-ubuntu-22
     runs-on: ubuntu-22.04
+    if: github.repository == 'loxilb-io/loxilb'
     steps:
       - uses: actions/checkout@v2
         with:
