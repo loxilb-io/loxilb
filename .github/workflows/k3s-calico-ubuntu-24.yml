@@ -1,18 +1,18 @@
 name: K3s-Calico-Sanity-CI-Ubuntu-24
 on:
- schedule:
+ #schedule:
  # Runs "At 11:00 UTC every day-of-week"
- - cron: '0 11 * * *'
+ #- cron: '0 11 * * *'
  workflow_dispatch:
     inputs:
       testName:
         description: 'Test Run-Name'     
         required: true
         default: 'k3s-calico-ubuntu-24'
- workflow_run:
-    workflows: ["Docker-Multi-Arch"]
-    types:
-      - completed
+ #workflow_run:
+ #   workflows: ["Docker-Multi-Arch"]
+ #   types:
+ #     - completed
 jobs:
   build:
     name: k3s-calico-sanity
