@@ -78,7 +78,7 @@ const (
 
 // constants
 const (
-	MaxNatEndPoints            = 16
+	MaxNatEndPoints            = 32
 	DflLbaInactiveTries        = 2         // Default number of inactive tries before LB arm is turned off
 	MaxDflLbaInactiveTries     = 100       // Max number of inactive tries before LB arm is turned off
 	DflLbaCheckTimeout         = 10        // Default timeout for checking LB arms
