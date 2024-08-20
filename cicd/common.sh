@@ -557,6 +557,10 @@ function create_lb_rule() {
   echo "$1: loxicmd create lb ${args[*]}"
   $dexec $1 loxicmd create lb ${args[*]}
 
+  if [[ ${args[*]} == *"--mode=fullproxy"* ]]; then
+    return
+  fi
+
   hook=$($dexec llb1 ntc filter show dev eth0 ingress | grep tc_packet_hook)
   if [[ $hook != *"tc_packet_hook"* ]]; then
     echo "ERROR : No hook point found";
