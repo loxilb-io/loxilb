@@ -102,6 +102,12 @@ jobs:
              ./rmconfig.sh
              cd -
       - run: |
+             cd cicd/tcplbmaxep/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
              cd cicd/ipmasquerade/
              ./config.sh
              ./validation.sh
