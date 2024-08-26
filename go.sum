@@ -296,6 +296,10 @@ github.com/loxilb-io/loxilib v0.8.9-0.20240124072521-f37fbddfb4e8 h1:PYkgIX2fv1U
 github.com/loxilb-io/loxilib v0.8.9-0.20240124072521-f37fbddfb4e8/go.mod h1:LoQCxBz+N0fO9rGwRmPHrQPHol/jUf4MNpph63Cydkg=
 github.com/loxilb-io/loxilib v0.8.9-0.20240620071157-28d3880edd8f h1:Zeas0eEF60hK+UwMp9QRqPtUuFQV6pC0X2re+yuqCEM=
 github.com/loxilb-io/loxilib v0.8.9-0.20240620071157-28d3880edd8f/go.mod h1:LoQCxBz+N0fO9rGwRmPHrQPHol/jUf4MNpph63Cydkg=
+github.com/loxilb-io/loxilib v0.8.9-0.20240826070926-6929c7b669f1 h1:6nwOmOypZLqBkm1x5DulX0BEROD04wD9yO/CCOjQWes=
+github.com/loxilb-io/loxilib v0.8.9-0.20240826070926-6929c7b669f1/go.mod h1:LoQCxBz+N0fO9rGwRmPHrQPHol/jUf4MNpph63Cydkg=
+github.com/loxilb-io/loxilib v0.8.9-0.20240826081440-53bcf7b9aed2 h1:id1unRAYmtM3asSpsE50LZJy7Z6cHjl8gNB4vZHMoQU=
+github.com/loxilb-io/loxilib v0.8.9-0.20240826081440-53bcf7b9aed2/go.mod h1:LoQCxBz+N0fO9rGwRmPHrQPHol/jUf4MNpph63Cydkg=
 github.com/loxilb-io/sctp v0.0.0-20230519081703-6d1baec82fd4 h1:oDc2lsbfuQEcVP3k+Pw4v6Xdm3t4M9vBc1Y9egszv6g=
 github.com/loxilb-io/sctp v0.0.0-20230519081703-6d1baec82fd4/go.mod h1:1a6hv8ISVQhnW5IVpW9o+OL6BAFlWiVpC0O4d19g+wQ=
 github.com/mailru/easyjson v0.0.0-20190614124828-94de47d64c63/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
