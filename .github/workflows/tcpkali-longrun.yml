@@ -12,9 +12,9 @@ on:
 jobs:
   test-runner:
     name: tcpkali-longrun
-    runs-on: [self-hosted]
-    #if: github.repository == 'loxilb-io/loxilb' 
-    #      &&  github.event.inputs.tagName == ''
+    runs-on: [self-hosted, sb]
+    if: github.repository == 'loxilb-io/loxilb' 
+          &&  github.event.inputs.tagName == ''
     steps:
     - name: Checkout
       uses: actions/checkout@v2

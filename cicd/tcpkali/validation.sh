@@ -6,7 +6,8 @@ $hexec l3ep2 node ../common/tcp_server.js server2 &
 $hexec l3ep3 node ../common/tcp_server.js server3 &
 
 conn=400
-time=100
+
+time=14400 #4hrs
 
 stime=$(( $time + 10 ))
 sleep 2
