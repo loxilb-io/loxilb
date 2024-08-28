@@ -12,7 +12,7 @@ on:
 jobs:
   test-runner:
     name: tcpkali-longrun
-    runs-on: [self-hosted, nd4]
+    runs-on: [self-hosted]
     #if: github.repository == 'loxilb-io/loxilb' 
     #      &&  github.event.inputs.tagName == ''
     steps:
