@@ -56,7 +56,7 @@ sleep 2
 
 for k in {0..1}
 do
-    echo "${host[k]}: Testing Service IP: $servIP"
+    echo "${host[k]}: Testing Service IP: $servIP - connections: $conn duration: $time secs"
     lcode=0
     $hexec ${host[k]} stdbuf -oL tcpkali -c $conn -T $time -w 8 -m "message" -r 2000 $servIP:2020 2> ${host[k]}.log &
 done
