@@ -33,4 +33,5 @@ jobs:
       run: |
         cd cicd/tcpkali || true
         ./rmconfig.sh
+        docker images -a | grep "loxilb-io/loxilb" | awk '{print $3}' | xargs docker rmi
         cd -
