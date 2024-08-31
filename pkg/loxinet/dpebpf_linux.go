@@ -434,7 +434,7 @@ func (e *DpEbpfH) loadEbpfPgm(name string) int {
 	ret := -1
 	for _, f := range filters {
 		if t, ok := f.(*nlp.BpfFilter); ok {
-			if strings.Contains(t.Name, C.TC_LL_SEC_DEFAULT) {
+			if strings.Contains(t.Name, "tc_packet_func") {
 				ret = 0
 				break
 			}

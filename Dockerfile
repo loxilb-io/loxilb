@@ -34,14 +34,6 @@ RUN mkdir -p /opt/loxilb && \
     if [ -d /usr/local/build/lib64  ] ; then mv /usr/local/build/lib64  /usr/local/build/lib; fi && \
     cp -fr /usr/local/build/lib/* /usr/lib/ && ldconfig && \
     rm -fr openssl-3.3.1*  && \
-    # Install loxilb's custom ntc tool
-    wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
-    unzip main.zip && cd iproute2-main/ && rm -fr libbpf && wget https://github.com/loxilb-io/libbpf/archive/refs/heads/main.zip && \
-    unzip main.zip && mv libbpf-main libbpf && cd libbpf/src/ && mkdir build && \
-    make install && DESTDIR=build OBJDIR=build make install && cd - && \
-    export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:`pwd`/libbpf/src/ && \
-    LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && \
-    cp -f tc/tc /usr/local/sbin/ntc && cd .. && rm -fr main.zip iproute2-main && \
     # Install bpftool
     wget https://github.com/libbpf/bpftool/releases/download/v7.2.0/bpftool-libbpf-v7.2.0-sources.tar.gz && \
     tar -xvzf bpftool-libbpf-v7.2.0-sources.tar.gz && cd bpftool/src/ && \
