@@ -100,7 +100,6 @@ COPY --from=build /usr/local/sbin/loxilb_dp_debug /usr/local/sbin/loxilb_dp_debu
 COPY --from=build /usr/local/sbin/loxicmd /usr/local/sbin/loxicmd
 COPY --from=build /opt/loxilb /opt/loxilb
 COPY --from=build /root/loxilb-io/loxilb/loxilb /root/loxilb-io/loxilb/loxilb
-COPY --from=build /usr/local/sbin/ntc /usr/local/sbin/ntc
 COPY --from=build /usr/local/sbin/bpftool /usr/local/sbin/bpftool
 COPY --from=build /usr/sbin/gobgp* /usr/sbin/
 COPY --from=build /root/.bashrc /root/.bashrc
