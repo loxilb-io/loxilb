@@ -19,12 +19,11 @@ package loxinet
 import (
 	"errors"
 	"fmt"
+	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 	"net"
 	"strings"
-
-	tk "github.com/loxilb-io/loxilib"
-
-	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 // constants
@@ -533,10 +532,10 @@ func (l3 *L3H) IfasTicker() {
 
 		canSync := false
 		for _, ifaEnt := range ifa.Ifas {
-			canSync = true
-			if ifaEnt.Secondary {
+			if nlp.NlpIsBlackListedIntf(ifa.Key.Obj, 0) || ifaEnt.Secondary {
 				continue
 			}
+			canSync = true
 		}
 
 		if canSync && ifa.Sync != 0 {
