@@ -99,7 +99,7 @@ func NlpRegister(hook cmn.NetHookInterface) {
 	hooks = hook
 }
 
-func iSBlackListedIntf(name string, masterIdx int) bool {
+func NlpIsBlackListedIntf(name string, masterIdx int) bool {
 	if nNl.WhiteList != "none" {
 		filter := nNl.WLRgx.MatchString(name)
 		return !filter
@@ -1296,7 +1296,7 @@ func DelRoute(route nlp.Route) int {
 func LUWorkSingle(m nlp.LinkUpdate) int {
 	var ret int
 
-	if iSBlackListedIntf(m.Link.Attrs().Name, m.Link.Attrs().MasterIndex) {
+	if NlpIsBlackListedIntf(m.Link.Attrs().Name, m.Link.Attrs().MasterIndex) {
 		return -1
 	}
 
@@ -1349,7 +1349,7 @@ func NUWorkSingle(m nlp.NeighUpdate) int {
 		return -1
 	}
 
-	if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+	if NlpIsBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 		return -1
 	}
 
@@ -1370,22 +1370,22 @@ func RUWorkSingle(m nlp.RouteUpdate) int {
 	if len(m.MultiPath) <= 0 {
 		link, err := nlp.LinkByIndex(m.LinkIndex)
 		if err != nil {
-			tk.LogIt(tk.LogError, "RUWorkSingle: link find error %s", err)
+			tk.LogIt(tk.LogError, "RUWorkSingle: link find error %s\n", err)
 			return -1
 		}
 
-		if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+		if NlpIsBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 			return -1
 		}
 	} else {
 		for _, path := range m.MultiPath {
 			link, err := nlp.LinkByIndex(path.LinkIndex)
 			if err != nil {
-				tk.LogIt(tk.LogError, "RUWorkSingle: link find error %s", err)
+				tk.LogIt(tk.LogError, "RUWorkSingle: link find error %s\n", err)
 				return -1
 			}
 
-			if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+			if NlpIsBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 				return -1
 			}
 		}
@@ -1461,7 +1461,7 @@ func NLWorker(nNl *NlH, bgpPeerMode bool, ch chan bool, wch chan bool) {
 
 	defer func() {
 		if e := recover(); e != nil {
-			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
+			tk.LogIt(tk.LogCritical, "%s: %s\n", e, debug.Stack())
 		}
 		hooks.NetHandlePanic()
 		os.Exit(1)
@@ -1489,7 +1489,7 @@ func GetBridges() {
 		return
 	}
 	for _, link := range links {
-		if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+		if NlpIsBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 			continue
 		}
 		switch link.(type) {
@@ -1515,7 +1515,7 @@ func NlpGet(ch chan bool) int {
 
 	for _, link := range links {
 
-		if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+		if NlpIsBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 			continue
 		}
 
@@ -1527,7 +1527,7 @@ func NlpGet(ch chan bool) int {
 
 	for _, link := range links {
 
-		if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+		if NlpIsBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 			// Need addresss to work with
 			addrs, err := nlp.AddrList(link, nlp.FAMILY_ALL)
 			if err != nil {
