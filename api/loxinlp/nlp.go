@@ -86,6 +86,8 @@ type NlH struct {
 	IMap      map[string]Intf
 	BlackList string
 	BLRgx     *regexp.Regexp
+	WhiteList string
+	WLRgx     *regexp.Regexp
 }
 
 var (
@@ -98,6 +100,11 @@ func NlpRegister(hook cmn.NetHookInterface) {
 }
 
 func iSBlackListedIntf(name string, masterIdx int) bool {
+	if nNl.WhiteList != "none" {
+		filter := nNl.WLRgx.MatchString(name)
+		return !filter
+	}
+
 	if name == "lo" {
 		return true
 	}
@@ -1669,12 +1676,14 @@ func LbSessionGet(done bool) int {
 	return 0
 }
 
-func NlpInit(bgpPeerMode bool, blackList string, ipvsCompat bool) *NlH {
+func NlpInit(bgpPeerMode bool, blackList, whitelist string, ipvsCompat bool) *NlH {
 
 	nNl = new(NlH)
 
 	nNl.BlackList = blackList
 	nNl.BLRgx = regexp.MustCompile(blackList)
+	nNl.WhiteList = whitelist
+	nNl.WLRgx = regexp.MustCompile(whitelist)
 	checkInit := make(chan bool)
 	waitInit := make(chan bool)
 
