@@ -905,7 +905,12 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 				}
 			}
 		} else {
-			dat.ca.act_type = C.DP_SET_TOCP
+			mLen, _ := w.Dst.Mask.Size()
+			if mLen == 32 || mLen == 128 {
+				dat.ca.act_type = C.DP_SET_TOCP
+			} else {
+				dat.ca.act_type = C.DP_SET_NOP
+			}
 		}
 
 		if w.RtMark > 0 {
