@@ -251,8 +251,9 @@ func DpEbpfDPLogLevel(cfg *C.struct_ebpfcfg, debug tk.LogLevelT) {
 		cfg.loglevel = 3 // LOG_WARNING
 	case tk.LogInfo:
 		cfg.loglevel = 2 // LOG_INFO
-	case tk.LogDebug:
+	case tk.LogTrace:
 		cfg.loglevel = 0 // LOG_TRACE
+	case tk.LogDebug:
 	default:
 		cfg.loglevel = 1 // LOG_DEBUG
 	}

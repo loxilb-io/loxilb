@@ -108,6 +108,8 @@ func (mh *loxiNetH) ParamSet(param cmn.ParamMod) (int, error) {
 func (mh *loxiNetH) ParamGet(param *cmn.ParamMod) (int, error) {
 	logLevel := "n/a"
 	switch mh.logger.CurrLogLevel {
+	case tk.LogTrace:
+		logLevel = "trace"
 	case tk.LogDebug:
 		logLevel = "debug"
 	case tk.LogInfo:
