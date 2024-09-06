@@ -3,6 +3,7 @@ kind: Service
 metadata:
   name: sctp-lb-fullnat
   annotations:
+    #loxilb.io/num-secondary-networks: "2"
    loxilb.io/liveness: "yes"
    loxilb.io/lbmode: "fullnat"
 spec:
@@ -25,7 +26,10 @@ metadata:
 spec:
   containers:
     - name: sctp-fullnat-test
+      #image: loxilbio/sctp-darn:latest
       image: ghcr.io/loxilb-io/alpine-socat:latest
+      imagePullPolicy: Always
+      #command: ["sctp_darn","-H", "0.0.0.0","-P", "9999", "-l"]
       command: [ "sh", "-c"]
       args:
       - while true; do
