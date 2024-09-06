@@ -75,6 +75,9 @@ func LogString2Level(logStr string) tk.LogLevelT {
 		logLevel = tk.LogCritical
 	case "emergency":
 		logLevel = tk.LogEmerg
+	case "trace":
+		logLevel = tk.LogTrace
+	case "debug":
 	default:
 		logLevel = tk.LogDebug
 	}
