@@ -41,6 +41,16 @@ rules:
       - patch
       - update
   - apiGroups:
+      - gateway.networking.k8s.io
+    resources:
+      - gatewayclasses
+      - gatewayclasses/status
+      - gateways
+      - gateways/status
+      - tcproutes
+      - udproutes
+    verbs: ["get", "watch", "list", "patch", "update"]
+  - apiGroups:
       - discovery.k8s.io
     resources:
       - endpointslices
@@ -60,6 +70,51 @@ rules:
       - subjectaccessreviews
     verbs:
       - create
+  - apiGroups:
+      - bgppeer.loxilb.io
+    resources:
+      - bgppeerservices
+    verbs:
+      - get
+      - watch
+      - list
+      - create
+      - update
+      - delete
+  - apiGroups:
+      - bgppolicydefinedsets.loxilb.io
+    resources:
+      - bgppolicydefinedsetsservices
+    verbs:
+      - get
+      - watch
+      - list
+      - create
+      - update
+      - delete
+  - apiGroups:
+      - bgppolicydefinition.loxilb.io
+    resources:
+      - bgppolicydefinitionservices
+    verbs:
+      - get
+      - watch
+      - list
+      - create
+      - update
+      - delete
+  - apiGroups:
+      - bgppolicyapply.loxilb.io
+    resources:
+      - bgppolicyapplyservices
+    verbs:
+      - get
+      - watch
+      - list
+      - create
+      - update
+      - delete
+
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -80,26 +135,22 @@ metadata:
   name: kube-loxilb
   namespace: kube-system
   labels:
-    app: loxilb
+    app: kube-loxilb-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: loxilb
+      app: kube-loxilb-app
   template:
     metadata:
       labels:
-        app: loxilb
+        app: kube-loxilb-app
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       tolerations:
-        - effect: NoSchedule
-          operator: Exists
         # Mark the pod as a critical add-on for rescheduling.
         - key: CriticalAddonsOnly
-          operator: Exists
-        - effect: NoExecute
           operator: Exists
       priorityClassName: system-node-critical
       serviceAccountName: kube-loxilb
@@ -112,12 +163,13 @@ spec:
         - /bin/kube-loxilb
         args:
         #- --loxiURL=http://192.168.80.10:11111
-        - --externalCIDR=123.123.123.1/24
-        - --setBGP=64512
-        - --listenBGPPort=1791
+        - --externalCIDR=192.168.80.5/32
+        #- --externalSecondaryCIDRs=124.124.124.1/24,125.125.125.1/24
+        #- --setBGP=64512
+        #- --listenBGPPort=1791
         - --setRoles=0.0.0.0
         #- --monitor
-        #- --setBGP
+        #- --extBGPPeers=50.50.50.1:65101,51.51.51.1:65102
         #- --setLBMode=1
         #- --config=/opt/loxilb/agent/kube-loxilb.conf
         resources:
