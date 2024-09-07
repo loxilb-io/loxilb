@@ -53,5 +53,6 @@ EOF
 kubectl apply -f https://raw.githubusercontent.com/techiescamp/kubeadm-scripts/main/manifests/metrics-server.yaml
 
 # Install loxilb
+curl -sfL https://github.com/loxilb-io/loxilb-ebpf/raw/main/kprobe/install.sh | sh -
 kubectl apply -f /vagrant/yaml/kube-loxilb.yaml
 kubectl apply -f /vagrant/yaml/loxilb.yaml
