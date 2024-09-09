@@ -536,8 +536,8 @@ function create_lb_rule() {
   echo "$1: loxicmd create lb ${args[*]}"
   $dexec $1 loxicmd create lb ${args[*]}
 
-  hook=$($dexec llb1 tc filter show dev eth0 ingress | grep tc_packet_hook)
-  if [[ $hook != *"tc_packet_hook"* ]]; then
+  hook=$($dexec $1 tc filter show dev eth0 ingress | grep tc_packet_func)
+  if [[ $hook != *"tc_packet_func"* ]]; then
     echo "ERROR : No hook point found";
     exit 1
   fi

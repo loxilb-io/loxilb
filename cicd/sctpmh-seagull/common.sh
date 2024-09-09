@@ -12,10 +12,14 @@ dexec="sudo docker exec -i "
 hns="sudo ip netns "
 hexist="$vrn$hn"
 lxdocker="ghcr.io/loxilb-io/loxilb:latest"
-var=$(lsb_release -r | cut -f2)
-if [[ $var == *"22.04"* ]];then
-  lxdocker="ghcr.io/loxilb-io/loxilb:latestU22"
-fi
+hostdocker="ghcr.io/loxilb-io/nettest:latest"
+cluster_opts=""
+extra_opts=""
+ka_opts=""
+#var=$(lsb_release -r | cut -f2)
+#if [[ $var == *"22.04"* ]];then
+#  lxdocker="ghcr.io/loxilb-io/loxilb:latestu22"
+#fi
 
 loxilbs=()
 
@@ -30,11 +34,9 @@ pull_dockers() {
   ## loxilb docker
   docker pull $lxdocker
   ## Host docker 
-  docker pull eyes852/ubuntu-iperf-test:0.5
+  docker pull docker pull $hostdocker
   ## BGP host docker
   docker pull ewindisch/quagga
-  ## Keepalive docker
-  docker pull osixia/keepalived:2.0.20
 }
 
 ## Creates a docker host
@@ -81,6 +83,10 @@ spawn_docker_host() {
       fi
       shift 2
       ;;
+    -e | --extra-args)
+      extra_opts="$2"
+      shift 2
+      ;;
     -*|--*)
       echo "Unknown option $1"
       exit
@@ -101,34 +107,14 @@ spawn_docker_host() {
         bgp_conf="-v $bpath:/etc/gobgp/"
       fi
     fi
-    if [[ "$dname" == "llb1" ]]; then
-      cluster_opts=" --cluster=172.17.0.3 --self=0"
-    elif [[ "$dname" == "llb2" ]]; then
-      cluster_opts=" --cluster=172.17.0.2 --self=1"
-    fi
-
     if [[ ! -z ${ka+x} ]]; then
       sudo mkdir -p /etc/shared/$dname/
-      if [[ "$ka" == "in" ]];then
-        ka_opts="-k in"
-        if [[ ! -z "$kpath" ]]; then
-            ka_conf="-v $kpath:/etc/keepalived/" 
-        fi
-      fi
-      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config $ka_conf --name $dname $lxdocker
-      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $ka_opts
-
-      if [[ "$ka" == "out" ]];then
-        ka_opts="-k out"
-        if [[ ! -z "$kpath" ]]; then
-            ka_conf="-v $kpath:/container/service/keepalived/assets/" 
-        fi
-
-        docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit --network=container:$dname $ka_conf -v /etc/shared/$dname:/etc/shared --name ka_$dname osixia/keepalived:2.0.20
-      fi
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --pid=host --cgroupns=host --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config --name $dname $lxdocker
+      get_llb_peerIP $dname
+      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $ka_opts $extra_opts
     else
-      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname $lxdocker $bgp_opts
-      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --pid=host --cgroupns=host --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname $lxdocker $bgp_opts
+      docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $extra_opts
     fi
   elif [[ "$dtype" == "host" ]]; then
     if [[ ! -z "$bpath" ]]; then
@@ -137,8 +123,11 @@ spawn_docker_host() {
     if [[ "$bgp" == "yes" || ! -z "$bpath" ]]; then
       docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit $bgp_conf --name $dname ewindisch/quagga
     else
-      docker run -u root --cap-add SYS_ADMIN -dit --name $dname eyes852/ubuntu-iperf-test:0.5
+      docker run -u root --cap-add SYS_ADMIN -dit --name $dname $hostdocker
     fi
+  elif [[ "$dtype" == "seahost" ]]; then
+      docker run -u root --cap-add SYS_ADMIN -i -t --rm --detach --entrypoint /bin/bash --name $dname  ghcr.io/loxilb-io/seagull:ubuntu1804
+      docker exec -dit $dname ifconfig eth0 0
   fi
 
   pid=""
@@ -156,20 +145,50 @@ spawn_docker_host() {
   $hexec $dname ifconfig lo up
   $hexec $dname sysctl net.ipv6.conf.all.disable_ipv6=1 2>&1 >> /dev/null
   #$hexec $dname sysctl net.ipv4.conf.all.arp_accept=1 2>&1 >> /dev/null
-  $hexec $dname sysctl net.ipv4.conf.eth0.arp_ignore=2 2>&1 >> /dev/null
+  if [ -f /proc/sys/net/ipv4/conf/eth0/arp_ignore ]; then
+    $hexec $dname sysctl net.ipv4.conf.eth0.arp_ignore=2 2>&1 >> /dev/null
+  fi
+}
+
+## Get loxilb peer docker IP
+get_llb_peerIP() {
+   if [[ "$1" == "llb1" ]]; then
+      llb1IP=$(docker inspect --format='{{.NetworkSettings.IPAddress}}' llb1)
+      if [[ "lb$llb1IP" == "lb" ]];then
+        llb2IP="172.17.0.3"
+      else
+        read A B C D <<<"${llb1IP//./ }"
+        llb2IP="$A.$B.$C.$((D+1))"
+      fi
+      cluster_opts=" --cluster=$llb2IP --self=0"
+      ka_opts=" --ka=$llb2IP:$llb1IP"
+    elif [[ "$1" == "llb2" ]]; then
+      llb2IP=$(docker inspect --format='{{.NetworkSettings.IPAddress}}' llb2)
+      if [[ "lb$llb2IP" == "lb" ]];then
+        llb1IP="172.17.0.2"
+      else
+        read A B C D <<<"${llb2IP//./ }"
+        llb1IP="$A.$B.$C.$((D-1))"
+      fi
+      cluster_opts=" --cluster=$llb1IP --self=1"
+      ka_opts=" --ka=$llb1IP:$llb2IP"
+    fi
 }
 
 ## Deletes a docker host
 ## arg1 - hostname 
 delete_docker_host() {
-  id=`docker ps -f name=$1| grep -w $1 | cut  -d " "  -f 1 | grep -iv  "CONTAINER"`
-  if [ "$id" != "" ]; then
-    docker stop $1 2>&1 >> /dev/null
+  dcmd="kill"
+  if [[ $1 == "llb"* ]] || [[ $1 == "loxilb"* ]]; then
+    dcmd="stop"
+  fi
+  if docker $dcmd $1 2>&1 >> /dev/null
+  then
     hd="true"
     ka=`docker ps -f name=ka_$1| grep -w ka_$1 | cut  -d " "  -f 1 | grep -iv  "CONTAINER"`
     loxilbs=( "${loxilbs[@]/$1}" )
     if [ "$ka" != "" ]; then
-      docker stop ka_$1 2>&1 >> /dev/null
+      docker kill ka_$1 2>&1 >> /dev/null
       docker rm ka_$1 2>&1 >> /dev/null
     fi
   fi
@@ -177,9 +196,7 @@ delete_docker_host() {
     $hns del $1
     sudo rm -fr "$hexist/$1" 2>&1 >> /dev/null
   fi
-  if [ "$id" != "" ]; then
-    docker rm $1 2>&1 >> /dev/null
-  fi
+  docker rm $1 2>&1 >> /dev/null || true
 }
 
 ## Connects two docker hosts
@@ -461,10 +478,10 @@ create_docker_host_vxlan() {
   #echo "$h1:$link1->$h2:$link2"
 
   if [[ "$uifType" == "phy" ]]; then
-    sudo ip -n $h1 link add vxlan$vxid type vxlan id $vxid local $lip dev $link1 dstport 4789
+    sudo ip -n $h1 link add vxlan$vxid type vxlan id $vxid local $lip dev $link1 dstport 0
     sudo ip -n $h1 link set vxlan$vxid up
   elif [[ "$uifType" == "vlan" ]]; then
-    sudo ip -n $h1 link add vxlan$vxid type vxlan id $vxid local $lip dev vlan$vid dstport 4789
+    sudo ip -n $h1 link add vxlan$vxid type vxlan id $vxid local $lip dev vlan$vid dstport 0
     sudo ip -n $h1 link set vxlan$vxid up
   fi
 

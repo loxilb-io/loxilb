@@ -561,7 +561,7 @@ function create_lb_rule() {
     return
   fi
 
-  hook=$($dexec llb1 tc filter show dev eth0 ingress | grep tc_packet_func)
+  hook=$($dexec $1 tc filter show dev eth0 ingress | grep tc_packet_func)
   if [[ $hook != *"tc_packet_func"* ]]; then
     echo "ERROR : No hook point found";
     exit 1
