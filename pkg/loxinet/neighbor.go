@@ -361,11 +361,13 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 	zeroHwAddr, _ := net.ParseMAC("00:00:00:00:00:00")
 	ne, found := n.NeighMap[key]
 
+	add2Map := !found
+
 	port := n.Zone.Ports.PortFindByOSID(Attr.OSLinkIndex)
 	if port == nil {
 		tk.LogIt(tk.LogError, "neigh add - %s:%s no oport\n", Addr.String(), Zone)
 		if !found {
-			n.NeighMap[key] = &Neigh{Dummy: true, Attr: Attr, NhRtm: make(map[RtKey]*Rt)}
+			n.NeighMap[key] = &Neigh{Key: key, Dummy: true, Addr: Addr, Attr: Attr, Inactive: true, NhRtm: make(map[RtKey]*Rt)}
 		} else {
 			ne.Dummy = true
 			ne.OifPort = nil
@@ -392,14 +394,13 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 	ra := RtAttr{0, 0, true, Attr.OSLinkIndex, false}
 	na := []RtNhAttr{{Addr, Attr.OSLinkIndex}}
 
-	if found == true {
+	if found {
 		ne.Inactive = false
 		ne.Dummy = false
-		if bytes.Equal(Attr.HardwareAddr, zeroHwAddr) == true {
+		if bytes.Equal(Attr.HardwareAddr, zeroHwAddr) {
 			ne.Resolved = false
 		} else {
-			if bytes.Equal(Attr.HardwareAddr, ne.Attr.HardwareAddr) == false ||
-				ne.Resolved == false {
+			if !bytes.Equal(Attr.HardwareAddr, ne.Attr.HardwareAddr) || !ne.Resolved {
 				ne.Attr.HardwareAddr = Attr.HardwareAddr
 				ne.Resolved = true
 				n.NeighRecursiveResolve(ne)
@@ -412,30 +413,34 @@ func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error)
 		return NeighExistsErr, errors.New("nh exists")
 	}
 
-	idx, err = n.NeighID.GetCounter()
-	if err != nil {
-		tk.LogIt(tk.LogError, "neigh add - %s:%s no marks\n", Addr.String(), Zone)
-		return NeighRangeErr, errors.New("nh-hwm error")
-	}
-
 	if ne == nil {
 		ne = new(Neigh)
+		ne.Key = key
+	}
+
+	if ne.Mark == 0 {
+		idx, err = n.NeighID.GetCounter()
+		if err != nil {
+			tk.LogIt(tk.LogError, "neigh add - %s:%s no marks\n", Addr.String(), Zone)
+			return NeighRangeErr, errors.New("nh-hwm error")
+		}
+		ne.Mark = idx
 	}
 
 	ne.Dummy = false
-	ne.Key = key
 	ne.Addr = Addr
 	ne.Attr = Attr
 	ne.OifPort = port
-	ne.Mark = idx
 	ne.Type |= NhNormal
 	if ne.NhRtm == nil {
 		ne.NhRtm = make(map[RtKey]*Rt)
 	}
 	ne.Inactive = false
-
 	n.NeighRecursiveResolve(ne)
-	n.NeighMap[ne.Key] = ne
+
+	if add2Map {
+		n.NeighMap[ne.Key] = ne
+	}
 	ne.DP(DpCreate)
 
 NhExist:
@@ -451,17 +456,11 @@ NhExist:
 	//Add a related L2 Pair entry if needed
 	if port.IsSlavePort() == false && port.IsLeafPort() == true && ne.Resolved {
 		var fdbAddr [6]byte
-		var vid int
 		for i := 0; i < 6; i++ {
 			fdbAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 		}
-		if port.SInfo.PortType&cmn.PortReal != 0 {
-			vid = port.PortNo + RealPortIDB
-		} else {
-			vid = port.PortNo + BondIDB
-		}
 
-		fdbKey := FdbKey{fdbAddr, vid}
+		fdbKey := FdbKey{fdbAddr, port.L2.Vid}
 		fdbAttr := FdbAttr{port.Name, net.ParseIP("0.0.0.0"), cmn.FdbPhy}
 
 		code, err := n.Zone.L2.L2FdbAdd(fdbKey, fdbAttr)
@@ -485,7 +484,7 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 	key := NeighKey{Addr.String(), Zone}
 
 	ne, found := n.NeighMap[key]
-	if found == false {
+	if !found {
 		tk.LogIt(tk.LogError, "neigh delete - %s:%s doesnt exist\n", Addr.String(), Zone)
 		return NeighNoEntErr, errors.New("no-nh error")
 	}
@@ -513,17 +512,11 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 	port := ne.OifPort
 	if port != nil && port.IsSlavePort() == false && port.IsLeafPort() == true && ne.Resolved {
 		var fdbAddr [6]byte
-		var vid int
 		for i := 0; i < 6; i++ {
 			fdbAddr[i] = uint8(ne.Attr.HardwareAddr[i])
 		}
-		if port.SInfo.PortType&cmn.PortReal != 0 {
-			vid = port.PortNo + RealPortIDB
-		} else {
-			vid = port.PortNo + BondIDB
-		}
 
-		fdbKey := FdbKey{fdbAddr, vid}
+		fdbKey := FdbKey{fdbAddr, port.L2.Vid}
 		n.Zone.L2.L2FdbDel(fdbKey)
 	}
 
@@ -607,12 +600,12 @@ func (n *NeighH) NeighPairRt(ne *Neigh, rt *Rt) int {
 func (n *NeighH) NeighUnPairRt(ne *Neigh, rt *Rt) int {
 
 	_, found := ne.NhRtm[rt.Key]
-	if found == false {
+	if !found {
 		return -1
 	}
 
 	delete(ne.NhRtm, rt.Key)
-	if len(ne.NhRtm) < 1 && ne.Inactive == true {
+	if len(ne.NhRtm) < 1 && ne.Inactive {
 		// Safely remove
 		tk.LogIt(tk.LogDebug, "neigh rt unpair - %s->%s\n", rt.Key.RtCidr, ne.Key.NhString)
 		n.NeighDelete(ne.Addr, ne.Key.Zone)
@@ -664,7 +657,6 @@ func (n *NeighH) NeighTicker(ne *Neigh) {
 
 		_, err := zone.Nh.NeighAdd(net.ParseIP(ne.Key.NhString), ne.Key.Zone, ne.Attr)
 		if err == nil {
-
 			tk.LogIt(tk.LogInfo, "nh defer added - %s:%s\n", ne.Key.NhString, ne.Key.Zone)
 		}
 

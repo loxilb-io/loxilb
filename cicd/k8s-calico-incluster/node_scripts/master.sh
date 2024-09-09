@@ -10,13 +10,12 @@ sudo kubeadm config images pull
 
 echo "Preflight Check Passed: Downloaded All Required Images"
 
-sudo kubeadm init --apiserver-advertise-address=$CONTROL_IP --apiserver-cert-extra-sans=$CONTROL_IP --pod-network-cidr=$POD_CIDR --service-cidr=$SERVICE_CIDR --node-name "$NODENAME" --ignore-preflight-errors Swap
+#sudo kubeadm init --apiserver-advertise-address=$CONTROL_IP --apiserver-cert-extra-sans=$CONTROL_IP --pod-network-cidr=$POD_CIDR --service-cidr=$SERVICE_CIDR --node-name "$NODENAME" --ignore-preflight-errors Swap
+sudo kubeadm init --ignore-preflight-errors Swap --config /vagrant/yaml/kubeadm-config.yaml
 
 mkdir -p "$HOME"/.kube
 sudo cp -i /etc/kubernetes/admin.conf "$HOME"/.kube/config
 sudo chown "$(id -u)":"$(id -g)" "$HOME"/.kube/config
-
-curl -sfL https://github.com/loxilb-io/loxilb-ebpf/raw/main/kprobe/install.sh | sh -
 
 # Save Configs to shared /Vagrant location
 
@@ -54,6 +53,6 @@ EOF
 kubectl apply -f https://raw.githubusercontent.com/techiescamp/kubeadm-scripts/main/manifests/metrics-server.yaml
 
 # Install loxilb
-kubectl apply -f /vagrant/yaml/loxilb.yml
-kubectl apply -f /vagrant/yaml/loxilb-peer.yml
-kubectl apply -f /vagrant/yaml/kube-loxilb.yml
+curl -sfL https://github.com/loxilb-io/loxilb-ebpf/raw/main/kprobe/install.sh | sh -
+kubectl apply -f /vagrant/yaml/kube-loxilb.yaml
+kubectl apply -f /vagrant/yaml/loxilb.yaml

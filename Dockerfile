@@ -21,27 +21,19 @@ RUN mkdir -p /opt/loxilb && \
     apt-get update && apt-get install -y wget && \
     arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && if [ "$arch" = "arm64" ] ; then apt-get install -y gcc-multilib-arm-linux-gnueabihf; else apt-get update && apt-get install -y  gcc-multilib;fi && \
     # Arch specific packages - GoLang
-    wget https://go.dev/dl/go1.22.0.linux-${arch}.tar.gz && tar -xzf go1.22.0.linux-${arch}.tar.gz --directory /usr/local/ && rm go1.22.0.linux-${arch}.tar.gz && \
+    wget https://go.dev/dl/go1.23.0.linux-${arch}.tar.gz && tar -xzf go1.23.0.linux-${arch}.tar.gz --directory /usr/local/ && rm go1.23.0.linux-${arch}.tar.gz && \
     # Dev and util packages
-    apt-get install -y clang llvm libelf-dev libpcap-dev vim net-tools \
+    apt-get install -y clang llvm libelf-dev libpcap-dev vim net-tools ca-certificates \
     elfutils dwarves git libbsd-dev bridge-utils wget unzip build-essential \
     bison flex sudo iproute2 pkg-config tcpdump iputils-ping curl bash-completion && \
-    # Install openssl-3.0.0
-    wget https://www.openssl.org/source/openssl-3.0.0.tar.gz && tar -xvzf openssl-3.0.0.tar.gz && \
-    cd openssl-3.0.0 && ./Configure enable-ktls '-Wl,-rpath,$(LIBRPATH)' --prefix=/usr/local/build && \
+    # Install openssl-3.3.1
+    wget https://github.com/openssl/openssl/releases/download/openssl-3.3.1/openssl-3.3.1.tar.gz && tar -xvzf openssl-3.3.1.tar.gz && \
+    cd openssl-3.3.1 && ./Configure enable-ktls '-Wl,-rpath,$(LIBRPATH)' --prefix=/usr/local/build && \
     make -j$(nproc) && make install_dev install_modules && cd - && \
     cp -a /usr/local/build/include/openssl /usr/include/ && \
     if [ -d /usr/local/build/lib64  ] ; then mv /usr/local/build/lib64  /usr/local/build/lib; fi && \
     cp -fr /usr/local/build/lib/* /usr/lib/ && ldconfig && \
-    rm -fr openssl-3.0.0*  && \
-    # Install loxilb's custom ntc tool
-    wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
-    unzip main.zip && cd iproute2-main/ && rm -fr libbpf && wget https://github.com/loxilb-io/libbpf/archive/refs/heads/main.zip && \
-    unzip main.zip && mv libbpf-main libbpf && cd libbpf/src/ && mkdir build && \
-    make install && DESTDIR=build OBJDIR=build make install && cd - && \
-    export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:`pwd`/libbpf/src/ && \
-    LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && \
-    cp -f tc/tc /usr/local/sbin/ntc && cd .. && rm -fr main.zip iproute2-main && \
+    rm -fr openssl-3.3.1*  && \
     # Install bpftool
     wget https://github.com/libbpf/bpftool/releases/download/v7.2.0/bpftool-libbpf-v7.2.0-sources.tar.gz && \
     tar -xvzf bpftool-libbpf-v7.2.0-sources.tar.gz && cd bpftool/src/ && \
@@ -65,8 +57,8 @@ RUN mkdir -p /opt/loxilb && \
     rm -fr /root/loxilb-io/loxilb/.github && mkdir -p /root/loxilb-io/loxilb/ && \
     cp /usr/local/sbin/loxilb /root/loxilb-io/loxilb/loxilb && rm /usr/local/sbin/loxilb && \
     # Install gobgp
-    wget https://github.com/osrg/gobgp/releases/download/v3.5.0/gobgp_3.5.0_linux_amd64.tar.gz && \
-    tar -xzf gobgp_3.5.0_linux_amd64.tar.gz &&  rm gobgp_3.5.0_linux_amd64.tar.gz && \
+    wget https://github.com/osrg/gobgp/releases/download/v3.29.0/gobgp_3.29.0_linux_${arch}.tar.gz && \
+    tar -xzf gobgp_3.29.0_linux_${arch}.tar.gz &&  rm gobgp_3.29.0_linux_${arch}.tar.gz && \
     mv gobgp* /usr/sbin/ && rm LICENSE README.md && \
     apt-get purge -y clang llvm libelf-dev libpcap-dev libbsd-dev build-essential \
     elfutils dwarves git bison flex wget unzip && apt-get -y autoremove && \
@@ -96,7 +88,7 @@ ENV PATH="${PATH}:/usr/local/go/bin"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
 
 RUN apt-get update && apt-get install -y --no-install-recommends sudo \
-    libbsd-dev iproute2 tcpdump bridge-utils net-tools libllvm10 && \
+    libbsd-dev iproute2 tcpdump bridge-utils net-tools libllvm10 ca-certificates && \
     rm -rf /var/lib/apt/lists/* && apt clean
 
 COPY --from=build /usr/lib64/libbpf* /usr/lib64/
@@ -108,7 +100,6 @@ COPY --from=build /usr/local/sbin/loxilb_dp_debug /usr/local/sbin/loxilb_dp_debu
 COPY --from=build /usr/local/sbin/loxicmd /usr/local/sbin/loxicmd
 COPY --from=build /opt/loxilb /opt/loxilb
 COPY --from=build /root/loxilb-io/loxilb/loxilb /root/loxilb-io/loxilb/loxilb
-COPY --from=build /usr/local/sbin/ntc /usr/local/sbin/ntc
 COPY --from=build /usr/local/sbin/bpftool /usr/local/sbin/bpftool
 COPY --from=build /usr/sbin/gobgp* /usr/sbin/
 COPY --from=build /root/.bashrc /root/.bashrc

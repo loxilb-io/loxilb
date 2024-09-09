@@ -1,0 +1,95 @@
+name: Adv-LB-Sanity-CI-Ubuntu-24
+
+on:
+  schedule:
+  # Runs "At 11:00 UTC every day-of-week"
+  - cron: '0 11 * * *'
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'     
+        required: true
+        default: 'warning'
+      tags:
+        description: 'Advanced LB Sanity ubuntu 24'
+  workflow_run:
+    workflows: ["Docker-Multi-Arch"]
+    types:
+      - completed
+       
+jobs:
+  build:
+    name: advanced-lb-sanity-ubuntu-24
+    runs-on: ubuntu-24.04
+    if: github.repository == 'loxilb-io/loxilb'
+          &&  github.event.inputs.tagName == ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v2
+      - uses: actions/setup-go@v3
+        with:
+             go-version: '>=1.18.0'
+      - run: sudo apt-get update
+      - run: sudo apt-get -y install  linux-tools-$(uname -r) bridge-utils iperf iproute2 nodejs socat ethtool lksctp-tools
+      - run: |
+             cd cicd/k8slbsim/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/onearml2/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/ulcltcplb/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/ulclsctplb/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/tcptunlb/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/sctptunlb/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/wrrtcplb1/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/wrrtcplb2/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/nat64tcp/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/tcplbmaxep/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -

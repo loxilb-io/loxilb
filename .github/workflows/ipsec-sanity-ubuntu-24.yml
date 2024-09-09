@@ -1,0 +1,57 @@
+name: IPsec-Sanity-CI-Ubuntu-24
+
+on:
+  schedule:
+  # Runs "At 11:00 UTC every day-of-week"
+  - cron: '0 11 * * *'
+  workflow_dispatch:
+    inputs:
+      userInput:
+        description: 'Enter string to print at end'
+        required: true
+        default: 'Finished'
+      tags:
+        description: 'IPSec Sanity Ubuntu 24'
+  workflow_run:
+    workflows: ["Docker-Multi-Arch"]
+    types:
+      - completed
+jobs:
+  build:
+    name: ipsec-sanity-ubuntu-24
+    runs-on: ubuntu-24.04
+    if: github.repository == 'loxilb-io/loxilb'
+          &&  github.event.inputs.tagName == ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v2
+      - uses: actions/setup-go@v3
+        with:
+             go-version: '>=1.18.0'
+      - run: |
+             cd cicd/ipsec1/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/ipsec2/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/ipsec3/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/ipsec-e2e/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: echo ${{ github.event.inputs.userInput }}

@@ -234,6 +234,71 @@ paths:
           description: Maintanence mode
           schema:
             $ref: '#/definitions/Error'
+  '/config/loadbalancer/hosturl/{hosturl}/externalipaddress/{ip_address}/port/{port}/protocol/{proto}':
+    delete:
+      summary: Delete an existing Load balancer service
+      description: Delete an existing load balancer service with .
+      parameters:
+        - name: hosturl
+          in: path
+          type: string
+          required: true
+          description: Attributes for load balance service
+        - name: ip_address
+          in: path
+          type: string
+          required: true
+          description: Attributes for load balance service
+        - name: port
+          in: path
+          type: number
+          required: true
+          description: Attributes for load balance service
+        - name: proto
+          in: path
+          type: string
+          required: true
+          description: Attributes for load balance service
+        - name: bgp
+          in: query
+          type: boolean
+          description: option for BGP enable
+        - name: block
+          in: query
+          type: number
+          required: false
+          description: block value if any
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintanence mode
+          schema:
+            $ref: '#/definitions/Error'
 #----------------------------------------------
 # Conntrack
 #----------------------------------------------
@@ -2835,7 +2900,10 @@ definitions:
         properties:
           externalIP:
             type: string
-            description: IP address for externel access
+            description: IP address for external access
+          privateIP:
+            type: string
+            description: private IP (NAT'd) address for external access
           port:
             type: integer
             description:  port number for the access
@@ -2901,6 +2969,9 @@ definitions:
             type: integer
             format: int32
             description: end-point specific op (0-create, 1-attachEP, 2-detachEP)
+          host:
+            type: string
+            description: Ingress specific host URL path
       
       endpoints:
         type: array
@@ -2958,7 +3029,7 @@ definitions:
         type: integer
         description: index of the route 
       protocol:
-        type: integer
+        type: string
         description: Route protocol
       flags:
         type: string

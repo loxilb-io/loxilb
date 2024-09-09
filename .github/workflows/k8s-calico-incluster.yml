@@ -1,0 +1,36 @@
+name: K8s-Calico-Incluster-Sanity-CI
+on:
+ # schedule:
+ # Runs "At 11:00 UTC every day-of-week"
+ #- cron: '0 11 * * *'
+ workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'k8s-calico-incluster'
+jobs:
+  test-runner:
+    name: k8s-calico-incluster-sanity
+    runs-on: [self-hosted, large]
+    if: github.repository == 'loxilb-io/loxilb' 
+          &&  github.event.inputs.tagName == ''
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+          submodules: recursive
+
+    - name: Run the test
+      run: |
+         cd cicd/k8s-calico-incluster
+         ./config.sh
+         ./validation.sh
+         cd -
+         
+    - name: Clean test-bed
+      if: success() || failure()
+      run: |
+        cd cicd/k8s-calico-incluster || true
+        ./rmconfig.sh
+        cd -

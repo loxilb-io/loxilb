@@ -86,6 +86,8 @@ type NlH struct {
 	IMap      map[string]Intf
 	BlackList string
 	BLRgx     *regexp.Regexp
+	WhiteList string
+	WLRgx     *regexp.Regexp
 }
 
 var (
@@ -97,7 +99,12 @@ func NlpRegister(hook cmn.NetHookInterface) {
 	hooks = hook
 }
 
-func iSBlackListedIntf(name string, masterIdx int) bool {
+func NlpIsBlackListedIntf(name string, masterIdx int) bool {
+	if nNl.WhiteList != "none" {
+		filter := nNl.WLRgx.MatchString(name)
+		return !filter
+	}
+
 	if name == "lo" {
 		return true
 	}
@@ -1189,8 +1196,18 @@ func AddRoute(route nlp.Route) int {
 		ipNet = *route.Dst
 	}
 
-	ret, err := hooks.NetRouteAdd(&cmn.RouteMod{Protocol: int(route.Protocol), Flags: route.Flags,
-		Gw: route.Gw, LinkIndex: route.LinkIndex, Dst: ipNet})
+	var gws []cmn.GWInfo
+
+	if len(route.MultiPath) <= 0 {
+		gw := cmn.GWInfo{Gw: route.Gw, LinkIndex: route.LinkIndex}
+		gws = append(gws, gw)
+	} else {
+		for i := range route.MultiPath {
+			gws = append(gws, cmn.GWInfo{Gw: route.MultiPath[i].Gw, LinkIndex: route.MultiPath[i].LinkIndex})
+		}
+	}
+
+	ret, err := hooks.NetRouteAdd(&cmn.RouteMod{Protocol: int(route.Protocol), Flags: route.Flags, Dst: ipNet, GWs: gws})
 	if err != nil {
 		if route.Gw != nil {
 			tk.LogIt(tk.LogError, "[NLP] RT  %s via %s proto %d add failed-%s\n", ipNet.String(),
@@ -1279,7 +1296,7 @@ func DelRoute(route nlp.Route) int {
 func LUWorkSingle(m nlp.LinkUpdate) int {
 	var ret int
 
-	if iSBlackListedIntf(m.Link.Attrs().Name, m.Link.Attrs().MasterIndex) {
+	if NlpIsBlackListedIntf(m.Link.Attrs().Name, m.Link.Attrs().MasterIndex) {
 		return -1
 	}
 
@@ -1332,7 +1349,7 @@ func NUWorkSingle(m nlp.NeighUpdate) int {
 		return -1
 	}
 
-	if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+	if NlpIsBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 		return -1
 	}
 
@@ -1350,14 +1367,28 @@ func NUWorkSingle(m nlp.NeighUpdate) int {
 func RUWorkSingle(m nlp.RouteUpdate) int {
 	var ret int
 
-	link, err := nlp.LinkByIndex(m.LinkIndex)
-	if err != nil {
-		fmt.Println(err)
-		return -1
-	}
+	if len(m.MultiPath) <= 0 {
+		link, err := nlp.LinkByIndex(m.LinkIndex)
+		if err != nil {
+			tk.LogIt(tk.LogError, "RUWorkSingle: link find error %s\n", err)
+			return -1
+		}
 
-	if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
-		return -1
+		if NlpIsBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+			return -1
+		}
+	} else {
+		for _, path := range m.MultiPath {
+			link, err := nlp.LinkByIndex(path.LinkIndex)
+			if err != nil {
+				tk.LogIt(tk.LogError, "RUWorkSingle: link find error %s\n", err)
+				return -1
+			}
+
+			if NlpIsBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+				return -1
+			}
+		}
 	}
 
 	if skipIfRoute {
@@ -1430,7 +1461,7 @@ func NLWorker(nNl *NlH, bgpPeerMode bool, ch chan bool, wch chan bool) {
 
 	defer func() {
 		if e := recover(); e != nil {
-			tk.LogIt(tk.LogCritical, "%s: %s", e, debug.Stack())
+			tk.LogIt(tk.LogCritical, "%s: %s\n", e, debug.Stack())
 		}
 		hooks.NetHandlePanic()
 		os.Exit(1)
@@ -1458,7 +1489,7 @@ func GetBridges() {
 		return
 	}
 	for _, link := range links {
-		if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+		if NlpIsBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 			continue
 		}
 		switch link.(type) {
@@ -1484,7 +1515,7 @@ func NlpGet(ch chan bool) int {
 
 	for _, link := range links {
 
-		if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+		if NlpIsBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 			continue
 		}
 
@@ -1496,7 +1527,7 @@ func NlpGet(ch chan bool) int {
 
 	for _, link := range links {
 
-		if iSBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
+		if NlpIsBlackListedIntf(link.Attrs().Name, link.Attrs().MasterIndex) {
 			// Need addresss to work with
 			addrs, err := nlp.AddrList(link, nlp.FAMILY_ALL)
 			if err != nil {
@@ -1559,25 +1590,28 @@ func NlpGet(ch chan bool) int {
 				AddNeigh(neigh, link)
 			}
 		}
+	}
 
-		/* Get Routes */
-		routes, err := nlp.RouteList(link, nlp.FAMILY_ALL)
-		if err != nil {
-			tk.LogIt(tk.LogError, "[NLP] Error getting route list %v\n", err)
-		}
+	/* Get Routes */
+	routes, err := nlp.RouteList(nil, nlp.FAMILY_ALL)
+	if err != nil {
+		tk.LogIt(tk.LogError, "[NLP] Error getting route list %v\n", err)
+	}
 
-		if len(routes) == 0 {
-			tk.LogIt(tk.LogDebug, "[NLP] No STATIC routes found for intf %s\n", link.Attrs().Name)
-		} else {
-			for _, route := range routes {
-				if skipIfRoute {
-					if route.Scope.String() == "link" && tk.IsNetIPv4(route.Dst.IP.String()) {
-						continue
-					}
+	if len(routes) == 0 {
+		tk.LogIt(tk.LogDebug, "[NLP] No STATIC routes found\n")
+	} else {
+		for _, route := range routes {
+			var m nlp.RouteUpdate
+			if skipIfRoute {
+				if route.Scope.String() == "link" && tk.IsNetIPv4(route.Dst.IP.String()) {
+					continue
 				}
-
-				AddRoute(route)
 			}
+			m.Type = syscall.RTM_NEWROUTE
+			m.Route = route
+
+			RUWorkSingle(m)
 		}
 	}
 	tk.LogIt(tk.LogInfo, "[NLP] nlp get done\n")
@@ -1642,12 +1676,14 @@ func LbSessionGet(done bool) int {
 	return 0
 }
 
-func NlpInit(bgpPeerMode bool, blackList string, ipvsCompat bool) *NlH {
+func NlpInit(bgpPeerMode bool, blackList, whitelist string, ipvsCompat bool) *NlH {
 
 	nNl = new(NlH)
 
 	nNl.BlackList = blackList
 	nNl.BLRgx = regexp.MustCompile(blackList)
+	nNl.WhiteList = whitelist
+	nNl.WLRgx = regexp.MustCompile(whitelist)
 	checkInit := make(chan bool)
 	waitInit := make(chan bool)
 

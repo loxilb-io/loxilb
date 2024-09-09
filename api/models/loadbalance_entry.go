@@ -315,8 +315,11 @@ type LoadbalanceEntryServiceArguments struct {
 	// block-number if any of this LB entry
 	Block uint16 `json:"block,omitempty"`
 
-	// IP address for externel access
+	// IP address for external access
 	ExternalIP string `json:"externalIP,omitempty"`
+
+	// Ingress specific host URL path
+	Host string `json:"host,omitempty"`
 
 	// value for inactivity timeout (in seconds)
 	InactiveTimeOut int32 `json:"inactiveTimeOut,omitempty"`
@@ -338,6 +341,9 @@ type LoadbalanceEntryServiceArguments struct {
 
 	// port number for the access
 	Port int64 `json:"port,omitempty"`
+
+	// private IP (NAT'd) address for external access
+	PrivateIP string `json:"privateIP,omitempty"`
 
 	// value for probe retries
 	ProbeRetries int32 `json:"probeRetries,omitempty"`

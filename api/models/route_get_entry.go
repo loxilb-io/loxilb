@@ -32,7 +32,7 @@ type RouteGetEntry struct {
 	HardwareMark int64 `json:"hardwareMark,omitempty"`
 
 	// Route protocol
-	Protocol int64 `json:"protocol,omitempty"`
+	Protocol string `json:"protocol,omitempty"`
 
 	// statistic
 	Statistic *RouteGetEntryStatistic `json:"statistic,omitempty"`

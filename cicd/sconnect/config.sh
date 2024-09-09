@@ -229,4 +229,4 @@ create_docker_host_vxlan --host1 llb1 --host2 l3vxh2 --id 60 --uif phy --lip 5.5
 create_docker_host_vxlan --host1 llb1 --host2 l3vxh2 --id 60 --ep 5.5.5.2
 config_docker_host --host1 llb1 --host2 l3vxh2 --ptype vlan --id 60 --addr 60.60.60.254/24
 
-sleep 25
+sleep 60

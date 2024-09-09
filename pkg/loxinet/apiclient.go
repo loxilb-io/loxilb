@@ -279,29 +279,35 @@ func (na *NetAPIStruct) NetRouteAdd(rm *cmn.RouteMod) (int, error) {
 	var ret int
 	var err error
 
+	if len(rm.GWs) <= 0 {
+		return RtNhErr, errors.New("invalid gws")
+	}
 	if na.BgpPeerMode {
 		return RtNhErr, errors.New("running in bgp only mode")
 	}
 	intfRt := false
 	mlen, _ := rm.Dst.Mask.Size()
-	if rm.Gw == nil {
+	if rm.GWs[0].Gw == nil {
 		// This is an interface route
 		if (tk.IsNetIPv4(rm.Dst.IP.String()) && mlen == 32) || (tk.IsNetIPv6(rm.Dst.IP.String()) && mlen == 128) {
 			intfRt = true
-			rm.Gw = rm.Dst.IP
+			rm.GWs[0].Gw = rm.Dst.IP
 		}
 	}
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
-	ra := RtAttr{Protocol: rm.Protocol, OSFlags: rm.Flags, HostRoute: false, Ifi: rm.LinkIndex, IfRoute: intfRt}
-	if rm.Gw != nil {
-		na := []RtNhAttr{{rm.Gw, rm.LinkIndex}}
+	ra := RtAttr{Protocol: rm.Protocol, OSFlags: rm.Flags, HostRoute: false, Ifi: rm.GWs[0].LinkIndex, IfRoute: intfRt}
+	if rm.GWs[0].Gw != nil {
+		var na []RtNhAttr
+		for _, gw := range rm.GWs {
+			na = append(na, RtNhAttr{gw.Gw, gw.LinkIndex})
+		}
 		ret, err = mh.zr.Rt.RtAdd(rm.Dst, RootZone, ra, na)
+
 	} else {
 		ret, err = mh.zr.Rt.RtAdd(rm.Dst, RootZone, ra, nil)
 	}
-
 	return ret, err
 }
 

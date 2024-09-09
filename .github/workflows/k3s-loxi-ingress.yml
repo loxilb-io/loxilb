@@ -1,0 +1,33 @@
+name: K3s-Loxi-Ingress-Sanity-CI
+on:
+ schedule:
+ # Runs "At 6:00 UTC every day-of-week"
+ - cron: '0 6 * * *'
+ workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'k3s-loxi-ingress'
+jobs:
+  build:
+    name: k3s-loxi-ingress-sanity
+    runs-on: [self-hosted, large]
+    if: github.repository == 'loxilb-io/loxilb' 
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Run K3s LoxiIngress CICD
+        run: |
+         cd cicd/k3s-flannel-loxilb-ingress
+         ./config.sh
+         ./validation.sh
+         ./rmconfig.sh
+         cd -
+      - name: Clean test-bed
+        if: success() || failure()
+        run: |
+          cd cicd/k3s-flannel-loxilb-ingress/ || true
+          ./rmconfig.sh
+          cd -

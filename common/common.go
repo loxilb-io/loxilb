@@ -369,16 +369,22 @@ type RouteGet struct {
 	Sync DpStatusT
 }
 
+// GWInfo - Info about gateway
+type GWInfo struct {
+	// Gw - gateway information if any
+	Gw net.IP
+	// LinkIndex - OS allocated index
+	LinkIndex int
+}
+
 // RouteMod - Info about a route
 type RouteMod struct {
 	// Protocol - Protocol type
 	Protocol int
 	// Flags - flag type
 	Flags int
-	// Gw - gateway information if any
-	Gw net.IP
-	// LinkIndex - OS allocated index
-	LinkIndex int
+	// GWs - gateway information if any
+	GWs []GWInfo
 	// Dst - ip addr
 	Dst net.IPNet
 }
@@ -519,14 +525,18 @@ type LBSec int32
 const (
 	// LBServPlain - Plain mode
 	LBServPlain LBSec = iota
-	// LBServHttps - HTTPS termination
-	LBServHttps
+	// LBServHTTPS - HTTPS termination
+	LBServHTTPS
+	// LBServE2EHTTPS - HTTPS proxy
+	LBServE2EHTTPS
 )
 
 // LbServiceArg - Information related to load-balancer service
 type LbServiceArg struct {
 	// ServIP - the service ip or vip  of the load-balancer rule
 	ServIP string `json:"externalIP"`
+	// PrivateIP - the private service ip or vip of the load-balancer rule
+	PrivateIP string `json:"privateIP"`
 	// ServPort - the service port of the load-balancer rule
 	ServPort uint16 `json:"port"`
 	// Proto - the service protocol of the load-balancer rule
@@ -567,6 +577,8 @@ type LbServiceArg struct {
 	PersistTimeout uint32 `json:"persistTimeout"`
 	// Snat - Do SNAT
 	Snat bool `json:"snat"`
+	// HostUrl - Ingress Specific URL path
+	HostUrl string `json:"path"`
 }
 
 // LbEndPointArg - Information related to load-balancer end-point

@@ -16,6 +16,7 @@ hostdocker="ghcr.io/loxilb-io/nettest:latest"
 cluster_opts=""
 extra_opts=""
 ka_opts=""
+docker_extra_opts=""
 #var=$(lsb_release -r | cut -f2)
 #if [[ $var == *"22.04"* ]];then
 #  lxdocker="ghcr.io/loxilb-io/loxilb:latestu22"
@@ -76,7 +77,7 @@ spawn_docker_host() {
       fi
       shift 2
       ;;
-    -d | --ka-config )
+    -n | --ka-config )
       kpath="$2"
       if [[ -z ${ka+x} ]]; then
         ka="in"
@@ -85,6 +86,10 @@ spawn_docker_host() {
       ;;
     -e | --extra-args)
       extra_opts="$2"
+      shift 2
+      ;;
+    -x | --docker-args)
+      docker_extra_opts="$2"
       shift 2
       ;;
     -*|--*)
@@ -109,11 +114,11 @@ spawn_docker_host() {
     fi
     if [[ ! -z ${ka+x} ]]; then
       sudo mkdir -p /etc/shared/$dname/
-      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --pid=host --cgroupns=host --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config --name $dname $lxdocker
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt $docker_extra_opts --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v /etc/shared/$dname:/etc/shared $loxilb_config --name $dname $lxdocker
       get_llb_peerIP $dname
       docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $ka_opts $extra_opts
     else
-      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt --pid=host --cgroupns=host --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname $lxdocker $bgp_opts
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt $docker_extra_opts --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname $lxdocker $bgp_opts
       docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $extra_opts
     fi
   elif [[ "$dtype" == "host" ]]; then
@@ -552,8 +557,12 @@ function create_lb_rule() {
   echo "$1: loxicmd create lb ${args[*]}"
   $dexec $1 loxicmd create lb ${args[*]}
 
-  hook=$($dexec llb1 ntc filter show dev eth0 ingress | grep tc_packet_hook)
-  if [[ $hook != *"tc_packet_hook"* ]]; then
+  if [[ ${args[*]} == *"--mode=fullproxy"* ]]; then
+    return
+  fi
+
+  hook=$($dexec llb1 tc filter show dev eth0 ingress | grep tc_packet_func)
+  if [[ $hook != *"tc_packet_func"* ]]; then
     echo "ERROR : No hook point found";
     exit 1
   fi

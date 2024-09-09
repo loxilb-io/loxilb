@@ -1,0 +1,53 @@
+name: NAT66-LB-Sanity-CI-Ubuntu-24
+
+on:
+  schedule:
+  # Runs "At 11:00 UTC every day-of-week"
+  - cron: '0 11 * * *'
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'     
+        required: true
+        default: 'warning'
+      tags:
+        description: 'NAT66 LB Sanity Ubuntu 24'
+  workflow_run:
+    workflows: ["Docker-Multi-Arch"]
+    types:
+      - completed
+       
+jobs:
+  build:
+    name: nat66-lb-sanity-ubuntu-24
+    runs-on: ubuntu-24.04
+    if: github.repository == 'loxilb-io/loxilb'
+          &&  github.event.inputs.tagName == ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v2
+      - uses: actions/setup-go@v3
+        with:
+             go-version: '>=1.18.0'
+      - run: sudo apt-get update
+      - run: sudo apt-get -y install linux-tools-$(uname -r) bridge-utils iperf iproute2 nodejs socat ethtool
+      - run: |
+             cd cicd/nat66tcp/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/nat66udp/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
+             cd -
+      - run: |
+             cd cicd/nat66sctp/
+             #./config.sh
+             #./validation.sh
+             #./rmconfig.sh
+             cd -

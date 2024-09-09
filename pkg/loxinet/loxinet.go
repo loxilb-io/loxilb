@@ -79,6 +79,10 @@ type loxiNetH struct {
 	eHooks      bool
 	lSockPolicy bool
 	sockMapEn   bool
+	cloudLabel  string
+	cloudHook   CloudHookInterface
+	cloudInst   string
+	disBPF      bool
 	pFile       *os.File
 }
 
@@ -104,6 +108,8 @@ func (mh *loxiNetH) ParamSet(param cmn.ParamMod) (int, error) {
 func (mh *loxiNetH) ParamGet(param *cmn.ParamMod) (int, error) {
 	logLevel := "n/a"
 	switch mh.logger.CurrLogLevel {
+	case tk.LogTrace:
+		logLevel = "trace"
 	case tk.LogDebug:
 		logLevel = "debug"
 	case tk.LogInfo:
@@ -203,14 +209,16 @@ func loxiNetInit() {
 
 	// It is important to make sure loxilb's eBPF filesystem
 	// is in place and mounted to make sure maps are pinned properly
-	if !utils.FileExists(BpfFsCheckFile) {
-		if utils.FileExists(MkfsScript) {
-			RunCommand(MkfsScript, true)
-		}
-	}
-	utils.MkTunFsIfNotExist()
+	if !opts.Opts.ProxyModeOnly {
+		if !utils.FileExists(BpfFsCheckFile) {
+			if utils.FileExists(MkfsScript) {
+				RunCommand(MkfsScript, true)
+			}
 
-	sysctlInit()
+		}
+		utils.MkTunFsIfNotExist()
+		sysctlInit()
+	}
 
 	mh.self = opts.Opts.ClusterSelf
 	mh.rssEn = opts.Opts.RssEnable
@@ -219,8 +227,19 @@ func loxiNetInit() {
 	mh.pProbe = opts.Opts.PassiveEPProbe
 	mh.lSockPolicy = opts.Opts.LocalSockPolicy
 	mh.sockMapEn = opts.Opts.SockMapSupport
+	mh.cloudLabel = opts.Opts.Cloud
+	mh.cloudHook = CloudHookNew(mh.cloudLabel)
+	mh.cloudInst = opts.Opts.CloudInstance
+	mh.disBPF = opts.Opts.ProxyModeOnly
 	mh.sigCh = make(chan os.Signal, 5)
 	signal.Notify(mh.sigCh, os.Interrupt, syscall.SIGCHLD, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
+
+	if mh.cloudHook != nil {
+		err := mh.cloudHook.CloudAPIInit(opts.Opts.CloudCIDRBlock)
+		if err != nil {
+			os.Exit(1)
+		}
+	}
 
 	// Check if profiling is enabled
 	if opts.Opts.CPUProfile != "none" {
@@ -247,7 +266,7 @@ func loxiNetInit() {
 			RunCommand(MkMountCG2, false)
 		}
 		// Initialize the ebpf datapath subsystem
-		mh.dpEbpf = DpEbpfInit(clusterMode, mh.rssEn, mh.eHooks, mh.lSockPolicy, mh.sockMapEn, mh.self, -1)
+		mh.dpEbpf = DpEbpfInit(clusterMode, mh.rssEn, mh.eHooks, mh.lSockPolicy, mh.sockMapEn, mh.self, mh.disBPF, -1)
 		mh.dp = DpBrokerInit(mh.dpEbpf, rpcMode)
 
 		// Initialize the security zone subsystem
@@ -300,7 +319,7 @@ func loxiNetInit() {
 	// Initialize the nlp subsystem
 	if !opts.Opts.NoNlp {
 		nlp.NlpRegister(NetAPIInit(opts.Opts.BgpPeerMode))
-		nlp.NlpInit(opts.Opts.BgpPeerMode, opts.Opts.BlackList, opts.Opts.IPVSCompat)
+		nlp.NlpInit(opts.Opts.BgpPeerMode, opts.Opts.BlackList, opts.Opts.WhiteList, opts.Opts.IPVSCompat)
 	}
 
 	// Initialize the k8s subsystem
