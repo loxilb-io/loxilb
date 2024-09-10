@@ -2,7 +2,7 @@
 bin=loxilb
 dock?=loxilb
 
-loxilbid=$(shell sudo docker ps -f name=$(dock) | grep -w $(dock) | cut  -d " "  -f 1 | grep -iv  "CONTAINER")
+loxilbid=$(shell docker ps -f name=$(dock) | grep -w $(dock) | cut  -d " "  -f 1 | grep -iv  "CONTAINER")
 
 subsys:
 	cd loxilb-ebpf && $(MAKE) 
