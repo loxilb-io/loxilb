@@ -1,7 +1,7 @@
 #!/bin/bash
 source ../common.sh
 source check_ha.sh
-echo -e "sctpmh: SCTP Multihoming - Multipath Failover Test. Client, LB and EP all Multihomed\n"
+echo -e "sctpmh: SCTP Multihoming - E2E Multipath Failover Test. Client, LB and EP all Multihomed\n"
 extIP="133.133.133.1"
 port=2020
 
@@ -13,7 +13,7 @@ echo -e "-----------------------------------------------------------------------
 echo -e "\nHA state Master:$master BACKUP-$backup\n"
 echo -e "\nTraffic Flow: EP ---> LB ---> User"
 
-$hexec user sctp_test -H 1.1.1.1 -B 2.2.2.1  -P 9999 -l > user.out &
+$hexec user sctp_test -H 0.0.0.0  -P 9999 -l > user.out &
 sleep 2
 
 $hexec ep1 stdbuf -oL sctp_test -H 31.31.31.1 -B 32.32.32.1 -P 20000 -h $extIP -p $port -s -m 100 -x 50000 > ep1.out &
@@ -91,7 +91,10 @@ $hexec user ip route add default via 1.1.1.254
 
 if [[ $fin == 1 && $p1 == 1 && $p2 == 1 && $p3 == 1 && $code == 0 ]]; then
     echo "sctpmh SCTP Multihoming E2E Multipath Failover [OK]"
+    echo "OK" > status4.txt
+    restart_loxilbs
 else
+    echo "NOK" > status4.txt
     echo "sctpmh SCTP Multihoming E2E Multipath Failover [NOK]"
     echo -e "\nuser"
     sudo ip netns exec user ip route
@@ -118,6 +121,7 @@ else
     $dexec llb2 loxicmd get lb
     echo "llb2 ep-info"
     $dexec llb2 loxicmd get ep
+    restart_loxilbs
     exit 1
 fi
 echo -e "------------------------------------------------------------------------------------\n\n\n"
