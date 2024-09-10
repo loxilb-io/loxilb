@@ -1,6 +1,6 @@
 name: K8s-Calico-Incluster-Sanity-CI
 on:
- schedule:
+ # schedule:
  # Runs "At 11:00 UTC every day-of-week"
  #- cron: '0 11 * * *'
  workflow_dispatch:
