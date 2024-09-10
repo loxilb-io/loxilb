@@ -2503,9 +2503,6 @@ func (R *RuleH) RuleDestructAll() {
 		}
 
 		lbs.ServPort = r.tuples.l4Dst.val
-
-		fmt.Printf("Deleting fin %s\n", r.tuples.l3Dst.addr.IP.String())
-
 		R.DeleteNatLbRule(lbs)
 	}
 	for _, r := range R.tables[RtFw].eMap {
