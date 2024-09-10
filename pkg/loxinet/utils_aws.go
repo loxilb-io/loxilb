@@ -426,6 +426,119 @@ retry:
 	return nil
 }
 
+// CloudDestroyVIPNetWork - Destroy the VIP network on "last" loxilb shutdown
+func (aws *AWSAPIStruct) CloudDestroyVIPNetWork() error {
+	if awsCIDRnet == nil {
+		return nil
+	}
+
+	setDFLRoute = false
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*30))
+	defer cancel()
+
+	subnets := []string{}
+	loxilbKey := "loxiType"
+	loxilbIfKeyVal := fmt.Sprintf("loxilb-eni%s", mh.cloudInst)
+	loxilbSubNetKeyVal := fmt.Sprintf("loxilb-subnet%s", mh.cloudInst)
+	filterStr := fmt.Sprintf("%s:%s", "tag", loxilbKey)
+
+	output, err := ec2Client.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
+		Filters: []types.Filter{
+			{Name: &filterStr, Values: []string{loxilbIfKeyVal}},
+		},
+	})
+
+	if err != nil || (output != nil && len(output.NetworkInterfaces) <= 0) {
+		tk.LogIt(tk.LogError, "no loxiType intf found\n")
+		subnetOutput, err := ec2Client.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
+			Filters: []types.Filter{
+				{Name: &filterStr, Values: []string{loxilbSubNetKeyVal}},
+			},
+		})
+		if err == nil {
+			for _, subnet := range subnetOutput.Subnets {
+				subnets = append(subnets, *subnet.SubnetId)
+			}
+		}
+	} else {
+		for _, intf := range output.NetworkInterfaces {
+			subnets = append(subnets, *intf.SubnetId)
+			if intf.Attachment != nil {
+				force := true
+				_, err := ec2Client.DetachNetworkInterface(ctx, &ec2.DetachNetworkInterfaceInput{AttachmentId: intf.Attachment.AttachmentId, Force: &force})
+				if err != nil {
+					tk.LogIt(tk.LogError, "awsdestroy - failed to detach intf (%s):%s\n", *intf.NetworkInterfaceId, err)
+					return err
+				}
+			}
+			loop := 20
+			for loop > 0 {
+				ctx2, cancel2 := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
+				_, err2 := ec2Client.DeleteNetworkInterface(ctx2, &ec2.DeleteNetworkInterfaceInput{NetworkInterfaceId: intf.NetworkInterfaceId})
+				cancel2()
+				if err2 != nil {
+					tk.LogIt(tk.LogError, "awsdestroy - failed to delete intf (%s):%s\n", *intf.NetworkInterfaceId, err2)
+					time.Sleep(2 * time.Second)
+					loop--
+					if loop <= 0 {
+						return err2
+					}
+					continue
+				}
+				break
+			}
+		}
+	}
+
+	ctx3, cancel3 := context.WithTimeout(context.Background(), time.Duration(time.Second*30))
+	defer cancel3()
+
+	for _, subnet := range subnets {
+		_, err := ec2Client.DeleteSubnet(ctx3, &ec2.DeleteSubnetInput{SubnetId: &subnet})
+		if err != nil {
+			tk.LogIt(tk.LogError, "awsdestroy - failed to delete subnet (%s):%s\n", subnet, err)
+			return err
+		}
+	}
+
+	cidrBlock := awsCIDRnet.String()
+	vpcFilterStr := "cidr-block-association.cidr-block"
+	vpcOut, err := ec2Client.DescribeVpcs(ctx3, &ec2.DescribeVpcsInput{
+		Filters: []types.Filter{
+			{Name: &vpcFilterStr, Values: []string{cidrBlock}},
+		},
+	})
+
+	if err != nil {
+		tk.LogIt(tk.LogError, "awsdestroy - describe-vpcs failed (%s)\n", err)
+		return err
+	}
+	if len(vpcOut.Vpcs) >= 1 {
+		for _, vpc := range vpcOut.Vpcs {
+			if vpc.VpcId != nil {
+				for _, cbAs := range vpc.CidrBlockAssociationSet {
+					if cbAs.CidrBlockState != nil && cbAs.CidrBlockState.State == types.VpcCidrBlockStateCodeAssociated &&
+						cbAs.CidrBlock != nil && *cbAs.CidrBlock == cidrBlock {
+						if *vpc.VpcId == vpcID {
+							// CIDR is not in the current VPC. There should be no attached subnets/interfaces at this point
+							_, err := ec2Client.DisassociateVpcCidrBlock(ctx3, &ec2.DisassociateVpcCidrBlockInput{AssociationId: cbAs.AssociationId})
+							if err != nil {
+								tk.LogIt(tk.LogError, "awsdestroy - cidrBlock (%s) dissassociate failed in VPC %s:%s\n", cidrBlock, *vpcOut.Vpcs[0].VpcId, err)
+								return err
+							}
+							tk.LogIt(tk.LogInfo, "awsdestroy - cidrBlock (%s) dissassociated from VPC %s\n", cidrBlock, *vpcOut.Vpcs[0].VpcId)
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 func (aws *AWSAPIStruct) CloudUnPrepareVIPNetWork() error {
 	_, defaultDst, _ := net.ParseCIDR("0.0.0.0/0")
 	if intfENIName == "" {
@@ -517,7 +630,7 @@ func awsCreatePrivateIp(ctx context.Context, ni string, vIP net.IP) error {
 	return nil
 }
 
-func awsDeletePrivateIp(ctx context.Context, ni string, vIP net.IP) error {
+func awsDeletePrivateIP(ctx context.Context, ni string, vIP net.IP) error {
 	input := &ec2.UnassignPrivateIpAddressesInput{
 		NetworkInterfaceId: &ni,
 		PrivateIpAddresses: []string{vIP.String()},
@@ -547,7 +660,7 @@ func awsUpdatePrivateIP(vIP net.IP, add bool) error {
 	}
 
 	if !add {
-		return awsDeletePrivateIp(ctx, niID, vIP)
+		return awsDeletePrivateIP(ctx, niID, vIP)
 	}
 
 	return awsCreatePrivateIp(ctx, niID, vIP)

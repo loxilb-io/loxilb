@@ -169,6 +169,25 @@ func loxiNetTicker(bgpPeerMode bool) {
 				tk.LogIt(tk.LogCritical, "Shutdown on sig %v\n", sig)
 				// TODO - More subsystem cleanup TBD
 				mh.zr.Rules.RuleDestructAll()
+				if mh.cloudHook != nil {
+					// Cleanup any cloud resources
+					ciState, _ := mh.has.CIStateGetInst(cmn.CIDefault)
+					if ciState == "MASTER" {
+						bfdSessions, err := mh.has.CIBFDSessionGet()
+						if err == nil {
+							cleanCloudResources := true
+							for _, bfdSession := range bfdSessions {
+								if bfdSession.State != "BFDDown" {
+									cleanCloudResources = false
+									break
+								}
+							}
+							if cleanCloudResources {
+								mh.cloudHook.CloudDestroyVIPNetWork()
+							}
+						}
+					}
+				}
 				if !bgpPeerMode {
 					mh.dpEbpf.DpEbpfUnInit()
 				}
