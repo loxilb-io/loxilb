@@ -7,7 +7,8 @@ border="************************************************************************
 for((j=0,i=1; i<=6; i++, j++)); do
     echo "SCTP Multihoming - Test case #$i"
     echo -e "\n\n\n$border\n"
-    ./validation$i.sh
+    cmd="sudo /vagrant/validation$i.sh"
+    vagrant ssh bastion -c "$cmd"
     echo -e "\n\n"
     file=status$i.txt
     status=`cat $file`
@@ -45,11 +46,11 @@ echo -e "\n$border"
 
 echo -e "\n\n\n$border\n"
 if [[ $code == 0 ]]; then
-    echo -e "SCTP Multihoming with sctp_test CICD [OK]"
+    echo -e "SCTP multihoming with seagull CICD [OK]"
 else
-    echo -e "SCTP Multihoming with sctp_test CICD [NOK]"
+    echo -e "SCTP Multihoming with seagull CICD [NOK]"
 fi
 echo -e "\n$border\n"
 
-sudo rm -rf statu*.txt
+
 exit $code

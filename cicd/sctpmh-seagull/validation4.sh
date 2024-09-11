@@ -1,6 +1,6 @@
 #!/bin/bash
-source ../common.sh
-source check_ha.sh
+source /vagrant/common.sh
+source /vagrant/check_ha.sh
 echo -e "sctpmh: SCTP Multihoming - E2E Multipath Failover Test. Client, LB and EP all Multihomed\n"
 extIP="133.133.133.1"
 port=2020
@@ -13,10 +13,16 @@ echo -e "-----------------------------------------------------------------------
 echo -e "\nHA state Master:$master BACKUP-$backup\n"
 echo -e "\nTraffic Flow: EP ---> LB ---> User"
 
-$hexec user sctp_test -H 0.0.0.0  -P 9999 -l > user.out &
+sudo docker exec -dt user ksh -c 'sed -i 's/source=31.31.31.1/source=0.0.0.0/g' /opt/seagull/diameter-env/config/conf.server.xml'
+
+sudo docker exec -dt user ksh -c 'export LD_PRELOAD=/usr/local/bin/libsctplib.so.1.0.8; export LD_LIBRARY_PATH=/usr/local/bin; cd /opt/seagull/diameter-env/run/; timeout 220 stdbuf -oL seagull -conf ../config/conf.server.xml -dico ../config/base_s6a.xml -scen ../scenario/ulr-ula.server.xml > user.out' 2>&1 > /dev/null &
 sleep 2
 
-$hexec ep1 stdbuf -oL sctp_test -H 31.31.31.1 -B 32.32.32.1 -P 20000 -h $extIP -p $port -s -c 6 -x 1000 > ep1.out &
+sudo docker exec -dt ep1 ksh -c "sed -i 's/\"call-rate\" value=\"5000\"/\"call-rate\" value=\"100\"/g' /opt/seagull/diameter-env/config/conf.client.xml"
+sudo docker exec -dt ep1 ksh -c 'sed -i 's/dest=20.20.20.1/dest=133.133.133.1/g' /opt/seagull/diameter-env/config/conf.client.xml'
+sudo docker exec -dt ep1 ksh -c 'export LD_PRELOAD=/usr/local/bin/libsctplib.so.1.0.8; export LD_LIBRARY_PATH=/usr/local/bin; cd /opt/seagull/diameter-env/run/; timeout 210 stdbuf -oL seagull -conf ../config/conf.client.xml -dico ../config/base_s6a.xml -scen ../scenario/ulr-ula.client.xml > ep1.out' 2>&1 > /dev/null &
+
+sleep 20
 
 #Path counters
 p1c_old=0
@@ -27,15 +33,18 @@ p3c_old=0
 p3c_new=0
 down=0
 code=0
-sleep 2
-
-for((i=0;i<200;i++)) do
-    fin=`tail -n 100 ep1.out | grep "Client: Sending packets.(1000/1000)"`
-    if [[ ! -z $fin ]]; then
-        fin=1
-        echo "sctp_test done."
-        break;
-    fi
+call_old=0
+call_new=0
+fail_old=0
+fail_new=0
+recover=0
+frecover=0
+calls=0
+for((i=0;i<35;i++)) do
+    $dexec ep1 bash -c 'tail -n 25 /opt/seagull/diameter-env/run/ep1.out'
+    call_new=$(sudo docker exec -t ep1 bash -c 'tail -n 10 /opt/seagull/diameter-env/run/ep1.out | grep "Successful calls"'| xargs | cut -d '|' -f 4)
+    fail_new=$(sudo docker exec -t ep1 bash -c 'tail -n 10 /opt/seagull/diameter-env/run/ep1.out | grep "Failed calls"'| xargs | cut -d '|' -f 4)
+    echo -e "\n"
     $dexec $master loxicmd get ct --servName=sctpmh2
     echo -e "\n"
     p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "133.133.133.1 | 31.31.31.1" | xargs | cut -d '|' -f 10)
@@ -47,14 +56,9 @@ for((i=0;i<200;i++)) do
     if [[ $p1c_new -gt $p1c_old ]]; then
         echo "Path 1: 31.31.31.1 -> 133.133.133.1 -> 1.1.1.1 [ACTIVE]"
         p1=1
-        #if [[ $down == 1 ]]; then
-        #    echo "This path shouldn't be ACTIVE"
-        #    code=1
-        #fi
         echo -e "Turning off this path at User.\nEP----->LB--x-->User"
         $hexec user ip link set euserr1 down;
         down=1
-        p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "133.133.133.1 | 31.31.31.1" | xargs | cut -d '|' -f 10)
     else
         if [[ $down == 1 ]]; then
             p1dok=1
@@ -77,26 +81,65 @@ for((i=0;i<200;i++)) do
     else
         echo "Path 3: 31.31.31.1 -> 135.135.135.1 -> 1.1.1.1 [NOT ACTIVE]"
     fi
+    
+    echo -e "\n"
+	if [[ $recover == 1 ]]; then
+        printf "\t***Setup Recovered***"
+    fi
+    echo -e "\n\n"
+
+    if [[ $fail_new -gt $fail_old && $down == 1 && $recover == 0 ]]; then
+	    printf "Failed Calls:   \t%10s \t[INCREASING]\n" $fail_new
+	    fstart=1
+        code=1
+        calls=0
+    else 
+        if [[ $fail_new -eq $fail_old ]]; then
+            if [[ $down == 1 && $fstart == 1 ]]; then
+	            printf "Failed Calls:   \t%10s \t[STABLE]\n" $fail_new
+	            frecover=1
+                code=0
+            else
+	            printf "Failed Calls:   \t%10s\n" $fail_new
+	        fi
+        fi
+    fi
+
+    if [[ $call_new -gt $call_old ]]; then
+	    printf "Successful Calls: \t%10s \t[ACTIVE]\n" $call_new
+        calls=1
+	    if [[ $down == 1 && $frecover == 1 ]]; then
+            recover=1
+	    fi
+    else
+	    printf "Successful Calls: \t%10s \t[NOT ACTIVE]\n" $call_new
+    fi
+
     p1c_old=$p1c_new
     p2c_old=$p1c_new
     p2c_old=$p1c_new
+    call_old=$call_new
+    fail_old=$fail_new
     echo -e "\n"
     sleep 5
 done
 
-sudo rm -rf *.out
-sudo pkill sctp_test
+#sudo rm -rf *.out
+#sudo pkill sctp_test
 
 #Restore
 $hexec user ip link set euserr1 up
 $hexec user ip route add default via 1.1.1.254
+sudo docker exec -dt user ksh -c 'sed -i 's/source=0.0.0.0/source=31.31.31.1/g' /opt/seagull/diameter-env/config/conf.server.xml'
+sudo docker exec -dt ep1 ksh -c 'sed -i 's/dest=133.133.133.1/dest=20.20.20.1/g' /opt/seagull/diameter-env/config/conf.client.xml'
+sudo docker exec -dt ep1 ksh -c "sed -i 's/\"call-rate\" value=\"100\"/\"call-rate\" value=\"5000\"/g' /opt/seagull/diameter-env/config/conf.client.xml"
 
-if [[ $fin == 1 && $p1 == 1 && $p2 == 1 && $p3 == 1 && $code == 0 ]]; then
+if [[ $calls == 1 && $p1 == 1 && $p2 == 1 && $p3 == 1 && $code == 0 && $recover == 1 ]]; then
     echo "sctpmh SCTP Multihoming E2E Multipath Failover [OK]"
-    echo "OK" > status4.txt
+    echo "OK" > /vagrant/status4.txt
     restart_loxilbs
 else
-    echo "NOK" > status4.txt
+    echo "NOK" > /vagrant/status4.txt
     echo "sctpmh SCTP Multihoming E2E Multipath Failover [NOK]"
     echo -e "\nuser"
     sudo ip netns exec user ip route

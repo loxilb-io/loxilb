@@ -1,9 +1,9 @@
 #!/bin/bash
-source ../common.sh
-source check_ha.sh
+source /vagrant/common.sh
+source /vagrant/check_ha.sh
 
 echo -e "sctpmh: SCTP Multihoming Basic Test - Client & EP Uni-homed and LB is Multi-homed\n"
-extIP="123.123.123.1"
+extIP="20.20.20.1"
 port=2020
 
 check_ha
@@ -11,31 +11,30 @@ check_ha
 echo "SCTP Multihoming service sctp-lb -> $extIP:$port"
 echo -e "------------------------------------------------------------------------------------\n"
 
-$hexec ep1 sctp_darn -H 0.0.0.0  -P 9999 -l 2>&1> /dev/null &
+sudo docker exec -dt ep1 ksh -c 'export LD_PRELOAD=/usr/local/bin/libsctplib.so.1.0.8; export LD_LIBRARY_PATH=/usr/local/bin; cd /opt/seagull/diameter-env/run/; timeout 40 stdbuf -oL seagull -conf ../config/conf.server.xml -dico ../config/base_s6a.xml -scen ../scenario/ulr-ula.server.xml > ep1.out' 2>&1 > /dev/null &
+sleep 2
 
-sleep 10
-$hexec user stdbuf -oL sctp_darn -H 1.1.1.1 -h $extIP -p $port -s < input > user.out
-sleep 3
+sudo docker exec -dt user ksh -c 'export LD_PRELOAD=/usr/local/bin/libsctplib.so.1.0.8; export LD_LIBRARY_PATH=/usr/local/bin; cd /opt/seagull/diameter-env/run/; timeout 25 stdbuf -oL seagull -conf ../config/conf.client.xml -dico ../config/base_s6a.xml -scen ../scenario/ulr-ula.client.xml > user.out' 2>&1 > /dev/null &
 
-exp="New connection, peer addresses
-123.123.123.1:2020
-124.124.124.1:2020
-125.125.125.1:2020"
+sleep 2
 
-res=`cat user.out | grep -A 3 "New connection, peer addresses"`
-sudo rm -rf user.out
-sudo pkill sctp_darn
+for((i=0;i<5;i++)) do
+    $dexec user bash -c 'tail -n 25 /opt/seagull/diameter-env/run/user.out'
+    res=$(sudo docker exec -t user bash -c 'tail -n 10 /opt/seagull/diameter-env/run/user.out | grep "Successful calls"'| xargs | cut -d '|' -f 4)
+    $dexec $master loxicmd get ct --servName=sctpmh1
+    echo -e "\n"
+    sleep 5
+done
 
-if [[ "$res" == "$exp" ]]; then
-    echo $res
+if [ "$res" -gt "0" ]; then
+    #echo -e $res
     echo -e "\nsctpmh SCTP Multihoming service Basic Test [OK]\n"
-    echo "OK" > status1.txt
+    echo "OK" > /vagrant/status1.txt
     restart_loxilbs
 else
-    echo "NOK" > status1.txt
+    echo "NOK" > /vagrant/status1.txt
     echo "sctpmh SCTP Multihoming service Basic Test [NOK]"
-    echo "Expected : $exp"
-    echo "Received : $res"
+    echo "Calls : $res"
     ## Dump some debug info
     echo "system route-info"
     echo -e "\nuser"
