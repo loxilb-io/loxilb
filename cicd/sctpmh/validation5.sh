@@ -19,7 +19,7 @@ sudo pkill sctp_test
 $hexec ep1 sctp_test -H 31.31.31.1  -P 9999 -l > ep1.out &
 sleep 2
 
-$hexec user stdbuf -oL sctp_test -H 1.1.1.1 -B 2.2.2.1 -P 20000 -h $extIP -p $port -s -m 1400 -x 300000 > user.out &
+$hexec user stdbuf -oL sctp_test -H 1.1.1.1 -B 2.2.2.1 -P 20000 -h $extIP -p $port -s -c 6 -x 10000 > user.out &
 
 #Path counters
 p1c_old=0
@@ -33,8 +33,8 @@ hadone=0
 code=0
 nsyncOk=0
 
-for((i=0;i<200;i++)) do
-    fin=`tail -n 100 user.out | grep "Client: Sending packets.(300000/300000)"`
+for((i=0;i<400;i++)) do
+    fin=`tail -n 100 user.out | grep "Client: Sending packets.(10000/10000)"`
     if [[ ! -z $fin ]]; then
         fin=1
         echo "sctp_test done."

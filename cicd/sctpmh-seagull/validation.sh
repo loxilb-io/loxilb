@@ -46,11 +46,11 @@ echo -e "\n$border"
 
 echo -e "\n\n\n$border\n"
 if [[ $code == 0 ]]; then
-    echo -e "SCTP Multihoming CICD [OK]"
+    echo -e "SCTP multihoming with seagull CICD [OK]"
 else
-    echo -e "SCTP Multihoming CICD [NOK]"
+    echo -e "SCTP Multihoming with seagull CICD [NOK]"
 fi
-echo -e "\n$border\n"
+echo -e "\n$border\n"`
 
 
 exit $code

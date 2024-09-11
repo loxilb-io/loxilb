@@ -18,7 +18,7 @@ echo -e "\nTraffic Flow: User -> LB -> EP "
 $hexec ep1 sctp_test -H 31.31.31.1  -P 9999 -l > ep1.out &
 sleep 2
 
-$hexec user stdbuf -oL sctp_test -H 1.1.1.1 -B 2.2.2.1 -P 20000 -h $extIP -p $port -s -m 100 -x 50000 > user.out &
+$hexec user stdbuf -oL sctp_test -H 1.1.1.1 -B 2.2.2.1 -P 20000 -h $extIP -p $port -s -c 6 -x 1000 > user.out &
 #Path counters
 p1c_old=0
 p1c_new=0
@@ -28,8 +28,11 @@ p3c_old=0
 p3c_new=0
 down=0
 code=0
+
+sleep 5
+
 for((i=0;i<200;i++)) do
-    fin=`tail -n 100 user.out | grep "Client: Sending packets.(50000/50000)"`
+    fin=`tail -n 100 user.out | grep "Client: Sending packets.(1000/1000)"`
     if [[ ! -z $fin ]]; then
         fin=1
         echo "sctp_test done."

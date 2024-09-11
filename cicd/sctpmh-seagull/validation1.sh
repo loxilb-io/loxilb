@@ -56,7 +56,7 @@ else
     echo "llb1 ep-info"
     $dexec llb1 loxicmd get ep
     echo "llb1 bpf-info"
-    $dexec llb1 ntc filter show dev eth0 ingress
+    $dexec llb1 tc filter show dev eth0 ingress
     echo "BFP trace -- "
     sudo timeout 5 cat  /sys/kernel/debug/tracing/trace_pipe
     sudo killall -9 cat

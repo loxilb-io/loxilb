@@ -21,9 +21,10 @@ function check_ha() {
         else
             count=$(( $count + 1 ))
             if [[ $count -ge 20 ]]; then
-                echo "KA llb1-$status1, llb2-$status2 [NOK]" >&2
+                echo "KA llb1-$status1, llb2-$status2 [NOK] - Exiting" >&2
                 exit 1;
             fi
+            echo "KA llb1-$status1, llb2-$status2 [NOK]" >&2
             sleep 5
         fi
     done
@@ -34,7 +35,6 @@ function checkSync() {
     sync=0
     while [[ $count -le 5 ]] ; do
         echo -e "\nStatus at MASTER:$master\n" >&2
-        #$dexec $master loxicmd get ct | grep est >&2
         ct=`$dexec $master loxicmd get ct | grep est`
         echo "${ct//'\n'/$'\n'}" >&2
 

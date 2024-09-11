@@ -21,18 +21,18 @@ echo "#########################################"
 echo "Connecting and configuring  hosts"
 echo "#########################################"
 
-connect_docker_hosts user r1 1500
-connect_docker_hosts user r2 1500
-connect_docker_hosts r1 sw1 1500
-connect_docker_hosts r2 sw1 1500
-connect_docker_hosts sw1 llb1 1500
-connect_docker_hosts sw1 llb2 1500
-connect_docker_hosts llb1 sw2 1500
-connect_docker_hosts llb2 sw2 1500
-connect_docker_hosts sw2 r3 1500
-connect_docker_hosts sw2 r4 1500
-connect_docker_hosts r3 ep1 1500
-connect_docker_hosts r4 ep1 1500
+connect_docker_hosts user r1
+connect_docker_hosts user r2
+connect_docker_hosts r1 sw1
+connect_docker_hosts r2 sw1
+connect_docker_hosts sw1 llb1
+connect_docker_hosts sw1 llb2
+connect_docker_hosts llb1 sw2
+connect_docker_hosts llb2 sw2
+connect_docker_hosts sw2 r3
+connect_docker_hosts sw2 r4
+connect_docker_hosts r3 ep1
+connect_docker_hosts r4 ep1
 
 create_docker_host_cnbridge --host1 sw1 --host2 llb1
 create_docker_host_cnbridge --host1 sw1 --host2 llb2
