@@ -50,7 +50,7 @@ if [[ $code == 0 ]]; then
 else
     echo -e "SCTP Multihoming with seagull CICD [NOK]"
 fi
-echo -e "\n$border\n"`
+echo -e "\n$border\n"
 
 
 exit $code
