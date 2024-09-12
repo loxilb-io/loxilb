@@ -111,8 +111,7 @@ spec:
         - /bin/kube-loxilb
         args:
         - --loxiURL=http://$LOXILB_PRIVATE_IP:11111
-        - --externalCIDR=$LOXILB_PRIVATE_IP/32
-        #- --externalSecondaryCIDRs=124.124.124.1/24,125.125.125.1/24
+        - --cidrPools=defaultPool=$LOXILB_PRIVATE_IP/32
         #- --monitor
         #- --setBGP
         - --setLBMode=2
