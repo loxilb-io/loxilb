@@ -15,7 +15,7 @@ require (
 	github.com/go-openapi/validate v0.22.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/loxilb-io/ipvs v0.1.0
-	github.com/loxilb-io/loxilib v0.8.9-0.20240906040045-9ad9b8b549d3
+	github.com/loxilb-io/loxilib v0.8.9-0.20240912025939-1e5e76723499
 	github.com/osrg/gobgp/v3 v3.29.0
 	github.com/prometheus-community/pro-bing v0.1.0
 	github.com/prometheus/client_model v0.3.0
@@ -53,7 +53,7 @@ require (
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/loxilb-io/sctp v0.0.0-20230519081703-6d1baec82fd4 // indirect
+	github.com/loxilb-io/sctp v0.0.0-20240912025756-01894eac308b // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/moby/ipvs v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
