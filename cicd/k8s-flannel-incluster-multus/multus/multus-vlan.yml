@@ -1,0 +1,21 @@
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: vlan5
+spec:
+  config: '{
+    "name": "vlan5-net",
+    "cniVersion": "0.3.1",
+    "type": "vlan",
+    "master": "eth2",
+    "mtu": 1450,
+    "vlanId": 5,
+    "linkInContainer": false,
+    "ipam": {
+        "type": "whereabouts",
+        "range": "123.123.123.192/28"
+    },
+    "dns": {
+      "nameservers": [ "8.8.8.8" ]
+    }
+  }'
