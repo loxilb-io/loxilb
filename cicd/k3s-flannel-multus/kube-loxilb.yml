@@ -33,6 +33,7 @@ rules:
     resources:
       - endpoints
       - services
+      - namespaces
       - services/status
     verbs:
       - get
