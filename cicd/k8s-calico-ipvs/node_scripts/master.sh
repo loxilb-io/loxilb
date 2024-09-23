@@ -6,10 +6,6 @@ set -euxo pipefail
 
 NODENAME=$(hostname -s)
 
-sudo kubeadm config images pull
-
-echo "Preflight Check Passed: Downloaded All Required Images"
-
 #sudo kubeadm init --apiserver-advertise-address=$CONTROL_IP --apiserver-cert-extra-sans=$CONTROL_IP --pod-network-cidr=$POD_CIDR --service-cidr=$SERVICE_CIDR --node-name "$NODENAME" --ignore-preflight-errors Swap
 sudo kubeadm init --ignore-preflight-errors Swap --config /vagrant/yaml/kubeadm-config.yaml
 
@@ -33,7 +29,8 @@ cp -i /etc/kubernetes/admin.conf $config_path/config
 touch $config_path/join.sh
 chmod +x $config_path/join.sh
 
-kubeadm token create --print-join-command > $config_path/join.sh
+join_cmd=`kubeadm token create --print-join-command`
+echo $join_cmd "--cri-socket /var/run/cri-dockerd.sock" > $config_path/join.sh
 
 # Install Calico Network Plugin
 
