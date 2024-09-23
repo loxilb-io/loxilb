@@ -4,11 +4,11 @@
 
 set -euxo pipefail
 
-if [[ $(hostname -s) == "worker1" ]]; then
-  sudo sed -i 's#10.85.0.0/16#10.244.1.0/24#g' /etc/cni/net.d/100-crio-bridge.conflist
-else
-  sudo sed -i 's#10.85.0.0/16#10.244.2.0/24#g' /etc/cni/net.d/100-crio-bridge.conflist
-fi
+#if [[ $(hostname -s) == "worker1" ]]; then
+#  sudo sed -i 's#10.85.0.0/16#10.244.1.0/24#g' /etc/cni/net.d/100-crio-bridge.conflist
+#else
+#  sudo sed -i 's#10.85.0.0/16#10.244.2.0/24#g' /etc/cni/net.d/100-crio-bridge.conflist
+#fi
 
 config_path="/vagrant/configs"
 
