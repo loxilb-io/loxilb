@@ -16,6 +16,7 @@ nodeRegistration:
   taints: null
   kubeletExtraArgs:
     node-ip: 192.168.80.250
+  criSocket: unix:///var/run/cri-dockerd.sock
 ---
 apiVersion: kubeadm.k8s.io/v1beta3
 certificatesDir: /etc/kubernetes/pki
@@ -68,3 +69,7 @@ metricsBindAddress: 127.0.0.1:10249
 nodePortAddresses: null
 oomScoreAdj: -999
 portRange: ""
+---
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+cgroupDriver: systemd
