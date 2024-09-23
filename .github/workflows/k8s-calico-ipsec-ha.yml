@@ -1,0 +1,36 @@
+name: K8s-Calico-Cluster-IPSec-HA-Sanity-CI
+on:
+ schedule:
+ # Runs "At 19:00 UTC every day-of-week"
+ - cron: '0 19 * * *'
+ workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'k8s-calico-cluster-ipsec-ha'
+jobs:
+  test-runner:
+    name: k8s-calico-cluster-ipsec-ha-sanity
+    runs-on: [self-hosted, large]
+    if: github.repository == 'loxilb-io/loxilb' 
+          &&  github.event.inputs.tagName == ''
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+          submodules: recursive
+
+    - name: Run the test
+      run: |
+         cd cicd/k8s-calico-ipsec-ha
+         ./config.sh
+         ./validation_with_sctp.sh
+         cd -
+         
+    - name: Clean test-bed
+      if: success() || failure()
+      run: |
+        cd cicd/k8s-calico-ipsec-ha || true
+        ./rmconfig.sh
+        cd -
