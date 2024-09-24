@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tcp-lb-fullnat
+  annotations:
+    loxilb.io/liveness: "yes"
+    loxilb.io/lbmode: "fullnat"
+    loxilb.io/probetype: "ping"
+spec:
+  externalTrafficPolicy: Local
+  loadBalancerClass: loxilb.io/loxilb
+  selector:
+    what: tcp-fullnat-test
+  ports:
+    - port: 56002
+      targetPort: 5001
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tcp-fullnat-test
+  labels:
+    what: tcp-fullnat-test
+spec:
+  containers:
+    - name: tcp-fullnat-test
+      image: eyes852/ubuntu-iperf-test:0.5
+      command:
+        - iperf
+        - "-s"
+      ports:
+        - containerPort: 5001
