@@ -40,6 +40,10 @@ sudo sysctl net.ipv4.conf.vboxnet1.arp_accept=1
 #vagrant ssh master -c 'kubectl apply -f /vagrant/yaml/udp_fullnat.yml' 2> /dev/null
 #vagrant ssh master -c 'kubectl apply -f /vagrant/yaml/sctp_fullnat.yml' 2> /dev/null
 
+#Create multus services
+vagrant ssh master -c 'kubectl apply -f /vagrant/multus/multus-pod.yml' 2> /dev/null
+vagrant ssh master -c 'kubectl apply -f /vagrant/multus/multus-service.yml' 2> /dev/null
+
 for((i=1; i<=60; i++))
 do
     fin=1

@@ -24,10 +24,6 @@ kubectl label node $(hostname -s) node-role.kubernetes.io/worker=worker
 kubectl wait pod --all --for=condition=Ready --namespace=kube-system --timeout=240s >> /dev/null 2>&1 || true
 kubectl wait pod --all --for=condition=Ready --namespace=default --timeout=240s >> /dev/null 2>&1 || true
 kubectl wait pod --all --for=condition=Ready --namespace=kube-flannel --timeout=240s  >> /dev/null 2>&1 || true
-kubectl apply -f /vagrant/yaml/kube-loxilb.yaml
-kubectl apply -f /vagrant/multus/multus-pod.yml
-sleep 60
-kubectl apply -f /vagrant/multus/multus-service.yml
 
 EOF
 

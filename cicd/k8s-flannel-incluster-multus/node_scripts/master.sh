@@ -63,3 +63,4 @@ kubectl wait pod --all --for=condition=Ready --namespace=kube-flannel --timeout=
 kubectl apply -f /vagrant/multus/multus-vlan.yml
 sleep 60
 kubectl apply -f /vagrant/yaml/loxilb.yaml
+kubectl apply -f /vagrant/yaml/kube-loxilb.yaml
