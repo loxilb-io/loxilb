@@ -22,7 +22,7 @@ var Opts struct {
 	LogLevel          string         `long:"loglevel" description:"One of debug,info,error,warning,notice,critical,emergency,alert" default:"debug"`
 	CPUProfile        string         `long:"cpuprofile" description:"Enable cpu profiling and specify file to use" default:"none" env:"CPUPROF"`
 	Prometheus        bool           `short:"p" long:"prometheus" description:"Run prometheus thread"`
-	CSumDisable       bool           `long:"disable-csum" description:"Disable checksum update(experimental)"`
+	CRC32SumDisable   bool           `long:"disable-crc32" description:"Disable crc32 checksum update(experimental)"`
 	PassiveEPProbe    bool           `long:"passive-probe" description:"Enable passive liveness probes(experimental)"`
 	RssEnable         bool           `long:"rss-enable" description:"Enable rss optimization(experimental)"`
 	EgrHooks          bool           `long:"egr-hooks" description:"Enable eBPF egress hooks(experimental)"`
