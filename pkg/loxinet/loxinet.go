@@ -242,7 +242,7 @@ func loxiNetInit() {
 	mh.self = opts.Opts.ClusterSelf
 	mh.rssEn = opts.Opts.RssEnable
 	mh.eHooks = opts.Opts.EgrHooks
-	mh.sumDis = opts.Opts.CSumDisable
+	mh.sumDis = opts.Opts.CRC32SumDisable
 	mh.pProbe = opts.Opts.PassiveEPProbe
 	mh.lSockPolicy = opts.Opts.LocalSockPolicy
 	mh.sockMapEn = opts.Opts.SockMapSupport
