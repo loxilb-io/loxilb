@@ -78,7 +78,7 @@ const (
 
 // constants
 const (
-	MaxNatEndPoints            = 32
+	MaxLBEndPoints             = 32
 	DflLbaInactiveTries        = 2         // Default number of inactive tries before LB arm is turned off
 	MaxDflLbaInactiveTries     = 100       // Max number of inactive tries before LB arm is turned off
 	DflLbaCheckTimeout         = 10        // Default timeout for checking LB arms
@@ -209,28 +209,28 @@ type epHost struct {
 	opts         epHostOpts
 }
 
-type ruleNatEp struct {
+type ruleLBEp struct {
 	xIP           net.IP
 	rIP           net.IP
 	xPort         uint16
 	weight        uint8
 	inActTries    int
-	inActive      bool
+	inActiveEP    bool
 	noService     bool
 	chkVal        bool
 	stat          ruleStat
-	foldEndPoints []ruleNatEp
+	foldEndPoints []ruleLBEp
 	foldRuleKey   string
 }
 
-type ruleNatSIP struct {
+type ruleLBSIP struct {
 	sIP net.IP
 }
 
-type ruleNatActs struct {
+type ruleLBActs struct {
 	mode      cmn.LBMode
 	sel       cmn.EpSelect
-	endPoints []ruleNatEp
+	endPoints []ruleLBEp
 }
 
 type ruleFwOpt struct {
@@ -284,7 +284,7 @@ type ruleEnt struct {
 	pTO      uint32
 	act      ruleAct
 	privIP   net.IP
-	secIP    []ruleNatSIP
+	secIP    []ruleLBSIP
 	stat     ruleStat
 	name     string
 	secMode  cmn.LBSec
@@ -682,7 +682,7 @@ func (a *ruleAct) String() string {
 		}
 
 		switch na := a.action.(type) {
-		case *ruleNatActs:
+		case *ruleLBActs:
 			if na.mode == cmn.LBModeOneArm {
 				ks += fmt.Sprintf("%s", "onearm:")
 			} else if na.mode == cmn.LBModeHostOneArm {
@@ -693,7 +693,7 @@ func (a *ruleAct) String() string {
 					for _, nf := range n.foldEndPoints {
 						ks += fmt.Sprintf("feip-%s,fep-%d,fw-%d,",
 							nf.xIP.String(), nf.xPort, nf.weight)
-						if nf.inActive || nf.noService {
+						if nf.inActiveEP || nf.noService {
 							ks += fmt.Sprintf("dead|")
 						} else {
 							ks += fmt.Sprintf("alive|")
@@ -702,7 +702,7 @@ func (a *ruleAct) String() string {
 				} else {
 					ks += fmt.Sprintf("eip-%s,ep-%d,w-%d,",
 						n.xIP.String(), n.xPort, n.weight)
-					if n.inActive || n.noService {
+					if n.inActiveEP || n.noService {
 						ks += fmt.Sprintf("dead|")
 					} else {
 						ks += fmt.Sprintf("alive|")
@@ -740,11 +740,11 @@ func (R *RuleH) Rules2Json() ([]byte, error) {
 			return nil, errors.New("malformed service proto")
 		}
 		t.ServPort = data.tuples.l4Dst.val
-		t.Sel = data.act.action.(*ruleNatActs).sel
-		t.Mode = data.act.action.(*ruleNatActs).mode
+		t.Sel = data.act.action.(*ruleLBActs).sel
+		t.Mode = data.act.action.(*ruleLBActs).mode
 
 		// Make Endpoints
-		tmpEp := data.act.action.(*ruleNatActs).endPoints
+		tmpEp := data.act.action.(*ruleLBActs).endPoints
 		for _, ep := range tmpEp {
 			eps = append(eps, cmn.LbEndPointArg{
 				EpIP:   ep.xIP.String(),
@@ -768,8 +768,8 @@ func (R *RuleH) Rules2Json() ([]byte, error) {
 	return bret, nil
 }
 
-// GetNatLbRule - get all rules and pack them into a cmn.LbRuleMod slice
-func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
+// GetLBRule - get all rules and pack them into a cmn.LbRuleMod slice
+func (R *RuleH) GetLBRule() ([]cmn.LbRuleMod, error) {
 	var res []cmn.LbRuleMod
 
 	for _, data := range R.tables[RtLB].eMap {
@@ -790,8 +790,8 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 			return []cmn.LbRuleMod{}, errors.New("malformed service proto")
 		}
 		ret.Serv.ServPort = data.tuples.l4Dst.val
-		ret.Serv.Sel = data.act.action.(*ruleNatActs).sel
-		ret.Serv.Mode = data.act.action.(*ruleNatActs).mode
+		ret.Serv.Sel = data.act.action.(*ruleLBActs).sel
+		ret.Serv.Mode = data.act.action.(*ruleLBActs).mode
 		ret.Serv.Monitor = data.hChk.actChk
 		ret.Serv.InactiveTimeout = data.iTO
 		ret.Serv.Bgp = data.bgp
@@ -815,14 +815,14 @@ func (R *RuleH) GetNatLbRule() ([]cmn.LbRuleMod, error) {
 		data.DP(DpStatsGetImm)
 
 		// Make Endpoints
-		tmpEp := data.act.action.(*ruleNatActs).endPoints
+		tmpEp := data.act.action.(*ruleLBActs).endPoints
 		for _, ep := range tmpEp {
 			state := "active"
 			if ep.noService {
 				state = "inactive"
 			}
 
-			if ep.inActive {
+			if ep.inActiveEP {
 				continue
 			}
 
@@ -863,7 +863,7 @@ func validateXlateEPWeights(servEndPoints []cmn.LbEndPointArg) (int, error) {
 	return 0, nil
 }
 
-func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool, liveCheckEn bool) {
+func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleLBEp, doAddOp bool, liveCheckEn bool) {
 	var hopts epHostOpts
 	pType := ""
 	pPort := uint16(0)
@@ -905,14 +905,14 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool, li
 			hopts.probePort = pPort
 		}
 
-		if mh.pProbe == true || liveCheckEn {
+		if mh.pProbe || liveCheckEn {
 			hopts.probeActivated = true
 		}
 
 		epKey := makeEPKey(nep.xIP.String(), pType, pPort)
 
 		if doAddOp {
-			if nep.inActive != true {
+			if !nep.inActiveEP {
 				R.AddEPHost(false, nep.xIP.String(), epKey, hopts)
 			}
 		} else {
@@ -921,8 +921,8 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleNatEp, doAddOp bool, li
 	}
 }
 
-// GetNatLbRuleByID - Get a NAT rule by its identifier
-func (R *RuleH) GetNatLbRuleByID(ruleID uint32) *ruleEnt {
+// GetLBRuleByID - Get a LB rule by its identifier
+func (R *RuleH) GetLBRuleByID(ruleID uint32) *ruleEnt {
 	if ruleID < RtMaximumLbs {
 		return R.tables[RtLB].rArr[ruleID]
 	}
@@ -930,8 +930,8 @@ func (R *RuleH) GetNatLbRuleByID(ruleID uint32) *ruleEnt {
 	return nil
 }
 
-// GetNatLbRuleByServArgs - Get a NAT rule by its service args
-func (R *RuleH) GetNatLbRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
+// GetLBRuleByServArgs - Get a LB rule by its service args
+func (R *RuleH) GetLBRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
 	var ipProto uint8
 	service := ""
 	if tk.IsNetIPv4(serv.ServIP) {
@@ -965,8 +965,8 @@ func (R *RuleH) GetNatLbRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
 	return R.tables[RtLB].eMap[rt.ruleKey()]
 }
 
-// GetNatLbRuleSecIPs - Get secondary IPs for SCTP NAT rule by its service args
-func (R *RuleH) GetNatLbRuleSecIPs(serv cmn.LbServiceArg) []string {
+// GetLBRuleSecIPs - Get secondary IPs for SCTP LB rule by its service args
+func (R *RuleH) GetLBRuleSecIPs(serv cmn.LbServiceArg) []string {
 	var ipProto uint8
 	var ips []string
 	service := ""
@@ -1006,7 +1006,7 @@ func (R *RuleH) electEPSrc(r *ruleEnt) bool {
 	addrRslv := false
 
 	switch na := r.act.action.(type) {
-	case *ruleNatActs:
+	case *ruleLBActs:
 		{
 			for idx := range na.endPoints {
 				np := &na.endPoints[idx]
@@ -1122,7 +1122,7 @@ func (R *RuleH) syncEPHostState2Rule(rule *ruleEnt, checkNow bool) bool {
 	rChg := false
 	if checkNow || time.Duration(time.Now().Sub(rule.sT).Seconds()) >= time.Duration(R.cfg.RuleInactChkTime) {
 		switch na := rule.act.action.(type) {
-		case *ruleNatActs:
+		case *ruleLBActs:
 			if rule.tuples.l4Prot.val == 6 {
 				sType = HostProbeConnectTCP
 			} else if rule.tuples.l4Prot.val == 17 {
@@ -1142,14 +1142,14 @@ func (R *RuleH) syncEPHostState2Rule(rule *ruleEnt, checkNow bool) bool {
 					if np.noService == false {
 						np.noService = true
 						rChg = true
-						tk.LogIt(tk.LogDebug, "nat lb-rule service-down ep - %s:%s\n", sType, n.xIP.String())
+						tk.LogIt(tk.LogDebug, "lb-rule service-down ep - %s:%s\n", sType, n.xIP.String())
 					}
 				} else {
 					if n.noService {
 						np.noService = false
 						np.inActTries = 0
 						rChg = true
-						tk.LogIt(tk.LogDebug, "nat lb-rule service-up ep - %s:%s\n", sType, n.xIP.String())
+						tk.LogIt(tk.LogDebug, "lb-rule service-up ep - %s:%s\n", sType, n.xIP.String())
 					}
 				}
 			}
@@ -1166,7 +1166,7 @@ func (R *RuleH) foldRecursiveEPs(r *ruleEnt) {
 
 	for _, tr := range R.tables[RtLB].eMap {
 		switch atr := r.act.action.(type) {
-		case *ruleNatActs:
+		case *ruleLBActs:
 			for i := range atr.endPoints {
 				rep := &atr.endPoints[i]
 				service := ""
@@ -1184,15 +1184,15 @@ func (R *RuleH) foldRecursiveEPs(r *ruleEnt) {
 				l4dst := rule16Tuple{rep.xPort, 0xffff}
 				rtk := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: r.tuples.pref}
 				if rtk.ruleKey() == tr.tuples.ruleKey() {
-					rep.foldEndPoints = tr.act.action.(*ruleNatActs).endPoints
+					rep.foldEndPoints = tr.act.action.(*ruleLBActs).endPoints
 					rep.foldRuleKey = tr.tuples.ruleKey()
 				}
 			}
 		}
 
 		switch at := tr.act.action.(type) {
-		case *ruleNatActs:
-			if r.act.action.(*ruleNatActs).sel != at.sel || r.act.action.(*ruleNatActs).sel == cmn.LbSelPrio {
+		case *ruleLBActs:
+			if r.act.action.(*ruleLBActs).sel != at.sel || r.act.action.(*ruleLBActs).sel == cmn.LbSelPrio {
 				continue
 			}
 			fold := false
@@ -1214,13 +1214,13 @@ func (R *RuleH) foldRecursiveEPs(r *ruleEnt) {
 				l4dst := rule16Tuple{ep.xPort, 0xffff}
 				rtk := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: r.tuples.pref}
 				if r.tuples.ruleKey() == rtk.ruleKey() {
-					ep.foldEndPoints = r.act.action.(*ruleNatActs).endPoints
+					ep.foldEndPoints = r.act.action.(*ruleLBActs).endPoints
 					ep.foldRuleKey = r.tuples.ruleKey()
 					fold = true
 				}
 				if fold {
 					tr.DP(DpCreate)
-					tk.LogIt(tk.LogDebug, "nat lb-rule folded - %d:%s-%s\n", tr.ruleNum, tr.tuples.String(), tr.act.String())
+					tk.LogIt(tk.LogDebug, "lb-rule folded - %d:%s-%s\n", tr.ruleNum, tr.tuples.String(), tr.act.String())
 				}
 			}
 		}
@@ -1233,7 +1233,7 @@ func (R *RuleH) unFoldRecursiveEPs(r *ruleEnt) {
 
 	selPolicy := cmn.LbSelRr
 	switch at := r.act.action.(type) {
-	case *ruleNatActs:
+	case *ruleLBActs:
 		selPolicy = at.sel
 	}
 
@@ -1242,7 +1242,7 @@ func (R *RuleH) unFoldRecursiveEPs(r *ruleEnt) {
 			continue
 		}
 		switch atr := r.act.action.(type) {
-		case *ruleNatActs:
+		case *ruleLBActs:
 			for i := range atr.endPoints {
 				rep := &atr.endPoints[i]
 				if rep.foldRuleKey == tr.tuples.ruleKey() {
@@ -1252,7 +1252,7 @@ func (R *RuleH) unFoldRecursiveEPs(r *ruleEnt) {
 			}
 		}
 		switch at := tr.act.action.(type) {
-		case *ruleNatActs:
+		case *ruleLBActs:
 			if selPolicy != at.sel || selPolicy == cmn.LbSelPrio {
 				continue
 			}
@@ -1262,7 +1262,7 @@ func (R *RuleH) unFoldRecursiveEPs(r *ruleEnt) {
 					ep.foldEndPoints = nil
 					ep.foldRuleKey = ""
 					tr.DP(DpCreate)
-					tk.LogIt(tk.LogDebug, "nat lb-rule unfolded - %d:%s-%s\n", tr.ruleNum, tr.tuples.String(), tr.act.String())
+					tk.LogIt(tk.LogDebug, "lb-rule unfolded - %d:%s-%s\n", tr.ruleNum, tr.tuples.String(), tr.act.String())
 				}
 			}
 		}
@@ -1281,8 +1281,9 @@ func (R *RuleH) addVIPSys(r *ruleEnt) {
 	}
 }
 
-func getLBArms(oldEps []ruleNatEp, newEps []ruleNatEp, oper cmn.LBOp) (bool, []ruleNatEp) {
-	var retEps []ruleNatEp
+func getLBConsolidatedEPs(oldEps []ruleLBEp, newEps []ruleLBEp, oper cmn.LBOp) (bool, []ruleLBEp, []ruleLBEp) {
+	var retEps []ruleLBEp
+	var delEps []ruleLBEp
 	ruleChg := false
 	found := false
 
@@ -1292,9 +1293,9 @@ func getLBArms(oldEps []ruleNatEp, newEps []ruleNatEp, oper cmn.LBOp) (bool, []r
 				eEp.xPort == nEp.xPort {
 				e := &oldEps[i]
 				n := &newEps[j]
-				if eEp.inActive && oper != cmn.LBOPDetach {
+				if eEp.inActiveEP && oper != cmn.LBOPDetach {
 					ruleChg = true
-					e.inActive = false
+					e.inActiveEP = false
 				}
 				if e.weight != nEp.weight {
 					ruleChg = true
@@ -1311,20 +1312,30 @@ func getLBArms(oldEps []ruleNatEp, newEps []ruleNatEp, oper cmn.LBOp) (bool, []r
 	// Remove LB arms from an existing LB
 	if oper == cmn.LBOPDetach {
 		if !found {
-			return false, oldEps
+			return false, oldEps, delEps
 		}
 		for i := range oldEps {
 			e := &oldEps[i]
 			if !e.chkVal {
 				retEps = append(retEps, *e)
+			} else {
+				e.chkVal = false
+				delEps = append(delEps, *e)
 			}
 		}
-		return true, retEps
+		return true, retEps, delEps
+	}
+
+	for i := range oldEps {
+		e := &oldEps[i]
+		if !e.chkVal && !e.inActiveEP {
+			delEps = append(delEps, *e)
+		}
 	}
 
 	retEps = oldEps
 
-	// Attach LB arms to an existing LB
+	// Attach LB endpoints to an existing LB
 	for i, nEp := range newEps {
 		n := &newEps[i]
 		if !nEp.chkVal {
@@ -1338,19 +1349,20 @@ func getLBArms(oldEps []ruleNatEp, newEps []ruleNatEp, oper cmn.LBOp) (bool, []r
 		e := &retEps[i]
 		if !eEp.chkVal && oper == cmn.LBOPAdd {
 			ruleChg = true
-			e.inActive = true
+			e.inActiveEP = true
 		}
 		e.chkVal = false
 	}
-	return ruleChg, retEps
+
+	return ruleChg, retEps, delEps
 }
 
-// AddNatLbRule - Add a service LB nat rule. The service details are passed in serv argument,
+// AddLbRule - Add a service LB rule. The service details are passed in serv argument,
 // and end-point information is passed in the slice servEndPoints. On success,
 // it will return 0 and nil error, else appropriate return code and error string will be set
-func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, servEndPoints []cmn.LbEndPointArg) (int, error) {
-	var natActs ruleNatActs
-	var nSecIP []ruleNatSIP
+func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, servEndPoints []cmn.LbEndPointArg) (int, error) {
+	var lBActs ruleLBActs
+	var nSecIP []ruleLBSIP
 	var ipProto uint8
 	var privIP net.IP
 
@@ -1415,7 +1427,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	}
 
 	// Currently support a maximum of MAX_NAT_EPS
-	if len(servEndPoints) <= 0 || len(servEndPoints) > MaxNatEndPoints {
+	if len(servEndPoints) <= 0 || len(servEndPoints) > MaxLBEndPoints {
 		return RuleEpCountErr, errors.New("endpoints-range error")
 	}
 
@@ -1456,7 +1468,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		if tk.IsNetIPv4(serv.ServIP) && tk.IsNetIPv6(k.SecIP) {
 			return RuleUnknownServiceErr, errors.New("malformed-secIP nat46 error")
 		}
-		sip := ruleNatSIP{pNetAddr}
+		sip := ruleLBSIP{pNetAddr}
 		nSecIP = append(nSecIP, sip)
 	}
 
@@ -1467,14 +1479,14 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	})
 
 	if serv.Mode == cmn.LBModeHostOneArm && !sNetAddr.IP.IsUnspecified() {
-		tk.LogIt(tk.LogInfo, "nat lb-rule %s-%v-%s hostarm needs unspec VIP\n", serv.ServIP, serv.ServPort, serv.Proto)
+		tk.LogIt(tk.LogInfo, "lb-rule %s-%v-%s hostarm needs unspec VIP\n", serv.ServIP, serv.ServPort, serv.Proto)
 		return RuleArgsErr, errors.New("hostarm-args error")
 	}
 
-	natActs.sel = serv.Sel
-	natActs.mode = cmn.LBMode(serv.Mode)
+	lBActs.sel = serv.Sel
+	lBActs.mode = cmn.LBMode(serv.Mode)
 
-	if natActs.mode == cmn.LBModeOneArm || natActs.mode == cmn.LBModeFullNAT || natActs.mode == cmn.LBModeHostOneArm || serv.Monitor {
+	if lBActs.mode == cmn.LBModeOneArm || lBActs.mode == cmn.LBModeFullNAT || lBActs.mode == cmn.LBModeHostOneArm || serv.Monitor {
 		activateProbe = true
 	}
 
@@ -1491,16 +1503,16 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 			return RuleUnknownServiceErr, errors.New("malformed-service error")
 		}
 
-		if natActs.mode == cmn.LBModeDSR && k.EpPort != serv.ServPort {
+		if lBActs.mode == cmn.LBModeDSR && k.EpPort != serv.ServPort {
 			return RuleUnknownServiceErr, errors.New("malformed-service dsr-port error")
 		}
-		ep := ruleNatEp{pNetAddr, xNetAddr, k.EpPort, k.Weight, 0, false, false, false, ruleStat{0, 0}, nil, ""}
-		natActs.endPoints = append(natActs.endPoints, ep)
+		ep := ruleLBEp{pNetAddr, xNetAddr, k.EpPort, k.Weight, 0, false, false, false, ruleStat{0, 0}, nil, ""}
+		lBActs.endPoints = append(lBActs.endPoints, ep)
 	}
 
-	sort.SliceStable(natActs.endPoints, func(i, j int) bool {
-		a := tk.IPtonl(natActs.endPoints[i].xIP)
-		b := tk.IPtonl(natActs.endPoints[j].xIP)
+	sort.SliceStable(lBActs.endPoints, func(i, j int) bool {
+		a := tk.IPtonl(lBActs.endPoints[i].xIP)
+		b := tk.IPtonl(lBActs.endPoints[j].xIP)
 		return a < b
 	})
 
@@ -1515,15 +1527,15 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		if !reflect.DeepEqual(eRule.secIP, nSecIP) {
 			return RuleUnknownServiceErr, errors.New("secIP modify error")
 		}
-		// If a NAT rule already exists, we try not reschuffle the order of the end-points.
+		// If a LB rule already exists, we try not reschuffle the order of the end-points.
 		// We will try to append the new end-points at the end, while marking any other end-points
 		// not in the new list as inactive
-		ruleChg, retEps := getLBArms(eRule.act.action.(*ruleNatActs).endPoints, natActs.endPoints, serv.Oper)
+		ruleChg, retEps, delEps := getLBConsolidatedEPs(eRule.act.action.(*ruleLBActs).endPoints, lBActs.endPoints, serv.Oper)
 
 		if eRule.hChk.prbType != serv.ProbeType || eRule.hChk.prbPort != serv.ProbePort ||
 			eRule.hChk.prbReq != serv.ProbeReq || eRule.hChk.prbResp != serv.ProbeResp ||
-			eRule.pTO != serv.PersistTimeout || eRule.act.action.(*ruleNatActs).sel != natActs.sel ||
-			eRule.act.action.(*ruleNatActs).mode != natActs.mode {
+			eRule.pTO != serv.PersistTimeout || eRule.act.action.(*ruleLBActs).sel != lBActs.sel ||
+			eRule.act.action.(*ruleLBActs).mode != lBActs.mode {
 			ruleChg = true
 		}
 
@@ -1536,16 +1548,16 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		}
 
 		if len(retEps) == 0 {
-			tk.LogIt(tk.LogDebug, "nat lb-rule %s has no-endpoints: to be deleted\n", eRule.tuples.String())
-			return R.DeleteNatLbRule(serv)
+			tk.LogIt(tk.LogDebug, "lb-rule %s has no-endpoints: to be deleted\n", eRule.tuples.String())
+			return R.DeleteLbRule(serv)
 		}
 
-		if eRule.act.action.(*ruleNatActs).mode == cmn.LBModeFullProxy && natActs.mode != cmn.LBModeFullProxy ||
-			eRule.act.action.(*ruleNatActs).mode != cmn.LBModeFullProxy && natActs.mode == cmn.LBModeFullProxy {
+		if eRule.act.action.(*ruleLBActs).mode == cmn.LBModeFullProxy && lBActs.mode != cmn.LBModeFullProxy ||
+			eRule.act.action.(*ruleLBActs).mode != cmn.LBModeFullProxy && lBActs.mode == cmn.LBModeFullProxy {
 			return RuleExistsErr, errors.New("lbrule-exist error: cant modify fullproxy rule mode")
 		}
 
-		if eRule.act.action.(*ruleNatActs).mode == cmn.LBModeFullProxy {
+		if eRule.act.action.(*ruleLBActs).mode == cmn.LBModeFullProxy {
 			eRule.DP(DpRemove)
 		}
 
@@ -1557,25 +1569,26 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 		eRule.hChk.prbRetries = serv.ProbeRetries
 		eRule.hChk.prbTimeo = serv.ProbeTimeout
 		eRule.pTO = serv.PersistTimeout
-		eRule.act.action.(*ruleNatActs).sel = natActs.sel
-		eRule.act.action.(*ruleNatActs).endPoints = retEps
-		eRule.act.action.(*ruleNatActs).mode = natActs.mode
+		eRule.act.action.(*ruleLBActs).sel = lBActs.sel
+		eRule.act.action.(*ruleLBActs).endPoints = retEps
+		eRule.act.action.(*ruleLBActs).mode = lBActs.mode
 		// Managed flag can't be modified on the fly
 		// eRule.managed = serv.Managed
 
 		if !serv.Snat {
+			R.modNatEpHost(eRule, delEps, false, activateProbe)
 			R.modNatEpHost(eRule, retEps, true, activateProbe)
 			R.electEPSrc(eRule)
 		}
 
 		eRule.sT = time.Now()
 		eRule.iTO = serv.InactiveTimeout
-		tk.LogIt(tk.LogDebug, "nat lb-rule updated - %s:%s\n", eRule.tuples.String(), eRule.act.String())
+		tk.LogIt(tk.LogDebug, "lb-rule updated - %s:%s\n", eRule.tuples.String(), eRule.act.String())
 		eRule.DP(DpCreate)
 
 		return 0, nil
 	} else if serv.Oper == cmn.LBOPDetach {
-		tk.LogIt(tk.LogInfo, "nat lb-rule %s-%v-%s does not exist\n", serv.ServIP, serv.ServPort, serv.Proto)
+		tk.LogIt(tk.LogInfo, "lb-rule %s-%v-%s does not exist\n", serv.ServIP, serv.ServPort, serv.Proto)
 		return RuleNotExistsErr, errors.New("lbrule not-exists error")
 	}
 
@@ -1606,7 +1619,7 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 	r.hChk.prbTimeo = serv.ProbeTimeout
 	r.hChk.actChk = serv.Monitor
 
-	r.act.action = &natActs
+	r.act.action = &lBActs
 	r.ruleNum, err = R.tables[RtLB].Mark.GetCounter()
 	if err != nil {
 		tk.LogIt(tk.LogError, "nat lb-rule - %s:%s hwm error\n", r.tuples.String(), r.act.String())
@@ -1629,14 +1642,14 @@ func (R *RuleH) AddNatLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg,
 
 	if !serv.Snat {
 		R.foldRecursiveEPs(r)
-		R.modNatEpHost(r, natActs.endPoints, true, activateProbe)
+		R.modNatEpHost(r, lBActs.endPoints, true, activateProbe)
 		R.electEPSrc(r)
 		if serv.Mode == cmn.LBModeHostOneArm {
 			R.mkHostAssocs(r)
 		}
 	}
 
-	tk.LogIt(tk.LogDebug, "nat lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
+	tk.LogIt(tk.LogDebug, "lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
 	R.tables[RtLB].eMap[rt.ruleKey()] = r
 	if r.ruleNum < RtMaximumLbs {
@@ -1660,10 +1673,10 @@ func (R *RuleH) deleteVIPSys(r *ruleEnt) {
 	}
 }
 
-// DeleteNatLbRule - Delete a service LB nat rule. The service details are passed in serv argument.
+// DeleteLbRule - Delete a service LB rule. The service details are passed in serv argument.
 // On success, it will return 0 and nil error, else appropriate return code and
 // error string will be set
-func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
+func (R *RuleH) DeleteLbRule(serv cmn.LbServiceArg) (int, error) {
 	var ipProto uint8
 
 	service := ""
@@ -1703,9 +1716,9 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 
 	defer R.tables[RtLB].Mark.PutCounter(rule.ruleNum)
 
-	eEps := rule.act.action.(*ruleNatActs).endPoints
+	eEps := rule.act.action.(*ruleLBActs).endPoints
 	activatedProbe := false
-	if rule.act.action.(*ruleNatActs).mode == cmn.LBModeOneArm || rule.act.action.(*ruleNatActs).mode == cmn.LBModeFullNAT || rule.act.action.(*ruleNatActs).mode == cmn.LBModeHostOneArm || rule.hChk.actChk {
+	if rule.act.action.(*ruleLBActs).mode == cmn.LBModeOneArm || rule.act.action.(*ruleLBActs).mode == cmn.LBModeFullNAT || rule.act.action.(*ruleLBActs).mode == cmn.LBModeHostOneArm || rule.hChk.actChk {
 		activatedProbe = true
 	}
 	if rule.act.actType != RtActSnat {
@@ -1720,7 +1733,7 @@ func (R *RuleH) DeleteNatLbRule(serv cmn.LbServiceArg) (int, error) {
 
 	R.deleteVIPSys(rule)
 
-	tk.LogIt(tk.LogDebug, "nat lb-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
+	tk.LogIt(tk.LogDebug, "lb-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
 
 	rule.DP(DpRemove)
 
@@ -1901,7 +1914,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 
 		snatEP := []cmn.LbEndPointArg{{EpIP: fwOpts.opt.snatIP, EpPort: fwOpts.opt.snatPort}}
 
-		_, err := R.AddNatLbRule(servArg, nil, snatEP)
+		_, err := R.AddLbRule(servArg, nil, snatEP)
 		if err != nil {
 			tk.LogIt(tk.LogError, "fw-rule - %s:%s (%s) snat create error\n", r.tuples.String(), r.act.String(), err)
 			return RuleArgsErr, errors.New("rule-snat error")
@@ -1991,7 +2004,7 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 			servArg.Name = fmt.Sprintf("%s:%s:%d", "Masq", fwOpts.opt.snatIP, fwOpts.opt.snatPort)
 		}
 
-		_, err := R.DeleteNatLbRule(servArg)
+		_, err := R.DeleteLbRule(servArg)
 		if err != nil {
 			tk.LogIt(tk.LogError, "fw-rule - %s:%s snat delete error\n", rule.tuples.String(), rule.act.String())
 		}
@@ -2423,7 +2436,7 @@ func (R *RuleH) RulesSync() {
 		rChg = R.electEPSrc(rule)
 		rlChg := false
 		switch at := rule.act.action.(type) {
-		case *ruleNatActs:
+		case *ruleLBActs:
 			if at.mode == cmn.LBModeHostOneArm {
 				rlChg = R.mkHostAssocs(rule)
 			}
@@ -2442,7 +2455,7 @@ func (R *RuleH) RulesSync() {
 
 		rChg = R.syncEPHostState2Rule(rule, false)
 		if rChg {
-			tk.LogIt(tk.LogDebug, "nat lb-Rule updated %d:%s,%s\n", rule.ruleNum, ruleKeys, ruleActs)
+			tk.LogIt(tk.LogDebug, "lb-Rule updated %d:%s,%s\n", rule.ruleNum, ruleKeys, ruleActs)
 			rule.DP(DpCreate)
 		}
 	}
@@ -2503,7 +2516,7 @@ func (R *RuleH) RuleDestructAll() {
 		}
 
 		lbs.ServPort = r.tuples.l4Dst.val
-		R.DeleteNatLbRule(lbs)
+		R.DeleteLbRule(lbs)
 	}
 	for _, r := range R.tables[RtFw].eMap {
 		fwr.DstIP = r.tuples.l3Dst.addr.String()
@@ -2536,7 +2549,7 @@ func (r *ruleEnt) VIP2DP(work DpWorkT) int {
 	portMap := make(map[int]struct{})
 	if mh.lSockPolicy {
 		switch at := r.act.action.(type) {
-		case *ruleNatActs:
+		case *ruleLBActs:
 			for _, ep := range at.endPoints {
 				if _, ok := portMap[int(ep.xPort)]; ok {
 					continue
@@ -2544,7 +2557,7 @@ func (r *ruleEnt) VIP2DP(work DpWorkT) int {
 				portMap[int(ep.xPort)] = struct{}{}
 				nVIPWork := new(SockVIPDpWorkQ)
 				nVIPWork.Work = work
-				if ep.inActive {
+				if ep.inActiveEP {
 					nVIPWork.Work = DpRemove
 				}
 				nVIPWork.VIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
@@ -2558,14 +2571,14 @@ func (r *ruleEnt) VIP2DP(work DpWorkT) int {
 	return 0
 }
 
-// Nat2DP - Sync state of nat-rule entity to data-path
-func (r *ruleEnt) Nat2DP(work DpWorkT) int {
+// LB2DP - Sync state of lb-rule entity to data-path
+func (r *ruleEnt) LB2DP(work DpWorkT) int {
 
 	if r.addrRslv {
 		return -1
 	}
 
-	nWork := new(NatDpWorkQ)
+	nWork := new(LBDpWorkQ)
 
 	nWork.Work = work
 	nWork.Status = &r.sync
@@ -2603,7 +2616,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	}
 
 	switch at := r.act.action.(type) {
-	case *ruleNatActs:
+	case *ruleLBActs:
 		switch {
 		case at.sel == cmn.LbSelRr:
 			nWork.EpSel = EpRR
@@ -2629,23 +2642,23 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 		if at.sel == cmn.LbSelPrio {
 			j := 0
 			k := 0
-			var small [MaxNatEndPoints]int
-			var neps [MaxNatEndPoints]ruleNatEp
+			var small [MaxLBEndPoints]int
+			var neps [MaxLBEndPoints]ruleLBEp
 			for i, ep := range at.endPoints {
-				if ep.inActive {
+				if ep.inActiveEP {
 					continue
 				}
 				oEp := &at.endPoints[i]
-				sw := (int(ep.weight) * MaxNatEndPoints) / 100
+				sw := (int(ep.weight) * MaxLBEndPoints) / 100
 				if sw == 0 {
 					small[k] = i
 					k++
 				}
-				for x := 0; x < sw && j < MaxNatEndPoints; x++ {
+				for x := 0; x < sw && j < MaxLBEndPoints; x++ {
 					neps[j].xIP = oEp.xIP
 					neps[j].rIP = oEp.rIP
 					neps[j].xPort = oEp.xPort
-					neps[j].inActive = oEp.inActive
+					neps[j].inActiveEP = oEp.inActiveEP
 					neps[j].weight = oEp.weight
 					if sw == 1 {
 						small[k] = i
@@ -2654,18 +2667,18 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 					j++
 				}
 			}
-			if j < MaxNatEndPoints {
+			if j < MaxLBEndPoints {
 				v := 0
 				if k == 0 {
 					k = len(at.endPoints)
 				}
-				for j < MaxNatEndPoints {
+				for j < MaxLBEndPoints {
 					idx := small[v%k]
 					oEp := &at.endPoints[idx]
 					neps[j].xIP = oEp.xIP
 					neps[j].rIP = oEp.rIP
 					neps[j].xPort = oEp.xPort
-					neps[j].inActive = oEp.inActive
+					neps[j].inActiveEP = oEp.inActiveEP
 					neps[j].weight = oEp.weight
 					j++
 					v++
@@ -2678,7 +2691,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 				ep.RIP = e.rIP
 				ep.XPort = e.xPort
 				ep.Weight = e.weight
-				if e.inActive || e.noService {
+				if e.inActiveEP || e.noService {
 					ep.InActive = true
 				}
 				nWork.endPoints = append(nWork.endPoints, ep)
@@ -2693,7 +2706,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 						ep.RIP = kf.rIP
 						ep.XPort = kf.xPort
 						ep.Weight = kf.weight
-						if kf.inActive || kf.noService {
+						if kf.inActiveEP || kf.noService {
 							ep.InActive = true
 						}
 
@@ -2706,7 +2719,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 					ep.RIP = k.rIP
 					ep.XPort = k.xPort
 					ep.Weight = k.weight
-					if k.inActive || k.noService {
+					if k.inActiveEP || k.noService {
 						ep.InActive = true
 					}
 
@@ -2724,7 +2737,7 @@ func (r *ruleEnt) Nat2DP(work DpWorkT) int {
 	if mode == cmn.LBModeHostOneArm {
 		for locIP := range r.locIPs {
 			if sIP := net.ParseIP(locIP); sIP != nil {
-				nWork1 := new(NatDpWorkQ)
+				nWork1 := new(LBDpWorkQ)
 				*nWork1 = *nWork
 				nWork1.ServiceIP = sIP
 				mh.dp.ToDpCh <- nWork1
@@ -2842,7 +2855,7 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 	if work == DpStatsGet || work == DpStatsGetImm {
 		if isNat {
 			switch at := r.act.action.(type) {
-			case *ruleNatActs:
+			case *ruleLBActs:
 				numEndPoints := 0
 				for i := range at.endPoints {
 					nEP := &at.endPoints[i]
@@ -2895,7 +2908,7 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 	}
 
 	if isNat {
-		return r.Nat2DP(work)
+		return r.LB2DP(work)
 	}
 
 	return r.Fw2DP(work)
@@ -2922,9 +2935,9 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP) error {
 				}
 
 				if loxinlp.AddAddrNoHook(IP.String()+"/32", "lo") != 0 {
-					tk.LogIt(tk.LogError, "nat lb-rule vip %s:%s add failed\n", IP.String(), "lo")
+					tk.LogIt(tk.LogError, "lb-rule vip %s:%s add failed\n", IP.String(), "lo")
 				} else {
-					tk.LogIt(tk.LogInfo, "nat lb-rule vip %s:%s added\n", IP.String(), "lo")
+					tk.LogIt(tk.LogInfo, "lb-rule vip %s:%s added\n", IP.String(), "lo")
 				}
 				loxinlp.DelNeighNoHook(IP.String(), "")
 			}
@@ -2936,16 +2949,16 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP) error {
 			case <-rCh:
 				break
 			case <-ctx.Done():
-				tk.LogIt(tk.LogInfo, "nat lb-rule vip %s - iface %s : GratARP timeout\n", IP.String(), iface)
+				tk.LogIt(tk.LogInfo, "lb-rule vip %s - iface %s : GratARP timeout\n", IP.String(), iface)
 			}
 		}
 
 	} else if ciState != "NOT_DEFINED" {
 		if utils.IsIPHostAddr(IP.String()) {
 			if loxinlp.DelAddrNoHook(IP.String()+"/32", "lo") != 0 {
-				tk.LogIt(tk.LogError, "nat lb-rule vip %s:%s delete failed\n", IP.String(), "lo")
+				tk.LogIt(tk.LogError, "lb-rule vip %s:%s delete failed\n", IP.String(), "lo")
 			} else {
-				tk.LogIt(tk.LogInfo, "nat lb-rule vip %s:%s deleted\n", IP.String(), "lo")
+				tk.LogIt(tk.LogInfo, "lb-rule vip %s:%s deleted\n", IP.String(), "lo")
 			}
 		}
 	} else {

@@ -947,8 +947,8 @@ func (e *DpEbpfH) DpRouteDel(w *RouteDpWorkQ) int {
 	return DpRouteMod(w)
 }
 
-// DpNatLbRuleMod - routine to work on a ebpf nat-lb change request
-func DpNatLbRuleMod(w *NatDpWorkQ) int {
+// DpLBRuleMod - routine to work on a ebpf lb change request
+func DpLBRuleMod(w *LBDpWorkQ) int {
 
 	key := new(natKey)
 
@@ -1088,9 +1088,9 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 	return EbpfErrWqUnk
 }
 
-// DpNatLbRuleAdd - routine to work on a ebpf nat-lb add request
-func (e *DpEbpfH) DpNatLbRuleAdd(w *NatDpWorkQ) int {
-	ec := DpNatLbRuleMod(w)
+// DpLBRuleAdd - routine to work on a ebpf lb add request
+func (e *DpEbpfH) DpLBRuleAdd(w *LBDpWorkQ) int {
+	ec := DpLBRuleMod(w)
 	if ec != 0 {
 		*w.Status = DpCreateErr
 	} else {
@@ -1099,9 +1099,9 @@ func (e *DpEbpfH) DpNatLbRuleAdd(w *NatDpWorkQ) int {
 	return ec
 }
 
-// DpNatLbRuleDel - routine to work on a ebpf nat-lb delete request
-func (e *DpEbpfH) DpNatLbRuleDel(w *NatDpWorkQ) int {
-	return DpNatLbRuleMod(w)
+// DpLBRuleDel - routine to work on a ebpf lb delete request
+func (e *DpEbpfH) DpLBRuleDel(w *LBDpWorkQ) int {
+	return DpLBRuleMod(w)
 }
 
 // DpStat - routine to work on a ebpf map statistics request
@@ -1956,7 +1956,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 	if addOp {
 		// Need to completely initialize the cti
 		mh.mtx.Lock()
-		r := mh.zr.Rules.GetNatLbRuleByID(uint32(act.rid))
+		r := mh.zr.Rules.GetLBRuleByID(uint32(act.rid))
 		mh.mtx.Unlock()
 		if r == nil {
 			return
@@ -2213,7 +2213,7 @@ func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
 	serv.BlockNum = w.BlockNum
 
 	mh.mtx.Lock()
-	r := mh.zr.Rules.GetNatLbRuleByServArgs(serv)
+	r := mh.zr.Rules.GetLBRuleByServArgs(serv)
 	mh.mtx.Unlock()
 
 	if r == nil || len(w.PVal) == 0 || len(w.PKey) == 0 || w.CState != "est" {
