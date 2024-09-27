@@ -218,6 +218,7 @@ type ruleLBEp struct {
 	inActiveEP    bool
 	noService     bool
 	chkVal        bool
+	epCreated     bool
 	stat          ruleStat
 	foldEndPoints []ruleLBEp
 	foldRuleKey   string
@@ -877,7 +878,8 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleLBEp, doAddOp bool, liv
 	} else {
 		hopts.probeDuration = r.hChk.prbTimeo
 	}
-	for _, nep := range endpoints {
+	for idx := range endpoints {
+		nep := &endpoints[idx]
 		if r.tuples.l4Prot.val == 6 {
 			pType = HostProbeConnectTCP
 			pPort = nep.xPort
@@ -912,11 +914,25 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleLBEp, doAddOp bool, liv
 		epKey := makeEPKey(nep.xIP.String(), pType, pPort)
 
 		if doAddOp {
-			if !nep.inActiveEP {
-				R.AddEPHost(false, nep.xIP.String(), epKey, hopts)
+			if !nep.inActiveEP && !nep.epCreated {
+				_, err := R.AddEPHost(false, nep.xIP.String(), epKey, hopts)
+				if err == nil {
+					nep.epCreated = true
+				} else {
+					tk.LogIt(tk.LogError, "add ep-host error %v : %s\n", epKey, err)
+				}
+			} else if nep.inActiveEP {
+				nep.epCreated = false
 			}
 		} else {
-			R.DeleteEPHost(false, epKey, nep.xIP.String(), hopts.probeType, hopts.probePort)
+			if nep.epCreated {
+				_, err := R.DeleteEPHost(false, epKey, nep.xIP.String(), hopts.probeType, hopts.probePort)
+				if err == nil {
+					nep.epCreated = false
+				} else {
+					tk.LogIt(tk.LogError, "delete ep-host error %v : %s\n", epKey, err)
+				}
+			}
 		}
 	}
 }
@@ -1506,7 +1522,7 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, se
 		if lBActs.mode == cmn.LBModeDSR && k.EpPort != serv.ServPort {
 			return RuleUnknownServiceErr, errors.New("malformed-service dsr-port error")
 		}
-		ep := ruleLBEp{pNetAddr, xNetAddr, k.EpPort, k.Weight, 0, false, false, false, ruleStat{0, 0}, nil, ""}
+		ep := ruleLBEp{pNetAddr, xNetAddr, k.EpPort, k.Weight, 0, false, false, false, false, ruleStat{0, 0}, nil, ""}
 		lBActs.endPoints = append(lBActs.endPoints, ep)
 	}
 
