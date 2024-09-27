@@ -511,9 +511,9 @@ const (
 type LBOp int32
 
 const (
-	// LBOPAdd - Add te LB rule (replace if existing)
+	// LBOPAdd - Add the LB rule (replace if existing)
 	LBOPAdd LBOp = iota
-	// LBModeOneArm - Attach End-Points
+	// LBOPAttach - Attach End-Points
 	LBOPAttach
 	// LBOPDetach - Detach End-Points
 	LBOPDetach
