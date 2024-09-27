@@ -331,7 +331,7 @@ func (na *NetAPIStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 	var ips []string
-	ret, err := mh.zr.Rules.AddNatLbRule(lm.Serv, lm.SecIPs[:], lm.Eps[:])
+	ret, err := mh.zr.Rules.AddLbRule(lm.Serv, lm.SecIPs[:], lm.Eps[:])
 	if err == nil && lm.Serv.Bgp {
 		if mh.bgp != nil {
 			ips = append(ips, lm.Serv.ServIP)
@@ -354,8 +354,8 @@ func (na *NetAPIStruct) NetLbRuleDel(lm *cmn.LbRuleMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
-	ips := mh.zr.Rules.GetNatLbRuleSecIPs(lm.Serv)
-	ret, err := mh.zr.Rules.DeleteNatLbRule(lm.Serv)
+	ips := mh.zr.Rules.GetLBRuleSecIPs(lm.Serv)
+	ret, err := mh.zr.Rules.DeleteLbRule(lm.Serv)
 	if lm.Serv.Bgp {
 		if mh.bgp != nil {
 			ips = append(ips, lm.Serv.ServIP)
@@ -372,7 +372,7 @@ func (na *NetAPIStruct) NetLbRuleGet() ([]cmn.LbRuleMod, error) {
 	if na.BgpPeerMode {
 		return nil, errors.New("running in bgp only mode")
 	}
-	ret, err := mh.zr.Rules.GetNatLbRule()
+	ret, err := mh.zr.Rules.GetLBRule()
 	return ret, err
 }
 
