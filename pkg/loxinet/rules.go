@@ -1442,7 +1442,7 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, se
 		return RuleArgsErr, errors.New("malformed-service-pport error")
 	}
 
-	// Currently support a maximum of MAX_NAT_EPS
+	// Currently support a maximum of MaxLBEndPoints
 	if len(servEndPoints) <= 0 || len(servEndPoints) > MaxLBEndPoints {
 		return RuleEpCountErr, errors.New("endpoints-range error")
 	}
@@ -1573,8 +1573,13 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, se
 			return RuleExistsErr, errors.New("lbrule-exist error: cant modify fullproxy rule mode")
 		}
 
-		if eRule.act.action.(*ruleLBActs).mode == cmn.LBModeFullProxy {
+		if eRule.act.action.(*ruleLBActs).mode == cmn.LBModeFullProxy || len(retEps) > MaxLBEndPoints {
 			eRule.DP(DpRemove)
+			if len(retEps) > MaxLBEndPoints {
+				tk.LogIt(tk.LogInfo, "lb-rule %s-%v-%s reset all end-points (too many)\n", serv.ServIP, serv.ServPort, serv.Proto)
+				delEps = eRule.act.action.(*ruleLBActs).endPoints
+				retEps = lBActs.endPoints
+			}
 		}
 
 		// Update the rule
