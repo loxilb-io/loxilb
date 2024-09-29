@@ -79,6 +79,7 @@ Telco-cloud requires load-balancing and communication across various interfaces/
 
 ## Getting Started  
 #### loxilb as ext-cluster pod  
+- [K8s : loxilb ext-mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k8s-flannel-ext.md)
 - [K3s : loxilb with default flannel](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s_quick_start_flannel.md)
 - [K3s : loxilb with calico](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s_quick_start_calico.md)
 - [K3s : loxilb with cilium](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/quick_start_with_cilium.md)
@@ -86,10 +87,12 @@ Telco-cloud requires load-balancing and communication across various interfaces/
 - [EKS : loxilb ext-mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/eks-external.md)
 
 #### loxilb as in-cluster pod   
+- [K8s : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k8s-flannel-incluster.md)
 - [K3s : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k3s_quick_start_incluster.md)
 - [K0s : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/k0s_quick_start_incluster.md)
 - [MicroK8s : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/microk8s_quick_start_incluster.md)
 - [EKS : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/eks-incluster.md)
+- [RedHat OCP : loxilb in-cluster mode](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/rhocp-quickstart-incluster.md)
 
 #### loxilb as service-proxy (kube-proxy replacement)
 - [K3s : loxilb service-proxy with flannel](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/service-proxy-flannel.md)
@@ -108,6 +111,7 @@ Telco-cloud requires load-balancing and communication across various interfaces/
 - [How-To : Deploy loxilb with multi-AZ HA support in AWS](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/aws-multi-az.md)
 - [How-To : Deploy loxilb with multi-cloud HA support](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/multi-cloud-ha.md)
 - [How-To : Deploy loxilb with ingress-nginx](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/loxilb-nginx-ingress.md)
+- [How-To : Run loxilb in-cluster with secondary networks](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/loxilb-incluster-multus.md)
 
 ## Knowledge-Base   
 - [What is eBPF](ebpf.md)
