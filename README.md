@@ -114,7 +114,7 @@ Telco-cloud requires load-balancing and communication across various interfaces/
 - [How-To : Run loxilb in-cluster with secondary networks](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/loxilb-incluster-multus.md)
 
 ## Knowledge-Base   
-- [What is eBPF](ebpf.md)
+- [What is eBPF](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/ebpf.md)
 - [What is k8s service - load-balancer](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/lb.md)
 - [Architecture in brief](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/arch.md)
 - [Code organization](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/code.md)
