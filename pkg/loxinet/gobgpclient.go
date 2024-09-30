@@ -205,12 +205,12 @@ func (gbh *GoBgpH) processRouteSingle(p *goBgpRouteInfo, showIdentifier bgp.BGPA
 
 	tk.LogIt(tk.LogInfo, format, pathStr...)
 
-	if err := gbh.syncRoute(p, showIdentifier); err != nil {
+	if err := gbh.syncRoute(p); err != nil {
 		tk.LogIt(tk.LogError, " failed to "+format, pathStr...)
 	}
 }
 
-func (gbh *GoBgpH) syncRoute(p *goBgpRouteInfo, showIdentifier bgp.BGPAddPathMode) error {
+func (gbh *GoBgpH) syncRoute(p *goBgpRouteInfo) error {
 	if gbh.noNlp {
 		return nil
 	}
