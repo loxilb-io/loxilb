@@ -696,7 +696,7 @@ func awsAssociateElasticIp(vIP, eIP net.IP, add bool) error {
 
 	tk.LogIt(tk.LogInfo, "AWS adding elastic IP : %s\n", eIP.String())
 	if !add {
-		return awsDisassociateElasticIpWithInterface(ctx, eipAssociateID, niID)
+		return awsDisassociateElasticIpWithInterface(ctx, eipAssociateID)
 	}
 	return awsAssociateElasticIpWithInterface(ctx, eipID, niID, vIP)
 }
@@ -723,7 +723,7 @@ func awsAssociateElasticIpWithInterface(ctx context.Context, eipID, niID string,
 	return err
 }
 
-func awsDisassociateElasticIpWithInterface(ctx context.Context, eipAssociateID, niID string) error {
+func awsDisassociateElasticIpWithInterface(ctx context.Context, eipAssociateID string) error {
 	_, err := ec2Client.DisassociateAddress(ctx, &ec2.DisassociateAddressInput{
 		AssociationId: &eipAssociateID,
 	})
