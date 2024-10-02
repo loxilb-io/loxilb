@@ -211,13 +211,14 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 			for i := 0; i < nhLen; i++ {
 				// FIXME - Need to sort before comparing
 				if !Na[i].NhAddr.Equal(rt.NhAttr[i].NhAddr) {
-					rtMod = false
+					rtMod = true
 					break
 				}
 			}
 		}
 
 		if rtMod {
+			tk.LogIt(tk.LogDebug, "rt change - %s:%s detected\n", Dst.String(), Zone)
 			ret, _ := r.RtDelete(Dst, Zone)
 			if ret != 0 {
 				tk.LogIt(tk.LogError, "rt add - %s:%s del failed on mod\n", Dst.String(), Zone)
