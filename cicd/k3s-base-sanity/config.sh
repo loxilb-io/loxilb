@@ -131,18 +131,15 @@ else
 
   # Install k3s without external cloud-manager and disabled servicelb
   #curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.22.9+k3s1 INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" K3S_KUBECONFIG_MODE="644" sh -
-  curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" K3S_KUBECONFIG_MODE="644" sh -
+  curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb" K3S_KUBECONFIG_MODE="644" sh -
 
-  sleep 10
+  sleep 20
 
   # Check kubectl works
   kubectl $KUBECONFIG get pods -A
 
   # Remove taints in k3s if any (usually happens if started without cloud-manager)
-  kubectl $KUBECONFIG taint nodes --all node.cloudprovider.kubernetes.io/uninitialized=false:NoSchedule-
-
-  # Start loxi-ccm as k3s daemonset
-  kubectl $KUBECONFIG apply -f https://github.com/loxilb-io/loxi-ccm/raw/master/manifests/loxi-ccm-k3s.yaml
+  # kubectl $KUBECONFIG taint nodes --all node.cloudprovider.kubernetes.io/uninitialized=false:NoSchedule-
 
   echo "End K3s installation"
 fi
