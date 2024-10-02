@@ -139,7 +139,7 @@ else
   kubectl $KUBECONFIG get pods -A
 
   # Remove taints in k3s if any (usually happens if started without cloud-manager)
-  kubectl $KUBECONFIG taint nodes --all node.cloudprovider.kubernetes.io/uninitialized=false:NoSchedule-
+  # kubectl $KUBECONFIG taint nodes --all node.cloudprovider.kubernetes.io/uninitialized=false:NoSchedule-
 
   echo "End K3s installation"
 fi
