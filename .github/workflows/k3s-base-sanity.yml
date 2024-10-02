@@ -40,9 +40,7 @@ jobs:
           submodules: recursive
       - run: curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb" K3S_KUBECONFIG_MODE="644" sh -
       - run: |
-         sleep 20
-         kubectl "${{ env.KUBECONFIG }}" taint nodes --all node.cloudprovider.kubernetes.io/uninitialized=false:NoSchedule-
-         sleep 60
+         sleep 80
          kubectl "${{ env.KUBECONFIG }}" get nodes
          kubectl "${{ env.KUBECONFIG }}" get pods -A
          sleep 20
