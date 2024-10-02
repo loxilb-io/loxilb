@@ -50,7 +50,10 @@ do
 done
 done
 
-$hexec l3h1 nohup nc -d ${servIP[0]} 2020  &
+$hexec l3h1 nohup nc -d ${servIP[0]} 2020  >/dev/null 2>&1 &
+$hexec l3h1 nohup nc -d ${servIP[0]} 2020  >/dev/null 2>&1 &
+$hexec l3h1 nohup nc -d ${servIP[0]} 2020  >/dev/null 2>&1 &
+$hexec l3h1 nohup nc -d ${servIP[0]} 2020  >/dev/null 2>&1 &
 sleep 5
 
 echo "Testing Service IP: ${servIP[0]}"
@@ -69,6 +72,25 @@ do
 done
 done
 
+$hexec l3h1 nohup nc -d ${servIP[0]} 2020  >/dev/null 2>&1 &
+sleep 5
+
+echo "Testing Service IP: ${servIP[0]}"
+lcode=0
+for i in {1..4}
+do
+for j in {0..2}
+do
+    res=$($hexec l3h1 curl --max-time 10 -s ${servIP[0]}:2020)
+    echo $res
+    if [[ $res != "server3" ]]
+    then
+        lcode=1
+    fi
+    sleep 1
+done
+done
+
 if [[ $lcode == 0 ]]
 then
     echo SCENARIO-tcplb with least-connection [OK]
@@ -77,8 +99,8 @@ else
     code=1
 fi
 
-sudo killall -9 node 2>&1 > /dev/null
 sudo killall -9 nc 2>&1 > /dev/null
+sudo killall -9 node 2>&1 > /dev/null
 rm -f nohup.out
 
 exit $code
