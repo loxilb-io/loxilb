@@ -2011,7 +2011,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 		}
 	}
 
-	tk.LogIt(tk.LogDebug, "[CT] %s - %s\n", opStr, cti.String())
+	tk.LogIt(tk.LogTrace, "[CT] %s - %s\n", opStr, cti.String())
 }
 
 func dpCTMapBcast() {
@@ -2044,7 +2044,7 @@ func dpCTMapChkUpdates() {
 	fd := C.llb_map2fd(C.LL_DP_CT_MAP)
 
 	if len(mh.dpEbpf.ctMap) > 0 {
-		tk.LogIt(tk.LogInfo, "[CT] Map size %d\n", len(mh.dpEbpf.ctMap))
+		tk.LogIt(tk.LogTrace, "[CT] Map size %d\n", len(mh.dpEbpf.ctMap))
 	}
 
 	for _, cti := range mh.dpEbpf.ctMap {
@@ -2075,7 +2075,7 @@ func dpCTMapChkUpdates() {
 				delete(mh.dpEbpf.ctMap, cti.Key())
 				mh.dpEbpf.ctMap[goCtEnt.Key()] = goCtEnt
 				ctStr := goCtEnt.String()
-				tk.LogIt(tk.LogDebug, "[CT] %s - %s\n", "update", ctStr)
+				tk.LogIt(tk.LogTrace, "[CT] %s - %s\n", "update", ctStr)
 				if goCtEnt.CState == "est" {
 					goCtEnt.XSync = true
 					goCtEnt.NTs = tc
@@ -2125,7 +2125,7 @@ func dpCTMapChkUpdates() {
 		}
 		if cti.XSync == true &&
 			time.Duration(tc.Sub(cti.NTs).Seconds()) >= time.Duration(10) {
-			tk.LogIt(tk.LogDebug, "[CT] Sync - %s\n", cti.String())
+			tk.LogIt(tk.LogTrace, "[CT] Sync - %s\n", cti.String())
 
 			ret := 0
 			if cti.Deleted > 0 {
@@ -2148,16 +2148,16 @@ func dpCTMapChkUpdates() {
 		}
 
 		if len(blkCti) >= blkCtiMaxLen {
-			tk.LogIt(tk.LogDebug, "[CT] Block Add Sync - \n")
+			tk.LogIt(tk.LogTrace, "[CT] Block Add Sync - \n")
 			tc1 := time.Now()
 			mh.dp.DpXsyncRPC(DpSyncAdd, blkCti)
 			tc2 := time.Now()
-			tk.LogIt(tk.LogInfo, "[CT] Block Add Sync %d took %v- \n", len(blkCti), time.Duration(tc2.Sub(tc1)))
+			tk.LogIt(tk.LogTrace, "[CT] Block Add Sync %d took %v- \n", len(blkCti), time.Duration(tc2.Sub(tc1)))
 			blkCti = nil
 		}
 
 		if len(blkDelCti) >= blkCtiMaxLen {
-			tk.LogIt(tk.LogDebug, "[CT] Block Del Sync - \n")
+			tk.LogIt(tk.LogTrace, "[CT] Block Del Sync - \n")
 			mh.dp.DpXsyncRPC(DpSyncDelete, blkDelCti)
 			blkDelCti = nil
 		}
@@ -2165,14 +2165,14 @@ func dpCTMapChkUpdates() {
 
 	if len(blkCti) > 0 {
 		tc1 := time.Now()
-		tk.LogIt(tk.LogDebug, "[CT] Block Add Sync - \n")
+		tk.LogIt(tk.LogTrace, "[CT] Block Add Sync - \n")
 		mh.dp.DpXsyncRPC(DpSyncAdd, blkCti)
 		tc2 := time.Now()
-		tk.LogIt(tk.LogInfo, "[CT] Block Add Sync %d took %v- \n", len(blkCti), time.Duration(tc2.Sub(tc1)))
+		tk.LogIt(tk.LogTrace, "[CT] Block Add Sync %d took %v- \n", len(blkCti), time.Duration(tc2.Sub(tc1)))
 	}
 
 	if len(blkDelCti) > 0 {
-		tk.LogIt(tk.LogDebug, "[CT] Block Del Sync - \n")
+		tk.LogIt(tk.LogTrace, "[CT] Block Del Sync - \n")
 		mh.dp.DpXsyncRPC(DpSyncDelete, blkDelCti)
 	}
 }
@@ -2217,7 +2217,7 @@ func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
 	mh.mtx.Unlock()
 
 	if r == nil || len(w.PVal) == 0 || len(w.PKey) == 0 || w.CState != "est" {
-		tk.LogIt(tk.LogDebug, "Invalid CT op/No LB - %v\n", serv)
+		tk.LogIt(tk.LogError, "Invalid CT op/No LB - %v\n", serv)
 		return EbpfErrCtAdd
 	}
 
