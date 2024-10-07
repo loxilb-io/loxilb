@@ -285,8 +285,8 @@ const (
 	DpE2EHTTPS
 )
 
-// NatDpWorkQ - work queue entry for nat related operation
-type NatDpWorkQ struct {
+// LBDpWorkQ - work queue entry for lb related operation
+type LBDpWorkQ struct {
 	Work      DpWorkT
 	Status    *DpStatusT
 	ZoneNum   int
@@ -431,8 +431,8 @@ type DpHookInterface interface {
 	DpNextHopDel(*NextHopDpWorkQ) int
 	DpRouteAdd(*RouteDpWorkQ) int
 	DpRouteDel(*RouteDpWorkQ) int
-	DpNatLbRuleAdd(*NatDpWorkQ) int
-	DpNatLbRuleDel(*NatDpWorkQ) int
+	DpLBRuleAdd(*LBDpWorkQ) int
+	DpLBRuleDel(*LBDpWorkQ) int
 	DpFwRuleAdd(w *FwDpWorkQ) int
 	DpFwRuleDel(w *FwDpWorkQ) int
 	DpStat(*StatDpWorkQ) int
@@ -685,11 +685,11 @@ func (dp *DpH) DpWorkOnRoute(rtWq *RouteDpWorkQ) DpRetT {
 }
 
 // DpWorkOnNatLb - routine  to work on a NAT lb work queue request
-func (dp *DpH) DpWorkOnNatLb(nWq *NatDpWorkQ) DpRetT {
+func (dp *DpH) DpWorkOnNatLb(nWq *LBDpWorkQ) DpRetT {
 	if nWq.Work == DpCreate {
-		return dp.DpHooks.DpNatLbRuleAdd(nWq)
+		return dp.DpHooks.DpLBRuleAdd(nWq)
 	} else if nWq.Work == DpRemove {
-		return dp.DpHooks.DpNatLbRuleDel(nWq)
+		return dp.DpHooks.DpLBRuleDel(nWq)
 	}
 
 	return DpWqUnkErr
@@ -808,7 +808,7 @@ func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 		ret = dp.DpWorkOnNextHop(mq)
 	case *RouteDpWorkQ:
 		ret = dp.DpWorkOnRoute(mq)
-	case *NatDpWorkQ:
+	case *LBDpWorkQ:
 		ret = dp.DpWorkOnNatLb(mq)
 	case *UlClDpWorkQ:
 		ret = dp.DpWorkOnUlCl(mq)
@@ -875,7 +875,7 @@ func (dp *DpH) DpMapGetCt4() []cmn.CtInfo {
 		for _, dCti := range r {
 			servName = "-"
 			mh.mtx.Lock()
-			rule := mh.zr.Rules.GetNatLbRuleByID(dCti.RuleID)
+			rule := mh.zr.Rules.GetLBRuleByID(dCti.RuleID)
 			mh.mtx.Unlock()
 			if rule != nil {
 				servName = rule.name

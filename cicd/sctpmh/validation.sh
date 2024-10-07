@@ -1,40 +1,55 @@
 #!/bin/bash
 code=0
-echo "SCTP Multihoming - Test case #1"
-echo -e "*********************************************************************************"
-./validation1.sh
-if [[ $? == 1 ]]; then
-    code=1
-fi
-echo -e "\n\n\nSCTP Multihoming - Test case #2"
-echo -e "*********************************************************************************"
-./validation2.sh
-if [[ $? == 1 ]]; then
-    code=1
-fi
-echo -e "\n\n\nSCTP Multihoming - Test case #3"
-echo -e "*********************************************************************************"
-./validation3.sh
-if [[ $? == 1 ]]; then
-    code=1
-fi
-echo -e "\n\n\nSCTP Multihoming - Test case #4"
-echo -e "*********************************************************************************"
-./validation4.sh
-if [[ $? == 1 ]]; then
-    code=1
-fi
-echo -e "\n\n\nSCTP Multihoming - Test case #5"
-echo -e "*********************************************************************************"
-sleep 60
-./validation5.sh
-if [[ $? == 1 ]]; then
-    code=1
-fi
-echo -e "\n\n\n*********************************************************************************"
+tc=( "Basic Test - Client & EP Uni-homed and LB is Multi-homed" "Multipath Test, Client and LB Multihomed, EP is uni-homed" "C2LB Multipath Failover Test - Client and LB Multihomed, EP is uni-homed" "E2E Multipath Failover Test - Client, LB and EP all Multihomed" "C2LB HA Failover Test - Client and LB Multihomed, EP is uni-homed" "E2E HA Failover Test. Client, LB and EP all Multihomed" )
+padding="............................................................................................................."
+border="**************************************************************************************************************************************************"
+
+for((j=0,i=1; i<=6; i++, j++)); do
+    echo "SCTP Multihoming - Test case #$i"
+    echo -e "\n\n\n$border\n"
+    ./validation$i.sh
+    echo -e "\n\n"
+    file=status$i.txt
+    status=`cat $file`
+    title=${tc[j]}
+    echo -e "\n\n"
+
+    if [[ $status == "NOK" ]]; then
+        code=1
+        printf "Test case #%2s - %s%s %s\n" "$i" "$title" "${padding:${#title}}" "[FAILED]";
+    else
+        printf "Test case #%2s - %s%s %s\n" "$i" "$title" "${padding:${#title}}" "[PASSED]";
+    fi
+    echo -e "\n\n\n$border\n\n"
+
+    sleep 30
+done
+
+echo -e "\n\n\n$border\n"
+printf "================================================== SCTP MULTIHOMING CONSOLIDATED RESULT ==========================================================\n"
+for((j=0,i=1; i<=6; i++, j++)); do
+    file=status$i.txt
+    status=`cat $file`
+    title=${tc[j]}
+    echo -e "\n\n"
+
+    if [[ $status == "NOK" ]]; then
+        code=1
+        printf "Test case #%2s - %s%s %s\n" "$i" "$title" "${padding:${#title}}" "[FAILED]";
+    else
+        printf "Test case #%2s - %s%s %s\n" "$i" "$title" "${padding:${#title}}" "[PASSED]";
+    fi
+done
+
+echo -e "\n$border"
+
+echo -e "\n\n\n$border\n"
 if [[ $code == 0 ]]; then
-    echo -e "\n\n SCTP Multihoming CICD [OK]"
+    echo -e "SCTP Multihoming with sctp_test CICD [OK]"
 else
-    echo -e "\n\n SCTP Multihoming CICD [NOK]"
+    echo -e "SCTP Multihoming with sctp_test CICD [NOK]"
 fi
+echo -e "\n$border\n"
+
+sudo rm -rf statu*.txt
 exit $code

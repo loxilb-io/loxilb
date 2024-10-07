@@ -108,7 +108,7 @@ loxilb는 기본적으로 L4 로드 밸런서/서비스 프록시로 작동합�
 - [How-To : ingress-nginx와 함께 loxilb 배포](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/loxilb-nginx-ingress.md)
 
 ## 배경 지식
-- [eBPF란 무엇인가](ebpf.md)
+- [eBPF란 무엇인가](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/ebpf.md)
 - [k8s 서비스 - 로드 밸런서란 무엇인가](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/lb.md)
 - [간단한 아키텍처](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/arch.md)
 - [코드 조직](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/code.md)

@@ -947,8 +947,8 @@ func (e *DpEbpfH) DpRouteDel(w *RouteDpWorkQ) int {
 	return DpRouteMod(w)
 }
 
-// DpNatLbRuleMod - routine to work on a ebpf nat-lb change request
-func DpNatLbRuleMod(w *NatDpWorkQ) int {
+// DpLBRuleMod - routine to work on a ebpf lb change request
+func DpLBRuleMod(w *LBDpWorkQ) int {
 
 	key := new(natKey)
 
@@ -1088,9 +1088,9 @@ func DpNatLbRuleMod(w *NatDpWorkQ) int {
 	return EbpfErrWqUnk
 }
 
-// DpNatLbRuleAdd - routine to work on a ebpf nat-lb add request
-func (e *DpEbpfH) DpNatLbRuleAdd(w *NatDpWorkQ) int {
-	ec := DpNatLbRuleMod(w)
+// DpLBRuleAdd - routine to work on a ebpf lb add request
+func (e *DpEbpfH) DpLBRuleAdd(w *LBDpWorkQ) int {
+	ec := DpLBRuleMod(w)
 	if ec != 0 {
 		*w.Status = DpCreateErr
 	} else {
@@ -1099,9 +1099,9 @@ func (e *DpEbpfH) DpNatLbRuleAdd(w *NatDpWorkQ) int {
 	return ec
 }
 
-// DpNatLbRuleDel - routine to work on a ebpf nat-lb delete request
-func (e *DpEbpfH) DpNatLbRuleDel(w *NatDpWorkQ) int {
-	return DpNatLbRuleMod(w)
+// DpLBRuleDel - routine to work on a ebpf lb delete request
+func (e *DpEbpfH) DpLBRuleDel(w *LBDpWorkQ) int {
+	return DpLBRuleMod(w)
 }
 
 // DpStat - routine to work on a ebpf map statistics request
@@ -1956,7 +1956,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 	if addOp {
 		// Need to completely initialize the cti
 		mh.mtx.Lock()
-		r := mh.zr.Rules.GetNatLbRuleByID(uint32(act.rid))
+		r := mh.zr.Rules.GetLBRuleByID(uint32(act.rid))
 		mh.mtx.Unlock()
 		if r == nil {
 			return
@@ -2011,7 +2011,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 		}
 	}
 
-	tk.LogIt(tk.LogDebug, "[CT] %s - %s\n", opStr, cti.String())
+	tk.LogIt(tk.LogTrace, "[CT] %s - %s\n", opStr, cti.String())
 }
 
 func dpCTMapBcast() {
@@ -2044,7 +2044,7 @@ func dpCTMapChkUpdates() {
 	fd := C.llb_map2fd(C.LL_DP_CT_MAP)
 
 	if len(mh.dpEbpf.ctMap) > 0 {
-		tk.LogIt(tk.LogInfo, "[CT] Map size %d\n", len(mh.dpEbpf.ctMap))
+		tk.LogIt(tk.LogTrace, "[CT] Map size %d\n", len(mh.dpEbpf.ctMap))
 	}
 
 	for _, cti := range mh.dpEbpf.ctMap {
@@ -2075,7 +2075,7 @@ func dpCTMapChkUpdates() {
 				delete(mh.dpEbpf.ctMap, cti.Key())
 				mh.dpEbpf.ctMap[goCtEnt.Key()] = goCtEnt
 				ctStr := goCtEnt.String()
-				tk.LogIt(tk.LogDebug, "[CT] %s - %s\n", "update", ctStr)
+				tk.LogIt(tk.LogTrace, "[CT] %s - %s\n", "update", ctStr)
 				if goCtEnt.CState == "est" {
 					goCtEnt.XSync = true
 					goCtEnt.NTs = tc
@@ -2125,7 +2125,7 @@ func dpCTMapChkUpdates() {
 		}
 		if cti.XSync == true &&
 			time.Duration(tc.Sub(cti.NTs).Seconds()) >= time.Duration(10) {
-			tk.LogIt(tk.LogDebug, "[CT] Sync - %s\n", cti.String())
+			tk.LogIt(tk.LogTrace, "[CT] Sync - %s\n", cti.String())
 
 			ret := 0
 			if cti.Deleted > 0 {
@@ -2148,16 +2148,16 @@ func dpCTMapChkUpdates() {
 		}
 
 		if len(blkCti) >= blkCtiMaxLen {
-			tk.LogIt(tk.LogDebug, "[CT] Block Add Sync - \n")
+			tk.LogIt(tk.LogTrace, "[CT] Block Add Sync - \n")
 			tc1 := time.Now()
 			mh.dp.DpXsyncRPC(DpSyncAdd, blkCti)
 			tc2 := time.Now()
-			tk.LogIt(tk.LogInfo, "[CT] Block Add Sync %d took %v- \n", len(blkCti), time.Duration(tc2.Sub(tc1)))
+			tk.LogIt(tk.LogTrace, "[CT] Block Add Sync %d took %v- \n", len(blkCti), time.Duration(tc2.Sub(tc1)))
 			blkCti = nil
 		}
 
 		if len(blkDelCti) >= blkCtiMaxLen {
-			tk.LogIt(tk.LogDebug, "[CT] Block Del Sync - \n")
+			tk.LogIt(tk.LogTrace, "[CT] Block Del Sync - \n")
 			mh.dp.DpXsyncRPC(DpSyncDelete, blkDelCti)
 			blkDelCti = nil
 		}
@@ -2165,14 +2165,14 @@ func dpCTMapChkUpdates() {
 
 	if len(blkCti) > 0 {
 		tc1 := time.Now()
-		tk.LogIt(tk.LogDebug, "[CT] Block Add Sync - \n")
+		tk.LogIt(tk.LogTrace, "[CT] Block Add Sync - \n")
 		mh.dp.DpXsyncRPC(DpSyncAdd, blkCti)
 		tc2 := time.Now()
-		tk.LogIt(tk.LogInfo, "[CT] Block Add Sync %d took %v- \n", len(blkCti), time.Duration(tc2.Sub(tc1)))
+		tk.LogIt(tk.LogTrace, "[CT] Block Add Sync %d took %v- \n", len(blkCti), time.Duration(tc2.Sub(tc1)))
 	}
 
 	if len(blkDelCti) > 0 {
-		tk.LogIt(tk.LogDebug, "[CT] Block Del Sync - \n")
+		tk.LogIt(tk.LogTrace, "[CT] Block Del Sync - \n")
 		mh.dp.DpXsyncRPC(DpSyncDelete, blkDelCti)
 	}
 }
@@ -2213,11 +2213,11 @@ func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
 	serv.BlockNum = w.BlockNum
 
 	mh.mtx.Lock()
-	r := mh.zr.Rules.GetNatLbRuleByServArgs(serv)
+	r := mh.zr.Rules.GetLBRuleByServArgs(serv)
 	mh.mtx.Unlock()
 
 	if r == nil || len(w.PVal) == 0 || len(w.PKey) == 0 || w.CState != "est" {
-		tk.LogIt(tk.LogDebug, "Invalid CT op/No LB - %v\n", serv)
+		tk.LogIt(tk.LogError, "Invalid CT op/No LB - %v\n", serv)
 		return EbpfErrCtAdd
 	}
 

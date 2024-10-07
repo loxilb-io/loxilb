@@ -293,7 +293,7 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 				return 0, nil
 			}
 		}
-		tk.LogIt(tk.LogError, "port add - %s exists\n", name)
+		tk.LogIt(tk.LogTrace, "port add - %s exists\n", name)
 		return PortExistsErr, errors.New("port exists")
 	}
 

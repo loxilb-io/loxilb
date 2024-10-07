@@ -14,11 +14,12 @@ echo -e "-----------------------------------------------------------------------
 echo -e "\nHA state Master:$master BACKUP-$backup\n"
 
 echo -e "\nTraffic Flow: User -> LB -> EP "
+sudo pkill sctp_test
 
-$hexec ep1 sctp_test -H 0.0.0.0  -P 9999 -l > ep1.out &
+$hexec ep1 sctp_test -H 31.31.31.1  -P 9999 -l > ep1.out &
 sleep 2
 
-$hexec user stdbuf -oL sctp_test -H 1.1.1.1 -B 2.2.2.1 -P 20000 -h $extIP -p $port -s -m 100 -x 200000 > user.out &
+$hexec user stdbuf -oL sctp_test -H 1.1.1.1 -B 2.2.2.1 -P 20000 -h $extIP -p $port -s -c 6 -x 10000 > user.out &
 
 #Path counters
 p1c_old=0
@@ -32,29 +33,8 @@ hadone=0
 code=0
 nsyncOk=0
 
-function restart_mloxilb() {
-    if [[ $master == "llb1" ]]; then
-        pat="cluster=172.17.0.3"
-        copts=" --cluster=172.17.0.3"
-        self=" --self=0"
-        ka=" --ka=172.17.0.3:172.17.0.2"
-    else
-        pat="cluster=172.17.0.2"
-        copts=" --cluster=172.17.0.2"
-        self=" --self=1"
-        ka=" --ka=172.17.0.2:172.17.0.3"
-    fi
-    pid=$(docker exec -i $master ps -aef | grep $pat | xargs | cut -d ' ' -f 2)
-    echo Killing $pid >&2
-    docker exec -dt $master kill -9 $pid
-    docker exec -dt $master ip link del llb0
-    docker exec -dt $master nohup /root/loxilb-io/loxilb/loxilb $copts $self $ka > /dev/null &
-    pid=$(docker exec -i $master ps -aef | grep $pat | xargs | cut -d ' ' -f 2)
-    echo "New loxilb pid: $pid" >&2
-}
-
-for((i=0;i<200;i++)) do
-    fin=`tail -n 100 user.out | grep "Client: Sending packets.(200000/200000)"`
+for((i=0;i<400;i++)) do
+    fin=`tail -n 100 user.out | grep "Client: Sending packets.(10000/10000)"`
     if [[ ! -z $fin ]]; then
         fin=1
         echo "sctp_test done."
@@ -65,7 +45,7 @@ for((i=0;i<200;i++)) do
         check_ha
         echo -e "\nHA state Master:$master BACKUP-$backup\n"
         nsyncOk=$(checkSync)
-        if [[ $nsyncOk == 2 ]]; then
+        if [[ $nsyncOk == 2 ]]; then #No active connections in Master, no need to continue.
             break;
         fi
     fi
@@ -115,9 +95,12 @@ sudo rm -rf *.out
 sudo pkill sctp_test
 
 if [[ $fin == 1 && $p1 == 1 && $p2 == 1 && $p3 == 1 && $code == 0 && $syncOk == 1 ]]; then
-    echo "sctpmh SCTP Multihoming HA Failover [OK]"
+    echo "sctpmh SCTP Multihoming C2LB HA Failover [OK]"
+    echo "OK" > status5.txt
+    restart_loxilbs
 else
-    echo "sctpmh SCTP Multihoming HA Failover [NOK]"
+    echo "NOK" > status5.txt
+    echo "sctpmh SCTP Multihoming C2LB HA Failover [NOK]"
     echo -e "\nuser"
     sudo ip netns exec user ip route
     echo -e "\nr1"
@@ -143,6 +126,7 @@ else
     echo "llb2 ep-info"
     $dexec llb2 loxicmd get ep
     echo "-----------------------------"
+    restart_loxilbs
     exit 1
 fi
 echo -e "------------------------------------------------------------------------------------\n\n\n"

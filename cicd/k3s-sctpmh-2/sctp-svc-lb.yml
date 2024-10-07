@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: sctp-lb1
   annotations:
-    loxilb.io/num-secondary-networks: "2"
+    loxilb.io/poolSelectSecondary: "pool2,pool3"
     loxilb.io/lbmode: "fullnat"
     loxilb.io/liveness: "yes"
 spec:

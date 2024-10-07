@@ -1,9 +1,12 @@
 #!/bin/bash
 source ../common.sh
+source check_ha.sh
 
 echo -e "sctpmh: SCTP Multihoming Basic Test - Client & EP Uni-homed and LB is Multi-homed\n"
 extIP="123.123.123.1"
 port=2020
+
+check_ha
 
 echo "SCTP Multihoming service sctp-lb -> $extIP:$port"
 echo -e "------------------------------------------------------------------------------------\n"
@@ -26,7 +29,10 @@ sudo pkill sctp_darn
 if [[ "$res" == "$exp" ]]; then
     echo $res
     echo -e "\nsctpmh SCTP Multihoming service Basic Test [OK]\n"
+    echo "OK" > status1.txt
+    restart_loxilbs
 else
+    echo "NOK" > status1.txt
     echo "sctpmh SCTP Multihoming service Basic Test [NOK]"
     echo "Expected : $exp"
     echo "Received : $res"
@@ -51,11 +57,12 @@ else
     echo "llb1 ep-info"
     $dexec llb1 loxicmd get ep
     echo "llb1 bpf-info"
-    $dexec llb1 ntc filter show dev eth0 ingress
+    $dexec llb1 tc filter show dev eth0 ingress
     echo "BFP trace -- "
     sudo timeout 5 cat  /sys/kernel/debug/tracing/trace_pipe
     sudo killall -9 cat
     echo "BFP trace -- "
+    restart_loxilbs
     exit 1
 fi
 echo -e "------------------------------------------------------------------------------------\n\n\n"

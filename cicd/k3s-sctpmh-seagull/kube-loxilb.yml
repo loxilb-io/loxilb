@@ -33,6 +33,7 @@ rules:
     resources:
       - endpoints
       - services
+      - namespaces
       - services/status
     verbs:
       - get
@@ -111,8 +112,7 @@ spec:
         - /bin/kube-loxilb
         args:
         - --loxiURL=http://4.0.6.10:11111,http://4.0.6.11:11111
-        - --externalCIDR=4.0.5.100/32
-        - --externalSecondaryCIDRs=4.0.4.100/24
+        - --cidrPools=defaultPool=4.0.5.100/32,pool2=4.0.4.100/24
         #- --monitor
         #- --setBGP
         #- --setLBMode=1

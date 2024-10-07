@@ -907,8 +907,9 @@ func ModLink(link nlp.Link, add bool) int {
 			Link: linkState, State: state, Mtu: mtu, Master: master, Real: real,
 			TunID: tunId, TunDst: tunDst, TunSrc: tunSrc})
 		if err != nil {
-			tk.LogIt(tk.LogError, "[NLP] Port %v, %v, %v, %v add failed\n", name, ifMac, state, mtu)
-			fmt.Println(err)
+			if !strings.Contains(err.Error(), "port exists") {
+				tk.LogIt(tk.LogError, "[NLP] Port %v, %v, %v, %v add failed\n", name, ifMac, state, mtu)
+			}
 		} else {
 			tk.LogIt(tk.LogInfo, "[NLP] Port %v, %v, %v, %v add [OK]\n", name, ifMac, state, mtu)
 		}
@@ -917,7 +918,6 @@ func ModLink(link nlp.Link, add bool) int {
 		ret, err = hooks.NetPortDel(&cmn.PortMod{Dev: name, Ptype: pType})
 		if err != nil {
 			tk.LogIt(tk.LogError, "[NLP] Port %v, %v, %v, %v delete failed\n", name, ifMac, state, mtu)
-			fmt.Println(err)
 		} else {
 			tk.LogIt(tk.LogInfo, "[NLP] Port %v, %v, %v, %v delete [OK]\n", name, ifMac, state, mtu)
 		}
@@ -1627,50 +1627,48 @@ func LbSessionGet(done bool) int {
 
 		if _, err := os.Stat(opt.Opts.ConfigPath + "/EPconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
-				tk.LogIt(tk.LogInfo, "[NLP] No EndPoint config file : %s \n", err.Error())
+				tk.LogIt(tk.LogInfo, "[NLP] Continuing without EP config file: %s\n", err.Error())
 			}
 		} else {
 			applyEPConfig()
 		}
-		tk.LogIt(tk.LogInfo, "[NLP] EndPoint done\n")
+		tk.LogIt(tk.LogInfo, "[NLP] EndPoint config process done\n")
 
 		if _, err := os.Stat(opt.Opts.ConfigPath + "/lbconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
-				tk.LogIt(tk.LogInfo, "[NLP] No load balancer config file : %s \n", err.Error())
+				tk.LogIt(tk.LogInfo, "[NLP] Continuing without LB config file : %s \n", err.Error())
 			}
 		} else {
 			applyLoadBalancerConfig()
 		}
+		tk.LogIt(tk.LogInfo, "[NLP] LoadBalancer config done\n")
 
-		tk.LogIt(tk.LogInfo, "[NLP] LoadBalancer done\n")
 		if _, err := os.Stat(opt.Opts.ConfigPath + "/sessionconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
-				tk.LogIt(tk.LogInfo, "[NLP] No Session config file : %s \n", err.Error())
+				tk.LogIt(tk.LogInfo, "[NLP] Continuing without Session config file : %s \n", err.Error())
 			}
 		} else {
 			applySessionConfig()
 		}
+		tk.LogIt(tk.LogInfo, "[NLP] Session config done\n")
 
-		tk.LogIt(tk.LogInfo, "[NLP] Session done\n")
 		if _, err := os.Stat(opt.Opts.ConfigPath + "/sessionulclconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
-				tk.LogIt(tk.LogInfo, "[NLP] No UlCl config file : %s \n", err.Error())
+				tk.LogIt(tk.LogInfo, "[NLP] Continuing without UlCl config file : %s \n", err.Error())
 			}
 		} else {
 			applyUlClConfig()
 		}
+		tk.LogIt(tk.LogInfo, "[NLP] Session UlCl config done\n")
 
-		tk.LogIt(tk.LogInfo, "[NLP] Session UlCl done\n")
 		if _, err := os.Stat(opt.Opts.ConfigPath + "/FWconfig.txt"); errors.Is(err, os.ErrNotExist) {
 			if err != nil {
-				tk.LogIt(tk.LogInfo, "[NLP] No Firewall config file : %s \n", err.Error())
+				tk.LogIt(tk.LogInfo, "[NLP] Continuing without Firewall config file : %s \n", err.Error())
 			}
 		} else {
 			applyFWConfig()
 		}
-		tk.LogIt(tk.LogInfo, "[NLP] Firewall done\n")
-
-		tk.LogIt(tk.LogInfo, "[NLP] LbSessionGet done\n")
+		tk.LogIt(tk.LogInfo, "[NLP] Firewall config done\n")
 	}
 
 	return 0

@@ -79,14 +79,15 @@ $hexec ep1 ip route change default via 31.31.31.254
 
 # Backup paths in user
 $hexec user ip route add 124.124.124.1/32 via 2.2.2.254
-$hexec user ip route add 125.125.125.1/32 via 2.2.2.254
+#$hexec user ip route add 125.125.125.1/32 via 2.2.2.254
+#$hexec user ip route add 32.32.32.1/32 via 2.2.2.254
 $hexec user ip route add 134.134.134.1/32 via 2.2.2.254
-$hexec user ip route add 135.135.135.1/32 via 2.2.2.254
+#$hexec user ip route add 135.135.135.1/32 via 2.2.2.254
 
-$hexec ep1 ip route add 124.124.124.1/32 via 32.32.32.254
-$hexec ep1 ip route add 125.125.125.1/32 via 32.32.32.254
+#$hexec ep1 ip route add 124.124.124.1/32 via 32.32.32.254
+#$hexec ep1 ip route add 125.125.125.1/32 via 31.31.31.254
 $hexec ep1 ip route add 134.134.134.1/32 via 32.32.32.254
-$hexec ep1 ip route add 135.135.135.1/32 via 32.32.32.254
+$hexec ep1 ip route add 135.135.135.1/32 via 31.31.31.254
 
 $hexec llb1 ip route add 1.1.1.0/24 via 11.11.11.253
 $hexec llb1 ip route add 2.2.2.0/24 via 11.11.11.254
@@ -107,10 +108,10 @@ create_lb_rule llb2 123.123.123.1 --name=sctpmh1 --secips=124.124.124.1,125.125.
 create_lb_rule llb1 133.133.133.1 --name=sctpmh2 --secips=134.134.134.1,135.135.135.1 --sctp=2020:9999 --endpoints=1.1.1.1:1 --mode=fullnat
 create_lb_rule llb2 133.133.133.1 --name=sctpmh2 --secips=134.134.134.1,135.135.135.1 --sctp=2020:9999 --endpoints=1.1.1.1:1 --mode=fullnat
 
-$dexec llb1 loxicmd create ep 1.1.1.1 --name=1.1.1.1_sctp_9999 --probetype=none
-$dexec llb1 loxicmd create ep 31.31.31.1 --name=31.31.31.1_sctp_9999 --probetype=none
-$dexec llb2 loxicmd create ep 1.1.1.1 --name=1.1.1.1_sctp_9999 --probetype=none
-$dexec llb2 loxicmd create ep 31.31.31.1 --name=31.31.31.1_sctp_9999 --probetype=none
+$dexec llb1 loxicmd create ep 1.1.1.1 --name=1.1.1.1_sctp_8080 --probetype=ping
+$dexec llb1 loxicmd create ep 31.31.31.1 --name=31.31.31.1_sctp_8080 --probetype=ping
+$dexec llb2 loxicmd create ep 1.1.1.1 --name=1.1.1.1_sctp_8080 --probetype=ping
+$dexec llb2 loxicmd create ep 31.31.31.1 --name=31.31.31.1_sctp_8080 --probetype=ping
 
 
 create_lb_rule llb1 11.11.11.11 --tcp=80:8080 --endpoints=31.31.31.1:1
