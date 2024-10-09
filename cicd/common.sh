@@ -146,7 +146,7 @@ spawn_docker_host() {
     sudo mount -o bind /proc/$pid/ns/net /var/run/netns/$dname
   fi
 
-  $hexec $dname ifconfig lo up
+  $hexec $dname ip link set lo up
   $hexec $dname sysctl net.ipv6.conf.all.disable_ipv6=1 2>&1 >> /dev/null
   #$hexec $dname sysctl net.ipv4.conf.all.arp_accept=1 2>&1 >> /dev/null
   if [ -f /proc/sys/net/ipv4/conf/eth0/arp_ignore ]; then

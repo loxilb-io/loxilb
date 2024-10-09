@@ -26,7 +26,7 @@ import (
 )
 
 func ConfigPostFW(params operations.PostConfigFirewallParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Firewall %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] Firewall %s API called by IP: %s. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.RemoteAddr, params.HTTPRequest.URL)
 	Opts := cmn.FwOptArg{}
 	Rules := cmn.FwRuleArg{}
 	FW := cmn.FwRuleMod{}
@@ -62,6 +62,15 @@ func ConfigPostFW(params operations.PostConfigFirewallParams) middleware.Respond
 
 	FW.Rule = Rules
 	FW.Opts = Opts
+
+	if Opts.Allow {
+		tk.LogIt(tk.LogInfo, "[FW] Allowed traffic: SrcIP: %s, DstIP: %s, Protocol: %d, SrcPortMin: %d, SrcPortMax: %d, DstPortMin: %d, DstPortMax: %d, Preference: %d, InPort: %s\n",
+			Rules.SrcIP, Rules.DstIP, Rules.Proto, Rules.SrcPortMin, Rules.SrcPortMax, Rules.DstPortMin, Rules.DstPortMax, Rules.Pref, Rules.InPort)
+	} else if Opts.Drop {
+		tk.LogIt(tk.LogInfo, "[FW] Dropped traffic: SrcIP: %s, DstIP: %s, Protocol: %d, SrcPortMin: %d, SrcPortMax: %d, DstPortMin: %d, DstPortMax: %d, Preference: %d, InPort: %s\n",
+			Rules.SrcIP, Rules.DstIP, Rules.Proto, Rules.SrcPortMin, Rules.SrcPortMax, Rules.DstPortMin, Rules.DstPortMax, Rules.Pref, Rules.InPort)
+	}
+
 	fmt.Printf("FW: %v\n", FW)
 	_, err := ApiHooks.NetFwRuleAdd(&FW)
 	if err != nil {
@@ -71,7 +80,7 @@ func ConfigPostFW(params operations.PostConfigFirewallParams) middleware.Respond
 }
 
 func ConfigDeleteFW(params operations.DeleteConfigFirewallParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Firewall %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] Firewall %s API called by IP: %s. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.RemoteAddr, params.HTTPRequest.URL)
 
 	Rules := cmn.FwRuleArg{}
 	FW := cmn.FwRuleMod{}
@@ -128,11 +137,14 @@ func ConfigDeleteFW(params operations.DeleteConfigFirewallParams) middleware.Res
 		return &ResultResponse{Result: "fail"}
 	}
 
+	tk.LogIt(tk.LogInfo, "[FW] Deleted traffic rule: SrcIP: %s, DstIP: %s, Protocol: %d, SrcPortMin: %d, SrcPortMax: %d, DstPortMin: %d, DstPortMax: %d, Preference: %d, InPort: %s\n",
+		Rules.SrcIP, Rules.DstIP, Rules.Proto, Rules.SrcPortMin, Rules.SrcPortMax, Rules.DstPortMin, Rules.DstPortMax, Rules.Pref, Rules.InPort)
+
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigGetFW(params operations.GetConfigFirewallAllParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Firewall %s API callded. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "[API] Firewall %s API called by IP: %s. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.RemoteAddr, params.HTTPRequest.URL)
 	res, _ := ApiHooks.NetFwRuleGet()
 	var result []*models.FirewallEntry
 	result = make([]*models.FirewallEntry, 0)
