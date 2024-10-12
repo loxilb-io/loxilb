@@ -16,11 +16,7 @@
 package prometheus
 
 import (
-	"context"
 	"fmt"
-	"github.com/go-openapi/errors"
-	"github.com/loxilb-io/loxilb/options"
-	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -50,8 +46,6 @@ var (
 	PromethusDefaultPeriod = 10 * time.Second
 	PromethusPartialPeriod = (PromethusDefaultPeriod / 6)
 	PromethusLongPeriod    = (PromethusDefaultPeriod * 600) // To reset Period
-	prometheusCtx          context.Context
-	prometheusCancel       context.CancelFunc
 	activeConntrackCount   = promauto.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "active_conntrack_count",
@@ -149,286 +143,215 @@ func PrometheusRegister(hook cmn.NetHookInterface) {
 }
 
 func Init() {
-	prometheusCtx, prometheusCancel = context.WithCancel(context.Background())
-
 	// Make Conntrack Statistic map
 	ConntrackStats = make(map[ConntrackKey]Stats)
 	mutex = &sync.Mutex{}
-	go RunGetConntrack(prometheusCtx)
-	go RunGetEndpoint(prometheusCtx)
-	go RunActiveConntrackCount(prometheusCtx)
-	go RunHostCount(prometheusCtx)
-	go RunProcessedStatistic(prometheusCtx)
-	go RunNewFlowCount(prometheusCtx)
-	go RunResetCounts(prometheusCtx)
-	go RunGetLBRule(prometheusCtx)
-	go RunLcusCalculator(prometheusCtx)
-}
-
-func Off() error {
-	if !options.Opts.Prometheus {
-		return errors.New(http.StatusBadRequest, "already prometheus turned off")
-	}
-	options.Opts.Prometheus = false
-	prometheusCancel()
-	return nil
-}
-
-func TurnOn() error {
-	if options.Opts.Prometheus {
-		return errors.New(http.StatusBadRequest, "already prometheus turned on")
-	}
-	options.Opts.Prometheus = true
-	Init()
-	return nil
+	go RunGetConntrack()
+	go RunGetEndpoint()
+	go RunActiveConntrackCount()
+	go RunHostCount()
+	go RunProcessedStatistic()
+	go RunNewFlowCount()
+	go RunResetCounts()
+	go RunGetLBRule()
+	go RunLcusCalculator()
 }
 
 func MakeConntrackKey(c cmn.CtInfo) (key ConntrackKey) {
 	return ConntrackKey(fmt.Sprintf("%s|%05d|%s|%05d|%v", c.Sip, c.Sport, c.Dip, c.Dport, c.Proto))
 }
 
-func RunResetCounts(ctx context.Context) {
+func RunResetCounts() {
 	for {
 		// Statistic reset
 		time.Sleep(PromethusLongPeriod)
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			mutex.Lock()
-			ConntrackStats = map[ConntrackKey]Stats{}
-			mutex.Unlock()
-		}
+		mutex.Lock()
+		ConntrackStats = map[ConntrackKey]Stats{}
+		mutex.Unlock()
 	}
 }
 
-func RunGetConntrack(ctx context.Context) {
+func RunGetConntrack() {
 	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			mutex.Lock()
-			ConntrackInfo, err = hooks.NetCtInfoGet()
-			if err != nil {
-				tk.LogIt(tk.LogDebug, "[Prometheus] Error occur : %v\n", err)
-			}
-
-			for _, ct := range ConntrackInfo {
-				k := MakeConntrackKey(ct)
-				var tmpStats Stats
-				_, ok := ConntrackStats[k]
-				if ok {
-					tmpStats = Stats{
-						Bytes:   ConntrackStats[k].Bytes + ct.Bytes,
-						Packets: ConntrackStats[k].Packets + ct.Pkts,
-					}
-				} else {
-					tmpStats = Stats{
-						Bytes:   ct.Bytes,
-						Packets: ct.Pkts,
-					}
-				}
-
-				ConntrackStats[k] = tmpStats
-			}
-			mutex.Unlock()
+		mutex.Lock()
+		ConntrackInfo, err = hooks.NetCtInfoGet()
+		if err != nil {
+			tk.LogIt(tk.LogDebug, "[Prometheus] Error occur : %v\n", err)
 		}
 
+		for _, ct := range ConntrackInfo {
+			k := MakeConntrackKey(ct)
+			var tmpStats Stats
+			_, ok := ConntrackStats[k]
+			if ok {
+				tmpStats = Stats{
+					Bytes:   ConntrackStats[k].Bytes + ct.Bytes,
+					Packets: ConntrackStats[k].Packets + ct.Pkts,
+				}
+			} else {
+				tmpStats = Stats{
+					Bytes:   ct.Bytes,
+					Packets: ct.Pkts,
+				}
+			}
+
+			ConntrackStats[k] = tmpStats
+
+		}
+		mutex.Unlock()
 		time.Sleep(PromethusDefaultPeriod)
 	}
 }
 
-func RunGetEndpoint(ctx context.Context) {
+func RunGetEndpoint() {
 	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			mutex.Lock()
-			EndPointInfo, err = hooks.NetEpHostGet()
-			if err != nil {
-				tk.LogIt(tk.LogDebug, "[Prometheus] Error occur : %v\n", err)
-			}
-			mutex.Unlock()
+		mutex.Lock()
+		EndPointInfo, err = hooks.NetEpHostGet()
+		if err != nil {
+			tk.LogIt(tk.LogDebug, "[Prometheus] Error occur : %v\n", err)
 		}
-
+		mutex.Unlock()
 		time.Sleep(PromethusDefaultPeriod)
 	}
 }
 
-func RunGetLBRule(ctx context.Context) {
+func RunGetLBRule() {
 	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			mutex.Lock()
-			LBRuleInfo, err = hooks.NetLbRuleGet()
-			if err != nil {
-				tk.LogIt(tk.LogDebug, "[Prometheus] Error occur : %v\n", err)
-			}
-			ruleCount.Set(float64(len(LBRuleInfo)))
-			mutex.Unlock()
+		mutex.Lock()
+		LBRuleInfo, err = hooks.NetLbRuleGet()
+		if err != nil {
+			tk.LogIt(tk.LogDebug, "[Prometheus] Error occur : %v\n", err)
 		}
-
+		ruleCount.Set(float64(len(LBRuleInfo)))
+		mutex.Unlock()
 		time.Sleep(PromethusDefaultPeriod)
 	}
 }
 
-func RunActiveConntrackCount(ctx context.Context) {
+func RunActiveConntrackCount() {
 	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			mutex.Lock()
-			// init Counts
-			activeFlowCountTcp.Set(0)
-			activeFlowCountUdp.Set(0)
-			activeFlowCountSctp.Set(0)
-			inActiveFlowCount.Set(0)
+		mutex.Lock()
+		// init Counts
+		activeFlowCountTcp.Set(0)
+		activeFlowCountUdp.Set(0)
+		activeFlowCountSctp.Set(0)
+		inActiveFlowCount.Set(0)
 
-			// Total flow count
-			activeConntrackCount.Set(float64(len(ConntrackInfo)))
+		// Total flow count
+		activeConntrackCount.Set(float64(len(ConntrackInfo)))
 
-			for _, ct := range ConntrackInfo {
-				// TCP flow count
-				if ct.Proto == "tcp" {
-					activeFlowCountTcp.Inc()
-				}
-				// UDP flow count
-				if ct.Proto == "udp" {
-					activeFlowCountUdp.Inc()
-				}
-				// SCTP flow count
-				if ct.Proto == "sctp" {
-					activeFlowCountSctp.Inc()
-				}
-				// Closed flow count
-				if ct.CState == "closed" {
-					inActiveFlowCount.Inc()
-				}
+		for _, ct := range ConntrackInfo {
+			// TCP flow count
+			if ct.Proto == "tcp" {
+				activeFlowCountTcp.Inc()
 			}
-			mutex.Unlock()
+			// UDP flow count
+			if ct.Proto == "udp" {
+				activeFlowCountUdp.Inc()
+			}
+			// SCTP flow count
+			if ct.Proto == "sctp" {
+				activeFlowCountSctp.Inc()
+			}
+			// Closed flow count
+			if ct.CState == "closed" {
+				inActiveFlowCount.Inc()
+			}
 		}
-
+		mutex.Unlock()
 		time.Sleep(PromethusDefaultPeriod)
 	}
 }
 
-func RunHostCount(ctx context.Context) {
+func RunHostCount() {
 	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			mutex.Lock()
-			healthyHostCount.Set(0)
-			unHealthyHostCount.Set(0)
-			for _, ep := range EndPointInfo {
-				if ep.CurrState == "ok" {
-					healthyHostCount.Inc()
-				}
-				if ep.CurrState == "nok" {
-					unHealthyHostCount.Inc()
-				}
+		mutex.Lock()
+		healthyHostCount.Set(0)
+		unHealthyHostCount.Set(0)
+		for _, ep := range EndPointInfo {
+			if ep.CurrState == "ok" {
+				healthyHostCount.Inc()
 			}
-			mutex.Unlock()
+			if ep.CurrState == "nok" {
+				unHealthyHostCount.Inc()
+			}
 		}
-
+		mutex.Unlock()
 		time.Sleep(PromethusDefaultPeriod)
 	}
 }
 
-func RunProcessedStatistic(ctx context.Context) {
+func RunProcessedStatistic() {
 	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			mutex.Lock()
-			// Init Stats
-			processedPackets.Set(0)
-			processedBytes.Set(0)
-			processedTCPBytes.Set(0)
-			processedUDPBytes.Set(0)
-			processedSCTPBytes.Set(0)
-			for k, ct := range ConntrackStats {
-				if strings.Contains(string(k), "tcp") {
-					processedTCPBytes.Add(float64(ct.Bytes))
-				}
-				if strings.Contains(string(k), "udp") {
-					processedUDPBytes.Add(float64(ct.Bytes))
-				}
-				if strings.Contains(string(k), "sctp") {
-					processedSCTPBytes.Add(float64(ct.Bytes))
-				}
-				processedPackets.Add(float64(ct.Packets))
-				processedBytes.Add(float64(ct.Bytes))
+		mutex.Lock()
+		// Init Stats
+		processedPackets.Set(0)
+		processedBytes.Set(0)
+		processedTCPBytes.Set(0)
+		processedUDPBytes.Set(0)
+		processedSCTPBytes.Set(0)
+		for k, ct := range ConntrackStats {
+			if strings.Contains(string(k), "tcp") {
+				processedTCPBytes.Add(float64(ct.Bytes))
 			}
-			mutex.Unlock()
+			if strings.Contains(string(k), "udp") {
+				processedUDPBytes.Add(float64(ct.Bytes))
+			}
+			if strings.Contains(string(k), "sctp") {
+				processedSCTPBytes.Add(float64(ct.Bytes))
+			}
+			processedPackets.Add(float64(ct.Packets))
+			processedBytes.Add(float64(ct.Bytes))
 		}
-
+		mutex.Unlock()
 		time.Sleep(PromethusDefaultPeriod)
 	}
 }
 
-func RunNewFlowCount(ctx context.Context) {
+func RunNewFlowCount() {
 	PreFlowCounts = 0
 	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			mutex.Lock()
-			// Total new flow count
-			CurrentFlowCounts := len(ConntrackInfo)
-			diff := CurrentFlowCounts - PreFlowCounts
-			if diff > 0 {
-				newFlowCount.Set(float64(diff))
-			} else {
-				newFlowCount.Set(0)
-			}
-			PreFlowCounts = CurrentFlowCounts
-			mutex.Unlock()
+		mutex.Lock()
+		// Total new flow count
+		CurrentFlowCounts := len(ConntrackInfo)
+		diff := CurrentFlowCounts - PreFlowCounts
+		if diff > 0 {
+			newFlowCount.Set(float64(diff))
+		} else {
+			newFlowCount.Set(0)
 		}
-
+		PreFlowCounts = CurrentFlowCounts
+		mutex.Unlock()
 		time.Sleep(PromethusDefaultPeriod)
 	}
 }
 
-func RunLcusCalculator(ctx context.Context) {
+func RunLcusCalculator() {
 	for {
 		time.Sleep(PromethusDefaultPeriod)
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			mutex.Lock()
-			var LCUNewFlowCount = &dto.Metric{}
-			var LCUActiveFlowCount = &dto.Metric{}
-			var LCURuleCount = &dto.Metric{}
-			var LCUProcessedBytes = &dto.Metric{}
-			if err := newFlowCount.Write(LCUNewFlowCount); err != nil {
-				tk.LogIt(tk.LogDebug, "[Prometheus] Error occur : %v\n", err)
-			}
-			if err := activeConntrackCount.Write(LCUActiveFlowCount); err != nil {
-				tk.LogIt(tk.LogDebug, "[Prometheus] Error occur : %v\n", err)
-			}
-			if err := ruleCount.Write(LCURuleCount); err != nil {
-				tk.LogIt(tk.LogDebug, "[Prometheus] Error occur : %v\n", err)
-			}
-			if err := processedBytes.Write(LCUProcessedBytes); err != nil {
-				tk.LogIt(tk.LogDebug, "[Prometheus] Error occur : %v\n", err)
-			}
-			// LCU of accumulated Flow count = Flowcount / 2160000
-			// LCU of Rule = ruleCount/1000
-			// LCU of Byte = processedBytes(Gb)/1h
-			consumedLcus.Set(float64(len(ConntrackStats))/2160000 +
-				*LCURuleCount.Gauge.Value/1000 +
-				(*LCUProcessedBytes.Gauge.Value*8)/360000000000) // (byte * 8)/ (60*60*1G)/10
-			mutex.Unlock()
+		mutex.Lock()
+		var LCUNewFlowCount = &dto.Metric{}
+		var LCUActiveFlowCount = &dto.Metric{}
+		var LCURuleCount = &dto.Metric{}
+		var LCUProcessedBytes = &dto.Metric{}
+		if err := newFlowCount.Write(LCUNewFlowCount); err != nil {
+			tk.LogIt(tk.LogDebug, "[Prometheus] Error occur : %v\n", err)
 		}
+		if err := activeConntrackCount.Write(LCUActiveFlowCount); err != nil {
+			tk.LogIt(tk.LogDebug, "[Prometheus] Error occur : %v\n", err)
+		}
+		if err := ruleCount.Write(LCURuleCount); err != nil {
+			tk.LogIt(tk.LogDebug, "[Prometheus] Error occur : %v\n", err)
+		}
+		if err := processedBytes.Write(LCUProcessedBytes); err != nil {
+			tk.LogIt(tk.LogDebug, "[Prometheus] Error occur : %v\n", err)
+		}
+		// LCU of accumulated Flow count = Flowcount / 2160000
+		// LCU of Rule = ruleCount/1000
+		// LCU of Byte = processedBytes(Gb)/1h
+		consumedLcus.Set(float64(len(ConntrackStats))/2160000 +
+			*LCURuleCount.Gauge.Value/1000 +
+			(*LCUProcessedBytes.Gauge.Value*8)/360000000000) // (byte * 8)/ (60*60*1G)/10
+		mutex.Unlock()
 	}
 }
