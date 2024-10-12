@@ -2742,6 +2742,72 @@ paths:
           description: Metrics in prometheus text format
           schema:
             type: string
+  '/config/metrics':
+    get:
+      summary: Get prometheus config value
+      responses:
+        '200':
+          description: prometheus config value
+          schema:
+            $ref: '#/definitions/MetricsConfig'
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintenance mode
+          schema:
+            $ref: '#/definitions/Error'
+    post:
+      summary: turn on prometheus option
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintenance mode
+          schema:
+            $ref: '#/definitions/Error'
+    delete:
+      summary: turn off prometheus option
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintenance mode
+          schema:
+            $ref: '#/definitions/Error'
 
 #----------------------------------------------
 # BFD
@@ -4032,3 +4098,9 @@ definitions:
         type: integer
         format: uint8
         description: Retry Count to detect failure
+  MetricsConfig:
+    type: object
+    properties:
+      prometheus:
+        type: boolean
+        description: value for prometheus enable or not

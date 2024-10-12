@@ -16,6 +16,8 @@
 package handler
 
 import (
+	"github.com/loxilb-io/loxilb/api/models"
+	"github.com/loxilb-io/loxilb/api/prometheus"
 	"net/http"
 
 	"github.com/go-openapi/runtime"
@@ -34,4 +36,30 @@ func ConfigGetPrometheusCounter(params operations.GetMetricsParams) middleware.R
 	return CustomResponder(func(w http.ResponseWriter, _ runtime.Producer) {
 		promhttp.Handler().ServeHTTP(w, params.HTTPRequest)
 	})
+}
+
+func ConfigGetPrometheusOption(params operations.GetConfigMetricsParams) middleware.Responder {
+	tk.LogIt(tk.LogDebug, "[API] Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	return operations.NewGetConfigMetricsOK().WithPayload(&models.MetricsConfig{Prometheus: options.Opts.Prometheus})
+}
+
+func ConfigPostPrometheus(params operations.PostConfigMetricsParams) middleware.Responder {
+	tk.LogIt(tk.LogDebug, "[API] Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	err := prometheus.TurnOn()
+	if err != nil {
+		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		return &ResultResponse{Result: err.Error()}
+	}
+	return &ResultResponse{Result: "Success"}
+}
+
+func ConfigDeletePrometheus(params operations.DeleteConfigMetricsParams) middleware.Responder {
+	tk.LogIt(tk.LogDebug, "[API] Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	err := prometheus.Off()
+	if err != nil {
+		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		return &ResultResponse{Result: err.Error()}
+	}
+
+	return &ResultResponse{Result: "Success"}
 }
