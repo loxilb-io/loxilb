@@ -13,7 +13,7 @@ Kubernetes defines many service constructs like cluster-ip, node-port, load-bala
 
 ![LoxiLB Cover](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/photos/loxilb-cover.png)
 
-All these services are provided by load-balancers/proxies operating at Layer4/Layer7. Since Kubernetes's is highly modular,  these services can be provided by different software modules. For example, kube-proxy is used by default to provide cluster-ip and node-port services. For some services like LB and Ingress, no default is usually provided.
+All these services are provided by load-balancers/proxies operating at Layer4/Layer7. Since Kubernetes is highly modular,  these services can be provided by different software modules. For example, kube-proxy is used by default to provide cluster-ip and node-port services. For some services like LB and Ingress, no default is usually provided.
 
 Service type load-balancer is usually provided by public cloud-provider(s) as a managed entity. But for on-prem and self-managed clusters, there are only a few good options available. Even for provider-managed K8s like EKS, there are many who would want to bring their own LB to clusters running anywhere. Additionally, Telco 5G and edge services introduce unique challenges due to the variety of exotic protocols involved, including GTP, SCTP, SRv6, SEPP, and DTLS, making seamless integration particularly challenging. <b>loxilb provides service type load-balancer as its main use-case</b>. loxilb can be run in-cluster or ext-to-cluster as per user need.
 
@@ -46,7 +46,7 @@ Telco-cloud requires load-balancing and communication across various interfaces/
     * [Multi-Node Performance](https://loxilb-io.github.io/loxilbdocs/perf-multi/) 
     * [Performance on ARM](https://www.loxilb.io/post/running-loxilb-on-aws-graviton2-based-ec2-instance)
     * [Short Demo on Performance](https://www.youtube.com/watch?v=MJXcM0x6IeQ)
-- Utitlizes ebpf which makes it ```flexible``` as well as ```customizable```
+- Utilizes ebpf which makes it ```flexible``` as well as ```customizable```
 - Advanced ```quality of service``` for workloads (per LB, per end-point or per client)
 - Works with ```any``` Kubernetes distribution/CNI - k8s/k3s/k0s/kind/OpenShift + Calico/Flannel/Cilium/Weave/Multus etc
 - Kube-proxy replacement with loxilb allows ```simple plug-in``` with any existing/deployed pod-networking software
@@ -62,7 +62,7 @@ Telco-cloud requires load-balancing and communication across various interfaces/
 - High-availability support with BFD detection for hitless/maglev/cgnat clustering
 - Extensive and scalable end-point liveness probes for cloud-native environments
 - Stateful firewalling and IPSEC/Wireguard support
-- Optimized implementation for features like [Conntrack](https://thermalcircle.de/doku.php?id=blog:linux:connection_tracking_1_modules_and_hooks), QoS etc
+- Optimized implementation for features like [Conntrack](https://thermalcircle.de/doku.php?id=blog:linux:connection_tracking_1_modules_and_hooks), QoS, etc
 - Full compatibility for ipvs (ipvs policies can be auto inherited)
 - Policy oriented L7 proxy support - HTTP1.0, 1.1, 2.0, 3.0   
 
@@ -131,7 +131,7 @@ Telco-cloud requires load-balancing and communication across various interfaces/
 - [Development Roadmap](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/roadmap.md)
 - [Contribute](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/contribute.md)
 - [System Requirements](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/requirements.md)
-- [Frequenctly Asked Questions- FAQs](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/faq.md)
+- [Frequently Asked Questions- FAQs](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/faq.md)
 - [Blogs](https://www.loxilb.io/blog)
 - [Demo Videos](https://www.youtube.com/@loxilb697)
 
