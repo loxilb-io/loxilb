@@ -87,8 +87,10 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV PATH="${PATH}:/usr/local/go/bin"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
 
-RUN apt-get update && apt-get install -y --no-install-recommends sudo \
+RUN apt-get update && apt-get install -y --no-install-recommends sudo wget \
     libbsd-dev iproute2 tcpdump bridge-utils net-tools libllvm10 ca-certificates && \
+    wget https://raw.githubusercontent.com/loxilb-io/tools/refs/heads/main/k8s/mkllb-url.sh && \
+    chmod +x mkllb-url.sh && mv mkllb-url.sh /usr/local/sbin/mkllb-url && \
     rm -rf /var/lib/apt/lists/* && apt clean
 
 COPY --from=build /usr/lib64/libbpf* /usr/lib64/
