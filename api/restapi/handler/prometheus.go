@@ -40,7 +40,7 @@ func ConfigGetPrometheusCounter(params operations.GetMetricsParams) middleware.R
 
 func ConfigGetPrometheusOption(params operations.GetConfigMetricsParams) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	return operations.NewGetConfigMetricsOK().WithPayload(&models.MetricsConfig{Prometheus: options.Opts.Prometheus})
+	return operations.NewGetConfigMetricsOK().WithPayload(&models.MetricsConfig{Prometheus: &options.Opts.Prometheus})
 }
 
 func ConfigPostPrometheus(params operations.PostConfigMetricsParams) middleware.Responder {

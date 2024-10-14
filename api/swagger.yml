@@ -4100,6 +4100,8 @@ definitions:
         description: Retry Count to detect failure
   MetricsConfig:
     type: object
+    required:
+      - prometheus
     properties:
       prometheus:
         type: boolean
