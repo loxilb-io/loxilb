@@ -8,8 +8,10 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // MetricsConfig metrics config
@@ -18,11 +20,30 @@ import (
 type MetricsConfig struct {
 
 	// value for prometheus enable or not
-	Prometheus bool `json:"prometheus,omitempty"`
+	// Required: true
+	Prometheus *bool `json:"prometheus"`
 }
 
 // Validate validates this metrics config
 func (m *MetricsConfig) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validatePrometheus(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *MetricsConfig) validatePrometheus(formats strfmt.Registry) error {
+
+	if err := validate.Required("prometheus", "body", m.Prometheus); err != nil {
+		return err
+	}
+
 	return nil
 }
 
