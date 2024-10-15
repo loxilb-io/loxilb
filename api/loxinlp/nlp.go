@@ -1188,10 +1188,19 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 func AddRoute(route nlp.Route) int {
 	var ipNet net.IPNet
 	if route.Dst == nil {
-		r := net.IPv4(0, 0, 0, 0)
-		m := net.CIDRMask(0, 32)
-		r = r.Mask(m)
-		ipNet = net.IPNet{IP: r, Mask: m}
+		if route.Family == 2 {
+			r := net.IPv4(0, 0, 0, 0)
+			m := net.CIDRMask(0, 32)
+			r = r.Mask(m)
+			ipNet = net.IPNet{IP: r, Mask: m}
+		} else if route.Family == 10 {
+			r := net.ParseIP("::")
+			m := net.CIDRMask(0, 128)
+			r = r.Mask(m)
+			ipNet = net.IPNet{IP: r, Mask: m}
+		} else {
+			return -1
+		}
 	} else {
 		ipNet = *route.Dst
 	}
