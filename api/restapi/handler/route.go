@@ -17,38 +17,39 @@ package handler
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/loxilb-io/loxilb/api/loxinlp"
 	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	tk "github.com/loxilb-io/loxilib"
-	"strconv"
-	"strings"
 )
 
 func ConfigPostRoute(params operations.PostConfigRouteParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Route  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Route  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.AddRouteNoHook(params.Attr.DestinationIPNet, params.Attr.Gateway, params.Attr.Protocol)
 	if ret != 0 {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", ret)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", ret)
 		return &ResultResponse{Result: "fail"}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeleteRoute(params operations.DeleteConfigRouteDestinationIPNetIPAddressMaskParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Route  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Route  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	DstIP := fmt.Sprintf("%s/%d", params.IPAddress, params.Mask)
 	ret := loxinlp.DelRouteNoHook(DstIP)
 	if ret != 0 {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", ret)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", ret)
 		return &ResultResponse{Result: "fail"}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigGetRoute(params operations.GetConfigRouteAllParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Route  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Route  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	res, _ := ApiHooks.NetRouteGet()
 	var result []*models.RouteGetEntry
 	result = make([]*models.RouteGetEntry, 0)
