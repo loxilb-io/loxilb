@@ -209,9 +209,12 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		p.HInfo.Link = hwi.Link
 		p.HInfo.State = hwi.State
 		p.HInfo.Mtu = hwi.Mtu
-		if !p.IsL3TunPort() && bytes.Equal(hwi.MacAddr[:], p.HInfo.MacAddr[:]) == false {
+		if !p.IsL3TunPort() && !bytes.Equal(hwi.MacAddr[:], p.HInfo.MacAddr[:]) {
 			p.HInfo.MacAddr = hwi.MacAddr
 			p.DP(DpCreate)
+
+			tk.LogIt(tk.LogInfo, "port add - %s addr-changed\n", name)
+			zn.L3.IfasTicker(true)
 		}
 		if p.SInfo.PortType == cmn.PortReal {
 

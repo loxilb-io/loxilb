@@ -26,7 +26,7 @@ import (
 )
 
 func ConfigPostFW(params operations.PostConfigFirewallParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Firewall %s API called by IP: %s. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.RemoteAddr, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Firewall %s API called by IP: %s. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.RemoteAddr, params.HTTPRequest.URL)
 	Opts := cmn.FwOptArg{}
 	Rules := cmn.FwRuleArg{}
 	FW := cmn.FwRuleMod{}
@@ -80,7 +80,7 @@ func ConfigPostFW(params operations.PostConfigFirewallParams) middleware.Respond
 }
 
 func ConfigDeleteFW(params operations.DeleteConfigFirewallParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Firewall %s API called by IP: %s. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.RemoteAddr, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Firewall %s API called by IP: %s. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.RemoteAddr, params.HTTPRequest.URL)
 
 	Rules := cmn.FwRuleArg{}
 	FW := cmn.FwRuleMod{}
@@ -144,7 +144,7 @@ func ConfigDeleteFW(params operations.DeleteConfigFirewallParams) middleware.Res
 }
 
 func ConfigGetFW(params operations.GetConfigFirewallAllParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Firewall %s API called by IP: %s. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.RemoteAddr, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Firewall %s API called by IP: %s. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.RemoteAddr, params.HTTPRequest.URL)
 	res, _ := ApiHooks.NetFwRuleGet()
 	var result []*models.FirewallEntry
 	result = make([]*models.FirewallEntry, 0)

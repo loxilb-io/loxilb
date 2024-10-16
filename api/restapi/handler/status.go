@@ -24,7 +24,7 @@ import (
 )
 
 func ConfigGetProcess(params operations.GetStatusProcessParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	//var result []*models.ProcessInfoEntry
 	process := status.ProcessInfoGet()
 
@@ -32,21 +32,21 @@ func ConfigGetProcess(params operations.GetStatusProcessParams) middleware.Respo
 }
 
 func ConfigGetDevice(params operations.GetStatusDeviceParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	// Get Conntrack informations
 	res, err := status.DeviceInfoGet()
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return operations.NewGetStatusDeviceOK().WithPayload(res)
 }
 
 func ConfigGetFileSystem(params operations.GetStatusFilesystemParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	res, err := status.FileSystemInfoGet()
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return operations.NewGetStatusFilesystemOK().WithPayload(&operations.GetStatusFilesystemOKBody{FilesystemAttr: res})

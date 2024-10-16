@@ -50,6 +50,7 @@ type Ifa struct {
 	Key  IfaKey
 	Zone *Zone
 	Sync DpStatusT
+	Addr [6]byte
 	Ifas []*IfaEnt
 }
 
@@ -524,7 +525,7 @@ func (l3 *L3H) IfaGet() []cmn.IPAddrGet {
 }
 
 // IfaTicker - Periodic ticker for checking Ifas
-func (l3 *L3H) IfasTicker() {
+func (l3 *L3H) IfasTicker(fsync bool) {
 	for _, ifa := range l3.IfaMap {
 		if ifa.Key.Obj == "lo" {
 			continue
@@ -538,8 +539,8 @@ func (l3 *L3H) IfasTicker() {
 			canSync = true
 		}
 
-		if canSync && ifa.Sync != 0 {
-			tk.LogIt(tk.LogDebug, "defer resync ifa obj : %s\n", ifa.Key.Obj)
+		if canSync && (ifa.Sync != 0 || fsync) {
+			tk.LogIt(tk.LogDebug, "resync ifa obj : %s\n", ifa.Key.Obj)
 			ifa.DP(DpCreate)
 		}
 	}
