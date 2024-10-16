@@ -123,6 +123,7 @@ func (na *NetAPIStruct) NetVlanAdd(vm *cmn.VlanMod) (int, error) {
 		PortHwInfo{vm.MacAddr, vm.Link, vm.State, vm.Mtu, "", "", vm.TunID, nil, nil})
 	if ret == VlanExistsErr {
 		ret = 0
+		err = nil
 	}
 
 	return ret, err

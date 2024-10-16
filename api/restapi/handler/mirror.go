@@ -27,7 +27,7 @@ import (
 )
 
 func ConfigPostMirror(params operations.PostConfigMirrorParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Mirror %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Mirror %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var MirrMod cmn.MirrMod
 
@@ -52,35 +52,35 @@ func ConfigPostMirror(params operations.PostConfigMirrorParams) middleware.Respo
 		MirrMod.Target.AttachMent = cmn.MirrObjType(params.Attr.TargetObject.Attachment)
 	}
 
-	tk.LogIt(tk.LogDebug, "[API] MirrMod : %v\n", MirrMod)
+	tk.LogIt(tk.LogDebug, "api: MirrMod : %v\n", MirrMod)
 	_, err := ApiHooks.NetMirrorAdd(&MirrMod)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeleteMirror(params operations.DeleteConfigMirrorIdentIdentParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Mirror %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Mirror %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var MirrMod cmn.MirrMod
 
 	MirrMod.Ident = params.Ident
 
-	tk.LogIt(tk.LogDebug, "[API] MirrMod : %v\n", MirrMod)
+	tk.LogIt(tk.LogDebug, "api: MirrMod : %v\n", MirrMod)
 	_, err := ApiHooks.NetMirrorDel(&MirrMod)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigGetMirror(params operations.GetConfigMirrorAllParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Mirror %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Mirror %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	res, err := ApiHooks.NetMirrorGet()
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	var result []*models.MirrorGetEntry

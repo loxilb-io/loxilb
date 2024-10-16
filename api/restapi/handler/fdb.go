@@ -24,7 +24,7 @@ import (
 )
 
 func ConfigPostFDB(params operations.PostConfigFdbParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.AddFDBNoHook(params.Attr.MacAddress, params.Attr.Dev)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
@@ -33,7 +33,7 @@ func ConfigPostFDB(params operations.PostConfigFdbParams) middleware.Responder {
 }
 
 func ConfigDeleteFDB(params operations.DeleteConfigFdbMacAddressDevIfNameParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.DelFDBNoHook(params.MacAddress, params.IfName)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
@@ -42,7 +42,7 @@ func ConfigDeleteFDB(params operations.DeleteConfigFdbMacAddressDevIfNameParams)
 }
 
 func ConfigGetFDB(params operations.GetConfigFdbAllParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] FDB  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: FDB  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	fdbs, _ := loxinlp.GetFDBNoHook()
 	var result []*models.FDBEntry
 	result = make([]*models.FDBEntry, 0)

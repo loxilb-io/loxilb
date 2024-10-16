@@ -24,11 +24,11 @@ import (
 )
 
 func ConfigGetConntrack(params operations.GetConfigConntrackAllParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Conntrack %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Conntrack %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	// Get Conntrack informations
 	res, err := ApiHooks.NetCtInfoGet()
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	var result []*models.ConntrackEntry
