@@ -10,9 +10,11 @@ ARG TAG=main
 ENV PATH="${PATH}:/usr/local/go/bin"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
 
+RUN mkdir -p /root/loxilb-io/loxilb
+COPY . /root/loxilb-io/loxilb/
+
 # Install loxilb related packages
 RUN mkdir -p /opt/loxilb && \
-    mkdir -p /root/loxilb-io/loxilb/ && \
     mkdir -p /usr/lib64/ && \
     mkdir -p /opt/loxilb/cert/ && \
     mkdir -p /etc/loxilb/certs/ && \
@@ -45,11 +47,12 @@ RUN mkdir -p /opt/loxilb && \
     make && cp ./loxicmd /usr/local/sbin/loxicmd && cd - && rm -fr loxicmd && \
     /usr/local/sbin/loxicmd completion bash > /etc/bash_completion.d/loxi_completion && \
     # Install loxilb
-    git clone --recurse-submodules https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && \
+    # git clone --recurse-submodules https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && \
     cd /root/loxilb-io/loxilb/ && git fetch --all --tags && git checkout $TAG && \
     cd loxilb-ebpf && git fetch --all --tags && git checkout $TAG && cd .. \
     go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
     else make ;fi && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
+    cp tools/k8s/mkllb-url /usr/local/sbin/mkllb-url && \
     cp loxilb-ebpf/utils/mkllb_cgroup.sh /usr/local/sbin/mkllb_cgroup && \
     cp /root/loxilb-io/loxilb/loxilb-ebpf/kernel/loxilb_dp_debug  /usr/local/sbin/loxilb_dp_debug && \
     cp /root/loxilb-io/loxilb/loxilb /usr/local/sbin/loxilb && \
@@ -87,7 +90,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV PATH="${PATH}:/usr/local/go/bin"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
 
-RUN apt-get update && apt-get install -y --no-install-recommends sudo \
+RUN apt-get update && apt-get install -y --no-install-recommends sudo wget \
     libbsd-dev iproute2 tcpdump bridge-utils net-tools libllvm10 ca-certificates && \
     rm -rf /var/lib/apt/lists/* && apt clean
 
@@ -95,6 +98,7 @@ COPY --from=build /usr/lib64/libbpf* /usr/lib64/
 COPY --from=build /usr/local/build/lib/* /usr/lib64
 COPY --from=build /usr/local/go/bin /usr/local/go/bin
 COPY --from=build /usr/local/sbin/mkllb_bpffs /usr/local/sbin/mkllb_bpffs
+COPY --from=build /usr/local/sbin/mkllb-url /usr/local/sbin/mkllb-url
 COPY --from=build /usr/local/sbin/mkllb_cgroup /usr/local/sbin/mkllb_cgroup
 COPY --from=build /usr/local/sbin/loxilb_dp_debug /usr/local/sbin/loxilb_dp_debug
 COPY --from=build /usr/local/sbin/loxicmd /usr/local/sbin/loxicmd

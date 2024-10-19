@@ -25,33 +25,33 @@ import (
 )
 
 func ConfigPostParams(params operations.PostConfigParamsParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Params %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Params %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var param cmn.ParamMod
 
 	// Set Param State
 	param.LogLevel = params.Attr.LogLevel
-	tk.LogIt(tk.LogDebug, "[API] New LogLevel %s\n", param.LogLevel)
+	tk.LogIt(tk.LogDebug, "api: New LogLevel %s\n", param.LogLevel)
 	_, err := ApiHooks.NetParamSet(param)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigGetParams(params operations.GetConfigParamsParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var param cmn.ParamMod
 
 	var payload models.OperParams
 	// Get Param state
 	_, err := ApiHooks.NetParamGet(&param)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	payload.LogLevel = param.LogLevel
-	tk.LogIt(tk.LogDebug, "[API] LogLevel %s\n", param.LogLevel)
+	tk.LogIt(tk.LogDebug, "api: LogLevel %s\n", param.LogLevel)
 	return operations.NewGetConfigParamsOK().WithPayload(&payload)
 }
