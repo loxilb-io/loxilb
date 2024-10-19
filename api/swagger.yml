@@ -70,7 +70,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
   '/config/loadbalancer/all':
@@ -96,7 +96,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
     delete:
@@ -130,7 +130,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
   '/config/loadbalancer/name/{lb_name}':
@@ -171,7 +171,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
   '/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}':
@@ -231,7 +231,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
   '/config/loadbalancer/hosturl/{hosturl}/externalipaddress/{ip_address}/port/{port}/protocol/{proto}':
@@ -296,7 +296,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 #----------------------------------------------
@@ -325,7 +325,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -355,7 +355,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -401,7 +401,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
   '/config/route':
@@ -443,7 +443,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
  
@@ -490,7 +490,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -521,7 +521,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -564,7 +564,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
  
@@ -606,7 +606,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -633,7 +633,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
             
@@ -676,7 +676,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
  
@@ -723,7 +723,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'            
 
@@ -755,7 +755,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
             
@@ -798,7 +798,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
  
@@ -840,7 +840,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -871,7 +871,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
   '/config/mirror':
@@ -913,7 +913,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
  
@@ -955,7 +955,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -986,7 +986,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
             
@@ -1029,7 +1029,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
  
@@ -1081,7 +1081,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -1112,7 +1112,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
             
@@ -1155,7 +1155,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
  
@@ -1202,7 +1202,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
             
@@ -1233,7 +1233,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
   '/config/fdb':
@@ -1275,7 +1275,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
  
@@ -1322,7 +1322,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -1352,7 +1352,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
             
@@ -1395,7 +1395,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
  
@@ -1438,7 +1438,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
             
@@ -1487,7 +1487,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
   '/config/vlan/{vlan_id}/member/{if_name}/tagged/{tagged}':
@@ -1531,7 +1531,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -1561,7 +1561,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'          
   '/config/tunnel/vxlan':
@@ -1591,7 +1591,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'   
   '/config/tunnel/vxlan/{vxlanID}':
@@ -1618,7 +1618,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'        
             
@@ -1653,7 +1653,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'       
             
@@ -1688,7 +1688,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'     
 
@@ -1718,7 +1718,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
             
@@ -1761,7 +1761,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 #----------------------------------------------
@@ -1790,7 +1790,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -1833,7 +1833,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -1890,7 +1890,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -1920,7 +1920,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -1963,7 +1963,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
  
@@ -2036,7 +2036,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -2066,7 +2066,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
             
@@ -2089,7 +2089,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
             
@@ -2116,7 +2116,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 #----------------------------------------------
@@ -2161,7 +2161,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
     get:
@@ -2199,7 +2199,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -2247,7 +2247,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
   '/config/bgp/neigh':
@@ -2289,7 +2289,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -2337,7 +2337,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -2394,7 +2394,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
     
@@ -2440,7 +2440,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -2488,7 +2488,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
   '/config/bgp/policy/definitions/all':
@@ -2514,7 +2514,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
             
@@ -2557,7 +2557,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -2599,7 +2599,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -2643,7 +2643,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
     delete:
@@ -2684,7 +2684,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
             
@@ -2727,7 +2727,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
@@ -2769,7 +2769,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
             
@@ -2812,7 +2812,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
   '/config/bfd/remoteIP/{remote_ip}':
@@ -2858,7 +2858,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         '503':
-          description: Maintanence mode
+          description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
 
