@@ -1245,7 +1245,7 @@ func AddRouteNoHook(DestinationIPNet, gateway, proto string) int {
 	route.Gw = Gw
 
 	if proto == "static" {
-		route.Protocol = 4 // 4 means Proto Static.
+		route.Protocol = unix.RTPROT_STATIC
 	}
 	err = nlp.RouteAdd(&route)
 	if err != nil {
