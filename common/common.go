@@ -481,7 +481,7 @@ const (
 	LbSelHash
 	// LbSelPrio - select the lb based on weighted round-robin
 	LbSelPrio
-	// LbSelRrPersist - persist connectons from same client
+	// LbSelRrPersist - persist connections from same client
 	LbSelRrPersist
 	// LbSelLeastConnections - select client based on least connections
 	LbSelLeastConnections
