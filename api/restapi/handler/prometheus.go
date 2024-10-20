@@ -29,7 +29,7 @@ import (
 )
 
 func ConfigGetPrometheusCounter(params operations.GetMetricsParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	if !options.Opts.Prometheus {
 		return operations.NewGetMetricsOK().WithPayload("Prometheus option is disabled.")
 	}

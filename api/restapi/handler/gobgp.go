@@ -26,10 +26,10 @@ import (
 )
 
 func ConfigGetBGPNeigh(params operations.GetConfigBgpNeighAllParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] BGP Neighbor %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: BGP Neighbor %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	res, err := ApiHooks.NetGoBGPNeighGet()
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	var result []*models.BGPNeighGetEntry
@@ -47,7 +47,7 @@ func ConfigGetBGPNeigh(params operations.GetConfigBgpNeighAllParams) middleware.
 	return operations.NewGetConfigBgpNeighAllOK().WithPayload(&operations.GetConfigBgpNeighAllOKBody{BgpNeiAttr: result})
 }
 func ConfigPostBGPNeigh(params operations.PostConfigBgpNeighParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] BGP Neighbor %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: BGP Neighbor %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var bgpNeighMod cmn.GoBGPNeighMod
 
 	// IP address
@@ -62,17 +62,17 @@ func ConfigPostBGPNeigh(params operations.PostConfigBgpNeighParams) middleware.R
 	// Multi-hop or not
 	bgpNeighMod.MultiHop = params.Attr.SetMultiHop
 
-	tk.LogIt(tk.LogDebug, "[API] GoBGP neighAdd : %v\n", bgpNeighMod)
+	tk.LogIt(tk.LogDebug, "api: GoBGP neighAdd : %v\n", bgpNeighMod)
 	_, err := ApiHooks.NetGoBGPNeighAdd(&bgpNeighMod)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeleteBGPNeigh(params operations.DeleteConfigBgpNeighIPAddressParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] BGP Neighbor %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: BGP Neighbor %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var bgpNeighMod cmn.GoBGPNeighMod
 
 	// IP address
@@ -81,17 +81,17 @@ func ConfigDeleteBGPNeigh(params operations.DeleteConfigBgpNeighIPAddressParams)
 	// Remote AS
 	bgpNeighMod.RemoteAS = uint32(*params.RemoteAs)
 
-	tk.LogIt(tk.LogDebug, "[API] GoBGP neighDel : %v\n", bgpNeighMod)
+	tk.LogIt(tk.LogDebug, "api: GoBGP neighDel : %v\n", bgpNeighMod)
 	_, err := ApiHooks.NetGoBGPNeighDel(&bgpNeighMod)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigPostBGPGlobal(params operations.PostConfigBgpGlobalParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] BGP Global Config %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: BGP Global Config %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var bgpG cmn.GoBGPGlobalConfig
 
 	// Router ID
@@ -109,17 +109,17 @@ func ConfigPostBGPGlobal(params operations.PostConfigBgpGlobalParams) middleware
 		bgpG.ListenPort = 179
 	}
 
-	tk.LogIt(tk.LogDebug, "[API] GoBGP GCAdd : %v\n", bgpG)
+	tk.LogIt(tk.LogDebug, "api: GoBGP GCAdd : %v\n", bgpG)
 	_, err := ApiHooks.NetGoBGPGCAdd(&bgpG)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigPostBGPPolicyDefinedsets(params operations.PostConfigBgpPolicyDefinedsetsDefinesetTypeParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] BGP Policy DefinedSet %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: BGP Policy DefinedSet %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var bgpPolicyDefinedSet cmn.GoBGPPolicyDefinedSetMod
 
 	// name
@@ -138,36 +138,36 @@ func ConfigPostBGPPolicyDefinedsets(params operations.PostConfigBgpPolicyDefined
 		bgpPolicyDefinedSet.List = params.Attr.List
 	}
 
-	tk.LogIt(tk.LogDebug, "[API] GoBGP bgpPolicyPrefix : %v\n", bgpPolicyDefinedSet)
+	tk.LogIt(tk.LogDebug, "api: GoBGP bgpPolicyPrefix : %v\n", bgpPolicyDefinedSet)
 	_, err := ApiHooks.NetGoBGPPolicyDefinedSetAdd(&bgpPolicyDefinedSet)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeleteBGPPolicyDefinedsets(params operations.DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] BGP Policy DefinedSet %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: BGP Policy DefinedSet %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var bgpPolicyConfig cmn.GoBGPPolicyDefinedSetMod
 
 	bgpPolicyConfig.Name = params.TypeName
 	bgpPolicyConfig.DefinedTypeString = params.DefinesetType
 
-	tk.LogIt(tk.LogDebug, "[API] GoBGP bgpPolicyConfig : %v\n", bgpPolicyConfig)
+	tk.LogIt(tk.LogDebug, "api: GoBGP bgpPolicyConfig : %v\n", bgpPolicyConfig)
 	_, err := ApiHooks.NetGoBGPPolicyDefinedSetDel(&bgpPolicyConfig)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigGetBGPPolicyDefinedSetGet(params operations.GetConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] BGP DefinedSet %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: BGP DefinedSet %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	res, err := ApiHooks.NetGoBGPPolicyDefinedSetGet(params.TypeName, params.DefinesetType)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	result := make([]*models.BGPPolicyDefinedSetGetEntry, 0)
@@ -194,7 +194,7 @@ func ConfigGetBGPPolicyDefinedSetGet(params operations.GetConfigBgpPolicyDefined
 }
 
 func ConfigPostBGPPolicyDefinitions(params operations.PostConfigBgpPolicyDefinitionsParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] BGP Policy Definitions %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: BGP Policy Definitions %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var bgpPolicyConfig cmn.GoBGPPolicyDefinitionsMod
 
 	// name
@@ -276,36 +276,36 @@ func ConfigPostBGPPolicyDefinitions(params operations.PostConfigBgpPolicyDefinit
 		bgpPolicyConfig.Statement = append(bgpPolicyConfig.Statement, tmpStatement)
 	}
 
-	tk.LogIt(tk.LogDebug, "[API] GoBGP bgpPolicyConfig : %v\n", bgpPolicyConfig)
+	tk.LogIt(tk.LogDebug, "api: GoBGP bgpPolicyConfig : %v\n", bgpPolicyConfig)
 	_, err := ApiHooks.NetGoBGPPolicyDefinitionAdd(&bgpPolicyConfig)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeleteBGPPolicyDefinitions(params operations.DeleteConfigBgpPolicyDefinitionsPolicyNameParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] BGP Policy Definitions %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: BGP Policy Definitions %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var bgpPolicyConfig cmn.GoBGPPolicyDefinitionsMod
 
 	// name
 	bgpPolicyConfig.Name = params.PolicyName
 
-	tk.LogIt(tk.LogDebug, "[API] GoBGP bgpPolicyConfig : %v\n", bgpPolicyConfig)
+	tk.LogIt(tk.LogDebug, "api: GoBGP bgpPolicyConfig : %v\n", bgpPolicyConfig)
 	_, err := ApiHooks.NetGoBGPPolicyDefinitionDel(&bgpPolicyConfig)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigGetBGPPolicyDefinitions(params operations.GetConfigBgpPolicyDefinitionsAllParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] BGP Policy Definitions %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: BGP Policy Definitions %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	res, err := ApiHooks.NetGoBGPPolicyDefinitionsGet()
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	result := make([]*models.BGPPolicyDefinitionsMod, 0)
@@ -400,34 +400,34 @@ func ConfigGetBGPPolicyDefinitions(params operations.GetConfigBgpPolicyDefinitio
 }
 
 func ConfigPostBGPPolicyApply(params operations.PostConfigBgpPolicyApplyParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] BGP Policy Apply %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: BGP Policy Apply %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var bgpPolicyConfig cmn.GoBGPPolicyApply
 
 	bgpPolicyConfig.NeighIPAddress = params.Attr.IPAddress
 	bgpPolicyConfig.PolicyType = params.Attr.PolicyType
 	bgpPolicyConfig.Polices = params.Attr.Policies
 	bgpPolicyConfig.RouteAction = params.Attr.RouteAction
-	tk.LogIt(tk.LogDebug, "[API] GoBGP bgpPolicyConfig : %v\n", bgpPolicyConfig)
+	tk.LogIt(tk.LogDebug, "api: GoBGP bgpPolicyConfig : %v\n", bgpPolicyConfig)
 	_, err := ApiHooks.NetGoBGPPolicyApplyAdd(&bgpPolicyConfig)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeleteBGPPolicyApply(params operations.DeleteConfigBgpPolicyApplyParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] BGP Policy Apply %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: BGP Policy Apply %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var bgpPolicyConfig cmn.GoBGPPolicyApply
 
 	bgpPolicyConfig.NeighIPAddress = params.Attr.IPAddress
 	bgpPolicyConfig.PolicyType = params.Attr.PolicyType
 	bgpPolicyConfig.Polices = params.Attr.Policies
 	bgpPolicyConfig.RouteAction = "" // No need RouteAction for delete
-	tk.LogIt(tk.LogDebug, "[API] GoBGP bgpPolicyConfig : %v\n", bgpPolicyConfig)
+	tk.LogIt(tk.LogDebug, "api: GoBGP bgpPolicyConfig : %v\n", bgpPolicyConfig)
 	_, err := ApiHooks.NetGoBGPPolicyApplyDel(&bgpPolicyConfig)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}

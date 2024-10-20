@@ -16,21 +16,22 @@
 package handler
 
 import (
+	"net"
+
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
-	"net"
 )
 
 func ConfigGetCIState(params operations.GetConfigCistateAllParams) middleware.Responder {
 	var result []*models.CIStatusGetEntry
 	result = make([]*models.CIStatusGetEntry, 0)
-	tk.LogIt(tk.LogDebug, "[API] Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	hasMod, err := ApiHooks.NetCIStateGet()
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	for _, h := range hasMod {
@@ -45,7 +46,7 @@ func ConfigGetCIState(params operations.GetConfigCistateAllParams) middleware.Re
 }
 
 func ConfigPostCIState(params operations.PostConfigCistateParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] HA %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: HA %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var hasMod cmn.HASMod
 
@@ -53,11 +54,11 @@ func ConfigPostCIState(params operations.PostConfigCistateParams) middleware.Res
 	hasMod.Instance = params.Attr.Instance
 	hasMod.State = params.Attr.State
 	hasMod.Vip = net.ParseIP(params.Attr.Vip)
-	tk.LogIt(tk.LogDebug, "[API] Instance %s New HA State : %v, VIP: %s\n",
+	tk.LogIt(tk.LogDebug, "api: Instance %s New HA State : %v, VIP: %s\n",
 		hasMod.Instance, hasMod.State, hasMod.Vip)
 	_, err := ApiHooks.NetCIStateMod(&hasMod)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
@@ -66,10 +67,10 @@ func ConfigPostCIState(params operations.PostConfigCistateParams) middleware.Res
 func ConfigGetBFDSession(params operations.GetConfigBfdAllParams) middleware.Responder {
 	var result []*models.BfdGetEntry
 	result = make([]*models.BfdGetEntry, 0)
-	tk.LogIt(tk.LogDebug, "[API] Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	bfdMod, err := ApiHooks.NetBFDGet()
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	for _, h := range bfdMod {
@@ -89,7 +90,7 @@ func ConfigGetBFDSession(params operations.GetConfigBfdAllParams) middleware.Res
 }
 
 func ConfigPostBFDSession(params operations.PostConfigBfdParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] HA %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: HA %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var bfdMod cmn.BFDMod
 
@@ -100,18 +101,18 @@ func ConfigPostBFDSession(params operations.PostConfigBfdParams) middleware.Resp
 	bfdMod.Interval = params.Attr.Interval
 	bfdMod.RetryCount = params.Attr.RetryCount
 
-	tk.LogIt(tk.LogDebug, "[API] Instance %s BFD session add : %s, Interval: %d, RetryCount: %d\n",
+	tk.LogIt(tk.LogDebug, "api: Instance %s BFD session add : %s, Interval: %d, RetryCount: %d\n",
 		bfdMod.Instance, bfdMod.RemoteIP, bfdMod.Interval, bfdMod.RetryCount)
 	_, err := ApiHooks.NetBFDAdd(&bfdMod)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeleteBFDSession(params operations.DeleteConfigBfdRemoteIPRemoteIPParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] HA %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogDebug, "api: HA %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var bfdMod cmn.BFDMod
 
@@ -122,11 +123,11 @@ func ConfigDeleteBFDSession(params operations.DeleteConfigBfdRemoteIPRemoteIPPar
 
 	bfdMod.RemoteIP = net.ParseIP(params.RemoteIP)
 
-	tk.LogIt(tk.LogDebug, "[API] Instance %s BFD session delete : %s\n",
+	tk.LogIt(tk.LogDebug, "api: Instance %s BFD session delete : %s\n",
 		bfdMod.Instance, bfdMod.RemoteIP)
 	_, err := ApiHooks.NetBFDDel(&bfdMod)
 	if err != nil {
-		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
 	return &ResultResponse{Result: "Success"}
