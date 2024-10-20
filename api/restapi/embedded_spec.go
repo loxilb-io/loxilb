@@ -93,7 +93,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -133,7 +133,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -201,7 +201,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -265,7 +265,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -329,7 +329,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -396,7 +396,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -465,7 +465,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -529,7 +529,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -591,7 +591,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -662,7 +662,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -745,7 +745,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -812,7 +812,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -876,7 +876,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -916,7 +916,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -978,7 +978,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1042,7 +1042,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1082,7 +1082,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1122,7 +1122,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1186,7 +1186,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1226,7 +1226,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1306,7 +1306,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1370,7 +1370,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1410,7 +1410,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1479,7 +1479,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1543,7 +1543,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1650,7 +1650,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1690,7 +1690,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1754,7 +1754,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1794,7 +1794,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1870,7 +1870,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1937,7 +1937,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -1977,7 +1977,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2028,7 +2028,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2116,7 +2116,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2211,7 +2211,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2273,7 +2273,108 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/metrics": {
+      "get": {
+        "summary": "Get prometheus config value",
+        "responses": {
+          "200": {
+            "description": "prometheus config value",
+            "schema": {
+              "$ref": "#/definitions/MetricsConfig"
+            }
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "turn on prometheus option",
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "turn off prometheus option",
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2337,7 +2438,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2377,7 +2478,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2439,7 +2540,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2503,7 +2604,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2543,7 +2644,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2612,7 +2713,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2671,7 +2772,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2733,7 +2834,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2797,7 +2898,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2837,7 +2938,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2899,7 +3000,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -2939,7 +3040,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3003,7 +3104,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3067,7 +3168,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3136,7 +3237,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3200,7 +3301,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3240,7 +3341,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3302,7 +3403,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3366,7 +3467,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3406,7 +3507,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3475,7 +3576,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3521,7 +3622,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3561,7 +3662,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3600,7 +3701,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3651,7 +3752,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3700,7 +3801,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3764,7 +3865,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3804,7 +3905,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3866,7 +3967,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -3938,7 +4039,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -4003,7 +4104,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -4048,7 +4149,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -4088,7 +4189,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -4128,7 +4229,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -5105,6 +5206,18 @@ func init() {
         }
       }
     },
+    "MetricsConfig": {
+      "type": "object",
+      "required": [
+        "prometheus"
+      ],
+      "properties": {
+        "prometheus": {
+          "description": "value for prometheus enable or not",
+          "type": "boolean"
+        }
+      }
+    },
     "MirrorEntry": {
       "type": "object",
       "properties": {
@@ -5804,7 +5917,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -5844,7 +5957,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -5912,7 +6025,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -5976,7 +6089,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6040,7 +6153,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6107,7 +6220,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6176,7 +6289,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6240,7 +6353,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6302,7 +6415,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6373,7 +6486,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6456,7 +6569,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6523,7 +6636,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6587,7 +6700,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6627,7 +6740,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6689,7 +6802,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6753,7 +6866,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6793,7 +6906,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6833,7 +6946,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6897,7 +7010,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -6937,7 +7050,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7017,7 +7130,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7081,7 +7194,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7121,7 +7234,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7190,7 +7303,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7254,7 +7367,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7361,7 +7474,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7401,7 +7514,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7465,7 +7578,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7505,7 +7618,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7581,7 +7694,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7648,7 +7761,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7688,7 +7801,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7739,7 +7852,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7827,7 +7940,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7922,7 +8035,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -7984,7 +8097,108 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/metrics": {
+      "get": {
+        "summary": "Get prometheus config value",
+        "responses": {
+          "200": {
+            "description": "prometheus config value",
+            "schema": {
+              "$ref": "#/definitions/MetricsConfig"
+            }
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "turn on prometheus option",
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "turn off prometheus option",
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8048,7 +8262,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8088,7 +8302,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8150,7 +8364,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8214,7 +8428,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8254,7 +8468,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8323,7 +8537,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8382,7 +8596,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8444,7 +8658,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8508,7 +8722,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8548,7 +8762,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8610,7 +8824,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8650,7 +8864,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8714,7 +8928,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8778,7 +8992,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8847,7 +9061,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8911,7 +9125,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -8951,7 +9165,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9013,7 +9227,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9077,7 +9291,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9117,7 +9331,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9186,7 +9400,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9232,7 +9446,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9272,7 +9486,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9311,7 +9525,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9362,7 +9576,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9411,7 +9625,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9475,7 +9689,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9515,7 +9729,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9577,7 +9791,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9649,7 +9863,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9714,7 +9928,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9759,7 +9973,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9799,7 +10013,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -9839,7 +10053,7 @@ func init() {
             }
           },
           "503": {
-            "description": "Maintanence mode",
+            "description": "Maintenance mode",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -11374,6 +11588,18 @@ func init() {
         },
         "snat": {
           "description": "snat rule",
+          "type": "boolean"
+        }
+      }
+    },
+    "MetricsConfig": {
+      "type": "object",
+      "required": [
+        "prometheus"
+      ],
+      "properties": {
+        "prometheus": {
+          "description": "value for prometheus enable or not",
           "type": "boolean"
         }
       }

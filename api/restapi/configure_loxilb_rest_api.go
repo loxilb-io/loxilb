@@ -158,6 +158,9 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 
 	// Prometheus
 	api.GetMetricsHandler = operations.GetMetricsHandlerFunc(handler.ConfigGetPrometheusCounter)
+	api.GetConfigMetricsHandler = operations.GetConfigMetricsHandlerFunc(handler.ConfigGetPrometheusOption)
+	api.PostConfigMetricsHandler = operations.PostConfigMetricsHandlerFunc(handler.ConfigPostPrometheus)
+	api.DeleteConfigMetricsHandler = operations.DeleteConfigMetricsHandlerFunc(handler.ConfigDeletePrometheus)
 
 	// BGP Peer
 	api.GetConfigBgpNeighAllHandler = operations.GetConfigBgpNeighAllHandlerFunc(handler.ConfigGetBGPNeigh)
