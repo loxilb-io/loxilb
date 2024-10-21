@@ -31,6 +31,7 @@ var buildInfo string = ""
 
 func main() {
 	fmt.Printf("loxilb start\n")
+	fmt.Printf("Build Information: %s\n", buildInfo) // 빌드 정보 출력
 
 	// Parse command-line arguments
 	_, err := flags.Parse(&opts.Opts)
