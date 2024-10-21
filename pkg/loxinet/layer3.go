@@ -19,11 +19,12 @@ package loxinet
 import (
 	"errors"
 	"fmt"
+	"net"
+	"strings"
+
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
-	"net"
-	"strings"
 )
 
 // constants
@@ -292,7 +293,8 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP, findAny bool) (int, net.IP, st
 			continue
 		}
 
-		if tk.IsNetIPv6(addr.String()) && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String()) {
+		if (tk.IsNetIPv6(addr.String()) && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String())) ||
+			(tk.IsNetIPv4(addr.String()) && tk.IsNetIPv6(ifaEnt.IfaNet.IP.String())) {
 			continue
 		}
 
@@ -338,7 +340,8 @@ func (l3 *L3H) IfaFindAddr(Obj string, addr net.IP) (int, net.IP) {
 
 	for _, ifaEnt := range ifa.Ifas {
 
-		if tk.IsNetIPv6(addr.String()) && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String()) {
+		if (tk.IsNetIPv6(addr.String()) && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String())) ||
+			(tk.IsNetIPv4(addr.String()) && tk.IsNetIPv6(ifaEnt.IfaNet.IP.String())) {
 			continue
 		}
 
@@ -363,7 +366,8 @@ func (l3 *L3H) IfaFind(Obj string, addr net.IP) (int, net.IP) {
 
 	for _, ifaEnt := range ifa.Ifas {
 
-		if tk.IsNetIPv6(addr.String()) && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String()) {
+		if (tk.IsNetIPv6(addr.String()) && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String())) ||
+			(tk.IsNetIPv4(addr.String()) && tk.IsNetIPv6(ifaEnt.IfaNet.IP.String())) {
 			continue
 		}
 
@@ -423,7 +427,8 @@ func (l3 *L3H) IfaSelectAny(addr net.IP, findAny bool) (int, net.IP, string) {
 				continue
 			}
 
-			if v6 && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String()) {
+			if (v6 && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String())) ||
+				(!v6 && tk.IsNetIPv6(ifaEnt.IfaNet.IP.String())) {
 				continue
 			}
 
