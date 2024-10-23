@@ -35,21 +35,30 @@ do
     esac
 done
 
-url="http://${addr}:11111"
-
 laddr=${addr}
+
 if [[ ${cloud} == "aws" ]]; then
   if [[ ! -f /usr/local/bin/aws ]]; then
     apt install -y unzip
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
     unzip awscliv2.zip && ./aws/install
   fi
-  token=`curl -m 10 -X PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` && \
-  addr=`curl -m 10 -H "X-aws-ec2-metadata-token: $token" http://169.254.169.254/latest/meta-data/public-ipv4`
+  token=`curl -s -m 10 -X PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` && \
+  if [[ "x$addr" == "x0.0.0.0" ]]; then
+    laddr=`curl -s -m 10 -H "X-aws-ec2-metadata-token: $token" http://169.254.169.254/latest/meta-data/local-ipv4`
+  fi
+  addr=`curl -s -m 10 -H "X-aws-ec2-metadata-token: $token" http://169.254.169.254/latest/meta-data/public-ipv4`
+else
+  if [[ "x$addr" == "x0.0.0.0" ]]; then
+    laddr=`ip route get 8.8.8.8 | head -1 | cut -d' ' -f3`
+    addr=`ip route get 8.8.8.8 | head -1 | cut -d' ' -f3`
+  fi
 fi
 
 if [[ ${utype} == "hostcidr" ]]; then
   url=${addr}
+else
+  url="http://${addr}:11111"
 fi
 
 echo "============"
