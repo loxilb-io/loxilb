@@ -288,6 +288,7 @@ type ruleEnt struct {
 	secIP    []ruleLBSIP
 	stat     ruleStat
 	name     string
+	inst     string
 	secMode  cmn.LBSec
 	locIPs   map[string]struct{}
 }
@@ -330,6 +331,7 @@ type epChecker struct {
 type vipElem struct {
 	ref  int
 	pVIP net.IP
+	inst string
 }
 
 // RuleH - context container
@@ -1288,11 +1290,11 @@ func (R *RuleH) unFoldRecursiveEPs(r *ruleEnt) {
 // addVIPSys - system specific operations for VIPs of a LB rule
 func (R *RuleH) addVIPSys(r *ruleEnt) {
 	if r.act.actType != RtActSnat && !strings.Contains(r.name, "ipvs") && !strings.Contains(r.name, "static") {
-		R.AddRuleVIP(r.tuples.l3Dst.addr.IP, r.RuleVIP2PrivIP())
+		R.AddRuleVIP(r.tuples.l3Dst.addr.IP, r.RuleVIP2PrivIP(), r.inst)
 
 		// Take care of any secondary VIPs
 		for _, sVIP := range r.secIP {
-			R.AddRuleVIP(sVIP.sIP, sVIP.sIP)
+			R.AddRuleVIP(sVIP.sIP, sVIP.sIP, r.inst)
 		}
 	}
 }
@@ -1617,6 +1619,12 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, se
 	r.tuples = rt
 	r.zone = R.zone
 	r.name = serv.Name
+	names := strings.Split(r.name, ":")
+	if len(names) >= 2 {
+		r.inst = names[1]
+	} else {
+		r.inst = cmn.CIDefault
+	}
 	if serv.Snat {
 		r.act.actType = RtActSnat
 	} else if serv.Mode == cmn.LBModeFullNAT || serv.Mode == cmn.LBModeOneArm || serv.Mode == cmn.LBModeHostOneArm {
@@ -2488,7 +2496,7 @@ func (R *RuleH) RulesSync() {
 				ip = net.ParseIP(vip)
 			}
 			if ip != nil {
-				R.AdvRuleVIPIfL2(ip, net.ParseIP(vip))
+				R.AdvRuleVIPIfL2(ip, net.ParseIP(vip), vipElem.inst)
 			}
 		}
 		R.vipST = time.Now()
@@ -2936,8 +2944,11 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 
 }
 
-func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP) error {
-	ciState, _ := mh.has.CIStateGetInst(cmn.CIDefault)
+func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP, inst string) error {
+	if inst == "" {
+		inst = cmn.CIDefault
+	}
+	ciState, _ := mh.has.CIStateGetInst(inst)
 	if ciState == "MASTER" {
 		dev := fmt.Sprintf("llb-rule-%s", IP.String())
 		ret, _ := R.zone.L3.IfaFind(dev, IP)
@@ -3000,6 +3011,7 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP) error {
 
 func (R *RuleH) RuleVIPSyncToClusterState() {
 
+	// For Cloud integrations, there is only default instance
 	ciState, _ := mh.has.CIStateGetInst(cmn.CIDefault)
 	if mh.cloudHook != nil {
 		if ciState == "MASTER" {
@@ -3015,7 +3027,7 @@ func (R *RuleH) RuleVIPSyncToClusterState() {
 			ip = net.ParseIP(vip)
 		}
 		if ip != nil {
-			R.AdvRuleVIPIfL2(ip, net.ParseIP(vip))
+			R.AdvRuleVIPIfL2(ip, net.ParseIP(vip), vipElem.inst)
 		}
 	}
 }
@@ -3028,12 +3040,13 @@ func (r *ruleEnt) RuleVIP2PrivIP() net.IP {
 	}
 }
 
-func (R *RuleH) AddRuleVIP(VIP net.IP, pVIP net.IP) {
+func (R *RuleH) AddRuleVIP(VIP net.IP, pVIP net.IP, inst string) {
 	vipEnt := R.vipMap[VIP.String()]
 	if vipEnt == nil {
 		vipEnt = new(vipElem)
 		vipEnt.ref = 1
 		vipEnt.pVIP = pVIP
+		vipEnt.inst = inst
 		R.vipMap[VIP.String()] = vipEnt
 	} else {
 		vipEnt.ref++
@@ -3041,9 +3054,9 @@ func (R *RuleH) AddRuleVIP(VIP net.IP, pVIP net.IP) {
 
 	if vipEnt.ref == 1 {
 		if pVIP == nil {
-			R.AdvRuleVIPIfL2(VIP, VIP)
+			R.AdvRuleVIPIfL2(VIP, VIP, inst)
 		} else {
-			R.AdvRuleVIPIfL2(pVIP, VIP)
+			R.AdvRuleVIPIfL2(pVIP, VIP, inst)
 		}
 	}
 }

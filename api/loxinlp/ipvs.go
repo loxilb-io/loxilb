@@ -145,7 +145,7 @@ func IPVSSync() {
 
 			for _, ent := range ipVSCtx.RMap {
 				if ent.inValid {
-					name := fmt.Sprintf("ipvs_%s:%d-%s", ent.key.Address, ent.key.Port, ent.key.Protocol)
+					name := fmt.Sprintf("ipvs_%s-%d-%s", ent.key.Address, ent.key.Port, ent.key.Protocol)
 					lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: ent.key.Address, ServPort: ent.key.Port, Proto: ent.key.Protocol, Sel: ent.sel, Mode: ent.mode, Name: name, ProbeType: ent.pType}}
 					_, err := hooks.NetLbRuleDel(&lbrule)
 					if err != nil {
@@ -157,7 +157,7 @@ func IPVSSync() {
 			}
 
 			for _, newEnt := range ipVSList {
-				name := fmt.Sprintf("ipvs_%s:%d-%s", newEnt.key.Address, newEnt.key.Port, newEnt.key.Protocol)
+				name := fmt.Sprintf("ipvs_%s-%d-%s", newEnt.key.Address, newEnt.key.Port, newEnt.key.Protocol)
 				lbrule := cmn.LbRuleMod{Serv: cmn.LbServiceArg{ServIP: newEnt.key.Address, ServPort: newEnt.key.Port, Proto: newEnt.key.Protocol, Sel: newEnt.sel, Mode: newEnt.mode, Name: name, ProbeType: newEnt.pType, PersistTimeout: newEnt.timeout}}
 				for _, ep := range newEnt.endPoints {
 					lbrule.Eps = append(lbrule.Eps, cmn.LbEndPointArg{EpIP: ep.EpIP, EpPort: ep.EpPort, Weight: 1})
