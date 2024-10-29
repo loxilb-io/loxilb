@@ -15,106 +15,6 @@ metadata:
   name: loxilb-ingress
   namespace: kube-system
 ---
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: loxilb-ingress
-  namespace: kube-system
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - nodes
-    verbs:
-      - get
-      - watch
-      - list
-      - patch
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - get
-      - watch
-      - list
-      - patch
-  - apiGroups:
-      - ""
-    resources:
-      - endpoints
-      - services
-      - services/status
-    verbs:
-      - get
-      - watch
-      - list
-      - patch
-      - update
-  - apiGroups:
-      - discovery.k8s.io
-    resources:
-      - endpointslices
-    verbs:
-      - get
-      - watch
-      - list
-  - apiGroups:
-      - authentication.k8s.io
-    resources:
-      - tokenreviews
-    verbs:
-      - create
-  - apiGroups:
-      - authorization.k8s.io
-    resources:
-      - subjectaccessreviews
-    verbs:
-      - create
-  - apiGroups:
-      - networking.k8s.io
-    resources:
-      - ingresses
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - networking.k8s.io
-    resources:
-      - ingresses/status
-    verbs:
-      - update
-  - apiGroups:
-      - networking.k8s.io
-    resources:
-      - ingressclasses
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - coordination.k8s.io
-    resources:
-      - leases
-    verbs:
-      - create
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
-      - patch
-  - apiGroups:
-      - discovery.k8s.io
-    resources:
-      - endpointslices
-    verbs:
-      - list
-      - watch
-      - get
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -123,18 +23,6 @@ metadata:
     app.kubernetes.io/name: loxilb-ingress
   name: loxilb-ingress
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - endpoints
-  - nodes
-  - pods
-  - secrets
-  - namespaces
-  verbs:
-  - list
-  - watch
 - apiGroups:
   - coordination.k8s.io
   resources:
@@ -145,12 +33,7 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - nodes
-  verbs:
-  - get
-- apiGroups:
-  - ""
-  resources:
+  - endpoints
   - services
   verbs:
   - get
@@ -194,23 +77,6 @@ rules:
   - list
   - watch
   - get
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  labels:
-    app.kubernetes.io/instance: loxilb-ingress
-    app.kubernetes.io/name: loxilb-ingress
-  name: loxilb-ingress
-  namespace: kube-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: loxilb-ingress
-subjects:
-- kind: ServiceAccount
-  name: loxilb-ingress
-  namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -260,6 +126,13 @@ spec:
         command: [ "/bin/loxilb-ingress" ]
         ports:
         - containerPort: 11111
+        livenessProbe:
+          httpGet:
+            path: netlox/v1/config/loadbalancer/all
+            port: 11111
+          initialDelaySeconds: 30
+          periodSeconds: 20
+          timeoutSeconds: 5
       volumes:
         - name: loxilb-ssl
           secret:
