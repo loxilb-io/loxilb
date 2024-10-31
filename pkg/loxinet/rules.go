@@ -2948,6 +2948,11 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP, inst string) error {
 	if inst == "" {
 		inst = cmn.CIDefault
 	}
+
+	if IP.String() == "0.0.0.0" {
+		return nil
+	}
+
 	ciState, _ := mh.has.CIStateGetInst(inst)
 	if ciState == "MASTER" {
 		dev := fmt.Sprintf("llb-rule-%s", IP.String())

@@ -51,6 +51,7 @@ const (
 type NeighKey struct {
 	NhString string
 	Zone     string
+	Link     int
 }
 
 // NeighAttr - attributes of a neighbor
@@ -357,7 +358,7 @@ func (n *NeighH) NeighGet() ([]cmn.NeighMod, error) {
 func (n *NeighH) NeighAdd(Addr net.IP, Zone string, Attr NeighAttr) (int, error) {
 	var idx uint64
 	var err error
-	key := NeighKey{Addr.String(), Zone}
+	key := NeighKey{Addr.String(), Zone, Attr.OSLinkIndex}
 	zeroHwAddr, _ := net.ParseMAC("00:00:00:00:00:00")
 	ne, found := n.NeighMap[key]
 
@@ -448,7 +449,7 @@ NhExist:
 	// Add a host specific to this neighbor
 	ec, err := n.Zone.Rt.RtAdd(ipnet, Zone, ra, na)
 	if err != nil && ec != RtExistsErr {
-		n.NeighDelete(Addr, Zone)
+		n.NeighDelete(Addr, Zone, Attr.OSLinkIndex)
 		tk.LogIt(tk.LogError, "neigh add - %s:%s host-rt fail(%s)\n", Addr.String(), Zone, err)
 		return NeighHostRtErr, errors.New("nh-hostrt error")
 	}
@@ -466,7 +467,7 @@ NhExist:
 		code, err := n.Zone.L2.L2FdbAdd(fdbKey, fdbAttr)
 		if err != nil && code != L2SameFdbErr {
 			n.Zone.Rt.RtDeleteHost(ipnet, Zone)
-			n.NeighDelete(Addr, Zone)
+			n.NeighDelete(Addr, Zone, Attr.OSLinkIndex)
 			tk.LogIt(tk.LogError, "neigh add - %s:%s mac fail\n", Addr.String(), Zone)
 			return NeighMacErr, errors.New("nh-mac error")
 		}
@@ -480,8 +481,8 @@ NhExist:
 }
 
 // NeighDelete - delete a neigh entry
-func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
-	key := NeighKey{Addr.String(), Zone}
+func (n *NeighH) NeighDelete(Addr net.IP, Zone string, Link int) (int, error) {
+	key := NeighKey{Addr.String(), Zone, Link}
 
 	ne, found := n.NeighMap[key]
 	if !found {
@@ -561,14 +562,14 @@ func (n *NeighH) NeighDelete(Addr net.IP, Zone string) (int, error) {
 func (n *NeighH) NeighDeleteByPort(port string) {
 	for _, ne := range n.NeighMap {
 		if ne.OifPort != nil && ne.OifPort.Name == port {
-			n.NeighDelete(ne.Addr, ne.Key.Zone)
+			n.NeighDelete(ne.Addr, ne.Key.Zone, ne.Key.Link)
 		}
 	}
 }
 
 // NeighFind - Find a neighbor entry
-func (n *NeighH) NeighFind(Addr net.IP, Zone string) (*Neigh, int) {
-	key := NeighKey{Addr.String(), Zone}
+func (n *NeighH) NeighFind(Addr net.IP, Zone string, Link int) (*Neigh, int) {
+	key := NeighKey{Addr.String(), Zone, Link}
 
 	ne, found := n.NeighMap[key]
 	if found == false {
@@ -608,7 +609,7 @@ func (n *NeighH) NeighUnPairRt(ne *Neigh, rt *Rt) int {
 	if len(ne.NhRtm) < 1 && ne.Inactive {
 		// Safely remove
 		tk.LogIt(tk.LogDebug, "neigh rt unpair - %s->%s\n", rt.Key.RtCidr, ne.Key.NhString)
-		n.NeighDelete(ne.Addr, ne.Key.Zone)
+		n.NeighDelete(ne.Addr, ne.Key.Zone, ne.Key.Link)
 		ne.DP(DpRemove)
 	}
 
@@ -638,7 +639,7 @@ func (n *NeighH) PortNotifier(name string, osID int, evType PortEvent) {
 	if evType&PortEvDown|PortEvDelete|PortEvLowerDown != 0 {
 		for _, ne := range n.NeighMap {
 			if ne.OifPort != nil && ne.OifPort.Name == name {
-				n.NeighDelete(net.ParseIP(ne.Key.NhString), ne.Key.Zone)
+				n.NeighDelete(net.ParseIP(ne.Key.NhString), ne.Key.Zone, ne.Key.Link)
 			}
 		}
 	}
@@ -681,7 +682,7 @@ func (n *NeighH) NeighsTicker() {
 func (n *NeighH) NeighDestructAll() {
 	for _, ne := range n.NeighMap {
 		addr := net.ParseIP(ne.Key.NhString)
-		n.NeighDelete(addr, ne.Key.NhString)
+		n.NeighDelete(addr, ne.Key.Zone, ne.Key.Link)
 	}
 	return
 }
