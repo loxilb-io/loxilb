@@ -234,7 +234,7 @@ func (na *NetAPIStruct) NetNeighDel(nm *cmn.NeighMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 
-	ret, err := mh.zr.Nh.NeighDelete(nm.IP, RootZone)
+	ret, err := mh.zr.Nh.NeighDelete(nm.IP, RootZone, nm.LinkIndex)
 	return ret, err
 }
 
