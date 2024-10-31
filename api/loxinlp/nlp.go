@@ -1115,7 +1115,7 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 	if neigh.Family == unix.AF_INET ||
 		neigh.Family == unix.AF_INET6 {
 
-		ret, err = hooks.NetNeighDel(&cmn.NeighMod{IP: neigh.IP})
+		ret, err = hooks.NetNeighDel(&cmn.NeighMod{IP: neigh.IP, LinkIndex: neigh.LinkIndex})
 		if err != nil {
 			tk.LogIt(tk.LogError, "nlp: NH  %v %v del failed\n", neigh.IP.String(), name)
 			ret = -1

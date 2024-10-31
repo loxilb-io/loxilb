@@ -275,7 +275,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 		hwmac, _ := net.ParseMAC("00:00:00:00:00:00")
 
 		for i := range Na {
-			nh, _ := r.Zone.Nh.NeighFind(Na[i].NhAddr, Zone)
+			nh, _ := r.Zone.Nh.NeighFind(Na[i].NhAddr, Zone, Na[i].LinkIndex)
 			if nh == nil {
 
 				// If this is a host route then neighbor has to exist
@@ -288,7 +288,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 				}
 
 				r.Zone.Nh.NeighAdd(Na[i].NhAddr, Zone, NeighAttr{Na[i].LinkIndex, 0, hwmac})
-				nh, _ = r.Zone.Nh.NeighFind(Na[i].NhAddr, Zone)
+				nh, _ = r.Zone.Nh.NeighFind(Na[i].NhAddr, Zone, Na[i].LinkIndex)
 				if nh == nil {
 					delete(r.RtMap, rt.Key)
 					r.Mark.PutCounter(rt.Mark)
@@ -329,7 +329,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 	if tret != 0 {
 		// Delete any neigbors created here
 		for i := 0; i < len(newNhs); i++ {
-			r.Zone.Nh.NeighDelete(newNhs[i].Addr, Zone)
+			r.Zone.Nh.NeighDelete(newNhs[i].Addr, Zone, newNhs[i].Attr.OSLinkIndex)
 		}
 		delete(r.RtMap, rt.Key)
 		r.Mark.PutCounter(rt.Mark)

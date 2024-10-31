@@ -236,7 +236,7 @@ func TestLoxinet(t *testing.T) {
 		t.Errorf("NHAdd fail 1.1.1.1/24 via 8.8.8.8")
 	}
 
-	_, err = mh.zr.Nh.NeighDelete(net.IPv4(8, 8, 8, 8), "default")
+	_, err = mh.zr.Nh.NeighDelete(net.IPv4(8, 8, 8, 8), "default", 12)
 	if err != nil {
 		t.Errorf("NHAdd fail 8.8.8.8")
 	}
