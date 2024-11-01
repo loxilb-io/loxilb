@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: https-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: https
+  template:
+    metadata:
+      labels:
+        app: https
+    spec:
+      containers:
+        - name: https-pod
+          image: ghcr.io/loxilb-io/nginx:stable
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: https-service
+spec:
+  selector:
+    app: https
+  ports:
+    - protocol: TCP
+      name: tcpport81
+      port: 81
+      targetPort: 8081
+    - protocol: TCP
+      name: tcpport80
+      port: 80
+      targetPort: 8080
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: test-https-route
+  namespace: kube-system
+spec:
+  parentRefs:
+    - name: test-gateway
+      namespace: kube-system
+      sectionName: https-listener
+  hostnames:
+     - "test.loxilb.gateway.https"
+  rules:
+    - backendRefs:
+      - name: https-service
+        namespace: default
+        port: 80

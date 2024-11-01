@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: udproute-deployment
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: udproute-pod
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: udproute-pod
+    spec:
+      containers:
+        - name: udproute-pod
+          image: ghcr.io/loxilb-io/udp-echo:latest
+          ports:
+            - containerPort: 33333
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: UDPRoute
+metadata:
+  name: test-udproute
+  namespace: kube-system
+  labels:
+    selectorkey: app
+    selectorvalue: udproute-pod
+    serviceBehaviour: create
+  annotations:
+    ### https://loxilb-io.github.io/loxilbdocs/kube-loxilb/
+    #loxilb.io/liveness: "yes"
+    loxilb.io/lbmode: "fullnat"
+spec:
+  # find gateway and gateway's listener
+  parentRefs:
+  - name: test-gateway         # name of gateway
+    namespace: kube-system
+    sectionName: udp-listener # name of listener
+  rules:
+  - backendRefs:
+    - name: udproute-lb-service
+      port: 33333
