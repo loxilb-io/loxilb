@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tcproute-deployment
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: tcproute-pod
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: tcproute-pod
+    spec:
+      containers:
+        - name: tcproute-pod
+          image: ghcr.io/loxilb-io/nginx:stable
+          ports:
+            - containerPort: 8080
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TCPRoute
+metadata:
+  name: test-tcproute
+  namespace: kube-system
+  labels:
+    selectorkey: app
+    selectorvalue: tcproute-pod
+    serviceBehaviour: create
+  annotations:
+    ### https://loxilb-io.github.io/loxilbdocs/kube-loxilb/
+    #loxilb.io/liveness: "yes"
+    loxilb.io/lbmode: "fullnat"
+spec:
+  # find gateway and gateway's listener
+  parentRefs:
+  - name: test-gateway         # name of gateway
+    namespace: kube-system
+    sectionName: tcp-listener # name of listener
+  rules:
+  - backendRefs:
+    - name: tcproute-lb-service
+      port: 80

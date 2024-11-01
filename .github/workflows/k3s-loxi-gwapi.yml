@@ -1,0 +1,33 @@
+name: K3s-Loxi-GWAPI-Sanity-CI
+on:
+ schedule:
+ # Runs "At 7:00 UTC every day-of-week"
+ - cron: '0 7 * * *'
+ workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'k3s-loxi-gwapi'
+jobs:
+  build:
+    name: k3s-loxi-gwapi-sanity
+    runs-on: [self-hosted, large]
+    if: github.repository == 'loxilb-io/loxilb' 
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Run K3s LoxiGWAPI CICD
+        run: |
+         cd cicd/k3s-flannel-loxilb-gwapi
+         ./config.sh
+         ./validation.sh
+         ./rmconfig.sh
+         cd -
+      - name: Clean test-bed
+        if: success() || failure()
+        run: |
+          cd cicd/k3s-flannel-loxilb-gwapi/ || true
+          ./rmconfig.sh
+          cd -

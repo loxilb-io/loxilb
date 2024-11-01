@@ -1,0 +1,35 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: test-gateway
+  namespace: kube-system
+spec:
+  gatewayClassName: test-gc
+  listeners:
+  - name: tcp-listener
+    protocol: TCP
+    port: 21818
+    allowedRoutes:
+      kinds:
+      - kind: TCPRoute
+  - name: udp-listener
+    protocol: UDP
+    port: 21819
+    allowedRoutes:
+      kinds:
+      - kind: UDPRoute
+  - name: http-listener
+    protocol: HTTP
+    port: 80
+    allowedRoutes:
+      kinds:
+      - kind: HTTPRoute
+  - name: https-listener 
+    protocol: HTTPS # Other possible value is `TLS`
+    port: 443
+    tls:
+      mode: Terminate # If protocol is `TLS`, `Passthrough` is a possible mode
+      certificateRefs:
+      - kind: Secret
+        group: ""
+        name: loxilb-ssl
