@@ -44,10 +44,12 @@ if [[ ${cloud} == "aws" ]]; then
     unzip awscliv2.zip && ./aws/install
   fi
   token=`curl -s -m 10 -X PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` && \
-  if [[ "x$addr" == "x0.0.0.0" ]]; then
-    laddr=`curl -s -m 10 -H "X-aws-ec2-metadata-token: $token" http://169.254.169.254/latest/meta-data/local-ipv4`
+  laddr=`curl -s -m 10 -H "X-aws-ec2-metadata-token: $token" http://169.254.169.254/latest/meta-data/local-ipv4`
+  if [[ "x$addr" == "xlocal" ]]; then
+    addr=$laddr
+  else
+    addr=`curl -s -m 10 -H "X-aws-ec2-metadata-token: $token" http://169.254.169.254/latest/meta-data/public-ipv4`
   fi
-  addr=`curl -s -m 10 -H "X-aws-ec2-metadata-token: $token" http://169.254.169.254/latest/meta-data/public-ipv4`
 else
   if [[ "x$addr" == "x0.0.0.0" ]]; then
     laddr=`ip route get 8.8.8.8 | head -1 | cut -d' ' -f3`
