@@ -13,7 +13,7 @@ var Opts struct {
 	Host              string         `long:"host" description:"the IP to listen on" default:"0.0.0.0" env:"HOST"`
 	Port              int            `long:"port" description:"the port to listen on for insecure connections" default:"11111" env:"PORT"`
 	TLS               bool           `long:"tls" description:"enable TLS " env:"TLS"`
-	TLSHost           string         `long:"tls-host" description:"the IP to listen on for tls, when not specified it's the same as --host" env:"TLS_HOST"`
+	TLSHost           string         `long:"tls-host" description:"the IP to listen on for tls" default:"0.0.0.0" env:"TLS_HOST"`
 	TLSPort           int            `long:"tls-port" description:"the port to listen on for secure connections" default:"8091" env:"TLS_PORT"`
 	TLSCertificate    flags.Filename `long:"tls-certificate" description:"the certificate to use for secure connections" default:"/opt/loxilb/cert/server.crt" env:"TLS_CERTIFICATE"`
 	TLSCertificateKey flags.Filename `long:"tls-key" description:"the private key to use for secure connections" default:"/opt/loxilb/cert/server.key" env:"TLS_PRIVATE_KEY"`

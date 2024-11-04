@@ -22,6 +22,15 @@ docker_extra_opts=""
 #  lxdocker="ghcr.io/loxilb-io/loxilb:latestu22"
 #fi
 
+
+if [ ! -d loxilb.io ]; then
+  ../common/minica --domains loxilb.io
+  mkdir cert
+  cp minica.pem cert/rootCA.crt
+  cp loxilb.io/cert.pem cert/server.crt
+  cp loxilb.io/key.pem cert/server.key
+fi
+
 loxilbs=()
 
 ## Given a docker name(arg1), return its pid
@@ -118,7 +127,7 @@ spawn_docker_host() {
       get_llb_peerIP $dname
       docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $ka_opts $extra_opts
     else
-      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt $docker_extra_opts --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log $loxilb_config --name $dname $lxdocker $bgp_opts
+      docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dt $docker_extra_opts --entrypoint /bin/bash $bgp_conf -v /dev/log:/dev/log -v `pwd`/cert:/opt/loxilb/cert/ $loxilb_config --name $dname $lxdocker $bgp_opts
       docker exec -dt $dname /root/loxilb-io/loxilb/loxilb $bgp_opts $cluster_opts $extra_opts
     fi
   elif [[ "$dtype" == "host" ]]; then
