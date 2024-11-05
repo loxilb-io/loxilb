@@ -25,6 +25,8 @@ sudo kubectl create secret tls loxilb-ssl --cert server.crt --key server.key -n 
 sed -i -e 's/tls.key/server.key/g' ./loxilb-secret.yml
 sed -i -e 's/tls.crt/server.crt/g' ./loxilb-secret.yml
 sed -i -e 's/kubernetes.io\/tls/Opaque/g' ./loxilb-secret.yml
+cp /vagrant/loxilbCA.pem .
+sudo kubectl -n kube-system create configmap loxilb-cacert --from-file=`pwd`/loxilbCA.pem
 sudo kubectl apply -f /vagrant/kube-loxilb.yml
 sudo kubectl apply -f loxilb-secret.yml
 sudo kubectl apply -f /vagrant/ingress/loxilb-ingress-deploy.yml

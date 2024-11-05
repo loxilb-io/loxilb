@@ -112,7 +112,7 @@ spec:
         command:
         - /bin/kube-loxilb
         args:
-        - --loxiURL=http://192.168.80.9:11111
+        - --loxiURL=https://192.168.80.9:8091
         - --cidrPools=defaultPool=192.168.80.9/32
         #- --zone=aws
         #- --setBGP=64512
@@ -121,14 +121,16 @@ spec:
         #- --monitor
         #- --setLBMode=1
         #- --config=/opt/loxilb/agent/kube-loxilb.conf
-        resources:
-          requests:
-            cpu: "100m"
-            memory: "50Mi"
-          limits:
-            cpu: "100m"
-            memory: "50Mi"
+        volumeMounts:
+        - mountPath: /etc/ssl/certs/loxilbCA.pem
+          name: loxilb-cacert
+          subPath: loxilbCA.pem
         securityContext:
           privileged: true
           capabilities:
             add: ["NET_ADMIN", "NET_RAW"]
+      volumes:
+        - name: loxilb-cacert
+          configMap:
+            defaultMode: 420
+            name: loxilb-cacert
