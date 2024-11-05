@@ -112,6 +112,8 @@ Telco-cloud requires load-balancing and communication across various interfaces/
 - [How-To : Deploy loxilb with multi-cloud HA support](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/multi-cloud-ha.md)
 - [How-To : Deploy loxilb with ingress-nginx](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/loxilb-nginx-ingress.md)
 - [How-To : Run loxilb in-cluster with secondary networks](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/loxilb-incluster-multus.md)
+- [How-To : Kubernetes service sharding with loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/service-sharding.md)
+- [How-To : loxilb L4/L7 Load-Balancing with Kubernetes Gateway API](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/gw-api.md)
 
 ## Knowledge-Base   
 - [What is eBPF](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/ebpf.md)
@@ -126,6 +128,7 @@ Telco-cloud requires load-balancing and communication across various interfaces/
 - [loxicmd command-line tool usage](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/cmd.md)
 - [Developer's guide to loxicmd](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/cmd-dev.md)
 - [Developer's guide to loxilb API](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/api-dev.md)
+- [HTTPS guide for loxilb API](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/https.md)
 - [API Reference - loxilb web-Api](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/api.md)
 - [Performance Reports](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/perf.md)
 - [Development Roadmap](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/roadmap.md)
