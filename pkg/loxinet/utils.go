@@ -18,7 +18,6 @@ package loxinet
 
 import (
 	"fmt"
-	tk "github.com/loxilb-io/loxilib"
 	"net"
 	"net/http"
 	"os"
@@ -26,6 +25,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	tk "github.com/loxilb-io/loxilib"
+	nl "github.com/vishvananda/netlink"
 )
 
 // IterIntf - interface implementation to iterate various loxinet
@@ -131,4 +133,28 @@ func FormatTimedelta(t time.Time) string {
 		return fmt.Sprintf("%02d:%02d:%02d", hours, mins, secs)
 	}
 	return fmt.Sprintf("%dd ", days) + fmt.Sprintf("%02d:%02d:%02d", hours, mins, secs)
+}
+
+func FindSysOifForHost(host string) string {
+	chkIP := net.ParseIP(host)
+	if chkIP == nil {
+		return ""
+	}
+	rt, err := nl.RouteGet(chkIP)
+	if err != nil {
+		tk.LogIt(tk.LogError, " failed to get sys oif for %s\n", host)
+		return ""
+	}
+
+	if len(rt) <= 0 {
+		return ""
+	}
+
+	ln, err := nl.LinkByIndex(rt[0].LinkIndex)
+	if err != nil {
+		tk.LogIt(tk.LogError, " failed to get sys oif linkid for %s\n", host)
+		return ""
+	}
+
+	return ln.Attrs().Name
 }
