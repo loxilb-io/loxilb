@@ -81,7 +81,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 
 	dev := fmt.Sprintf("llb-rule-%s", addr.String())
 	if Obj != dev {
-		ret, _ := l3.IfaFind(dev, addr)
+		ret, _ := l3.IfaFindAddr(dev, addr)
 		if ret == 0 {
 			l3.IfaDelete(dev, addr.String()+"/32")
 		}
@@ -346,32 +346,6 @@ func (l3 *L3H) IfaFindAddr(Obj string, addr net.IP) (int, net.IP) {
 		}
 
 		if ifaEnt.IfaAddr.Equal(addr) {
-			return 0, ifaEnt.IfaAddr
-		}
-	}
-
-	return L3AddrErr, net.IPv4(0, 0, 0, 0)
-}
-
-// IfaFind - Given any ip address, check if it matches ip address from Obj's ifa list
-// This is useful to determine if ip address is already assigned to some interface
-func (l3 *L3H) IfaFind(Obj string, addr net.IP) (int, net.IP) {
-
-	key := IfaKey{Obj}
-	ifa := l3.IfaMap[key]
-
-	if ifa == nil {
-		return L3ObjErr, net.IPv4(0, 0, 0, 0)
-	}
-
-	for _, ifaEnt := range ifa.Ifas {
-
-		if (tk.IsNetIPv6(addr.String()) && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String())) ||
-			(tk.IsNetIPv4(addr.String()) && tk.IsNetIPv6(ifaEnt.IfaNet.IP.String())) {
-			continue
-		}
-
-		if ifaEnt.IfaNet.IP.Equal(addr) {
 			return 0, ifaEnt.IfaAddr
 		}
 	}
