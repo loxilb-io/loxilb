@@ -2297,21 +2297,26 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 		ep.opts.probeType == HostProbeConnectSCTP {
 		if ep.opts.probeType == HostProbeConnectTCP {
 			sType = "tcp"
-			ret, sIP, _ := R.zone.L3.IfaSelectAny(net.ParseIP(ep.hostName), true)
-			if ret == 0 {
-				sHint = sIP.String()
-			}
 		} else if ep.opts.probeType == HostProbeConnectUDP {
 			sType = "udp"
+		} else {
+			sType = "sctp"
+		}
+
+		if mh.cloudHook == nil {
 			ret, sIP, _ := R.zone.L3.IfaSelectAny(net.ParseIP(ep.hostName), true)
 			if ret == 0 {
 				sHint = sIP.String()
 			}
 		} else {
-			sType = "sctp"
-			ret, sIP, _ := R.zone.L3.IfaSelectAny(net.ParseIP(ep.hostName), true)
-			if ret == 0 {
-				sHint = sIP.String()
+			// For AWS/EKS environments we need to rely on system tables as compared to
+			// internal tables due to how elastic VIPs are maintained
+			IfObj := FindSysOifForHost(ep.hostName)
+			if IfObj != "" && IfObj != "lo" {
+				ret, sIP, _ := R.zone.L3.IfaSelect(IfObj, net.ParseIP(ep.hostName), true)
+				if ret == 0 {
+					sHint = sIP.String()
+				}
 			}
 		}
 		sOk := tk.L4ServiceProber(sType, sName, sHint, ep.opts.probeReq, ep.opts.probeResp)
@@ -2528,7 +2533,7 @@ func (R *RuleH) RuleDestructAll() {
 
 	for _, r := range R.tables[RtLB].eMap {
 		lbs.ServIP = r.tuples.l3Dst.addr.IP.String()
-		fmt.Printf("Deleting %s\n", r.tuples.l3Dst.addr.IP.String())
+		tk.LogIt(tk.LogDebug, "Deleting %s\n", r.tuples.l3Dst.addr.IP.String())
 
 		if r.tuples.l4Prot.val == 6 {
 			lbs.Proto = "tcp"
@@ -2956,7 +2961,7 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP, inst string) error {
 	ciState, _ := mh.has.CIStateGetInst(inst)
 	if ciState == "MASTER" {
 		dev := fmt.Sprintf("llb-rule-%s", IP.String())
-		ret, _ := R.zone.L3.IfaFind(dev, IP)
+		ret, _ := R.zone.L3.IfaFindAddr(dev, IP)
 		if ret == 0 {
 			R.zone.L3.IfaDelete(dev, IP.String()+"/32")
 		}
@@ -3001,7 +3006,7 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP, inst string) error {
 	} else {
 		if _, foundIP := R.zone.L3.IfaAddrLocal(IP); foundIP == nil {
 			dev := fmt.Sprintf("llb-rule-%s", IP.String())
-			ret, _ := R.zone.L3.IfaFind(dev, IP)
+			ret, _ := R.zone.L3.IfaFindAddr(dev, IP)
 			if ret != 0 {
 				_, err := R.zone.L3.IfaAdd(dev, IP.String()+"/32")
 				if err != nil {
@@ -3088,7 +3093,7 @@ func (R *RuleH) DeleteRuleVIP(VIP net.IP) {
 			}
 		}
 		dev := fmt.Sprintf("llb-rule-%s", xVIP.String())
-		ret, _ := mh.zr.L3.IfaFind(dev, xVIP)
+		ret, _ := mh.zr.L3.IfaFindAddr(dev, xVIP)
 		if ret == 0 {
 			mh.zr.L3.IfaDelete(dev, xVIP.String()+"/32")
 		}
