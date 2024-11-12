@@ -1,0 +1,44 @@
+name: OS-Build-Releases
+
+on: 
+  schedule:
+  # Runs "At 22:00 UTC every day-of-week"
+  - cron: '0 22 * * *'
+  workflow_dispatch:
+     inputs:
+      tagName:
+        description: 'Tag Name (e.g 0.9.7 or latest)'     
+        required: true
+        default: 'latest'
+
+jobs:
+  build:
+    name: Build OS packages
+    runs-on: ubuntu-20.04
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v2
+      - uses: actions/setup-go@v3
+        with:
+             go-version: '>=1.18.0'
+      - name: Install Dependencies
+        run: sudo apt-get update  && sudo apt-get -y install clang-10 llvm libelf-dev gcc-multilib libpcap-dev elfutils dwarves git linux-tools-$(uname -r) libbsd-dev bridge-utils unzip build-essential bison flex iproute2
+      - name: Perform any pre-requisite operations
+        run: | 
+             sudo mkdir -p /opt/loxilb/
+             sudo apt-get purge -y libssl-dev 2>&1 >> /dev/null  | true
+      - name: Build loxilb deb package
+        run: |
+             git clone https://github.com/loxilb-io/tools.git build-tools && cd build-tools/pkg/ && make major=${{ github.event.inputs.tagName }} && cd -
+      - name: Upload the package to a release
+        if: github.repository == 'loxilb-io/loxilb' 
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ github.event.inputs.tagName }}
+          allowUpdates: true
+          artifacts: "build-tools/pkg/*.deb"
