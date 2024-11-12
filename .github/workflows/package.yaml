@@ -34,11 +34,11 @@ jobs:
              sudo apt-get purge -y libssl-dev 2>&1 >> /dev/null  | true
       - name: Build loxilb deb package
         run: |
-             git clone https://github.com/loxilb-io/tools.git && cd tools/pkg/ && make major=${{ github.event.inputs.tagName }} && cd -
+             git clone https://github.com/loxilb-io/tools.git build-tools && cd build-tools/pkg/ && make major=${{ github.event.inputs.tagName }} && cd -
       - name: Upload the package to a release
         if: github.repository == 'loxilb-io/loxilb' 
         uses: ncipollo/release-action@v1
         with:
           tag: v${{ github.event.inputs.tagName }}
           allowUpdates: true
-          artifacts: "tools/pkg/*.deb"
+          artifacts: "build-tools/pkg/*.deb"
