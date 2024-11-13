@@ -152,7 +152,7 @@ func (o *GetConfigBgpPolicyDefinitionsAllInternalServerError) WriteResponse(rw h
 const GetConfigBgpPolicyDefinitionsAllServiceUnavailableCode int = 503
 
 /*
-GetConfigBgpPolicyDefinitionsAllServiceUnavailable Maintanence mode
+GetConfigBgpPolicyDefinitionsAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigBgpPolicyDefinitionsAllServiceUnavailable
 */

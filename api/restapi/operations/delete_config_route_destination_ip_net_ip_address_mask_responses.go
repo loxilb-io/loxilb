@@ -312,7 +312,7 @@ func (o *DeleteConfigRouteDestinationIPNetIPAddressMaskInternalServerError) Writ
 const DeleteConfigRouteDestinationIPNetIPAddressMaskServiceUnavailableCode int = 503
 
 /*
-DeleteConfigRouteDestinationIPNetIPAddressMaskServiceUnavailable Maintanence mode
+DeleteConfigRouteDestinationIPNetIPAddressMaskServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigRouteDestinationIpNetIpAddressMaskServiceUnavailable
 */

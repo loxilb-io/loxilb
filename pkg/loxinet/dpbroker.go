@@ -265,6 +265,7 @@ const (
 	EpRRPersist
 	EpLeastConn
 	EpN2
+	EpN3
 )
 
 // NatEP - a nat end-point
@@ -314,6 +315,8 @@ type DpCtInfo struct {
 	Dport   uint16    `json:"dport"`
 	Sport   uint16    `json:"sport"`
 	Proto   string    `json:"proto"`
+	Ident   uint32    `json:"ident"`
+	IdType  uint32    `json:"type"`
 	CState  string    `json:"cstate"`
 	CAct    string    `json:"cact"`
 	CI      string    `json:"ci"`
@@ -393,19 +396,19 @@ const (
 
 // Key - outputs a key string for given DpCtInfo pointer
 func (ct *DpCtInfo) Key() string {
-	str := fmt.Sprintf("%s%s%d%d%s", ct.DIP.String(), ct.SIP.String(), ct.Dport, ct.Sport, ct.Proto)
+	str := fmt.Sprintf("%s%s%d%d%s%v%v", ct.DIP.String(), ct.SIP.String(), ct.Dport, ct.Sport, ct.Proto, ct.IdType, ct.Ident)
 	return str
 }
 
 // KeyState - outputs a key string for given DpCtInfo pointer with state info
 func (ct *DpCtInfo) KeyState() string {
-	str := fmt.Sprintf("%s%s%d%d%s-%s", ct.DIP.String(), ct.SIP.String(), ct.Dport, ct.Sport, ct.Proto, ct.CState)
+	str := fmt.Sprintf("%s%s%d%d%s%v%v-%s", ct.DIP.String(), ct.SIP.String(), ct.Dport, ct.Sport, ct.Proto, ct.IdType, ct.Ident, ct.CState)
 	return str
 }
 
 // String - stringify the given DpCtInfo
 func (ct *DpCtInfo) String() string {
-	str := fmt.Sprintf("%s:%d->%s:%d (%s), ", ct.SIP.String(), ct.Sport, ct.DIP.String(), ct.Dport, ct.Proto)
+	str := fmt.Sprintf("%s:%d->%s:%d (%s) (%v:%v), ", ct.SIP.String(), ct.Sport, ct.DIP.String(), ct.Dport, ct.Proto, ct.IdType, ct.Ident)
 	str += fmt.Sprintf("%s:%s [%v:%v]", ct.CState, ct.CAct, ct.Packets, ct.Bytes)
 	return str
 }
@@ -881,7 +884,8 @@ func (dp *DpH) DpMapGetCt4() []cmn.CtInfo {
 				servName = rule.name
 			}
 			cti := cmn.CtInfo{Dip: dCti.DIP, Sip: dCti.SIP, Dport: dCti.Dport, Sport: dCti.Sport,
-				Proto: dCti.Proto, CState: dCti.CState, CAct: dCti.CAct,
+				Proto: dCti.Proto, Ident: fmt.Sprintf("%v:%v", dCti.IdType, dCti.Ident),
+				CState: dCti.CState, CAct: dCti.CAct,
 				Pkts: dCti.Packets, Bytes: dCti.Bytes, ServiceName: servName}
 			CtInfoArr = append(CtInfoArr, cti)
 		}

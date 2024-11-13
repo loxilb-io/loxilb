@@ -312,7 +312,7 @@ func (o *DeleteConfigEndpointEpipaddressIPAddressInternalServerError) WriteRespo
 const DeleteConfigEndpointEpipaddressIPAddressServiceUnavailableCode int = 503
 
 /*
-DeleteConfigEndpointEpipaddressIPAddressServiceUnavailable Maintanence mode
+DeleteConfigEndpointEpipaddressIPAddressServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigEndpointEpipaddressIpAddressServiceUnavailable
 */

@@ -152,7 +152,7 @@ func (o *GetConfigEndpointAllInternalServerError) WriteResponse(rw http.Response
 const GetConfigEndpointAllServiceUnavailableCode int = 503
 
 /*
-GetConfigEndpointAllServiceUnavailable Maintanence mode
+GetConfigEndpointAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigEndpointAllServiceUnavailable
 */

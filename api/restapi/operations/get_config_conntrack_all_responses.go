@@ -152,7 +152,7 @@ func (o *GetConfigConntrackAllInternalServerError) WriteResponse(rw http.Respons
 const GetConfigConntrackAllServiceUnavailableCode int = 503
 
 /*
-GetConfigConntrackAllServiceUnavailable Maintanence mode
+GetConfigConntrackAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigConntrackAllServiceUnavailable
 */

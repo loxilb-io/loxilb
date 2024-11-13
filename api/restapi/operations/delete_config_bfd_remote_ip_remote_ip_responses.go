@@ -312,7 +312,7 @@ func (o *DeleteConfigBfdRemoteIPRemoteIPInternalServerError) WriteResponse(rw ht
 const DeleteConfigBfdRemoteIPRemoteIPServiceUnavailableCode int = 503
 
 /*
-DeleteConfigBfdRemoteIPRemoteIPServiceUnavailable Maintanence mode
+DeleteConfigBfdRemoteIPRemoteIPServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigBfdRemoteIpRemoteIpServiceUnavailable
 */

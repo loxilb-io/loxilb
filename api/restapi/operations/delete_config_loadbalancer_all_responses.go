@@ -312,7 +312,7 @@ func (o *DeleteConfigLoadbalancerAllInternalServerError) WriteResponse(rw http.R
 const DeleteConfigLoadbalancerAllServiceUnavailableCode int = 503
 
 /*
-DeleteConfigLoadbalancerAllServiceUnavailable Maintanence mode
+DeleteConfigLoadbalancerAllServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigLoadbalancerAllServiceUnavailable
 */

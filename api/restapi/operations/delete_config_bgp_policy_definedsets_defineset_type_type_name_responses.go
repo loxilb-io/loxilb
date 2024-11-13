@@ -312,7 +312,7 @@ func (o *DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameInternalServerErro
 const DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameServiceUnavailableCode int = 503
 
 /*
-DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameServiceUnavailable Maintanence mode
+DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameServiceUnavailable
 */

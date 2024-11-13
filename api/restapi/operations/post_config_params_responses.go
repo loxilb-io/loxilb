@@ -312,7 +312,7 @@ func (o *PostConfigParamsInternalServerError) WriteResponse(rw http.ResponseWrit
 const PostConfigParamsServiceUnavailableCode int = 503
 
 /*
-PostConfigParamsServiceUnavailable Maintanence mode
+PostConfigParamsServiceUnavailable Maintenance mode
 
 swagger:response postConfigParamsServiceUnavailable
 */

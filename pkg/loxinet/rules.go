@@ -1472,6 +1472,10 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, se
 		return RuleArgsErr, errors.New("secondaryIP-args error")
 	}
 
+	if serv.Proto != "udp" && serv.Sel == cmn.LbSelN3 {
+		return RuleArgsErr, errors.New("non-udp-n3-args error")
+	}
+
 	if len(servSecIPs) > 3 {
 		return RuleArgsErr, errors.New("secondaryIP-args len error")
 	}
@@ -2665,6 +2669,8 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 			nWork.EpSel = EpLeastConn
 		case at.sel == cmn.LbSelN2:
 			nWork.EpSel = EpN2
+		case at.sel == cmn.LbSelN3:
+			nWork.EpSel = EpN3
 		default:
 			nWork.EpSel = EpRR
 		}

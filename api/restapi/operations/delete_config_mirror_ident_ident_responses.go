@@ -312,7 +312,7 @@ func (o *DeleteConfigMirrorIdentIdentInternalServerError) WriteResponse(rw http.
 const DeleteConfigMirrorIdentIdentServiceUnavailableCode int = 503
 
 /*
-DeleteConfigMirrorIdentIdentServiceUnavailable Maintanence mode
+DeleteConfigMirrorIdentIdentServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigMirrorIdentIdentServiceUnavailable
 */

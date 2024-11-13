@@ -312,7 +312,7 @@ func (o *DeleteConfigBgpPolicyApplyInternalServerError) WriteResponse(rw http.Re
 const DeleteConfigBgpPolicyApplyServiceUnavailableCode int = 503
 
 /*
-DeleteConfigBgpPolicyApplyServiceUnavailable Maintanence mode
+DeleteConfigBgpPolicyApplyServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigBgpPolicyApplyServiceUnavailable
 */

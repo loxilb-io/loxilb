@@ -312,7 +312,7 @@ func (o *PostConfigIpv4addressInternalServerError) WriteResponse(rw http.Respons
 const PostConfigIpv4addressServiceUnavailableCode int = 503
 
 /*
-PostConfigIpv4addressServiceUnavailable Maintanence mode
+PostConfigIpv4addressServiceUnavailable Maintenance mode
 
 swagger:response postConfigIpv4addressServiceUnavailable
 */

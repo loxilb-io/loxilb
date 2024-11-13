@@ -152,7 +152,7 @@ func (o *GetConfigBfdAllInternalServerError) WriteResponse(rw http.ResponseWrite
 const GetConfigBfdAllServiceUnavailableCode int = 503
 
 /*
-GetConfigBfdAllServiceUnavailable Maintanence mode
+GetConfigBfdAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigBfdAllServiceUnavailable
 */

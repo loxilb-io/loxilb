@@ -32,6 +32,9 @@ type ConntrackEntry struct {
 	// port number for the access
 	DestinationPort int64 `json:"destinationPort,omitempty"`
 
+	// value for Conntrack ident
+	Ident string `json:"ident,omitempty"`
+
 	// Packet counts of the conntrack
 	Packets int64 `json:"packets,omitempty"`
 

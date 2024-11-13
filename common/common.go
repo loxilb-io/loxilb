@@ -487,6 +487,8 @@ const (
 	LbSelLeastConnections
 	// LbSelN2 - select client based on N2 SCTP interface
 	LbSelN2
+	// LbSelN3 - select client based on N3 interface
+	LbSelN3
 )
 
 // LBMode - Variable to define LB mode
@@ -624,6 +626,8 @@ type CtInfo struct {
 	Sport uint16 `json:"sourcePort"`
 	// Proto - IP protocol information
 	Proto string `json:"protocol"`
+	// Ident - Identity val
+	Ident string `json:"ident"`
 	// CState - current state of conntrack
 	CState string `json:"conntrackState"`
 	// CAct - any related action

@@ -152,7 +152,7 @@ func (o *GetConfigPolicyAllInternalServerError) WriteResponse(rw http.ResponseWr
 const GetConfigPolicyAllServiceUnavailableCode int = 503
 
 /*
-GetConfigPolicyAllServiceUnavailable Maintanence mode
+GetConfigPolicyAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigPolicyAllServiceUnavailable
 */

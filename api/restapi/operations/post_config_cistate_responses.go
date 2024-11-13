@@ -312,7 +312,7 @@ func (o *PostConfigCistateInternalServerError) WriteResponse(rw http.ResponseWri
 const PostConfigCistateServiceUnavailableCode int = 503
 
 /*
-PostConfigCistateServiceUnavailable Maintanence mode
+PostConfigCistateServiceUnavailable Maintenance mode
 
 swagger:response postConfigCistateServiceUnavailable
 */

@@ -312,7 +312,7 @@ func (o *PostConfigNeighborInternalServerError) WriteResponse(rw http.ResponseWr
 const PostConfigNeighborServiceUnavailableCode int = 503
 
 /*
-PostConfigNeighborServiceUnavailable Maintanence mode
+PostConfigNeighborServiceUnavailable Maintenance mode
 
 swagger:response postConfigNeighborServiceUnavailable
 */
