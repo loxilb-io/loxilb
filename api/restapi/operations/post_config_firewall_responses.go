@@ -312,7 +312,7 @@ func (o *PostConfigFirewallInternalServerError) WriteResponse(rw http.ResponseWr
 const PostConfigFirewallServiceUnavailableCode int = 503
 
 /*
-PostConfigFirewallServiceUnavailable Maintanence mode
+PostConfigFirewallServiceUnavailable Maintenance mode
 
 swagger:response postConfigFirewallServiceUnavailable
 */

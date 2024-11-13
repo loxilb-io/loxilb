@@ -152,7 +152,7 @@ func (o *PostConfigTunnelVxlanVxlanIDPeerInternalServerError) WriteResponse(rw h
 const PostConfigTunnelVxlanVxlanIDPeerServiceUnavailableCode int = 503
 
 /*
-PostConfigTunnelVxlanVxlanIDPeerServiceUnavailable Maintanence mode
+PostConfigTunnelVxlanVxlanIDPeerServiceUnavailable Maintenance mode
 
 swagger:response postConfigTunnelVxlanVxlanIdPeerServiceUnavailable
 */

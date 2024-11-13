@@ -312,7 +312,7 @@ func (o *PostConfigMirrorInternalServerError) WriteResponse(rw http.ResponseWrit
 const PostConfigMirrorServiceUnavailableCode int = 503
 
 /*
-PostConfigMirrorServiceUnavailable Maintanence mode
+PostConfigMirrorServiceUnavailable Maintenance mode
 
 swagger:response postConfigMirrorServiceUnavailable
 */

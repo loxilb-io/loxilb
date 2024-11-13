@@ -312,7 +312,7 @@ func (o *DeleteConfigSessionulclIdentIdentUlclAddressIPAddressInternalServerErro
 const DeleteConfigSessionulclIdentIdentUlclAddressIPAddressServiceUnavailableCode int = 503
 
 /*
-DeleteConfigSessionulclIdentIdentUlclAddressIPAddressServiceUnavailable Maintanence mode
+DeleteConfigSessionulclIdentIdentUlclAddressIPAddressServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigSessionulclIdentIdentUlclAddressIpAddressServiceUnavailable
 */

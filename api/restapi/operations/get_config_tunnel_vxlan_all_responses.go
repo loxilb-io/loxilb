@@ -152,7 +152,7 @@ func (o *GetConfigTunnelVxlanAllInternalServerError) WriteResponse(rw http.Respo
 const GetConfigTunnelVxlanAllServiceUnavailableCode int = 503
 
 /*
-GetConfigTunnelVxlanAllServiceUnavailable Maintanence mode
+GetConfigTunnelVxlanAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigTunnelVxlanAllServiceUnavailable
 */

@@ -16,11 +16,10 @@
 package handler
 
 import (
+	"github.com/go-openapi/runtime/middleware"
 	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	tk "github.com/loxilb-io/loxilib"
-
-	"github.com/go-openapi/runtime/middleware"
 )
 
 func ConfigGetConntrack(params operations.GetConfigConntrackAllParams) middleware.Responder {
@@ -42,6 +41,7 @@ func ConfigGetConntrack(params operations.GetConfigConntrackAllParams) middlewar
 		tmpResult.DestinationPort = int64(conntrack.Dport)
 		tmpResult.Packets = int64(conntrack.Pkts)
 		tmpResult.Protocol = conntrack.Proto
+		tmpResult.Ident = conntrack.Ident
 		tmpResult.SourceIP = conntrack.Sip.String()
 		tmpResult.SourcePort = int64(conntrack.Sport)
 		tmpResult.ServName = conntrack.ServiceName

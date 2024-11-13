@@ -152,7 +152,7 @@ func (o *GetConfigVlanAllInternalServerError) WriteResponse(rw http.ResponseWrit
 const GetConfigVlanAllServiceUnavailableCode int = 503
 
 /*
-GetConfigVlanAllServiceUnavailable Maintanence mode
+GetConfigVlanAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigVlanAllServiceUnavailable
 */

@@ -312,7 +312,7 @@ func (o *PostConfigFdbInternalServerError) WriteResponse(rw http.ResponseWriter,
 const PostConfigFdbServiceUnavailableCode int = 503
 
 /*
-PostConfigFdbServiceUnavailable Maintanence mode
+PostConfigFdbServiceUnavailable Maintenance mode
 
 swagger:response postConfigFdbServiceUnavailable
 */

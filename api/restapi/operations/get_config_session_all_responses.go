@@ -152,7 +152,7 @@ func (o *GetConfigSessionAllInternalServerError) WriteResponse(rw http.ResponseW
 const GetConfigSessionAllServiceUnavailableCode int = 503
 
 /*
-GetConfigSessionAllServiceUnavailable Maintanence mode
+GetConfigSessionAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigSessionAllServiceUnavailable
 */

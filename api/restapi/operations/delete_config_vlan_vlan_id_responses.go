@@ -312,7 +312,7 @@ func (o *DeleteConfigVlanVlanIDInternalServerError) WriteResponse(rw http.Respon
 const DeleteConfigVlanVlanIDServiceUnavailableCode int = 503
 
 /*
-DeleteConfigVlanVlanIDServiceUnavailable Maintanence mode
+DeleteConfigVlanVlanIDServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigVlanVlanIdServiceUnavailable
 */

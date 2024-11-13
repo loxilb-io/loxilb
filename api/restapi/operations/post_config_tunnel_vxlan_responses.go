@@ -177,7 +177,7 @@ func (o *PostConfigTunnelVxlanInternalServerError) WriteResponse(rw http.Respons
 const PostConfigTunnelVxlanServiceUnavailableCode int = 503
 
 /*
-PostConfigTunnelVxlanServiceUnavailable Maintanence mode
+PostConfigTunnelVxlanServiceUnavailable Maintenance mode
 
 swagger:response postConfigTunnelVxlanServiceUnavailable
 */

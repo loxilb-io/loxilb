@@ -152,7 +152,7 @@ func (o *GetStatusFilesystemInternalServerError) WriteResponse(rw http.ResponseW
 const GetStatusFilesystemServiceUnavailableCode int = 503
 
 /*
-GetStatusFilesystemServiceUnavailable Maintanence mode
+GetStatusFilesystemServiceUnavailable Maintenance mode
 
 swagger:response getStatusFilesystemServiceUnavailable
 */

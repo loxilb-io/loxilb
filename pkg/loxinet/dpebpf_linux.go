@@ -1008,6 +1008,8 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 		dat.sel_type = C.NAT_LB_SEL_LC
 	case w.EpSel == EpN2:
 		dat.sel_type = C.NAT_LB_SEL_N2
+	case w.EpSel == EpN3:
+		dat.sel_type = C.NAT_LB_SEL_N3
 	/* Currently not implemented in DP */
 	/*case w.EpSel == EP_PRIO:
 	  dat.sel_type = C.NAT_LB_SEL_PRIO*/
@@ -1215,6 +1217,9 @@ func (ct *DpCtInfo) convDPCt2GoObjFixup(ctKey *C.struct_dp_ct_key, ctDat *C.stru
 	default:
 		ct.Proto = fmt.Sprintf("%d", p)
 	}
+
+	ct.IdType = uint32(ctKey._type)
+	ct.Ident = uint32(ctKey.ident)
 
 	if ctDat == nil {
 		ct.CAct = "n/a"
@@ -1430,6 +1435,7 @@ func (ct *DpCtInfo) convDPCtKey2GoObj(ctKey *C.struct_dp_ct_key) *DpCtInfo {
 	default:
 		ct.Proto = fmt.Sprintf("%d", p)
 	}
+
 	return ct
 }
 

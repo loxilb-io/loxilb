@@ -152,7 +152,7 @@ func (o *GetConfigFirewallAllInternalServerError) WriteResponse(rw http.Response
 const GetConfigFirewallAllServiceUnavailableCode int = 503
 
 /*
-GetConfigFirewallAllServiceUnavailable Maintanence mode
+GetConfigFirewallAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigFirewallAllServiceUnavailable
 */

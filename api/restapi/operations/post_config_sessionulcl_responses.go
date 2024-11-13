@@ -312,7 +312,7 @@ func (o *PostConfigSessionulclInternalServerError) WriteResponse(rw http.Respons
 const PostConfigSessionulclServiceUnavailableCode int = 503
 
 /*
-PostConfigSessionulclServiceUnavailable Maintanence mode
+PostConfigSessionulclServiceUnavailable Maintenance mode
 
 swagger:response postConfigSessionulclServiceUnavailable
 */

@@ -152,7 +152,7 @@ func (o *GetConfigMirrorAllInternalServerError) WriteResponse(rw http.ResponseWr
 const GetConfigMirrorAllServiceUnavailableCode int = 503
 
 /*
-GetConfigMirrorAllServiceUnavailable Maintanence mode
+GetConfigMirrorAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigMirrorAllServiceUnavailable
 */

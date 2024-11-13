@@ -357,7 +357,7 @@ func (o *GetConfigBgpNeighAllInternalServerError) WriteResponse(rw http.Response
 const GetConfigBgpNeighAllServiceUnavailableCode int = 503
 
 /*
-GetConfigBgpNeighAllServiceUnavailable Maintanence mode
+GetConfigBgpNeighAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigBgpNeighAllServiceUnavailable
 */

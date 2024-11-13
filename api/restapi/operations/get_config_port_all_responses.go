@@ -152,7 +152,7 @@ func (o *GetConfigPortAllInternalServerError) WriteResponse(rw http.ResponseWrit
 const GetConfigPortAllServiceUnavailableCode int = 503
 
 /*
-GetConfigPortAllServiceUnavailable Maintanence mode
+GetConfigPortAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigPortAllServiceUnavailable
 */

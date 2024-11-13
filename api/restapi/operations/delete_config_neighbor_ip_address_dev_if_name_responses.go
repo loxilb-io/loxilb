@@ -312,7 +312,7 @@ func (o *DeleteConfigNeighborIPAddressDevIfNameInternalServerError) WriteRespons
 const DeleteConfigNeighborIPAddressDevIfNameServiceUnavailableCode int = 503
 
 /*
-DeleteConfigNeighborIPAddressDevIfNameServiceUnavailable Maintanence mode
+DeleteConfigNeighborIPAddressDevIfNameServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigNeighborIpAddressDevIfNameServiceUnavailable
 */

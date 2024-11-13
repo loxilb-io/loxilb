@@ -312,7 +312,7 @@ func (o *PostConfigBgpGlobalInternalServerError) WriteResponse(rw http.ResponseW
 const PostConfigBgpGlobalServiceUnavailableCode int = 503
 
 /*
-PostConfigBgpGlobalServiceUnavailable Maintanence mode
+PostConfigBgpGlobalServiceUnavailable Maintenance mode
 
 swagger:response postConfigBgpGlobalServiceUnavailable
 */

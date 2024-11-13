@@ -357,7 +357,7 @@ func (o *GetConfigParamsInternalServerError) WriteResponse(rw http.ResponseWrite
 const GetConfigParamsServiceUnavailableCode int = 503
 
 /*
-GetConfigParamsServiceUnavailable Maintanence mode
+GetConfigParamsServiceUnavailable Maintenance mode
 
 swagger:response getConfigParamsServiceUnavailable
 */

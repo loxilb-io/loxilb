@@ -152,7 +152,7 @@ func (o *GetConfigNeighborAllInternalServerError) WriteResponse(rw http.Response
 const GetConfigNeighborAllServiceUnavailableCode int = 503
 
 /*
-GetConfigNeighborAllServiceUnavailable Maintanence mode
+GetConfigNeighborAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigNeighborAllServiceUnavailable
 */
