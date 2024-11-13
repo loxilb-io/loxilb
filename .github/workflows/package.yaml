@@ -32,13 +32,27 @@ jobs:
         run: | 
              sudo mkdir -p /opt/loxilb/
              sudo apt-get purge -y libssl-dev 2>&1 >> /dev/null  | true
-      - name: Build loxilb deb package
-        run: |
-             git clone https://github.com/loxilb-io/tools.git build-tools && cd build-tools/pkg/ && make major=${{ github.event.inputs.tagName }} && cd -
-      - name: Upload the package to a release
-        if: github.repository == 'loxilb-io/loxilb' 
+      - name: Build loxilb deb package with given tag
+        if: github.event.inputs.tagName != ''
+        run: git clone https://github.com/loxilb-io/tools.git build-tools && cd build-tools/pkg/ && make major=${{ github.event.inputs.tagName }} && cd -
+      - name: Build loxilb deb package with latest
+        if: github.event.inputs.tagName == ''
+        run: git clone https://github.com/loxilb-io/tools.git build-tools && cd build-tools/pkg/ && make major=latest && cd -      
+      - name: Upload the package to a release with given tag  
+        if: |
+          github.repository == 'loxilb-io/loxilb' 
+          &&  github.event.inputs.tagName != ''
         uses: ncipollo/release-action@v1
         with:
           tag: v${{ github.event.inputs.tagName }}
+          allowUpdates: true
+          artifacts: "build-tools/pkg/*.deb"
+      - name: Upload the package to a release with latest tag  
+        if: |
+          github.repository == 'loxilb-io/loxilb' 
+          &&  github.event.inputs.tagName == ''
+        uses: ncipollo/release-action@v1
+        with:
+          tag: vlatest
           allowUpdates: true
           artifacts: "build-tools/pkg/*.deb"
