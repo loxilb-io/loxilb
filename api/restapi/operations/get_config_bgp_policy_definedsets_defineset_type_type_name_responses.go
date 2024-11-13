@@ -357,7 +357,7 @@ func (o *GetConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameInternalServerError) 
 const GetConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameServiceUnavailableCode int = 503
 
 /*
-GetConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameServiceUnavailable Maintanence mode
+GetConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameServiceUnavailable Maintenance mode
 
 swagger:response getConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameServiceUnavailable
 */

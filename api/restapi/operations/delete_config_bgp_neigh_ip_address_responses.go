@@ -312,7 +312,7 @@ func (o *DeleteConfigBgpNeighIPAddressInternalServerError) WriteResponse(rw http
 const DeleteConfigBgpNeighIPAddressServiceUnavailableCode int = 503
 
 /*
-DeleteConfigBgpNeighIPAddressServiceUnavailable Maintanence mode
+DeleteConfigBgpNeighIPAddressServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigBgpNeighIpAddressServiceUnavailable
 */

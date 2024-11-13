@@ -312,7 +312,7 @@ func (o *PostConfigVlanInternalServerError) WriteResponse(rw http.ResponseWriter
 const PostConfigVlanServiceUnavailableCode int = 503
 
 /*
-PostConfigVlanServiceUnavailable Maintanence mode
+PostConfigVlanServiceUnavailable Maintenance mode
 
 swagger:response postConfigVlanServiceUnavailable
 */

@@ -312,7 +312,7 @@ func (o *PostConfigPolicyInternalServerError) WriteResponse(rw http.ResponseWrit
 const PostConfigPolicyServiceUnavailableCode int = 503
 
 /*
-PostConfigPolicyServiceUnavailable Maintanence mode
+PostConfigPolicyServiceUnavailable Maintenance mode
 
 swagger:response postConfigPolicyServiceUnavailable
 */

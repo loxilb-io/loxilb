@@ -3136,6 +3136,9 @@ definitions:
       conntrackState:
         type: string
         description:  value for Conntrack state
+      ident:
+        type: string
+        description:  value for Conntrack ident
       conntrackAct:
         type: string
         description:  value for Conntrack Act

@@ -4708,6 +4708,10 @@ func init() {
           "description": "port number for the access",
           "type": "integer"
         },
+        "ident": {
+          "description": "value for Conntrack ident",
+          "type": "string"
+        },
         "packets": {
           "description": "Packet counts of the conntrack",
           "type": "integer"
@@ -10986,6 +10990,10 @@ func init() {
         "destinationPort": {
           "description": "port number for the access",
           "type": "integer"
+        },
+        "ident": {
+          "description": "value for Conntrack ident",
+          "type": "string"
         },
         "packets": {
           "description": "Packet counts of the conntrack",

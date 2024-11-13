@@ -152,7 +152,7 @@ func (o *GetConfigCistateAllInternalServerError) WriteResponse(rw http.ResponseW
 const GetConfigCistateAllServiceUnavailableCode int = 503
 
 /*
-GetConfigCistateAllServiceUnavailable Maintanence mode
+GetConfigCistateAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigCistateAllServiceUnavailable
 */

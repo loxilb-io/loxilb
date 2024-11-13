@@ -312,7 +312,7 @@ func (o *PostConfigBgpPolicyApplyInternalServerError) WriteResponse(rw http.Resp
 const PostConfigBgpPolicyApplyServiceUnavailableCode int = 503
 
 /*
-PostConfigBgpPolicyApplyServiceUnavailable Maintanence mode
+PostConfigBgpPolicyApplyServiceUnavailable Maintenance mode
 
 swagger:response postConfigBgpPolicyApplyServiceUnavailable
 */

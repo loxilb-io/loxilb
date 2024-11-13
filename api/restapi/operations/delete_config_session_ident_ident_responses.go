@@ -312,7 +312,7 @@ func (o *DeleteConfigSessionIdentIdentInternalServerError) WriteResponse(rw http
 const DeleteConfigSessionIdentIdentServiceUnavailableCode int = 503
 
 /*
-DeleteConfigSessionIdentIdentServiceUnavailable Maintanence mode
+DeleteConfigSessionIdentIdentServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigSessionIdentIdentServiceUnavailable
 */

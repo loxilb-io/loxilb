@@ -312,7 +312,7 @@ func (o *DeleteConfigIpv4addressIPAddressMaskDevIfNameInternalServerError) Write
 const DeleteConfigIpv4addressIPAddressMaskDevIfNameServiceUnavailableCode int = 503
 
 /*
-DeleteConfigIpv4addressIPAddressMaskDevIfNameServiceUnavailable Maintanence mode
+DeleteConfigIpv4addressIPAddressMaskDevIfNameServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigIpv4addressIpAddressMaskDevIfNameServiceUnavailable
 */

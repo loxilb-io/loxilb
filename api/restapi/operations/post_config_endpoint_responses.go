@@ -312,7 +312,7 @@ func (o *PostConfigEndpointInternalServerError) WriteResponse(rw http.ResponseWr
 const PostConfigEndpointServiceUnavailableCode int = 503
 
 /*
-PostConfigEndpointServiceUnavailable Maintanence mode
+PostConfigEndpointServiceUnavailable Maintenance mode
 
 swagger:response postConfigEndpointServiceUnavailable
 */

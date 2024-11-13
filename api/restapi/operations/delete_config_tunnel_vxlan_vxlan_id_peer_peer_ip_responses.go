@@ -152,7 +152,7 @@ func (o *DeleteConfigTunnelVxlanVxlanIDPeerPeerIPInternalServerError) WriteRespo
 const DeleteConfigTunnelVxlanVxlanIDPeerPeerIPServiceUnavailableCode int = 503
 
 /*
-DeleteConfigTunnelVxlanVxlanIDPeerPeerIPServiceUnavailable Maintanence mode
+DeleteConfigTunnelVxlanVxlanIDPeerPeerIPServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigTunnelVxlanVxlanIdPeerPeerIpServiceUnavailable
 */

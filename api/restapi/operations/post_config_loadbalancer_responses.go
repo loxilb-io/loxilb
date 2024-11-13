@@ -332,7 +332,7 @@ func (o *PostConfigLoadbalancerInternalServerError) WriteResponse(rw http.Respon
 const PostConfigLoadbalancerServiceUnavailableCode int = 503
 
 /*
-PostConfigLoadbalancerServiceUnavailable Maintanence mode
+PostConfigLoadbalancerServiceUnavailable Maintenance mode
 
 swagger:response postConfigLoadbalancerServiceUnavailable
 */

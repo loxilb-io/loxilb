@@ -312,7 +312,7 @@ func (o *PostConfigRouteInternalServerError) WriteResponse(rw http.ResponseWrite
 const PostConfigRouteServiceUnavailableCode int = 503
 
 /*
-PostConfigRouteServiceUnavailable Maintanence mode
+PostConfigRouteServiceUnavailable Maintenance mode
 
 swagger:response postConfigRouteServiceUnavailable
 */

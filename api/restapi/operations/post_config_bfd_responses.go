@@ -312,7 +312,7 @@ func (o *PostConfigBfdInternalServerError) WriteResponse(rw http.ResponseWriter,
 const PostConfigBfdServiceUnavailableCode int = 503
 
 /*
-PostConfigBfdServiceUnavailable Maintanence mode
+PostConfigBfdServiceUnavailable Maintenance mode
 
 swagger:response postConfigBfdServiceUnavailable
 */

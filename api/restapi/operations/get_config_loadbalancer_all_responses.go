@@ -152,7 +152,7 @@ func (o *GetConfigLoadbalancerAllInternalServerError) WriteResponse(rw http.Resp
 const GetConfigLoadbalancerAllServiceUnavailableCode int = 503
 
 /*
-GetConfigLoadbalancerAllServiceUnavailable Maintanence mode
+GetConfigLoadbalancerAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigLoadbalancerAllServiceUnavailable
 */

@@ -312,7 +312,7 @@ func (o *DeleteConfigFirewallInternalServerError) WriteResponse(rw http.Response
 const DeleteConfigFirewallServiceUnavailableCode int = 503
 
 /*
-DeleteConfigFirewallServiceUnavailable Maintanence mode
+DeleteConfigFirewallServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigFirewallServiceUnavailable
 */

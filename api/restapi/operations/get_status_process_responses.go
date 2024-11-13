@@ -152,7 +152,7 @@ func (o *GetStatusProcessInternalServerError) WriteResponse(rw http.ResponseWrit
 const GetStatusProcessServiceUnavailableCode int = 503
 
 /*
-GetStatusProcessServiceUnavailable Maintanence mode
+GetStatusProcessServiceUnavailable Maintenance mode
 
 swagger:response getStatusProcessServiceUnavailable
 */

@@ -152,7 +152,7 @@ func (o *GetConfigIpv4addressAllInternalServerError) WriteResponse(rw http.Respo
 const GetConfigIpv4addressAllServiceUnavailableCode int = 503
 
 /*
-GetConfigIpv4addressAllServiceUnavailable Maintanence mode
+GetConfigIpv4addressAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigIpv4addressAllServiceUnavailable
 */

@@ -332,7 +332,7 @@ func (o *GetConfigRouteAllInternalServerError) WriteResponse(rw http.ResponseWri
 const GetConfigRouteAllServiceUnavailableCode int = 503
 
 /*
-GetConfigRouteAllServiceUnavailable Maintanence mode
+GetConfigRouteAllServiceUnavailable Maintenance mode
 
 swagger:response getConfigRouteAllServiceUnavailable
 */

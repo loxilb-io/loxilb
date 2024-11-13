@@ -312,7 +312,7 @@ func (o *PostConfigBgpPolicyDefinedsetsDefinesetTypeInternalServerError) WriteRe
 const PostConfigBgpPolicyDefinedsetsDefinesetTypeServiceUnavailableCode int = 503
 
 /*
-PostConfigBgpPolicyDefinedsetsDefinesetTypeServiceUnavailable Maintanence mode
+PostConfigBgpPolicyDefinedsetsDefinesetTypeServiceUnavailable Maintenance mode
 
 swagger:response postConfigBgpPolicyDefinedsetsDefinesetTypeServiceUnavailable
 */

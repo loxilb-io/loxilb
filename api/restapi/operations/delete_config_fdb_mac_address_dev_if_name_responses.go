@@ -312,7 +312,7 @@ func (o *DeleteConfigFdbMacAddressDevIfNameInternalServerError) WriteResponse(rw
 const DeleteConfigFdbMacAddressDevIfNameServiceUnavailableCode int = 503
 
 /*
-DeleteConfigFdbMacAddressDevIfNameServiceUnavailable Maintanence mode
+DeleteConfigFdbMacAddressDevIfNameServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigFdbMacAddressDevIfNameServiceUnavailable
 */

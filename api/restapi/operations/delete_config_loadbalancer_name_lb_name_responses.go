@@ -312,7 +312,7 @@ func (o *DeleteConfigLoadbalancerNameLbNameInternalServerError) WriteResponse(rw
 const DeleteConfigLoadbalancerNameLbNameServiceUnavailableCode int = 503
 
 /*
-DeleteConfigLoadbalancerNameLbNameServiceUnavailable Maintanence mode
+DeleteConfigLoadbalancerNameLbNameServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigLoadbalancerNameLbNameServiceUnavailable
 */

@@ -152,7 +152,7 @@ func (o *GetStatusDeviceInternalServerError) WriteResponse(rw http.ResponseWrite
 const GetStatusDeviceServiceUnavailableCode int = 503
 
 /*
-GetStatusDeviceServiceUnavailable Maintanence mode
+GetStatusDeviceServiceUnavailable Maintenance mode
 
 swagger:response getStatusDeviceServiceUnavailable
 */

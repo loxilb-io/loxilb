@@ -222,7 +222,7 @@ func (o *DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedInternalServerError) Writ
 const DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedServiceUnavailableCode int = 503
 
 /*
-DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedServiceUnavailable Maintanence mode
+DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedServiceUnavailable Maintenance mode
 
 swagger:response deleteConfigVlanVlanIdMemberIfNameTaggedTaggedServiceUnavailable
 */
