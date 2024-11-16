@@ -19,7 +19,7 @@ var Opts struct {
 	TLSCertificateKey flags.Filename `long:"tls-key" description:"the private key to use for secure connections" default:"/opt/loxilb/cert/server.key" env:"TLS_PRIVATE_KEY"`
 	ClusterNodes      string         `long:"cluster" description:"Comma-separated list of cluter-node IP Addresses" default:"none"`
 	ClusterSelf       int            `long:"self" description:"annonation of self in cluster" default:"0"`
-	LogLevel          string         `long:"loglevel" description:"One of debug,info,error,warning,notice,critical,emergency,alert" default:"debug"`
+	LogLevel          string         `long:"loglevel" description:"One of trace,debug,info,error,warning,notice,critical,emergency,alert" default:"debug"`
 	CPUProfile        string         `long:"cpuprofile" description:"Enable cpu profiling and specify file to use" default:"none" env:"CPUPROF"`
 	Prometheus        bool           `short:"p" long:"prometheus" description:"Run prometheus thread"`
 	CRC32SumDisable   bool           `long:"disable-crc32" description:"Disable crc32 checksum update(experimental)"`
