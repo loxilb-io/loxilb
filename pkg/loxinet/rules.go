@@ -79,20 +79,22 @@ const (
 // constants
 const (
 	MaxLBEndPoints             = 32
-	DflLbaInactiveTries        = 2         // Default number of inactive tries before LB arm is turned off
-	MaxDflLbaInactiveTries     = 100       // Max number of inactive tries before LB arm is turned off
-	DflLbaCheckTimeout         = 10        // Default timeout for checking LB arms
-	DflHostProbeTimeout        = 60        // Default probe timeout for end-point host
-	InitHostProbeTimeout       = 15        // Initial probe timeout for end-point host
-	MaxHostProbeTime           = 24 * 3600 // Max possible host health check duration
-	LbDefaultInactiveTimeout   = 4 * 60    // Default inactive timeout for established sessions
-	LbDefaultInactiveNSTimeout = 20        // Default inactive timeout for non-session oriented protocols
-	LbMaxInactiveTimeout       = 24 * 3600 // Maximum inactive timeout for established sessions
-	MaxEndPointCheckers        = 4         // Maximum helpers to check endpoint health
-	EndPointCheckerDuration    = 2         // Duration at which ep-helpers will run
-	MaxEndPointSweeps          = 20        // Maximum end-point sweeps per round
-	VIPSweepDuration           = 30        // Duration of periodic VIP maintenance
-	DefaultPersistTimeOut      = 10800     // Default persistent LB session timeout
+	DflLbaInactiveTries        = 2          // Default number of inactive tries before LB arm is turned off
+	MaxDflLbaInactiveTries     = 100        // Max number of inactive tries before LB arm is turned off
+	DflLbaCheckTimeout         = 10         // Default timeout for checking LB arms
+	DflHostProbeTimeout        = 60         // Default probe timeout for end-point host
+	InitHostProbeTimeout       = 15         // Initial probe timeout for end-point host
+	MaxHostProbeTime           = 24 * 3600  // Max possible host health check duration
+	LbDefaultInactiveTimeout   = 4 * 60     // Default inactive timeout for established sessions
+	LbDefaultInactiveNSTimeout = 20         // Default inactive timeout for non-session oriented protocols
+	LbMaxInactiveTimeout       = 24 * 3600  // Maximum inactive timeout for established sessions
+	MaxEndPointCheckers        = 4          // Maximum helpers to check endpoint health
+	EndPointCheckerDuration    = 2          // Duration at which ep-helpers will run
+	MaxEndPointSweeps          = 20         // Maximum end-point sweeps per round
+	VIPSweepDuration           = 30         // Duration of periodic VIP maintenance
+	DefaultPersistTimeOut      = 10800      // Default persistent LB session timeout
+	SnatFwMark                 = 0x80000000 // Snat Marker
+	SrcChkFwMark               = 0x40000000 // Src check Marker
 )
 
 type ruleTType uint
@@ -154,7 +156,7 @@ type ruleTuples struct {
 	inL4Prot rule8Tuple
 	inL4Src  rule16Tuple
 	inL4Dst  rule16Tuple
-	pref     uint16
+	pref     uint32
 	path     string
 }
 
@@ -290,6 +292,7 @@ type ruleEnt struct {
 	name     string
 	inst     string
 	secMode  cmn.LBSec
+	srcList  []*allowedSrcElem
 	locIPs   map[string]struct{}
 }
 
@@ -299,7 +302,7 @@ type ruleTable struct {
 	eMap       map[string]*ruleEnt
 	rArr       [RtMaximumLbs]*ruleEnt
 	pMap       []*ruleEnt
-	Mark       *tk.Counter
+	Mark       *utils.Marker
 }
 
 type ruleTableType uint
@@ -334,6 +337,13 @@ type vipElem struct {
 	inst string
 }
 
+type allowedSrcElem struct {
+	ref     int
+	srcPref *net.IPNet
+	mark    uint64
+	lbmark  uint32
+}
+
 // RuleH - context container
 type RuleH struct {
 	zone       *Zone
@@ -341,6 +351,8 @@ type RuleH struct {
 	tables     [RtMax]ruleTable
 	epMap      map[string]*epHost
 	vipMap     map[string]*vipElem
+	srcMark    *tk.Counter
+	lbSrcMap   map[string]*allowedSrcElem
 	epCs       [MaxEndPointCheckers]epChecker
 	wg         sync.WaitGroup
 	lepHID     uint8
@@ -360,15 +372,17 @@ func RulesInit(zone *Zone) *RuleH {
 
 	nRh.vipMap = make(map[string]*vipElem)
 	nRh.epMap = make(map[string]*epHost)
+	nRh.lbSrcMap = make(map[string]*allowedSrcElem)
+	nRh.srcMark = tk.NewCounter(1, RtMaximumFw4s)
 	nRh.tables[RtFw].tableMatch = RmMax - 1
 	nRh.tables[RtFw].tableType = RtMf
 	nRh.tables[RtFw].eMap = make(map[string]*ruleEnt)
-	nRh.tables[RtFw].Mark = tk.NewCounter(1, RtMaximumFw4s)
+	nRh.tables[RtFw].Mark = utils.NewMarker(1, RtMaximumFw4s)
 
 	nRh.tables[RtLB].tableMatch = RmL3Dst | RmL4Dst | RmL4Prot
 	nRh.tables[RtLB].tableType = RtEm
 	nRh.tables[RtLB].eMap = make(map[string]*ruleEnt)
-	nRh.tables[RtLB].Mark = tk.NewCounter(1, RtMaximumLbs)
+	nRh.tables[RtLB].Mark = utils.NewMarker(1, RtMaximumLbs)
 
 	for i := 0; i < MaxEndPointCheckers; i++ {
 		nRh.epCs[i].tD = make(chan bool)
@@ -764,8 +778,6 @@ func (R *RuleH) Rules2Json() ([]byte, error) {
 			return nil, err
 		}
 		bret = append(bret, js...)
-		fmt.Printf("js: %v\n", js)
-		fmt.Println(string(js))
 	}
 
 	return bret, nil
@@ -983,7 +995,7 @@ func (R *RuleH) GetLBRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
 	return R.tables[RtLB].eMap[rt.ruleKey()]
 }
 
-// GetLBRuleSecIPs - Get secondary IPs for SCTP LB rule by its service args
+// GetLBRuleSecIPs - Get secondary IPs for LB rule by its service args
 func (R *RuleH) GetLBRuleSecIPs(serv cmn.LbServiceArg) []string {
 	var ipProto uint8
 	var ips []string
@@ -1014,6 +1026,93 @@ func (R *RuleH) GetLBRuleSecIPs(serv cmn.LbServiceArg) []string {
 		}
 	}
 	return ips
+}
+
+func (R *RuleH) addAllowedLbSrc(CIDR string, lbMark uint32) *allowedSrcElem {
+
+	_, srcPref, err := net.ParseCIDR(CIDR)
+	if err != nil {
+		tk.LogIt(tk.LogError, "allowed-cidr parse failed\n")
+		return nil
+	}
+
+	if lbMark >= 14 {
+		tk.LogIt(tk.LogError, "allowed-src lbmark out-of-range\n")
+		return nil
+	}
+
+	added := false
+	srcElem := R.lbSrcMap[CIDR]
+	if srcElem != nil {
+		srcElem.lbmark |= 1 << lbMark
+		srcElem.ref++
+		added = true
+		goto addFw
+	}
+
+	srcElem = new(allowedSrcElem)
+	srcElem.ref = 1
+	srcElem.srcPref = srcPref
+	srcElem.lbmark = 1 << lbMark
+	srcElem.mark, err = R.srcMark.GetCounter()
+	if err != nil {
+		tk.LogIt(tk.LogError, "allowed-cidr failed to alloc id\n")
+		return nil
+	}
+
+addFw:
+	fwarg := cmn.FwRuleArg{SrcIP: srcPref.String(), DstIP: "0.0.0.0/0"}
+	fwOpts := cmn.FwOptArg{Allow: true, Mark: srcElem.lbmark | SrcChkFwMark}
+	_, err = R.AddFwRule(fwarg, fwOpts)
+	if err != nil {
+		if !strings.Contains(err.Error(), "fwrule-exists") {
+			R.srcMark.PutCounter(srcElem.mark)
+			tk.LogIt(tk.LogError, "allowed-src failed to add fw %s\n", err)
+			return nil
+		}
+	}
+
+	if !added {
+		R.lbSrcMap[CIDR] = srcElem
+	}
+
+	tk.LogIt(tk.LogInfo, "added allowed-cidr %s: 0x%x\n", srcPref.String(), srcElem.lbmark)
+
+	return srcElem
+}
+
+func (R *RuleH) deleteAllowedLbSrc(CIDR string, lbMark uint32) error {
+	srcElem := R.lbSrcMap[CIDR]
+	if srcElem == nil {
+		return errors.New("no such allowed src prefix")
+	}
+
+	if lbMark >= 14 {
+		tk.LogIt(tk.LogError, "allowed-src lbmark out-of-range\n")
+		return nil
+	}
+
+	srcElem.ref--
+
+	if srcElem.ref == 0 {
+		fwarg := cmn.FwRuleArg{SrcIP: srcElem.srcPref.String(), DstIP: "0.0.0.0/0"}
+		_, err := R.DeleteFwRule(fwarg)
+		if err != nil {
+			tk.LogIt(tk.LogError, "Failed to delete allowedSRC %s\n", srcElem.srcPref.String())
+		}
+		R.srcMark.PutCounter(srcElem.mark)
+		delete(R.lbSrcMap, CIDR)
+		tk.LogIt(tk.LogInfo, "delete allowed-cidr %s\n", srcElem.srcPref.String())
+	} else {
+		srcElem.lbmark &= ^(1 << lbMark)
+		fwarg := cmn.FwRuleArg{SrcIP: srcElem.srcPref.String()}
+		fwOpts := cmn.FwOptArg{Allow: true, Mark: srcElem.lbmark | SrcChkFwMark}
+		R.AddFwRule(fwarg, fwOpts)
+		tk.LogIt(tk.LogInfo, "updated allowed-cidr %s : 0x%x\n", srcElem.srcPref.String(), srcElem.lbmark)
+
+	}
+
+	return nil
 }
 
 func (R *RuleH) electEPSrc(r *ruleEnt) bool {
@@ -1378,7 +1477,7 @@ func getLBConsolidatedEPs(oldEps []ruleLBEp, newEps []ruleLBEp, oper cmn.LBOp) (
 // AddLbRule - Add a service LB rule. The service details are passed in serv argument,
 // and end-point information is passed in the slice servEndPoints. On success,
 // it will return 0 and nil error, else appropriate return code and error string will be set
-func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, servEndPoints []cmn.LbEndPointArg) (int, error) {
+func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, allowedSources []cmn.LbAllowedSrcIPArg, servEndPoints []cmn.LbEndPointArg) (int, error) {
 	var lBActs ruleLBActs
 	var nSecIP []ruleLBSIP
 	var ipProto uint8
@@ -1395,6 +1494,8 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, se
 	if err != nil {
 		return RuleUnknownServiceErr, errors.New("malformed-service error")
 	}
+
+	allowedSources = append(allowedSources, cmn.LbAllowedSrcIPArg{Prefix: "10.10.10.1/32"})
 
 	privIP = nil
 	if serv.PrivateIP != "" {
@@ -1641,6 +1742,7 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, se
 	r.managed = serv.Managed
 	r.secIP = nSecIP
 	r.secMode = serv.Security
+
 	// Per LB end-point health-check is supposed to be handled at kube-loxilb/CCM,
 	// but it certain cases like stand-alone mode, loxilb can do its own
 	// lb end-point health monitoring
@@ -1653,10 +1755,22 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, se
 	r.hChk.actChk = serv.Monitor
 
 	r.act.action = &lBActs
-	r.ruleNum, err = R.tables[RtLB].Mark.GetCounter()
+	r.ruleNum, err = R.tables[RtLB].Mark.GetMarker()
 	if err != nil {
 		tk.LogIt(tk.LogError, "nat lb-rule - %s:%s hwm error\n", r.tuples.String(), r.act.String())
 		return RuleAllocErr, errors.New("rule-hwm error")
+	}
+	for _, allowedSource := range allowedSources {
+		srcElem := R.addAllowedLbSrc(allowedSource.Prefix, uint32(r.ruleNum))
+		if srcElem == nil {
+			R.tables[RtLB].Mark.ReleaseMarker(r.ruleNum)
+			for _, src := range r.srcList {
+				R.deleteAllowedLbSrc(src.srcPref.String(), uint32(r.ruleNum))
+			}
+			tk.LogIt(tk.LogError, "nat lb-rule - %s:%s allowedSRC error\n", r.tuples.String(), r.act.String())
+			return RuleAllocErr, errors.New("rule-allowed-src error")
+		}
+		r.srcList = append(r.srcList, srcElem)
 	}
 	r.sT = time.Now()
 	r.iTO = serv.InactiveTimeout
@@ -1682,14 +1796,13 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, se
 		}
 	}
 
-	tk.LogIt(tk.LogDebug, "lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
-
 	R.tables[RtLB].eMap[rt.ruleKey()] = r
 	if r.ruleNum < RtMaximumLbs {
 		R.tables[RtLB].rArr[r.ruleNum] = r
 	}
 	R.addVIPSys(r)
 	r.DP(DpCreate)
+	tk.LogIt(tk.LogDebug, "lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
 	return 0, nil
 }
@@ -1747,7 +1860,7 @@ func (R *RuleH) DeleteLbRule(serv cmn.LbServiceArg) (int, error) {
 		return RuleNotExistsErr, errors.New("no-rule error")
 	}
 
-	defer R.tables[RtLB].Mark.PutCounter(rule.ruleNum)
+	defer R.tables[RtLB].Mark.ReleaseMarker(rule.ruleNum)
 
 	eEps := rule.act.action.(*ruleLBActs).endPoints
 	activatedProbe := false
@@ -1758,6 +1871,11 @@ func (R *RuleH) DeleteLbRule(serv cmn.LbServiceArg) (int, error) {
 		R.modNatEpHost(rule, eEps, false, activatedProbe)
 		R.unFoldRecursiveEPs(rule)
 	}
+
+	for _, srcElem := range rule.srcList {
+		R.deleteAllowedLbSrc(srcElem.srcPref.String(), uint32(rule.ruleNum))
+	}
+	rule.srcList = nil
 
 	delete(R.tables[RtLB].eMap, rt.ruleKey())
 	if rule.ruleNum < RtMaximumLbs {
@@ -1841,12 +1959,13 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	// Validate rule args
 	_, dNetAddr, err := net.ParseCIDR(fwRule.DstIP)
 	if err != nil {
-		return RuleTupleErr, errors.New("malformed-rule error")
+		return RuleTupleErr, errors.New("malformed-rule dst error")
 	}
 
 	_, sNetAddr, err := net.ParseCIDR(fwRule.SrcIP)
 	if err != nil {
-		return RuleTupleErr, errors.New("malformed-rule error")
+		fmt.Printf("src parse failure %s\n", err)
+		return RuleTupleErr, errors.New("malformed-rule src error")
 	}
 
 	l3dst := ruleIPTuple{*dNetAddr}
@@ -1883,6 +2002,10 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	eFw := R.tables[RtFw].eMap[rt.ruleKey()]
 
 	if eFw != nil {
+		if fwOpts.opt.fwMark != fwOptArgs.Mark {
+			fwOpts.opt.fwMark = fwOptArgs.Mark
+			eFw.Fw2DP(DpCreate)
+		}
 		// If a FW rule already exists
 		return RuleExistsErr, errors.New("fwrule-exists error")
 	}
@@ -1925,7 +2048,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	}
 
 	r.act.action = &fwOpts
-	r.ruleNum, err = R.tables[RtFw].Mark.GetCounter()
+	r.ruleNum, err = R.tables[RtFw].Mark.GetMarker()
 	if err != nil {
 		tk.LogIt(tk.LogError, "fw-rule - %s:%s mark error\n", r.tuples.String(), r.act.String())
 		return RuleAllocErr, errors.New("rule-mark error")
@@ -1938,7 +2061,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 		servArg.ServIP = "0.0.0.0"
 		servArg.ServPort = 0
 		servArg.Proto = "none"
-		servArg.BlockNum = uint16(r.ruleNum) | 0x1000
+		servArg.BlockNum = uint32(r.ruleNum) | SnatFwMark
 		servArg.Sel = cmn.LbSelRr
 		servArg.Mode = cmn.LBModeDefault
 		servArg.Snat = true
@@ -1947,13 +2070,13 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 
 		snatEP := []cmn.LbEndPointArg{{EpIP: fwOpts.opt.snatIP, EpPort: fwOpts.opt.snatPort}}
 
-		_, err := R.AddLbRule(servArg, nil, snatEP)
+		_, err := R.AddLbRule(servArg, nil, nil, snatEP)
 		if err != nil {
 			tk.LogIt(tk.LogError, "fw-rule - %s:%s (%s) snat create error\n", r.tuples.String(), r.act.String(), err)
 			return RuleArgsErr, errors.New("rule-snat error")
 		}
 
-		fwOpts.opt.fwMark = uint32(uint16((r.ruleNum) | 0x1000))
+		fwOpts.opt.fwMark = uint32(uint16((r.ruleNum) | SnatFwMark))
 
 	}
 
@@ -1977,12 +2100,12 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 	// Vaildate rule args
 	_, dNetAddr, err := net.ParseCIDR(fwRule.DstIP)
 	if err != nil {
-		return RuleTupleErr, errors.New("malformed-rule error")
+		return RuleTupleErr, errors.New("malformed-rule dst error")
 	}
 
 	_, sNetAddr, err := net.ParseCIDR(fwRule.SrcIP)
 	if err != nil {
-		return RuleTupleErr, errors.New("malformed-rule error")
+		return RuleTupleErr, errors.New("malformed-rule src error")
 	}
 
 	l3dst := ruleIPTuple{*dNetAddr}
@@ -2027,7 +2150,7 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 		servArg.ServIP = "0.0.0.0"
 		servArg.ServPort = 0
 		servArg.Proto = "none"
-		servArg.BlockNum = uint16(rule.ruleNum) | 0x1000
+		servArg.BlockNum = uint32(rule.ruleNum) | SnatFwMark
 		servArg.Sel = cmn.LbSelRr
 		servArg.Mode = cmn.LBModeDefault
 		servArg.Snat = true
@@ -2043,7 +2166,7 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 		}
 	}
 
-	defer R.tables[RtFw].Mark.PutCounter(rule.ruleNum)
+	defer R.tables[RtFw].Mark.ReleaseMarker(rule.ruleNum)
 
 	delete(R.tables[RtFw].eMap, rt.ruleKey())
 
@@ -2579,7 +2702,6 @@ func (R *RuleH) RuleDestructAll() {
 
 		R.DeleteFwRule(fwr)
 	}
-	return
 }
 
 // VIP2DP - Sync state of nat-rule for local sock VIP-port rewrite
@@ -2634,6 +2756,9 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 	nWork.InActTo = uint64(r.iTO)
 	nWork.PersistTo = uint64(r.pTO)
 	nWork.HostURL = r.tuples.path
+	if len(r.srcList) > 0 {
+		nWork.SrcCheck = true
+	}
 
 	if r.act.actType == RtActDnat {
 		nWork.NatType = DpDnat
@@ -2838,7 +2963,7 @@ func (r *ruleEnt) Fw2DP(work DpWorkT) int {
 	}
 	nWork.Proto = r.tuples.l4Prot.val
 	nWork.Mark = int(r.ruleNum)
-	nWork.Pref = r.tuples.pref
+	nWork.Pref = uint16(r.tuples.pref)
 
 	switch at := r.act.action.(type) {
 	case *ruleFwOpts:

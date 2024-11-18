@@ -289,7 +289,7 @@ func TestLoxinet(t *testing.T) {
 			Weight: 2,
 		},
 	}
-	_, err = mh.zr.Rules.AddLbRule(lbServ, nil, lbEps[:])
+	_, err = mh.zr.Rules.AddLbRule(lbServ, nil, nil, lbEps[:])
 	if err != nil {
 		t.Errorf("failed to add nat lb rule for 10.10.10.1\n")
 	}

@@ -3011,7 +3011,7 @@ definitions:
             description: value for Security mode (0-Plain, 1-HTTPs)
           block:
             type: integer
-            format: uint16
+            format: uint32
             description: block-number if any of this LB entry
           inactiveTimeOut:
             type: integer
