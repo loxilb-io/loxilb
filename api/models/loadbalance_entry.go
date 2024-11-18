@@ -313,7 +313,7 @@ type LoadbalanceEntryServiceArguments struct {
 	Bgp bool `json:"bgp,omitempty"`
 
 	// block-number if any of this LB entry
-	Block uint16 `json:"block,omitempty"`
+	Block uint32 `json:"block,omitempty"`
 
 	// IP address for external access
 	ExternalIP string `json:"externalIP,omitempty"`

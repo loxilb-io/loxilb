@@ -93,7 +93,7 @@ func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerHosturlH
 		lbServ.HostUrl = params.Hosturl
 	}
 	if params.Block != nil {
-		lbServ.BlockNum = uint16(*params.Block)
+		lbServ.BlockNum = uint32(*params.Block)
 	}
 	if params.Bgp != nil {
 		lbServ.Bgp = *params.Bgp
@@ -119,7 +119,7 @@ func ConfigDeleteLoadbalancerWithoutPath(params operations.DeleteConfigLoadbalan
 	lbServ.Proto = params.Proto
 	lbServ.HostUrl = ""
 	if params.Block != nil {
-		lbServ.BlockNum = uint16(*params.Block)
+		lbServ.BlockNum = uint32(*params.Block)
 	}
 	if params.Bgp != nil {
 		lbServ.Bgp = *params.Bgp
@@ -155,7 +155,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tmpSvc.Bgp = lb.Serv.Bgp
 		tmpSvc.Port = int64(lb.Serv.ServPort)
 		tmpSvc.Protocol = lb.Serv.Proto
-		tmpSvc.Block = uint16(lb.Serv.BlockNum)
+		tmpSvc.Block = uint32(lb.Serv.BlockNum)
 		tmpSvc.Sel = int64(lb.Serv.Sel)
 		tmpSvc.Mode = int32(lb.Serv.Mode)
 		tmpSvc.Security = int32(lb.Serv.Security)

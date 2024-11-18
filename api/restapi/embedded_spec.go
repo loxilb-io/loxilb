@@ -5117,7 +5117,7 @@ func init() {
             "block": {
               "description": "block-number if any of this LB entry",
               "type": "integer",
-              "format": "uint16"
+              "format": "uint32"
             },
             "externalIP": {
               "description": "IP address for external access",
@@ -11374,7 +11374,7 @@ func init() {
             "block": {
               "description": "block-number if any of this LB entry",
               "type": "integer",
-              "format": "uint16"
+              "format": "uint32"
             },
             "externalIP": {
               "description": "IP address for external access",
@@ -11509,7 +11509,7 @@ func init() {
         "block": {
           "description": "block-number if any of this LB entry",
           "type": "integer",
-          "format": "uint16"
+          "format": "uint32"
         },
         "externalIP": {
           "description": "IP address for external access",

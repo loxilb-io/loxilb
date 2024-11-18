@@ -293,9 +293,10 @@ type LBDpWorkQ struct {
 	ZoneNum   int
 	ServiceIP net.IP
 	L4Port    uint16
-	BlockNum  uint16
+	BlockNum  uint32
 	DsrMode   bool
 	CsumDis   bool
+	SrcCheck  bool
 	SecMode   SecT
 	HostURL   string
 	Proto     uint8
@@ -333,7 +334,7 @@ type DpCtInfo struct {
 	ServiceIP  net.IP `json:"serviceip"`
 	ServProto  string `json:"servproto"`
 	L4ServPort uint16 `json:"l4servproto"`
-	BlockNum   uint16 `json:"blocknum"`
+	BlockNum   uint32 `json:"blocknum"`
 	RuleID     uint32 `json:"ruleid"`
 }
 
