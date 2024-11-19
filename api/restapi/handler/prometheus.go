@@ -29,7 +29,7 @@ import (
 )
 
 func ConfigGetPrometheusCounter(params operations.GetMetricsParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "api: Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	if !options.Opts.Prometheus {
 		return operations.NewGetMetricsOK().WithPayload("Prometheus option is disabled.")
 	}
@@ -39,7 +39,7 @@ func ConfigGetPrometheusCounter(params operations.GetMetricsParams) middleware.R
 }
 
 func ConfigGetPrometheusOption(params operations.GetConfigMetricsParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "[API] Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	return operations.NewGetConfigMetricsOK().WithPayload(&models.MetricsConfig{Prometheus: &options.Opts.Prometheus})
 }
 
@@ -54,7 +54,7 @@ func ConfigPostPrometheus(params operations.PostConfigMetricsParams) middleware.
 }
 
 func ConfigDeletePrometheus(params operations.DeleteConfigMetricsParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "[API] Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "[API] Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	err := prometheus.Off()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)

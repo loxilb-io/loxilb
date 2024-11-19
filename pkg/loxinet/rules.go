@@ -827,6 +827,10 @@ func (R *RuleH) GetLBRule() ([]cmn.LbRuleMod, error) {
 			ret.SecIPs = append(ret.SecIPs, cmn.LbSecIPArg{SecIP: sip.sIP.String()})
 		}
 
+		for _, src := range data.srcList {
+			ret.SrcIPs = append(ret.SrcIPs, cmn.LbAllowedSrcIPArg{Prefix: src.srcPref.String()})
+		}
+
 		data.DP(DpStatsGetImm)
 
 		// Make Endpoints
@@ -1495,8 +1499,6 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		return RuleUnknownServiceErr, errors.New("malformed-service error")
 	}
 
-	allowedSources = append(allowedSources, cmn.LbAllowedSrcIPArg{Prefix: "10.10.10.1/32"})
-
 	privIP = nil
 	if serv.PrivateIP != "" {
 		privIP = net.ParseIP(serv.PrivateIP)
@@ -2076,8 +2078,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 			return RuleArgsErr, errors.New("rule-snat error")
 		}
 
-		fwOpts.opt.fwMark = uint32(uint16((r.ruleNum) | SnatFwMark))
-
+		fwOpts.opt.fwMark = uint32(r.ruleNum) | SnatFwMark
 	}
 
 	tk.LogIt(tk.LogDebug, "fw-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())

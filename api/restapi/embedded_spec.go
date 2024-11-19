@@ -5067,6 +5067,18 @@ func init() {
     "LoadbalanceEntry": {
       "type": "object",
       "properties": {
+        "allowedSources": {
+          "description": "values of allowed source IP",
+          "type": "array",
+          "items": {
+            "properties": {
+              "prefix": {
+                "description": "IP address for allowed source access",
+                "type": "string"
+              }
+            }
+          }
+        },
         "endpoints": {
           "description": "values of End point servers",
           "type": "array",
@@ -11350,6 +11362,13 @@ func init() {
     "LoadbalanceEntry": {
       "type": "object",
       "properties": {
+        "allowedSources": {
+          "description": "values of allowed source IP",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LoadbalanceEntryAllowedSourcesItems0"
+          }
+        },
         "endpoints": {
           "description": "values of End point servers",
           "type": "array",
@@ -11464,6 +11483,14 @@ func init() {
               "type": "boolean"
             }
           }
+        }
+      }
+    },
+    "LoadbalanceEntryAllowedSourcesItems0": {
+      "properties": {
+        "prefix": {
+          "description": "IP address for allowed source access",
+          "type": "string"
         }
       }
     },
