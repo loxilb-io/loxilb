@@ -28,7 +28,7 @@ import (
 func ConfigGetCIState(params operations.GetConfigCistateAllParams) middleware.Responder {
 	var result []*models.CIStatusGetEntry
 	result = make([]*models.CIStatusGetEntry, 0)
-	tk.LogIt(tk.LogDebug, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	hasMod, err := ApiHooks.NetCIStateGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)

@@ -5067,6 +5067,18 @@ func init() {
     "LoadbalanceEntry": {
       "type": "object",
       "properties": {
+        "allowedSources": {
+          "description": "values of allowed source IP",
+          "type": "array",
+          "items": {
+            "properties": {
+              "prefix": {
+                "description": "IP address for allowed source access",
+                "type": "string"
+              }
+            }
+          }
+        },
         "endpoints": {
           "description": "values of End point servers",
           "type": "array",
@@ -5117,7 +5129,7 @@ func init() {
             "block": {
               "description": "block-number if any of this LB entry",
               "type": "integer",
-              "format": "uint16"
+              "format": "uint32"
             },
             "externalIP": {
               "description": "IP address for external access",
@@ -11350,6 +11362,13 @@ func init() {
     "LoadbalanceEntry": {
       "type": "object",
       "properties": {
+        "allowedSources": {
+          "description": "values of allowed source IP",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LoadbalanceEntryAllowedSourcesItems0"
+          }
+        },
         "endpoints": {
           "description": "values of End point servers",
           "type": "array",
@@ -11374,7 +11393,7 @@ func init() {
             "block": {
               "description": "block-number if any of this LB entry",
               "type": "integer",
-              "format": "uint16"
+              "format": "uint32"
             },
             "externalIP": {
               "description": "IP address for external access",
@@ -11467,6 +11486,14 @@ func init() {
         }
       }
     },
+    "LoadbalanceEntryAllowedSourcesItems0": {
+      "properties": {
+        "prefix": {
+          "description": "IP address for allowed source access",
+          "type": "string"
+        }
+      }
+    },
     "LoadbalanceEntryEndpointsItems0": {
       "properties": {
         "counter": {
@@ -11509,7 +11536,7 @@ func init() {
         "block": {
           "description": "block-number if any of this LB entry",
           "type": "integer",
-          "format": "uint16"
+          "format": "uint32"
         },
         "externalIP": {
           "description": "IP address for external access",

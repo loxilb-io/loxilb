@@ -58,6 +58,12 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 		}
 	}
 
+	for _, data := range params.Attr.AllowedSources {
+		lbRules.SrcIPs = append(lbRules.SrcIPs, cmn.LbAllowedSrcIPArg{
+			Prefix: data.Prefix,
+		})
+	}
+
 	for _, data := range params.Attr.Endpoints {
 		lbRules.Eps = append(lbRules.Eps, cmn.LbEndPointArg{
 			EpIP:   data.EndpointIP,
@@ -93,7 +99,7 @@ func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerHosturlH
 		lbServ.HostUrl = params.Hosturl
 	}
 	if params.Block != nil {
-		lbServ.BlockNum = uint16(*params.Block)
+		lbServ.BlockNum = uint32(*params.Block)
 	}
 	if params.Bgp != nil {
 		lbServ.Bgp = *params.Bgp
@@ -119,7 +125,7 @@ func ConfigDeleteLoadbalancerWithoutPath(params operations.DeleteConfigLoadbalan
 	lbServ.Proto = params.Proto
 	lbServ.HostUrl = ""
 	if params.Block != nil {
-		lbServ.BlockNum = uint16(*params.Block)
+		lbServ.BlockNum = uint32(*params.Block)
 	}
 	if params.Bgp != nil {
 		lbServ.Bgp = *params.Bgp
@@ -155,7 +161,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tmpSvc.Bgp = lb.Serv.Bgp
 		tmpSvc.Port = int64(lb.Serv.ServPort)
 		tmpSvc.Protocol = lb.Serv.Proto
-		tmpSvc.Block = uint16(lb.Serv.BlockNum)
+		tmpSvc.Block = uint32(lb.Serv.BlockNum)
 		tmpSvc.Sel = int64(lb.Serv.Sel)
 		tmpSvc.Mode = int32(lb.Serv.Mode)
 		tmpSvc.Security = int32(lb.Serv.Security)
@@ -174,6 +180,12 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 			tmpSIP := new(models.LoadbalanceEntrySecondaryIPsItems0)
 			tmpSIP.SecondaryIP = sip.SecIP
 			tmpLB.SecondaryIPs = append(tmpLB.SecondaryIPs, tmpSIP)
+		}
+
+		for _, src := range lb.SrcIPs {
+			tmpSIP := new(models.LoadbalanceEntryAllowedSourcesItems0)
+			tmpSIP.Prefix = src.Prefix
+			tmpLB.AllowedSources = append(tmpLB.AllowedSources, tmpSIP)
 		}
 
 		// Endpoints match
