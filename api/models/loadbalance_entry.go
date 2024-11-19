@@ -19,6 +19,9 @@ import (
 // swagger:model LoadbalanceEntry
 type LoadbalanceEntry struct {
 
+	// values of allowed source IP
+	AllowedSources []*LoadbalanceEntryAllowedSourcesItems0 `json:"allowedSources"`
+
 	// values of End point servers
 	Endpoints []*LoadbalanceEntryEndpointsItems0 `json:"endpoints"`
 
@@ -32,6 +35,10 @@ type LoadbalanceEntry struct {
 // Validate validates this loadbalance entry
 func (m *LoadbalanceEntry) Validate(formats strfmt.Registry) error {
 	var res []error
+
+	if err := m.validateAllowedSources(formats); err != nil {
+		res = append(res, err)
+	}
 
 	if err := m.validateEndpoints(formats); err != nil {
 		res = append(res, err)
@@ -48,6 +55,32 @@ func (m *LoadbalanceEntry) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *LoadbalanceEntry) validateAllowedSources(formats strfmt.Registry) error {
+	if swag.IsZero(m.AllowedSources) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.AllowedSources); i++ {
+		if swag.IsZero(m.AllowedSources[i]) { // not required
+			continue
+		}
+
+		if m.AllowedSources[i] != nil {
+			if err := m.AllowedSources[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("allowedSources" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("allowedSources" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -126,6 +159,10 @@ func (m *LoadbalanceEntry) validateServiceArguments(formats strfmt.Registry) err
 func (m *LoadbalanceEntry) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateAllowedSources(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateEndpoints(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -141,6 +178,26 @@ func (m *LoadbalanceEntry) ContextValidate(ctx context.Context, formats strfmt.R
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *LoadbalanceEntry) contextValidateAllowedSources(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.AllowedSources); i++ {
+
+		if m.AllowedSources[i] != nil {
+			if err := m.AllowedSources[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("allowedSources" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("allowedSources" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -211,6 +268,43 @@ func (m *LoadbalanceEntry) MarshalBinary() ([]byte, error) {
 // UnmarshalBinary interface implementation
 func (m *LoadbalanceEntry) UnmarshalBinary(b []byte) error {
 	var res LoadbalanceEntry
+	if err := swag.ReadJSON(b, &res); err != nil {
+		return err
+	}
+	*m = res
+	return nil
+}
+
+// LoadbalanceEntryAllowedSourcesItems0 loadbalance entry allowed sources items0
+//
+// swagger:model LoadbalanceEntryAllowedSourcesItems0
+type LoadbalanceEntryAllowedSourcesItems0 struct {
+
+	// IP address for allowed source access
+	Prefix string `json:"prefix,omitempty"`
+}
+
+// Validate validates this loadbalance entry allowed sources items0
+func (m *LoadbalanceEntryAllowedSourcesItems0) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate validates this loadbalance entry allowed sources items0 based on context it is used
+func (m *LoadbalanceEntryAllowedSourcesItems0) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	return nil
+}
+
+// MarshalBinary interface implementation
+func (m *LoadbalanceEntryAllowedSourcesItems0) MarshalBinary() ([]byte, error) {
+	if m == nil {
+		return nil, nil
+	}
+	return swag.WriteJSON(m)
+}
+
+// UnmarshalBinary interface implementation
+func (m *LoadbalanceEntryAllowedSourcesItems0) UnmarshalBinary(b []byte) error {
+	var res LoadbalanceEntryAllowedSourcesItems0
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

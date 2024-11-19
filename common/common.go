@@ -616,6 +616,8 @@ type LbRuleMod struct {
 	Serv LbServiceArg `json:"serviceArguments"`
 	// SecIPs - Secondary IPs for SCTP multi-homed service
 	SecIPs []LbSecIPArg `json:"secondaryIPs"`
+	// SrcIPs - Allowed Source IPs
+	SrcIPs []LbAllowedSrcIPArg `json:"allowedSources"`
 	// Eps - slice containing LbEndPointArg
 	Eps []LbEndPointArg `json:"endpoints"`
 }

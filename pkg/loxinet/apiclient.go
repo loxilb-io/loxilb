@@ -18,7 +18,6 @@ package loxinet
 
 import (
 	"errors"
-
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
@@ -332,7 +331,7 @@ func (na *NetAPIStruct) NetLbRuleAdd(lm *cmn.LbRuleMod) (int, error) {
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
 	var ips []string
-	ret, err := mh.zr.Rules.AddLbRule(lm.Serv, lm.SecIPs[:], nil, lm.Eps[:])
+	ret, err := mh.zr.Rules.AddLbRule(lm.Serv, lm.SecIPs[:], lm.SrcIPs[:], lm.Eps[:])
 	if err == nil && lm.Serv.Bgp {
 		if mh.bgp != nil {
 			ips = append(ips, lm.Serv.ServIP)

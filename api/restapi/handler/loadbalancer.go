@@ -58,6 +58,12 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 		}
 	}
 
+	for _, data := range params.Attr.AllowedSources {
+		lbRules.SrcIPs = append(lbRules.SrcIPs, cmn.LbAllowedSrcIPArg{
+			Prefix: data.Prefix,
+		})
+	}
+
 	for _, data := range params.Attr.Endpoints {
 		lbRules.Eps = append(lbRules.Eps, cmn.LbEndPointArg{
 			EpIP:   data.EndpointIP,
@@ -174,6 +180,12 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 			tmpSIP := new(models.LoadbalanceEntrySecondaryIPsItems0)
 			tmpSIP.SecondaryIP = sip.SecIP
 			tmpLB.SecondaryIPs = append(tmpLB.SecondaryIPs, tmpSIP)
+		}
+
+		for _, src := range lb.SrcIPs {
+			tmpSIP := new(models.LoadbalanceEntryAllowedSourcesItems0)
+			tmpSIP.Prefix = src.Prefix
+			tmpLB.AllowedSources = append(tmpLB.AllowedSources, tmpSIP)
 		}
 
 		// Endpoints match

@@ -3068,6 +3068,15 @@ definitions:
             secondaryIP:
               type: string
               description: IP address for secondary access
+      
+      allowedSources:
+        type: array
+        description: values of allowed source IP
+        items:
+          properties:
+            prefix:
+              type: string
+              description: IP address for allowed source access
   
   RouteEntry:
     type: object
