@@ -952,10 +952,10 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 
 	key := new(natKey)
 
-	key.mark = C.ushort(w.BlockNum)
+	key.mark = C.uint(w.BlockNum)
 
 	if w.NatType == DpSnat {
-		key.mark |= 0x1000
+		key.mark |= SnatFwMark
 	} else {
 		key.daddr = [4]C.uint{0, 0, 0, 0}
 		if tk.IsNetIPv4(w.ServiceIP.String()) {
@@ -965,10 +965,11 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 			convNetIP2DPv6Addr(unsafe.Pointer(&key.daddr[0]), w.ServiceIP)
 			key.v6 = 1
 		}
-		key.mark = C.ushort(w.BlockNum)
+		key.mark = C.uint(w.BlockNum)
 		key.dport = C.ushort(tk.Htons(w.L4Port))
-		key.l4proto = C.uchar(w.Proto)
+		key.l4proto = C.ushort(w.Proto)
 		key.zone = C.ushort(w.ZoneNum)
+
 	}
 
 	dat := new(proxyActs)
@@ -1020,6 +1021,9 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 	if w.DsrMode {
 		dat.ca.oaux = 1
 	}
+	if w.SrcCheck {
+		dat.chksrc = 1
+	}
 
 	nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[0]))
 
@@ -1053,7 +1057,7 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 		nxfa.inactive = 1
 	}
 
-	dat.nxfrm = C.ushort(len(w.endPoints))
+	dat.nxfrm = C.uchar(len(w.endPoints))
 	if w.CsumDis {
 		dat.cdis = 1
 	} else {
@@ -1820,10 +1824,11 @@ func (e *DpEbpfH) DpFwRuleMod(w *FwDpWorkQ) int {
 		} else if w.FwType == DpFwTrap {
 			fwe.fwa.ca.act_type = C.DP_SET_TOCP
 		}
-		fwe.fwa.ca.mark = C.ushort(w.FwVal2)
+		fwe.fwa.ca.mark = C.uint(w.FwVal2)
 		if w.FwRecord {
 			fwe.fwa.ca.record = C.ushort(1)
 		}
+
 		ret := C.llb_add_map_elem(C.LL_DP_FW4_MAP, unsafe.Pointer(fwe), unsafe.Pointer(nil))
 		if ret != 0 {
 			tk.LogIt(tk.LogError, "ebpf fw error\n")
@@ -1983,7 +1988,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 	mh.dpEbpf.mtx.Lock()
 	defer mh.dpEbpf.mtx.Unlock()
 
-	if addOp == false {
+	if !addOp {
 		cti = mh.dpEbpf.ctMap[cti.Key()]
 		if cti == nil || cti.Deleted > 0 {
 			return

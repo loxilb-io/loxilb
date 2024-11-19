@@ -35,7 +35,7 @@ func ConfigPostFW(params operations.PostConfigFirewallParams) middleware.Respond
 	Rules.DstPortMax = uint16(params.Attr.RuleArguments.MaxDestinationPort)
 	Rules.DstPortMin = uint16(params.Attr.RuleArguments.MinDestinationPort)
 	Rules.InPort = params.Attr.RuleArguments.PortName
-	Rules.Pref = uint16(params.Attr.RuleArguments.Preference)
+	Rules.Pref = uint32(params.Attr.RuleArguments.Preference)
 	Rules.Proto = uint8(params.Attr.RuleArguments.Protocol)
 	Rules.SrcIP = params.Attr.RuleArguments.SourceIP
 	Rules.SrcPortMax = uint16(params.Attr.RuleArguments.MaxSourcePort)
@@ -102,7 +102,7 @@ func ConfigDeleteFW(params operations.DeleteConfigFirewallParams) middleware.Res
 		Rules.InPort = *params.PortName
 	}
 	if params.Preference != nil {
-		Rules.Pref = uint16(*params.Preference)
+		Rules.Pref = uint32(*params.Preference)
 	}
 	if params.Protocol != nil {
 		Rules.Proto = uint8(*params.Protocol)
@@ -175,7 +175,6 @@ func ConfigGetFW(params operations.GetConfigFirewallAllParams) middleware.Respon
 		tmpOpts.ToIP = FW.Opts.ToIP
 		tmpOpts.ToPort = int64(FW.Opts.ToPort)
 		tmpOpts.Counter = FW.Opts.Counter
-
 		tmpResult.RuleArguments = &tmpRule
 		tmpResult.Opts = &tmpOpts
 
