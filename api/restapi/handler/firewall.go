@@ -152,6 +152,11 @@ func ConfigGetFW(params operations.GetConfigFirewallAllParams) middleware.Respon
 		var tmpResult models.FirewallEntry
 		var tmpRule models.FirewallRuleEntry
 		var tmpOpts models.FirewallOptionEntry
+
+		if FW.Opts.Mark&0x40000000 != 0 {
+			continue
+		}
+
 		// Rule
 		tmpRule.DestinationIP = FW.Rule.DstIP
 		tmpRule.MaxDestinationPort = int64(FW.Rule.DstPortMax)
