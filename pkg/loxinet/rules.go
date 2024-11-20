@@ -1040,7 +1040,7 @@ func (R *RuleH) addAllowedLbSrc(CIDR string, lbMark uint32) *allowedSrcElem {
 		return nil
 	}
 
-	if lbMark >= 14 {
+	if lbMark >= 30 {
 		tk.LogIt(tk.LogError, "allowed-src lbmark out-of-range\n")
 		return nil
 	}
@@ -1080,7 +1080,7 @@ addFw:
 		R.lbSrcMap[CIDR] = srcElem
 	}
 
-	tk.LogIt(tk.LogInfo, "added allowed-cidr %s: 0x%x\n", srcPref.String(), srcElem.lbmark)
+	tk.LogIt(tk.LogInfo, "added allowed-cidr %s: 0x%x(%v)\n", srcPref.String(), srcElem.lbmark, srcElem.ref)
 
 	return srcElem
 }
@@ -1091,7 +1091,7 @@ func (R *RuleH) deleteAllowedLbSrc(CIDR string, lbMark uint32) error {
 		return errors.New("no such allowed src prefix")
 	}
 
-	if lbMark >= 14 {
+	if lbMark >= 30 {
 		tk.LogIt(tk.LogError, "allowed-src lbmark out-of-range\n")
 		return nil
 	}
@@ -1660,8 +1660,25 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		if eRule.hChk.prbType != serv.ProbeType || eRule.hChk.prbPort != serv.ProbePort ||
 			eRule.hChk.prbReq != serv.ProbeReq || eRule.hChk.prbResp != serv.ProbeResp ||
 			eRule.pTO != serv.PersistTimeout || eRule.act.action.(*ruleLBActs).sel != lBActs.sel ||
-			eRule.act.action.(*ruleLBActs).mode != lBActs.mode {
+			eRule.act.action.(*ruleLBActs).mode != lBActs.mode ||
+			len(allowedSources) != len(eRule.srcList) {
 			ruleChg = true
+		}
+
+		if len(allowedSources) == len(eRule.srcList) {
+			for _, newSrc := range allowedSources {
+				srcMatch := false
+				for _, src := range eRule.srcList {
+					if src.srcPref.String() != newSrc.Prefix {
+						srcMatch = true
+						break
+					}
+				}
+				if !srcMatch {
+					ruleChg = true
+					break
+				}
+			}
 		}
 
 		if !ruleChg {
@@ -1689,6 +1706,26 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 				delEps = eRule.act.action.(*ruleLBActs).endPoints
 				retEps = lBActs.endPoints
 			}
+		}
+
+		eSrcList := eRule.srcList
+		eRule.srcList = nil
+
+		for _, allowedSource := range allowedSources {
+			srcElem := R.addAllowedLbSrc(allowedSource.Prefix, uint32(eRule.ruleNum))
+			if srcElem == nil {
+				for _, src := range eRule.srcList {
+					R.deleteAllowedLbSrc(src.srcPref.String(), uint32(eRule.ruleNum))
+				}
+				eRule.srcList = eSrcList
+				tk.LogIt(tk.LogError, "nat lb-rule - %s:%s allowedSRC error\n", eRule.tuples.String(), eRule.act.String())
+				return RuleAllocErr, errors.New("rule-allowed-src error")
+			}
+			eRule.srcList = append(eRule.srcList, srcElem)
+		}
+
+		for _, srcElem := range eSrcList {
+			R.deleteAllowedLbSrc(srcElem.srcPref.String(), uint32(eRule.ruleNum))
 		}
 
 		// Update the rule
@@ -2004,8 +2041,9 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	eFw := R.tables[RtFw].eMap[rt.ruleKey()]
 
 	if eFw != nil {
-		if fwOpts.opt.fwMark != fwOptArgs.Mark {
-			fwOpts.opt.fwMark = fwOptArgs.Mark
+		if eFw.act.action.(*ruleFwOpts).opt.fwMark != fwOptArgs.Mark {
+			eFw.Fw2DP(DpRemove)
+			eFw.act.action.(*ruleFwOpts).opt.fwMark = fwOptArgs.Mark
 			eFw.Fw2DP(DpCreate)
 		}
 		// If a FW rule already exists
