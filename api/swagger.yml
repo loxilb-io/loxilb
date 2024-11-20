@@ -3011,7 +3011,7 @@ definitions:
             description: value for Security mode (0-Plain, 1-HTTPs)
           block:
             type: integer
-            format: uint16
+            format: uint32
             description: block-number if any of this LB entry
           inactiveTimeOut:
             type: integer
@@ -3068,6 +3068,15 @@ definitions:
             secondaryIP:
               type: string
               description: IP address for secondary access
+      
+      allowedSources:
+        type: array
+        description: values of allowed source IP
+        items:
+          properties:
+            prefix:
+              type: string
+              description: IP address for allowed source access
   
   RouteEntry:
     type: object

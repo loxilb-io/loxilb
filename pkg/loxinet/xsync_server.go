@@ -154,7 +154,7 @@ func (ci *CtInfo) ConvertToDpCtInfo() DpCtInfo {
 		Packets: uint64(ci.Packets), Bytes: uint64(ci.Bytes), Deleted: int(ci.Deleted),
 		PKey: ci.Pkey, PVal: ci.Pval,
 		XSync: ci.Xsync, ServiceIP: ci.Serviceip, ServProto: ci.Servproto,
-		L4ServPort: uint16(ci.L4Servport), BlockNum: uint16(ci.Blocknum),
+		L4ServPort: uint16(ci.L4Servport), BlockNum: uint32(ci.Blocknum),
 	}
 	return cti
 }

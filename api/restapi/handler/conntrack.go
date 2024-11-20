@@ -23,7 +23,7 @@ import (
 )
 
 func ConfigGetConntrack(params operations.GetConfigConntrackAllParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "api: Conntrack %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: Conntrack %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	// Get Conntrack informations
 	res, err := ApiHooks.NetCtInfoGet()
 	if err != nil {

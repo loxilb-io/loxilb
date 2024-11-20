@@ -431,7 +431,7 @@ type FwRuleArg struct {
 	// InPort - the incoming port
 	InPort string `json:"portName"`
 	// Pref - User preference for ordering
-	Pref uint16 `json:"preference"`
+	Pref uint32 `json:"preference"`
 }
 
 // FwRuleMod - Info related to a firewall entry
@@ -544,7 +544,7 @@ type LbServiceArg struct {
 	// Proto - the service protocol of the load-balancer rule
 	Proto string `json:"protocol"`
 	// BlockNum - An arbitrary block num to further segregate a service
-	BlockNum uint16 `json:"block"`
+	BlockNum uint32 `json:"block"`
 	// Sel - one of LbSelRr,LbSelHash, or LbSelHash
 	Sel EpSelect `json:"sel"`
 	// Bgp - export this rule with goBGP
@@ -604,12 +604,20 @@ type LbSecIPArg struct {
 	SecIP string `json:"secondaryIP"`
 }
 
+// LbAllowedSrcIPArg - Allowed Src IPs
+type LbAllowedSrcIPArg struct {
+	// Prefix - Allowed Prefix
+	Prefix string `json:"prefix"`
+}
+
 // LbRuleMod - Info related to a load-balancer entry
 type LbRuleMod struct {
 	// Serv - service argument of type LbServiceArg
 	Serv LbServiceArg `json:"serviceArguments"`
 	// SecIPs - Secondary IPs for SCTP multi-homed service
 	SecIPs []LbSecIPArg `json:"secondaryIPs"`
+	// SrcIPs - Allowed Source IPs
+	SrcIPs []LbAllowedSrcIPArg `json:"allowedSources"`
 	// Eps - slice containing LbEndPointArg
 	Eps []LbEndPointArg `json:"endpoints"`
 }
