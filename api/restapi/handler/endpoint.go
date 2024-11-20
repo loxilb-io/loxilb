@@ -25,7 +25,7 @@ import (
 
 func ConfigGetEndPoint(params operations.GetConfigEndpointAllParams) middleware.Responder {
 	// Get endpoint rules
-	tk.LogIt(tk.LogDebug, "api: EndPoint %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: EndPoint %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	res, err := ApiHooks.NetEpHostGet()
 	if err != nil {
@@ -58,7 +58,7 @@ func ConfigGetEndPoint(params operations.GetConfigEndpointAllParams) middleware.
 }
 
 func ConfigPostEndPoint(params operations.PostConfigEndpointParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "api: EndPoint %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: EndPoint %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	EP := cmn.EndPointMod{}
 	EP.HostName = params.Attr.HostName
@@ -78,7 +78,7 @@ func ConfigPostEndPoint(params operations.PostConfigEndpointParams) middleware.R
 }
 
 func ConfigDeleteEndPoint(params operations.DeleteConfigEndpointEpipaddressIPAddressParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "api: EndPoint %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: EndPoint %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	EP := cmn.EndPointMod{}
 	EP.HostName = params.IPAddress

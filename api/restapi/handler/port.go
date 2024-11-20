@@ -24,7 +24,7 @@ import (
 )
 
 func ConfigGetPort(params operations.GetConfigPortAllParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "api: Port %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: Port %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	// Get Port informations
 	ports, err := ApiHooks.NetPortGet()

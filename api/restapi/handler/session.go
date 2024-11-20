@@ -28,7 +28,7 @@ import (
 )
 
 func ConfigPostSession(params operations.PostConfigSessionParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "api: Session %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: Session %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var sessionMod cmn.SessionMod
 	// Default Setting
@@ -51,7 +51,7 @@ func ConfigPostSession(params operations.PostConfigSessionParams) middleware.Res
 }
 
 func ConfigDeleteSession(params operations.DeleteConfigSessionIdentIdentParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "api: Session %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: Session %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var sessionMod cmn.SessionMod
 	// Default Setting
@@ -66,7 +66,7 @@ func ConfigDeleteSession(params operations.DeleteConfigSessionIdentIdentParams) 
 }
 
 func ConfigPostSessionUlCl(params operations.PostConfigSessionulclParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "api: Session UlCl %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: Session UlCl %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var sessionulclMod cmn.SessionUlClMod
 	// Default Setting
@@ -85,7 +85,7 @@ func ConfigPostSessionUlCl(params operations.PostConfigSessionulclParams) middle
 }
 
 func ConfigDeleteSessionUlCl(params operations.DeleteConfigSessionulclIdentIdentUlclAddressIPAddressParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "api: Session UlCl %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: Session UlCl %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var sessionulclMod cmn.SessionUlClMod
 
@@ -105,7 +105,7 @@ func ConfigDeleteSessionUlCl(params operations.DeleteConfigSessionulclIdentIdent
 
 func ConfigGetSession(params operations.GetConfigSessionAllParams) middleware.Responder {
 	// Get Session rules
-	tk.LogIt(tk.LogDebug, "api: Session %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: Session %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	res, err := ApiHooks.NetSessionGet()
 	if err != nil {
@@ -142,7 +142,7 @@ func ConfigGetSession(params operations.GetConfigSessionAllParams) middleware.Re
 
 func ConfigGetSessionUlCl(params operations.GetConfigSessionulclAllParams) middleware.Responder {
 	// Get Ulcl rules
-	tk.LogIt(tk.LogDebug, "api: Session UlCl %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: Session UlCl %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	res, err := ApiHooks.NetSessionUlClGet()
 	if err != nil {

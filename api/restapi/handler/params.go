@@ -25,7 +25,7 @@ import (
 )
 
 func ConfigPostParams(params operations.PostConfigParamsParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "api: Params %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: Params %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var param cmn.ParamMod
 
@@ -41,7 +41,7 @@ func ConfigPostParams(params operations.PostConfigParamsParams) middleware.Respo
 }
 
 func ConfigGetParams(params operations.GetConfigParamsParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var param cmn.ParamMod
 
 	var payload models.OperParams

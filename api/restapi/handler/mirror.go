@@ -27,7 +27,7 @@ import (
 )
 
 func ConfigPostMirror(params operations.PostConfigMirrorParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "api: Mirror %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: Mirror %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var MirrMod cmn.MirrMod
 
@@ -62,7 +62,7 @@ func ConfigPostMirror(params operations.PostConfigMirrorParams) middleware.Respo
 }
 
 func ConfigDeleteMirror(params operations.DeleteConfigMirrorIdentIdentParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "api: Mirror %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: Mirror %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var MirrMod cmn.MirrMod
 
 	MirrMod.Ident = params.Ident
@@ -77,7 +77,7 @@ func ConfigDeleteMirror(params operations.DeleteConfigMirrorIdentIdentParams) mi
 }
 
 func ConfigGetMirror(params operations.GetConfigMirrorAllParams) middleware.Responder {
-	tk.LogIt(tk.LogDebug, "api: Mirror %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+	tk.LogIt(tk.LogTrace, "api: Mirror %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	res, err := ApiHooks.NetMirrorGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
