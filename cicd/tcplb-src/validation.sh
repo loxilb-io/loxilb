@@ -51,6 +51,21 @@ do
     sleep 1
 done
 done
+done
+
+k=2
+echo "Testing Service IP: ${servIP[k]} source 10.10.10.2"
+lcode=0
+for j in {0..2}
+do
+    res=$($hexec l3h1 curl --max-time 2 -s ${servIP[k]}:2020 --interface 10.10.10.2)
+    echo $res
+    if [[ $res != "" ]]
+    then
+        lcode=1
+    fi
+    sleep 1
+done
 if [[ $lcode == 0 ]]
 then
     echo SCENARIO-tcplb with ${servIP[k]} [OK]
@@ -58,7 +73,6 @@ else
     echo SCENARIO-tcplb with ${servIP[k]} [FAILED]
     code=1
 fi
-done
 
 sudo killall -9 node 2>&1 > /dev/null
 exit $code
