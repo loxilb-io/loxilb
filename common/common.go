@@ -581,6 +581,8 @@ type LbServiceArg struct {
 	Snat bool `json:"snat"`
 	// HostUrl - Ingress Specific URL path
 	HostUrl string `json:"path"`
+	// ProxyProtocolV2 - Enable proxy protocol v2
+	ProxyProtocolV2 bool `json:"proxyprotocolv2"`
 }
 
 // LbEndPointArg - Information related to load-balancer end-point

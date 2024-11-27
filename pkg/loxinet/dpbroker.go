@@ -297,6 +297,7 @@ type LBDpWorkQ struct {
 	DsrMode   bool
 	CsumDis   bool
 	SrcCheck  bool
+	Ppv2En    bool
 	SecMode   SecT
 	HostURL   string
 	Proto     uint8

@@ -292,6 +292,7 @@ type ruleEnt struct {
 	name     string
 	inst     string
 	secMode  cmn.LBSec
+	ppv2En   bool
 	srcList  []*allowedSrcElem
 	locIPs   map[string]struct{}
 }
@@ -819,6 +820,7 @@ func (R *RuleH) GetLBRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.ProbeResp = data.hChk.prbResp
 		ret.Serv.Name = data.name
 		ret.Serv.HostUrl = data.tuples.path
+		ret.Serv.ProxyProtocolV2 = data.ppv2En
 		if data.act.actType == RtActSnat {
 			ret.Serv.Snat = true
 		}
@@ -1661,6 +1663,7 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 			eRule.hChk.prbReq != serv.ProbeReq || eRule.hChk.prbResp != serv.ProbeResp ||
 			eRule.pTO != serv.PersistTimeout || eRule.act.action.(*ruleLBActs).sel != lBActs.sel ||
 			eRule.act.action.(*ruleLBActs).mode != lBActs.mode ||
+			eRule.ppv2En != serv.ProxyProtocolV2 ||
 			len(allowedSources) != len(eRule.srcList) {
 			ruleChg = true
 		}
@@ -1736,6 +1739,7 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		eRule.hChk.prbRetries = serv.ProbeRetries
 		eRule.hChk.prbTimeo = serv.ProbeTimeout
 		eRule.pTO = serv.PersistTimeout
+		eRule.ppv2En = serv.ProxyProtocolV2
 		eRule.act.action.(*ruleLBActs).sel = lBActs.sel
 		eRule.act.action.(*ruleLBActs).endPoints = retEps
 		eRule.act.action.(*ruleLBActs).mode = lBActs.mode
@@ -1781,6 +1785,7 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 	r.managed = serv.Managed
 	r.secIP = nSecIP
 	r.secMode = serv.Security
+	r.ppv2En = serv.ProxyProtocolV2
 
 	// Per LB end-point health-check is supposed to be handled at kube-loxilb/CCM,
 	// but it certain cases like stand-alone mode, loxilb can do its own
@@ -2795,6 +2800,7 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 	nWork.InActTo = uint64(r.iTO)
 	nWork.PersistTo = uint64(r.pTO)
 	nWork.HostURL = r.tuples.path
+	nWork.Ppv2En = r.ppv2En
 	if len(r.srcList) > 0 {
 		nWork.SrcCheck = true
 	}
