@@ -1559,6 +1559,10 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		return RuleUnknownServiceErr, errors.New("malformed-service error")
 	}
 
+	if serv.ProxyProtocolV2 && serv.Proto != "tcp" {
+		return RuleUnknownServiceErr, errors.New("proxy-proto-v2 not tcp service error")
+	}
+
 	if serv.Proto == "tcp" {
 		ipProto = 6
 	} else if serv.Proto == "udp" {
