@@ -3038,6 +3038,9 @@ definitions:
           host:
             type: string
             description: Ingress specific host URL path
+          proxyprotocolv2:
+            type: boolean
+            description: flag to enable proxy protocol v2
       
       endpoints:
         type: array
