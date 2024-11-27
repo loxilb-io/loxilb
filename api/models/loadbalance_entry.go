@@ -460,6 +460,9 @@ type LoadbalanceEntryServiceArguments struct {
 	// value for access protocol
 	Protocol string `json:"protocol,omitempty"`
 
+	// flag to enable proxy protocol v2
+	Proxyprotocolv2 bool `json:"proxyprotocolv2,omitempty"`
+
 	// value for Security mode (0-Plain, 1-HTTPs)
 	Security int32 `json:"security,omitempty"`
 
