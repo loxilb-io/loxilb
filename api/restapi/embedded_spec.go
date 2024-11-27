@@ -5205,6 +5205,10 @@ func init() {
               "description": "value for access protocol",
               "type": "string"
             },
+            "proxyprotocolv2": {
+              "description": "flag to enable proxy protocol v2",
+              "type": "boolean"
+            },
             "security": {
               "description": "value for Security mode (0-Plain, 1-HTTPs)",
               "type": "integer",
@@ -11469,6 +11473,10 @@ func init() {
               "description": "value for access protocol",
               "type": "string"
             },
+            "proxyprotocolv2": {
+              "description": "flag to enable proxy protocol v2",
+              "type": "boolean"
+            },
             "security": {
               "description": "value for Security mode (0-Plain, 1-HTTPs)",
               "type": "integer",
@@ -11611,6 +11619,10 @@ func init() {
         "protocol": {
           "description": "value for access protocol",
           "type": "string"
+        },
+        "proxyprotocolv2": {
+          "description": "flag to enable proxy protocol v2",
+          "type": "boolean"
         },
         "security": {
           "description": "value for Security mode (0-Plain, 1-HTTPs)",

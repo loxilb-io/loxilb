@@ -1022,7 +1022,10 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 		dat.ca.oaux = 1
 	}
 	if w.SrcCheck {
-		dat.chksrc = 1
+		dat.opflags = C.NAT_LB_OP_CHKSRC
+	}
+	if w.Ppv2En {
+		dat.ppv2 = 1
 	}
 
 	nxfa := (*nxfrmAct)(unsafe.Pointer(&dat.nxfrms[0]))
@@ -1264,6 +1267,8 @@ func (ct *DpCtInfo) convDPCt2GoObjFixup(ctKey *C.struct_dp_ct_key, ctDat *C.stru
 		case t.state == C.CT_TCP_SA:
 			ct.CState = "sync-ack"
 		case t.state == C.CT_TCP_EST:
+			ct.CState = "est"
+		case t.state == C.CT_TCP_PEST:
 			ct.CState = "est"
 		case t.state == C.CT_TCP_ERR:
 			ct.CState = "h/e"
