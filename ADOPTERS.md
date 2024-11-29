@@ -17,6 +17,7 @@ Feel free to edit this file and open a Pull-Request to get your organization lis
 | ------------ | ------- | ------| ------------------ |
 | [BPFire](http://www.firebeeos.com/) | @vincentmli | ![deployment](https://img.shields.io/badge/deployment-blue) | eBPF based “BPFire” Distro | 
 | [Friedrich-Alexander-Universität](https://www.fau.de/)| [Research Paper](https://arxiv.org/pdf/2405.00078) | ![research](https://img.shields.io/badge/research-orange) | eBPF Runtime Security |
+| [Juniper Networks](https://www.juniper.net/) | Richard Roberts| ![testing](https://img.shields.io/badge/development%20&%20testing-green) |  Cloud-native LB for E2 interface and dTLS service-mesh |
 | [KETI](https://www.keti.re.kr/main/main.php) | [JinWon Park](mailto:jwpark9010@keti.re.kr?subject=LoxiLB) | ![deployment](https://img.shields.io/badge/deployment-blue) | Cloud-native LB for on-prem MLOps Deployment |
 | [Kookmin University](https://english.kookmin.ac.kr/) | *TBD* | ![testing](https://img.shields.io/badge/development%20&%20testing-green) | Cloud-native LB for on-prem ORAN Testbed |
 | [Oracle OCI](https://www.oracle.com/) | @esirame | ![testing](https://img.shields.io/badge/development%20&%20testing-green) | Telco cloud-native LB/Ingress for N2 interface |
