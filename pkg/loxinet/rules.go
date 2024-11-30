@@ -1183,7 +1183,7 @@ func (R *RuleH) electEPSrc(r *ruleEnt) bool {
 					}
 				}
 
-				if !np.rIP.Equal(sip) {
+				if !np.rIP.Equal(sip) || r.addrRslv && !addrRslv {
 					np.rIP = sip
 					chg = true
 					tk.LogIt(tk.LogDebug, "%s:suitable source for %s: %s\n", mode, np.xIP.String(), np.rIP.String())
