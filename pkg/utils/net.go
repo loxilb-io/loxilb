@@ -23,7 +23,6 @@ import (
 	"crypto/x509"
 	"encoding/binary"
 	"errors"
-	"golang.org/x/sys/unix"
 	"io"
 	"net"
 	"net/http"
@@ -32,9 +31,132 @@ import (
 	"time"
 	"unsafe"
 
+	"golang.org/x/sys/unix"
+
 	tk "github.com/loxilb-io/loxilib"
 	nlp "github.com/vishvananda/netlink"
 )
+
+const (
+	ICMPv6NeighborAdvertisement = 136 // ICMPv6 Type for Neighbor Advertisement
+)
+
+type icmpv6Header struct {
+	Type     uint8
+	Code     uint8
+	Checksum uint16
+	Reserved uint32
+}
+
+func NetAdvertiseVI64Req(targetIP net.IP, ifName string) (int, error) {
+	if targetIP == nil || ifName == "" || ifName == "lo" {
+		return -1, errors.New("invalid parameters")
+	}
+
+	ifi, err := net.InterfaceByName(ifName)
+	if err != nil {
+		return -1, errors.New("intfv6-err")
+	}
+
+	srcIP := net.IPv6linklocalallnodes
+	dstIP := net.IPv6linklocalallnodes
+
+	// Create an ICMPv6 header for Neighbor Advertisement
+	icmpHeader := &icmpv6Header{
+		Type:     ICMPv6NeighborAdvertisement,
+		Code:     0,
+		Checksum: 0, // To be calculated later
+		Reserved: 0,
+	}
+
+	payload := newNeighborAdvertisementPayload(targetIP, ifi.HardwareAddr)
+	icmpData := append(icmpHeader.Marshal(), payload...)
+
+	// Calculate checksum
+	icmpHeader.Checksum = calculateChecksum(icmpData, srcIP, dstIP)
+	icmpData = append(icmpHeader.Marshal(), payload...)
+
+	fd, err := syscall.Socket(syscall.AF_INET6, syscall.SOCK_RAW, syscall.IPPROTO_ICMPV6)
+	if err != nil {
+		return -1, err
+	}
+	defer syscall.Close(fd)
+
+	if err := syscall.BindToDevice(fd, ifName); err != nil {
+		return -1, errors.New("bindv6-err")
+	}
+
+	dstAddr := &syscall.SockaddrInet6{
+		Port: 0,
+		Addr: [16]byte{},
+	}
+	copy(dstAddr.Addr[:], dstIP)
+
+	err = syscall.Sendto(fd, icmpData, 0, dstAddr)
+	if err != nil {
+		return -1, err
+	}
+
+	return 0, nil
+}
+
+func (h *icmpv6Header) Marshal() []byte {
+	buf := make([]byte, 8)
+	buf[0] = h.Type
+	buf[1] = h.Code
+	binary.BigEndian.PutUint16(buf[2:], h.Checksum)
+	binary.BigEndian.PutUint32(buf[4:], 0)
+	return buf
+}
+
+func newNeighborAdvertisementPayload(targetIP net.IP, macAddr net.HardwareAddr) []byte {
+	buf := make([]byte, 32)
+
+	targetIP = targetIP.To16()
+	if targetIP == nil {
+		panic("Invalid IPv6 address")
+	}
+
+	// Target Address
+	copy(buf[0:16], targetIP)
+
+	// Option: Target Link-Layer Address
+	buf[16] = 2 // Option Type
+	buf[17] = 1 // Length in units of 8 bytes
+	copy(buf[18:], macAddr)
+
+	return buf
+}
+
+func calculateChecksum(data []byte, srcIP, dstIP net.IP) uint16 {
+	pseudoHeader := createPseudoHeader(srcIP, dstIP, len(data))
+	fullPacket := append(pseudoHeader, data...)
+	return checksum(fullPacket)
+}
+
+func createPseudoHeader(srcIP, dstIP net.IP, length int) []byte {
+	buf := bytes.Buffer{}
+	buf.Write(srcIP.To16())
+	buf.Write(dstIP.To16())
+	buf.WriteByte(0)
+	buf.WriteByte(58) // Next Header (ICMPv6)
+	binary.Write(&buf, binary.BigEndian, uint32(length))
+	return buf.Bytes()
+}
+
+func checksum(data []byte) uint16 {
+	var sum uint32
+	for i := 0; i < len(data)-1; i += 2 {
+		sum += uint32(binary.BigEndian.Uint16(data[i:]))
+	}
+	if len(data)%2 != 0 {
+		sum += uint32(data[len(data)-1]) << 8
+	}
+	for sum > 0xFFFF {
+		sum = (sum >> 16) + (sum & 0xFFFF)
+	}
+	return ^uint16(sum)
+}
 
 // HTTPSProber - Do a https probe for given url
 // returns true/false depending on whether probing was successful
@@ -116,8 +238,8 @@ func IsIPHostNetAddr(ip net.IP) bool {
 	return false
 }
 
-// GratArpReq - sends a gratuitous arp reply given the DIP, SIP and interface name
-func GratArpReq(AdvIP net.IP, ifName string) (int, error) {
+// NetAdvertiseVIP4Req - sends a gratuitous arp reply given the DIP, SIP and interface name
+func NetAdvertiseVIP4Req(AdvIP net.IP, ifName string) (int, error) {
 	bcAddr := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
 	fd, err := syscall.Socket(syscall.AF_PACKET, syscall.SOCK_DGRAM, int(tk.Htons(syscall.ETH_P_ARP)))
 	if err != nil {
@@ -177,14 +299,19 @@ func GratArpReq(AdvIP net.IP, ifName string) (int, error) {
 	return 0, nil
 }
 
-// GratArpReq - sends a gratuitous arp reply given the DIP, SIP and interface name
-func GratArpReqWithCtx(ctx context.Context, rCh chan<- int, AdvIP net.IP, ifName string) (int, error) {
+// NetAdvertiseVIPReqWithCtx - sends a gratuitous arp reply given the DIP interface name
+func NetAdvertiseVIPReqWithCtx(ctx context.Context, rCh chan<- int, AdvIP net.IP, ifName string) (int, error) {
 	for {
 		select {
 		case <-ctx.Done():
 			return -1, ctx.Err()
 		default:
-			ret, _ := GratArpReq(AdvIP, ifName)
+			var ret int
+			if tk.IsNetIPv4(AdvIP.String()) {
+				ret, _ = NetAdvertiseVIP4Req(AdvIP, ifName)
+			} else {
+				ret, _ = NetAdvertiseVI64Req(AdvIP, ifName)
+			}
 			rCh <- ret
 			return 0, nil
 		}
@@ -355,4 +482,16 @@ func MkTunFsIfNotExist() error {
 		}
 	}
 	return nil
+}
+
+// sIPHostNetAddr - Check if provided address is a local subnet
+func IPHostCIDRString(ip net.IP) string {
+	if ip == nil {
+		return "0.0.0.0/0"
+	}
+	if tk.IsNetIPv4(ip.String()) {
+		return ip.String() + "/32"
+	} else {
+		return ip.String() + "/128"
+	}
 }
