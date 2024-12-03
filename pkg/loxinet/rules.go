@@ -3134,7 +3134,7 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP, inst string) error {
 		inst = cmn.CIDefault
 	}
 
-	if IP.String() == "0.0.0.0" {
+	if IP.String() == "0.0.0.0" || IP.String() == "::" {
 		return nil
 	}
 
@@ -3143,10 +3143,14 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP, inst string) error {
 		dev := fmt.Sprintf("llb-rule-%s", IP.String())
 		ret, _ := R.zone.L3.IfaFindAddr(dev, IP)
 		if ret == 0 {
-			R.zone.L3.IfaDelete(dev, IP.String()+"/32")
+			R.zone.L3.IfaDelete(dev, utils.IPHostCIDRString(IP))
 		}
 		ev, _, iface := R.zone.L3.IfaSelectAny(IP, false)
 		if ev == 0 {
+			ifname := "lo"
+			if tk.IsNetIPv6(IP.String()) {
+				ifname = iface
+			}
 			if !utils.IsIPHostAddr(IP.String()) {
 				if mh.cloudHook != nil {
 					err := mh.cloudHook.CloudUpdatePrivateIP(IP, eIP, true)
@@ -3156,17 +3160,17 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP, inst string) error {
 					}
 				}
 
-				if loxinlp.AddAddrNoHook(IP.String()+"/32", "lo") != 0 {
-					tk.LogIt(tk.LogError, "lb-rule vip %s:%s add failed\n", IP.String(), "lo")
+				if loxinlp.AddAddrNoHook(utils.IPHostCIDRString(IP), ifname) != 0 {
+					tk.LogIt(tk.LogError, "lb-rule vip %s:%s add failed\n", IP.String(), ifname)
 				} else {
-					tk.LogIt(tk.LogInfo, "lb-rule vip %s:%s added\n", IP.String(), "lo")
+					tk.LogIt(tk.LogInfo, "lb-rule vip %s:%s added\n", IP.String(), ifname)
 				}
 				loxinlp.DelNeighNoHook(IP.String(), "")
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
 			defer cancel()
 			rCh := make(chan int)
-			go utils.GratArpReqWithCtx(ctx, rCh, IP, iface)
+			go utils.NetAdvertiseVIPReqWithCtx(ctx, rCh, IP, iface)
 			select {
 			case <-rCh:
 				break
@@ -3177,10 +3181,17 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP, inst string) error {
 
 	} else if ciState != "NOT_DEFINED" {
 		if utils.IsIPHostAddr(IP.String()) {
-			if loxinlp.DelAddrNoHook(IP.String()+"/32", "lo") != 0 {
-				tk.LogIt(tk.LogError, "lb-rule vip %s:%s delete failed\n", IP.String(), "lo")
+			ifname := "lo"
+			ev, _, iface := R.zone.L3.IfaSelectAny(IP, false)
+			if ev == 0 {
+				if tk.IsNetIPv6(IP.String()) {
+					ifname = iface
+				}
+			}
+			if loxinlp.DelAddrNoHook(utils.IPHostCIDRString(IP), ifname) != 0 {
+				tk.LogIt(tk.LogError, "lb-rule vip %s:%s delete failed\n", IP.String(), ifname)
 			} else {
-				tk.LogIt(tk.LogInfo, "lb-rule vip %s:%s deleted\n", IP.String(), "lo")
+				tk.LogIt(tk.LogInfo, "lb-rule vip %s:%s deleted\n", IP.String(), ifname)
 			}
 		}
 	} else {
@@ -3188,7 +3199,7 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP, inst string) error {
 			dev := fmt.Sprintf("llb-rule-%s", IP.String())
 			ret, _ := R.zone.L3.IfaFindAddr(dev, IP)
 			if ret != 0 {
-				_, err := R.zone.L3.IfaAdd(dev, IP.String()+"/32")
+				_, err := R.zone.L3.IfaAdd(dev, utils.IPHostCIDRString(IP))
 				if err != nil {
 					fmt.Printf("Failed to add IP : %s:%s\n", dev, err)
 				}
@@ -3264,7 +3275,14 @@ func (R *RuleH) DeleteRuleVIP(VIP net.IP) {
 			xVIP = vipEnt.pVIP
 		}
 		if utils.IsIPHostAddr(xVIP.String()) {
-			loxinlp.DelAddrNoHook(xVIP.String()+"/32", "lo")
+			ifname := "lo"
+			ev, _, iface := R.zone.L3.IfaSelectAny(xVIP, false)
+			if ev == 0 {
+				if tk.IsNetIPv6(xVIP.String()) {
+					ifname = iface
+				}
+			}
+			loxinlp.DelAddrNoHook(utils.IPHostCIDRString(xVIP), ifname)
 			if mh.cloudHook != nil {
 				err := mh.cloudHook.CloudUpdatePrivateIP(xVIP, VIP, false)
 				if err != nil {
@@ -3275,7 +3293,7 @@ func (R *RuleH) DeleteRuleVIP(VIP net.IP) {
 		dev := fmt.Sprintf("llb-rule-%s", xVIP.String())
 		ret, _ := mh.zr.L3.IfaFindAddr(dev, xVIP)
 		if ret == 0 {
-			mh.zr.L3.IfaDelete(dev, xVIP.String()+"/32")
+			mh.zr.L3.IfaDelete(dev, utils.IPHostCIDRString(xVIP))
 		}
 		delete(R.vipMap, VIP.String())
 	}
