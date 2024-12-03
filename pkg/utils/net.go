@@ -53,6 +53,10 @@ func NetAdvertiseVI64Req(targetIP net.IP, ifName string) (int, error) {
 		return -1, errors.New("invalid parameters")
 	}
 
+	if !tk.IsNetIPv6(targetIP.String()) {
+		return -1, errors.New("invalid parameters")
+	}
+
 	ifi, err := net.InterfaceByName(ifName)
 	if err != nil {
 		return -1, errors.New("intfv6-err")
@@ -92,7 +96,14 @@ func NetAdvertiseVI64Req(targetIP net.IP, ifName string) (int, error) {
 	}
 	copy(dstAddr.Addr[:], dstIP)
 
-	err = syscall.Sendto(fd, icmpData, 0, dstAddr)
+	cmsgBuf := make([]byte, syscall.CmsgSpace(4)) // 4 bytes for hop limit
+	cmsg := (*syscall.Cmsghdr)(unsafe.Pointer(&cmsgBuf[0]))
+	cmsg.Level = syscall.IPPROTO_IPV6
+	cmsg.Type = syscall.IPV6_HOPLIMIT
+	cmsg.SetLen(syscall.CmsgLen(4))
+	*(*int32)(unsafe.Pointer(&cmsgBuf[syscall.CmsgLen(0)])) = 255
+
+	_, err = syscall.SendmsgN(fd, icmpData, cmsgBuf, dstAddr, 0)
 	if err != nil {
 		return -1, err
 	}
@@ -105,12 +116,12 @@ func (h *icmpv6Header) Marshal() []byte {
 	buf[0] = h.Type
 	buf[1] = h.Code
 	binary.BigEndian.PutUint16(buf[2:], h.Checksum)
-	binary.BigEndian.PutUint32(buf[4:], 0)
+	binary.BigEndian.PutUint32(buf[4:], 0x20000000)
 	return buf
 }
 
 func newNeighborAdvertisementPayload(targetIP net.IP, macAddr net.HardwareAddr) []byte {
-	buf := make([]byte, 32)
+	buf := make([]byte, 24)
 
 	targetIP = targetIP.To16()
 	if targetIP == nil {
@@ -126,6 +137,18 @@ func newNeighborAdvertisementPayload(targetIP net.IP, macAddr net.HardwareAddr) 
 	copy(buf[18:], macAddr)
 
 	return buf
+}
+
+// ConvertToSolicitedNodeMulticast converts an IPv6 address to its solicited-node multicast address
+func ConvertToSolicitedNodeMulticast(ip net.IP) net.IP {
+
+	last24 := ip[len(ip)-3:] // Last 3 bytes of the IPv6 address
+
+	solicitedNode := net.IPv6unspecified
+	copy(solicitedNode[:], net.ParseIP("ff02::1:ff00:0")[:])
+	copy(solicitedNode[13:], last24)
+
+	return solicitedNode
 }
 
 func calculateChecksum(data []byte, srcIP, dstIP net.IP) uint16 {
