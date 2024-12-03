@@ -1070,6 +1070,14 @@ func AddNeigh(neigh nlp.Neigh, link nlp.Link) int {
 				return 0
 			}
 			brId, _ = strconv.Atoi(strings.Join(re.FindAllString(brLink.Attrs().Name, -1), " "))
+			// Dirty hack to support docker bridge
+			if brId == 0 {
+				if brLink.Attrs().Name == "docker0" {
+					brId = 4090
+				} else if brLink.Attrs().Name == "cni0" {
+					brId = 4091
+				}
+			}
 		}
 
 		if vxlan, ok := link.(*nlp.Vxlan); ok {
@@ -1157,6 +1165,14 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 				return 0
 			}
 			brId, _ = strconv.Atoi(strings.Join(re.FindAllString(brLink.Attrs().Name, -1), " "))
+			// Dirty hack to support docker bridge
+			if brId == 0 {
+				if brLink.Attrs().Name == "docker0" {
+					brId = 4090
+				} else if brLink.Attrs().Name == "cni0" {
+					brId = 4091
+				}
+			}
 		}
 
 		if vxlan, ok := link.(*nlp.Vxlan); ok {
