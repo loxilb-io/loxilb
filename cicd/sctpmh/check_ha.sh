@@ -80,12 +80,15 @@ function restart_mloxilb() {
         ka=" --ka=172.17.0.2:172.17.0.3"
     fi
     echo "Restarting MASTER: $master"
-    pid=$(docker exec -i $master ps -aef | grep $pat | xargs | cut -d ' ' -f 2)
+    #pid=$(docker exec -i $master ps -aef | grep $pat | xargs | cut -d ' ' -f 2)
+    pid=$(ps -aef | grep $pat | xargs | cut -d ' ' -f 2)
     echo "Killing $pid" >&2
-    docker exec -dt $master kill -9 $pid
+    #docker exec -dt $master kill -9 $pid
+    sudo kill -9 $pid
     docker exec -dt $master ip link del llb0
-    docker exec -dt $master nohup /root/loxilb-io/loxilb/loxilb $copts $self $ka > /dev/null &
-    pid=$(docker exec -i $master ps -aef | grep $pat | xargs | cut -d ' ' -f 2)
+    docker exec -dt $master /root/loxilb-io/loxilb/loxilb $copts $self $ka
+    #pid=$(docker exec -i $master ps -aef | grep $pat | xargs | cut -d ' ' -f 2)
+    pid=$(ps -aef | grep $pat | xargs | cut -d ' ' -f 2)
     echo "New loxilb pid: $pid" >&2
 }
 
@@ -112,23 +115,30 @@ function restart_loxilbs() {
         bka=" --ka=172.17.0.3:172.17.0.2"
     fi
     echo "Restarting $master"
-    pid=$(docker exec -i $master ps -aef | grep $mpat | xargs | cut -d ' ' -f 2)
-    echo "Killing $mpid" >&2
-    docker exec -dt $master kill -9 $pid
+    pid=$(ps -aef | grep $mpat | xargs | cut -d ' ' -f 2)
+    #pid=$(docker exec -i $master ps -aef | grep $mpat | xargs | cut -d ' ' -f 2)
+    echo "Killing $pid" >&2
+    #docker exec -dt $master kill -9 $pid
+    sudo kill -9 $pid
     docker exec -dt $master ip link del llb0
-    docker exec -dt $master nohup /root/loxilb-io/loxilb/loxilb $mcopts $mself $mka > /dev/null &
-    pid=$(docker exec -i $master ps -aef | grep $mpat | xargs | cut -d ' ' -f 2)
+    echo "/root/loxilb-io/loxilb/loxilb $mcopts $mself $mka" >&2
+    docker exec -dt $master /root/loxilb-io/loxilb/loxilb $mcopts $mself $mka
+    pid=$(ps -aef | grep $mpat | xargs | cut -d ' ' -f 2)
+    #pid=$(docker exec -i $master ps -aef | grep $mpat | xargs | cut -d ' ' -f 2)
     echo "New loxilb pid: $pid" >&2
 
     echo "Restarting $backup"
-    pid=$(docker exec -i $backup ps -aef | grep $bpat | xargs | cut -d ' ' -f 2)
+    pid=$(ps -aef | grep $bpat | xargs | cut -d ' ' -f 2)
+    #pid=$(docker exec -i $backup ps -aef | grep $bpat | xargs | cut -d ' ' -f 2)
     echo "Killing $pid" >&2
-    docker exec -dt $backup kill -9 $pid
+    #docker exec -dt $backup kill -9 $pid
+    sudo kill -9 $pid
     docker exec -dt $backup ip link del llb0
-    docker exec -dt $backup nohup /root/loxilb-io/loxilb/loxilb $bcopts $bself $bka > /dev/null &
-    pid=$(docker exec -i $backup ps -aef | grep $bpat | xargs | cut -d ' ' -f 2)
+    echo "/root/loxilb-io/loxilb/loxilb $bcopts $bself $bka" >&2
+    docker exec -dt $backup /root/loxilb-io/loxilb/loxilb $bcopts $bself $bka
+    #pid=$(docker exec -i $backup ps -aef | grep $bpat | xargs | cut -d ' ' -f 2)
+    pid=$(ps -aef | grep $bpat | xargs | cut -d ' ' -f 2)
     echo "New loxilb pid: $pid" >&2
-
 }
 
 
