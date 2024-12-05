@@ -16,7 +16,7 @@ echo -e "\nTraffic Flow: EP ---> LB ---> User"
 $hexec user sctp_test -H 0.0.0.0  -P 9999 -l > user.out &
 sleep 2
 
-$hexec ep1 stdbuf -oL sctp_test -H 31.31.31.1 -B 32.32.32.1 -P 20000 -h $extIP -p $port -s -c 6 -x 1000 > ep1.out &
+$hexec ep1 stdbuf -oL sctp_test -H 31.31.31.1 -B 32.32.32.1 -P 20000 -h $extIP -p $port -s -c 6 -x 5000 > ep1.out &
 
 #Path counters
 p1c_old=0
@@ -30,7 +30,7 @@ code=0
 sleep 2
 
 for((i=0;i<200;i++)) do
-    fin=`tail -n 100 ep1.out | grep "Client: Sending packets.(1000/1000)"`
+    fin=`tail -n 100 ep1.out | grep "Client: Sending packets.(5000/5000)"`
     if [[ ! -z $fin ]]; then
         fin=1
         echo "sctp_test done."
@@ -38,9 +38,9 @@ for((i=0;i<200;i++)) do
     fi
     $dexec $master loxicmd get ct --servName=sctpmh2
     echo -e "\n"
-    p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "133.133.133.1 | 31.31.31.1" | xargs | cut -d '|' -f 10)
-    p2c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "134.134.134.1 | 32.32.32.1" | xargs | cut -d '|' -f 10)
-    p3c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "135.135.135.1 | 31.31.31.1" | xargs | cut -d '|' -f 10)
+    p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "133.133.133.1 | 31.31.31.1" | xargs | cut -d '|' -f 11)
+    p2c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "134.134.134.1 | 32.32.32.1" | xargs | cut -d '|' -f 11)
+    p3c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "135.135.135.1 | 31.31.31.1" | xargs | cut -d '|' -f 11)
     
     echo "Counters: $p1c_new $p2c_new $p3c_new"
 
@@ -54,7 +54,7 @@ for((i=0;i<200;i++)) do
         echo -e "Turning off this path at User.\nEP----->LB--x-->User"
         $hexec user ip link set euserr1 down;
         down=1
-        p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "133.133.133.1 | 31.31.31.1" | xargs | cut -d '|' -f 10)
+        p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "133.133.133.1 | 31.31.31.1" | xargs | cut -d '|' -f 11)
     else
         if [[ $down == 1 ]]; then
             p1dok=1

@@ -18,7 +18,7 @@ echo -e "\nTraffic Flow: User -> LB -> EP "
 $hexec ep1 sctp_test -H 31.31.31.1  -P 9999 -l > ep1.out &
 sleep 2
 
-$hexec user stdbuf -oL sctp_test -H 1.1.1.1 -B 2.2.2.1 -P 20000 -h $extIP -p $port -s -c 6 -x 1000 > user.out &
+$hexec user stdbuf -oL sctp_test -H 1.1.1.1 -B 2.2.2.1 -P 20000 -h $extIP -p $port -s -c 6 -x 5000 > user.out &
 #Path counters
 p1c_old=0
 p1c_new=0
@@ -32,7 +32,7 @@ code=0
 sleep 5
 
 for((i=0;i<200;i++)) do
-    fin=`tail -n 100 user.out | grep "Client: Sending packets.(1000/1000)"`
+    fin=`tail -n 100 user.out | grep "Client: Sending packets.(5000/5000)"`
     if [[ ! -z $fin ]]; then
         fin=1
         echo "sctp_test done."
@@ -40,9 +40,9 @@ for((i=0;i<200;i++)) do
     fi
     $dexec $master loxicmd get ct --servName=sctpmh1 
     echo -e "\n"
-    p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh1 | grep "123.123.123.1 | 1.1.1.1" | xargs | cut -d '|' -f 10)
-    p2c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh1 | grep "124.124.124.1 | 2.2.2.1" | xargs | cut -d '|' -f 10)
-    p3c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh1 | grep "125.125.125.1 | 1.1.1.1" | xargs | cut -d '|' -f 10)
+    p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh1 | grep "123.123.123.1 | 1.1.1.1" | xargs | cut -d '|' -f 11)
+    p2c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh1 | grep "124.124.124.1 | 2.2.2.1" | xargs | cut -d '|' -f 11)
+    p3c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh1 | grep "125.125.125.1 | 1.1.1.1" | xargs | cut -d '|' -f 11)
     
     echo "Counters: $p1c_new $p2c_new $p3c_new"
 
@@ -56,7 +56,7 @@ for((i=0;i<200;i++)) do
         echo "Turning off this path from User->LB"
         $hexec user ip link set euserr1 down;
         down=1
-        p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh1 | grep "123.123.123.1 | 1.1.1.1" | xargs | cut -d '|' -f 10)
+        p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh1 | grep "123.123.123.1 | 1.1.1.1" | xargs | cut -d '|' -f 11)
     else
         if [[ $down == 1 ]]; then
             p1dok=1

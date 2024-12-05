@@ -21,7 +21,7 @@ sudo pkill sctp_test
 $hexec user sctp_test -H 0.0.0.0  -P 9999 -l > user.out &
 sleep 2
 
-$hexec ep1 stdbuf -oL sctp_test -H 31.31.31.1 -B 32.32.32.1 -P 20000 -h $extIP -p $port -s -c 6 -x 10000 > ep1.out &
+$hexec ep1 stdbuf -oL sctp_test -H 31.31.31.1 -B 32.32.32.1 -P 20000 -h $extIP -p $port -s -c 6 -x 30000 > ep1.out &
 
 #Path counters
 p1c_old=0
@@ -36,7 +36,7 @@ code=0
 nsyncOk=0
 
 for((i=0;i<500;i++)) do
-    fin=`tail -n 100 ep1.out | grep "Client: Sending packets.(10000/10000)"`
+    fin=`tail -n 100 ep1.out | grep "Client: Sending packets.(30000/30000)"`
     if [[ ! -z $fin ]]; then
         fin=1
         echo "sctp_test done."
@@ -55,9 +55,9 @@ for((i=0;i<500;i++)) do
     echo -e "\n"
     $dexec $master loxicmd get ct --servName=sctpmh2
     echo -e "\n"
-    p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "133.133.133.1 | 31.31.31.1" | xargs | cut -d '|' -f 10)
-    p2c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "134.134.134.1 | 32.32.32.1" | xargs | cut -d '|' -f 10)
-    p3c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "135.135.135.1 | 31.31.31.1" | xargs | cut -d '|' -f 10)
+    p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "133.133.133.1 | 31.31.31.1" | xargs | cut -d '|' -f 11)
+    p2c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "134.134.134.1 | 32.32.32.1" | xargs | cut -d '|' -f 11)
+    p3c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh2 | grep "135.135.135.1 | 31.31.31.1" | xargs | cut -d '|' -f 11)
     
  
     echo "Counters: $p1c_new $p2c_new $p3c_new"
@@ -102,7 +102,7 @@ done
 sudo rm -rf *.out
 sudo pkill sctp_test
 
-if [[ $fin == 1 && $p1 == 1 && $p2 == 1 && $p3 == 1 && $code == 0 && $nsyncOk == 1 ]]; then
+if [[ $fin == 1 && $p1 == 1 && $p2 == 1 && $p3 == 1 && $code == 0 && $syncOk == 1 ]]; then
     echo "sctpmh SCTP Multihoming E2E HA Failover [OK]"
     echo "OK" > status6.txt
     restart_loxilbs
