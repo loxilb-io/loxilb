@@ -5,7 +5,7 @@ source ../common.sh
 echo "#########################################"
 echo "Spawning all hosts"
 echo "#########################################"
-
+sudo sysctl net.ipv4.conf.all.arp_accept=1
 spawn_docker_host --dock-type loxilb --dock-name llb1 --with-ka in
 spawn_docker_host --dock-type loxilb --dock-name llb2 --with-ka in
 spawn_docker_host --dock-type host --dock-name ep1
