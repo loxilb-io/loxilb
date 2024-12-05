@@ -35,9 +35,9 @@ for((i=0;i<5;i++)) do
     echo -e "\n\n"
     $dexec $master loxicmd get ct --servName=sctpmh1
     echo -e "\n"
-    p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh1 | grep "20.20.20.1 | 1.1.1.1" | xargs | cut -d '|' -f 10)
-    p2c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh1 | grep "21.21.21.1 | 2.2.2.1" | xargs | cut -d '|' -f 10)
-    p3c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh1 | grep "22.22.22.1 | 1.1.1.1" | xargs | cut -d '|' -f 10)
+    p1c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh1 | grep "20.20.20.1 | 1.1.1.1" | xargs | cut -d '|' -f 11)
+    p2c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh1 | grep "21.21.21.1 | 2.2.2.1" | xargs | cut -d '|' -f 11)
+    p3c_new=$(sudo docker exec -i $master loxicmd get ct --servName=sctpmh1 | grep "22.22.22.1 | 1.1.1.1" | xargs | cut -d '|' -f 11)
     
     echo "Counters: $p1c_new $p2c_new $p3c_new"
 
