@@ -22,7 +22,7 @@ for((j=0,i=1; i<=6; i++, j++)); do
     fi
     echo -e "\n\n\n$border\n\n"
 
-    sleep 30
+    sleep 60
 done
 
 echo -e "\n\n\n$border\n"
