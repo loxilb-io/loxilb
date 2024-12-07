@@ -1,0 +1,33 @@
+name: K3s-Dual-Stack-Sanity-CI
+on:
+ schedule:
+ # Runs "At 8:00 UTC every day-of-week"
+ - cron: '0 8 * * *'
+ workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'     
+        required: true
+        default: 'k3s-dual-stack'
+jobs:
+  build:
+    name: k3s-dual-stack-sanity
+    runs-on: [self-hosted, large]
+    if: github.repository == 'loxilb-io/loxilb' 
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Run K3s Dual-Stack CICD
+        run: |
+         cd cicd/k3s-flannel-cluster-dual-stack
+         ./config.sh
+         ./validation.sh
+         ./rmconfig.sh
+         cd -
+      - name: Clean test-bed
+        if: success() || failure()
+        run: |
+          cd cicd/k3s-flannel-cluster-dual-stack/ || true
+          ./rmconfig.sh
+          cd -
