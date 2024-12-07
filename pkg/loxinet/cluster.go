@@ -18,13 +18,16 @@ package loxinet
 
 import (
 	"errors"
-	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
-	cmn "github.com/loxilb-io/loxilb/common"
-	bfd "github.com/loxilb-io/loxilb/pkg/proto"
-	tk "github.com/loxilb-io/loxilib"
+	"fmt"
 	"net"
 	"os"
 	"time"
+
+	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
+	cmn "github.com/loxilb-io/loxilb/common"
+	bfd "github.com/loxilb-io/loxilb/pkg/proto"
+	utils "github.com/loxilb-io/loxilb/pkg/utils"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 // error codes for cluster module
@@ -32,6 +35,12 @@ const (
 	CIErrBase = iota - 90000
 	CIModErr
 	CIStateErr
+)
+
+const (
+	defaultClusterSubnet  = "10.252.0.0/16"
+	defaultCluster6Subnet = "fd55:e81c:146f:66b5::/64"
+	ClusterNetID          = 999
 )
 
 // ClusterInstance - Struct for Cluster Instance information
@@ -53,18 +62,24 @@ type CIKAArgs struct {
 	RemoteIP net.IP
 	SourceIP net.IP
 	Interval int64
+	CSubnet  string
+	CSubnet6 string
+	CDev     string
 }
 
 // CIStateH - Cluster context handler
 type CIStateH struct {
-	SpawnKa    bool
-	RemoteIP   net.IP
-	SourceIP   net.IP
-	Interval   int64
-	ClusterMap map[string]*ClusterInstance
-	StateMap   map[string]int
-	NodeMap    map[string]*ClusterNode
-	Bs         *bfd.Struct
+	SpawnKa     bool
+	RemoteIP    net.IP
+	SourceIP    net.IP
+	Interval    int64
+	ClusterMap  map[string]*ClusterInstance
+	StateMap    map[string]int
+	NodeMap     map[string]*ClusterNode
+	Bs          *bfd.Struct
+	ClusterNet  string
+	ClusterNet6 string
+	ClusterIf   string
 }
 
 func (ci *CIStateH) BFDSessionNotify(instance string, remote string, ciState string) {
@@ -151,7 +166,149 @@ func CIInit(args CIKAArgs) *CIStateH {
 	}
 
 	nCIh.NodeMap = make(map[string]*ClusterNode)
+
+	args.CDev = "eth0"
+	if args.CDev != "" {
+		tk.LogIt(tk.LogError, "cluster-dev name\n")
+		_, err := net.InterfaceByName(args.CDev)
+		if err != nil {
+			tk.LogIt(tk.LogError, "cluster-dev name error\n")
+			os.Exit(1)
+			return nil
+		}
+		clusterCIDR := defaultClusterSubnet
+		if args.CSubnet != "" {
+			clusterCIDR = args.CSubnet
+		}
+
+		clusterCIDR6 := defaultCluster6Subnet
+		if args.CSubnet6 != "" {
+			clusterCIDR6 = args.CSubnet6
+		}
+
+		ip, _, err := net.ParseCIDR(clusterCIDR)
+		if err != nil {
+			tk.LogIt(tk.LogError, "ClusterIP address invalid %s\n", clusterCIDR)
+			return nil
+		}
+
+		ip6, _, err := net.ParseCIDR(clusterCIDR6)
+		if err != nil {
+			tk.LogIt(tk.LogError, "ClusterIP6 address invalid %s\n", clusterCIDR6)
+			return nil
+		}
+
+		ifIP, err := utils.GetIfaceIPAddr(args.CDev)
+		if err != nil || ifIP == nil {
+			tk.LogIt(tk.LogError, "No IP address found in cluster-dev\n")
+			return nil
+		}
+
+		ifIP6, _ := utils.GetIfaceIP6Addr(args.CDev)
+		if ifIP6 == nil {
+			tk.LogIt(tk.LogError, "No IP6 address found in cluster-dev\n")
+			ifIP6 = ip6
+			ifIP6[len(ifIP6)-1]++
+		}
+
+		ip[len(ip)-2] = ifIP[len(ifIP)-2]
+		ip[len(ip)-1] = ifIP[len(ifIP)-1]
+
+		ip6[len(ip)-2] = ifIP6[len(ifIP6)-2]
+		ip6[len(ip)-1] = ifIP6[len(ifIP6)-1]
+
+		clusterIfName := fmt.Sprintf("vxlan%d", ClusterNetID)
+
+		if nlp.AddVxLANBridgeNoHook(ClusterNetID, args.CDev) < 0 {
+			tk.LogIt(tk.LogError, "Failed to created Cluster Network\n")
+			return nil
+		}
+
+		if nlp.AddAddrNoHook(ip.String()+"/16", clusterIfName) < 0 {
+			tk.LogIt(tk.LogError, "Failed to add Cluster Addr %s:%s\n", ip.String(), clusterIfName)
+			return nil
+		}
+
+		if nlp.AddAddrNoHook(ip6.String()+"/64", clusterIfName) < 0 {
+			tk.LogIt(tk.LogError, "Failed to add Cluster Addr %s:%s\n", ip6.String(), clusterIfName)
+			nCIh.ClusterNet6 = ""
+		} else {
+			nCIh.ClusterNet6 = clusterCIDR6
+		}
+
+		tk.LogIt(tk.LogInfo, "Cluster IP address %s\n", ip.String())
+		tk.LogIt(tk.LogInfo, "Cluster IP6 address %s\n", ip6.String())
+
+		nCIh.ClusterIf = args.CDev
+		nCIh.ClusterNet = clusterCIDR
+		nCIh.ClusterNet6 = clusterCIDR6
+	}
+
 	return nCIh
+}
+
+// CIDestroy - routine to destroy Cluster context
+func (ci *CIStateH) CIDestroy() {
+
+	if ci.ClusterIf != "" {
+		tk.LogIt(tk.LogError, "cluster-dev name\n")
+		_, err := net.InterfaceByName(ci.ClusterIf)
+		if err != nil {
+			tk.LogIt(tk.LogError, "cluster-dev name error\n")
+			return
+		}
+
+		clusterCIDR := ci.ClusterNet
+		clusterCIDR6 := ci.ClusterNet6
+
+		ip, _, err := net.ParseCIDR(clusterCIDR)
+		if err != nil {
+			tk.LogIt(tk.LogError, "ClusterIP address invalid %s\n", clusterCIDR)
+			return
+		}
+
+		ip6, _, err := net.ParseCIDR(clusterCIDR6)
+		if err != nil {
+			tk.LogIt(tk.LogError, "ClusterIP6 address invalid %s\n", clusterCIDR6)
+			return
+		}
+
+		ifIP, err := utils.GetIfaceIPAddr(ci.ClusterIf)
+		if err != nil || ifIP == nil {
+			tk.LogIt(tk.LogError, "No IP address found in cluster-dev\n")
+			return
+		}
+
+		ifIP6, _ := utils.GetIfaceIP6Addr(ci.ClusterIf)
+		if ifIP6 == nil {
+			tk.LogIt(tk.LogError, "No IP6 address found in cluster-dev\n")
+			ifIP6 = ip6
+			ifIP6[len(ifIP6)-1]++
+		}
+
+		ip[len(ip)-2] = ifIP[len(ifIP)-2]
+		ip[len(ip)-1] = ifIP[len(ifIP)-1]
+
+		ip6[len(ip)-2] = ifIP6[len(ifIP6)-2]
+		ip6[len(ip)-1] = ifIP6[len(ifIP6)-1]
+
+		tk.LogIt(tk.LogInfo, "Cluster IP address %s deleted\n", ip.String())
+		tk.LogIt(tk.LogInfo, "Cluster IP6 address %s deleted\n", ip6.String())
+
+		clusterIfName := fmt.Sprintf("vxlan%d", ClusterNetID)
+
+		if nlp.DelAddrNoHook(ip.String()+"/16", clusterIfName) < 0 {
+			tk.LogIt(tk.LogError, "Failed to delete Cluster Addr %s:%s\n", ip.String(), clusterIfName)
+		}
+
+		if nlp.DelAddrNoHook(ip6.String()+"/64", clusterIfName) < 0 {
+			tk.LogIt(tk.LogError, "Failed to delete Cluster Addr %s:%s\n", ip6.String(), clusterIfName)
+		}
+
+		if nlp.DelVxLANNoHook(ClusterNetID) < 0 {
+			tk.LogIt(tk.LogError, "Failed to delete Cluster Network\n")
+		}
+	}
 }
 
 // CIStateGetInst - routine to get HA state

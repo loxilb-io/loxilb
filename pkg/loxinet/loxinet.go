@@ -191,6 +191,7 @@ func loxiNetTicker(bgpPeerMode bool) {
 				if !bgpPeerMode {
 					mh.dpEbpf.DpEbpfUnInit()
 				}
+				mh.has.CIDestroy()
 				apiserver.ApiServerShutOk()
 			}
 		case t := <-mh.ticker.C:
@@ -300,7 +301,10 @@ func loxiNetInit() {
 		}
 
 		// Initialize the clustering subsystem
-		mh.has = CIInit(kaArgs)
+		if mh.has = CIInit(kaArgs); mh.has == nil {
+			tk.LogIt(tk.LogError, "cluster init failed\n")
+			os.Exit(1)
+		}
 		if clusterMode {
 			if opts.Opts.Bgp {
 				tk.LogIt(tk.LogInfo, "init-wait cluster mode\n")
