@@ -222,6 +222,12 @@ func loxiNetInit() {
 		clusterMode = true
 	}
 
+	// Initialize the clustering subsystem
+	if mh.has = CIInit(kaArgs); mh.has == nil {
+		tk.LogIt(tk.LogError, "cluster init failed\n")
+		os.Exit(1)
+	}
+
 	// Initialize logger and specify the log file
 	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
 	logLevel := LogString2Level(opts.Opts.LogLevel)
@@ -300,11 +306,6 @@ func loxiNetInit() {
 			return
 		}
 
-		// Initialize the clustering subsystem
-		if mh.has = CIInit(kaArgs); mh.has == nil {
-			tk.LogIt(tk.LogError, "cluster init failed\n")
-			os.Exit(1)
-		}
 		if clusterMode {
 			if opts.Opts.Bgp {
 				tk.LogIt(tk.LogInfo, "init-wait cluster mode\n")

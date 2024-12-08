@@ -583,7 +583,8 @@ func AddVxLANBridgeNoHook(vxlanid int, epIntfName string) int {
 			SrcAddr:      LocalIPs[0].IP,
 			VtepDevIndex: EndpointInterface.Attrs().Index,
 			VxlanId:      vxlanid,
-			Port:         4789, // VxLAN default port
+			Port:         8472, // VxLAN default port
+			Learning:     true,
 		}
 		if err := nlp.LinkAdd(VxlanDev); err != nil {
 			tk.LogIt(tk.LogWarning, "nlp: failed to create VxlanDev: [ %v ] with the error: %s\n", VxlanDev, err)
