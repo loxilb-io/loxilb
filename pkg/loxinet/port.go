@@ -317,12 +317,12 @@ func (P *PortsH) PortAdd(name string, osid int, ptype int, zone string,
 		return PortCounterErr, err
 	}
 
-	var rp *Port = nil
+	var rp *Port
 	if hwi.Real != "" {
 		rp = P.portSmap[hwi.Real]
 		if rp == nil {
 			tk.LogIt(tk.LogError, "port add - %s no real-port(%s)\n", name, hwi.Real)
-			return PortNoRealDevErr, errors.New("no-realport error")
+			//return PortNoRealDevErr, errors.New("no-realport error")
 		}
 	} else if ptype == cmn.PortVxlanBr {
 		tk.LogIt(tk.LogError, "port add - %s real-port needed\n", name)
@@ -793,10 +793,22 @@ func (P *PortsH) PortNotifierRegister(notifier PortEventIntf) {
 // PortTicker - a ticker routine for ports
 func (P *PortsH) PortTicker() {
 	var ev PortEvent
-	var portMod = false
+	portMod := false
 
 	for _, port := range P.portSmap {
 		portMod = false
+
+		if port.HInfo.Real != "" {
+			rp := P.portSmap[port.HInfo.Real]
+			if rp == nil {
+				tk.LogIt(tk.LogError, "port - %s no real-port(%s)\n", port.Name, port.HInfo.Real)
+			} else if rp.SInfo.PortOvl == nil {
+				tk.LogIt(tk.LogError, "port - %s set ovl-port(%s)\n", rp.Name, port.Name)
+				rp.SInfo.PortOvl = port
+			}
+		}
+
+		continue
 
 		// TODO - This is not very efficient since internally
 		// it will get all OS interfaces each time
