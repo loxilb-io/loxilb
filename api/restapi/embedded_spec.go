@@ -5131,6 +5131,10 @@ func init() {
               "type": "integer",
               "format": "uint32"
             },
+            "egress": {
+              "description": "flag to indicate an egress rule",
+              "type": "boolean"
+            },
             "externalIP": {
               "description": "IP address for external access",
               "type": "string"
@@ -11399,6 +11403,10 @@ func init() {
               "type": "integer",
               "format": "uint32"
             },
+            "egress": {
+              "description": "flag to indicate an egress rule",
+              "type": "boolean"
+            },
             "externalIP": {
               "description": "IP address for external access",
               "type": "string"
@@ -11545,6 +11553,10 @@ func init() {
           "description": "block-number if any of this LB entry",
           "type": "integer",
           "format": "uint32"
+        },
+        "egress": {
+          "description": "flag to indicate an egress rule",
+          "type": "boolean"
         },
         "externalIP": {
           "description": "IP address for external access",

@@ -3041,6 +3041,9 @@ definitions:
           proxyprotocolv2:
             type: boolean
             description: flag to enable proxy protocol v2
+          egress:
+            type: boolean
+            description: flag to indicate an egress rule
       
       endpoints:
         type: array

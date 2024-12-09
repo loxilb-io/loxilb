@@ -50,6 +50,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv.Oper = cmn.LBOp(params.Attr.ServiceArguments.Oper)
 	lbRules.Serv.HostUrl = params.Attr.ServiceArguments.Host
 	lbRules.Serv.ProxyProtocolV2 = params.Attr.ServiceArguments.Proxyprotocolv2
+	lbRules.Serv.Egress = params.Attr.ServiceArguments.Egress
 
 	if lbRules.Serv.Proto == "sctp" {
 		for _, data := range params.Attr.SecondaryIPs {
@@ -175,6 +176,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tmpSvc.Snat = lb.Serv.Snat
 		tmpSvc.Host = lb.Serv.HostUrl
 		tmpSvc.Proxyprotocolv2 = lb.Serv.ProxyProtocolV2
+		tmpSvc.Egress = lb.Serv.Egress
 
 		tmpLB.ServiceArguments = &tmpSvc
 
