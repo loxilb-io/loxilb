@@ -583,6 +583,8 @@ type LbServiceArg struct {
 	HostUrl string `json:"path"`
 	// ProxyProtocolV2 - Enable proxy protocol v2
 	ProxyProtocolV2 bool `json:"proxyprotocolv2"`
+	// Egress - Egress Rule
+	Egress bool `json:"egress"`
 }
 
 // LbEndPointArg - Information related to load-balancer end-point

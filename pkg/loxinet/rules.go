@@ -293,6 +293,7 @@ type ruleEnt struct {
 	inst     string
 	secMode  cmn.LBSec
 	ppv2En   bool
+	egress   bool
 	srcList  []*allowedSrcElem
 	locIPs   map[string]struct{}
 }
@@ -821,6 +822,7 @@ func (R *RuleH) GetLBRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.Name = data.name
 		ret.Serv.HostUrl = data.tuples.path
 		ret.Serv.ProxyProtocolV2 = data.ppv2En
+		ret.Serv.Egress = data.egress
 		if data.act.actType == RtActSnat {
 			ret.Serv.Snat = true
 		}
@@ -1696,6 +1698,10 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 			return RuleExistsErr, errors.New("lbrule-exist error: cant modify rule security mode")
 		}
 
+		if eRule.egress != serv.Egress {
+			return RuleExistsErr, errors.New("lbrule-exist error: cant modify rule egress mode")
+		}
+
 		if len(retEps) == 0 {
 			tk.LogIt(tk.LogDebug, "lb-rule %s has no-endpoints: to be deleted\n", eRule.tuples.String())
 			return R.DeleteLbRule(serv)
@@ -1790,6 +1796,7 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 	r.secIP = nSecIP
 	r.secMode = serv.Security
 	r.ppv2En = serv.ProxyProtocolV2
+	r.egress = serv.Egress
 
 	// Per LB end-point health-check is supposed to be handled at kube-loxilb/CCM,
 	// but it certain cases like stand-alone mode, loxilb can do its own
@@ -2782,6 +2789,10 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 
 	if r.addrRslv {
 		return -1
+	}
+
+	if r.egress {
+		return 0
 	}
 
 	nWork := new(LBDpWorkQ)
