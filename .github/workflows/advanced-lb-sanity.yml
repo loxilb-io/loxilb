@@ -122,3 +122,8 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
+      - run: |
+             cd cicd/udplb-persist/
+             ./config.sh
+             ./validation.sh
+             ./rmconfig.sh
