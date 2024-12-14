@@ -194,6 +194,7 @@ type epHostOpts struct {
 	currProbeDuration uint32
 	probePort         uint16
 	probeActivated    bool
+	egress            bool
 }
 
 type epHost struct {
@@ -2356,7 +2357,11 @@ func (R *RuleH) AddEPHost(apiCall bool, hostName string, name string, args epHos
 	ep := R.epMap[epKey]
 	if ep != nil {
 		if apiCall {
+			egress := ep.opts.egress
 			ep.opts = args
+			if egress {
+				ep.opts.egress = egress
+			}
 			ep.opts.currProbeDuration = ep.opts.probeDuration
 			ep.initProberOn = true
 			return 0, nil
@@ -2380,6 +2385,15 @@ func (R *RuleH) AddEPHost(apiCall bool, hostName string, name string, args epHos
 	ep.hID = R.lepHID % MaxEndPointCheckers
 	//ep.sT = time.Now()
 	R.lepHID++
+
+	if args.egress {
+		epNode := cmn.ClusterNodeMod{Addr: net.ParseIP(hostName),
+			Egress: true}
+		_, err := mh.has.ClusterNodeAdd(epNode)
+		if err != nil {
+			return -1, errors.New("ep-host add failed as cluster node")
+		}
+	}
 
 	R.epMap[epKey] = ep
 

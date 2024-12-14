@@ -893,7 +893,8 @@ type BFDMod struct {
 // ClusterNodeMod - information related to a cluster node instance
 type ClusterNodeMod struct {
 	// Instance - Cluster Instance
-	Addr net.IP `json:"Addr"`
+	Addr   net.IP `json:"Addr"`
+	Egress bool   `json:"egress"`
 }
 
 const (

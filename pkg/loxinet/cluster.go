@@ -53,6 +53,7 @@ type ClusterInstance struct {
 // ClusterNode - Struct for Cluster Node Information
 type ClusterNode struct {
 	Addr   net.IP
+	Egress bool
 	Status DpStatusT
 }
 
@@ -119,7 +120,7 @@ func (ci *CIStateH) startBFDProto(bfdSessConfigArgs bfd.ConfigArgs) {
 }
 
 // CITicker - Periodic ticker for Cluster module
-func (h *CIStateH) CITicker() {
+func (ci *CIStateH) CITicker() {
 	// Nothing to do currently
 }
 
@@ -400,6 +401,7 @@ func (h *CIStateH) ClusterNodeAdd(node cmn.ClusterNodeMod) (int, error) {
 
 	cNode = new(ClusterNode)
 	cNode.Addr = node.Addr
+	cNode.Egress = node.Egress
 	h.NodeMap[node.Addr.String()] = cNode
 
 	cNode.DP(DpCreate)
@@ -512,6 +514,19 @@ func (h *CIStateH) CIBFDSessionGet() ([]cmn.BFDMod, error) {
 
 // DP - sync state of cluster-node entity to data-path
 func (cn *ClusterNode) DP(work DpWorkT) int {
+
+	if cn.Egress {
+		if work == DpCreate {
+			ret := nlp.AddVxLANPeerNoHook(ClusterNetID, cn.Addr.String())
+			if ret != 0 {
+				cn.Status = DpCreateErr
+			}
+			return 0
+		} else {
+			nlp.AddVxLANPeerNoHook(ClusterNetID, cn.Addr.String())
+			return 0
+		}
+	}
 
 	pwq := new(PeerDpWorkQ)
 	pwq.Work = work
