@@ -887,7 +887,7 @@ func validateXlateEPWeights(servEndPoints []cmn.LbEndPointArg) (int, error) {
 	return 0, nil
 }
 
-func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleLBEp, doAddOp bool, liveCheckEn bool) {
+func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleLBEp, doAddOp bool, liveCheckEn bool, egressEps bool) {
 	var hopts epHostOpts
 	pType := ""
 	pPort := uint16(0)
@@ -932,6 +932,10 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleLBEp, doAddOp bool, liv
 
 		if mh.pProbe || liveCheckEn {
 			hopts.probeActivated = true
+		}
+
+		if egressEps {
+			hopts.egress = true
 		}
 
 		epKey := makeEPKey(nep.xIP.String(), pType, pPort)
@@ -1758,8 +1762,8 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		// eRule.managed = serv.Managed
 
 		if !serv.Snat {
-			R.modNatEpHost(eRule, delEps, false, activateProbe)
-			R.modNatEpHost(eRule, retEps, true, activateProbe)
+			R.modNatEpHost(eRule, delEps, false, activateProbe, eRule.egress)
+			R.modNatEpHost(eRule, retEps, true, activateProbe, eRule.egress)
 			R.electEPSrc(eRule)
 		}
 
@@ -1845,7 +1849,7 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 
 	if !serv.Snat {
 		R.foldRecursiveEPs(r)
-		R.modNatEpHost(r, lBActs.endPoints, true, activateProbe)
+		R.modNatEpHost(r, lBActs.endPoints, true, activateProbe, r.egress)
 		R.electEPSrc(r)
 		if serv.Mode == cmn.LBModeHostOneArm {
 			R.mkHostAssocs(r)
@@ -1924,7 +1928,7 @@ func (R *RuleH) DeleteLbRule(serv cmn.LbServiceArg) (int, error) {
 		activatedProbe = true
 	}
 	if rule.act.actType != RtActSnat {
-		R.modNatEpHost(rule, eEps, false, activatedProbe)
+		R.modNatEpHost(rule, eEps, false, activatedProbe, rule.egress)
 		R.unFoldRecursiveEPs(rule)
 	}
 

@@ -517,14 +517,18 @@ func (cn *ClusterNode) DP(work DpWorkT) int {
 
 	if cn.Egress {
 		if work == DpCreate {
-			ret := nlp.AddVxLANPeerNoHook(ClusterNetID, cn.Addr.String())
-			if ret != 0 {
-				cn.Status = DpCreateErr
+			if !utils.IsIPHostAddr(cn.Addr.String()) {
+				ret := nlp.AddVxLANPeerNoHook(ClusterNetID, cn.Addr.String())
+				if ret != 0 {
+					cn.Status = DpCreateErr
+				}
 			}
 			return 0
 		} else {
-			nlp.AddVxLANPeerNoHook(ClusterNetID, cn.Addr.String())
-			return 0
+			if !utils.IsIPHostAddr(cn.Addr.String()) {
+				nlp.DelVxLANPeerNoHook(ClusterNetID, cn.Addr.String())
+				return 0
+			}
 		}
 	}
 
