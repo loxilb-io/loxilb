@@ -177,6 +177,10 @@ github.com/loxilb-io/loxilib v0.8.9-0.20241216233038-17d1ef9e89c8 h1:brNeihDQUB2
 github.com/loxilb-io/loxilib v0.8.9-0.20241216233038-17d1ef9e89c8/go.mod h1:72c3DmIKC53G5f4eNhTElemB08S64Xm/4QsDtwc66vw=
 github.com/loxilb-io/loxilib v0.8.9-0.20241217033340-39dbcd8d8dc3 h1:JIq1ffW2Fm77KONpDmn7LdQ3cfE1TTDkSvIxYOSn7B4=
 github.com/loxilb-io/loxilib v0.8.9-0.20241217033340-39dbcd8d8dc3/go.mod h1:Hw/yOnOs3ZbEc53z3Pz1UhoIJun3MaWZKjHJlBJNrBM=
+github.com/loxilb-io/loxilib v0.8.9-0.20241218074725-1ef6142b7484 h1:zPHkyqgRgrctTMnZIlikFRAcKri+/22lTm9i2SiSE2g=
+github.com/loxilb-io/loxilib v0.8.9-0.20241218074725-1ef6142b7484/go.mod h1:Hw/yOnOs3ZbEc53z3Pz1UhoIJun3MaWZKjHJlBJNrBM=
+github.com/loxilb-io/loxilib v0.8.9-0.20241218081253-760c19357603 h1:G9IwTGyCDyv/JNDFzHkRtyroNE2hRgmYXJt+1lJ8ffE=
+github.com/loxilb-io/loxilib v0.8.9-0.20241218081253-760c19357603/go.mod h1:Hw/yOnOs3ZbEc53z3Pz1UhoIJun3MaWZKjHJlBJNrBM=
 github.com/loxilb-io/sctp v0.0.0-20230519081703-6d1baec82fd4 h1:oDc2lsbfuQEcVP3k+Pw4v6Xdm3t4M9vBc1Y9egszv6g=
 github.com/loxilb-io/sctp v0.0.0-20230519081703-6d1baec82fd4/go.mod h1:1a6hv8ISVQhnW5IVpW9o+OL6BAFlWiVpC0O4d19g+wQ=
 github.com/loxilb-io/sctp v0.0.0-20240912024735-b9c5910e672f h1:sm8UnXJa4dAV/wTEbc59F+Gf3FlfvSJY+OcPFfY9Eck=
