@@ -15,7 +15,7 @@ require (
 	github.com/go-openapi/validate v0.22.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/loxilb-io/ipvs v0.1.0
-	github.com/loxilb-io/loxilib v0.8.9-0.20241217033340-39dbcd8d8dc3
+	github.com/loxilb-io/loxilib v0.8.9-0.20241218081253-760c19357603
 	github.com/osrg/gobgp/v3 v3.29.0
 	github.com/prometheus-community/pro-bing v0.1.0
 	github.com/prometheus/client_model v0.3.0
