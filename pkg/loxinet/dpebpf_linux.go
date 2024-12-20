@@ -1060,7 +1060,7 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 		nxfa.inactive = 1
 	}
 
-	dat.nxfrm = C.uchar(len(w.endPoints))
+	dat.nxfrm = C.ushort(len(w.endPoints))
 	if w.CsumDis {
 		dat.cdis = 1
 	} else {
