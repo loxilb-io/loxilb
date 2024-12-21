@@ -78,7 +78,7 @@ const (
 
 // constants
 const (
-	MaxLBEndPoints             = 256
+	MaxLBEndPoints             = 1600
 	MaxLBEndPointsRR           = 32
 	DflLbaInactiveTries        = 2          // Default number of inactive tries before LB arm is turned off
 	MaxDflLbaInactiveTries     = 100        // Max number of inactive tries before LB arm is turned off
@@ -91,7 +91,7 @@ const (
 	LbMaxInactiveTimeout       = 24 * 3600  // Maximum inactive timeout for established sessions
 	MaxEndPointCheckers        = 4          // Maximum helpers to check endpoint health
 	EndPointCheckerDuration    = 2          // Duration at which ep-helpers will run
-	MaxEndPointSweeps          = 20         // Maximum end-point sweeps per round
+	MaxEndPointSweeps          = 40         // Maximum end-point sweeps per round
 	VIPSweepDuration           = 30         // Duration of periodic VIP maintenance
 	DefaultPersistTimeOut      = 10800      // Default persistent LB session timeout
 	SnatFwMark                 = 0x80000000 // Snat Marker
@@ -905,7 +905,8 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleLBEp, doAddOp bool, liv
 			pType = HostProbeConnectTCP
 			pPort = nep.xPort
 		} else if r.tuples.l4Prot.val == 17 {
-			pType = HostProbeConnectUDP
+			//pType = HostProbeConnectUDP
+			pType = HostProbeConnectTCP // FIXME
 			pPort = nep.xPort
 		} else if r.tuples.l4Prot.val == 1 {
 			pType = HostProbePing
@@ -1250,7 +1251,8 @@ func (R *RuleH) syncEPHostState2Rule(rule *ruleEnt, checkNow bool) bool {
 			if rule.tuples.l4Prot.val == 6 {
 				sType = HostProbeConnectTCP
 			} else if rule.tuples.l4Prot.val == 17 {
-				sType = HostProbeConnectUDP
+				//sType = HostProbeConnectUDP
+				sType = HostProbeConnectTCP // FIXME
 			} else if rule.tuples.l4Prot.val == 1 {
 				sType = HostProbePing
 			} else if rule.tuples.l4Prot.val == 132 {
