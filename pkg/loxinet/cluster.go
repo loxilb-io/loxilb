@@ -80,7 +80,11 @@ type CIStateH struct {
 	Bs          *bfd.Struct
 	ClusterNet  string
 	ClusterNet6 string
+	ClusterGw   string
+	ClusterGw6  string
 	ClusterIf   string
+	OGw         []string
+	OGw6        []string
 }
 
 func (ci *CIStateH) BFDSessionNotify(instance string, remote string, ciState string) {
@@ -140,6 +144,16 @@ func (ci *CIStateH) CISpawn() {
 	}
 }
 
+// CIStateGetInst - routine to get HA state
+func (h *CIStateH) CIStateGetInst(inst string) (string, error) {
+
+	if ci, ok := h.ClusterMap[inst]; ok {
+		return ci.StateStr, nil
+	}
+
+	return "NOT_DEFINED", errors.New("not found")
+}
+
 // CIInit - routine to initialize Cluster context
 func CIInit(args CIKAArgs) *CIStateH {
 	var nCIh = new(CIStateH)
@@ -168,9 +182,8 @@ func CIInit(args CIKAArgs) *CIStateH {
 
 	nCIh.NodeMap = make(map[string]*ClusterNode)
 
-	args.CDev = "eth0"
 	if args.CDev != "" {
-		tk.LogIt(tk.LogError, "cluster-dev name\n")
+		tk.LogIt(tk.LogInfo, "cluster-dev name %s\n", args.CDev)
 		_, err := net.InterfaceByName(args.CDev)
 		if err != nil {
 			tk.LogIt(tk.LogError, "cluster-dev name error\n")
@@ -225,11 +238,13 @@ func CIInit(args CIKAArgs) *CIStateH {
 			return nil
 		}
 
+		nlp.DelAddrNoHook(ip.String()+"/16", clusterIfName)
 		if nlp.AddAddrNoHook(ip.String()+"/16", clusterIfName) < 0 {
 			tk.LogIt(tk.LogError, "Failed to add Cluster Addr %s:%s\n", ip.String(), clusterIfName)
 			return nil
 		}
 
+		nlp.DelAddrNoHook(ip6.String()+"/16", clusterIfName)
 		if nlp.AddAddrNoHook(ip6.String()+"/64", clusterIfName) < 0 {
 			tk.LogIt(tk.LogError, "Failed to add Cluster Addr %s:%s\n", ip6.String(), clusterIfName)
 			nCIh.ClusterNet6 = ""
@@ -237,12 +252,26 @@ func CIInit(args CIKAArgs) *CIStateH {
 			nCIh.ClusterNet6 = clusterCIDR6
 		}
 
-		tk.LogIt(tk.LogInfo, "Cluster IP address %s\n", ip.String())
-		tk.LogIt(tk.LogInfo, "Cluster IP6 address %s\n", ip6.String())
+		gw := make(net.IP, len(ip))
+		copy(gw, ip)
+		gw[len(gw)-1] = 254
+
+		gw6 := make(net.IP, len(ip6))
+		copy(gw6, ip6)
+		gw6[len(gw6)-1] = 254
 
 		nCIh.ClusterIf = args.CDev
 		nCIh.ClusterNet = clusterCIDR
 		nCIh.ClusterNet6 = clusterCIDR6
+		nCIh.ClusterGw = gw.String()
+		nCIh.ClusterGw6 = gw6.String()
+
+		nCIh.OGw, _ = nlp.GetRouteNoHook("8.8.8.8")
+		nCIh.OGw6, _ = nlp.GetRouteNoHook("2001:4860:4860::8888")
+
+		tk.LogIt(tk.LogInfo, "Cluster IP address %s GW %s oGW %v\n", ip.String(), nCIh.ClusterGw, nCIh.OGw)
+		tk.LogIt(tk.LogInfo, "Cluster IP6 address %s GW6 %s oGw6 %v\n", ip6.String(), nCIh.ClusterGw, nCIh.OGw6)
+
 	}
 
 	return nCIh
@@ -293,9 +322,6 @@ func (ci *CIStateH) CIDestroy() {
 		ip6[len(ip)-2] = ifIP6[len(ifIP6)-2]
 		ip6[len(ip)-1] = ifIP6[len(ifIP6)-1]
 
-		tk.LogIt(tk.LogInfo, "Cluster IP address %s deleted\n", ip.String())
-		tk.LogIt(tk.LogInfo, "Cluster IP6 address %s deleted\n", ip6.String())
-
 		clusterIfName := fmt.Sprintf("vxlan%d", ClusterNetID)
 
 		if nlp.DelAddrNoHook(ip.String()+"/16", clusterIfName) < 0 {
@@ -306,20 +332,93 @@ func (ci *CIStateH) CIDestroy() {
 			tk.LogIt(tk.LogError, "Failed to delete Cluster Addr %s:%s\n", ip6.String(), clusterIfName)
 		}
 
+		tk.LogIt(tk.LogInfo, "Cluster IP address %s deleted\n", ip.String())
+		tk.LogIt(tk.LogInfo, "Cluster IP6 address %s deleted\n", ip6.String())
+
 		if nlp.DelVxLANNoHook(ClusterNetID) < 0 {
 			tk.LogIt(tk.LogError, "Failed to delete Cluster Network\n")
+		}
+
+		if len(mh.has.OGw) > 0 {
+			nlp.DelRouteNoHook("0.0.0.0/0")
+			for _, gw := range mh.has.OGw {
+				nlp.AddRouteNoHook("0.0.0.0/0", gw, "static")
+			}
+		}
+		if len(mh.has.OGw6) > 0 {
+			nlp.DelRouteNoHook("::/0")
+			for _, gw := range mh.has.OGw6 {
+				nlp.AddRouteNoHook("::/0", gw, "static")
+			}
 		}
 	}
 }
 
-// CIStateGetInst - routine to get HA state
-func (h *CIStateH) CIStateGetInst(inst string) (string, error) {
+// CIAddClusterRoute - routine to add a cluster route
+func (h *CIStateH) CIAddClusterRoute(dest string, add bool) {
 
-	if ci, ok := h.ClusterMap[inst]; ok {
-		return ci.StateStr, nil
+	if add {
+		found := false
+		if tk.IsNetIPv4(dest) {
+			gws, _ := nlp.GetRouteNoHook("8.8.8.8")
+			for _, gw := range gws {
+				if gw == dest {
+					found = true
+					break
+				}
+			}
+			fmt.Printf("gws = %v: dest %s\n", gws, dest)
+			if !found {
+				nlp.DelRouteNoHook("0.0.0.0/0")
+				nlp.AddRouteNoHook("0.0.0.0/0", dest, "static")
+			}
+		} else {
+			found = false
+			gws, _ := nlp.GetRouteNoHook("2001:4860:4860::8888")
+			for _, gw := range gws {
+				if gw == dest {
+					found = true
+					break
+				}
+			}
+			if !found {
+				nlp.DelRouteNoHook("::/0")
+				nlp.AddRouteNoHook("::/0", dest, "static")
+			}
+		}
+	} else {
+		found := false
+		if tk.IsNetIPv4(dest) {
+			gws, _ := nlp.GetRouteNoHook("8.8.8.8")
+			for _, gw := range gws {
+				if gw == dest {
+					found = true
+					break
+				}
+			}
+			if found {
+				nlp.DelRouteNoHook("0.0.0.0/0")
+				for _, gw := range mh.has.OGw {
+					nlp.AddRouteNoHook("0.0.0.0/0", gw, "static")
+				}
+			}
+		} else {
+			found = false
+			gws, _ := nlp.GetRouteNoHook("2001:4860:4860::8888")
+			for _, gw := range gws {
+				if gw == dest {
+					found = true
+					break
+				}
+			}
+			if found {
+				nlp.DelRouteNoHook("::/0")
+				for _, gw := range mh.has.OGw {
+					nlp.AddRouteNoHook("::", gw, "static")
+				}
+			}
+		}
 	}
-
-	return "NOT_DEFINED", errors.New("not found")
 }
 
 // CIStateGet - routine to get HA state
@@ -381,7 +480,7 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 		if mh.bgp != nil {
 			mh.bgp.UpdateCIState(cm.Instance, ci.State, ci.Vip)
 		}
-		go mh.zr.Rules.RuleVIPSyncToClusterState()
+		go mh.zr.Rules.RulesSyncToClusterState()
 		return ci.State, nil
 	}
 
