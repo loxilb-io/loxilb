@@ -4962,6 +4962,10 @@ func init() {
           "description": "Set a fwmark for any matching rule",
           "type": "integer"
         },
+        "onDefault": {
+          "description": "Trigger only on default cases",
+          "type": "boolean"
+        },
         "record": {
           "description": "Record or dump for matching rule",
           "type": "boolean"
@@ -11264,6 +11268,10 @@ func init() {
         "fwMark": {
           "description": "Set a fwmark for any matching rule",
           "type": "integer"
+        },
+        "onDefault": {
+          "description": "Trigger only on default cases",
+          "type": "boolean"
         },
         "record": {
           "description": "Record or dump for matching rule",
