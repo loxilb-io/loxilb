@@ -3781,6 +3781,9 @@ definitions:
       toPort:
         type: integer
         description: Modify to given Port (Zero if port is not to be modified)
+      onDefault:
+        type: boolean
+        description: Trigger only on default cases
       counter:
         type: string
         description: traffic counters

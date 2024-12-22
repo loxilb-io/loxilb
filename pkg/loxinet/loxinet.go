@@ -216,7 +216,12 @@ func sysctlInit() {
 func loxiNetInit() {
 	var rpcMode int
 
-	kaArgs := KAString2Mode(opts.Opts.Ka)
+	// Initialize logger and specify the log file
+	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
+	logLevel := LogString2Level(opts.Opts.LogLevel)
+	mh.logger = tk.LogItInit(logfile, logLevel, true)
+
+	kaArgs := KAString2Mode(opts.Opts.Ka, opts.Opts.ClusterInterface)
 	clusterMode := false
 	if opts.Opts.ClusterNodes != "none" {
 		clusterMode = true
@@ -227,11 +232,6 @@ func loxiNetInit() {
 		tk.LogIt(tk.LogError, "cluster init failed\n")
 		os.Exit(1)
 	}
-
-	// Initialize logger and specify the log file
-	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
-	logLevel := LogString2Level(opts.Opts.LogLevel)
-	mh.logger = tk.LogItInit(logfile, logLevel, true)
 
 	// It is important to make sure loxilb's eBPF filesystem
 	// is in place and mounted to make sure maps are pinned properly

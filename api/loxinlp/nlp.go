@@ -1271,6 +1271,26 @@ func AddRouteNoHook(DestinationIPNet, gateway, proto string) int {
 	return ret
 }
 
+func GetRouteNoHook(destination string) ([]string, error) {
+	var gws []string
+
+	dst := net.ParseIP(destination)
+	if dst == nil {
+		return []string{}, errors.New("invalid destination")
+	}
+
+	rts, err := nlp.RouteGet(dst)
+	if err != nil {
+		return []string{}, errors.New("invalid rt destination")
+	}
+
+	for _, rt := range rts {
+		gws = append(gws, rt.Gw.String())
+	}
+
+	return gws, nil
+}
+
 func DelRouteNoHook(DestinationIPNet string) int {
 	var ret int
 	var route nlp.Route

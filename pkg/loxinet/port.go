@@ -806,6 +806,9 @@ func (P *PortsH) PortTicker() {
 				tk.LogIt(tk.LogError, "port - %s set ovl-port(%s)\n", rp.Name, port.Name)
 				rp.SInfo.PortOvl = port
 			}
+			if port.SInfo.PortReal != rp {
+				port.SInfo.PortReal = rp
+			}
 		}
 
 		continue

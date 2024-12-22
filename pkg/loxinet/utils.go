@@ -87,20 +87,20 @@ func LogString2Level(logStr string) tk.LogLevelT {
 }
 
 // KAString2Mode - Convert ka mode in string opts to spawn/KAMode
-func KAString2Mode(kaStr string) CIKAArgs {
+func KAString2Mode(kaStr, dev string) CIKAArgs {
 	spawnKa := false
 	interval := int64(0)
 	sourceIP := net.ParseIP("0.0.0.0")
 
 	if kaStr == "none" {
-		return CIKAArgs{SpawnKa: spawnKa, RemoteIP: nil, Interval: interval}
+		return CIKAArgs{SpawnKa: spawnKa, RemoteIP: nil, Interval: interval, CDev: dev}
 	}
 
 	kaArgs := strings.Split(kaStr, ":")
 
 	remote := net.ParseIP(kaArgs[0])
 	if remote == nil {
-		return CIKAArgs{SpawnKa: spawnKa, RemoteIP: nil, SourceIP: nil, Interval: interval}
+		return CIKAArgs{SpawnKa: spawnKa, RemoteIP: nil, SourceIP: nil, Interval: interval, CDev: dev}
 	}
 
 	if len(kaArgs) > 1 {
@@ -111,7 +111,7 @@ func KAString2Mode(kaStr string) CIKAArgs {
 		interval, _ = strconv.ParseInt(kaArgs[2], 10, 32)
 	}
 	spawnKa = true
-	return CIKAArgs{SpawnKa: spawnKa, RemoteIP: remote, SourceIP: sourceIP, Interval: interval}
+	return CIKAArgs{SpawnKa: spawnKa, RemoteIP: remote, SourceIP: sourceIP, Interval: interval, CDev: dev}
 
 }
 

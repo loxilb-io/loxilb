@@ -32,6 +32,9 @@ type FirewallOptionEntry struct {
 	// Set a fwmark for any matching rule
 	FwMark int64 `json:"fwMark,omitempty"`
 
+	// Trigger only on default cases
+	OnDefault bool `json:"onDefault,omitempty"`
+
 	// Record or dump for matching rule
 	Record bool `json:"record,omitempty"`
 

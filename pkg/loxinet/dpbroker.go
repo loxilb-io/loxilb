@@ -239,6 +239,7 @@ type FwDpWorkQ struct {
 	FwVal1   uint16
 	FwVal2   uint32
 	FwRecord bool
+	OnDflt   bool
 }
 
 // NatT - type of NAT
