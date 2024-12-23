@@ -42,7 +42,7 @@ for j in {0..2}
 do
     #$hexec h$k ping ${ep[j]} -f -c 5 -W 1;
     res=`$hexec h$k curl --max-time 10 -s 88.88.88.88:2020`
-    #echo -e $res
+    echo -e $res
     if [[ $res != "${servArr[j]}" ]]
     then
         echo -e "Expected ${servArr[j]}, Received : $res"

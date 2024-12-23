@@ -170,6 +170,7 @@ func (n *NeighH) NeighAddTunEP(ne *Neigh, rIP net.IP, sIP net.IP, tunID uint32, 
 	// FIXME - Need to be able to support multiple overlays with same entry
 	port := ne.OifPort
 	if port == nil || (port.SInfo.PortOvl == nil && tunType != DpTunIPIP) {
+		tk.LogIt(tk.LogError, "neigh-add-tunep failed %v\n", port)
 		return -1, nil
 	}
 

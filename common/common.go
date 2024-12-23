@@ -408,6 +408,8 @@ type FwOptArg struct {
 	DoSnat bool   `json:"doSnat"`
 	ToIP   string `json:"toIP"`
 	ToPort uint16 `json:"toPort"`
+	// OnDefault - Trigger only on default cases
+	OnDefault bool `json:"onDefault"`
 	// Counter - Traffic counter
 	Counter string `json:"counter"`
 }
@@ -583,6 +585,8 @@ type LbServiceArg struct {
 	HostUrl string `json:"path"`
 	// ProxyProtocolV2 - Enable proxy protocol v2
 	ProxyProtocolV2 bool `json:"proxyprotocolv2"`
+	// Egress - Egress Rule
+	Egress bool `json:"egress"`
 }
 
 // LbEndPointArg - Information related to load-balancer end-point
@@ -891,7 +895,8 @@ type BFDMod struct {
 // ClusterNodeMod - information related to a cluster node instance
 type ClusterNodeMod struct {
 	// Instance - Cluster Instance
-	Addr net.IP `json:"Addr"`
+	Addr   net.IP `json:"Addr"`
+	Egress bool   `json:"egress"`
 }
 
 const (

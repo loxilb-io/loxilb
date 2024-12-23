@@ -239,5 +239,6 @@ func (z *ZoneH) ZoneTicker() {
 		zone.Pols.PolTicker()
 		zone.Mirrs.MirrTicker()
 		zone.L3.IfasTicker(false)
+		zone.Ports.PortTicker()
 	}
 }
