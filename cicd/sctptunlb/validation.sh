@@ -9,7 +9,7 @@ $hexec l3e1 socat -v -T0.5 sctp-l:8080,reuseaddr,fork system:"echo 'server1'; ca
 $hexec l3e2 socat -v -T0.5 sctp-l:8080,reuseaddr,fork system:"echo 'server2'; cat" >/dev/null 2>&1 &
 $hexec l3e3 socat -v -T0.5 sctp-l:8080,reuseaddr,fork system:"echo 'server3'; cat" >/dev/null 2>&1 &
 
-sleep 5
+sleep 20
 code=0
 j=0
 waitCount=0
