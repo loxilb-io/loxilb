@@ -1207,7 +1207,7 @@ func (R *RuleH) mkHostAssocs(r *ruleEnt) bool {
 	}
 
 	for _, addr := range addrs {
-		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && !ipnet.IP.IsUnspecified() {
 			// check if IPv4 or IPv6 is not nil
 			if ipnet.IP.To4() != nil || ipnet.IP.To16() != nil {
 				if tk.IsNetIPv4(ipnet.IP.String()) && r.tuples.l3Dst.addr.IP.String() != ipnet.IP.String() {
@@ -2952,8 +2952,10 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 		return -1
 	}
 
-	mh.dp.ToDpCh <- nWork
-	r.VIP2DP(nWork.Work)
+	if !nWork.ServiceIP.IsUnspecified() {
+		mh.dp.ToDpCh <- nWork
+		r.VIP2DP(nWork.Work)
+	}
 
 	if mode == cmn.LBModeHostOneArm {
 		for locIP := range r.locIPs {
