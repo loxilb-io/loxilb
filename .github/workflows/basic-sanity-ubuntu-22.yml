@@ -42,6 +42,7 @@ jobs:
       - run: loxilb-ebpf/utils/mkllb_bpffs.sh
       - run: sudo -E env "PATH=$PATH" make
       - run: sudo -E env "PATH=$PATH" make test
+      - run: for iface in $(ifconfig | cut -d ' ' -f1| tr ':' '\n' | awk NF); do sudo tc filter delete dev $iface ingress >> /dev/null 2>&1; sudo tc filter delete dev $iface egress >> /dev/null 2>&1; done
       - run: docker pull ghcr.io/loxilb-io/loxilb:latest
       - run: docker run -u root --cap-add SYS_ADMIN   --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest-amd64
       - run: pwd && ls && sudo -E env "PATH=$PATH" make docker-cp-ebpf
