@@ -4962,6 +4962,10 @@ func init() {
           "description": "Set a fwmark for any matching rule",
           "type": "integer"
         },
+        "onDefault": {
+          "description": "Trigger only on default cases",
+          "type": "boolean"
+        },
         "record": {
           "description": "Record or dump for matching rule",
           "type": "boolean"
@@ -5130,6 +5134,10 @@ func init() {
               "description": "block-number if any of this LB entry",
               "type": "integer",
               "format": "uint32"
+            },
+            "egress": {
+              "description": "flag to indicate an egress rule",
+              "type": "boolean"
             },
             "externalIP": {
               "description": "IP address for external access",
@@ -11261,6 +11269,10 @@ func init() {
           "description": "Set a fwmark for any matching rule",
           "type": "integer"
         },
+        "onDefault": {
+          "description": "Trigger only on default cases",
+          "type": "boolean"
+        },
         "record": {
           "description": "Record or dump for matching rule",
           "type": "boolean"
@@ -11398,6 +11410,10 @@ func init() {
               "description": "block-number if any of this LB entry",
               "type": "integer",
               "format": "uint32"
+            },
+            "egress": {
+              "description": "flag to indicate an egress rule",
+              "type": "boolean"
             },
             "externalIP": {
               "description": "IP address for external access",
@@ -11545,6 +11561,10 @@ func init() {
           "description": "block-number if any of this LB entry",
           "type": "integer",
           "format": "uint32"
+        },
+        "egress": {
+          "description": "flag to indicate an egress rule",
+          "type": "boolean"
         },
         "externalIP": {
           "description": "IP address for external access",

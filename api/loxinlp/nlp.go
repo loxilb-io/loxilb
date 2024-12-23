@@ -583,7 +583,8 @@ func AddVxLANBridgeNoHook(vxlanid int, epIntfName string) int {
 			SrcAddr:      LocalIPs[0].IP,
 			VtepDevIndex: EndpointInterface.Attrs().Index,
 			VxlanId:      vxlanid,
-			Port:         4789, // VxLAN default port
+			Port:         8472, // VxLAN default port
+			Learning:     true,
 		}
 		if err := nlp.LinkAdd(VxlanDev); err != nil {
 			tk.LogIt(tk.LogWarning, "nlp: failed to create VxlanDev: [ %v ] with the error: %s\n", VxlanDev, err)
@@ -1268,6 +1269,26 @@ func AddRouteNoHook(DestinationIPNet, gateway, proto string) int {
 		return -1
 	}
 	return ret
+}
+
+func GetRouteNoHook(destination string) ([]string, error) {
+	var gws []string
+
+	dst := net.ParseIP(destination)
+	if dst == nil {
+		return []string{}, errors.New("invalid destination")
+	}
+
+	rts, err := nlp.RouteGet(dst)
+	if err != nil {
+		return []string{}, errors.New("invalid rt destination")
+	}
+
+	for _, rt := range rts {
+		gws = append(gws, rt.Gw.String())
+	}
+
+	return gws, nil
 }
 
 func DelRouteNoHook(DestinationIPNet string) int {
