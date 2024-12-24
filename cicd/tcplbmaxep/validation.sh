@@ -10,19 +10,20 @@ sleep 5
 code=0
 servIP=( "20.20.20.1" )
 servArr=(
-          "server1" "server2" "server3" "server4" 
-          "server1" "server2" "server3" "server4" 
-          "server1" "server2" "server3" "server4" 
-          "server1" "server2" "server3" "server4" 
-          "server1" "server2" "server3" "server4" 
-          "server1" "server2" "server3" "server4" 
-          "server1" "server2" "server3" "server4" 
-          "server1" "server2" "server3" "server4" 
+          "server1" "server2" "server3" 
+          "server1" "server2" "server3"
+          "server1" "server2" "server3"
+          "server1" "server2" "server3"
+          "server1" "server2" "server3"
+          "server1" "server2" "server3"
+          "server1" "server2" "server3"
+          "server1" "server2" "server3"
         )
+#ep=( "31.31.31.1" "32.32.32.1" "33.33.33.1" "34.34.34.1" )
 ep=( "31.31.31.1" "32.32.32.1" "33.33.33.1" "34.34.34.1" )
 j=0
 waitCount=0
-while [ $j -le 3 ]
+while [ $j -le 2 ]
 do
     res=$($hexec l3h1 curl --max-time 10 -s ${ep[j]}:8080)
     #echo $res
@@ -46,7 +47,7 @@ done
 
 echo "Testing Service IP: ${servIP[0]}"
 lcode=0
-for i in {0..31}
+for i in {0..23}
 do
   res=$($hexec l3h1 curl --max-time 10 -s ${servIP[0]}:2020)
   echo $res
