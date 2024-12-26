@@ -78,7 +78,7 @@ const (
 
 // constants
 const (
-	MaxLBEndPoints             = 1600
+	MaxLBEndPoints             = 1500
 	MaxLBEndPointsRR           = 32
 	DflLbaInactiveTries        = 2          // Default number of inactive tries before LB arm is turned off
 	MaxDflLbaInactiveTries     = 100        // Max number of inactive tries before LB arm is turned off
