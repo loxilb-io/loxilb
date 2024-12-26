@@ -357,6 +357,11 @@ func (ci *CIStateH) CIDestroy() {
 // CIAddClusterRoute - routine to add a cluster route
 func (h *CIStateH) CIAddClusterRoute(dest string, add bool) {
 
+	if tk.IsNetIPv4(dest) && dest != mh.has.ClusterGw ||
+		tk.IsNetIPv6(dest) && dest != mh.has.ClusterGw6 {
+		return
+	}
+
 	if add {
 		found := false
 		if tk.IsNetIPv4(dest) {
