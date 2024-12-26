@@ -2,7 +2,7 @@
 source ../common.sh
 echo SCENARIO-egrlb
 
-sleep 10 
+sleep 30 
 code=0
 
 check_egr_conn() {
