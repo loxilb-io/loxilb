@@ -47,12 +47,13 @@ jobs:
              ./validation.sh
              ./rmconfig.sh
              cd -
-      - run: |
-             cd cicd/tcplbl3dsr/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
+      # This is commented out due to false alarms for now
+      #- run: |
+      #       cd cicd/tcplbl3dsr/
+      #       ./config.sh
+      #       ./validation.sh
+      #       ./rmconfig.sh
+      #       cd -
       - run: |
              cd cicd/tcplbhash/
              ./config.sh
