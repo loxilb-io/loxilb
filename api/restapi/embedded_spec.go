@@ -4236,6 +4236,38 @@ func init() {
           }
         }
       }
+    },
+    "/version": {
+      "get": {
+        "description": "Get version inforrmation",
+        "summary": "Get version inforrmation in the device",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/VersionGetEntry"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -5766,6 +5798,19 @@ func init() {
         },
         "ulclIdent": {
           "description": "IP address and netmask",
+          "type": "string"
+        }
+      }
+    },
+    "VersionGetEntry": {
+      "type": "object",
+      "properties": {
+        "buildInfo": {
+          "description": "build info",
+          "type": "string"
+        },
+        "version": {
+          "description": "Instance name",
           "type": "string"
         }
       }
@@ -10088,6 +10133,38 @@ func init() {
           }
         }
       }
+    },
+    "/version": {
+      "get": {
+        "description": "Get version inforrmation",
+        "summary": "Get version inforrmation in the device",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/VersionGetEntry"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintanence mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -12503,6 +12580,19 @@ func init() {
         },
         "ulclIP": {
           "description": "Access network IP address",
+          "type": "string"
+        }
+      }
+    },
+    "VersionGetEntry": {
+      "type": "object",
+      "properties": {
+        "buildInfo": {
+          "description": "build info",
+          "type": "string"
+        },
+        "version": {
+          "description": "Instance name",
           "type": "string"
         }
       }

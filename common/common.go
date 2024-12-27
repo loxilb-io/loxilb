@@ -21,6 +21,12 @@ import (
 )
 
 // This file defines the go interface implementation needed to interact with loxinet go module
+// LoxiLB Version and Build information
+const (
+	Version = "0.9.7-beta"
+)
+
+var BuildInfo string = ""
 
 const (
 	// CIStateMaster - HA Master state
