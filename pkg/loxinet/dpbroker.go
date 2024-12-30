@@ -513,6 +513,8 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
 	var ret int
 	var err error
 
+	return 0
+
 	dp.SyncMtx.Lock()
 	defer dp.SyncMtx.Unlock()
 

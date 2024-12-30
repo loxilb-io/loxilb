@@ -268,14 +268,27 @@ func DpEbpfSetLogLevel(logLevel tk.LogLevelT) {
 }
 
 // DpEbpfInit - initialize the ebpf dp subsystem
-func DpEbpfInit(clusterEn, rssEn, egrHooks, localSockPolicy, sockMapEn bool, nodeNum int, disBPF bool, logLevel tk.LogLevelT) *DpEbpfH {
+func DpEbpfInit(clusterNodes string, rssEn, egrHooks, localSockPolicy, sockMapEn bool, nodeNum int, disBPF bool, logLevel tk.LogLevelT) *DpEbpfH {
 	var cfg C.struct_ebpfcfg
 
-	if clusterEn {
-		cfg.have_mtrace = 1
-	} else {
-		cfg.have_mtrace = 0
+	cNodes := strings.Split(clusterNodes, ",")
+	for i, cNode := range cNodes {
+		addr := net.ParseIP(cNode)
+		if addr == nil {
+			continue
+		}
+		if i == 0 {
+			cfg.cluster1 = C.CString(cNode)
+		} else if i == 1 {
+			cfg.cluster2 = C.CString(cNode)
+		}
 	}
+
+	//if clusterEn {
+	//	cfg.have_mtrace = 1
+	//} else {
+	//	cfg.have_mtrace = 0
+	//}
 	if egrHooks {
 		cfg.egr_hooks = 1
 	} else {
