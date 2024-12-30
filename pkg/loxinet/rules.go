@@ -1563,6 +1563,13 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		return RuleEpCountErr, errors.New("endpoints-range1 error")
 	}
 
+	// Validate persist timeout
+	if serv.Sel == cmn.LbSelRrPersist {
+		if serv.PersistTimeout == 0 || serv.PersistTimeout > 24*60*60 {
+			serv.PersistTimeout = DefaultPersistTimeOut
+		}
+	}
+
 	// For ICMP service, non-zero port can't be specified
 	if serv.Proto == "icmp" && serv.ServPort != 0 {
 		return RuleUnknownServiceErr, errors.New("malformed-service error")
@@ -1834,14 +1841,8 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 	r.bgp = serv.Bgp
 	r.ci = cmn.CIDefault
 	r.privIP = privIP
-	r.pTO = 0
-	if serv.Sel == cmn.LbSelRrPersist {
-		if serv.PersistTimeout == 0 || serv.PersistTimeout > 24*60*60 {
-			r.pTO = DefaultPersistTimeOut
-		} else {
-			r.pTO = serv.PersistTimeout
-		}
-	}
+	r.pTO = serv.PersistTimeout
+
 	r.locIPs = make(map[string]struct{})
 
 	if !serv.Snat {
