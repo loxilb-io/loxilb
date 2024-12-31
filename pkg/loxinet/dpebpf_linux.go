@@ -277,6 +277,9 @@ func DpEbpfInit(clusterNodes string, rssEn, egrHooks, localSockPolicy, sockMapEn
 		if addr == nil {
 			continue
 		}
+		if utils.IsIPHostAddr(cNode) {
+			continue
+		}
 		if i == 0 {
 			cfg.cluster1 = C.CString(cNode)
 		} else if i == 1 {
