@@ -292,7 +292,7 @@ func loxiNetInit() {
 			RunCommand(MkMountCG2, false)
 		}
 		// Initialize the ebpf datapath subsystem
-		mh.dpEbpf = DpEbpfInit(opts.Opts.ClusterNodes, mh.rssEn, mh.eHooks, mh.lSockPolicy, mh.sockMapEn, mh.self, mh.disBPF, logLevel)
+		mh.dpEbpf = DpEbpfInit(clusterMode, mh.rssEn, mh.eHooks, mh.lSockPolicy, mh.sockMapEn, mh.self, mh.disBPF, logLevel)
 		mh.dp = DpBrokerInit(mh.dpEbpf, rpcMode)
 
 		// Initialize the security zone subsystem

@@ -26,8 +26,6 @@ import (
 	"net/rpc"
 	"os"
 	"runtime/debug"
-	"time"
-
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
 	"google.golang.org/grpc"
@@ -212,10 +210,6 @@ func startxSyncGRPCServer() {
 func LoxiXsyncMain(mode string) {
 	if opts.Opts.ClusterNodes == "none" {
 		return
-	}
-
-	for {
-		time.Sleep(1 * time.Second)
 	}
 
 	// Stack trace logger
