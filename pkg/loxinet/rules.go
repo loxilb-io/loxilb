@@ -78,7 +78,8 @@ const (
 
 // constants
 const (
-	MaxLBEndPoints             = 24
+	MaxLBEndPoints             = 1500
+	MaxLBEndPointsRR           = 32
 	DflLbaInactiveTries        = 2          // Default number of inactive tries before LB arm is turned off
 	MaxDflLbaInactiveTries     = 100        // Max number of inactive tries before LB arm is turned off
 	DflLbaCheckTimeout         = 10         // Default timeout for checking LB arms
@@ -90,7 +91,7 @@ const (
 	LbMaxInactiveTimeout       = 24 * 3600  // Maximum inactive timeout for established sessions
 	MaxEndPointCheckers        = 4          // Maximum helpers to check endpoint health
 	EndPointCheckerDuration    = 2          // Duration at which ep-helpers will run
-	MaxEndPointSweeps          = 20         // Maximum end-point sweeps per round
+	MaxEndPointSweeps          = 40         // Maximum end-point sweeps per round
 	VIPSweepDuration           = 30         // Duration of periodic VIP maintenance
 	DefaultPersistTimeOut      = 10800      // Default persistent LB session timeout
 	SnatFwMark                 = 0x80000000 // Snat Marker
@@ -910,7 +911,8 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleLBEp, doAddOp bool, liv
 			pType = HostProbeConnectTCP
 			pPort = nep.xPort
 		} else if r.tuples.l4Prot.val == 17 {
-			pType = HostProbeConnectUDP
+			//pType = HostProbeConnectUDP
+			pType = HostProbeConnectTCP // FIXME
 			pPort = nep.xPort
 		} else if r.tuples.l4Prot.val == 1 {
 			pType = HostProbePing
@@ -1215,7 +1217,7 @@ func (R *RuleH) mkHostAssocs(r *ruleEnt) bool {
 	}
 
 	for _, addr := range addrs {
-		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && !ipnet.IP.IsUnspecified() {
 			// check if IPv4 or IPv6 is not nil
 			if ipnet.IP.To4() != nil || ipnet.IP.To16() != nil {
 				if tk.IsNetIPv4(ipnet.IP.String()) && r.tuples.l3Dst.addr.IP.String() != ipnet.IP.String() {
@@ -1259,7 +1261,8 @@ func (R *RuleH) syncEPHostState2Rule(rule *ruleEnt, checkNow bool) bool {
 			if rule.tuples.l4Prot.val == 6 {
 				sType = HostProbeConnectTCP
 			} else if rule.tuples.l4Prot.val == 17 {
-				sType = HostProbeConnectUDP
+				//sType = HostProbeConnectUDP
+				sType = HostProbeConnectTCP // FIXME
 			} else if rule.tuples.l4Prot.val == 1 {
 				sType = HostProbePing
 			} else if rule.tuples.l4Prot.val == 132 {
@@ -1571,6 +1574,12 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		return RuleEpCountErr, errors.New("endpoints-range error")
 	}
 
+	if (serv.Sel == cmn.LbSelRr || serv.Sel == cmn.LbSelLeastConnections ||
+		serv.Sel == cmn.LbSelPrio || serv.Sel == cmn.LbSelN2 || serv.Sel == cmn.LbSelN3) &&
+		len(servEndPoints) > MaxLBEndPointsRR {
+		return RuleEpCountErr, errors.New("endpoints-range1 error")
+	}
+
 	// Validate persist timeout
 	if serv.Sel == cmn.LbSelRrPersist {
 		if serv.PersistTimeout == 0 || serv.PersistTimeout > 24*60*60 {
@@ -1855,6 +1864,7 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 	r.ci = cmn.CIDefault
 	r.privIP = privIP
 	r.pTO = serv.PersistTimeout
+
 	r.locIPs = make(map[string]struct{})
 
 	if !serv.Snat {
@@ -2920,19 +2930,19 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 		if at.sel == cmn.LbSelPrio {
 			j := 0
 			k := 0
-			var small [MaxLBEndPoints]int
-			var neps [MaxLBEndPoints]ruleLBEp
+			var small [MaxLBEndPointsRR]int
+			var neps [MaxLBEndPointsRR]ruleLBEp
 			for i, ep := range at.endPoints {
 				if ep.inActiveEP {
 					continue
 				}
 				oEp := &at.endPoints[i]
-				sw := (int(ep.weight) * MaxLBEndPoints) / 100
+				sw := (int(ep.weight) * MaxLBEndPointsRR) / 100
 				if sw == 0 {
 					small[k] = i
 					k++
 				}
-				for x := 0; x < sw && j < MaxLBEndPoints; x++ {
+				for x := 0; x < sw && j < MaxLBEndPointsRR; x++ {
 					neps[j].xIP = oEp.xIP
 					neps[j].rIP = oEp.rIP
 					neps[j].xPort = oEp.xPort
@@ -2945,12 +2955,12 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 					j++
 				}
 			}
-			if j < MaxLBEndPoints {
+			if j < MaxLBEndPointsRR {
 				v := 0
 				if k == 0 {
 					k = len(at.endPoints)
 				}
-				for j < MaxLBEndPoints {
+				for j < MaxLBEndPointsRR {
 					idx := small[v%k]
 					oEp := &at.endPoints[idx]
 					neps[j].xIP = oEp.xIP
@@ -3009,8 +3019,10 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 		return -1
 	}
 
-	mh.dp.ToDpCh <- nWork
-	r.VIP2DP(nWork.Work)
+	if !nWork.ServiceIP.IsUnspecified() {
+		mh.dp.ToDpCh <- nWork
+		r.VIP2DP(nWork.Work)
+	}
 
 	if mode == cmn.LBModeHostOneArm {
 		for locIP := range r.locIPs {
