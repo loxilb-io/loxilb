@@ -271,23 +271,23 @@ func DpEbpfSetLogLevel(logLevel tk.LogLevelT) {
 func DpEbpfInit(clusterNodes string, rssEn, egrHooks, localSockPolicy, sockMapEn bool, nodeNum int, disBPF bool, logLevel tk.LogLevelT) *DpEbpfH {
 	var cfg C.struct_ebpfcfg
 
-	cNodes := strings.Split(clusterNodes, ",")
-	for i, cNode := range cNodes {
-		addr := net.ParseIP(cNode)
-		if addr == nil {
-			continue
-		}
-		if utils.IsIPHostAddr(cNode) {
-			continue
-		}
-		if i == 0 {
-			cfg.cluster1 = C.CString(cNode)
-		} else if i == 1 {
-			cfg.cluster2 = C.CString(cNode)
-		}
-	}
+	//cNodes := strings.Split(clusterNodes, ",")
+	//for i, cNode := range cNodes {
+	//	addr := net.ParseIP(cNode)
+	//	if addr == nil {
+	//		continue
+	//	}
+	//	if utils.IsIPHostAddr(cNode) {
+	//		continue
+	//	}
+	//	if i == 0 {
+	//		cfg.cluster1 = C.CString(cNode)
+	//	} else if i == 1 {
+	//		cfg.cluster2 = C.CString(cNode)
+	//	}
+	//}
 
-	//if clusterEn {
+	//if len(clusterEn) > 0 {
 	//	cfg.have_mtrace = 1
 	//} else {
 	//	cfg.have_mtrace = 0
@@ -1931,6 +1931,38 @@ func (e *DpEbpfH) DpSockVIPAdd(w *SockVIPDpWorkQ) int {
 // DpSockVIPDel - routine to work on a ebpf local VIP-port rewrite delete
 func (e *DpEbpfH) DpSockVIPDel(w *SockVIPDpWorkQ) int {
 	ec := e.DpSockVIPMod(w)
+	if ec != 0 {
+		*w.Status = DpRemoveErr
+	} else {
+		*w.Status = 0
+	}
+	return ec
+}
+
+// DpCnodeAdd - routine to work on adding a cnode
+func (e *DpEbpfH) DpCnodeAdd(w *PeerDpWorkQ) int {
+	cnode := w.PeerIP.String()
+
+	cnodeStr := C.CString(cnode)
+	defer C.free(unsafe.Pointer(cnodeStr))
+
+	ec := int(C.llb_add_cnode(cnodeStr))
+	if ec != 0 {
+		*w.Status = DpCreateErr
+	} else {
+		*w.Status = 0
+	}
+	return ec
+}
+
+// DpCnodeDel - routine to work on deleting a cnode
+func (e *DpEbpfH) DpCnodeDel(w *PeerDpWorkQ) int {
+	cnode := w.PeerIP.String()
+
+	cnodeStr := C.CString(cnode)
+	defer C.free(unsafe.Pointer(cnodeStr))
+
+	ec := int(C.llb_delete_cnode(cnodeStr))
 	if ec != 0 {
 		*w.Status = DpRemoveErr
 	} else {

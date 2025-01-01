@@ -18,15 +18,13 @@ package loxinet
 
 import (
 	"fmt"
+	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 	"net"
 	"os"
 	"runtime/debug"
 	"sync"
 	"time"
-
-	tk "github.com/loxilb-io/loxilib"
-
-	cmn "github.com/loxilb-io/loxilb/common"
 )
 
 // man names constants
@@ -41,6 +39,10 @@ const (
 	MapNameULCL = "ULCL"
 	MapNameIpol = "IPOL"
 	MapNameFw4  = "FW4"
+)
+
+const (
+	UseRPCPeer = false
 )
 
 // error codes
@@ -448,6 +450,8 @@ type DpHookInterface interface {
 	DpCtDel(w *DpCtInfo) int
 	DpSockVIPAdd(w *SockVIPDpWorkQ) int
 	DpSockVIPDel(w *SockVIPDpWorkQ) int
+	DpCnodeAdd(w *PeerDpWorkQ) int
+	DpCnodeDel(w *PeerDpWorkQ) int
 	DpTableGC()
 	DpCtGetAsync()
 	DpGetLock()
@@ -770,27 +774,35 @@ func (dp *DpH) DpWorkOnSockVIP(vsWq *SockVIPDpWorkQ) DpRetT {
 // DpWorkOnPeerOp - routine to work on a peer request for clustering
 func (dp *DpH) DpWorkOnPeerOp(pWq *PeerDpWorkQ) DpRetT {
 	if pWq.Work == DpCreate {
-		var newPeer DpPeer
-		for _, pe := range dp.Peers {
-			if pe.Peer.Equal(pWq.PeerIP) {
-				return DpCreateErr
-			}
-		}
-		newPeer.Peer = pWq.PeerIP
-		dp.Peers = append(dp.Peers, newPeer)
-		tk.LogIt(tk.LogInfo, "Added cluster-peer %s\n", newPeer.Peer.String())
-		return 0
-	} else if pWq.Work == DpRemove {
-		for idx := range dp.Peers {
-			pe := &dp.Peers[idx]
-			if pe.Peer.Equal(pWq.PeerIP) {
-				if pe.Client != nil {
-					dp.RPC.RPCHooks.RPCClose(pe)
+		if UseRPCPeer {
+			var newPeer DpPeer
+			for _, pe := range dp.Peers {
+				if pe.Peer.Equal(pWq.PeerIP) {
+					return DpCreateErr
 				}
-				dp.Peers = append(dp.Peers[:idx], dp.Peers[idx+1:]...)
-				tk.LogIt(tk.LogInfo, "Deleted cluster-peer %s\n", pWq.PeerIP.String())
-				return 0
 			}
+			newPeer.Peer = pWq.PeerIP
+			dp.Peers = append(dp.Peers, newPeer)
+			tk.LogIt(tk.LogInfo, "Added cluster-peer %s\n", newPeer.Peer.String())
+			return 0
+		} else {
+			return dp.DpHooks.DpCnodeAdd(pWq)
+		}
+	} else if pWq.Work == DpRemove {
+		if UseRPCPeer {
+			for idx := range dp.Peers {
+				pe := &dp.Peers[idx]
+				if pe.Peer.Equal(pWq.PeerIP) {
+					if pe.Client != nil {
+						dp.RPC.RPCHooks.RPCClose(pe)
+					}
+					dp.Peers = append(dp.Peers[:idx], dp.Peers[idx+1:]...)
+					tk.LogIt(tk.LogInfo, "Deleted cluster-peer %s\n", pWq.PeerIP.String())
+					return 0
+				}
+			}
+		} else {
+			return dp.DpHooks.DpCnodeDel(pWq)
 		}
 	}
 
