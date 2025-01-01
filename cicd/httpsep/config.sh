@@ -55,7 +55,7 @@ $dexec llb1 pkill loxilb
 $dexec llb1 ip link del llb0
 docker exec -dt llb1 /root/loxilb-io/loxilb/loxilb
 
-sleep 5
+sleep 25
 
 $dexec llb1 loxicmd create endpoint 31.31.31.1 --probetype=https --probeport=8080 --probereq="health" --proberesp="OK" --period=60 --retries=2
 $dexec llb1 loxicmd create endpoint 32.32.32.1 --probetype=https --probeport=8080 --probereq="health" --proberesp="OK" --period=60 --retries=2

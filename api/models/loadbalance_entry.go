@@ -409,6 +409,9 @@ type LoadbalanceEntryServiceArguments struct {
 	// block-number if any of this LB entry
 	Block uint32 `json:"block,omitempty"`
 
+	// flag to indicate an egress rule
+	Egress bool `json:"egress,omitempty"`
+
 	// IP address for external access
 	ExternalIP string `json:"externalIP,omitempty"`
 

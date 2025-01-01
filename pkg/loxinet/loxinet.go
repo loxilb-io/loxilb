@@ -191,6 +191,7 @@ func loxiNetTicker(bgpPeerMode bool) {
 				if !bgpPeerMode {
 					mh.dpEbpf.DpEbpfUnInit()
 				}
+				mh.has.CIDestroy()
 				apiserver.ApiServerShutOk()
 			}
 		case t := <-mh.ticker.C:
@@ -215,16 +216,22 @@ func sysctlInit() {
 func loxiNetInit() {
 	var rpcMode int
 
-	kaArgs := KAString2Mode(opts.Opts.Ka)
+	// Initialize logger and specify the log file
+	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
+	logLevel := LogString2Level(opts.Opts.LogLevel)
+	mh.logger = tk.LogItInit(logfile, logLevel, true)
+
+	kaArgs := KAString2Mode(opts.Opts.Ka, opts.Opts.ClusterInterface)
 	clusterMode := false
 	if opts.Opts.ClusterNodes != "none" {
 		clusterMode = true
 	}
 
-	// Initialize logger and specify the log file
-	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
-	logLevel := LogString2Level(opts.Opts.LogLevel)
-	mh.logger = tk.LogItInit(logfile, logLevel, true)
+	// Initialize the clustering subsystem
+	if mh.has = CIInit(kaArgs); mh.has == nil {
+		tk.LogIt(tk.LogError, "cluster init failed\n")
+		os.Exit(1)
+	}
 
 	// It is important to make sure loxilb's eBPF filesystem
 	// is in place and mounted to make sure maps are pinned properly
@@ -299,8 +306,6 @@ func loxiNetInit() {
 			return
 		}
 
-		// Initialize the clustering subsystem
-		mh.has = CIInit(kaArgs)
 		if clusterMode {
 			if opts.Opts.Bgp {
 				tk.LogIt(tk.LogInfo, "init-wait cluster mode\n")

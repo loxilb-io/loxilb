@@ -346,8 +346,32 @@ func Ntohll(i uint64) uint64 {
 	return binary.BigEndian.Uint64((*(*[8]byte)(unsafe.Pointer(&i)))[:])
 }
 
-// GetIfaceIpAddr - Get interface IP address
-func GetIfaceIpAddr(ifName string) (addr net.IP, err error) {
+// GetIfaceIPAddr - Get interface IP address
+func GetIfaceIPAddr(ifName string) (addr net.IP, err error) {
+	var (
+		ief    *net.Interface
+		addrs  []net.Addr
+		ipAddr net.IP
+	)
+	if ief, err = net.InterfaceByName(ifName); err != nil {
+		return nil, errors.New("not such ifname")
+	}
+	if addrs, err = ief.Addrs(); err != nil {
+		return nil, errors.New("not such addrs")
+	}
+	for _, addr := range addrs {
+		if ipAddr = addr.(*net.IPNet).IP.To4(); ipAddr != nil {
+			break
+		}
+	}
+	if ipAddr == nil {
+		return nil, errors.New("not ipv4 address")
+	}
+	return ipAddr, nil
+}
+
+// GetIfaceIP6Addr - Get interface IP address
+func GetIfaceIP6Addr(ifName string) (addr net.IP, err error) {
 	var (
 		ief    *net.Interface
 		addrs  []net.Addr
@@ -360,7 +384,8 @@ func GetIfaceIpAddr(ifName string) (addr net.IP, err error) {
 		return
 	}
 	for _, addr := range addrs {
-		if ipAddr = addr.(*net.IPNet).IP.To4(); ipAddr != nil {
+		if tk.IsNetIPv6(addr.(*net.IPNet).IP.String()) {
+			ipAddr = addr.(*net.IPNet).IP
 			break
 		}
 	}
@@ -374,7 +399,7 @@ func GetIfaceIpAddr(ifName string) (addr net.IP, err error) {
 func SendArpReq(AdvIP net.IP, ifName string) (int, error) {
 	zeroAddr := []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 
-	srcIP, err := GetIfaceIpAddr(ifName)
+	srcIP, err := GetIfaceIPAddr(ifName)
 	if err != nil {
 		return -1, err
 	}

@@ -912,7 +912,11 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_rt_tact)
 
 		if w.NMax > 0 {
-			dat.ca.act_type = C.DP_SET_RT_NHNUM
+			if w.Dst.IP.IsUnspecified() {
+				dat.ca.act_type = C.DP_SET_RT_NHNUM_DFLT
+			} else {
+				dat.ca.act_type = C.DP_SET_RT_NHNUM
+			}
 			act = (*rtL3NhAct)(getPtrOffset(unsafe.Pointer(dat),
 				C.sizeof_struct_dp_cmn_act))
 			act.naps = C.ushort(w.NMax)

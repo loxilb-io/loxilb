@@ -3041,6 +3041,9 @@ definitions:
           proxyprotocolv2:
             type: boolean
             description: flag to enable proxy protocol v2
+          egress:
+            type: boolean
+            description: flag to indicate an egress rule
       
       endpoints:
         type: array
@@ -3778,6 +3781,9 @@ definitions:
       toPort:
         type: integer
         description: Modify to given Port (Zero if port is not to be modified)
+      onDefault:
+        type: boolean
+        description: Trigger only on default cases
       counter:
         type: string
         description: traffic counters

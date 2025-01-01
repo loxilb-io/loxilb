@@ -557,6 +557,14 @@ func (ifa *Ifa) DP(work DpWorkT) int {
 
 	rmWq.PortNum = port.PortNo
 
+	if port.SInfo.PortType&cmn.PortVxlanBr == cmn.PortVxlanBr {
+		if port.SInfo.PortReal == nil {
+			tk.LogIt(tk.LogError, "No real port : %s\n", port.Name)
+			ifa.Sync = DpCreateErr
+			return -1
+		}
+	}
+
 	mh.dp.ToDpCh <- rmWq
 
 	if port.SInfo.PortType&cmn.PortVxlanBr == cmn.PortVxlanBr {
@@ -565,7 +573,9 @@ func (ifa *Ifa) DP(work DpWorkT) int {
 		rmWq.Status = &ifa.Sync
 
 		if port.SInfo.PortReal == nil {
-			return 0
+			tk.LogIt(tk.LogError, "No real port : %s(error)\n", port.Name)
+			ifa.Sync = DpCreateErr
+			return -1
 		}
 
 		up := port.SInfo.PortReal

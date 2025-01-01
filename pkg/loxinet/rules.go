@@ -96,6 +96,7 @@ const (
 	DefaultPersistTimeOut      = 10800      // Default persistent LB session timeout
 	SnatFwMark                 = 0x80000000 // Snat Marker
 	SrcChkFwMark               = 0x40000000 // Src check Marker
+	OnDfltSnatFwMark           = 0x20000000 // Ondefault Snat Marker
 )
 
 type ruleTType uint
@@ -195,6 +196,7 @@ type epHostOpts struct {
 	currProbeDuration uint32
 	probePort         uint16
 	probeActivated    bool
+	egress            bool
 }
 
 type epHost struct {
@@ -244,6 +246,7 @@ type ruleFwOpt struct {
 	record   bool
 	snatIP   string
 	snatPort uint16
+	onDflt   bool
 }
 
 type ruleFwOpts struct {
@@ -294,6 +297,7 @@ type ruleEnt struct {
 	inst     string
 	secMode  cmn.LBSec
 	ppv2En   bool
+	egress   bool
 	srcList  []*allowedSrcElem
 	locIPs   map[string]struct{}
 }
@@ -337,6 +341,7 @@ type vipElem struct {
 	ref  int
 	pVIP net.IP
 	inst string
+	egr  bool
 }
 
 type allowedSrcElem struct {
@@ -822,6 +827,7 @@ func (R *RuleH) GetLBRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.Name = data.name
 		ret.Serv.HostUrl = data.tuples.path
 		ret.Serv.ProxyProtocolV2 = data.ppv2En
+		ret.Serv.Egress = data.egress
 		if data.act.actType == RtActSnat {
 			ret.Serv.Snat = true
 		}
@@ -885,7 +891,7 @@ func validateXlateEPWeights(servEndPoints []cmn.LbEndPointArg) (int, error) {
 	return 0, nil
 }
 
-func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleLBEp, doAddOp bool, liveCheckEn bool) {
+func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleLBEp, doAddOp bool, liveCheckEn bool, egressEps bool) {
 	var hopts epHostOpts
 	pType := ""
 	pPort := uint16(0)
@@ -931,6 +937,10 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleLBEp, doAddOp bool, liv
 
 		if mh.pProbe || liveCheckEn {
 			hopts.probeActivated = true
+		}
+
+		if egressEps {
+			hopts.egress = true
 		}
 
 		epKey := makeEPKey(nep.xIP.String(), pType, pPort)
@@ -1398,11 +1408,11 @@ func (R *RuleH) unFoldRecursiveEPs(r *ruleEnt) {
 // addVIPSys - system specific operations for VIPs of a LB rule
 func (R *RuleH) addVIPSys(r *ruleEnt) {
 	if r.act.actType != RtActSnat && !strings.Contains(r.name, "ipvs") && !strings.Contains(r.name, "static") {
-		R.AddRuleVIP(r.tuples.l3Dst.addr.IP, r.RuleVIP2PrivIP(), r.inst)
+		R.AddRuleVIP(r.tuples.l3Dst.addr.IP, r.RuleVIP2PrivIP(), r.inst, r.egress)
 
 		// Take care of any secondary VIPs
 		for _, sVIP := range r.secIP {
-			R.AddRuleVIP(sVIP.sIP, sVIP.sIP, r.inst)
+			R.AddRuleVIP(sVIP.sIP, sVIP.sIP, r.inst, r.egress)
 		}
 	}
 }
@@ -1496,9 +1506,16 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 	service := ""
 	if tk.IsNetIPv4(serv.ServIP) {
 		service = serv.ServIP + "/32"
+		if service == "0.0.0.0/32" && serv.Egress && mh.has.ClusterGw != "" {
+			service = mh.has.ClusterGw + "/32"
+		}
 	} else {
 		service = serv.ServIP + "/128"
+		if service == "::/128" && serv.Egress && mh.has.ClusterGw != "" {
+			service = mh.has.ClusterGw + "/128"
+		}
 	}
+
 	_, sNetAddr, err := net.ParseCIDR(service)
 	if err != nil {
 		return RuleUnknownServiceErr, errors.New("malformed-service error")
@@ -1712,6 +1729,10 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 			return RuleExistsErr, errors.New("lbrule-exist error: cant modify rule security mode")
 		}
 
+		if eRule.egress != serv.Egress {
+			return RuleExistsErr, errors.New("lbrule-exist error: cant modify rule egress mode")
+		}
+
 		if len(retEps) == 0 {
 			tk.LogIt(tk.LogDebug, "lb-rule %s has no-endpoints: to be deleted\n", eRule.tuples.String())
 			return R.DeleteLbRule(serv)
@@ -1767,8 +1788,8 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		// eRule.managed = serv.Managed
 
 		if !serv.Snat {
-			R.modNatEpHost(eRule, delEps, false, activateProbe)
-			R.modNatEpHost(eRule, retEps, true, activateProbe)
+			R.modNatEpHost(eRule, delEps, false, activateProbe, eRule.egress)
+			R.modNatEpHost(eRule, retEps, true, activateProbe, eRule.egress)
 			R.electEPSrc(eRule)
 		}
 
@@ -1806,6 +1827,7 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 	r.secIP = nSecIP
 	r.secMode = serv.Security
 	r.ppv2En = serv.ProxyProtocolV2
+	r.egress = serv.Egress
 
 	// Per LB end-point health-check is supposed to be handled at kube-loxilb/CCM,
 	// but it certain cases like stand-alone mode, loxilb can do its own
@@ -1847,7 +1869,7 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 
 	if !serv.Snat {
 		R.foldRecursiveEPs(r)
-		R.modNatEpHost(r, lBActs.endPoints, true, activateProbe)
+		R.modNatEpHost(r, lBActs.endPoints, true, activateProbe, r.egress)
 		R.electEPSrc(r)
 		if serv.Mode == cmn.LBModeHostOneArm {
 			R.mkHostAssocs(r)
@@ -1886,8 +1908,14 @@ func (R *RuleH) DeleteLbRule(serv cmn.LbServiceArg) (int, error) {
 	service := ""
 	if tk.IsNetIPv4(serv.ServIP) {
 		service = serv.ServIP + "/32"
+		if service == "0.0.0.0/32" && serv.Egress && mh.has.ClusterGw != "" {
+			service = mh.has.ClusterGw + "/32"
+		}
 	} else {
 		service = serv.ServIP + "/128"
+		if service == "::/128" && serv.Egress && mh.has.ClusterGw != "" {
+			service = mh.has.ClusterGw + "/128"
+		}
 	}
 	_, sNetAddr, err := net.ParseCIDR(service)
 	if err != nil {
@@ -1926,7 +1954,7 @@ func (R *RuleH) DeleteLbRule(serv cmn.LbServiceArg) (int, error) {
 		activatedProbe = true
 	}
 	if rule.act.actType != RtActSnat {
-		R.modNatEpHost(rule, eEps, false, activatedProbe)
+		R.modNatEpHost(rule, eEps, false, activatedProbe, rule.egress)
 		R.unFoldRecursiveEPs(rule)
 	}
 
@@ -1995,6 +2023,7 @@ func (R *RuleH) GetFwRule() ([]cmn.FwRuleMod, error) {
 			ret.Opts.Mark = fwOpts.opt.fwMark
 		}
 		ret.Opts.Record = fwOpts.opt.record
+		ret.Opts.OnDefault = fwOpts.opt.onDflt
 
 		data.Fw2DP(DpStatsGetImm)
 		ret.Opts.Counter = fmt.Sprintf("%v:%v", data.stat.packets, data.stat.bytes)
@@ -2077,6 +2106,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	fwOpts.op = RtActDrop
 	fwOpts.opt.fwMark = fwOptArgs.Mark
 	fwOpts.opt.record = fwOptArgs.Record
+	fwOpts.opt.onDflt = fwOptArgs.OnDefault
 
 	if fwOptArgs.Allow {
 		r.act.actType = RtActFwd
@@ -2103,6 +2133,10 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 
 		if fwOpts.opt.fwMark != 0 {
 			return RuleArgsErr, errors.New("malformed-args fwmark !=0 for snat-error")
+		}
+
+		if fwOpts.opt.onDflt {
+			R.AddRuleVIP(net.ParseIP(fwOptArgs.ToIP), nil, cmn.CIDefault, true)
 		}
 	}
 
@@ -2135,12 +2169,25 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 			return RuleArgsErr, errors.New("rule-snat error")
 		}
 
-		fwOpts.opt.fwMark = uint32(r.ruleNum) | SnatFwMark
+		if !fwOptArgs.OnDefault {
+			fwOpts.opt.fwMark = uint32(r.ruleNum) | SnatFwMark
+		} else {
+			fwOpts.opt.fwMark = uint32(r.ruleNum) | OnDfltSnatFwMark
+		}
 	}
 
 	tk.LogIt(tk.LogDebug, "fw-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
 	R.tables[RtFw].eMap[rt.ruleKey()] = r
+
+	if fwOptArgs.OnDefault {
+		state, err := mh.has.CIStateGetInst(cmn.CIDefault)
+		if err == nil {
+			if state == "BACKUP" {
+				return 0, nil
+			}
+		}
+	}
 
 	r.Fw2DP(DpCreate)
 
@@ -2203,7 +2250,6 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 
 	if rule.act.actType == RtActSnat {
 		// Delete implicit SNAT Rule
-
 		var servArg cmn.LbServiceArg
 		servArg.ServIP = "0.0.0.0"
 		servArg.ServPort = 0
@@ -2216,6 +2262,9 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 		switch fwOpts := rule.act.action.(type) {
 		case *ruleFwOpts:
 			servArg.Name = fmt.Sprintf("%s:%s:%d", "Masq", fwOpts.opt.snatIP, fwOpts.opt.snatPort)
+			if fwOpts.opt.onDflt {
+				R.DeleteRuleVIP(net.ParseIP(fwOpts.opt.snatIP))
+			}
 		}
 
 		_, err := R.DeleteLbRule(servArg)
@@ -2359,7 +2408,11 @@ func (R *RuleH) AddEPHost(apiCall bool, hostName string, name string, args epHos
 	ep := R.epMap[epKey]
 	if ep != nil {
 		if apiCall {
+			egress := ep.opts.egress
 			ep.opts = args
+			if egress {
+				ep.opts.egress = egress
+			}
 			ep.opts.currProbeDuration = ep.opts.probeDuration
 			ep.initProberOn = true
 			return 0, nil
@@ -2383,6 +2436,15 @@ func (R *RuleH) AddEPHost(apiCall bool, hostName string, name string, args epHos
 	ep.hID = R.lepHID % MaxEndPointCheckers
 	//ep.sT = time.Now()
 	R.lepHID++
+
+	if args.egress {
+		epNode := cmn.ClusterNodeMod{Addr: net.ParseIP(hostName),
+			Egress: true}
+		_, err := mh.has.ClusterNodeAdd(epNode)
+		if err != nil {
+			return -1, errors.New("ep-host add failed as cluster node")
+		}
+	}
 
 	R.epMap[epKey] = ep
 
@@ -2684,7 +2746,7 @@ func (R *RuleH) RulesSync() {
 				ip = net.ParseIP(vip)
 			}
 			if ip != nil {
-				R.AdvRuleVIPIfL2(ip, net.ParseIP(vip), vipElem.inst)
+				R.AdvRuleVIP(ip, net.ParseIP(vip), vipElem.inst, vipElem.egr)
 			}
 		}
 		R.vipST = time.Now()
@@ -2792,6 +2854,10 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 
 	if r.addrRslv {
 		return -1
+	}
+
+	if r.egress {
+		return 0
 	}
 
 	nWork := new(LBDpWorkQ)
@@ -3048,6 +3114,7 @@ func (r *ruleEnt) Fw2DP(work DpWorkT) int {
 		}
 		nWork.FwVal2 = at.opt.fwMark
 		nWork.FwRecord = at.opt.record
+		nWork.OnDflt = at.opt.onDflt
 	default:
 		return -1
 	}
@@ -3139,7 +3206,7 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 
 }
 
-func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP, inst string) error {
+func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool) error {
 	if inst == "" {
 		inst = cmn.CIDefault
 	}
@@ -3189,6 +3256,10 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP, inst string) error {
 			}
 		}
 
+		if egress {
+			mh.has.CIAddClusterRoute(IP.String(), false)
+		}
+
 	} else if ciState != "NOT_DEFINED" {
 		if utils.IsIPHostAddr(IP.String()) {
 			ifname := "lo"
@@ -3204,6 +3275,11 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP, inst string) error {
 				tk.LogIt(tk.LogInfo, "lb-rule vip %s:%s deleted\n", IP.String(), ifname)
 			}
 		}
+
+		if egress {
+			mh.has.CIAddClusterRoute(IP.String(), true)
+		}
+
 	} else {
 		if _, foundIP := R.zone.L3.IfaAddrLocal(IP); foundIP == nil {
 			dev := fmt.Sprintf("llb-rule-%s", IP.String())
@@ -3215,12 +3291,16 @@ func (R *RuleH) AdvRuleVIPIfL2(IP net.IP, eIP net.IP, inst string) error {
 				}
 			}
 		}
+
+		if egress {
+			mh.has.CIAddClusterRoute(IP.String(), false)
+		}
 	}
 
 	return nil
 }
 
-func (R *RuleH) RuleVIPSyncToClusterState() {
+func (R *RuleH) RulesSyncToClusterState() {
 
 	// For Cloud integrations, there is only default instance
 	ciState, _ := mh.has.CIStateGetInst(cmn.CIDefault)
@@ -3232,13 +3312,23 @@ func (R *RuleH) RuleVIPSyncToClusterState() {
 		}
 	}
 
+	for _, eFw := range R.tables[RtFw].eMap {
+		if eFw.act.action.(*ruleFwOpts).opt.onDflt {
+			if ciState == "MASTER" || ciState != "BACKUP" {
+				eFw.Fw2DP(DpCreate)
+			} else if ciState == "BACKUP" {
+				eFw.Fw2DP(DpRemove)
+			}
+		}
+	}
+
 	for vip, vipElem := range R.vipMap {
 		ip := vipElem.pVIP
 		if ip == nil {
 			ip = net.ParseIP(vip)
 		}
 		if ip != nil {
-			R.AdvRuleVIPIfL2(ip, net.ParseIP(vip), vipElem.inst)
+			R.AdvRuleVIP(ip, net.ParseIP(vip), vipElem.inst, vipElem.egr)
 		}
 	}
 }
@@ -3251,13 +3341,14 @@ func (r *ruleEnt) RuleVIP2PrivIP() net.IP {
 	}
 }
 
-func (R *RuleH) AddRuleVIP(VIP net.IP, pVIP net.IP, inst string) {
+func (R *RuleH) AddRuleVIP(VIP net.IP, pVIP net.IP, inst string, egress bool) {
 	vipEnt := R.vipMap[VIP.String()]
 	if vipEnt == nil {
 		vipEnt = new(vipElem)
 		vipEnt.ref = 1
 		vipEnt.pVIP = pVIP
 		vipEnt.inst = inst
+		vipEnt.egr = egress
 		R.vipMap[VIP.String()] = vipEnt
 	} else {
 		vipEnt.ref++
@@ -3265,9 +3356,9 @@ func (R *RuleH) AddRuleVIP(VIP net.IP, pVIP net.IP, inst string) {
 
 	if vipEnt.ref == 1 {
 		if pVIP == nil {
-			R.AdvRuleVIPIfL2(VIP, VIP, inst)
+			R.AdvRuleVIP(VIP, VIP, inst, vipEnt.egr)
 		} else {
-			R.AdvRuleVIPIfL2(pVIP, VIP, inst)
+			R.AdvRuleVIP(pVIP, VIP, inst, vipEnt.egr)
 		}
 	}
 }

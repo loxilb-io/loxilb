@@ -1,4 +1,4 @@
-name: SCTP-LB-Sanity-CI
+name: Egr-LB-Sanity-CI
 
 on:
   push:
@@ -13,11 +13,11 @@ on:
         required: true
         default: 'warning'
       tags:
-        description: 'SCTP LB Sanity'
+        description: 'Egress LB Sanity'
        
 jobs:
   build:
-    name: sctp-lb-sanity
+    name: advanced-lb-sanity
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -38,25 +38,7 @@ jobs:
       - run: id=`docker ps -f name=loxilb | cut  -d " "  -f 1 | grep -iv  "CONTAINER"` && docker commit $id ghcr.io/loxilb-io/loxilb:latest
       - run: docker stop loxilb && docker rm loxilb
       - run: |
-             cd cicd/sctplb/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/sctponearm/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/sctplbdsr/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/sctplblc/
+             cd cicd/egresslb/
              ./config.sh
              ./validation.sh
              ./rmconfig.sh

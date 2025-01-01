@@ -40,4 +40,5 @@ var Opts struct {
 	ConfigPath        string         `long:"config-path" description:"Config file path" default:"/etc/loxilb/"`
 	ProxyModeOnly     bool           `long:"proxyonlymode" description:"Run loxilb in proxy mode only, no Datapath"`
 	WhiteList         string         `long:"whitelist" description:"Regex string of whitelisted interface(experimental)" default:"none"`
+	ClusterInterface  string         `long:"clusterinterface" description:"cluster interface for egress HA" default:""`
 }
