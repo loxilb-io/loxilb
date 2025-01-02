@@ -24,9 +24,8 @@ import (
 	"sync"
 	"time"
 
-	tk "github.com/loxilb-io/loxilib"
-
 	cmn "github.com/loxilb-io/loxilb/common"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 // man names constants

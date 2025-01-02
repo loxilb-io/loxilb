@@ -911,6 +911,7 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleLBEp, doAddOp bool, liv
 			pPort = nep.xPort
 		} else if r.tuples.l4Prot.val == 17 {
 			pType = HostProbeConnectUDP
+			pType = HostProbeConnectTCP // FIXME
 			pPort = nep.xPort
 		} else if r.tuples.l4Prot.val == 1 {
 			pType = HostProbePing
@@ -1215,7 +1216,7 @@ func (R *RuleH) mkHostAssocs(r *ruleEnt) bool {
 	}
 
 	for _, addr := range addrs {
-		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && !ipnet.IP.IsUnspecified() {
 			// check if IPv4 or IPv6 is not nil
 			if ipnet.IP.To4() != nil || ipnet.IP.To16() != nil {
 				if tk.IsNetIPv4(ipnet.IP.String()) && r.tuples.l3Dst.addr.IP.String() != ipnet.IP.String() {
@@ -1571,6 +1572,13 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		return RuleEpCountErr, errors.New("endpoints-range error")
 	}
 
+	// Validate persist timeout
+	if serv.Sel == cmn.LbSelRrPersist {
+		if serv.PersistTimeout == 0 || serv.PersistTimeout > 24*60*60 {
+			serv.PersistTimeout = DefaultPersistTimeOut
+		}
+	}
+
 	// For ICMP service, non-zero port can't be specified
 	if serv.Proto == "icmp" && serv.ServPort != 0 {
 		return RuleUnknownServiceErr, errors.New("malformed-service error")
@@ -1847,14 +1855,8 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 	r.bgp = serv.Bgp
 	r.ci = cmn.CIDefault
 	r.privIP = privIP
-	r.pTO = 0
-	if serv.Sel == cmn.LbSelRrPersist {
-		if serv.PersistTimeout == 0 || serv.PersistTimeout > 24*60*60 {
-			r.pTO = DefaultPersistTimeOut
-		} else {
-			r.pTO = serv.PersistTimeout
-		}
-	}
+	r.pTO = serv.PersistTimeout
+
 	r.locIPs = make(map[string]struct{})
 
 	if !serv.Snat {
@@ -3009,8 +3011,10 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 		return -1
 	}
 
-	mh.dp.ToDpCh <- nWork
-	r.VIP2DP(nWork.Work)
+	if !nWork.ServiceIP.IsUnspecified() {
+		mh.dp.ToDpCh <- nWork
+		r.VIP2DP(nWork.Work)
+	}
 
 	if mode == cmn.LBModeHostOneArm {
 		for locIP := range r.locIPs {

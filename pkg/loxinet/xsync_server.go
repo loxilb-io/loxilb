@@ -26,7 +26,6 @@ import (
 	"net/rpc"
 	"os"
 	"runtime/debug"
-
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
 	"google.golang.org/grpc"
