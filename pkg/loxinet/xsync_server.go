@@ -20,15 +20,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	opts "github.com/loxilb-io/loxilb/options"
+	tk "github.com/loxilb-io/loxilib"
+	"google.golang.org/grpc"
 	"io"
 	"net"
 	"net/http"
 	"net/rpc"
 	"os"
 	"runtime/debug"
-	opts "github.com/loxilb-io/loxilb/options"
-	tk "github.com/loxilb-io/loxilib"
-	"google.golang.org/grpc"
 )
 
 // DpWorkOnBlockCtAdd - Add block CT entries from remote goRPC client
