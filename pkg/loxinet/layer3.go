@@ -281,6 +281,12 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP, findAny bool) (int, net.IP, st
 					continue
 				}
 				if len(ifa.Ifas) > 0 {
+					for _, ifaEnt := range ifa.Ifas {
+						if (tk.IsNetIPv4(addr.String()) && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String())) ||
+							(tk.IsNetIPv6(addr.String()) && tk.IsNetIPv6(ifaEnt.IfaNet.IP.String())) {
+							return 0, ifaEnt.IfaAddr, Obj
+						}
+					}
 					return 0, ifa.Ifas[0].IfaAddr, Obj
 				}
 			}
@@ -309,6 +315,12 @@ func (l3 *L3H) IfaSelect(Obj string, addr net.IP, findAny bool) (int, net.IP, st
 
 	// Select first IP
 	if len(ifa.Ifas) > 0 {
+		for _, ifaEnt := range ifa.Ifas {
+			if (tk.IsNetIPv4(addr.String()) && tk.IsNetIPv4(ifaEnt.IfaNet.IP.String())) ||
+				(tk.IsNetIPv6(addr.String()) && tk.IsNetIPv6(ifaEnt.IfaNet.IP.String())) {
+				return 0, ifaEnt.IfaAddr, Obj
+			}
+		}
 		return 0, ifa.Ifas[0].IfaAddr, Obj
 	}
 
