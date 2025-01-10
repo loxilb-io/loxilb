@@ -36,16 +36,17 @@ done
 respArr=( "server1" "server1" "server1"
           "server1" "server1" "server1"
           "server1" "server1" "server1"
+          "server1" "server1" "server1"
+          "server2" "server2" "server2"
           "server2" "server2" "server2"
           "server2" "server2" "server2"
           "server2" "server2" "server2"
           "server3" "server3" "server3"
-          "server3" "server1" "server1"
-          "server1" "server3" "server3"
+          "server3" "server3" "server3"
           "server1" "server1"
-        )
+         )
 
-for i in {0..23}
+for i in {0..31}
 do
     res=$($hexec l3h1 curl --max-time 10 -s 20.20.20.1:2020)
     echo $i:$res
