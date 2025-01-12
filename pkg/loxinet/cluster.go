@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"regexp"
+	"strconv"
 	"time"
 
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
@@ -144,11 +146,40 @@ func (ci *CIStateH) CISpawn() {
 	}
 }
 
+func parseInstance(input string) (int, error) {
+	// Define a regex pattern to match "<any-string>-inst<number>"
+	re := regexp.MustCompile(`^[a-zA-Z0-9_-]+-inst(\d+)$`)
+
+	matches := re.FindStringSubmatch(input)
+	if matches == nil || len(matches) < 2 {
+		return 0, fmt.Errorf("no match found in input: %s", input)
+	}
+
+	number, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse number: %v", err)
+	}
+
+	return number, nil
+}
+
 // CIStateGetInst - routine to get HA state
 func (h *CIStateH) CIStateGetInst(inst string) (string, error) {
 
 	if ci, ok := h.ClusterMap[inst]; ok {
 		return ci.StateStr, nil
+	}
+
+	if inst == cmn.CIDefault {
+		for ciStr, ci := range h.ClusterMap {
+			instNum, err := parseInstance(ciStr)
+			if err != nil {
+				continue
+			}
+			if instNum == 0 {
+				return ci.StateStr, nil
+			}
+		}
 	}
 
 	return "NOT_DEFINED", errors.New("not found")
