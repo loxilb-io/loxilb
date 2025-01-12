@@ -37,7 +37,7 @@ const BFDPort = 3784
 const BFDDefRetryCount = 3
 const (
 	// CIDefault - Default CI Instance name
-	CIDefault = "default"
+	CIDefault = "llb-inst0"
 )
 
 const (
