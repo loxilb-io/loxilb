@@ -170,18 +170,6 @@ func (h *CIStateH) CIStateGetInst(inst string) (string, error) {
 		return ci.StateStr, nil
 	}
 
-	if inst == cmn.CIDefault {
-		for ciStr, ci := range h.ClusterMap {
-			instNum, err := parseInstance(ciStr)
-			if err != nil {
-				continue
-			}
-			if instNum == 0 {
-				return ci.StateStr, nil
-			}
-		}
-	}
-
 	return "NOT_DEFINED", errors.New("not found")
 }
 
