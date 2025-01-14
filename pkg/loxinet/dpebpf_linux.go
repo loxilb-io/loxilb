@@ -99,8 +99,8 @@ const (
 
 // constants
 const (
-	dpEbpfLinuxTiVal     = 10
-	ctGCTiValDefault     = 25
+	dpEbpfLinuxTiVal     = 5
+	ctGCTiValDefault     = 15
 	ctiDeleteSyncRetries = 3
 	blkCtiMaxLen         = 8192
 	mapNotifierChLen     = 8096

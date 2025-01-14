@@ -23,6 +23,7 @@ Additionally, loxilb also supports:
 - [x] kube-proxy replacement with eBPF(full cluster-mesh implementation for Kubernetes)
 - [x] Ingress Support
 - [x] Kubernetes Gateway API
+- [x] HA capable Egress for Kubernetes
 - [ ] Kubernetes Network Policies 
 
 ## Telco-Cloud with loxilb
