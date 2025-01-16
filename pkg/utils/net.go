@@ -19,6 +19,7 @@ package utils
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/binary"
@@ -542,4 +543,17 @@ func IPHostCIDRString(ip net.IP) string {
 	} else {
 		return ip.String() + "/128"
 	}
+}
+
+func GenerateRandomMAC() (net.HardwareAddr, error) {
+	mac := make([]byte, 6)
+	_, err := rand.Read(mac)
+	if err != nil {
+		return nil, err
+	}
+
+	mac[0] |= 0x02
+	mac[0] &= 0xfe
+
+	return net.HardwareAddr(mac), nil
 }

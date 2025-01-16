@@ -2081,10 +2081,12 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	eFw := R.tables[RtFw].eMap[rt.ruleKey()]
 
 	if eFw != nil {
-		if eFw.act.action.(*ruleFwOpts).opt.fwMark != fwOptArgs.Mark {
-			eFw.Fw2DP(DpRemove)
-			eFw.act.action.(*ruleFwOpts).opt.fwMark = fwOptArgs.Mark
-			eFw.Fw2DP(DpCreate)
+		if !fwOptArgs.DoSnat {
+			if eFw.act.action.(*ruleFwOpts).opt.fwMark != fwOptArgs.Mark {
+				eFw.Fw2DP(DpRemove)
+				eFw.act.action.(*ruleFwOpts).opt.fwMark = fwOptArgs.Mark
+				eFw.Fw2DP(DpCreate)
+			}
 		}
 		// If a FW rule already exists
 		return RuleExistsErr, errors.New("fwrule-exists error")
@@ -3107,6 +3109,9 @@ func (r *ruleEnt) Fw2DP(work DpWorkT) int {
 		nWork.FwVal2 = at.opt.fwMark
 		nWork.FwRecord = at.opt.record
 		nWork.OnDflt = at.opt.onDflt
+		if nWork.OnDflt && work == DpRemove {
+			r.sync = 0
+		}
 	default:
 		return -1
 	}
