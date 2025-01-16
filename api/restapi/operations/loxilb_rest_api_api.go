@@ -192,6 +192,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		GetStatusProcessHandler: GetStatusProcessHandlerFunc(func(params GetStatusProcessParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetStatusProcess has not yet been implemented")
 		}),
+		GetVersionHandler: GetVersionHandlerFunc(func(params GetVersionParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetVersion has not yet been implemented")
+		}),
 		PostConfigBfdHandler: PostConfigBfdHandlerFunc(func(params PostConfigBfdParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigBfd has not yet been implemented")
 		}),
@@ -400,6 +403,8 @@ type LoxilbRestAPIAPI struct {
 	GetStatusFilesystemHandler GetStatusFilesystemHandler
 	// GetStatusProcessHandler sets the operation handler for the get status process operation
 	GetStatusProcessHandler GetStatusProcessHandler
+	// GetVersionHandler sets the operation handler for the get version operation
+	GetVersionHandler GetVersionHandler
 	// PostConfigBfdHandler sets the operation handler for the post config bfd operation
 	PostConfigBfdHandler PostConfigBfdHandler
 	// PostConfigBgpGlobalHandler sets the operation handler for the post config bgp global operation
@@ -674,6 +679,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.GetStatusProcessHandler == nil {
 		unregistered = append(unregistered, "GetStatusProcessHandler")
+	}
+	if o.GetVersionHandler == nil {
+		unregistered = append(unregistered, "GetVersionHandler")
 	}
 	if o.PostConfigBfdHandler == nil {
 		unregistered = append(unregistered, "PostConfigBfdHandler")
@@ -1035,6 +1043,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/status/process"] = NewGetStatusProcess(o.context, o.GetStatusProcessHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/version"] = NewGetVersion(o.context, o.GetVersionHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

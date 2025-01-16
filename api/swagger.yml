@@ -2808,7 +2808,31 @@ paths:
           description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
-
+#----------------------------------------------
+# Version
+#----------------------------------------------
+  '/version':
+    get:
+      summary: Get version information in the device
+      description: Get version information
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/VersionGetEntry'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintenance mode
+          schema:
+            $ref: '#/definitions/Error'
+            
 #----------------------------------------------
 # BFD
 #----------------------------------------------
@@ -4098,6 +4122,16 @@ definitions:
       state:
         type: string
         description: Current state for BFD session   
+
+  VersionGetEntry:
+    type: object
+    properties:
+      version:
+        type: string
+        description: Instance name
+      buildInfo:
+        type: string
+        description: build info
 
   BfdEntry:
     type: object
