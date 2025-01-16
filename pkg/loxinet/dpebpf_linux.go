@@ -857,9 +857,9 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 	if tk.IsNetIPv4(w.Dst.IP.String()) {
 		key4 := new(rt4Key)
 
-		len, _ := w.Dst.Mask.Size()
-		len += 16 /* 16-bit ZoneNum + prefix-len */
-		key4.l.prefixlen = C.uint(len)
+		mlen, _ := w.Dst.Mask.Size()
+		mlen += 16 /* 16-bit ZoneNum + prefix-len */
+		key4.l.prefixlen = C.uint(mlen)
 		kPtr = (*[6]uint8)(getPtrOffset(unsafe.Pointer(key4),
 			C.sizeof_struct_bpf_lpm_trie_key))
 
@@ -875,8 +875,8 @@ func DpRouteMod(w *RouteDpWorkQ) int {
 	} else {
 		key6 := new(rt6Key)
 
-		len, _ := w.Dst.Mask.Size()
-		key6.l.prefixlen = C.uint(len)
+		mlen, _ := w.Dst.Mask.Size()
+		key6.l.prefixlen = C.uint(mlen)
 
 		k6Ptr := (*C.uchar)(getPtrOffset(unsafe.Pointer(key6),
 			C.sizeof_struct_bpf_lpm_trie_key))

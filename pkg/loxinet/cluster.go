@@ -174,18 +174,18 @@ func (h *CIStateH) CIStateGetInst(inst string) (string, error) {
 		return ci.StateStr, nil
 	}
 
-	return "NOT_DEFINED", errors.New("not found")
+	return cmn.CIUnDefStateString, errors.New("not found")
 }
 
 // CIInit - routine to initialize Cluster context
 func CIInit(args CIKAArgs) *CIStateH {
 	var nCIh = new(CIStateH)
 	nCIh.StateMap = make(map[string]int)
-	nCIh.StateMap["MASTER"] = cmn.CIStateMaster
-	nCIh.StateMap["BACKUP"] = cmn.CIStateBackup
-	nCIh.StateMap["FAULT"] = cmn.CIStateConflict
-	nCIh.StateMap["STOP"] = cmn.CIStateNotDefined
-	nCIh.StateMap["NOT_DEFINED"] = cmn.CIStateNotDefined
+	nCIh.StateMap[cmn.CIMasterStateString] = cmn.CIStateMaster
+	nCIh.StateMap[cmn.CIBackupStateString] = cmn.CIStateBackup
+	nCIh.StateMap[cmn.CIFaultStateString] = cmn.CIStateConflict
+	nCIh.StateMap[cmn.CIStopStateString] = cmn.CIStateNotDefined
+	nCIh.StateMap[cmn.CIUnDefStateString] = cmn.CIStateNotDefined
 	nCIh.SpawnKa = args.SpawnKa
 	nCIh.RemoteIP = args.RemoteIP
 	nCIh.SourceIP = args.SourceIP
@@ -194,7 +194,7 @@ func CIInit(args CIKAArgs) *CIStateH {
 
 	if _, ok := nCIh.ClusterMap[cmn.CIDefault]; !ok {
 		ci := &ClusterInstance{State: cmn.CIStateNotDefined,
-			StateStr: "NOT_DEFINED",
+			StateStr: cmn.CIUnDefStateString,
 			Vip:      net.IPv4zero,
 		}
 		nCIh.ClusterMap[cmn.CIDefault] = ci
@@ -534,7 +534,7 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 
 	if _, ok := h.ClusterMap[cm.Instance]; !ok {
 		h.ClusterMap[cm.Instance] = &ClusterInstance{State: cmn.CIStateNotDefined,
-			StateStr: "NOT_DEFINED",
+			StateStr: cmn.CIUnDefStateString,
 			Vip:      net.IPv4zero}
 		tk.LogIt(tk.LogDebug, "[CLUSTER] New Instance %s created\n", cm.Instance)
 	}
@@ -559,7 +559,7 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 		if mh.bgp != nil {
 			mh.bgp.UpdateCIState(cm.Instance, ci.State, ci.Vip)
 		}
-		go mh.zr.Rules.RulesSyncToClusterState()
+		go mh.zr.Rules.RulesSyncToClusterState(cm.Instance, cm.State)
 		return ci.State, nil
 	}
 

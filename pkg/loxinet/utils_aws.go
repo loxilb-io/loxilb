@@ -274,9 +274,8 @@ func (aws *AWSAPIStruct) CloudPrepareVIPNetWork() error {
 						if err != nil {
 							tk.LogIt(tk.LogError, "cidrBlock (%s) dissassociate failed in VPC %s:%s\n", cidrBlock, *vpcOut.Vpcs[0].VpcId, err)
 							return err
-						} else {
-							tk.LogIt(tk.LogInfo, "cidrBlock (%s) dissassociated from VPC %s\n", cidrBlock, *vpcOut.Vpcs[0].VpcId)
 						}
+						tk.LogIt(tk.LogInfo, "cidrBlock (%s) dissassociated from VPC %s\n", cidrBlock, *vpcOut.Vpcs[0].VpcId)
 						break
 					}
 				}
@@ -291,9 +290,8 @@ func (aws *AWSAPIStruct) CloudPrepareVIPNetWork() error {
 		if err != nil {
 			tk.LogIt(tk.LogError, "cidrBlock (%s) associate failed in VPC %s:%s\n", cidrBlock, vpcID, err)
 			return err
-		} else {
-			tk.LogIt(tk.LogError, "cidrBlock (%s) associated to VPC %s\n", cidrBlock, vpcID)
 		}
+		tk.LogIt(tk.LogError, "cidrBlock (%s) associated to VPC %s\n", cidrBlock, vpcID)
 	}
 
 	ointfs, err := net.Interfaces()
@@ -615,7 +613,7 @@ func awsGetNetworkInterface(ctx context.Context, instanceID string, vIP net.IP) 
 	return "", errors.New("not found interface")
 }
 
-func awsCreatePrivateIp(ctx context.Context, ni string, vIP net.IP) error {
+func awsCreatePrivateIP(ctx context.Context, ni string, vIP net.IP) error {
 	allowReassign := true
 	input := &ec2.AssignPrivateIpAddressesInput{
 		NetworkInterfaceId: &ni,
@@ -663,10 +661,10 @@ func awsUpdatePrivateIP(vIP net.IP, add bool) error {
 		return awsDeletePrivateIP(ctx, niID, vIP)
 	}
 
-	return awsCreatePrivateIp(ctx, niID, vIP)
+	return awsCreatePrivateIP(ctx, niID, vIP)
 }
 
-func awsAssociateElasticIp(vIP, eIP net.IP, add bool) error {
+func awsAssociateElasticIP(vIP, eIP net.IP, add bool) error {
 
 	if intfENIName == "" {
 		tk.LogIt(tk.LogError, "associate elasticIP: failed to get ENI intf name\n")
@@ -688,7 +686,7 @@ func awsAssociateElasticIp(vIP, eIP net.IP, add bool) error {
 		niID = loxiEniID
 	}
 
-	eipID, eipAssociateID, err := awsGetElasticIpId(ctx, eIP)
+	eipID, eipAssociateID, err := awsGetElasticIPId(ctx, eIP)
 	if err != nil {
 		tk.LogIt(tk.LogError, "AWS get elastic IP failed: %v\n", err)
 		return err
@@ -696,12 +694,12 @@ func awsAssociateElasticIp(vIP, eIP net.IP, add bool) error {
 
 	tk.LogIt(tk.LogInfo, "AWS adding elastic IP : %s\n", eIP.String())
 	if !add {
-		return awsDisassociateElasticIpWithInterface(ctx, eipAssociateID)
+		return awsDisassociateElasticIPWithInterface(ctx, eipAssociateID)
 	}
-	return awsAssociateElasticIpWithInterface(ctx, eipID, niID, vIP)
+	return awsAssociateElasticIPWithInterface(ctx, eipID, niID, vIP)
 }
 
-func awsAssociateElasticIpWithInterface(ctx context.Context, eipID, niID string, privateIP net.IP) error {
+func awsAssociateElasticIPWithInterface(ctx context.Context, eipID, niID string, privateIP net.IP) error {
 	allowReassign := true
 	input := &ec2.AssociateAddressInput{
 		AllocationId:       &eipID,
@@ -709,7 +707,7 @@ func awsAssociateElasticIpWithInterface(ctx context.Context, eipID, niID string,
 		AllowReassociation: &allowReassign,
 	}
 	if privateIP != nil {
-		if err := awsCreatePrivateIp(ctx, niID, privateIP); err != nil {
+		if err := awsCreatePrivateIP(ctx, niID, privateIP); err != nil {
 			tk.LogIt(tk.LogError, "AWS create priv IP failed: %s\n", err)
 			return err
 		}
@@ -723,14 +721,14 @@ func awsAssociateElasticIpWithInterface(ctx context.Context, eipID, niID string,
 	return err
 }
 
-func awsDisassociateElasticIpWithInterface(ctx context.Context, eipAssociateID string) error {
+func awsDisassociateElasticIPWithInterface(ctx context.Context, eipAssociateID string) error {
 	_, err := ec2Client.DisassociateAddress(ctx, &ec2.DisassociateAddressInput{
 		AssociationId: &eipAssociateID,
 	})
 	return err
 }
 
-func awsGetElasticIpId(ctx context.Context, eIP net.IP) (string, string, error) {
+func awsGetElasticIPId(ctx context.Context, eIP net.IP) (string, string, error) {
 	filterStr := "public-ip"
 	output, err := ec2Client.DescribeAddresses(ctx, &ec2.DescribeAddressesInput{
 		Filters: []types.Filter{
@@ -743,14 +741,14 @@ func awsGetElasticIpId(ctx context.Context, eIP net.IP) (string, string, error) 
 	if len(output.Addresses) <= 0 {
 		return "", "", fmt.Errorf("not found Elastic IP %s", eIP.String())
 	}
-	var allocateId, associateId string
+	var allocateID, associateID string
 	if output.Addresses[0].AllocationId != nil {
-		allocateId = *output.Addresses[0].AllocationId
+		allocateID = *output.Addresses[0].AllocationId
 	}
 	if output.Addresses[0].AssociationId != nil {
-		associateId = *output.Addresses[0].AssociationId
+		associateID = *output.Addresses[0].AssociationId
 	}
-	return allocateId, associateId, nil
+	return allocateID, associateID, nil
 }
 
 // CloudAPIInit - Initialize the AWS cloud API
@@ -835,14 +833,15 @@ func awsImdsGetSecurityGroups(ctx context.Context) ([]string, error) {
 
 // CloudUpdatePrivateIP - Update private IP related to an elastic IP
 func (aws *AWSAPIStruct) CloudUpdatePrivateIP(vIP net.IP, eIP net.IP, add bool) error {
-	if vIP.Equal(eIP) { // no use EIP
+	if vIP.Equal(eIP) {
+		// Do not use EIP
 		return awsUpdatePrivateIP(vIP, add)
-	} else { // use EIP
-		if err := awsAssociateElasticIp(vIP, eIP, add); err != nil {
-			return err
-		}
-		return awsPrepDFLRoute()
 	}
+	// use EIP
+	if err := awsAssociateElasticIP(vIP, eIP, add); err != nil {
+		return err
+	}
+	return awsPrepDFLRoute()
 }
 
 // AWSCloudHookNew - Create AWS specific API hooks

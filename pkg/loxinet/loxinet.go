@@ -175,7 +175,7 @@ func loxiNetTicker(bgpPeerMode bool) {
 				if mh.cloudHook != nil {
 					// Cleanup any cloud resources
 					ciState, _ := mh.has.CIStateGetInst(cmn.CIDefault)
-					if ciState == "MASTER" {
+					if ciState == cmn.CIMasterStateString {
 						bfdSessions, err := mh.has.CIBFDSessionGet()
 						if err == nil {
 							cleanCloudResources := true
