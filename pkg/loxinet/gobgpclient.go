@@ -778,9 +778,9 @@ func (gbh *GoBgpH) initBgpClient() {
 
 		ciState, err := mh.has.CIStateGetInst(cmn.CIDefault)
 		if err == nil {
-			if ciState == "BACKUP" {
+			if ciState == cmn.CIBackupStateString {
 				gbh.resetBGPPolicy(true)
-			} else if ciState == "MASTER" {
+			} else if ciState == cmn.CIMasterStateString {
 				gbh.resetBGPPolicy(false)
 			}
 		}
@@ -853,9 +853,9 @@ func (gbh *GoBgpH) UpdateCIState(instance string, state int, vip net.IP) {
 	if update {
 		ciState, err := mh.has.CIStateGetInst(cmn.CIDefault)
 		if err == nil {
-			if ciState == "BACKUP" {
+			if ciState == cmn.CIBackupStateString {
 				gbh.resetBGPPolicy(true)
-			} else if ciState == "MASTER" {
+			} else if ciState == cmn.CIMasterStateString {
 				gbh.resetBGPPolicy(false)
 			}
 		}

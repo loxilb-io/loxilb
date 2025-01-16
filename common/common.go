@@ -41,9 +41,20 @@ const (
 
 const BFDPort = 3784
 const BFDDefRetryCount = 3
+
 const (
 	// CIDefault - Default CI Instance name
 	CIDefault = "llb-inst0"
+	// CIMasterStateString - Master state string for a cluster instance
+	CIMasterStateString = "MASTER"
+	// CIBackupStateString - Backup state string for a cluster instance
+	CIBackupStateString = "BACKUP"
+	// CIFaultStateString - Fault state string for a cluster instance
+	CIFaultStateString = "FAULT"
+	// CIStopStateString - Stop state string for a cluster instance
+	CIStopStateString = "STOP"
+	// CIUnDefStateString - Undefined state string for a cluster instance
+	CIUnDefStateString = "NOT_DEFINED"
 )
 
 const (

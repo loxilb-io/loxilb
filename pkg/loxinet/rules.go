@@ -911,7 +911,6 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleLBEp, doAddOp bool, liv
 			pPort = nep.xPort
 		} else if r.tuples.l4Prot.val == 17 {
 			pType = HostProbeConnectUDP
-			pType = HostProbeConnectTCP // FIXME
 			pPort = nep.xPort
 		} else if r.tuples.l4Prot.val == 1 {
 			pType = HostProbePing
@@ -2177,7 +2176,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	if fwOptArgs.OnDefault {
 		state, err := mh.has.CIStateGetInst(cmn.CIDefault)
 		if err == nil {
-			if state == "BACKUP" {
+			if state == cmn.CIBackupStateString {
 				return 0, nil
 			}
 		}
@@ -3213,7 +3212,7 @@ func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool) erro
 	}
 
 	ciState, _ := mh.has.CIStateGetInst(inst)
-	if ciState == "MASTER" {
+	if ciState == cmn.CIMasterStateString {
 		dev := fmt.Sprintf("llb-rule-%s", IP.String())
 		ret, _ := R.zone.L3.IfaFindAddr(dev, IP)
 		if ret == 0 {
@@ -3257,7 +3256,7 @@ func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool) erro
 			mh.has.CIAddClusterRoute(IP.String(), false)
 		}
 
-	} else if ciState != "NOT_DEFINED" {
+	} else if ciState != cmn.CIUnDefStateString {
 		if utils.IsIPHostAddr(IP.String()) {
 			ifname := "lo"
 			ev, _, iface := R.zone.L3.IfaSelectAny(IP, false)
@@ -3297,29 +3296,33 @@ func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool) erro
 	return nil
 }
 
-func (R *RuleH) RulesSyncToClusterState() {
+func (R *RuleH) RulesSyncToClusterState(inst, ciStateStr string) {
 
-	// For Cloud integrations, there is only default instance
-	ciState, _ := mh.has.CIStateGetInst(cmn.CIDefault)
-	if mh.cloudHook != nil {
-		if ciState == "MASTER" {
+	// For Cloud integrations, certain operations are performed only on default instance state changes
+	if mh.cloudHook != nil && inst == cmn.CIDefault {
+		if ciStateStr == cmn.CIMasterStateString {
 			mh.cloudHook.CloudPrepareVIPNetWork()
-		} else if ciState == "BACKUP" {
+		} else if ciStateStr == cmn.CIBackupStateString {
 			mh.cloudHook.CloudUnPrepareVIPNetWork()
 		}
 	}
 
-	for _, eFw := range R.tables[RtFw].eMap {
-		if eFw.act.action.(*ruleFwOpts).opt.onDflt {
-			if ciState == "MASTER" || ciState != "BACKUP" {
-				eFw.Fw2DP(DpCreate)
-			} else if ciState == "BACKUP" {
-				eFw.Fw2DP(DpRemove)
+	if inst == cmn.CIDefault {
+		for _, eFw := range R.tables[RtFw].eMap {
+			if eFw.act.action.(*ruleFwOpts).opt.onDflt {
+				if ciStateStr == cmn.CIMasterStateString || ciStateStr != cmn.CIBackupStateString {
+					eFw.Fw2DP(DpCreate)
+				} else if ciStateStr == cmn.CIBackupStateString {
+					eFw.Fw2DP(DpRemove)
+				}
 			}
 		}
 	}
 
 	for vip, vipElem := range R.vipMap {
+		if vipElem.inst != inst {
+			continue
+		}
 		ip := vipElem.pVIP
 		if ip == nil {
 			ip = net.ParseIP(vip)

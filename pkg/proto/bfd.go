@@ -311,7 +311,7 @@ func (b *bfdSession) RunSessionSM(raw *WireRaw) {
 			tk.LogIt(tk.LogInfo, "%s: BFD State -> UP\n", b.RemoteName)
 		}
 		b.State = BFDUp
-		if b.CiState == "MASTER" {
+		if b.CiState == cmn.CIMasterStateString {
 			// Force reelection
 			if b.MyDisc <= b.RemDisc {
 				oldState = BFDDown
@@ -349,19 +349,19 @@ func (b *bfdSession) sendStateNotification(newState, oldState SessionState, inst
 	}
 
 	if newState == BFDUp {
-		ciState := "BACKUP"
+		ciState := cmn.CIBackupStateString
 		if b.MyDisc > b.RemDisc {
-			ciState = "MASTER"
+			ciState = cmn.CIMasterStateString
 		}
 		tk.LogIt(tk.LogInfo, "%s: State change (%v:%v)\n", b.RemoteName, b.MyDisc, b.RemDisc)
 		b.CiState = ciState
 		b.Notify.BFDSessionNotify(inst, remote, ciState)
 	} else if newState == BFDDown && oldState == BFDUp {
-		ciState := "MASTER"
+		ciState := cmn.CIMasterStateString
 		b.CiState = ciState
 		b.Notify.BFDSessionNotify(inst, remote, ciState)
 	} else if b.RemDisc == b.MyDisc {
-		ciState := "NOT_DEFINED"
+		ciState := cmn.CIUnDefStateString
 		b.CiState = ciState
 		b.Notify.BFDSessionNotify(inst, remote, ciState)
 	}
