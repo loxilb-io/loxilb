@@ -22,12 +22,13 @@ import (
 	"time"
 
 	"github.com/jessevdk/go-flags"
+	"github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
 	ln "github.com/loxilb-io/loxilb/pkg/loxinet"
 )
 
-var version string = "0.9.7-beta"
-var buildInfo string = ""
+// var version string = "0.9.7-beta"
+// var buildInfo string = ""
 
 func main() {
 	fmt.Printf("loxilb start\n")
@@ -40,7 +41,7 @@ func main() {
 	}
 
 	if opts.Opts.Version {
-		fmt.Printf("loxilb version: %s %s\n", version, buildInfo)
+		fmt.Printf("loxilb version: %s %s\n", common.Version, common.BuildInfo)
 		os.Exit(0)
 	}
 

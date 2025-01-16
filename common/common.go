@@ -20,6 +20,12 @@ import (
 	"net"
 )
 
+const (
+	Version = "0.9.7-beta"
+)
+
+var BuildInfo string = ""
+
 // This file defines the go interface implementation needed to interact with loxinet go module
 
 const (
