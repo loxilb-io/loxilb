@@ -184,6 +184,9 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.PostConfigBgpPolicyApplyHandler = operations.PostConfigBgpPolicyApplyHandlerFunc(handler.ConfigPostBGPPolicyApply)
 	api.DeleteConfigBgpPolicyApplyHandler = operations.DeleteConfigBgpPolicyApplyHandlerFunc(handler.ConfigDeleteBGPPolicyApply)
 
+	// Version
+	api.GetVersionHandler = operations.GetVersionHandlerFunc(handler.ConfigGetVersion)
+
 	api.PreServerShutdown = func() {}
 	api.ServerShutdown = func() {}
 

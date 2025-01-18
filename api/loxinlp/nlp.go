@@ -31,6 +31,7 @@ import (
 
 	cmn "github.com/loxilb-io/loxilb/common"
 	opt "github.com/loxilb-io/loxilb/options"
+	"github.com/loxilb-io/loxilb/pkg/utils"
 	tk "github.com/loxilb-io/loxilib"
 	nlp "github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
@@ -565,6 +566,11 @@ func AddVxLANBridgeNoHook(vxlanid int, epIntfName string) int {
 	_, err := nlp.LinkByName(VxlanBridgeName)
 	if err != nil {
 
+		hwAddr, err := utils.GenerateRandomMAC()
+		if err != nil {
+			tk.LogIt(tk.LogError, "nlp: Error generating hwAddr\n")
+			return 403
+		}
 		EndpointInterface, err := nlp.LinkByName(epIntfName)
 		if err != nil {
 			tk.LogIt(tk.LogWarning, "nlp: Endpoint interface finding Fail\n")
@@ -577,8 +583,9 @@ func AddVxLANBridgeNoHook(vxlanid int, epIntfName string) int {
 		}
 		VxlanDev := &nlp.Vxlan{
 			LinkAttrs: nlp.LinkAttrs{
-				Name: VxlanBridgeName,
-				MTU:  9000, // Static Value for Vxlan in loxiLB
+				Name:         VxlanBridgeName,
+				MTU:          9000, // Static Value for Vxlan in loxiLB
+				HardwareAddr: hwAddr,
 			},
 			SrcAddr:      LocalIPs[0].IP,
 			VtepDevIndex: EndpointInterface.Attrs().Index,
@@ -1271,24 +1278,28 @@ func AddRouteNoHook(DestinationIPNet, gateway, proto string) int {
 	return ret
 }
 
-func GetRouteNoHook(destination string) ([]string, error) {
+func GetRouteNoHook(destination string) ([]string, string, error) {
 	var gws []string
+	var src string
 
 	dst := net.ParseIP(destination)
 	if dst == nil {
-		return []string{}, errors.New("invalid destination")
+		return []string{}, "", errors.New("invalid destination")
 	}
 
 	rts, err := nlp.RouteGet(dst)
 	if err != nil {
-		return []string{}, errors.New("invalid rt destination")
+		return []string{}, "", errors.New("invalid rt destination")
 	}
 
 	for _, rt := range rts {
+		if src == "" {
+			src = rt.Src.String()
+		}
 		gws = append(gws, rt.Gw.String())
 	}
 
-	return gws, nil
+	return gws, src, nil
 }
 
 func DelRouteNoHook(DestinationIPNet string) int {

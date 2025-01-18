@@ -578,7 +578,7 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
 				}
 				// FIXME - There is a race condition here
 				cIState, _ := mh.has.CIStateGetInst(tmpCti.CI)
-				if cIState != "MASTER" {
+				if cIState != cmn.CIMasterStateString {
 					return 0
 				}
 			}

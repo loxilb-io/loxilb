@@ -87,6 +87,10 @@ type CIStateH struct {
 	ClusterIf   string
 	OGw         []string
 	OGw6        []string
+	OSrc        string
+	OSrc6       string
+	initRules   bool
+	initRules6  bool
 }
 
 func (ci *CIStateH) BFDSessionNotify(instance string, remote string, ciState string) {
@@ -170,18 +174,18 @@ func (h *CIStateH) CIStateGetInst(inst string) (string, error) {
 		return ci.StateStr, nil
 	}
 
-	return "NOT_DEFINED", errors.New("not found")
+	return cmn.CIUnDefStateString, errors.New("not found")
 }
 
 // CIInit - routine to initialize Cluster context
 func CIInit(args CIKAArgs) *CIStateH {
 	var nCIh = new(CIStateH)
 	nCIh.StateMap = make(map[string]int)
-	nCIh.StateMap["MASTER"] = cmn.CIStateMaster
-	nCIh.StateMap["BACKUP"] = cmn.CIStateBackup
-	nCIh.StateMap["FAULT"] = cmn.CIStateConflict
-	nCIh.StateMap["STOP"] = cmn.CIStateNotDefined
-	nCIh.StateMap["NOT_DEFINED"] = cmn.CIStateNotDefined
+	nCIh.StateMap[cmn.CIMasterStateString] = cmn.CIStateMaster
+	nCIh.StateMap[cmn.CIBackupStateString] = cmn.CIStateBackup
+	nCIh.StateMap[cmn.CIFaultStateString] = cmn.CIStateConflict
+	nCIh.StateMap[cmn.CIStopStateString] = cmn.CIStateNotDefined
+	nCIh.StateMap[cmn.CIUnDefStateString] = cmn.CIStateNotDefined
 	nCIh.SpawnKa = args.SpawnKa
 	nCIh.RemoteIP = args.RemoteIP
 	nCIh.SourceIP = args.SourceIP
@@ -190,7 +194,7 @@ func CIInit(args CIKAArgs) *CIStateH {
 
 	if _, ok := nCIh.ClusterMap[cmn.CIDefault]; !ok {
 		ci := &ClusterInstance{State: cmn.CIStateNotDefined,
-			StateStr: "NOT_DEFINED",
+			StateStr: cmn.CIUnDefStateString,
 			Vip:      net.IPv4zero,
 		}
 		nCIh.ClusterMap[cmn.CIDefault] = ci
@@ -285,11 +289,11 @@ func CIInit(args CIKAArgs) *CIStateH {
 		nCIh.ClusterGw = gw.String()
 		nCIh.ClusterGw6 = gw6.String()
 
-		nCIh.OGw, _ = nlp.GetRouteNoHook("8.8.8.8")
-		nCIh.OGw6, _ = nlp.GetRouteNoHook("2001:4860:4860::8888")
+		nCIh.OGw, nCIh.OSrc, _ = nlp.GetRouteNoHook("8.8.8.8")
+		nCIh.OGw6, nCIh.OSrc6, _ = nlp.GetRouteNoHook("2001:4860:4860::8888")
 
-		tk.LogIt(tk.LogInfo, "Cluster IP address %s GW %s oGW %v\n", ip.String(), nCIh.ClusterGw, nCIh.OGw)
-		tk.LogIt(tk.LogInfo, "Cluster IP6 address %s GW6 %s oGw6 %v\n", ip6.String(), nCIh.ClusterGw, nCIh.OGw6)
+		tk.LogIt(tk.LogInfo, "Cluster IP address %s GW %s oGW %v oSrc %v \n", ip.String(), nCIh.ClusterGw, nCIh.OGw, nCIh.OSrc)
+		tk.LogIt(tk.LogInfo, "Cluster IP6 address %s GW6 %s oGw6 %v oSrc6 %v\n", ip6.String(), nCIh.ClusterGw, nCIh.OGw6, nCIh.OSrc6)
 
 	}
 
@@ -384,7 +388,7 @@ func (h *CIStateH) CIAddClusterRoute(dest string, add bool) {
 	if add {
 		found := false
 		if tk.IsNetIPv4(dest) {
-			gws, _ := nlp.GetRouteNoHook("8.8.8.8")
+			gws, _, _ := nlp.GetRouteNoHook("8.8.8.8")
 			for _, gw := range gws {
 				if gw == dest {
 					found = true
@@ -395,10 +399,16 @@ func (h *CIStateH) CIAddClusterRoute(dest string, add bool) {
 			if !found {
 				nlp.DelRouteNoHook("0.0.0.0/0")
 				nlp.AddRouteNoHook("0.0.0.0/0", dest, "static")
+				fwarg := cmn.FwRuleArg{SrcIP: mh.has.ClusterNet, DstIP: "0.0.0.0/0"}
+				_, err := mh.zr.Rules.DeleteFwRule(fwarg)
+				if err != nil {
+					tk.LogIt(tk.LogError, "Failed to delete egress snat for cluster %s\n", mh.has.ClusterNet)
+				}
+
 			}
 		} else {
 			found = false
-			gws, _ := nlp.GetRouteNoHook("2001:4860:4860::8888")
+			gws, _, _ := nlp.GetRouteNoHook("2001:4860:4860::8888")
 			for _, gw := range gws {
 				if gw == dest {
 					found = true
@@ -408,12 +418,17 @@ func (h *CIStateH) CIAddClusterRoute(dest string, add bool) {
 			if !found {
 				nlp.DelRouteNoHook("::/0")
 				nlp.AddRouteNoHook("::/0", dest, "static")
+				fwarg := cmn.FwRuleArg{SrcIP: mh.has.ClusterNet6, DstIP: "::/0"}
+				_, err := mh.zr.Rules.DeleteFwRule(fwarg)
+				if err != nil {
+					tk.LogIt(tk.LogError, "Failed to delete egress snat for cluster %s\n", mh.has.ClusterNet6)
+				}
 			}
 		}
 	} else {
 		found := false
 		if tk.IsNetIPv4(dest) {
-			gws, _ := nlp.GetRouteNoHook("8.8.8.8")
+			gws, _, _ := nlp.GetRouteNoHook("8.8.8.8")
 			for _, gw := range gws {
 				if gw == dest {
 					found = true
@@ -422,13 +437,33 @@ func (h *CIStateH) CIAddClusterRoute(dest string, add bool) {
 			}
 			if found {
 				nlp.DelRouteNoHook("0.0.0.0/0")
-				for _, gw := range mh.has.OGw {
+				for i, gw := range mh.has.OGw {
 					nlp.AddRouteNoHook("0.0.0.0/0", gw, "static")
+					if i == 0 {
+						fwarg := cmn.FwRuleArg{SrcIP: mh.has.ClusterNet, DstIP: "0.0.0.0/0"}
+						fwOpts := cmn.FwOptArg{DoSnat: true, OnDefault: true, ToIP: mh.has.OSrc}
+						_, err := mh.zr.Rules.AddFwRule(fwarg, fwOpts)
+						if err != nil {
+							tk.LogIt(tk.LogError, "Failed to create egress snat for cluster %s:%s\n", mh.has.ClusterNet, err)
+						}
+					}
 				}
+			} else if !h.initRules {
+				for i := range mh.has.OGw {
+					if i == 0 {
+						fwarg := cmn.FwRuleArg{SrcIP: mh.has.ClusterNet, DstIP: "0.0.0.0/0"}
+						fwOpts := cmn.FwOptArg{DoSnat: true, OnDefault: true, ToIP: mh.has.OSrc}
+						_, err := mh.zr.Rules.AddFwRule(fwarg, fwOpts)
+						if err != nil {
+							tk.LogIt(tk.LogError, "Failed to create egress snat for cluster %s:%s\n", mh.has.ClusterNet, err)
+						}
+					}
+				}
+				h.initRules = true
 			}
 		} else {
 			found = false
-			gws, _ := nlp.GetRouteNoHook("2001:4860:4860::8888")
+			gws, _, _ := nlp.GetRouteNoHook("2001:4860:4860::8888")
 			for _, gw := range gws {
 				if gw == dest {
 					found = true
@@ -437,9 +472,29 @@ func (h *CIStateH) CIAddClusterRoute(dest string, add bool) {
 			}
 			if found {
 				nlp.DelRouteNoHook("::/0")
-				for _, gw := range mh.has.OGw {
+				for i, gw := range mh.has.OGw6 {
 					nlp.AddRouteNoHook("::", gw, "static")
+					if i == 0 {
+						fwarg := cmn.FwRuleArg{SrcIP: mh.has.ClusterNet6, DstIP: "0.0.0.0/0"}
+						fwOpts := cmn.FwOptArg{DoSnat: true, OnDefault: true, ToIP: mh.has.OSrc6}
+						_, err := mh.zr.Rules.AddFwRule(fwarg, fwOpts)
+						if err != nil {
+							tk.LogIt(tk.LogError, "Failed to create egress snat for cluster %s:%s\n", mh.has.ClusterNet6, err)
+						}
+					}
 				}
+			} else if !h.initRules6 {
+				for i := range mh.has.OGw6 {
+					if i == 0 {
+						fwarg := cmn.FwRuleArg{SrcIP: mh.has.ClusterNet6, DstIP: "0.0.0.0/0"}
+						fwOpts := cmn.FwOptArg{DoSnat: true, OnDefault: true, ToIP: mh.has.OSrc6}
+						_, err := mh.zr.Rules.AddFwRule(fwarg, fwOpts)
+						if err != nil {
+							tk.LogIt(tk.LogError, "Failed to create egress snat for cluster %s:%s\n", mh.has.ClusterNet6, err)
+						}
+					}
+				}
+				h.initRules6 = true
 			}
 		}
 	}
@@ -479,7 +534,7 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 
 	if _, ok := h.ClusterMap[cm.Instance]; !ok {
 		h.ClusterMap[cm.Instance] = &ClusterInstance{State: cmn.CIStateNotDefined,
-			StateStr: "NOT_DEFINED",
+			StateStr: cmn.CIUnDefStateString,
 			Vip:      net.IPv4zero}
 		tk.LogIt(tk.LogDebug, "[CLUSTER] New Instance %s created\n", cm.Instance)
 	}
@@ -504,7 +559,7 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 		if mh.bgp != nil {
 			mh.bgp.UpdateCIState(cm.Instance, ci.State, ci.Vip)
 		}
-		go mh.zr.Rules.RulesSyncToClusterState()
+		go mh.zr.Rules.RulesSyncToClusterState(cm.Instance, cm.State)
 		return ci.State, nil
 	}
 
