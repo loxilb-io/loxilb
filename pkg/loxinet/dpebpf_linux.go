@@ -958,8 +958,9 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 
 	key.mark = C.uint(w.BlockNum)
 
-	if w.NatType == DpSnat {
-		key.mark |= SnatFwMark
+	if w.NatType == DpSnat || w.NatType == DpNat {
+		key.mark |= NatFwMark
+		fmt.Printf("mark %v\n", key.mark)
 	} else {
 		key.daddr = [4]C.uint{0, 0, 0, 0}
 		if tk.IsNetIPv4(w.ServiceIP.String()) {
@@ -973,14 +974,13 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 		key.dport = C.ushort(tk.Htons(w.L4Port))
 		key.l4proto = C.ushort(w.Proto)
 		key.zone = C.ushort(w.ZoneNum)
-
 	}
 
 	dat := new(proxyActs)
 	C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_proxy_tacts)
 	if w.NatType == DpSnat {
 		dat.ca.act_type = C.DP_SET_SNAT
-	} else if w.NatType == DpDnat || w.NatType == DpFullNat {
+	} else if w.NatType == DpDnat || w.NatType == DpFullNat || w.NatType == DpNat {
 		dat.ca.act_type = C.DP_SET_DNAT
 	} else if w.NatType == DpFullProxy {
 		dat.ca.act_type = C.DP_SET_FULLPROXY
@@ -1086,10 +1086,10 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 			unsafe.Pointer(dat))
 
 		if ret != 0 {
-			tk.LogIt(tk.LogDebug, "[DP] LB rule %s add[NOK]\n", w.ServiceIP.String())
+			tk.LogIt(tk.LogDebug, "[DP] LB rule %s:%v add[NOK]\n", w.ServiceIP.String(), key.mark)
 			return EbpfErrTmacAdd
 		}
-		tk.LogIt(tk.LogDebug, "[DP] LB rule %s add[OK]\n", w.ServiceIP.String())
+		tk.LogIt(tk.LogDebug, "[DP] LB rule %s:%v add[OK]\n", w.ServiceIP.String(), key.mark)
 		return 0
 	} else if w.Work == DpRemove {
 		C.llb_del_map_elem_wval(C.LL_DP_NAT_MAP,

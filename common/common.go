@@ -541,8 +541,10 @@ type LbServiceArg struct {
 	ServIP string `json:"externalIP"`
 	// PrivateIP - the private service ip or vip of the load-balancer rule
 	PrivateIP string `json:"privateIP"`
-	// ServPort - the service port of the load-balancer rule
+	// ServPort - the min service port of the load-balancer rule
 	ServPort uint16 `json:"port"`
+	// ServPortMax - the max service port of the load-balancer rule
+	ServPortMax uint16 `json:"portMax"`
 	// Proto - the service protocol of the load-balancer rule
 	Proto string `json:"protocol"`
 	// BlockNum - An arbitrary block num to further segregate a service

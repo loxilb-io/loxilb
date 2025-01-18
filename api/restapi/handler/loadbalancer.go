@@ -31,6 +31,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	lbRules.Serv.ServIP = params.Attr.ServiceArguments.ExternalIP
 	lbRules.Serv.PrivateIP = params.Attr.ServiceArguments.PrivateIP
 	lbRules.Serv.ServPort = uint16(params.Attr.ServiceArguments.Port)
+	lbRules.Serv.ServPortMax = uint16(params.Attr.ServiceArguments.PortMax)
 	lbRules.Serv.Proto = params.Attr.ServiceArguments.Protocol
 	lbRules.Serv.BlockNum = params.Attr.ServiceArguments.Block
 	lbRules.Serv.Sel = cmn.EpSelect(params.Attr.ServiceArguments.Sel)
@@ -117,6 +118,37 @@ func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerHosturlH
 	return &ResultResponse{Result: "Success"}
 }
 
+func ConfigDeleteLoadbalancerPortRange(params operations.DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoParams) middleware.Responder {
+	tk.LogIt(tk.LogTrace, "api: Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+
+	var lbServ cmn.LbServiceArg
+	var lbRules cmn.LbRuleMod
+	lbServ.ServIP = params.IPAddress
+	lbServ.ServPort = uint16(params.Port)
+	lbServ.ServPortMax = uint16(params.Portmax)
+	lbServ.Proto = params.Proto
+	if params.Hosturl == "any" {
+		lbServ.HostUrl = ""
+	} else {
+		lbServ.HostUrl = params.Hosturl
+	}
+	if params.Block != nil {
+		lbServ.BlockNum = uint32(*params.Block)
+	}
+	if params.Bgp != nil {
+		lbServ.Bgp = *params.Bgp
+	}
+
+	lbRules.Serv = lbServ
+	tk.LogIt(tk.LogDebug, "api: lbRules : %v\n", lbRules)
+	_, err := ApiHooks.NetLbRuleDel(&lbRules)
+	if err != nil {
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
+		return &ResultResponse{Result: err.Error()}
+	}
+	return &ResultResponse{Result: "Success"}
+}
+
 func ConfigDeleteLoadbalancerWithoutPath(params operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
@@ -124,6 +156,34 @@ func ConfigDeleteLoadbalancerWithoutPath(params operations.DeleteConfigLoadbalan
 	var lbRules cmn.LbRuleMod
 	lbServ.ServIP = params.IPAddress
 	lbServ.ServPort = uint16(params.Port)
+	lbServ.ServPortMax = 0
+	lbServ.Proto = params.Proto
+	lbServ.HostUrl = ""
+	if params.Block != nil {
+		lbServ.BlockNum = uint32(*params.Block)
+	}
+	if params.Bgp != nil {
+		lbServ.Bgp = *params.Bgp
+	}
+
+	lbRules.Serv = lbServ
+	tk.LogIt(tk.LogDebug, "api: lbRules (w/o Path): %v\n", lbRules)
+	_, err := ApiHooks.NetLbRuleDel(&lbRules)
+	if err != nil {
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
+		return &ResultResponse{Result: err.Error()}
+	}
+	return &ResultResponse{Result: "Success"}
+}
+
+func ConfigDeleteLoadbalancerPortRangeWithoutPath(params operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoParams) middleware.Responder {
+	tk.LogIt(tk.LogTrace, "api: Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
+
+	var lbServ cmn.LbServiceArg
+	var lbRules cmn.LbRuleMod
+	lbServ.ServIP = params.IPAddress
+	lbServ.ServPort = uint16(params.Port)
+	lbServ.ServPortMax = uint16(params.Portmax)
 	lbServ.Proto = params.Proto
 	lbServ.HostUrl = ""
 	if params.Block != nil {
@@ -162,6 +222,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 		tmpSvc.ExternalIP = lb.Serv.ServIP
 		tmpSvc.Bgp = lb.Serv.Bgp
 		tmpSvc.Port = int64(lb.Serv.ServPort)
+		tmpSvc.PortMax = int64(lb.Serv.ServPortMax)
 		tmpSvc.Protocol = lb.Serv.Proto
 		tmpSvc.Block = uint32(lb.Serv.BlockNum)
 		tmpSvc.Sel = int64(lb.Serv.Sel)

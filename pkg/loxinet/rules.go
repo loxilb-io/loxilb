@@ -93,7 +93,7 @@ const (
 	MaxEndPointSweeps          = 20         // Maximum end-point sweeps per round
 	VIPSweepDuration           = 30         // Duration of periodic VIP maintenance
 	DefaultPersistTimeOut      = 10800      // Default persistent LB session timeout
-	SnatFwMark                 = 0x80000000 // Snat Marker
+	NatFwMark                  = 0x80000000 // NAT Marker
 	SrcChkFwMark               = 0x40000000 // Src check Marker
 	OnDfltSnatFwMark           = 0x20000000 // Ondefault Snat Marker
 )
@@ -631,11 +631,19 @@ func (r *ruleTuples) String() string {
 	}
 
 	if r.l4Dst.valid != 0 {
-		ks += fmt.Sprintf("dport-%d,", r.l4Dst.val&r.l4Dst.valid)
+		if r.l4Dst.valid == 0xffff {
+			ks += fmt.Sprintf("dport-%d,", r.l4Dst.val&r.l4Dst.valid)
+		} else {
+			ks += fmt.Sprintf("dport-%d:%d,", r.l4Dst.val, r.l4Dst.valid)
+		}
 	}
 
 	if r.l4Src.valid != 0 {
-		ks += fmt.Sprintf("sport-%d,", r.l4Src.val&r.l4Src.valid)
+		if r.l4Src.valid == 0xffff {
+			ks += fmt.Sprintf("sport-%d,", r.l4Src.val&r.l4Src.valid)
+		} else {
+			ks += fmt.Sprintf("sport-%d:%d,", r.l4Src.val, r.l4Src.valid)
+		}
 	}
 
 	if checkValidMACTuple(r.inL2Dst) {
@@ -733,8 +741,14 @@ func (a *ruleAct) String() string {
 				}
 			}
 		case *ruleFwOpts:
+			if na.opt.fwMark != 0 {
+				ks += fmt.Sprintf("Mark:%v ", na.opt.fwMark)
+			}
 			if a.actType == RtActSnat {
-				ks += fmt.Sprintf("%s:%d", na.opt.snatIP, na.opt.snatPort)
+				ks += fmt.Sprintf("%s:%d ", na.opt.snatIP, na.opt.snatPort)
+			}
+			if na.opt.onDflt {
+				ks += fmt.Sprintf("egress ")
 			}
 		}
 	}
@@ -811,6 +825,9 @@ func (R *RuleH) GetLBRule() ([]cmn.LbRuleMod, error) {
 			return []cmn.LbRuleMod{}, errors.New("malformed service proto")
 		}
 		ret.Serv.ServPort = data.tuples.l4Dst.val
+		if data.tuples.l4Dst.valid != 0xffff {
+			ret.Serv.ServPortMax = data.tuples.l4Dst.valid
+		}
 		ret.Serv.Sel = data.act.action.(*ruleLBActs).sel
 		ret.Serv.Mode = data.act.action.(*ruleLBActs).mode
 		ret.Serv.Monitor = data.hChk.actChk
@@ -1008,6 +1025,9 @@ func (R *RuleH) GetLBRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
+	if serv.ServPortMax != 0 {
+		l4dst = rule16Tuple{serv.ServPort, serv.ServPortMax}
+	}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 	return R.tables[RtLB].eMap[rt.ruleKey()]
 }
@@ -1036,6 +1056,9 @@ func (R *RuleH) GetLBRuleSecIPs(serv cmn.LbServiceArg) []string {
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
+	if serv.ServPortMax != 0 {
+		l4dst = rule16Tuple{serv.ServPort, serv.ServPortMax}
+	}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 	if R.tables[RtLB].eMap[rt.ruleKey()] != nil {
 		for _, ip := range R.tables[RtLB].eMap[rt.ruleKey()].secIP {
@@ -1128,6 +1151,49 @@ func (R *RuleH) deleteAllowedLbSrc(CIDR string, lbMark uint32) error {
 		tk.LogIt(tk.LogInfo, "updated allowed-cidr %s : 0x%x\n", srcElem.srcPref.String(), srcElem.lbmark)
 
 	}
+
+	return nil
+}
+
+func (R *RuleH) addLbRuleWithFW(Dst string, dPortMin, dPortMax uint16, proto uint8, lbMark uint32) error {
+
+	// When this routine is called, we are certain all in-args are valid
+	// So, these are not rechecked in this routine
+	if tk.IsNetIPv6(Dst) {
+		return errors.New("proto error")
+	}
+
+	fwarg := cmn.FwRuleArg{SrcIP: "0.0.0.0/0", DstIP: Dst + "/32", DstPortMin: dPortMin, DstPortMax: dPortMax, Proto: proto}
+	fwOpts := cmn.FwOptArg{Allow: true, Mark: lbMark<<16 | NatFwMark}
+	_, err := R.AddFwRule(fwarg, fwOpts)
+	if err != nil {
+		if !strings.Contains(err.Error(), "fwrule-exists") {
+			tk.LogIt(tk.LogError, "lbRuleWithFW failed to add fw %v:%s\n", fwarg, err)
+			return err
+		}
+	}
+
+	tk.LogIt(tk.LogInfo, "lbRuleWithFW added fw %v\n", fwarg)
+
+	return nil
+}
+
+func (R *RuleH) deleteLbRuleWithFW(Dst string, dPortMin, dPortMax uint16, proto uint8) error {
+
+	// When this routine is called, we are certain all in-args are valid
+	// So, these are not rechecked in this routine
+	if tk.IsNetIPv6(Dst) {
+		return errors.New("proto error")
+	}
+
+	fwarg := cmn.FwRuleArg{SrcIP: "0.0.0.0/0", DstIP: Dst + "/32", DstPortMin: dPortMin, DstPortMax: dPortMax, Proto: proto}
+	_, err := R.DeleteFwRule(fwarg)
+	if err != nil {
+		tk.LogIt(tk.LogError, "lbRuleWithFW failed to delete fw %v:%s\n", fwarg, err)
+		return err
+	}
+
+	tk.LogIt(tk.LogInfo, "lbRuleWithFW delete fw %v\n", fwarg)
 
 	return nil
 }
@@ -1675,6 +1741,9 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
+	if serv.ServPortMax != 0 {
+		l4dst.valid = serv.ServPortMax
+	}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 
 	eRule := R.tables[RtLB].eMap[rt.ruleKey()]
@@ -1866,6 +1935,9 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		if serv.Mode == cmn.LBModeHostOneArm {
 			R.mkHostAssocs(r)
 		}
+		if serv.ServPortMax != 0 {
+			R.addLbRuleWithFW(serv.ServIP, serv.ServPort, serv.ServPortMax, ipProto, uint32(r.ruleNum))
+		}
 	}
 
 	R.tables[RtLB].eMap[rt.ruleKey()] = r
@@ -1931,6 +2003,9 @@ func (R *RuleH) DeleteLbRule(serv cmn.LbServiceArg) (int, error) {
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
 	l4dst := rule16Tuple{serv.ServPort, 0xffff}
+	if serv.ServPortMax != 0 {
+		l4dst = rule16Tuple{serv.ServPort, serv.ServPortMax}
+	}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 
 	rule := R.tables[RtLB].eMap[rt.ruleKey()]
@@ -1948,6 +2023,9 @@ func (R *RuleH) DeleteLbRule(serv cmn.LbServiceArg) (int, error) {
 	if rule.act.actType != RtActSnat {
 		R.modNatEpHost(rule, eEps, false, activatedProbe, rule.egress)
 		R.unFoldRecursiveEPs(rule)
+		if serv.ServPortMax != 0 {
+			R.deleteLbRuleWithFW(serv.ServIP, serv.ServPort, serv.ServPortMax, ipProto)
+		}
 	}
 
 	for _, srcElem := range rule.srcList {
@@ -2146,7 +2224,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 		servArg.ServIP = "0.0.0.0"
 		servArg.ServPort = 0
 		servArg.Proto = "none"
-		servArg.BlockNum = uint32(r.ruleNum) | SnatFwMark
+		servArg.BlockNum = uint32(r.ruleNum) | NatFwMark
 		servArg.Sel = cmn.LbSelRr
 		servArg.Mode = cmn.LBModeDefault
 		servArg.Snat = true
@@ -2162,7 +2240,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 		}
 
 		if !fwOptArgs.OnDefault {
-			fwOpts.opt.fwMark = uint32(r.ruleNum) | SnatFwMark
+			fwOpts.opt.fwMark = uint32(r.ruleNum) | NatFwMark
 		} else {
 			fwOpts.opt.fwMark = uint32(r.ruleNum) | OnDfltSnatFwMark
 		}
@@ -2246,7 +2324,7 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 		servArg.ServIP = "0.0.0.0"
 		servArg.ServPort = 0
 		servArg.Proto = "none"
-		servArg.BlockNum = uint32(rule.ruleNum) | SnatFwMark
+		servArg.BlockNum = uint32(rule.ruleNum) | NatFwMark
 		servArg.Sel = cmn.LbSelRr
 		servArg.Mode = cmn.LBModeDefault
 		servArg.Snat = true
@@ -2857,20 +2935,24 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 	nWork.Work = work
 	nWork.Status = &r.sync
 	nWork.ZoneNum = r.zone.ZoneNum
-	nWork.ServiceIP = r.RuleVIP2PrivIP()
+	if r.tuples.l4Dst.valid == 0xffff {
+		nWork.ServiceIP = r.RuleVIP2PrivIP()
+		nWork.L4Port = r.tuples.l4Dst.val
+		nWork.Proto = r.tuples.l4Prot.val
+		nWork.BlockNum = r.tuples.pref
+	} else {
+		nWork.BlockNum = uint32(r.ruleNum) << 16
+	}
+	nWork.Mark = int(r.ruleNum)
+	nWork.InActTo = uint64(r.iTO)
+	nWork.PersistTo = uint64(r.pTO)
+	nWork.HostURL = r.tuples.path
+	nWork.Ppv2En = r.ppv2En
 	if r.secMode == cmn.LBServHTTPS {
 		nWork.SecMode = DpTermHTTPS
 	} else if r.secMode == cmn.LBServE2EHTTPS {
 		nWork.SecMode = DpE2EHTTPS
 	}
-	nWork.L4Port = r.tuples.l4Dst.val
-	nWork.Proto = r.tuples.l4Prot.val
-	nWork.Mark = int(r.ruleNum)
-	nWork.BlockNum = r.tuples.pref
-	nWork.InActTo = uint64(r.iTO)
-	nWork.PersistTo = uint64(r.pTO)
-	nWork.HostURL = r.tuples.path
-	nWork.Ppv2En = r.ppv2En
 	if len(r.srcList) > 0 {
 		nWork.SrcCheck = true
 	}
@@ -2885,6 +2967,11 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 		nWork.NatType = DpFullProxy
 	} else {
 		return -1
+	}
+
+	// Special case
+	if r.tuples.l4Dst.valid != 0xffff {
+		nWork.NatType = DpNat
 	}
 
 	mode := cmn.LBModeDefault

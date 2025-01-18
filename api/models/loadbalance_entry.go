@@ -436,8 +436,11 @@ type LoadbalanceEntryServiceArguments struct {
 	// end-point specific op (0-create, 1-attachEP, 2-detachEP)
 	Oper int32 `json:"oper,omitempty"`
 
-	// port number for the access
+	// (Min) port number for the access
 	Port int64 `json:"port,omitempty"`
+
+	// Max port number(range) for the access
+	PortMax int64 `json:"portMax,omitempty"`
 
 	// private IP (NAT'd) address for external access
 	PrivateIP string `json:"privateIP,omitempty"`

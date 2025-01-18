@@ -246,7 +246,8 @@ type NatT uint8
 
 // nat type constants
 const (
-	DpSnat NatT = iota + 1
+	DpNat NatT = iota + 1
+	DpSnat
 	DpDnat
 	DpHsnat
 	DpHdnat
