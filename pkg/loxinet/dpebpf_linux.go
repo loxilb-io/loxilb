@@ -1982,7 +1982,8 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 			return
 		}
 		cti.ServiceIP = r.tuples.l3Dst.addr.IP
-		cti.L4ServPort = r.tuples.l4Dst.val
+		cti.L4ServPort = r.tuples.l4Dst.valMin
+		cti.L4ServPortMax = r.tuples.l4Dst.valMax
 		cti.BlockNum = r.tuples.pref
 		cti.CI = r.ci
 		if r.tuples.l4Prot.val == 6 {
@@ -2089,6 +2090,7 @@ func dpCTMapChkUpdates() {
 				// Copy rule associations
 				goCtEnt.ServiceIP = cti.ServiceIP
 				goCtEnt.L4ServPort = cti.L4ServPort
+				goCtEnt.L4ServPortMax = cti.L4ServPortMax
 				goCtEnt.BlockNum = cti.BlockNum
 				goCtEnt.ServProto = cti.ServProto
 				goCtEnt.CI = cti.CI
@@ -2230,6 +2232,7 @@ func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
 	serv.ServIP = w.ServiceIP.String()
 	serv.Proto = w.ServProto
 	serv.ServPort = w.L4ServPort
+	serv.ServPortMax = w.L4ServPortMax
 	serv.BlockNum = w.BlockNum
 
 	mh.mtx.Lock()
