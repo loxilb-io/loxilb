@@ -234,6 +234,141 @@ paths:
           description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'
+  '/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/portmax/{portmax}/protocol/{proto}':
+    delete:
+      summary: Delete an existing Load balancer service
+      description: Delete an existing load balancer service with .
+      parameters:
+        - name: ip_address
+          in: path
+          type: string
+          required: true
+          description: Attributes for load balance service
+        - name: port
+          in: path
+          type: number
+          required: true
+          description: Attributes for load balance service
+        - name: portmax
+          in: path
+          type: number
+          required: true
+          description: Attributes for load balance service
+        - name: proto
+          in: path
+          type: string
+          required: true
+          description: Attributes for load balance service
+        - name: bgp
+          in: query
+          type: boolean
+          description: option for BGP enable
+        - name: block
+          in: query
+          type: number
+          required: false
+          description: block value if any
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintenance mode
+          schema:
+            $ref: '#/definitions/Error'
+  '/config/loadbalancer/hosturl/{hosturl}/externalipaddress/{ip_address}/port/{port}/portmax/{portmax}/protocol/{proto}':
+    delete:
+      summary: Delete an existing Load balancer service
+      description: Delete an existing load balancer service with .
+      parameters:
+        - name: hosturl
+          in: path
+          type: string
+          required: true
+          description: Attributes for load balance service
+        - name: ip_address
+          in: path
+          type: string
+          required: true
+          description: Attributes for load balance service
+        - name: port
+          in: path
+          type: number
+          required: true
+          description: Attributes for load balance service
+        - name: portmax
+          in: path
+          type: number
+          required: true
+          description: Attributes for load balance service
+        - name: proto
+          in: path
+          type: string
+          required: true
+          description: Attributes for load balance service
+        - name: bgp
+          in: query
+          type: boolean
+          description: option for BGP enable
+        - name: block
+          in: query
+          type: number
+          required: false
+          description: block value if any
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. VLAN already exists OR dependency VRF/VNET not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintenance mode
+          schema:
+            $ref: '#/definitions/Error'
   '/config/loadbalancer/hosturl/{hosturl}/externalipaddress/{ip_address}/port/{port}/protocol/{proto}':
     delete:
       summary: Delete an existing Load balancer service
@@ -2996,7 +3131,10 @@ definitions:
             description: private IP (NAT'd) address for external access
           port:
             type: integer
-            description:  port number for the access
+            description:  (Min) port number for the access
+          portMax:
+            type: integer
+            description:  Max port number(range) for the access
           protocol:
             type: string
             description:  value for access protocol

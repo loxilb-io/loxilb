@@ -246,7 +246,8 @@ type NatT uint8
 
 // nat type constants
 const (
-	DpSnat NatT = iota + 1
+	DpNat NatT = iota + 1
+	DpSnat
 	DpDnat
 	DpHsnat
 	DpHdnat
@@ -332,11 +333,12 @@ type DpCtInfo struct {
 	XSync   bool      `json:"xsync"`
 
 	// LB Association Data
-	ServiceIP  net.IP `json:"serviceip"`
-	ServProto  string `json:"servproto"`
-	L4ServPort uint16 `json:"l4servproto"`
-	BlockNum   uint32 `json:"blocknum"`
-	RuleID     uint32 `json:"ruleid"`
+	ServiceIP     net.IP `json:"serviceip"`
+	ServProto     string `json:"servproto"`
+	L4ServPort    uint16 `json:"l4servproto"`
+	L4ServPortMax uint16 `json:"l4servprotomax"`
+	BlockNum      uint32 `json:"blocknum"`
+	RuleID        uint32 `json:"ruleid"`
 }
 
 const (

@@ -78,7 +78,7 @@ const (
 
 // constants
 const (
-	MaxLBEndPoints             = 32
+	MaxLBEndPoints             = 32         // Max number of supported LB end-points
 	DflLbaInactiveTries        = 2          // Default number of inactive tries before LB arm is turned off
 	MaxDflLbaInactiveTries     = 100        // Max number of inactive tries before LB arm is turned off
 	DflLbaCheckTimeout         = 10         // Default timeout for checking LB arms
@@ -93,9 +93,10 @@ const (
 	MaxEndPointSweeps          = 20         // Maximum end-point sweeps per round
 	VIPSweepDuration           = 30         // Duration of periodic VIP maintenance
 	DefaultPersistTimeOut      = 10800      // Default persistent LB session timeout
-	SnatFwMark                 = 0x80000000 // Snat Marker
+	NatFwMark                  = 0x80000000 // NAT Marker
 	SrcChkFwMark               = 0x40000000 // Src check Marker
 	OnDfltSnatFwMark           = 0x20000000 // Ondefault Snat Marker
+	MaxSrcLBMarkerNum          = 28         // Max LB indexes which support source checks
 )
 
 type ruleTType uint
@@ -114,6 +115,12 @@ type rule8Tuple struct {
 type rule16Tuple struct {
 	val   uint16
 	valid uint16
+}
+
+type rule16RTuple struct {
+	valMin uint16
+	valMax uint16
+	valid  bool
 }
 
 type rule32Tuple struct {
@@ -147,16 +154,16 @@ type ruleTuples struct {
 	l3Src    ruleIPTuple
 	l3Dst    ruleIPTuple
 	l4Prot   rule8Tuple
-	l4Src    rule16Tuple
-	l4Dst    rule16Tuple
+	l4Src    rule16RTuple
+	l4Dst    rule16RTuple
 	tunID    rule32Tuple
 	inL2Src  ruleMacTuple
 	inL2Dst  ruleMacTuple
 	inL3Src  ruleIPTuple
 	inL3Dst  ruleIPTuple
 	inL4Prot rule8Tuple
-	inL4Src  rule16Tuple
-	inL4Dst  rule16Tuple
+	inL4Src  rule16RTuple
+	inL4Dst  rule16RTuple
 	pref     uint32
 	path     string
 }
@@ -435,81 +442,6 @@ func RulesInit(zone *Zone) *RuleH {
 	return nRh
 }
 
-func (r *ruleTuples) ruleMkKeyCompliance(match ruleTMatch) {
-	if match&RmPort != RmPort {
-		r.port.val = ""
-	}
-	if match&RmL2Src != RmL2Src {
-		for i := 0; i < 6; i++ {
-			r.l2Src.addr[i] = 0
-			r.l2Src.valid[i] = 0
-		}
-	}
-	if match&RmL2Dst != RmL2Dst {
-		for i := 0; i < 6; i++ {
-			r.l2Dst.addr[i] = 0
-			r.l2Dst.valid[i] = 0
-		}
-	}
-	if match&RmVlanID != RmVlanID {
-		r.vlanID.val = 0
-		r.vlanID.valid = 0
-	}
-	if match&RmL3Src != RmL3Src {
-		_, dst, _ := net.ParseCIDR("0.0.0.0/0")
-		r.l3Src.addr = *dst
-	}
-	if match&RmL3Dst != RmL3Dst {
-		_, dst, _ := net.ParseCIDR("0.0.0.0/0")
-		r.l3Dst.addr = *dst
-	}
-	if match&RmL4Prot != RmL4Prot {
-		r.l4Prot.val = 0
-		r.l4Prot.valid = 0
-	}
-	if match&RmL4Src != RmL4Src {
-		r.l4Src.val = 0
-		r.l4Src.valid = 0
-	}
-	if match&RmL4Dst != RmL4Dst {
-		r.l4Dst.val = 0
-		r.l4Dst.valid = 0
-	}
-
-	if match&RmInL2Src != RmInL2Src {
-		for i := 0; i < 6; i++ {
-			r.inL2Src.addr[i] = 0
-			r.inL2Src.valid[i] = 0
-		}
-	}
-	if match&RmInL2Dst != RmInL2Dst {
-		for i := 0; i < 6; i++ {
-			r.inL2Dst.addr[i] = 0
-			r.inL2Dst.valid[i] = 0
-		}
-	}
-	if match&RmInL3Src != RmInL3Src {
-		_, dst, _ := net.ParseCIDR("0.0.0.0/0")
-		r.inL3Src.addr = *dst
-	}
-	if match&RmInL3Dst != RmInL3Dst {
-		_, dst, _ := net.ParseCIDR("0.0.0.0/0")
-		r.inL3Dst.addr = *dst
-	}
-	if match&RmInL4Port != RmInL4Port {
-		r.inL4Prot.val = 0
-		r.inL4Prot.valid = 0
-	}
-	if match&RmInL4Src != RmInL4Src {
-		r.inL4Src.val = 0
-		r.inL4Src.valid = 0
-	}
-	if match&RmInL4Dst != RmInL4Dst {
-		r.inL4Dst.val = 0
-		r.inL4Dst.valid = 0
-	}
-}
-
 func (r *ruleTuples) ruleKey() string {
 	ks := ""
 	if r.path != "" {
@@ -535,16 +467,20 @@ func (r *ruleTuples) ruleKey() string {
 	ks += fmt.Sprintf("%s", r.l3Src.addr.String())
 	ks += fmt.Sprintf("%d", r.l4Prot.val&r.l4Prot.valid)
 
-	if r.l4Src.valid == 0xffff {
-		ks += fmt.Sprintf("%d", r.l4Src.val&r.l4Src.valid)
-	} else {
-		ks += fmt.Sprintf("%d%d", r.l4Src.val, r.l4Src.valid)
+	if r.l4Src.valid {
+		if r.l4Src.valMin == r.l4Src.valMax {
+			ks += fmt.Sprintf("%d", r.l4Src.valMin)
+		} else {
+			ks += fmt.Sprintf("%d%d", r.l4Src.valMin, r.l4Src.valMax)
+		}
 	}
 
-	if r.l4Dst.valid == 0xffff {
-		ks += fmt.Sprintf("%d", r.l4Dst.val&r.l4Dst.valid)
-	} else {
-		ks += fmt.Sprintf("%d%d", r.l4Dst.val, r.l4Dst.valid)
+	if r.l4Dst.valid {
+		if r.l4Dst.valMin == r.l4Dst.valMax {
+			ks += fmt.Sprintf("%d", r.l4Dst.valMin)
+		} else {
+			ks += fmt.Sprintf("%d%d", r.l4Dst.valMin, r.l4Dst.valMax)
+		}
 	}
 
 	ks += fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",
@@ -565,8 +501,20 @@ func (r *ruleTuples) ruleKey() string {
 	ks += fmt.Sprintf("%s", r.inL3Dst.addr.String())
 	ks += fmt.Sprintf("%s", r.inL3Src.addr.String())
 	ks += fmt.Sprintf("%d", r.inL4Prot.val&r.inL4Prot.valid)
-	ks += fmt.Sprintf("%d", r.inL4Src.val&r.inL4Src.valid)
-	ks += fmt.Sprintf("%d", r.inL4Dst.val&r.inL4Dst.valid)
+	if r.inL4Src.valid {
+		if r.inL4Src.valMin == r.inL4Src.valMax {
+			ks += fmt.Sprintf("%d", r.inL4Src.valMin)
+		} else {
+			ks += fmt.Sprintf("%d%d", r.inL4Src.valMin, r.inL4Src.valMax)
+		}
+	}
+	if r.inL4Dst.valid {
+		if r.inL4Dst.valMin == r.inL4Dst.valMax {
+			ks += fmt.Sprintf("%d", r.inL4Dst.valMin)
+		} else {
+			ks += fmt.Sprintf("%d%d", r.inL4Dst.valMin, r.inL4Dst.valMax)
+		}
+	}
 	ks += fmt.Sprintf("%d", r.pref)
 	return ks
 }
@@ -630,12 +578,20 @@ func (r *ruleTuples) String() string {
 		ks += fmt.Sprintf("proto-%d,", r.l4Prot.val&r.l4Prot.valid)
 	}
 
-	if r.l4Dst.valid != 0 {
-		ks += fmt.Sprintf("dport-%d,", r.l4Dst.val&r.l4Dst.valid)
+	if r.l4Dst.valid {
+		if r.l4Dst.valMin == r.l4Dst.valMax {
+			ks += fmt.Sprintf("dport-%d,", r.l4Dst.valMin)
+		} else {
+			ks += fmt.Sprintf("dport-%d:%d,", r.l4Dst.valMin, r.l4Dst.valMax)
+		}
 	}
 
-	if r.l4Src.valid != 0 {
-		ks += fmt.Sprintf("sport-%d,", r.l4Src.val&r.l4Src.valid)
+	if r.l4Src.valid {
+		if r.l4Src.valMin == r.l4Src.valMax {
+			ks += fmt.Sprintf("sport-%d,", r.l4Src.valMin)
+		} else {
+			ks += fmt.Sprintf("sport-%d:%d,", r.l4Src.valMin, r.l4Src.valMax)
+		}
 	}
 
 	if checkValidMACTuple(r.inL2Dst) {
@@ -670,12 +626,20 @@ func (r *ruleTuples) String() string {
 		ks += fmt.Sprintf("iproto-%d,", r.inL4Prot.val&r.inL4Prot.valid)
 	}
 
-	if r.inL4Dst.valid != 0 {
-		ks += fmt.Sprintf("idport-%d,", r.inL4Dst.val&r.inL4Dst.valid)
+	if r.inL4Dst.valid {
+		if r.inL4Dst.valMin == r.inL4Dst.valMax {
+			ks += fmt.Sprintf("idport-%d,", r.inL4Dst.valMin)
+		} else {
+			ks += fmt.Sprintf("idport-%d:%d,", r.inL4Dst.valMin, r.inL4Dst.valMax)
+		}
 	}
 
-	if r.inL4Src.valid != 0 {
-		ks += fmt.Sprintf("isport-%d,", r.inL4Src.val&r.inL4Src.valid)
+	if r.inL4Src.valid {
+		if r.inL4Src.valMin == r.inL4Src.valMax {
+			ks += fmt.Sprintf("isport-%d,", r.inL4Src.valMin)
+		} else {
+			ks += fmt.Sprintf("isport-%d:%d,", r.inL4Src.valMin, r.inL4Src.valMax)
+		}
 	}
 
 	return ks
@@ -733,8 +697,14 @@ func (a *ruleAct) String() string {
 				}
 			}
 		case *ruleFwOpts:
+			if na.opt.fwMark != 0 {
+				ks += fmt.Sprintf("Mark:%v ", na.opt.fwMark)
+			}
 			if a.actType == RtActSnat {
-				ks += fmt.Sprintf("%s:%d", na.opt.snatIP, na.opt.snatPort)
+				ks += fmt.Sprintf("%s:%d ", na.opt.snatIP, na.opt.snatPort)
+			}
+			if na.opt.onDflt {
+				ks += fmt.Sprintf("egress ")
 			}
 		}
 	}
@@ -762,7 +732,8 @@ func (R *RuleH) Rules2Json() ([]byte, error) {
 		} else {
 			return nil, errors.New("malformed service proto")
 		}
-		t.ServPort = data.tuples.l4Dst.val
+		t.ServPort = data.tuples.l4Dst.valMin
+		t.ServPortMax = data.tuples.l4Dst.valMax
 		t.Sel = data.act.action.(*ruleLBActs).sel
 		t.Mode = data.act.action.(*ruleLBActs).mode
 
@@ -810,7 +781,11 @@ func (R *RuleH) GetLBRule() ([]cmn.LbRuleMod, error) {
 		} else {
 			return []cmn.LbRuleMod{}, errors.New("malformed service proto")
 		}
-		ret.Serv.ServPort = data.tuples.l4Dst.val
+		ret.Serv.ServPort = data.tuples.l4Dst.valMin
+		ret.Serv.ServPortMax = data.tuples.l4Dst.valMax
+		if ret.Serv.ServPort == ret.Serv.ServPortMax {
+			ret.Serv.ServPortMax = 0
+		}
 		ret.Serv.Sel = data.act.action.(*ruleLBActs).sel
 		ret.Serv.Mode = data.act.action.(*ruleLBActs).mode
 		ret.Serv.Monitor = data.hChk.actChk
@@ -1006,7 +981,7 @@ func (R *RuleH) GetLBRuleByServArgs(serv cmn.LbServiceArg) *ruleEnt {
 
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
-	l4dst := rule16Tuple{serv.ServPort, 0xffff}
+	l4dst := rule16RTuple{serv.ServPort, serv.ServPortMax, true}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 	return R.tables[RtLB].eMap[rt.ruleKey()]
 }
@@ -1034,7 +1009,7 @@ func (R *RuleH) GetLBRuleSecIPs(serv cmn.LbServiceArg) []string {
 
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
-	l4dst := rule16Tuple{serv.ServPort, 0xffff}
+	l4dst := rule16RTuple{serv.ServPort, serv.ServPortMax, true}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 	if R.tables[RtLB].eMap[rt.ruleKey()] != nil {
 		for _, ip := range R.tables[RtLB].eMap[rt.ruleKey()].secIP {
@@ -1052,7 +1027,7 @@ func (R *RuleH) addAllowedLbSrc(CIDR string, lbMark uint32) *allowedSrcElem {
 		return nil
 	}
 
-	if lbMark >= 30 {
+	if lbMark > MaxSrcLBMarkerNum {
 		tk.LogIt(tk.LogError, "allowed-src lbmark out-of-range\n")
 		return nil
 	}
@@ -1103,7 +1078,7 @@ func (R *RuleH) deleteAllowedLbSrc(CIDR string, lbMark uint32) error {
 		return errors.New("no such allowed src prefix")
 	}
 
-	if lbMark >= 30 {
+	if lbMark > MaxSrcLBMarkerNum {
 		tk.LogIt(tk.LogError, "allowed-src lbmark out-of-range\n")
 		return nil
 	}
@@ -1127,6 +1102,49 @@ func (R *RuleH) deleteAllowedLbSrc(CIDR string, lbMark uint32) error {
 		tk.LogIt(tk.LogInfo, "updated allowed-cidr %s : 0x%x\n", srcElem.srcPref.String(), srcElem.lbmark)
 
 	}
+
+	return nil
+}
+
+func (R *RuleH) addLbRuleWithFW(Dst string, dPortMin, dPortMax uint16, proto uint8, lbMark uint32) error {
+
+	// When this routine is called, we are certain all in-args are valid
+	// So, these are not rechecked in this routine
+	if tk.IsNetIPv6(Dst) {
+		return errors.New("proto error")
+	}
+
+	fwarg := cmn.FwRuleArg{SrcIP: "0.0.0.0/0", DstIP: Dst + "/32", DstPortMin: dPortMin, DstPortMax: dPortMax, Proto: proto}
+	fwOpts := cmn.FwOptArg{Allow: true, Mark: lbMark<<16 | NatFwMark}
+	_, err := R.AddFwRule(fwarg, fwOpts)
+	if err != nil {
+		if !strings.Contains(err.Error(), "fwrule-exists") {
+			tk.LogIt(tk.LogError, "lbRuleWithFW failed to add fw %v:%s\n", fwarg, err)
+			return err
+		}
+	}
+
+	tk.LogIt(tk.LogInfo, "lbRuleWithFW added fw %v\n", fwarg)
+
+	return nil
+}
+
+func (R *RuleH) deleteLbRuleWithFW(Dst string, dPortMin, dPortMax uint16, proto uint8) error {
+
+	// When this routine is called, we are certain all in-args are valid
+	// So, these are not rechecked in this routine
+	if tk.IsNetIPv6(Dst) {
+		return errors.New("proto error")
+	}
+
+	fwarg := cmn.FwRuleArg{SrcIP: "0.0.0.0/0", DstIP: Dst + "/32", DstPortMin: dPortMin, DstPortMax: dPortMax, Proto: proto}
+	_, err := R.DeleteFwRule(fwarg)
+	if err != nil {
+		tk.LogIt(tk.LogError, "lbRuleWithFW failed to delete fw %v:%s\n", fwarg, err)
+		return err
+	}
+
+	tk.LogIt(tk.LogInfo, "lbRuleWithFW delete fw %v\n", fwarg)
 
 	return nil
 }
@@ -1314,7 +1332,7 @@ func (R *RuleH) foldRecursiveEPs(r *ruleEnt) {
 				}
 				l4prot := rule8Tuple{r.tuples.l4Prot.val, 0xff}
 				l3dst := ruleIPTuple{*sNetAddr}
-				l4dst := rule16Tuple{rep.xPort, 0xffff}
+				l4dst := rule16RTuple{rep.xPort, rep.xPort, true}
 				rtk := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: r.tuples.pref}
 				if rtk.ruleKey() == tr.tuples.ruleKey() {
 					rep.foldEndPoints = tr.act.action.(*ruleLBActs).endPoints
@@ -1344,7 +1362,7 @@ func (R *RuleH) foldRecursiveEPs(r *ruleEnt) {
 
 				l4prot := rule8Tuple{r.tuples.l4Prot.val, 0xff}
 				l3dst := ruleIPTuple{*sNetAddr}
-				l4dst := rule16Tuple{ep.xPort, 0xffff}
+				l4dst := rule16RTuple{ep.xPort, ep.xPort, true}
 				rtk := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: r.tuples.pref}
 				if r.tuples.ruleKey() == rtk.ruleKey() {
 					ep.foldEndPoints = r.act.action.(*ruleLBActs).endPoints
@@ -1613,6 +1631,10 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		return RuleArgsErr, errors.New("secondaryIP-args len error")
 	}
 
+	if serv.ServPortMax != 0 && serv.ServPortMax < serv.ServPort {
+		return RuleArgsErr, errors.New("serv-port-args range error")
+	}
+
 	activateProbe := false
 
 	for _, k := range servSecIPs {
@@ -1673,7 +1695,11 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
-	l4dst := rule16Tuple{serv.ServPort, 0xffff}
+	servPortMax := serv.ServPort
+	if serv.ServPortMax != 0 {
+		servPortMax = serv.ServPortMax
+	}
+	l4dst := rule16RTuple{serv.ServPort, servPortMax, true}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 
 	eRule := R.tables[RtLB].eMap[rt.ruleKey()]
@@ -1865,6 +1891,9 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		if serv.Mode == cmn.LBModeHostOneArm {
 			R.mkHostAssocs(r)
 		}
+		if serv.ServPortMax != 0 {
+			R.addLbRuleWithFW(serv.ServIP, serv.ServPort, serv.ServPortMax, ipProto, uint32(r.ruleNum))
+		}
 	}
 
 	R.tables[RtLB].eMap[rt.ruleKey()] = r
@@ -1913,6 +1942,10 @@ func (R *RuleH) DeleteLbRule(serv cmn.LbServiceArg) (int, error) {
 		return RuleUnknownServiceErr, errors.New("malformed-service error")
 	}
 
+	if serv.ServPortMax != 0 && serv.ServPortMax < serv.ServPort {
+		return RuleArgsErr, errors.New("serv-port-args range error")
+	}
+
 	if serv.Proto == "tcp" {
 		ipProto = 6
 	} else if serv.Proto == "udp" {
@@ -1929,7 +1962,11 @@ func (R *RuleH) DeleteLbRule(serv cmn.LbServiceArg) (int, error) {
 
 	l4prot := rule8Tuple{ipProto, 0xff}
 	l3dst := ruleIPTuple{*sNetAddr}
-	l4dst := rule16Tuple{serv.ServPort, 0xffff}
+	servPortMax := serv.ServPort
+	if serv.ServPortMax != 0 {
+		servPortMax = serv.ServPortMax
+	}
+	l4dst := rule16RTuple{serv.ServPort, servPortMax, true}
 	rt := ruleTuples{l3Dst: l3dst, l4Prot: l4prot, l4Dst: l4dst, pref: serv.BlockNum, path: serv.HostUrl}
 
 	rule := R.tables[RtLB].eMap[rt.ruleKey()]
@@ -1947,6 +1984,9 @@ func (R *RuleH) DeleteLbRule(serv cmn.LbServiceArg) (int, error) {
 	if rule.act.actType != RtActSnat {
 		R.modNatEpHost(rule, eEps, false, activatedProbe, rule.egress)
 		R.unFoldRecursiveEPs(rule)
+		if serv.ServPortMax != 0 {
+			R.deleteLbRuleWithFW(serv.ServIP, serv.ServPort, serv.ServPortMax, ipProto)
+		}
 	}
 
 	for _, srcElem := range rule.srcList {
@@ -1977,19 +2017,15 @@ func (R *RuleH) GetFwRule() ([]cmn.FwRuleMod, error) {
 		// Make Fw Arguments
 		ret.Rule.DstIP = data.tuples.l3Dst.addr.String()
 		ret.Rule.SrcIP = data.tuples.l3Src.addr.String()
-		if data.tuples.l4Dst.valid == 0xffff {
-			ret.Rule.DstPortMin = data.tuples.l4Dst.val
-		} else {
-			ret.Rule.DstPortMin = data.tuples.l4Dst.valid
+		if data.tuples.l4Dst.valid {
+			ret.Rule.DstPortMin = data.tuples.l4Dst.valMin
+			ret.Rule.DstPortMax = data.tuples.l4Dst.valMax
 		}
-		ret.Rule.DstPortMax = data.tuples.l4Dst.val
-		if data.tuples.l4Src.valid == 0xffff {
-			ret.Rule.SrcPortMin = data.tuples.l4Src.val
-		} else {
-			ret.Rule.SrcPortMin = data.tuples.l4Src.valid
+		if data.tuples.l4Src.valid {
+			ret.Rule.SrcPortMin = data.tuples.l4Src.valMin
+			ret.Rule.SrcPortMin = data.tuples.l4Src.valMax
 		}
 
-		ret.Rule.SrcPortMax = data.tuples.l4Src.val
 		ret.Rule.Proto = data.tuples.l4Prot.val
 		ret.Rule.InPort = data.tuples.port.val
 		ret.Rule.Pref = data.tuples.pref
@@ -2030,8 +2066,8 @@ func (R *RuleH) GetFwRule() ([]cmn.FwRuleMod, error) {
 // it will return 0 and nil error, else appropriate return code and error string will be set
 func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, error) {
 	var fwOpts ruleFwOpts
-	var l4src rule16Tuple
-	var l4dst rule16Tuple
+	var l4src rule16RTuple
+	var l4dst rule16RTuple
 	var l4prot rule8Tuple
 
 	// Validate rule args
@@ -2054,24 +2090,11 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	} else {
 		l4prot = rule8Tuple{fwRule.Proto, 0xff}
 	}
-
-	if fwRule.SrcPortMax == fwRule.SrcPortMin {
-		if fwRule.SrcPortMin == 0 {
-			l4src = rule16Tuple{0, 0}
-		} else {
-			l4src = rule16Tuple{fwRule.SrcPortMin, 0xffff}
-		}
-	} else {
-		l4src = rule16Tuple{fwRule.SrcPortMax, fwRule.SrcPortMin}
+	if (fwRule.SrcPortMax != 0 || fwRule.SrcPortMin != 0) && fwRule.SrcPortMax >= fwRule.SrcPortMin {
+		l4src = rule16RTuple{fwRule.SrcPortMin, fwRule.SrcPortMax, true}
 	}
-	if fwRule.DstPortMax == fwRule.DstPortMin {
-		if fwRule.DstPortMin == 0 {
-			l4dst = rule16Tuple{0, 0}
-		} else {
-			l4dst = rule16Tuple{fwRule.DstPortMin, 0xffff}
-		}
-	} else {
-		l4dst = rule16Tuple{fwRule.DstPortMax, fwRule.DstPortMin}
+	if (fwRule.DstPortMax != 0 || fwRule.DstPortMin != 0) && fwRule.DstPortMax >= fwRule.DstPortMin {
+		l4dst = rule16RTuple{fwRule.DstPortMin, fwRule.DstPortMax, true}
 	}
 	inport := ruleStringTuple{fwRule.InPort}
 	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot,
@@ -2147,7 +2170,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 		servArg.ServIP = "0.0.0.0"
 		servArg.ServPort = 0
 		servArg.Proto = "none"
-		servArg.BlockNum = uint32(r.ruleNum) | SnatFwMark
+		servArg.BlockNum = uint32(r.ruleNum) | NatFwMark
 		servArg.Sel = cmn.LbSelRr
 		servArg.Mode = cmn.LBModeDefault
 		servArg.Snat = true
@@ -2163,7 +2186,7 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 		}
 
 		if !fwOptArgs.OnDefault {
-			fwOpts.opt.fwMark = uint32(r.ruleNum) | SnatFwMark
+			fwOpts.opt.fwMark = uint32(r.ruleNum) | NatFwMark
 		} else {
 			fwOpts.opt.fwMark = uint32(r.ruleNum) | OnDfltSnatFwMark
 		}
@@ -2191,8 +2214,8 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 // On success, it will return 0 and nil error, else appropriate return code and
 // error string will be set
 func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
-	var l4src rule16Tuple
-	var l4dst rule16Tuple
+	var l4src rule16RTuple
+	var l4dst rule16RTuple
 	var l4prot rule8Tuple
 
 	// Vaildate rule args
@@ -2215,23 +2238,11 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 		l4prot = rule8Tuple{fwRule.Proto, 0xff}
 	}
 
-	if fwRule.SrcPortMax == fwRule.SrcPortMin {
-		if fwRule.SrcPortMin == 0 {
-			l4src = rule16Tuple{0, 0}
-		} else {
-			l4src = rule16Tuple{fwRule.SrcPortMin, 0xffff}
-		}
-	} else {
-		l4src = rule16Tuple{fwRule.SrcPortMax, fwRule.SrcPortMin}
+	if (fwRule.SrcPortMax != 0 || fwRule.SrcPortMin != 0) && fwRule.SrcPortMax >= fwRule.SrcPortMin {
+		l4src = rule16RTuple{fwRule.SrcPortMin, fwRule.SrcPortMax, true}
 	}
-	if fwRule.DstPortMax == fwRule.DstPortMin {
-		if fwRule.DstPortMin == 0 {
-			l4dst = rule16Tuple{0, 0}
-		} else {
-			l4dst = rule16Tuple{fwRule.DstPortMin, 0xffff}
-		}
-	} else {
-		l4dst = rule16Tuple{fwRule.DstPortMax, fwRule.DstPortMin}
+	if (fwRule.DstPortMax != 0 || fwRule.DstPortMin != 0) && fwRule.DstPortMax >= fwRule.DstPortMin {
+		l4src = rule16RTuple{fwRule.DstPortMin, fwRule.DstPortMax, true}
 	}
 	inport := ruleStringTuple{fwRule.InPort}
 	rt := ruleTuples{l3Src: l3src, l3Dst: l3dst, l4Prot: l4prot, l4Src: l4src, l4Dst: l4dst, port: inport, pref: fwRule.Pref}
@@ -2247,7 +2258,7 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 		servArg.ServIP = "0.0.0.0"
 		servArg.ServPort = 0
 		servArg.Proto = "none"
-		servArg.BlockNum = uint32(rule.ruleNum) | SnatFwMark
+		servArg.BlockNum = uint32(rule.ruleNum) | NatFwMark
 		servArg.Sel = cmn.LbSelRr
 		servArg.Mode = cmn.LBModeDefault
 		servArg.Snat = true
@@ -2787,25 +2798,20 @@ func (R *RuleH) RuleDestructAll() {
 			continue
 		}
 
-		lbs.ServPort = r.tuples.l4Dst.val
+		lbs.ServPort = r.tuples.l4Dst.valMin
+		lbs.ServPortMax = r.tuples.l4Dst.valMax
 		R.DeleteLbRule(lbs)
 	}
 	for _, r := range R.tables[RtFw].eMap {
 		fwr.DstIP = r.tuples.l3Dst.addr.String()
 		fwr.SrcIP = r.tuples.l3Src.addr.String()
-		if r.tuples.l4Src.valid == 0xffff {
-			fwr.SrcPortMin = r.tuples.l4Src.val
-			fwr.SrcPortMax = r.tuples.l4Src.val
-		} else {
-			fwr.SrcPortMin = r.tuples.l4Src.valid
-			fwr.SrcPortMax = r.tuples.l4Src.val
+		if r.tuples.l4Src.valid {
+			fwr.SrcPortMin = r.tuples.l4Src.valMin
+			fwr.SrcPortMax = r.tuples.l4Src.valMax
 		}
-		if r.tuples.l4Dst.valid == 0xffff {
-			fwr.DstPortMin = r.tuples.l4Dst.val
-			fwr.DstPortMax = r.tuples.l4Dst.val
-		} else {
-			fwr.DstPortMin = r.tuples.l4Dst.valid
-			fwr.DstPortMax = r.tuples.l4Dst.val
+		if r.tuples.l4Dst.valid {
+			fwr.DstPortMin = r.tuples.l4Dst.valMin
+			fwr.DstPortMax = r.tuples.l4Dst.valMax
 		}
 
 		fwr.Proto = r.tuples.l4Prot.val
@@ -2832,7 +2838,7 @@ func (r *ruleEnt) VIP2DP(work DpWorkT) int {
 					nVIPWork.Work = DpRemove
 				}
 				nVIPWork.VIP = r.tuples.l3Dst.addr.IP.Mask(r.tuples.l3Dst.addr.Mask)
-				nVIPWork.Port = r.tuples.l4Dst.val
+				nVIPWork.Port = r.tuples.l4Dst.valMin
 				nVIPWork.RwPort = ep.xPort
 				nVIPWork.Status = new(DpStatusT)
 				mh.dp.ToDpCh <- nVIPWork
@@ -2858,20 +2864,24 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 	nWork.Work = work
 	nWork.Status = &r.sync
 	nWork.ZoneNum = r.zone.ZoneNum
-	nWork.ServiceIP = r.RuleVIP2PrivIP()
+	if r.tuples.l4Dst.valMax == r.tuples.l4Dst.valMin {
+		nWork.ServiceIP = r.RuleVIP2PrivIP()
+		nWork.L4Port = r.tuples.l4Dst.valMin
+		nWork.Proto = r.tuples.l4Prot.val
+		nWork.BlockNum = r.tuples.pref
+	} else {
+		nWork.BlockNum = uint32(r.ruleNum) << 16
+	}
+	nWork.Mark = int(r.ruleNum)
+	nWork.InActTo = uint64(r.iTO)
+	nWork.PersistTo = uint64(r.pTO)
+	nWork.HostURL = r.tuples.path
+	nWork.Ppv2En = r.ppv2En
 	if r.secMode == cmn.LBServHTTPS {
 		nWork.SecMode = DpTermHTTPS
 	} else if r.secMode == cmn.LBServE2EHTTPS {
 		nWork.SecMode = DpE2EHTTPS
 	}
-	nWork.L4Port = r.tuples.l4Dst.val
-	nWork.Proto = r.tuples.l4Prot.val
-	nWork.Mark = int(r.ruleNum)
-	nWork.BlockNum = r.tuples.pref
-	nWork.InActTo = uint64(r.iTO)
-	nWork.PersistTo = uint64(r.pTO)
-	nWork.HostURL = r.tuples.path
-	nWork.Ppv2En = r.ppv2En
 	if len(r.srcList) > 0 {
 		nWork.SrcCheck = true
 	}
@@ -2886,6 +2896,11 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 		nWork.NatType = DpFullProxy
 	} else {
 		return -1
+	}
+
+	// Special case
+	if r.tuples.l4Dst.valMax != r.tuples.l4Dst.valMin {
+		nWork.NatType = DpNat
 	}
 
 	mode := cmn.LBModeDefault
@@ -3057,19 +3072,13 @@ func (r *ruleEnt) Fw2DP(work DpWorkT) int {
 	nWork.ZoneNum = r.zone.ZoneNum
 	nWork.SrcIP = r.tuples.l3Src.addr
 	nWork.DstIP = r.tuples.l3Dst.addr
-	if r.tuples.l4Src.valid == 0xffff {
-		nWork.L4SrcMin = r.tuples.l4Src.val
-		nWork.L4SrcMax = r.tuples.l4Src.val
-	} else {
-		nWork.L4SrcMin = r.tuples.l4Src.valid
-		nWork.L4SrcMax = r.tuples.l4Src.val
+	if r.tuples.l4Src.valid {
+		nWork.L4SrcMin = r.tuples.l4Src.valMin
+		nWork.L4SrcMax = r.tuples.l4Src.valMax
 	}
-	if r.tuples.l4Dst.valid == 0xffff {
-		nWork.L4DstMin = r.tuples.l4Dst.val
-		nWork.L4DstMax = r.tuples.l4Dst.val
-	} else {
-		nWork.L4DstMin = r.tuples.l4Dst.valid
-		nWork.L4DstMax = r.tuples.l4Dst.val
+	if r.tuples.l4Dst.valid {
+		nWork.L4DstMin = r.tuples.l4Dst.valMin
+		nWork.L4DstMax = r.tuples.l4Dst.valMax
 	}
 	if r.tuples.port.val != "" {
 		port := r.zone.Ports.PortFindByName(r.tuples.port.val)

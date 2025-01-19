@@ -958,8 +958,9 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 
 	key.mark = C.uint(w.BlockNum)
 
-	if w.NatType == DpSnat {
-		key.mark |= SnatFwMark
+	if w.NatType == DpSnat || w.NatType == DpNat {
+		key.mark |= NatFwMark
+		fmt.Printf("mark %v\n", key.mark)
 	} else {
 		key.daddr = [4]C.uint{0, 0, 0, 0}
 		if tk.IsNetIPv4(w.ServiceIP.String()) {
@@ -973,14 +974,13 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 		key.dport = C.ushort(tk.Htons(w.L4Port))
 		key.l4proto = C.ushort(w.Proto)
 		key.zone = C.ushort(w.ZoneNum)
-
 	}
 
 	dat := new(proxyActs)
 	C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_proxy_tacts)
 	if w.NatType == DpSnat {
 		dat.ca.act_type = C.DP_SET_SNAT
-	} else if w.NatType == DpDnat || w.NatType == DpFullNat {
+	} else if w.NatType == DpDnat || w.NatType == DpFullNat || w.NatType == DpNat {
 		dat.ca.act_type = C.DP_SET_DNAT
 	} else if w.NatType == DpFullProxy {
 		dat.ca.act_type = C.DP_SET_FULLPROXY
@@ -1086,10 +1086,10 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 			unsafe.Pointer(dat))
 
 		if ret != 0 {
-			tk.LogIt(tk.LogDebug, "[DP] LB rule %s add[NOK]\n", w.ServiceIP.String())
+			tk.LogIt(tk.LogDebug, "[DP] LB rule %s:%v add[NOK]\n", w.ServiceIP.String(), key.mark)
 			return EbpfErrTmacAdd
 		}
-		tk.LogIt(tk.LogDebug, "[DP] LB rule %s add[OK]\n", w.ServiceIP.String())
+		tk.LogIt(tk.LogDebug, "[DP] LB rule %s:%v add[OK]\n", w.ServiceIP.String(), key.mark)
 		return 0
 	} else if w.Work == DpRemove {
 		C.llb_del_map_elem_wval(C.LL_DP_NAT_MAP,
@@ -1982,7 +1982,8 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 			return
 		}
 		cti.ServiceIP = r.tuples.l3Dst.addr.IP
-		cti.L4ServPort = r.tuples.l4Dst.val
+		cti.L4ServPort = r.tuples.l4Dst.valMin
+		cti.L4ServPortMax = r.tuples.l4Dst.valMax
 		cti.BlockNum = r.tuples.pref
 		cti.CI = r.ci
 		if r.tuples.l4Prot.val == 6 {
@@ -2089,6 +2090,7 @@ func dpCTMapChkUpdates() {
 				// Copy rule associations
 				goCtEnt.ServiceIP = cti.ServiceIP
 				goCtEnt.L4ServPort = cti.L4ServPort
+				goCtEnt.L4ServPortMax = cti.L4ServPortMax
 				goCtEnt.BlockNum = cti.BlockNum
 				goCtEnt.ServProto = cti.ServProto
 				goCtEnt.CI = cti.CI
@@ -2230,6 +2232,7 @@ func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
 	serv.ServIP = w.ServiceIP.String()
 	serv.Proto = w.ServProto
 	serv.ServPort = w.L4ServPort
+	serv.ServPortMax = w.L4ServPortMax
 	serv.BlockNum = w.BlockNum
 
 	mh.mtx.Lock()

@@ -2036,6 +2036,101 @@ func init() {
         }
       }
     },
+    "/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/portmax/{portmax}/protocol/{proto}": {
+      "delete": {
+        "description": "Delete an existing load balancer service with .",
+        "summary": "Delete an existing Load balancer service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "number",
+            "description": "Attributes for load balance service",
+            "name": "port",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "number",
+            "description": "Attributes for load balance service",
+            "name": "portmax",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "proto",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "option for BGP enable",
+            "name": "bgp",
+            "in": "query"
+          },
+          {
+            "type": "number",
+            "description": "block value if any",
+            "name": "block",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}": {
       "delete": {
         "description": "Delete an existing load balancer service with .",
@@ -2052,6 +2147,108 @@ func init() {
             "type": "number",
             "description": "Attributes for load balance service",
             "name": "port",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "proto",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "option for BGP enable",
+            "name": "bgp",
+            "in": "query"
+          },
+          {
+            "type": "number",
+            "description": "block value if any",
+            "name": "block",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/loadbalancer/hosturl/{hosturl}/externalipaddress/{ip_address}/port/{port}/portmax/{portmax}/protocol/{proto}": {
+      "delete": {
+        "description": "Delete an existing load balancer service with .",
+        "summary": "Delete an existing Load balancer service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "hosturl",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "number",
+            "description": "Attributes for load balance service",
+            "name": "port",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "number",
+            "description": "Attributes for load balance service",
+            "name": "portmax",
             "in": "path",
             "required": true
           },
@@ -5207,7 +5404,11 @@ func init() {
               "format": "int32"
             },
             "port": {
-              "description": "port number for the access",
+              "description": "(Min) port number for the access",
+              "type": "integer"
+            },
+            "portMax": {
+              "description": "Max port number(range) for the access",
               "type": "integer"
             },
             "privateIP": {
@@ -7933,6 +8134,101 @@ func init() {
         }
       }
     },
+    "/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/portmax/{portmax}/protocol/{proto}": {
+      "delete": {
+        "description": "Delete an existing load balancer service with .",
+        "summary": "Delete an existing Load balancer service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "number",
+            "description": "Attributes for load balance service",
+            "name": "port",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "number",
+            "description": "Attributes for load balance service",
+            "name": "portmax",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "proto",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "option for BGP enable",
+            "name": "bgp",
+            "in": "query"
+          },
+          {
+            "type": "number",
+            "description": "block value if any",
+            "name": "block",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/loadbalancer/externalipaddress/{ip_address}/port/{port}/protocol/{proto}": {
       "delete": {
         "description": "Delete an existing load balancer service with .",
@@ -7949,6 +8245,108 @@ func init() {
             "type": "number",
             "description": "Attributes for load balance service",
             "name": "port",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "proto",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "option for BGP enable",
+            "name": "bgp",
+            "in": "query"
+          },
+          {
+            "type": "number",
+            "description": "block value if any",
+            "name": "block",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. VLAN already exists OR dependency VRF/VNET not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/loadbalancer/hosturl/{hosturl}/externalipaddress/{ip_address}/port/{port}/portmax/{portmax}/protocol/{proto}": {
+      "delete": {
+        "description": "Delete an existing load balancer service with .",
+        "summary": "Delete an existing Load balancer service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "hosturl",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Attributes for load balance service",
+            "name": "ip_address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "number",
+            "description": "Attributes for load balance service",
+            "name": "port",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "number",
+            "description": "Attributes for load balance service",
+            "name": "portmax",
             "in": "path",
             "required": true
           },
@@ -11528,7 +11926,11 @@ func init() {
               "format": "int32"
             },
             "port": {
-              "description": "port number for the access",
+              "description": "(Min) port number for the access",
+              "type": "integer"
+            },
+            "portMax": {
+              "description": "Max port number(range) for the access",
               "type": "integer"
             },
             "privateIP": {
@@ -11679,7 +12081,11 @@ func init() {
           "format": "int32"
         },
         "port": {
-          "description": "port number for the access",
+          "description": "(Min) port number for the access",
+          "type": "integer"
+        },
+        "portMax": {
+          "description": "Max port number(range) for the access",
           "type": "integer"
         },
         "privateIP": {
