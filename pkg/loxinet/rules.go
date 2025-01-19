@@ -78,7 +78,7 @@ const (
 
 // constants
 const (
-	MaxLBEndPoints             = 32
+	MaxLBEndPoints             = 32         // Max number of supported LB end-points
 	DflLbaInactiveTries        = 2          // Default number of inactive tries before LB arm is turned off
 	MaxDflLbaInactiveTries     = 100        // Max number of inactive tries before LB arm is turned off
 	DflLbaCheckTimeout         = 10         // Default timeout for checking LB arms
@@ -96,6 +96,7 @@ const (
 	NatFwMark                  = 0x80000000 // NAT Marker
 	SrcChkFwMark               = 0x40000000 // Src check Marker
 	OnDfltSnatFwMark           = 0x20000000 // Ondefault Snat Marker
+	MaxSrcLBMarkerNum          = 28         // Max LB indexes which support source checks
 )
 
 type ruleTType uint
@@ -1075,7 +1076,7 @@ func (R *RuleH) addAllowedLbSrc(CIDR string, lbMark uint32) *allowedSrcElem {
 		return nil
 	}
 
-	if lbMark >= 30 {
+	if lbMark > MaxSrcLBMarkerNum {
 		tk.LogIt(tk.LogError, "allowed-src lbmark out-of-range\n")
 		return nil
 	}
@@ -1126,7 +1127,7 @@ func (R *RuleH) deleteAllowedLbSrc(CIDR string, lbMark uint32) error {
 		return errors.New("no such allowed src prefix")
 	}
 
-	if lbMark >= 30 {
+	if lbMark > MaxSrcLBMarkerNum {
 		tk.LogIt(tk.LogError, "allowed-src lbmark out-of-range\n")
 		return nil
 	}
