@@ -1208,6 +1208,11 @@ func DelNeigh(neigh nlp.Neigh, link nlp.Link) int {
 
 func AddRoute(route nlp.Route) int {
 	var ipNet net.IPNet
+
+	if route.Table < 254 {
+		return -1
+	}
+
 	if route.Dst == nil {
 		if route.Family == 2 {
 			r := net.IPv4(0, 0, 0, 0)
@@ -1293,6 +1298,9 @@ func GetRouteNoHook(destination string) ([]string, string, error) {
 	}
 
 	for _, rt := range rts {
+		if rt.Table < 254 {
+			continue
+		}
 		if src == "" {
 			src = rt.Src.String()
 		}
@@ -1320,6 +1328,11 @@ func DelRouteNoHook(DestinationIPNet string) int {
 func DelRoute(route nlp.Route) int {
 	var ret int
 	var ipNet net.IPNet
+
+	if route.Table < 254 {
+		return -1
+	}
+
 	if route.Dst == nil {
 		r := net.IPv4(0, 0, 0, 0)
 		m := net.CIDRMask(0, 32)
