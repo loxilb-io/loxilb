@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandlerFunc turns a function with the right signature into a delete config vlan vlan ID member if name tagged tagged handler
-type DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandlerFunc func(DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedParams) middleware.Responder
+type DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandlerFunc func(DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandlerFunc) Handle(params DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedParams) middleware.Responder {
-	return fn(params)
+func (fn DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandlerFunc) Handle(params DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler interface for that can handle valid delete config vlan vlan ID member if name tagged tagged params
 type DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler interface {
-	Handle(DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedParams) middleware.Responder
+	Handle(DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedParams, interface{}) middleware.Responder
 }
 
 // NewDeleteConfigVlanVlanIDMemberIfNameTaggedTagged creates a new http.Handler for the delete config vlan vlan ID member if name tagged tagged operation
@@ -47,12 +47,25 @@ func (o *DeleteConfigVlanVlanIDMemberIfNameTaggedTagged) ServeHTTP(rw http.Respo
 		*r = *rCtx
 	}
 	var Params = NewDeleteConfigVlanVlanIDMemberIfNameTaggedTaggedParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandlerFunc turns a function with the right signature into a delete config sessionulcl ident ident ulcl address IP address handler
-type DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandlerFunc func(DeleteConfigSessionulclIdentIdentUlclAddressIPAddressParams) middleware.Responder
+type DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandlerFunc func(DeleteConfigSessionulclIdentIdentUlclAddressIPAddressParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandlerFunc) Handle(params DeleteConfigSessionulclIdentIdentUlclAddressIPAddressParams) middleware.Responder {
-	return fn(params)
+func (fn DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandlerFunc) Handle(params DeleteConfigSessionulclIdentIdentUlclAddressIPAddressParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler interface for that can handle valid delete config sessionulcl ident ident ulcl address IP address params
 type DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler interface {
-	Handle(DeleteConfigSessionulclIdentIdentUlclAddressIPAddressParams) middleware.Responder
+	Handle(DeleteConfigSessionulclIdentIdentUlclAddressIPAddressParams, interface{}) middleware.Responder
 }
 
 // NewDeleteConfigSessionulclIdentIdentUlclAddressIPAddress creates a new http.Handler for the delete config sessionulcl ident ident ulcl address IP address operation
@@ -47,12 +47,25 @@ func (o *DeleteConfigSessionulclIdentIdentUlclAddressIPAddress) ServeHTTP(rw htt
 		*r = *rCtx
 	}
 	var Params = NewDeleteConfigSessionulclIdentIdentUlclAddressIPAddressParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

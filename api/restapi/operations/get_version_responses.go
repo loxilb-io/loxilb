@@ -152,7 +152,7 @@ func (o *GetVersionInternalServerError) WriteResponse(rw http.ResponseWriter, pr
 const GetVersionServiceUnavailableCode int = 503
 
 /*
-GetVersionServiceUnavailable Maintanence mode
+GetVersionServiceUnavailable Maintenance mode
 
 swagger:response getVersionServiceUnavailable
 */

@@ -19,16 +19,16 @@ import (
 )
 
 // GetConfigFirewallAllHandlerFunc turns a function with the right signature into a get config firewall all handler
-type GetConfigFirewallAllHandlerFunc func(GetConfigFirewallAllParams) middleware.Responder
+type GetConfigFirewallAllHandlerFunc func(GetConfigFirewallAllParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetConfigFirewallAllHandlerFunc) Handle(params GetConfigFirewallAllParams) middleware.Responder {
-	return fn(params)
+func (fn GetConfigFirewallAllHandlerFunc) Handle(params GetConfigFirewallAllParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // GetConfigFirewallAllHandler interface for that can handle valid get config firewall all params
 type GetConfigFirewallAllHandler interface {
-	Handle(GetConfigFirewallAllParams) middleware.Responder
+	Handle(GetConfigFirewallAllParams, interface{}) middleware.Responder
 }
 
 // NewGetConfigFirewallAll creates a new http.Handler for the get config firewall all operation
@@ -54,12 +54,25 @@ func (o *GetConfigFirewallAll) ServeHTTP(rw http.ResponseWriter, r *http.Request
 		*r = *rCtx
 	}
 	var Params = NewGetConfigFirewallAllParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

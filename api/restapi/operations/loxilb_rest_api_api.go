@@ -18,6 +18,9 @@ import (
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+
+	"github.com/loxilb-io/loxilb/api/restapi/operations/auth"
+	"github.com/loxilb-io/loxilb/api/restapi/operations/users"
 )
 
 // NewLoxilbRestAPIAPI creates a new LoxilbRestAPI instance
@@ -42,237 +45,262 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
-		DeleteConfigBfdRemoteIPRemoteIPHandler: DeleteConfigBfdRemoteIPRemoteIPHandlerFunc(func(params DeleteConfigBfdRemoteIPRemoteIPParams) middleware.Responder {
+		UsersDeleteAuthUsersIDHandler: users.DeleteAuthUsersIDHandlerFunc(func(params users.DeleteAuthUsersIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation users.DeleteAuthUsersID has not yet been implemented")
+		}),
+		DeleteConfigBfdRemoteIPRemoteIPHandler: DeleteConfigBfdRemoteIPRemoteIPHandlerFunc(func(params DeleteConfigBfdRemoteIPRemoteIPParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigBfdRemoteIPRemoteIP has not yet been implemented")
 		}),
-		DeleteConfigBgpNeighIPAddressHandler: DeleteConfigBgpNeighIPAddressHandlerFunc(func(params DeleteConfigBgpNeighIPAddressParams) middleware.Responder {
+		DeleteConfigBgpNeighIPAddressHandler: DeleteConfigBgpNeighIPAddressHandlerFunc(func(params DeleteConfigBgpNeighIPAddressParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigBgpNeighIPAddress has not yet been implemented")
 		}),
-		DeleteConfigBgpPolicyApplyHandler: DeleteConfigBgpPolicyApplyHandlerFunc(func(params DeleteConfigBgpPolicyApplyParams) middleware.Responder {
+		DeleteConfigBgpPolicyApplyHandler: DeleteConfigBgpPolicyApplyHandlerFunc(func(params DeleteConfigBgpPolicyApplyParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigBgpPolicyApply has not yet been implemented")
 		}),
-		DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler: DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandlerFunc(func(params DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameParams) middleware.Responder {
+		DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler: DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandlerFunc(func(params DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeName has not yet been implemented")
 		}),
-		DeleteConfigBgpPolicyDefinitionsPolicyNameHandler: DeleteConfigBgpPolicyDefinitionsPolicyNameHandlerFunc(func(params DeleteConfigBgpPolicyDefinitionsPolicyNameParams) middleware.Responder {
+		DeleteConfigBgpPolicyDefinitionsPolicyNameHandler: DeleteConfigBgpPolicyDefinitionsPolicyNameHandlerFunc(func(params DeleteConfigBgpPolicyDefinitionsPolicyNameParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigBgpPolicyDefinitionsPolicyName has not yet been implemented")
 		}),
-		DeleteConfigEndpointEpipaddressIPAddressHandler: DeleteConfigEndpointEpipaddressIPAddressHandlerFunc(func(params DeleteConfigEndpointEpipaddressIPAddressParams) middleware.Responder {
+		DeleteConfigEndpointEpipaddressIPAddressHandler: DeleteConfigEndpointEpipaddressIPAddressHandlerFunc(func(params DeleteConfigEndpointEpipaddressIPAddressParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigEndpointEpipaddressIPAddress has not yet been implemented")
 		}),
-		DeleteConfigFdbMacAddressDevIfNameHandler: DeleteConfigFdbMacAddressDevIfNameHandlerFunc(func(params DeleteConfigFdbMacAddressDevIfNameParams) middleware.Responder {
+		DeleteConfigFdbMacAddressDevIfNameHandler: DeleteConfigFdbMacAddressDevIfNameHandlerFunc(func(params DeleteConfigFdbMacAddressDevIfNameParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigFdbMacAddressDevIfName has not yet been implemented")
 		}),
-		DeleteConfigFirewallHandler: DeleteConfigFirewallHandlerFunc(func(params DeleteConfigFirewallParams) middleware.Responder {
+		DeleteConfigFirewallHandler: DeleteConfigFirewallHandlerFunc(func(params DeleteConfigFirewallParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigFirewall has not yet been implemented")
 		}),
-		DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler: DeleteConfigIpv4addressIPAddressMaskDevIfNameHandlerFunc(func(params DeleteConfigIpv4addressIPAddressMaskDevIfNameParams) middleware.Responder {
+		DeleteConfigIpv4addressIPAddressMaskDevIfNameHandler: DeleteConfigIpv4addressIPAddressMaskDevIfNameHandlerFunc(func(params DeleteConfigIpv4addressIPAddressMaskDevIfNameParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigIpv4addressIPAddressMaskDevIfName has not yet been implemented")
 		}),
-		DeleteConfigLoadbalancerAllHandler: DeleteConfigLoadbalancerAllHandlerFunc(func(params DeleteConfigLoadbalancerAllParams) middleware.Responder {
+		DeleteConfigLoadbalancerAllHandler: DeleteConfigLoadbalancerAllHandlerFunc(func(params DeleteConfigLoadbalancerAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigLoadbalancerAll has not yet been implemented")
 		}),
-		DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoHandler: DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoParams) middleware.Responder {
+		DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoHandler: DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProto has not yet been implemented")
 		}),
-		DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler: DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
+		DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandler: DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProto has not yet been implemented")
 		}),
-		DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoHandler: DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoParams) middleware.Responder {
+		DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoHandler: DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProto has not yet been implemented")
 		}),
-		DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoHandler: DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
+		DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoHandler: DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoHandlerFunc(func(params DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProto has not yet been implemented")
 		}),
-		DeleteConfigLoadbalancerNameLbNameHandler: DeleteConfigLoadbalancerNameLbNameHandlerFunc(func(params DeleteConfigLoadbalancerNameLbNameParams) middleware.Responder {
+		DeleteConfigLoadbalancerNameLbNameHandler: DeleteConfigLoadbalancerNameLbNameHandlerFunc(func(params DeleteConfigLoadbalancerNameLbNameParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigLoadbalancerNameLbName has not yet been implemented")
 		}),
-		DeleteConfigMetricsHandler: DeleteConfigMetricsHandlerFunc(func(params DeleteConfigMetricsParams) middleware.Responder {
+		DeleteConfigMetricsHandler: DeleteConfigMetricsHandlerFunc(func(params DeleteConfigMetricsParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigMetrics has not yet been implemented")
 		}),
-		DeleteConfigMirrorIdentIdentHandler: DeleteConfigMirrorIdentIdentHandlerFunc(func(params DeleteConfigMirrorIdentIdentParams) middleware.Responder {
+		DeleteConfigMirrorIdentIdentHandler: DeleteConfigMirrorIdentIdentHandlerFunc(func(params DeleteConfigMirrorIdentIdentParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigMirrorIdentIdent has not yet been implemented")
 		}),
-		DeleteConfigNeighborIPAddressDevIfNameHandler: DeleteConfigNeighborIPAddressDevIfNameHandlerFunc(func(params DeleteConfigNeighborIPAddressDevIfNameParams) middleware.Responder {
+		DeleteConfigNeighborIPAddressDevIfNameHandler: DeleteConfigNeighborIPAddressDevIfNameHandlerFunc(func(params DeleteConfigNeighborIPAddressDevIfNameParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigNeighborIPAddressDevIfName has not yet been implemented")
 		}),
-		DeleteConfigPolicyIdentIdentHandler: DeleteConfigPolicyIdentIdentHandlerFunc(func(params DeleteConfigPolicyIdentIdentParams) middleware.Responder {
+		DeleteConfigPolicyIdentIdentHandler: DeleteConfigPolicyIdentIdentHandlerFunc(func(params DeleteConfigPolicyIdentIdentParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigPolicyIdentIdent has not yet been implemented")
 		}),
-		DeleteConfigRouteDestinationIPNetIPAddressMaskHandler: DeleteConfigRouteDestinationIPNetIPAddressMaskHandlerFunc(func(params DeleteConfigRouteDestinationIPNetIPAddressMaskParams) middleware.Responder {
+		DeleteConfigRouteDestinationIPNetIPAddressMaskHandler: DeleteConfigRouteDestinationIPNetIPAddressMaskHandlerFunc(func(params DeleteConfigRouteDestinationIPNetIPAddressMaskParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigRouteDestinationIPNetIPAddressMask has not yet been implemented")
 		}),
-		DeleteConfigSessionIdentIdentHandler: DeleteConfigSessionIdentIdentHandlerFunc(func(params DeleteConfigSessionIdentIdentParams) middleware.Responder {
+		DeleteConfigSessionIdentIdentHandler: DeleteConfigSessionIdentIdentHandlerFunc(func(params DeleteConfigSessionIdentIdentParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigSessionIdentIdent has not yet been implemented")
 		}),
-		DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler: DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandlerFunc(func(params DeleteConfigSessionulclIdentIdentUlclAddressIPAddressParams) middleware.Responder {
+		DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandler: DeleteConfigSessionulclIdentIdentUlclAddressIPAddressHandlerFunc(func(params DeleteConfigSessionulclIdentIdentUlclAddressIPAddressParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigSessionulclIdentIdentUlclAddressIPAddress has not yet been implemented")
 		}),
-		DeleteConfigTunnelVxlanVxlanIDHandler: DeleteConfigTunnelVxlanVxlanIDHandlerFunc(func(params DeleteConfigTunnelVxlanVxlanIDParams) middleware.Responder {
+		DeleteConfigTunnelVxlanVxlanIDHandler: DeleteConfigTunnelVxlanVxlanIDHandlerFunc(func(params DeleteConfigTunnelVxlanVxlanIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigTunnelVxlanVxlanID has not yet been implemented")
 		}),
-		DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandler: DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandlerFunc(func(params DeleteConfigTunnelVxlanVxlanIDPeerPeerIPParams) middleware.Responder {
+		DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandler: DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandlerFunc(func(params DeleteConfigTunnelVxlanVxlanIDPeerPeerIPParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigTunnelVxlanVxlanIDPeerPeerIP has not yet been implemented")
 		}),
-		DeleteConfigVlanVlanIDHandler: DeleteConfigVlanVlanIDHandlerFunc(func(params DeleteConfigVlanVlanIDParams) middleware.Responder {
+		DeleteConfigVlanVlanIDHandler: DeleteConfigVlanVlanIDHandlerFunc(func(params DeleteConfigVlanVlanIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigVlanVlanID has not yet been implemented")
 		}),
-		DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler: DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandlerFunc(func(params DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedParams) middleware.Responder {
+		DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler: DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandlerFunc(func(params DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteConfigVlanVlanIDMemberIfNameTaggedTagged has not yet been implemented")
 		}),
-		GetConfigBfdAllHandler: GetConfigBfdAllHandlerFunc(func(params GetConfigBfdAllParams) middleware.Responder {
+		UsersGetAuthUsersHandler: users.GetAuthUsersHandlerFunc(func(params users.GetAuthUsersParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation users.GetAuthUsers has not yet been implemented")
+		}),
+		GetConfigBfdAllHandler: GetConfigBfdAllHandlerFunc(func(params GetConfigBfdAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigBfdAll has not yet been implemented")
 		}),
-		GetConfigBgpNeighAllHandler: GetConfigBgpNeighAllHandlerFunc(func(params GetConfigBgpNeighAllParams) middleware.Responder {
+		GetConfigBgpNeighAllHandler: GetConfigBgpNeighAllHandlerFunc(func(params GetConfigBgpNeighAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigBgpNeighAll has not yet been implemented")
 		}),
-		GetConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler: GetConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandlerFunc(func(params GetConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameParams) middleware.Responder {
+		GetConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler: GetConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandlerFunc(func(params GetConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigBgpPolicyDefinedsetsDefinesetTypeTypeName has not yet been implemented")
 		}),
-		GetConfigBgpPolicyDefinitionsAllHandler: GetConfigBgpPolicyDefinitionsAllHandlerFunc(func(params GetConfigBgpPolicyDefinitionsAllParams) middleware.Responder {
+		GetConfigBgpPolicyDefinitionsAllHandler: GetConfigBgpPolicyDefinitionsAllHandlerFunc(func(params GetConfigBgpPolicyDefinitionsAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigBgpPolicyDefinitionsAll has not yet been implemented")
 		}),
-		GetConfigCistateAllHandler: GetConfigCistateAllHandlerFunc(func(params GetConfigCistateAllParams) middleware.Responder {
+		GetConfigCistateAllHandler: GetConfigCistateAllHandlerFunc(func(params GetConfigCistateAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigCistateAll has not yet been implemented")
 		}),
-		GetConfigConntrackAllHandler: GetConfigConntrackAllHandlerFunc(func(params GetConfigConntrackAllParams) middleware.Responder {
+		GetConfigConntrackAllHandler: GetConfigConntrackAllHandlerFunc(func(params GetConfigConntrackAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigConntrackAll has not yet been implemented")
 		}),
-		GetConfigEndpointAllHandler: GetConfigEndpointAllHandlerFunc(func(params GetConfigEndpointAllParams) middleware.Responder {
+		GetConfigEndpointAllHandler: GetConfigEndpointAllHandlerFunc(func(params GetConfigEndpointAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigEndpointAll has not yet been implemented")
 		}),
-		GetConfigFdbAllHandler: GetConfigFdbAllHandlerFunc(func(params GetConfigFdbAllParams) middleware.Responder {
+		GetConfigFdbAllHandler: GetConfigFdbAllHandlerFunc(func(params GetConfigFdbAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigFdbAll has not yet been implemented")
 		}),
-		GetConfigFirewallAllHandler: GetConfigFirewallAllHandlerFunc(func(params GetConfigFirewallAllParams) middleware.Responder {
+		GetConfigFirewallAllHandler: GetConfigFirewallAllHandlerFunc(func(params GetConfigFirewallAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigFirewallAll has not yet been implemented")
 		}),
-		GetConfigIpv4addressAllHandler: GetConfigIpv4addressAllHandlerFunc(func(params GetConfigIpv4addressAllParams) middleware.Responder {
+		GetConfigIpv4addressAllHandler: GetConfigIpv4addressAllHandlerFunc(func(params GetConfigIpv4addressAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigIpv4addressAll has not yet been implemented")
 		}),
-		GetConfigLoadbalancerAllHandler: GetConfigLoadbalancerAllHandlerFunc(func(params GetConfigLoadbalancerAllParams) middleware.Responder {
+		GetConfigLoadbalancerAllHandler: GetConfigLoadbalancerAllHandlerFunc(func(params GetConfigLoadbalancerAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigLoadbalancerAll has not yet been implemented")
 		}),
-		GetConfigMetricsHandler: GetConfigMetricsHandlerFunc(func(params GetConfigMetricsParams) middleware.Responder {
+		GetConfigMetricsHandler: GetConfigMetricsHandlerFunc(func(params GetConfigMetricsParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigMetrics has not yet been implemented")
 		}),
-		GetConfigMirrorAllHandler: GetConfigMirrorAllHandlerFunc(func(params GetConfigMirrorAllParams) middleware.Responder {
+		GetConfigMirrorAllHandler: GetConfigMirrorAllHandlerFunc(func(params GetConfigMirrorAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigMirrorAll has not yet been implemented")
 		}),
-		GetConfigNeighborAllHandler: GetConfigNeighborAllHandlerFunc(func(params GetConfigNeighborAllParams) middleware.Responder {
+		GetConfigNeighborAllHandler: GetConfigNeighborAllHandlerFunc(func(params GetConfigNeighborAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigNeighborAll has not yet been implemented")
 		}),
-		GetConfigParamsHandler: GetConfigParamsHandlerFunc(func(params GetConfigParamsParams) middleware.Responder {
+		GetConfigParamsHandler: GetConfigParamsHandlerFunc(func(params GetConfigParamsParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigParams has not yet been implemented")
 		}),
-		GetConfigPolicyAllHandler: GetConfigPolicyAllHandlerFunc(func(params GetConfigPolicyAllParams) middleware.Responder {
+		GetConfigPolicyAllHandler: GetConfigPolicyAllHandlerFunc(func(params GetConfigPolicyAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigPolicyAll has not yet been implemented")
 		}),
-		GetConfigPortAllHandler: GetConfigPortAllHandlerFunc(func(params GetConfigPortAllParams) middleware.Responder {
+		GetConfigPortAllHandler: GetConfigPortAllHandlerFunc(func(params GetConfigPortAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigPortAll has not yet been implemented")
 		}),
-		GetConfigRouteAllHandler: GetConfigRouteAllHandlerFunc(func(params GetConfigRouteAllParams) middleware.Responder {
+		GetConfigRouteAllHandler: GetConfigRouteAllHandlerFunc(func(params GetConfigRouteAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigRouteAll has not yet been implemented")
 		}),
-		GetConfigSessionAllHandler: GetConfigSessionAllHandlerFunc(func(params GetConfigSessionAllParams) middleware.Responder {
+		GetConfigSessionAllHandler: GetConfigSessionAllHandlerFunc(func(params GetConfigSessionAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigSessionAll has not yet been implemented")
 		}),
-		GetConfigSessionulclAllHandler: GetConfigSessionulclAllHandlerFunc(func(params GetConfigSessionulclAllParams) middleware.Responder {
+		GetConfigSessionulclAllHandler: GetConfigSessionulclAllHandlerFunc(func(params GetConfigSessionulclAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigSessionulclAll has not yet been implemented")
 		}),
-		GetConfigTunnelVxlanAllHandler: GetConfigTunnelVxlanAllHandlerFunc(func(params GetConfigTunnelVxlanAllParams) middleware.Responder {
+		GetConfigTunnelVxlanAllHandler: GetConfigTunnelVxlanAllHandlerFunc(func(params GetConfigTunnelVxlanAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigTunnelVxlanAll has not yet been implemented")
 		}),
-		GetConfigVlanAllHandler: GetConfigVlanAllHandlerFunc(func(params GetConfigVlanAllParams) middleware.Responder {
+		GetConfigVlanAllHandler: GetConfigVlanAllHandlerFunc(func(params GetConfigVlanAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigVlanAll has not yet been implemented")
 		}),
-		GetMetricsHandler: GetMetricsHandlerFunc(func(params GetMetricsParams) middleware.Responder {
+		GetMetricsHandler: GetMetricsHandlerFunc(func(params GetMetricsParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetMetrics has not yet been implemented")
 		}),
-		GetStatusDeviceHandler: GetStatusDeviceHandlerFunc(func(params GetStatusDeviceParams) middleware.Responder {
+		GetStatusDeviceHandler: GetStatusDeviceHandlerFunc(func(params GetStatusDeviceParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetStatusDevice has not yet been implemented")
 		}),
-		GetStatusFilesystemHandler: GetStatusFilesystemHandlerFunc(func(params GetStatusFilesystemParams) middleware.Responder {
+		GetStatusFilesystemHandler: GetStatusFilesystemHandlerFunc(func(params GetStatusFilesystemParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetStatusFilesystem has not yet been implemented")
 		}),
-		GetStatusProcessHandler: GetStatusProcessHandlerFunc(func(params GetStatusProcessParams) middleware.Responder {
+		GetStatusProcessHandler: GetStatusProcessHandlerFunc(func(params GetStatusProcessParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetStatusProcess has not yet been implemented")
 		}),
 		GetVersionHandler: GetVersionHandlerFunc(func(params GetVersionParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetVersion has not yet been implemented")
 		}),
-		PostConfigBfdHandler: PostConfigBfdHandlerFunc(func(params PostConfigBfdParams) middleware.Responder {
+		AuthPostAuthLoginHandler: auth.PostAuthLoginHandlerFunc(func(params auth.PostAuthLoginParams) middleware.Responder {
+			return middleware.NotImplemented("operation auth.PostAuthLogin has not yet been implemented")
+		}),
+		AuthPostAuthLogoutHandler: auth.PostAuthLogoutHandlerFunc(func(params auth.PostAuthLogoutParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation auth.PostAuthLogout has not yet been implemented")
+		}),
+		UsersPostAuthUsersHandler: users.PostAuthUsersHandlerFunc(func(params users.PostAuthUsersParams) middleware.Responder {
+			return middleware.NotImplemented("operation users.PostAuthUsers has not yet been implemented")
+		}),
+		PostConfigBfdHandler: PostConfigBfdHandlerFunc(func(params PostConfigBfdParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigBfd has not yet been implemented")
 		}),
-		PostConfigBgpGlobalHandler: PostConfigBgpGlobalHandlerFunc(func(params PostConfigBgpGlobalParams) middleware.Responder {
+		PostConfigBgpGlobalHandler: PostConfigBgpGlobalHandlerFunc(func(params PostConfigBgpGlobalParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigBgpGlobal has not yet been implemented")
 		}),
-		PostConfigBgpNeighHandler: PostConfigBgpNeighHandlerFunc(func(params PostConfigBgpNeighParams) middleware.Responder {
+		PostConfigBgpNeighHandler: PostConfigBgpNeighHandlerFunc(func(params PostConfigBgpNeighParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigBgpNeigh has not yet been implemented")
 		}),
-		PostConfigBgpPolicyApplyHandler: PostConfigBgpPolicyApplyHandlerFunc(func(params PostConfigBgpPolicyApplyParams) middleware.Responder {
+		PostConfigBgpPolicyApplyHandler: PostConfigBgpPolicyApplyHandlerFunc(func(params PostConfigBgpPolicyApplyParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigBgpPolicyApply has not yet been implemented")
 		}),
-		PostConfigBgpPolicyDefinedsetsDefinesetTypeHandler: PostConfigBgpPolicyDefinedsetsDefinesetTypeHandlerFunc(func(params PostConfigBgpPolicyDefinedsetsDefinesetTypeParams) middleware.Responder {
+		PostConfigBgpPolicyDefinedsetsDefinesetTypeHandler: PostConfigBgpPolicyDefinedsetsDefinesetTypeHandlerFunc(func(params PostConfigBgpPolicyDefinedsetsDefinesetTypeParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigBgpPolicyDefinedsetsDefinesetType has not yet been implemented")
 		}),
-		PostConfigBgpPolicyDefinitionsHandler: PostConfigBgpPolicyDefinitionsHandlerFunc(func(params PostConfigBgpPolicyDefinitionsParams) middleware.Responder {
+		PostConfigBgpPolicyDefinitionsHandler: PostConfigBgpPolicyDefinitionsHandlerFunc(func(params PostConfigBgpPolicyDefinitionsParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigBgpPolicyDefinitions has not yet been implemented")
 		}),
-		PostConfigCistateHandler: PostConfigCistateHandlerFunc(func(params PostConfigCistateParams) middleware.Responder {
+		PostConfigCistateHandler: PostConfigCistateHandlerFunc(func(params PostConfigCistateParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigCistate has not yet been implemented")
 		}),
-		PostConfigEndpointHandler: PostConfigEndpointHandlerFunc(func(params PostConfigEndpointParams) middleware.Responder {
+		PostConfigEndpointHandler: PostConfigEndpointHandlerFunc(func(params PostConfigEndpointParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigEndpoint has not yet been implemented")
 		}),
-		PostConfigFdbHandler: PostConfigFdbHandlerFunc(func(params PostConfigFdbParams) middleware.Responder {
+		PostConfigFdbHandler: PostConfigFdbHandlerFunc(func(params PostConfigFdbParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigFdb has not yet been implemented")
 		}),
-		PostConfigFirewallHandler: PostConfigFirewallHandlerFunc(func(params PostConfigFirewallParams) middleware.Responder {
+		PostConfigFirewallHandler: PostConfigFirewallHandlerFunc(func(params PostConfigFirewallParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigFirewall has not yet been implemented")
 		}),
-		PostConfigIpv4addressHandler: PostConfigIpv4addressHandlerFunc(func(params PostConfigIpv4addressParams) middleware.Responder {
+		PostConfigIpv4addressHandler: PostConfigIpv4addressHandlerFunc(func(params PostConfigIpv4addressParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigIpv4address has not yet been implemented")
 		}),
-		PostConfigLoadbalancerHandler: PostConfigLoadbalancerHandlerFunc(func(params PostConfigLoadbalancerParams) middleware.Responder {
+		PostConfigLoadbalancerHandler: PostConfigLoadbalancerHandlerFunc(func(params PostConfigLoadbalancerParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigLoadbalancer has not yet been implemented")
 		}),
-		PostConfigMetricsHandler: PostConfigMetricsHandlerFunc(func(params PostConfigMetricsParams) middleware.Responder {
+		PostConfigMetricsHandler: PostConfigMetricsHandlerFunc(func(params PostConfigMetricsParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigMetrics has not yet been implemented")
 		}),
-		PostConfigMirrorHandler: PostConfigMirrorHandlerFunc(func(params PostConfigMirrorParams) middleware.Responder {
+		PostConfigMirrorHandler: PostConfigMirrorHandlerFunc(func(params PostConfigMirrorParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigMirror has not yet been implemented")
 		}),
-		PostConfigNeighborHandler: PostConfigNeighborHandlerFunc(func(params PostConfigNeighborParams) middleware.Responder {
+		PostConfigNeighborHandler: PostConfigNeighborHandlerFunc(func(params PostConfigNeighborParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigNeighbor has not yet been implemented")
 		}),
-		PostConfigParamsHandler: PostConfigParamsHandlerFunc(func(params PostConfigParamsParams) middleware.Responder {
+		PostConfigParamsHandler: PostConfigParamsHandlerFunc(func(params PostConfigParamsParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigParams has not yet been implemented")
 		}),
-		PostConfigPolicyHandler: PostConfigPolicyHandlerFunc(func(params PostConfigPolicyParams) middleware.Responder {
+		PostConfigPolicyHandler: PostConfigPolicyHandlerFunc(func(params PostConfigPolicyParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigPolicy has not yet been implemented")
 		}),
-		PostConfigRouteHandler: PostConfigRouteHandlerFunc(func(params PostConfigRouteParams) middleware.Responder {
+		PostConfigRouteHandler: PostConfigRouteHandlerFunc(func(params PostConfigRouteParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigRoute has not yet been implemented")
 		}),
-		PostConfigSessionHandler: PostConfigSessionHandlerFunc(func(params PostConfigSessionParams) middleware.Responder {
+		PostConfigSessionHandler: PostConfigSessionHandlerFunc(func(params PostConfigSessionParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigSession has not yet been implemented")
 		}),
-		PostConfigSessionulclHandler: PostConfigSessionulclHandlerFunc(func(params PostConfigSessionulclParams) middleware.Responder {
+		PostConfigSessionulclHandler: PostConfigSessionulclHandlerFunc(func(params PostConfigSessionulclParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigSessionulcl has not yet been implemented")
 		}),
-		PostConfigTunnelVxlanHandler: PostConfigTunnelVxlanHandlerFunc(func(params PostConfigTunnelVxlanParams) middleware.Responder {
+		PostConfigTunnelVxlanHandler: PostConfigTunnelVxlanHandlerFunc(func(params PostConfigTunnelVxlanParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigTunnelVxlan has not yet been implemented")
 		}),
-		PostConfigTunnelVxlanVxlanIDPeerHandler: PostConfigTunnelVxlanVxlanIDPeerHandlerFunc(func(params PostConfigTunnelVxlanVxlanIDPeerParams) middleware.Responder {
+		PostConfigTunnelVxlanVxlanIDPeerHandler: PostConfigTunnelVxlanVxlanIDPeerHandlerFunc(func(params PostConfigTunnelVxlanVxlanIDPeerParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigTunnelVxlanVxlanIDPeer has not yet been implemented")
 		}),
-		PostConfigVlanHandler: PostConfigVlanHandlerFunc(func(params PostConfigVlanParams) middleware.Responder {
+		PostConfigVlanHandler: PostConfigVlanHandlerFunc(func(params PostConfigVlanParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigVlan has not yet been implemented")
 		}),
-		PostConfigVlanVlanIDMemberHandler: PostConfigVlanVlanIDMemberHandlerFunc(func(params PostConfigVlanVlanIDMemberParams) middleware.Responder {
+		PostConfigVlanVlanIDMemberHandler: PostConfigVlanVlanIDMemberHandlerFunc(func(params PostConfigVlanVlanIDMemberParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigVlanVlanIDMember has not yet been implemented")
 		}),
+		UsersPutAuthUsersIDHandler: users.PutAuthUsersIDHandlerFunc(func(params users.PutAuthUsersIDParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation users.PutAuthUsersID has not yet been implemented")
+		}),
+
+		// Applies when the "Authorization" header is set
+		BearerAuthAuth: func(token string) (interface{}, error) {
+			return nil, errors.NotImplemented("api key auth (BearerAuth) Authorization from header param [Authorization] has not yet been implemented")
+		},
+		// default authorizer is authorized meaning no requests are blocked
+		APIAuthorizer: security.Authorized(),
 	}
 }
 
@@ -309,6 +337,15 @@ type LoxilbRestAPIAPI struct {
 	//   - application/json
 	JSONProducer runtime.Producer
 
+	// BearerAuthAuth registers a function that takes a token and returns a principal
+	// it performs authentication based on an api key Authorization provided in the header
+	BearerAuthAuth func(string) (interface{}, error)
+
+	// APIAuthorizer provides access control (ACL/RBAC/ABAC) by providing access to the request and authenticated principal
+	APIAuthorizer runtime.Authorizer
+
+	// UsersDeleteAuthUsersIDHandler sets the operation handler for the delete auth users ID operation
+	UsersDeleteAuthUsersIDHandler users.DeleteAuthUsersIDHandler
 	// DeleteConfigBfdRemoteIPRemoteIPHandler sets the operation handler for the delete config bfd remote IP remote IP operation
 	DeleteConfigBfdRemoteIPRemoteIPHandler DeleteConfigBfdRemoteIPRemoteIPHandler
 	// DeleteConfigBgpNeighIPAddressHandler sets the operation handler for the delete config bgp neigh IP address operation
@@ -361,6 +398,8 @@ type LoxilbRestAPIAPI struct {
 	DeleteConfigVlanVlanIDHandler DeleteConfigVlanVlanIDHandler
 	// DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler sets the operation handler for the delete config vlan vlan ID member if name tagged tagged operation
 	DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler
+	// UsersGetAuthUsersHandler sets the operation handler for the get auth users operation
+	UsersGetAuthUsersHandler users.GetAuthUsersHandler
 	// GetConfigBfdAllHandler sets the operation handler for the get config bfd all operation
 	GetConfigBfdAllHandler GetConfigBfdAllHandler
 	// GetConfigBgpNeighAllHandler sets the operation handler for the get config bgp neigh all operation
@@ -415,6 +454,12 @@ type LoxilbRestAPIAPI struct {
 	GetStatusProcessHandler GetStatusProcessHandler
 	// GetVersionHandler sets the operation handler for the get version operation
 	GetVersionHandler GetVersionHandler
+	// AuthPostAuthLoginHandler sets the operation handler for the post auth login operation
+	AuthPostAuthLoginHandler auth.PostAuthLoginHandler
+	// AuthPostAuthLogoutHandler sets the operation handler for the post auth logout operation
+	AuthPostAuthLogoutHandler auth.PostAuthLogoutHandler
+	// UsersPostAuthUsersHandler sets the operation handler for the post auth users operation
+	UsersPostAuthUsersHandler users.PostAuthUsersHandler
 	// PostConfigBfdHandler sets the operation handler for the post config bfd operation
 	PostConfigBfdHandler PostConfigBfdHandler
 	// PostConfigBgpGlobalHandler sets the operation handler for the post config bgp global operation
@@ -463,6 +508,8 @@ type LoxilbRestAPIAPI struct {
 	PostConfigVlanHandler PostConfigVlanHandler
 	// PostConfigVlanVlanIDMemberHandler sets the operation handler for the post config vlan vlan ID member operation
 	PostConfigVlanVlanIDMemberHandler PostConfigVlanVlanIDMemberHandler
+	// UsersPutAuthUsersIDHandler sets the operation handler for the put auth users ID operation
+	UsersPutAuthUsersIDHandler users.PutAuthUsersIDHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -540,6 +587,13 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.BearerAuthAuth == nil {
+		unregistered = append(unregistered, "AuthorizationAuth")
+	}
+
+	if o.UsersDeleteAuthUsersIDHandler == nil {
+		unregistered = append(unregistered, "users.DeleteAuthUsersIDHandler")
+	}
 	if o.DeleteConfigBfdRemoteIPRemoteIPHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigBfdRemoteIPRemoteIPHandler")
 	}
@@ -617,6 +671,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler == nil {
 		unregistered = append(unregistered, "DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler")
+	}
+	if o.UsersGetAuthUsersHandler == nil {
+		unregistered = append(unregistered, "users.GetAuthUsersHandler")
 	}
 	if o.GetConfigBfdAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigBfdAllHandler")
@@ -699,6 +756,15 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.GetVersionHandler == nil {
 		unregistered = append(unregistered, "GetVersionHandler")
 	}
+	if o.AuthPostAuthLoginHandler == nil {
+		unregistered = append(unregistered, "auth.PostAuthLoginHandler")
+	}
+	if o.AuthPostAuthLogoutHandler == nil {
+		unregistered = append(unregistered, "auth.PostAuthLogoutHandler")
+	}
+	if o.UsersPostAuthUsersHandler == nil {
+		unregistered = append(unregistered, "users.PostAuthUsersHandler")
+	}
 	if o.PostConfigBfdHandler == nil {
 		unregistered = append(unregistered, "PostConfigBfdHandler")
 	}
@@ -771,6 +837,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.PostConfigVlanVlanIDMemberHandler == nil {
 		unregistered = append(unregistered, "PostConfigVlanVlanIDMemberHandler")
 	}
+	if o.UsersPutAuthUsersIDHandler == nil {
+		unregistered = append(unregistered, "users.PutAuthUsersIDHandler")
+	}
 
 	if len(unregistered) > 0 {
 		return fmt.Errorf("missing registration: %s", strings.Join(unregistered, ", "))
@@ -786,12 +855,21 @@ func (o *LoxilbRestAPIAPI) ServeErrorFor(operationID string) func(http.ResponseW
 
 // AuthenticatorsFor gets the authenticators for the specified security schemes
 func (o *LoxilbRestAPIAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme) map[string]runtime.Authenticator {
-	return nil
+	result := make(map[string]runtime.Authenticator)
+	for name := range schemes {
+		switch name {
+		case "BearerAuth":
+			scheme := schemes[name]
+			result[name] = o.APIKeyAuthenticator(scheme.Name, scheme.In, o.BearerAuthAuth)
+
+		}
+	}
+	return result
 }
 
 // Authorizer returns the registered authorizer
 func (o *LoxilbRestAPIAPI) Authorizer() runtime.Authorizer {
-	return nil
+	return o.APIAuthorizer
 }
 
 // ConsumersFor gets the consumers for the specified media types.
@@ -859,6 +937,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/auth/users/{id}"] = users.NewDeleteAuthUsersID(o.context, o.UsersDeleteAuthUsersIDHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
@@ -963,6 +1045,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/config/vlan/{vlan_id}/member/{if_name}/tagged/{tagged}"] = NewDeleteConfigVlanVlanIDMemberIfNameTaggedTagged(o.context, o.DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/auth/users"] = users.NewGetAuthUsers(o.context, o.UsersGetAuthUsersHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -1074,6 +1160,18 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
+	o.handlers["POST"]["/auth/login"] = auth.NewPostAuthLogin(o.context, o.AuthPostAuthLoginHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/auth/logout"] = auth.NewPostAuthLogout(o.context, o.AuthPostAuthLogoutHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/auth/users"] = users.NewPostAuthUsers(o.context, o.UsersPostAuthUsersHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
 	o.handlers["POST"]["/config/bfd"] = NewPostConfigBfd(o.context, o.PostConfigBfdHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
@@ -1167,6 +1265,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/config/vlan/{vlan_id}/member"] = NewPostConfigVlanVlanIDMember(o.context, o.PostConfigVlanVlanIDMemberHandler)
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/auth/users/{id}"] = users.NewPutAuthUsersID(o.context, o.UsersPutAuthUsersIDHandler)
 }
 
 // Serve creates a http handler to serve the API over HTTP

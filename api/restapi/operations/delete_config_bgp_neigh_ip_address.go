@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteConfigBgpNeighIPAddressHandlerFunc turns a function with the right signature into a delete config bgp neigh IP address handler
-type DeleteConfigBgpNeighIPAddressHandlerFunc func(DeleteConfigBgpNeighIPAddressParams) middleware.Responder
+type DeleteConfigBgpNeighIPAddressHandlerFunc func(DeleteConfigBgpNeighIPAddressParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteConfigBgpNeighIPAddressHandlerFunc) Handle(params DeleteConfigBgpNeighIPAddressParams) middleware.Responder {
-	return fn(params)
+func (fn DeleteConfigBgpNeighIPAddressHandlerFunc) Handle(params DeleteConfigBgpNeighIPAddressParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // DeleteConfigBgpNeighIPAddressHandler interface for that can handle valid delete config bgp neigh IP address params
 type DeleteConfigBgpNeighIPAddressHandler interface {
-	Handle(DeleteConfigBgpNeighIPAddressParams) middleware.Responder
+	Handle(DeleteConfigBgpNeighIPAddressParams, interface{}) middleware.Responder
 }
 
 // NewDeleteConfigBgpNeighIPAddress creates a new http.Handler for the delete config bgp neigh IP address operation
@@ -47,12 +47,25 @@ func (o *DeleteConfigBgpNeighIPAddress) ServeHTTP(rw http.ResponseWriter, r *htt
 		*r = *rCtx
 	}
 	var Params = NewDeleteConfigBgpNeighIPAddressParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }
