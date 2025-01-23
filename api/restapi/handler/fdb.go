@@ -23,7 +23,7 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 )
 
-func ConfigPostFDB(params operations.PostConfigFdbParams) middleware.Responder {
+func ConfigPostFDB(params operations.PostConfigFdbParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.AddFDBNoHook(params.Attr.MacAddress, params.Attr.Dev)
 	if ret != 0 {
@@ -32,7 +32,7 @@ func ConfigPostFDB(params operations.PostConfigFdbParams) middleware.Responder {
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteFDB(params operations.DeleteConfigFdbMacAddressDevIfNameParams) middleware.Responder {
+func ConfigDeleteFDB(params operations.DeleteConfigFdbMacAddressDevIfNameParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.DelFDBNoHook(params.MacAddress, params.IfName)
 	if ret != 0 {
@@ -41,7 +41,7 @@ func ConfigDeleteFDB(params operations.DeleteConfigFdbMacAddressDevIfNameParams)
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigGetFDB(params operations.GetConfigFdbAllParams) middleware.Responder {
+func ConfigGetFDB(params operations.GetConfigFdbAllParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: FDB  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	fdbs, _ := loxinlp.GetFDBNoHook()
 	var result []*models.FDBEntry

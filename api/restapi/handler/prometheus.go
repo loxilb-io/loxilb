@@ -16,9 +16,10 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/loxilb-io/loxilb/api/models"
 	"github.com/loxilb-io/loxilb/api/prometheus"
-	"net/http"
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
@@ -28,7 +29,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func ConfigGetPrometheusCounter(params operations.GetMetricsParams) middleware.Responder {
+func ConfigGetPrometheusCounter(params operations.GetMetricsParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	if !options.Opts.Prometheus {
 		return operations.NewGetMetricsOK().WithPayload("Prometheus option is disabled.")
@@ -38,12 +39,12 @@ func ConfigGetPrometheusCounter(params operations.GetMetricsParams) middleware.R
 	})
 }
 
-func ConfigGetPrometheusOption(params operations.GetConfigMetricsParams) middleware.Responder {
+func ConfigGetPrometheusOption(params operations.GetConfigMetricsParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "[API] Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	return operations.NewGetConfigMetricsOK().WithPayload(&models.MetricsConfig{Prometheus: &options.Opts.Prometheus})
 }
 
-func ConfigPostPrometheus(params operations.PostConfigMetricsParams) middleware.Responder {
+func ConfigPostPrometheus(params operations.PostConfigMetricsParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	err := prometheus.TurnOn()
 	if err != nil {
@@ -53,7 +54,7 @@ func ConfigPostPrometheus(params operations.PostConfigMetricsParams) middleware.
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeletePrometheus(params operations.DeleteConfigMetricsParams) middleware.Responder {
+func ConfigDeletePrometheus(params operations.DeleteConfigMetricsParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "[API] Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	err := prometheus.Off()
 	if err != nil {

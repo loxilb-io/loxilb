@@ -18,6 +18,7 @@ package loxinet
 
 import (
 	"errors"
+
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
 )
@@ -778,4 +779,38 @@ func (na *NetAPIStruct) NetGoBGPPolicyApplyDel(param *cmn.GoBGPPolicyApply) (int
 	tk.LogIt(tk.LogDebug, "loxilb BGP mode is disabled \n")
 	return 0, errors.New("loxilb BGP mode is disabled")
 
+}
+
+// NetUserAdd - Add a user in loxilb
+func (na *NetAPIStruct) NetUserAdd(param *cmn.User) (int, error) {
+	return mh.UserService.AddUser(*param)
+}
+
+// NetUserGet - Get a user in loxilb
+func (na *NetAPIStruct) NetUserGet() ([]cmn.User, error) {
+	return mh.UserService.GetUsers()
+}
+
+// NetUserDel - Delete a user in loxilb
+func (na *NetAPIStruct) NetUserDel(ID int) error {
+	return mh.UserService.DeleteUser(ID)
+}
+
+// NetUserUpdate - Update a user in loxilb
+func (na *NetAPIStruct) NetUserUpdate(param *cmn.User) error {
+	return mh.UserService.UpdateUser(*param)
+}
+
+// NetUserLogin - Validate a user in loxilb
+func (na *NetAPIStruct) NetUserLogin(param *cmn.User) (string, bool, error) {
+	return mh.UserService.Login(param.Username, param.Password)
+}
+
+func (na *NetAPIStruct) NetUserValidate(token string) (interface{}, error) {
+	return mh.UserService.ValidateToken(token)
+}
+
+// NetUserLogin - Validate a user in loxilb
+func (na *NetAPIStruct) NetUserLogout(tokenString string) error {
+	return mh.UserService.Logout(tokenString)
 }

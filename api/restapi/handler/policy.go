@@ -24,7 +24,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-func ConfigPostPolicy(params operations.PostConfigPolicyParams) middleware.Responder {
+func ConfigPostPolicy(params operations.PostConfigPolicyParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Policy %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var polMod cmn.PolMod
@@ -59,7 +59,7 @@ func ConfigPostPolicy(params operations.PostConfigPolicyParams) middleware.Respo
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeletePolicy(params operations.DeleteConfigPolicyIdentIdentParams) middleware.Responder {
+func ConfigDeletePolicy(params operations.DeleteConfigPolicyIdentIdentParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Policy %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var polMod cmn.PolMod
 
@@ -74,7 +74,7 @@ func ConfigDeletePolicy(params operations.DeleteConfigPolicyIdentIdentParams) mi
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigGetPolicy(params operations.GetConfigPolicyAllParams) middleware.Responder {
+func ConfigGetPolicy(params operations.GetConfigPolicyAllParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Policy %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	res, err := ApiHooks.NetPolicerGet()
 	if err != nil {

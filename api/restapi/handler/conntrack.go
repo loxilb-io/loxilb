@@ -22,7 +22,7 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 )
 
-func ConfigGetConntrack(params operations.GetConfigConntrackAllParams) middleware.Responder {
+func ConfigGetConntrack(params operations.GetConfigConntrackAllParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Conntrack %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	// Get Conntrack informations
 	res, err := ApiHooks.NetCtInfoGet()

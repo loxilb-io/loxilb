@@ -23,7 +23,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-func ConfigGetPort(params operations.GetConfigPortAllParams) middleware.Responder {
+func ConfigGetPort(params operations.GetConfigPortAllParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Port %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	// Get Port informations

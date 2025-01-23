@@ -27,7 +27,7 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 )
 
-func ConfigPostRoute(params operations.PostConfigRouteParams) middleware.Responder {
+func ConfigPostRoute(params operations.PostConfigRouteParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Route  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.AddRouteNoHook(params.Attr.DestinationIPNet, params.Attr.Gateway, params.Attr.Protocol)
 	if ret != 0 {
@@ -37,7 +37,7 @@ func ConfigPostRoute(params operations.PostConfigRouteParams) middleware.Respond
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteRoute(params operations.DeleteConfigRouteDestinationIPNetIPAddressMaskParams) middleware.Responder {
+func ConfigDeleteRoute(params operations.DeleteConfigRouteDestinationIPNetIPAddressMaskParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Route  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	DstIP := fmt.Sprintf("%s/%d", params.IPAddress, params.Mask)
 	ret := loxinlp.DelRouteNoHook(DstIP)
@@ -48,7 +48,7 @@ func ConfigDeleteRoute(params operations.DeleteConfigRouteDestinationIPNetIPAddr
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigGetRoute(params operations.GetConfigRouteAllParams) middleware.Responder {
+func ConfigGetRoute(params operations.GetConfigRouteAllParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Route  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	res, _ := ApiHooks.NetRouteGet()
 	var result []*models.RouteGetEntry

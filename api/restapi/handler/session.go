@@ -27,7 +27,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-func ConfigPostSession(params operations.PostConfigSessionParams) middleware.Responder {
+func ConfigPostSession(params operations.PostConfigSessionParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Session %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var sessionMod cmn.SessionMod
@@ -50,7 +50,7 @@ func ConfigPostSession(params operations.PostConfigSessionParams) middleware.Res
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteSession(params operations.DeleteConfigSessionIdentIdentParams) middleware.Responder {
+func ConfigDeleteSession(params operations.DeleteConfigSessionIdentIdentParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Session %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var sessionMod cmn.SessionMod
@@ -65,7 +65,7 @@ func ConfigDeleteSession(params operations.DeleteConfigSessionIdentIdentParams) 
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigPostSessionUlCl(params operations.PostConfigSessionulclParams) middleware.Responder {
+func ConfigPostSessionUlCl(params operations.PostConfigSessionulclParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Session UlCl %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var sessionulclMod cmn.SessionUlClMod
@@ -84,7 +84,7 @@ func ConfigPostSessionUlCl(params operations.PostConfigSessionulclParams) middle
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteSessionUlCl(params operations.DeleteConfigSessionulclIdentIdentUlclAddressIPAddressParams) middleware.Responder {
+func ConfigDeleteSessionUlCl(params operations.DeleteConfigSessionulclIdentIdentUlclAddressIPAddressParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Session UlCl %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var sessionulclMod cmn.SessionUlClMod
@@ -103,7 +103,7 @@ func ConfigDeleteSessionUlCl(params operations.DeleteConfigSessionulclIdentIdent
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigGetSession(params operations.GetConfigSessionAllParams) middleware.Responder {
+func ConfigGetSession(params operations.GetConfigSessionAllParams, principal interface{}) middleware.Responder {
 	// Get Session rules
 	tk.LogIt(tk.LogTrace, "api: Session %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
@@ -140,7 +140,7 @@ func ConfigGetSession(params operations.GetConfigSessionAllParams) middleware.Re
 	return operations.NewGetConfigSessionAllOK().WithPayload(&operations.GetConfigSessionAllOKBody{SessionAttr: result})
 }
 
-func ConfigGetSessionUlCl(params operations.GetConfigSessionulclAllParams) middleware.Responder {
+func ConfigGetSessionUlCl(params operations.GetConfigSessionulclAllParams, principal interface{}) middleware.Responder {
 	// Get Ulcl rules
 	tk.LogIt(tk.LogTrace, "api: Session UlCl %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 

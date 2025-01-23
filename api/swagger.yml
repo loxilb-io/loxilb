@@ -27,6 +27,183 @@ consumes:
   - application/json
 paths:
 #----------------------------------------------
+# User Management
+#----------------------------------------------
+  '/auth/login':
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns a JWT token if the credentials
+        are valid.
+      parameters:
+      - description: User credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/User'
+      produces:
+      - application/json
+      security: [] # Overrides global security, no authorization required
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: User login
+      tags:
+      - auth
+  '/auth/logout':
+    post:
+      consumes:
+      - application/json
+      description: Invalidates the user's token and logs them out.
+      security:
+        - BearerAuth: []
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: User logout
+      tags:
+      - auth
+  '/auth/users':
+    get:
+      description: Retrieves all users from the database and returns them as a JSON
+        response.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/User'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Fetch all users
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user in the system
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/User'
+      produces:
+      - application/json
+      security: [] # Overrides global security, no authorization required
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Create a new user
+      tags:
+      - users
+  '/auth/users/{id}':
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a user by its ID
+      security:
+        - BearerAuth: []
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Delete user
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing user with the provided JSON payload
+      security:
+        - BearerAuth: []
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Update user
+      tags:
+      - users
+#----------------------------------------------
 # Load Balancer
 #----------------------------------------------
   '/config/loadbalancer':
@@ -2950,6 +3127,7 @@ paths:
     get:
       summary: Get version information in the device
       description: Get version information
+      security: [] # Overrides global security, no authorization required
       responses:
         '200':
           description: OK
@@ -4299,3 +4477,61 @@ definitions:
       prometheus:
         type: boolean
         description: value for prometheus enable or not
+  MetricEntity:
+    type: object
+    properties:
+      name:
+        type: string
+        description: Metric Name
+      value:
+        type: integer
+        format: uint64
+        description: Metric Value
+      service:
+        type: string
+        description: Load Balancer Service Name
+  ErrorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  HealthCheckResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  LoginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  MessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  SuccessResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  User:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer      
+      password:
+        type: string
+      username:
+        type: string
+      role:
+        type: string
+    type: object
+securityDefinitions:
+  BearerAuth:
+    type: apiKey
+    name: Authorization
+    in: header
+security:
+  - BearerAuth: [] # Global security applied to all endpoints by default

@@ -23,7 +23,7 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 )
 
-func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) middleware.Responder {
+func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var lbRules cmn.LbRuleMod
@@ -88,7 +88,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams) midd
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
+func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortProtocolProtoParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var lbServ cmn.LbServiceArg
@@ -118,7 +118,7 @@ func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerHosturlH
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteLoadbalancerPortRange(params operations.DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoParams) middleware.Responder {
+func ConfigDeleteLoadbalancerPortRange(params operations.DeleteConfigLoadbalancerHosturlHosturlExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var lbServ cmn.LbServiceArg
@@ -149,7 +149,7 @@ func ConfigDeleteLoadbalancerPortRange(params operations.DeleteConfigLoadbalance
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteLoadbalancerWithoutPath(params operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams) middleware.Responder {
+func ConfigDeleteLoadbalancerWithoutPath(params operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortProtocolProtoParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var lbServ cmn.LbServiceArg
@@ -176,7 +176,7 @@ func ConfigDeleteLoadbalancerWithoutPath(params operations.DeleteConfigLoadbalan
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteLoadbalancerPortRangeWithoutPath(params operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoParams) middleware.Responder {
+func ConfigDeleteLoadbalancerPortRangeWithoutPath(params operations.DeleteConfigLoadbalancerExternalipaddressIPAddressPortPortPortmaxPortmaxProtocolProtoParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var lbServ cmn.LbServiceArg
@@ -203,7 +203,7 @@ func ConfigDeleteLoadbalancerPortRangeWithoutPath(params operations.DeleteConfig
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) middleware.Responder {
+func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams, principal interface{}) middleware.Responder {
 	// Get LB rules
 	tk.LogIt(tk.LogTrace, "api: Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
@@ -269,7 +269,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams) mid
 	return operations.NewGetConfigLoadbalancerAllOK().WithPayload(&operations.GetConfigLoadbalancerAllOKBody{LbAttr: result})
 }
 
-func ConfigDeleteAllLoadbalancer(params operations.DeleteConfigLoadbalancerAllParams) middleware.Responder {
+func ConfigDeleteAllLoadbalancer(params operations.DeleteConfigLoadbalancerAllParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "api: Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	res, err := ApiHooks.NetLbRuleGet()
@@ -289,7 +289,7 @@ func ConfigDeleteAllLoadbalancer(params operations.DeleteConfigLoadbalancerAllPa
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteLoadbalancerByName(params operations.DeleteConfigLoadbalancerNameLbNameParams) middleware.Responder {
+func ConfigDeleteLoadbalancerByName(params operations.DeleteConfigLoadbalancerNameLbNameParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "api: Load balancer %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	res, err := ApiHooks.NetLbRuleGet()

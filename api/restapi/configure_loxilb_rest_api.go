@@ -27,6 +27,8 @@ import (
 
 	"github.com/loxilb-io/loxilb/api/restapi/handler"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
+	"github.com/loxilb-io/loxilb/api/restapi/operations/auth"
+	"github.com/loxilb-io/loxilb/api/restapi/operations/users"
 )
 
 //go:generate swagger generate server --target ../../api --name LoxilbRestAPI --spec ../swagger.yml --principal interface{}
@@ -57,6 +59,10 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.JSONConsumer = runtime.JSONConsumer()
 
 	api.JSONProducer = runtime.JSONProducer()
+	// Applies when the "Authorization" header is set
+	api.BearerAuthAuth = handler.BearerAuthAuth
+	// Set your custom authorizer if needed. Default one is security.Authorized()
+	api.APIAuthorizer = handler.Authorized()
 
 	// Load balancer add and delete and get
 	api.PostConfigLoadbalancerHandler = operations.PostConfigLoadbalancerHandlerFunc(handler.ConfigPostLoadbalancer)
@@ -187,6 +193,19 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	// Version
 	api.GetVersionHandler = operations.GetVersionHandlerFunc(handler.ConfigGetVersion)
 
+	// It works only if the UserServiceEnable option is enabled.
+	if opts.Opts.UserServiceEnable {
+		// login logout api
+		api.AuthPostAuthLoginHandler = auth.PostAuthLoginHandlerFunc(handler.AuthPostLogin)
+		api.AuthPostAuthLogoutHandler = auth.PostAuthLogoutHandlerFunc(handler.AuthPostLogout)
+
+		// Users API
+		api.UsersGetAuthUsersHandler = users.GetAuthUsersHandlerFunc(handler.UsersGetUsers)
+		api.UsersPostAuthUsersHandler = users.PostAuthUsersHandlerFunc(handler.UsersPostUsers)
+		api.UsersDeleteAuthUsersIDHandler = users.DeleteAuthUsersIDHandlerFunc(handler.UsersDeleteUsers)
+		api.UsersPutAuthUsersIDHandler = users.PutAuthUsersIDHandlerFunc(handler.UsersPutUsers)
+	}
+
 	api.PreServerShutdown = func() {}
 	api.ServerShutdown = func() {}
 
@@ -208,6 +227,16 @@ func configureServer(s *http.Server, scheme, addr string) {
 // The middleware configuration is for the handler executors. These do not apply to the swagger.json document.
 // The middleware executes after routing but before authentication, binding and validation.
 func setupMiddlewares(handler http.Handler) http.Handler {
+	// User service is disabled, so we need to set a valid token for the Authorization header.
+	if !opts.Opts.UserServiceEnable {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Set a any token for the Authorization header.
+			if r.Header.Get("Authorization") == "" {
+				r.Header.Set("Authorization", "valid")
+			}
+			handler.ServeHTTP(w, r)
+		})
+	}
 	return handler
 }
 

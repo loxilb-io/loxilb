@@ -23,7 +23,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-func ConfigGetProcess(params operations.GetStatusProcessParams) middleware.Responder {
+func ConfigGetProcess(params operations.GetStatusProcessParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	//var result []*models.ProcessInfoEntry
 	process := status.ProcessInfoGet()
@@ -31,7 +31,7 @@ func ConfigGetProcess(params operations.GetStatusProcessParams) middleware.Respo
 	return operations.NewGetStatusProcessOK().WithPayload(&operations.GetStatusProcessOKBody{ProcessAttr: process})
 }
 
-func ConfigGetDevice(params operations.GetStatusDeviceParams) middleware.Responder {
+func ConfigGetDevice(params operations.GetStatusDeviceParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	// Get Conntrack informations
 	res, err := status.DeviceInfoGet()
@@ -42,7 +42,7 @@ func ConfigGetDevice(params operations.GetStatusDeviceParams) middleware.Respond
 	return operations.NewGetStatusDeviceOK().WithPayload(res)
 }
 
-func ConfigGetFileSystem(params operations.GetStatusFilesystemParams) middleware.Responder {
+func ConfigGetFileSystem(params operations.GetStatusFilesystemParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	res, err := status.FileSystemInfoGet()
 	if err != nil {
