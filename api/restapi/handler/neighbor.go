@@ -24,7 +24,7 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 )
 
-func ConfigPostNeighbor(params operations.PostConfigNeighborParams) middleware.Responder {
+func ConfigPostNeighbor(params operations.PostConfigNeighborParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: IPv4 Neighbor %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.AddNeighNoHook(params.Attr.IPAddress, params.Attr.Dev, params.Attr.MacAddress)
 	if ret != 0 {
@@ -33,7 +33,7 @@ func ConfigPostNeighbor(params operations.PostConfigNeighborParams) middleware.R
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteNeighbor(params operations.DeleteConfigNeighborIPAddressDevIfNameParams) middleware.Responder {
+func ConfigDeleteNeighbor(params operations.DeleteConfigNeighborIPAddressDevIfNameParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: IPv4 Neighbor   %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.DelNeighNoHook(params.IPAddress, params.IfName)
 	if ret != 0 {
@@ -42,7 +42,7 @@ func ConfigDeleteNeighbor(params operations.DeleteConfigNeighborIPAddressDevIfNa
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigGetNeighbor(params operations.GetConfigNeighborAllParams) middleware.Responder {
+func ConfigGetNeighbor(params operations.GetConfigNeighborAllParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: IPv4 Neighbor  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	res, _ := ApiHooks.NetNeighGet()
 	var result []*models.NeighborEntry

@@ -12,16 +12,16 @@ import (
 )
 
 // PostConfigSessionulclHandlerFunc turns a function with the right signature into a post config sessionulcl handler
-type PostConfigSessionulclHandlerFunc func(PostConfigSessionulclParams) middleware.Responder
+type PostConfigSessionulclHandlerFunc func(PostConfigSessionulclParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PostConfigSessionulclHandlerFunc) Handle(params PostConfigSessionulclParams) middleware.Responder {
-	return fn(params)
+func (fn PostConfigSessionulclHandlerFunc) Handle(params PostConfigSessionulclParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // PostConfigSessionulclHandler interface for that can handle valid post config sessionulcl params
 type PostConfigSessionulclHandler interface {
-	Handle(PostConfigSessionulclParams) middleware.Responder
+	Handle(PostConfigSessionulclParams, interface{}) middleware.Responder
 }
 
 // NewPostConfigSessionulcl creates a new http.Handler for the post config sessionulcl operation
@@ -47,12 +47,25 @@ func (o *PostConfigSessionulcl) ServeHTTP(rw http.ResponseWriter, r *http.Reques
 		*r = *rCtx
 	}
 	var Params = NewPostConfigSessionulclParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandlerFunc turns a function with the right signature into a delete config bgp policy definedsets defineset type type name handler
-type DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandlerFunc func(DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameParams) middleware.Responder
+type DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandlerFunc func(DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandlerFunc) Handle(params DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameParams) middleware.Responder {
-	return fn(params)
+func (fn DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandlerFunc) Handle(params DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler interface for that can handle valid delete config bgp policy definedsets defineset type type name params
 type DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameHandler interface {
-	Handle(DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameParams) middleware.Responder
+	Handle(DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameParams, interface{}) middleware.Responder
 }
 
 // NewDeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeName creates a new http.Handler for the delete config bgp policy definedsets defineset type type name operation
@@ -47,12 +47,25 @@ func (o *DeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeName) ServeHTTP(rw htt
 		*r = *rCtx
 	}
 	var Params = NewDeleteConfigBgpPolicyDefinedsetsDefinesetTypeTypeNameParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

@@ -12,16 +12,16 @@ import (
 )
 
 // PostConfigIpv4addressHandlerFunc turns a function with the right signature into a post config ipv4address handler
-type PostConfigIpv4addressHandlerFunc func(PostConfigIpv4addressParams) middleware.Responder
+type PostConfigIpv4addressHandlerFunc func(PostConfigIpv4addressParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PostConfigIpv4addressHandlerFunc) Handle(params PostConfigIpv4addressParams) middleware.Responder {
-	return fn(params)
+func (fn PostConfigIpv4addressHandlerFunc) Handle(params PostConfigIpv4addressParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // PostConfigIpv4addressHandler interface for that can handle valid post config ipv4address params
 type PostConfigIpv4addressHandler interface {
-	Handle(PostConfigIpv4addressParams) middleware.Responder
+	Handle(PostConfigIpv4addressParams, interface{}) middleware.Responder
 }
 
 // NewPostConfigIpv4address creates a new http.Handler for the post config ipv4address operation
@@ -47,12 +47,25 @@ func (o *PostConfigIpv4address) ServeHTTP(rw http.ResponseWriter, r *http.Reques
 		*r = *rCtx
 	}
 	var Params = NewPostConfigIpv4addressParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

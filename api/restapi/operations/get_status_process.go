@@ -19,16 +19,16 @@ import (
 )
 
 // GetStatusProcessHandlerFunc turns a function with the right signature into a get status process handler
-type GetStatusProcessHandlerFunc func(GetStatusProcessParams) middleware.Responder
+type GetStatusProcessHandlerFunc func(GetStatusProcessParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetStatusProcessHandlerFunc) Handle(params GetStatusProcessParams) middleware.Responder {
-	return fn(params)
+func (fn GetStatusProcessHandlerFunc) Handle(params GetStatusProcessParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // GetStatusProcessHandler interface for that can handle valid get status process params
 type GetStatusProcessHandler interface {
-	Handle(GetStatusProcessParams) middleware.Responder
+	Handle(GetStatusProcessParams, interface{}) middleware.Responder
 }
 
 // NewGetStatusProcess creates a new http.Handler for the get status process operation
@@ -54,12 +54,25 @@ func (o *GetStatusProcess) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		*r = *rCtx
 	}
 	var Params = NewGetStatusProcessParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

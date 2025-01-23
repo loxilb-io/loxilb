@@ -19,16 +19,16 @@ import (
 )
 
 // GetConfigIpv4addressAllHandlerFunc turns a function with the right signature into a get config ipv4address all handler
-type GetConfigIpv4addressAllHandlerFunc func(GetConfigIpv4addressAllParams) middleware.Responder
+type GetConfigIpv4addressAllHandlerFunc func(GetConfigIpv4addressAllParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetConfigIpv4addressAllHandlerFunc) Handle(params GetConfigIpv4addressAllParams) middleware.Responder {
-	return fn(params)
+func (fn GetConfigIpv4addressAllHandlerFunc) Handle(params GetConfigIpv4addressAllParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // GetConfigIpv4addressAllHandler interface for that can handle valid get config ipv4address all params
 type GetConfigIpv4addressAllHandler interface {
-	Handle(GetConfigIpv4addressAllParams) middleware.Responder
+	Handle(GetConfigIpv4addressAllParams, interface{}) middleware.Responder
 }
 
 // NewGetConfigIpv4addressAll creates a new http.Handler for the get config ipv4address all operation
@@ -54,12 +54,25 @@ func (o *GetConfigIpv4addressAll) ServeHTTP(rw http.ResponseWriter, r *http.Requ
 		*r = *rCtx
 	}
 	var Params = NewGetConfigIpv4addressAllParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

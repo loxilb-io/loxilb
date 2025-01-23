@@ -23,7 +23,7 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 )
 
-func ConfigGetEndPoint(params operations.GetConfigEndpointAllParams) middleware.Responder {
+func ConfigGetEndPoint(params operations.GetConfigEndpointAllParams, principal interface{}) middleware.Responder {
 	// Get endpoint rules
 	tk.LogIt(tk.LogTrace, "api: EndPoint %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
@@ -57,7 +57,7 @@ func ConfigGetEndPoint(params operations.GetConfigEndpointAllParams) middleware.
 	return operations.NewGetConfigEndpointAllOK().WithPayload(&operations.GetConfigEndpointAllOKBody{Attr: result})
 }
 
-func ConfigPostEndPoint(params operations.PostConfigEndpointParams) middleware.Responder {
+func ConfigPostEndPoint(params operations.PostConfigEndpointParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: EndPoint %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	EP := cmn.EndPointMod{}
@@ -77,7 +77,7 @@ func ConfigPostEndPoint(params operations.PostConfigEndpointParams) middleware.R
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteEndPoint(params operations.DeleteConfigEndpointEpipaddressIPAddressParams) middleware.Responder {
+func ConfigDeleteEndPoint(params operations.DeleteConfigEndpointEpipaddressIPAddressParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: EndPoint %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	EP := cmn.EndPointMod{}

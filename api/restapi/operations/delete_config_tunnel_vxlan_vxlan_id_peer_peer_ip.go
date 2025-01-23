@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandlerFunc turns a function with the right signature into a delete config tunnel vxlan vxlan ID peer peer IP handler
-type DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandlerFunc func(DeleteConfigTunnelVxlanVxlanIDPeerPeerIPParams) middleware.Responder
+type DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandlerFunc func(DeleteConfigTunnelVxlanVxlanIDPeerPeerIPParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandlerFunc) Handle(params DeleteConfigTunnelVxlanVxlanIDPeerPeerIPParams) middleware.Responder {
-	return fn(params)
+func (fn DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandlerFunc) Handle(params DeleteConfigTunnelVxlanVxlanIDPeerPeerIPParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandler interface for that can handle valid delete config tunnel vxlan vxlan ID peer peer IP params
 type DeleteConfigTunnelVxlanVxlanIDPeerPeerIPHandler interface {
-	Handle(DeleteConfigTunnelVxlanVxlanIDPeerPeerIPParams) middleware.Responder
+	Handle(DeleteConfigTunnelVxlanVxlanIDPeerPeerIPParams, interface{}) middleware.Responder
 }
 
 // NewDeleteConfigTunnelVxlanVxlanIDPeerPeerIP creates a new http.Handler for the delete config tunnel vxlan vxlan ID peer peer IP operation
@@ -47,12 +47,25 @@ func (o *DeleteConfigTunnelVxlanVxlanIDPeerPeerIP) ServeHTTP(rw http.ResponseWri
 		*r = *rCtx
 	}
 	var Params = NewDeleteConfigTunnelVxlanVxlanIDPeerPeerIPParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

@@ -32,9 +32,9 @@ func NewGetVersion(ctx *middleware.Context, handler GetVersionHandler) *GetVersi
 /*
 	GetVersion swagger:route GET /version getVersion
 
-# Get version inforrmation in the device
+# Get version information in the device
 
-Get version inforrmation
+Get version information
 */
 type GetVersion struct {
 	Context *middleware.Context

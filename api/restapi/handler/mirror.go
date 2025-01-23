@@ -26,7 +26,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-func ConfigPostMirror(params operations.PostConfigMirrorParams) middleware.Responder {
+func ConfigPostMirror(params operations.PostConfigMirrorParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Mirror %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var MirrMod cmn.MirrMod
@@ -61,7 +61,7 @@ func ConfigPostMirror(params operations.PostConfigMirrorParams) middleware.Respo
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteMirror(params operations.DeleteConfigMirrorIdentIdentParams) middleware.Responder {
+func ConfigDeleteMirror(params operations.DeleteConfigMirrorIdentIdentParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Mirror %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var MirrMod cmn.MirrMod
 
@@ -76,7 +76,7 @@ func ConfigDeleteMirror(params operations.DeleteConfigMirrorIdentIdentParams) mi
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigGetMirror(params operations.GetConfigMirrorAllParams) middleware.Responder {
+func ConfigGetMirror(params operations.GetConfigMirrorAllParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Mirror %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	res, err := ApiHooks.NetMirrorGet()
 	if err != nil {

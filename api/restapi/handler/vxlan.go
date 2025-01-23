@@ -23,7 +23,7 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 )
 
-func ConfigPostVxLAN(params operations.PostConfigTunnelVxlanParams) middleware.Responder {
+func ConfigPostVxLAN(params operations.PostConfigTunnelVxlanParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: VxLAN %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.AddVxLANBridgeNoHook(int(params.Attr.VxlanID), params.Attr.EpIntf)
 	if ret != 0 {
@@ -32,7 +32,7 @@ func ConfigPostVxLAN(params operations.PostConfigTunnelVxlanParams) middleware.R
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteVxLAN(params operations.DeleteConfigTunnelVxlanVxlanIDParams) middleware.Responder {
+func ConfigDeleteVxLAN(params operations.DeleteConfigTunnelVxlanVxlanIDParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: VxLAN %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.DelVxLANNoHook(int(params.VxlanID))
 	if ret != 0 {
@@ -41,7 +41,7 @@ func ConfigDeleteVxLAN(params operations.DeleteConfigTunnelVxlanVxlanIDParams) m
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigPostVxLANPeer(params operations.PostConfigTunnelVxlanVxlanIDPeerParams) middleware.Responder {
+func ConfigPostVxLANPeer(params operations.PostConfigTunnelVxlanVxlanIDPeerParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: VxLAN %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.AddVxLANPeerNoHook(int(params.VxlanID), params.Attr.PeerIP)
 	if ret != 0 {
@@ -50,7 +50,7 @@ func ConfigPostVxLANPeer(params operations.PostConfigTunnelVxlanVxlanIDPeerParam
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteVxLANPeer(params operations.DeleteConfigTunnelVxlanVxlanIDPeerPeerIPParams) middleware.Responder {
+func ConfigDeleteVxLANPeer(params operations.DeleteConfigTunnelVxlanVxlanIDPeerPeerIPParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: VxLAN %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.DelVxLANPeerNoHook(int(params.VxlanID), params.PeerIP)
 	if ret != 0 {
@@ -59,7 +59,7 @@ func ConfigDeleteVxLANPeer(params operations.DeleteConfigTunnelVxlanVxlanIDPeerP
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigGetVxLAN(params operations.GetConfigTunnelVxlanAllParams) middleware.Responder {
+func ConfigGetVxLAN(params operations.GetConfigTunnelVxlanAllParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: VxLAN   %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	peers, _ := loxinlp.GetVxLANPeerNoHook()

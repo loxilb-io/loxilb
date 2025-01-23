@@ -19,16 +19,16 @@ import (
 )
 
 // GetConfigConntrackAllHandlerFunc turns a function with the right signature into a get config conntrack all handler
-type GetConfigConntrackAllHandlerFunc func(GetConfigConntrackAllParams) middleware.Responder
+type GetConfigConntrackAllHandlerFunc func(GetConfigConntrackAllParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetConfigConntrackAllHandlerFunc) Handle(params GetConfigConntrackAllParams) middleware.Responder {
-	return fn(params)
+func (fn GetConfigConntrackAllHandlerFunc) Handle(params GetConfigConntrackAllParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // GetConfigConntrackAllHandler interface for that can handle valid get config conntrack all params
 type GetConfigConntrackAllHandler interface {
-	Handle(GetConfigConntrackAllParams) middleware.Responder
+	Handle(GetConfigConntrackAllParams, interface{}) middleware.Responder
 }
 
 // NewGetConfigConntrackAll creates a new http.Handler for the get config conntrack all operation
@@ -54,12 +54,25 @@ func (o *GetConfigConntrackAll) ServeHTTP(rw http.ResponseWriter, r *http.Reques
 		*r = *rCtx
 	}
 	var Params = NewGetConfigConntrackAllParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

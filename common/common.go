@@ -18,6 +18,7 @@ package common
 
 import (
 	"net"
+	"time"
 )
 
 const (
@@ -1036,6 +1037,20 @@ type MirrGetMod struct {
 	Sync DpStatusT
 }
 
+// User - information related to a user
+type User struct {
+	// Username - username of the user
+	Username string `json:"username"`
+	// Password - password of the user
+	Password string `json:"password"`
+	// createdAt - time of creation
+	CreatedAt time.Time `json:"created_at"`
+	//ID - unique identifier for the user
+	ID int `json:"id"`
+	// Role - role of the user
+	Role string `json:"role"`
+}
+
 // NetHookInterface - Go interface which needs to be implemented to talk to loxinet module
 type NetHookInterface interface {
 	NetMirrorGet() ([]MirrGetMod, error)
@@ -1102,5 +1117,14 @@ type NetHookInterface interface {
 	NetBFDGet() ([]BFDMod, error)
 	NetBFDAdd(bm *BFDMod) (int, error)
 	NetBFDDel(bm *BFDMod) (int, error)
+
+	NetUserAdd(um *User) (int, error)
+	NetUserGet() ([]User, error)
+	NetUserDel(ID int) error
+	NetUserUpdate(um *User) error
+	NetUserLogin(um *User) (string, bool, error)
+	NetUserLogout(token string) error
+	NetUserValidate(token string) (interface{}, error)
+
 	NetHandlePanic()
 }

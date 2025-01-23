@@ -25,7 +25,7 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 )
 
-func ConfigPostIPv4Address(params operations.PostConfigIpv4addressParams) middleware.Responder {
+func ConfigPostIPv4Address(params operations.PostConfigIpv4addressParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: IPv4 address %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ret := loxinlp.AddAddrNoHook(params.Attr.IPAddress, params.Attr.Dev)
 	if ret != 0 {
@@ -34,7 +34,7 @@ func ConfigPostIPv4Address(params operations.PostConfigIpv4addressParams) middle
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteIPv4Address(params operations.DeleteConfigIpv4addressIPAddressMaskDevIfNameParams) middleware.Responder {
+func ConfigDeleteIPv4Address(params operations.DeleteConfigIpv4addressIPAddressMaskDevIfNameParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: IPv4 address   %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	ipNet := fmt.Sprintf("%s/%s", params.IPAddress, params.Mask)
 	ret := loxinlp.DelAddrNoHook(ipNet, params.IfName)
@@ -44,7 +44,7 @@ func ConfigDeleteIPv4Address(params operations.DeleteConfigIpv4addressIPAddressM
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigGetIPv4Address(params operations.GetConfigIpv4addressAllParams) middleware.Responder {
+func ConfigGetIPv4Address(params operations.GetConfigIpv4addressAllParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: IPv4 address   %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	res, _ := ApiHooks.NetAddrGet()
 	var result []*models.IPV4AddressGetEntry

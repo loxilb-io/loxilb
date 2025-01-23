@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteConfigRouteDestinationIPNetIPAddressMaskHandlerFunc turns a function with the right signature into a delete config route destination IP net IP address mask handler
-type DeleteConfigRouteDestinationIPNetIPAddressMaskHandlerFunc func(DeleteConfigRouteDestinationIPNetIPAddressMaskParams) middleware.Responder
+type DeleteConfigRouteDestinationIPNetIPAddressMaskHandlerFunc func(DeleteConfigRouteDestinationIPNetIPAddressMaskParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteConfigRouteDestinationIPNetIPAddressMaskHandlerFunc) Handle(params DeleteConfigRouteDestinationIPNetIPAddressMaskParams) middleware.Responder {
-	return fn(params)
+func (fn DeleteConfigRouteDestinationIPNetIPAddressMaskHandlerFunc) Handle(params DeleteConfigRouteDestinationIPNetIPAddressMaskParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // DeleteConfigRouteDestinationIPNetIPAddressMaskHandler interface for that can handle valid delete config route destination IP net IP address mask params
 type DeleteConfigRouteDestinationIPNetIPAddressMaskHandler interface {
-	Handle(DeleteConfigRouteDestinationIPNetIPAddressMaskParams) middleware.Responder
+	Handle(DeleteConfigRouteDestinationIPNetIPAddressMaskParams, interface{}) middleware.Responder
 }
 
 // NewDeleteConfigRouteDestinationIPNetIPAddressMask creates a new http.Handler for the delete config route destination IP net IP address mask operation
@@ -47,12 +47,25 @@ func (o *DeleteConfigRouteDestinationIPNetIPAddressMask) ServeHTTP(rw http.Respo
 		*r = *rCtx
 	}
 	var Params = NewDeleteConfigRouteDestinationIPNetIPAddressMaskParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

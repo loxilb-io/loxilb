@@ -25,7 +25,7 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 )
 
-func ConfigGetCIState(params operations.GetConfigCistateAllParams) middleware.Responder {
+func ConfigGetCIState(params operations.GetConfigCistateAllParams, principal interface{}) middleware.Responder {
 	var result []*models.CIStatusGetEntry
 	result = make([]*models.CIStatusGetEntry, 0)
 	tk.LogIt(tk.LogTrace, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
@@ -45,7 +45,7 @@ func ConfigGetCIState(params operations.GetConfigCistateAllParams) middleware.Re
 	return operations.NewGetConfigCistateAllOK().WithPayload(&operations.GetConfigCistateAllOKBody{Attr: result})
 }
 
-func ConfigPostCIState(params operations.PostConfigCistateParams) middleware.Responder {
+func ConfigPostCIState(params operations.PostConfigCistateParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: HA %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var hasMod cmn.HASMod
@@ -64,7 +64,7 @@ func ConfigPostCIState(params operations.PostConfigCistateParams) middleware.Res
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigGetBFDSession(params operations.GetConfigBfdAllParams) middleware.Responder {
+func ConfigGetBFDSession(params operations.GetConfigBfdAllParams, principal interface{}) middleware.Responder {
 	var result []*models.BfdGetEntry
 	result = make([]*models.BfdGetEntry, 0)
 	tk.LogIt(tk.LogTrace, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
@@ -89,7 +89,7 @@ func ConfigGetBFDSession(params operations.GetConfigBfdAllParams) middleware.Res
 	return operations.NewGetConfigBfdAllOK().WithPayload(&operations.GetConfigBfdAllOKBody{Attr: result})
 }
 
-func ConfigPostBFDSession(params operations.PostConfigBfdParams) middleware.Responder {
+func ConfigPostBFDSession(params operations.PostConfigBfdParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: HA %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var bfdMod cmn.BFDMod
@@ -111,7 +111,7 @@ func ConfigPostBFDSession(params operations.PostConfigBfdParams) middleware.Resp
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteBFDSession(params operations.DeleteConfigBfdRemoteIPRemoteIPParams) middleware.Responder {
+func ConfigDeleteBFDSession(params operations.DeleteConfigBfdRemoteIPRemoteIPParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: HA %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var bfdMod cmn.BFDMod

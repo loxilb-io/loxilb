@@ -19,16 +19,16 @@ import (
 )
 
 // GetConfigTunnelVxlanAllHandlerFunc turns a function with the right signature into a get config tunnel vxlan all handler
-type GetConfigTunnelVxlanAllHandlerFunc func(GetConfigTunnelVxlanAllParams) middleware.Responder
+type GetConfigTunnelVxlanAllHandlerFunc func(GetConfigTunnelVxlanAllParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetConfigTunnelVxlanAllHandlerFunc) Handle(params GetConfigTunnelVxlanAllParams) middleware.Responder {
-	return fn(params)
+func (fn GetConfigTunnelVxlanAllHandlerFunc) Handle(params GetConfigTunnelVxlanAllParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // GetConfigTunnelVxlanAllHandler interface for that can handle valid get config tunnel vxlan all params
 type GetConfigTunnelVxlanAllHandler interface {
-	Handle(GetConfigTunnelVxlanAllParams) middleware.Responder
+	Handle(GetConfigTunnelVxlanAllParams, interface{}) middleware.Responder
 }
 
 // NewGetConfigTunnelVxlanAll creates a new http.Handler for the get config tunnel vxlan all operation
@@ -54,12 +54,25 @@ func (o *GetConfigTunnelVxlanAll) ServeHTTP(rw http.ResponseWriter, r *http.Requ
 		*r = *rCtx
 	}
 	var Params = NewGetConfigTunnelVxlanAllParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

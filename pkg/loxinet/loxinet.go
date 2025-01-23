@@ -35,6 +35,7 @@ import (
 	prometheus "github.com/loxilb-io/loxilb/api/prometheus"
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
+	"github.com/loxilb-io/loxilb/pkg/user"
 	utils "github.com/loxilb-io/loxilb/pkg/utils"
 	tk "github.com/loxilb-io/loxilib"
 )
@@ -84,6 +85,7 @@ type loxiNetH struct {
 	cloudInst   string
 	disBPF      bool
 	pFile       *os.File
+	UserService *user.UserService
 }
 
 // NodeWalker - an implementation of node walker interface
@@ -200,6 +202,9 @@ func loxiNetTicker(bgpPeerMode bool) {
 				// Do any housekeeping activities for security zones
 				mh.zn.ZoneTicker()
 				mh.has.CITicker()
+				if opts.Opts.UserServiceEnable {
+					mh.UserService.UserServiceTicker()
+				}
 			}
 		}
 	}
@@ -361,6 +366,12 @@ func loxiNetInit() {
 		// Spawn CI maintenance application
 		mh.has.CISpawn()
 	}
+	// Initialize the user service subsystem
+	if opts.Opts.UserServiceEnable {
+		tk.LogIt(tk.LogInfo, "User service enabled\n")
+		mh.UserService = user.NewUserService()
+	}
+
 	// Initialize the loxinet global ticker(s)
 	mh.tDone = make(chan bool)
 	mh.ticker = time.NewTicker(LoxinetTiVal * time.Second)

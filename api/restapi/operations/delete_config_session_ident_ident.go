@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteConfigSessionIdentIdentHandlerFunc turns a function with the right signature into a delete config session ident ident handler
-type DeleteConfigSessionIdentIdentHandlerFunc func(DeleteConfigSessionIdentIdentParams) middleware.Responder
+type DeleteConfigSessionIdentIdentHandlerFunc func(DeleteConfigSessionIdentIdentParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteConfigSessionIdentIdentHandlerFunc) Handle(params DeleteConfigSessionIdentIdentParams) middleware.Responder {
-	return fn(params)
+func (fn DeleteConfigSessionIdentIdentHandlerFunc) Handle(params DeleteConfigSessionIdentIdentParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // DeleteConfigSessionIdentIdentHandler interface for that can handle valid delete config session ident ident params
 type DeleteConfigSessionIdentIdentHandler interface {
-	Handle(DeleteConfigSessionIdentIdentParams) middleware.Responder
+	Handle(DeleteConfigSessionIdentIdentParams, interface{}) middleware.Responder
 }
 
 // NewDeleteConfigSessionIdentIdent creates a new http.Handler for the delete config session ident ident operation
@@ -47,12 +47,25 @@ func (o *DeleteConfigSessionIdentIdent) ServeHTTP(rw http.ResponseWriter, r *htt
 		*r = *rCtx
 	}
 	var Params = NewDeleteConfigSessionIdentIdentParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

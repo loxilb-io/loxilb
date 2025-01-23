@@ -19,16 +19,16 @@ import (
 )
 
 // GetConfigRouteAllHandlerFunc turns a function with the right signature into a get config route all handler
-type GetConfigRouteAllHandlerFunc func(GetConfigRouteAllParams) middleware.Responder
+type GetConfigRouteAllHandlerFunc func(GetConfigRouteAllParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetConfigRouteAllHandlerFunc) Handle(params GetConfigRouteAllParams) middleware.Responder {
-	return fn(params)
+func (fn GetConfigRouteAllHandlerFunc) Handle(params GetConfigRouteAllParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // GetConfigRouteAllHandler interface for that can handle valid get config route all params
 type GetConfigRouteAllHandler interface {
-	Handle(GetConfigRouteAllParams) middleware.Responder
+	Handle(GetConfigRouteAllParams, interface{}) middleware.Responder
 }
 
 // NewGetConfigRouteAll creates a new http.Handler for the get config route all operation
@@ -54,12 +54,25 @@ func (o *GetConfigRouteAll) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		*r = *rCtx
 	}
 	var Params = NewGetConfigRouteAllParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

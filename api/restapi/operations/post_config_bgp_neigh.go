@@ -12,16 +12,16 @@ import (
 )
 
 // PostConfigBgpNeighHandlerFunc turns a function with the right signature into a post config bgp neigh handler
-type PostConfigBgpNeighHandlerFunc func(PostConfigBgpNeighParams) middleware.Responder
+type PostConfigBgpNeighHandlerFunc func(PostConfigBgpNeighParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PostConfigBgpNeighHandlerFunc) Handle(params PostConfigBgpNeighParams) middleware.Responder {
-	return fn(params)
+func (fn PostConfigBgpNeighHandlerFunc) Handle(params PostConfigBgpNeighParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // PostConfigBgpNeighHandler interface for that can handle valid post config bgp neigh params
 type PostConfigBgpNeighHandler interface {
-	Handle(PostConfigBgpNeighParams) middleware.Responder
+	Handle(PostConfigBgpNeighParams, interface{}) middleware.Responder
 }
 
 // NewPostConfigBgpNeigh creates a new http.Handler for the post config bgp neigh operation
@@ -47,12 +47,25 @@ func (o *PostConfigBgpNeigh) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		*r = *rCtx
 	}
 	var Params = NewPostConfigBgpNeighParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

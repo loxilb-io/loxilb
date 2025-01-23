@@ -12,16 +12,16 @@ import (
 )
 
 // PostConfigTunnelVxlanVxlanIDPeerHandlerFunc turns a function with the right signature into a post config tunnel vxlan vxlan ID peer handler
-type PostConfigTunnelVxlanVxlanIDPeerHandlerFunc func(PostConfigTunnelVxlanVxlanIDPeerParams) middleware.Responder
+type PostConfigTunnelVxlanVxlanIDPeerHandlerFunc func(PostConfigTunnelVxlanVxlanIDPeerParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PostConfigTunnelVxlanVxlanIDPeerHandlerFunc) Handle(params PostConfigTunnelVxlanVxlanIDPeerParams) middleware.Responder {
-	return fn(params)
+func (fn PostConfigTunnelVxlanVxlanIDPeerHandlerFunc) Handle(params PostConfigTunnelVxlanVxlanIDPeerParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // PostConfigTunnelVxlanVxlanIDPeerHandler interface for that can handle valid post config tunnel vxlan vxlan ID peer params
 type PostConfigTunnelVxlanVxlanIDPeerHandler interface {
-	Handle(PostConfigTunnelVxlanVxlanIDPeerParams) middleware.Responder
+	Handle(PostConfigTunnelVxlanVxlanIDPeerParams, interface{}) middleware.Responder
 }
 
 // NewPostConfigTunnelVxlanVxlanIDPeer creates a new http.Handler for the post config tunnel vxlan vxlan ID peer operation
@@ -47,12 +47,25 @@ func (o *PostConfigTunnelVxlanVxlanIDPeer) ServeHTTP(rw http.ResponseWriter, r *
 		*r = *rCtx
 	}
 	var Params = NewPostConfigTunnelVxlanVxlanIDPeerParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

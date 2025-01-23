@@ -3,12 +3,12 @@
 package restapi
 
 import (
+	"github.com/loxilb-io/loxilb/options"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"github.com/loxilb-io/loxilb/options"
 	"log"
 	"net"
 	"net/http"

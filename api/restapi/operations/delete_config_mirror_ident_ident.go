@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteConfigMirrorIdentIdentHandlerFunc turns a function with the right signature into a delete config mirror ident ident handler
-type DeleteConfigMirrorIdentIdentHandlerFunc func(DeleteConfigMirrorIdentIdentParams) middleware.Responder
+type DeleteConfigMirrorIdentIdentHandlerFunc func(DeleteConfigMirrorIdentIdentParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteConfigMirrorIdentIdentHandlerFunc) Handle(params DeleteConfigMirrorIdentIdentParams) middleware.Responder {
-	return fn(params)
+func (fn DeleteConfigMirrorIdentIdentHandlerFunc) Handle(params DeleteConfigMirrorIdentIdentParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // DeleteConfigMirrorIdentIdentHandler interface for that can handle valid delete config mirror ident ident params
 type DeleteConfigMirrorIdentIdentHandler interface {
-	Handle(DeleteConfigMirrorIdentIdentParams) middleware.Responder
+	Handle(DeleteConfigMirrorIdentIdentParams, interface{}) middleware.Responder
 }
 
 // NewDeleteConfigMirrorIdentIdent creates a new http.Handler for the delete config mirror ident ident operation
@@ -47,12 +47,25 @@ func (o *DeleteConfigMirrorIdentIdent) ServeHTTP(rw http.ResponseWriter, r *http
 		*r = *rCtx
 	}
 	var Params = NewDeleteConfigMirrorIdentIdentParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

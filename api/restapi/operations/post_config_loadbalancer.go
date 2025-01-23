@@ -12,16 +12,16 @@ import (
 )
 
 // PostConfigLoadbalancerHandlerFunc turns a function with the right signature into a post config loadbalancer handler
-type PostConfigLoadbalancerHandlerFunc func(PostConfigLoadbalancerParams) middleware.Responder
+type PostConfigLoadbalancerHandlerFunc func(PostConfigLoadbalancerParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PostConfigLoadbalancerHandlerFunc) Handle(params PostConfigLoadbalancerParams) middleware.Responder {
-	return fn(params)
+func (fn PostConfigLoadbalancerHandlerFunc) Handle(params PostConfigLoadbalancerParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // PostConfigLoadbalancerHandler interface for that can handle valid post config loadbalancer params
 type PostConfigLoadbalancerHandler interface {
-	Handle(PostConfigLoadbalancerParams) middleware.Responder
+	Handle(PostConfigLoadbalancerParams, interface{}) middleware.Responder
 }
 
 // NewPostConfigLoadbalancer creates a new http.Handler for the post config loadbalancer operation
@@ -47,12 +47,25 @@ func (o *PostConfigLoadbalancer) ServeHTTP(rw http.ResponseWriter, r *http.Reque
 		*r = *rCtx
 	}
 	var Params = NewPostConfigLoadbalancerParams()
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		*r = *aCtx
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc.(interface{}) // this is really a interface{}, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

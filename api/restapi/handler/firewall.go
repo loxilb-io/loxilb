@@ -25,7 +25,7 @@ import (
 	tk "github.com/loxilb-io/loxilib"
 )
 
-func ConfigPostFW(params operations.PostConfigFirewallParams) middleware.Responder {
+func ConfigPostFW(params operations.PostConfigFirewallParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Firewall %s API called by IP: %s. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.RemoteAddr, params.HTTPRequest.URL)
 	Opts := cmn.FwOptArg{}
 	Rules := cmn.FwRuleArg{}
@@ -80,7 +80,7 @@ func ConfigPostFW(params operations.PostConfigFirewallParams) middleware.Respond
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigDeleteFW(params operations.DeleteConfigFirewallParams) middleware.Responder {
+func ConfigDeleteFW(params operations.DeleteConfigFirewallParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Firewall %s API called by IP: %s. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.RemoteAddr, params.HTTPRequest.URL)
 
 	Rules := cmn.FwRuleArg{}
@@ -144,7 +144,7 @@ func ConfigDeleteFW(params operations.DeleteConfigFirewallParams) middleware.Res
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigGetFW(params operations.GetConfigFirewallAllParams) middleware.Responder {
+func ConfigGetFW(params operations.GetConfigFirewallAllParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Firewall %s API called by IP: %s. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.RemoteAddr, params.HTTPRequest.URL)
 	res, _ := ApiHooks.NetFwRuleGet()
 	var result []*models.FirewallEntry

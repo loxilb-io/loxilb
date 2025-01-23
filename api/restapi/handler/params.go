@@ -24,7 +24,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-func ConfigPostParams(params operations.PostConfigParamsParams) middleware.Responder {
+func ConfigPostParams(params operations.PostConfigParamsParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Params %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	var param cmn.ParamMod
@@ -40,7 +40,7 @@ func ConfigPostParams(params operations.PostConfigParamsParams) middleware.Respo
 	return &ResultResponse{Result: "Success"}
 }
 
-func ConfigGetParams(params operations.GetConfigParamsParams) middleware.Responder {
+func ConfigGetParams(params operations.GetConfigParamsParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Status %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var param cmn.ParamMod
 
