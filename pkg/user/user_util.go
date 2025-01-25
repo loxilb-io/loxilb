@@ -10,7 +10,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/loxilb-io/loxilb/pkg/db"
 	tk "github.com/loxilb-io/loxilib"
 	"github.com/patrickmn/go-cache"
