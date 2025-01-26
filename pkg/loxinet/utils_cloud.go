@@ -29,7 +29,7 @@ type CloudHookInterface interface {
 	CloudUpdatePrivateIP(vIP net.IP, eIP net.IP, add bool) error
 }
 
-func CloudHookNew(cloudLabel string) CloudHookInterface {
+func CloudHookNew(_ string) CloudHookInterface {
 	if mh.cloudLabel == "aws" {
 		return AWSCloudHookNew()
 	}

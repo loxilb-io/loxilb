@@ -213,7 +213,7 @@ func (P *PolH) PolDelete(pName string) (int, error) {
 	}
 
 	for idx, pObj := range p.PObjs {
-		var pP *PolObjInfo = &p.PObjs[idx]
+		pP := &p.PObjs[idx]
 		pObj.PolObj2DP(DpRemove)
 		pP.Parent = nil
 	}
