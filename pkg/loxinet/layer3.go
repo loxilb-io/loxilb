@@ -110,7 +110,7 @@ func (l3 *L3H) IfaAdd(Obj string, Cidr string) (int, error) {
 		ra := RtAttr{0, 0, false, ifObjID, false}
 		_, err = mh.zr.Rt.RtAdd(*network, RootZone, ra, nil)
 		if err != nil {
-			tk.LogIt(tk.LogDebug, "ifa add - %s:%s subnet-rt error\n", addr.String(), Obj)
+			tk.LogIt(tk.LogTrace, "ifa add - %s:%s subnet-rt error\n", addr.String(), Obj)
 			return L3AddrErr, errors.New("subnet-route add error")
 		} else if sz, _ := net.IPMask(network.Mask).Size(); sz != 32 && sz != 128 {
 			myAddr, myNet, err := net.ParseCIDR(addr.String() + "/32")

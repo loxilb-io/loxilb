@@ -93,7 +93,7 @@ type CIStateH struct {
 	initRules6  bool
 }
 
-func (ci *CIStateH) BFDSessionNotify(instance string, remote string, ciState string) {
+func (ci *CIStateH) BFDSessionNotify(instance string, _ string, ciState string) {
 	var sm cmn.HASMod
 
 	sm.Instance = instance

@@ -357,7 +357,7 @@ func (l2 *L2H) FdbsTicker() {
 }
 
 // PortNotifier - Implementation of PortEventIntf interface
-func (l2 *L2H) PortNotifier(name string, osID int, evType PortEvent) {
+func (l2 *L2H) PortNotifier(name string, _ int, evType PortEvent) {
 	if evType&PortEvDown|PortEvDelete|PortEvLowerDown != 0 {
 		for _, f := range l2.FdbMap {
 			if f.FdbAttr.Oif == name {

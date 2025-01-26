@@ -214,7 +214,7 @@ func (M *MirrH) MirrDelete(name string) (int, error) {
 	}
 
 	for idx, mObj := range m.MObjs {
-		var pM *MirrObjInfo = &m.MObjs[idx]
+		pM := &m.MObjs[idx]
 		mObj.MirrObj2DP(DpRemove)
 		pM.Parent = nil
 	}

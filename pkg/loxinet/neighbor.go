@@ -142,7 +142,7 @@ func (n *NeighH) Activate(ne *Neigh) {
 	name := ne.OifPort.Name
 	addr := ne.Addr
 	var Sip net.IP
-	ret := -1
+	var ret int
 	if ne.OifPort.IsIPinIPTunPort() {
 		addr = ne.OifPort.HInfo.TunDst
 		ret, Sip, name = n.Zone.L3.IfaSelectAny(addr, false)
