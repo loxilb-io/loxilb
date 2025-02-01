@@ -82,7 +82,7 @@ func K8sApiInit(k8sConfigFile string, hooks cmn.NetHookInterface) error {
 				case *v1.Pod:
 					tk.LogIt(tk.LogInfo, "Pod(%s) add: %s - %s:\n", pod.Name, pod.Status.PodIP, pod.Status.HostIP)
 					if pod.Status.HostIP == nodeIP && pod.Status.PodIP != nodeIP && pod.Status.PodIP != "" {
-						_, err := ApiHooks.NetAddrAdd(&cmn.IPAddrMod{Dev: pod.Name, IP: pod.Status.PodIP + "/32"})
+						_, err := ApiHooks.NetAddrAdd(&cmn.IPAddrMod{Dev: "llb-rule-" + pod.Name, IP: pod.Status.PodIP + "/32"})
 						if err != nil {
 							tk.LogIt(tk.LogDebug, "Pod(%s) add: %s - %s: failed - %s\n", pod.Name, pod.Status.PodIP, pod.Status.HostIP, err)
 						} else {
@@ -96,7 +96,7 @@ func K8sApiInit(k8sConfigFile string, hooks cmn.NetHookInterface) error {
 				case *v1.Pod:
 					tk.LogIt(tk.LogInfo, "Pod(%s) delete: %s - %s: \n", pod.Name, pod.Status.PodIP, pod.Status.HostIP)
 					if pod.Status.HostIP == nodeIP && pod.Status.PodIP != nodeIP && pod.Status.PodIP != "" {
-						_, err := ApiHooks.NetAddrDel(&cmn.IPAddrMod{Dev: pod.Name, IP: pod.Status.PodIP + "/32"})
+						_, err := ApiHooks.NetAddrDel(&cmn.IPAddrMod{Dev: "llb-rule-" + pod.Name, IP: pod.Status.PodIP + "/32"})
 						if err != nil {
 							tk.LogIt(tk.LogDebug, "Pod(%s) delete: %s - %s: failed - %s\n", pod.Name, pod.Status.PodIP, pod.Status.HostIP, err)
 						} else {
@@ -109,7 +109,7 @@ func K8sApiInit(k8sConfigFile string, hooks cmn.NetHookInterface) error {
 				switch oldPod := oldObj.(type) {
 				case *v1.Pod:
 					if oldPod.Status.HostIP == nodeIP && oldPod.Status.PodIP != nodeIP && oldPod.Status.PodIP != "" {
-						_, err := ApiHooks.NetAddrDel(&cmn.IPAddrMod{Dev: oldPod.Name, IP: oldPod.Status.PodIP + "/32"})
+						_, err := ApiHooks.NetAddrDel(&cmn.IPAddrMod{Dev: "llb-rule-" + oldPod.Name, IP: oldPod.Status.PodIP + "/32"})
 						if err != nil {
 							tk.LogIt(tk.LogDebug, "Pod(%s) delete: %s - %s: failed - %s\n", oldPod.Name, oldPod.Status.PodIP, oldPod.Status.HostIP, err)
 						} else {
@@ -121,7 +121,7 @@ func K8sApiInit(k8sConfigFile string, hooks cmn.NetHookInterface) error {
 				case *v1.Pod:
 					tk.LogIt(tk.LogInfo, "Pod(%s) modify: %s - %s:\n", pod.Name, pod.Status.PodIP, pod.Status.HostIP)
 					if pod.Status.HostIP == nodeIP && pod.Status.PodIP != nodeIP && pod.Status.PodIP != "" {
-						_, err := ApiHooks.NetAddrAdd(&cmn.IPAddrMod{Dev: pod.Name, IP: pod.Status.PodIP + "/32"})
+						_, err := ApiHooks.NetAddrAdd(&cmn.IPAddrMod{Dev: "llb-rule-" + pod.Name, IP: pod.Status.PodIP + "/32"})
 						if err != nil {
 							tk.LogIt(tk.LogDebug, "Pod(%s) modify: %s - %s: failed - %s\n", pod.Name, pod.Status.PodIP, pod.Status.HostIP, err)
 						} else {
