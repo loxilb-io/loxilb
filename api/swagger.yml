@@ -3266,6 +3266,371 @@ paths:
             $ref: '#/definitions/Error'
 
 #----------------------------------------------
+# Metrics
+#----------------------------------------------
+  '/metrics/flowcount':
+    get:
+      summary: Get flow count metrics
+      description: Get metrics related to flow counts.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/FlowCountMetrics'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/metrics/hostcount':
+    get:
+      summary: Get host count metrics
+      description: Get metrics related to host counts.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/HostCountMetrics'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/metrics/lbrulecount':
+    get:
+      summary: Get load balancer rule count metrics
+      description: Get metrics related to load balancer rule counts.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/LbRuleCountMetrics'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/metrics/newflowcount':
+    get:
+      summary: Get new flow count metrics
+      description: Get metrics related to new flow counts.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/NewFlowCountMetrics'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/metrics/requestcount':
+    get:
+      summary: Get request count metrics
+      description: Get metrics related to request counts.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/RequestCountMetrics'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/metrics/errorcount':
+    get:
+      summary: Get error count metrics
+      description: Get metrics related to error counts.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/ErrorCountMetrics'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/metrics/processedtraffic':
+    get:
+      summary: Get processed traffic metrics
+      description: Get metrics related to processed traffic.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/ProcessedTrafficMetrics'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/metrics/lbprocessedtraffic':
+    get:
+      summary: Get load balancer processed traffic metrics
+      description: Get metrics related to load balancer processed traffic.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/LbProcessedTrafficMetrics'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/metrics/epdisttraffic':
+    get:
+      summary: Get endpoint distribution traffic metrics
+      description: Get metrics related to endpoint distribution traffic per service. The additionalProp is service name.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/EpDistTrafficMetrics'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/metrics/servicedisttraffic':
+    get:
+      summary: Get service distribution traffic metrics
+      description: Get metrics related to service distribution traffic. The additionalProp is service name.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/ServiceDistTrafficMetrics'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/metrics/fwdrops':
+    get:
+      summary: Get firewall drops metrics
+      description: Get metrics related to firewall drops.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/FwDropsMetrics'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/metrics/reqcountperclient':
+    get:
+      summary: Get request count per client metrics
+      description: Get metrics related to request counts per client. The additionalProp is client IP address.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/ReqCountPerClientMetrics'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/logs':
+    get:
+      summary: Fetch logs with optional filtering
+      description: Fetch the latest logs from the system with optional filtering by number of lines, log level, or keyword.
+      parameters:
+        - name: lines
+          in: query
+          required: false
+          type: string
+          description: Number of log lines to fetch (default is 100).
+        - name: level
+          in: query
+          required: false
+          type: string
+          description: Filter logs by level (e.g., INFO, ERROR, DEBUG).
+        - name: keyword
+          in: query
+          required: false
+          type: string
+          description: Filter logs containing a specific keyword or phrase.
+      responses:
+        '200':
+          description: Logs fetched successfully
+          schema:
+            $ref: '#/definitions/Logs'
+        '400':
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/Error'
+
+#----------------------------------------------
+# Log Archives
+#----------------------------------------------
+  '/log-archives':
+    get:
+      summary: List available log archives
+      description: Retrieve a list of all rotated log archive files available for download.
+      responses:
+        '200':
+          description: List of log archive files
+          schema:
+            $ref: '#/definitions/LogArchives'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/log-archives/{filename}':
+    get:
+      summary: Download a specific log archive
+      description: Download a log archive file by its name.
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          type: string
+          description: Name of the log archive file to download.
+      responses:
+        '200':
+          description: Log archive file download
+          schema:
+            type: file
+        '400':
+          description: Missing or invalid filename
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: File not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/Error'
+
+#----------------------------------------------
+# Topology
+#----------------------------------------------
+  '/nodegraph/all':
+    get:
+      summary: List current topology
+      description: Retrieve a list of all nodes and edges in the current topology.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/NodeGraphShcmea'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintenance mode
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/nodegraph/{service}':
+    get:
+      summary: List current topology for a specific service
+      description: Retrieve a list of all nodes and edges in the current topology for a specific service.
+      parameters:
+        - name: service
+          in: path
+          required: true
+          type: string
+          description: Name of the service to filter the topology by.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/NodeGraphShcmea'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintenance mode
+          schema:
+            $ref: '#/definitions/Error'
+
+#----------------------------------------------
+# OAuth
+#----------------------------------------------
+  /oauth/{provider}:
+    get:
+      description: Initiates the OAuth login flow for the specified provider.
+      parameters:
+      - description: OAuth provider
+        in: path
+        name: provider
+        required: true
+        type: string
+      security: [] 
+      responses:
+        "302":
+          description: Found
+          schema:
+            $ref: '#/definitions/OauthMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/OauthErrorResponse'
+      summary: OAuth login
+      tags:
+      - auth
+  /oauth/{provider}/callback:
+    get:
+      description: Handles the OAuth callback flow for the specified provider.
+      parameters:
+      - description: OAuth provider
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: OAuth code
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: OAuth state
+        in: query
+        name: state
+        required: true
+        type: string
+      security: [] # Overrides global security, no authorization required
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/OauthLoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/OauthErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/OauthErrorResponse'
+      summary: OAuth callback
+      tags:
+      - auth
+  
+#----------------------------------------------
 # Schema definitions
 #----------------------------------------------
 definitions:
@@ -4528,6 +4893,254 @@ definitions:
       role:
         type: string
     type: object
+
+  FlowCountMetrics:
+    type: object
+    properties:
+      active_conntrack_count:
+        type: number
+      active_flow_count_tcp:
+        type: number
+      active_flow_count_udp:
+        type: number
+      active_flow_count_sctp:
+        type: number
+      inactive_flow_count:
+        type: number
+
+  HostCountMetrics:
+    type: object
+    properties:
+      healthy_host_count:
+        type: number
+      unhealthy_host_count:
+        type: number
+
+  LbRuleCountMetrics:
+    type: object
+    properties:
+      lb_rule_count:
+        type: number
+
+  NewFlowCountMetrics:
+    type: object
+    properties:
+      new_flow_count:
+        type: number
+
+  RequestCountMetrics:
+    type: object
+    properties:
+      total_requests:
+        type: number
+      total_requests_per_service:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            value:
+              type: number
+
+  ErrorCountMetrics:
+    type: object
+    properties:
+      total_errors:
+        type: number
+      total_errors_per_service:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            value:
+              type: number
+
+  ProcessedTrafficMetrics:
+    type: object
+    properties:
+      processed_bytes:
+        type: number
+      processed_tcp_bytes:
+        type: number
+      processed_sctp_bytes:
+        type: number
+      processed_udp_bytes:
+        type: number
+      processed_packets:
+        type: number
+
+  LbProcessedTrafficMetrics:
+    type: object
+    properties:
+      lb_rule_interaction_bytes:
+        type: array
+        items:
+          type: object
+          properties:
+            service:
+              type: string
+            sip:
+              type: string
+            dip:
+              type: string
+            value:
+              type: number
+      lb_rule_interaction_packets:
+        type: array
+        items:
+          type: object
+          properties:
+            service:
+              type: string
+            sip:
+              type: string
+            dip:
+              type: string
+            value:
+              type: number
+
+  EpDistTrafficMetrics:
+    type: object
+    additionalProperties:
+      type: array
+      items:
+        type: object
+        properties:
+          dip:
+            type: string
+          value:
+            type: number
+          ratio:
+            type: number
+
+  ServiceDistTrafficMetrics:
+    type: object
+    additionalProperties:
+      type: object
+      properties:
+        value:
+          type: number
+        ratio:
+          type: number
+
+  FwDropsMetrics:
+    type: object
+    properties:
+      total_fw_drops:
+        type: number
+      total_fw_drops_per_rule:
+        type: array
+        items:
+          type: object
+          properties:
+            fw_rule:
+              type: string
+            value:
+              type: number
+
+  ReqCountPerClientMetrics:
+    type: object
+    additionalProperties:
+      type: number
+
+  Logs:
+    type: object
+    properties:
+      logs:
+        type: array
+        items:
+          type: string
+        description: List of filtered logs.
+  
+  LogArchives:
+    type: object
+    properties:
+      archives:
+        type: array
+        items:
+          type: string
+        description: List of log archive filenames.
+  
+  NodeGraphShcmea:
+    type: object
+    properties:
+      schemaVersion:
+        type: integer
+      meta:
+        type: object
+        properties:
+          preferredVisualisationType:
+            type: string
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/Node'
+      edges:
+        type: array
+        items:
+          $ref: '#/definitions/Edge'
+  
+  Node:
+    type: object
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+      subtitle:
+        type: string
+      mainstat:
+        type: number
+      secondarystat:
+        type: number
+      color:
+        type: string
+      icon:
+        type: string
+      nodeRadius:
+        type: integer
+  
+  Edge:
+    type: object
+    properties:
+      id:
+        type: string
+      source:
+        type: string
+      target:
+        type: string
+      mainstat:
+        type: number
+      secondarystat:
+        type: number
+      thickness:
+        type: integer
+      color:
+        type: string
+  
+  OauthMessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  
+  OauthErrorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  
+  OauthLoginResponse:
+    properties:
+      id:
+        type: string
+      token:
+        type: string
+    type: object
+
 securityDefinitions:
   BearerAuth:
     type: apiKey

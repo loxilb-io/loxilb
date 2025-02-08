@@ -47,4 +47,13 @@ var Opts struct {
 	DatabaseUser         string         `long:"databaseuser" description:"Database user" default:"root"`
 	DatabasePasswordPath string         `long:"databasepasswordpath" description:"Database password" default:"/etc/loxilb/mysql_password"`
 	DatabaseName         string         `long:"databasename" description:"Database name" default:"loxilb_db"`
+	// Oauth2 Options
+	Oauth2Enable             bool   `long:"oauth2" description:"Enable user oauth2 service for loxilb"`
+	Oauth2Provider           string `long:"oauth2provider" description:"Oauth2 provider name" default:"google"`
+	Oauth2GoogleClientID     string `long:"oauth2google-clientid" description:"Oauth2 google client id"`
+	Oauth2GoogleClientSecret string `long:"oauth2google-clientsecret" description:"Oauth2 google client secret"`
+	Oauth2GoogleRedirectURL  string `long:"oauth2google-redirecturl" description:"Oauth2 google redirect url"`
+	Oauth2GithubClientID     string `long:"oauth2github-clientid" description:"Oauth2 github client id"`
+	Oauth2GithubClientSecret string `long:"oauth2github-clientsecret" description:"Oauth2 github client secret"`
+	Oauth2GithubRedirectURL  string `long:"oauth2github-redirecturl" description:"Oauth2 github redirect url"`
 }

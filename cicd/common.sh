@@ -14,9 +14,9 @@ hexist="$vrn$hn"
 lxdocker="ghcr.io/loxilb-io/loxilb:latest"
 hostdocker="ghcr.io/loxilb-io/nettest:latest"
 cluster_opts=""
-extra_opts=""
+extra_opts="-p"
 ka_opts=""
-docker_extra_opts=""
+docker_extra_opts="-p 11111:11111"
 #var=$(lsb_release -r | cut -f2)
 #if [[ $var == *"22.04"* ]];then
 #  lxdocker="ghcr.io/loxilb-io/loxilb:latestu22"
