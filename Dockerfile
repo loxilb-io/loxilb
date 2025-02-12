@@ -28,14 +28,14 @@ RUN mkdir -p /opt/loxilb && \
     apt-get install -y clang llvm libelf-dev libpcap-dev vim net-tools ca-certificates \
     elfutils dwarves git libbsd-dev bridge-utils wget unzip build-essential \
     bison flex sudo iproute2 pkg-config tcpdump iputils-ping curl bash-completion && \
-    # Install openssl-3.3.1
-    wget https://github.com/openssl/openssl/releases/download/openssl-3.3.1/openssl-3.3.1.tar.gz && tar -xvzf openssl-3.3.1.tar.gz && \
-    cd openssl-3.3.1 && ./Configure enable-ktls '-Wl,-rpath,$(LIBRPATH)' --prefix=/usr/local/build && \
+    # Install openssl-3.4.1
+    wget https://github.com/openssl/openssl/releases/download/openssl-3.4.1/openssl-3.4.1.tar.gz && tar -xvzf openssl-3.4.1.tar.gz && \
+    cd openssl-3.4.1 && ./Configure enable-ktls '-Wl,-rpath,$(LIBRPATH)' --prefix=/usr/local/build && \
     make -j$(nproc) && make install_dev install_modules && cd - && \
     cp -a /usr/local/build/include/openssl /usr/include/ && \
     if [ -d /usr/local/build/lib64  ] ; then mv /usr/local/build/lib64  /usr/local/build/lib; fi && \
     cp -fr /usr/local/build/lib/* /usr/lib/ && ldconfig && \
-    rm -fr openssl-3.3.1*  && \
+    rm -fr openssl-3.4.1*  && \
     # Install bpftool
     wget https://github.com/libbpf/bpftool/releases/download/v7.2.0/bpftool-libbpf-v7.2.0-sources.tar.gz && \
     tar -xvzf bpftool-libbpf-v7.2.0-sources.tar.gz && cd bpftool/src/ && \
