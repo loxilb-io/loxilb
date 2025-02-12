@@ -69,8 +69,8 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: .
-        #platforms: linux/amd64, linux/arm64
-        platforms: linux/amd64
+        platforms: linux/amd64, linux/arm64
+        #platforms: linux/amd64
         push: true
         build-args: TAG=${{ github.event.inputs.tagName }}
         tags: ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }}
