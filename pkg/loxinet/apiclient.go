@@ -810,6 +810,16 @@ func (na *NetAPIStruct) NetUserValidate(token string) (interface{}, error) {
 	return mh.UserService.ValidateToken(token)
 }
 
+// NetOauthUserLogin - User Log in loxilb using OAuth
+func (na *NetAPIStruct) NetOauthUserLogin(user_email, token string) (string, bool, error) {
+	return mh.OauthUserService.Login(user_email, token)
+}
+
+// NetOauthUserValidate - Validate a user in loxilb using OAuth
+func (na *NetAPIStruct) NetOauthUserValidate(token string) (interface{}, error) {
+	return mh.OauthUserService.ValidateToken(token)
+}
+
 // NetUserLogin - Validate a user in loxilb
 func (na *NetAPIStruct) NetUserLogout(tokenString string) error {
 	return mh.UserService.Logout(tokenString)

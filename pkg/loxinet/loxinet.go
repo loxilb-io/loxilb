@@ -60,32 +60,33 @@ const (
 )
 
 type loxiNetH struct {
-	dpEbpf      *DpEbpfH
-	dp          *DpH
-	zn          *ZoneH
-	zr          *Zone
-	mtx         sync.RWMutex
-	ticker      *time.Ticker
-	tDone       chan bool
-	sigCh       chan os.Signal
-	wg          sync.WaitGroup
-	bgp         *GoBgpH
-	sumDis      bool
-	pProbe      bool
-	has         *CIStateH
-	logger      *tk.Logger
-	ready       bool
-	self        int
-	rssEn       bool
-	eHooks      bool
-	lSockPolicy bool
-	sockMapEn   bool
-	cloudLabel  string
-	cloudHook   CloudHookInterface
-	cloudInst   string
-	disBPF      bool
-	pFile       *os.File
-	UserService *user.UserService
+	dpEbpf           *DpEbpfH
+	dp               *DpH
+	zn               *ZoneH
+	zr               *Zone
+	mtx              sync.RWMutex
+	ticker           *time.Ticker
+	tDone            chan bool
+	sigCh            chan os.Signal
+	wg               sync.WaitGroup
+	bgp              *GoBgpH
+	sumDis           bool
+	pProbe           bool
+	has              *CIStateH
+	logger           *tk.Logger
+	ready            bool
+	self             int
+	rssEn            bool
+	eHooks           bool
+	lSockPolicy      bool
+	sockMapEn        bool
+	cloudLabel       string
+	cloudHook        CloudHookInterface
+	cloudInst        string
+	disBPF           bool
+	pFile            *os.File
+	UserService      *user.UserService
+	OauthUserService *user.OauthUserService
 }
 
 // NodeWalker - an implementation of node walker interface
@@ -366,10 +367,17 @@ func loxiNetInit() {
 		// Spawn CI maintenance application
 		mh.has.CISpawn()
 	}
+
 	// Initialize the user service subsystem
 	if opts.Opts.UserServiceEnable {
 		tk.LogIt(tk.LogInfo, "User service enabled\n")
 		mh.UserService = user.NewUserService()
+	}
+
+	// Initialize the Oauth user service subsystem
+	if opts.Opts.Oauth2Enable {
+		tk.LogIt(tk.LogInfo, "Ouath User service enabled\n")
+		mh.OauthUserService = user.NewOauthUserService()
 	}
 
 	// Initialize the loxinet global ticker(s)

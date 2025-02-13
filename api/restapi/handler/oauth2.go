@@ -186,6 +186,8 @@ func AuthGetOauthProvider(params auth.GetOauthProviderParams) middleware.Respond
 // AuthGetOauthProviderCallback function
 // This function is used to get the OAuth provider callback
 func AuthGetOauthProviderCallback(params auth.GetOauthProviderCallbackParams) middleware.Responder {
+	var response models.OauthLoginResponse
+
 	provider := params.Provider
 	oauthConfig, exists := OAuthConfigs[provider]
 	if !exists {
@@ -259,9 +261,15 @@ func AuthGetOauthProviderCallback(params auth.GetOauthProviderCallbackParams) mi
 		}
 	}
 
-	tk.LogIt(tk.LogTrace, "User logged in email: %s, name: %s ", email, oauthName)
-	return auth.NewGetOauthProviderCallbackOK().WithPayload(&models.OauthLoginResponse{
-		ID:    oauthID,
-		Token: token.AccessToken,
-	})
+	tk.LogIt(tk.LogTrace, "Oauth User logged in email: %s, name: %s ", email, oauthName)
+	loginToken, valid, err := ApiHooks.NetOauthUserLogin(email, token.AccessToken)
+
+	if err != nil {
+		return &ResultResponse{Result: err.Error()}
+	}
+	if valid {
+		response.Token = loginToken
+		response.ID = oauthID
+	}
+	return auth.NewGetOauthProviderCallbackOK().WithPayload(&response)
 }

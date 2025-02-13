@@ -227,13 +227,13 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 		api.UsersPostAuthUsersHandler = users.PostAuthUsersHandlerFunc(handler.UsersPostUsers)
 		api.UsersDeleteAuthUsersIDHandler = users.DeleteAuthUsersIDHandlerFunc(handler.UsersDeleteUsers)
 		api.UsersPutAuthUsersIDHandler = users.PutAuthUsersIDHandlerFunc(handler.UsersPutUsers)
+	}
 
-		if opts.Opts.Oauth2Enable {
-			// OAuth2 API
-			handler.InitOAuthConfigs()
-			api.AuthGetOauthProviderHandler = auth.GetOauthProviderHandlerFunc(handler.AuthGetOauthProvider)
-			api.AuthGetOauthProviderCallbackHandler = auth.GetOauthProviderCallbackHandlerFunc(handler.AuthGetOauthProviderCallback)
-		}
+	if opts.Opts.Oauth2Enable {
+		// OAuth2 API
+		handler.InitOAuthConfigs()
+		api.AuthGetOauthProviderHandler = auth.GetOauthProviderHandlerFunc(handler.AuthGetOauthProvider)
+		api.AuthGetOauthProviderCallbackHandler = auth.GetOauthProviderCallbackHandlerFunc(handler.AuthGetOauthProviderCallback)
 	}
 
 	api.PreServerShutdown = func() {}
