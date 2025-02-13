@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	Version = "0.9.8-beta"
+	Version = "0.9.8.1-beta"
 )
 
 var BuildInfo string = ""
