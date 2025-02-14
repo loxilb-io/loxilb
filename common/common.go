@@ -1126,5 +1126,9 @@ type NetHookInterface interface {
 	NetUserLogout(token string) error
 	NetUserValidate(token string) (interface{}, error)
 
+	// OAuth2
+	NetOauthUserLogin(usern_name, token string) (string, bool, error)
+	NetOauthUserValidate(token string) (interface{}, error)
+
 	NetHandlePanic()
 }

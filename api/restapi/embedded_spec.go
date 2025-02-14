@@ -4575,6 +4575,113 @@ func init() {
         }
       }
     },
+    "/log-archives": {
+      "get": {
+        "description": "Retrieve a list of all rotated log archive files available for download.",
+        "summary": "List available log archives",
+        "responses": {
+          "200": {
+            "description": "List of log archive files",
+            "schema": {
+              "$ref": "#/definitions/LogArchives"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/log-archives/{filename}": {
+      "get": {
+        "description": "Download a log archive file by its name.",
+        "summary": "Download a specific log archive",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Name of the log archive file to download.",
+            "name": "filename",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Log archive file download",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "400": {
+            "description": "Missing or invalid filename",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/logs": {
+      "get": {
+        "description": "Fetch the latest logs from the system with optional filtering by number of lines, log level, or keyword.",
+        "summary": "Fetch logs with optional filtering",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Number of log lines to fetch (default is 100).",
+            "name": "lines",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filter logs by level (e.g., INFO, ERROR, DEBUG).",
+            "name": "level",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filter logs containing a specific keyword or phrase.",
+            "name": "keyword",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logs fetched successfully",
+            "schema": {
+              "$ref": "#/definitions/Logs"
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/metrics": {
       "get": {
         "summary": "Scrape metrics from the cache",
@@ -4583,6 +4690,405 @@ func init() {
             "description": "Metrics in prometheus text format",
             "schema": {
               "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/epdisttraffic": {
+      "get": {
+        "description": "Get metrics related to endpoint distribution traffic per service. The additionalProp is service name.",
+        "summary": "Get endpoint distribution traffic metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/EpDistTrafficMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/errorcount": {
+      "get": {
+        "description": "Get metrics related to error counts.",
+        "summary": "Get error count metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ErrorCountMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/flowcount": {
+      "get": {
+        "description": "Get metrics related to flow counts.",
+        "summary": "Get flow count metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/FlowCountMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/fwdrops": {
+      "get": {
+        "description": "Get metrics related to firewall drops.",
+        "summary": "Get firewall drops metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/FwDropsMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/hostcount": {
+      "get": {
+        "description": "Get metrics related to host counts.",
+        "summary": "Get host count metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/HostCountMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/lbprocessedtraffic": {
+      "get": {
+        "description": "Get metrics related to load balancer processed traffic.",
+        "summary": "Get load balancer processed traffic metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/LbProcessedTrafficMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/lbrulecount": {
+      "get": {
+        "description": "Get metrics related to load balancer rule counts.",
+        "summary": "Get load balancer rule count metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/LbRuleCountMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/newflowcount": {
+      "get": {
+        "description": "Get metrics related to new flow counts.",
+        "summary": "Get new flow count metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/NewFlowCountMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/processedtraffic": {
+      "get": {
+        "description": "Get metrics related to processed traffic.",
+        "summary": "Get processed traffic metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ProcessedTrafficMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/reqcountperclient": {
+      "get": {
+        "description": "Get metrics related to request counts per client. The additionalProp is client IP address.",
+        "summary": "Get request count per client metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ReqCountPerClientMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/requestcount": {
+      "get": {
+        "description": "Get metrics related to request counts.",
+        "summary": "Get request count metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestCountMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/servicedisttraffic": {
+      "get": {
+        "description": "Get metrics related to service distribution traffic. The additionalProp is service name.",
+        "summary": "Get service distribution traffic metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ServiceDistTrafficMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/nodegraph/all": {
+      "get": {
+        "description": "Retrieve a list of all nodes and edges in the current topology.",
+        "summary": "List current topology",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/NodeGraphShcmea"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/nodegraph/{service}": {
+      "get": {
+        "description": "Retrieve a list of all nodes and edges in the current topology for a specific service.",
+        "summary": "List current topology for a specific service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Name of the service to filter the topology by.",
+            "name": "service",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/NodeGraphShcmea"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/oauth/{provider}": {
+      "get": {
+        "security": [],
+        "description": "Initiates the OAuth login flow for the specified provider.",
+        "tags": [
+          "auth"
+        ],
+        "summary": "OAuth login",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "OAuth provider",
+            "name": "provider",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Found",
+            "schema": {
+              "$ref": "#/definitions/OauthMessageResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/OauthErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/oauth/{provider}/callback": {
+      "get": {
+        "security": [],
+        "description": "Handles the OAuth callback flow for the specified provider.",
+        "tags": [
+          "auth"
+        ],
+        "summary": "OAuth callback",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "OAuth provider",
+            "name": "provider",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "OAuth code",
+            "name": "code",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "OAuth state",
+            "name": "state",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/OauthLoginResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/OauthErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/OauthErrorResponse"
             }
           }
         }
@@ -5263,6 +5769,32 @@ func init() {
         }
       }
     },
+    "Edge": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "mainstat": {
+          "type": "number"
+        },
+        "secondarystat": {
+          "type": "number"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "thickness": {
+          "type": "integer"
+        }
+      }
+    },
     "EndPoint": {
       "type": "object",
       "properties": {
@@ -5353,6 +5885,26 @@ func init() {
         }
       }
     },
+    "EpDistTrafficMetrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "dip": {
+              "type": "string"
+            },
+            "ratio": {
+              "type": "number"
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
     "Error": {
       "type": "object",
       "properties": {
@@ -5375,6 +5927,28 @@ func init() {
         "sub-code": {
           "type": "integer",
           "format": "int32"
+        }
+      }
+    },
+    "ErrorCountMetrics": {
+      "type": "object",
+      "properties": {
+        "total_errors": {
+          "type": "number"
+        },
+        "total_errors_per_service": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              }
+            }
+          }
         }
       }
     },
@@ -5537,11 +6111,64 @@ func init() {
         }
       }
     },
+    "FlowCountMetrics": {
+      "type": "object",
+      "properties": {
+        "active_conntrack_count": {
+          "type": "number"
+        },
+        "active_flow_count_sctp": {
+          "type": "number"
+        },
+        "active_flow_count_tcp": {
+          "type": "number"
+        },
+        "active_flow_count_udp": {
+          "type": "number"
+        },
+        "inactive_flow_count": {
+          "type": "number"
+        }
+      }
+    },
+    "FwDropsMetrics": {
+      "type": "object",
+      "properties": {
+        "total_fw_drops": {
+          "type": "number"
+        },
+        "total_fw_drops_per_rule": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "fw_rule": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    },
     "HealthCheckResponse": {
       "type": "object",
       "properties": {
         "status": {
           "type": "string"
+        }
+      }
+    },
+    "HostCountMetrics": {
+      "type": "object",
+      "properties": {
+        "healthy_host_count": {
+          "type": "number"
+        },
+        "unhealthy_host_count": {
+          "type": "number"
         }
       }
     },
@@ -5577,6 +6204,59 @@ func init() {
         "sync": {
           "description": "Sync - sync state",
           "type": "integer"
+        }
+      }
+    },
+    "LbProcessedTrafficMetrics": {
+      "type": "object",
+      "properties": {
+        "lb_rule_interaction_bytes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "dip": {
+                "type": "string"
+              },
+              "service": {
+                "type": "string"
+              },
+              "sip": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "lb_rule_interaction_packets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "dip": {
+                "type": "string"
+              },
+              "service": {
+                "type": "string"
+              },
+              "sip": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    },
+    "LbRuleCountMetrics": {
+      "type": "object",
+      "properties": {
+        "lb_rule_count": {
+          "type": "number"
         }
       }
     },
@@ -5750,11 +6430,35 @@ func init() {
         }
       }
     },
+    "LogArchives": {
+      "type": "object",
+      "properties": {
+        "archives": {
+          "description": "List of log archive filenames.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "LoginResponse": {
       "type": "object",
       "properties": {
         "token": {
           "type": "string"
+        }
+      }
+    },
+    "Logs": {
+      "type": "object",
+      "properties": {
+        "logs": {
+          "description": "List of filtered logs.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -5918,6 +6622,98 @@ func init() {
         },
         "macAddress": {
           "description": "MAC address to neighbor",
+          "type": "string"
+        }
+      }
+    },
+    "NewFlowCountMetrics": {
+      "type": "object",
+      "properties": {
+        "new_flow_count": {
+          "type": "number"
+        }
+      }
+    },
+    "Node": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "mainstat": {
+          "type": "number"
+        },
+        "nodeRadius": {
+          "type": "integer"
+        },
+        "secondarystat": {
+          "type": "number"
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      }
+    },
+    "NodeGraphShcmea": {
+      "type": "object",
+      "properties": {
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Edge"
+          }
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "preferredVisualisationType": {
+              "type": "string"
+            }
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Node"
+          }
+        },
+        "schemaVersion": {
+          "type": "integer"
+        }
+      }
+    },
+    "OauthErrorResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "OauthLoginResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        }
+      }
+    },
+    "OauthMessageResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
           "type": "string"
         }
       }
@@ -6197,6 +6993,54 @@ func init() {
         }
       }
     },
+    "ProcessedTrafficMetrics": {
+      "type": "object",
+      "properties": {
+        "processed_bytes": {
+          "type": "number"
+        },
+        "processed_packets": {
+          "type": "number"
+        },
+        "processed_sctp_bytes": {
+          "type": "number"
+        },
+        "processed_tcp_bytes": {
+          "type": "number"
+        },
+        "processed_udp_bytes": {
+          "type": "number"
+        }
+      }
+    },
+    "ReqCountPerClientMetrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "RequestCountMetrics": {
+      "type": "object",
+      "properties": {
+        "total_requests": {
+          "type": "number"
+        },
+        "total_requests_per_service": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    },
     "RouteEntry": {
       "type": "object",
       "properties": {
@@ -6256,6 +7100,20 @@ func init() {
         },
         "sync": {
           "type": "integer"
+        }
+      }
+    },
+    "ServiceDistTrafficMetrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "ratio": {
+            "type": "number"
+          },
+          "value": {
+            "type": "number"
+          }
         }
       }
     },
@@ -11030,6 +11888,113 @@ func init() {
         }
       }
     },
+    "/log-archives": {
+      "get": {
+        "description": "Retrieve a list of all rotated log archive files available for download.",
+        "summary": "List available log archives",
+        "responses": {
+          "200": {
+            "description": "List of log archive files",
+            "schema": {
+              "$ref": "#/definitions/LogArchives"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/log-archives/{filename}": {
+      "get": {
+        "description": "Download a log archive file by its name.",
+        "summary": "Download a specific log archive",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Name of the log archive file to download.",
+            "name": "filename",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Log archive file download",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "400": {
+            "description": "Missing or invalid filename",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/logs": {
+      "get": {
+        "description": "Fetch the latest logs from the system with optional filtering by number of lines, log level, or keyword.",
+        "summary": "Fetch logs with optional filtering",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Number of log lines to fetch (default is 100).",
+            "name": "lines",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filter logs by level (e.g., INFO, ERROR, DEBUG).",
+            "name": "level",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filter logs containing a specific keyword or phrase.",
+            "name": "keyword",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logs fetched successfully",
+            "schema": {
+              "$ref": "#/definitions/Logs"
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/metrics": {
       "get": {
         "summary": "Scrape metrics from the cache",
@@ -11038,6 +12003,405 @@ func init() {
             "description": "Metrics in prometheus text format",
             "schema": {
               "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/epdisttraffic": {
+      "get": {
+        "description": "Get metrics related to endpoint distribution traffic per service. The additionalProp is service name.",
+        "summary": "Get endpoint distribution traffic metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/EpDistTrafficMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/errorcount": {
+      "get": {
+        "description": "Get metrics related to error counts.",
+        "summary": "Get error count metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ErrorCountMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/flowcount": {
+      "get": {
+        "description": "Get metrics related to flow counts.",
+        "summary": "Get flow count metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/FlowCountMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/fwdrops": {
+      "get": {
+        "description": "Get metrics related to firewall drops.",
+        "summary": "Get firewall drops metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/FwDropsMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/hostcount": {
+      "get": {
+        "description": "Get metrics related to host counts.",
+        "summary": "Get host count metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/HostCountMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/lbprocessedtraffic": {
+      "get": {
+        "description": "Get metrics related to load balancer processed traffic.",
+        "summary": "Get load balancer processed traffic metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/LbProcessedTrafficMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/lbrulecount": {
+      "get": {
+        "description": "Get metrics related to load balancer rule counts.",
+        "summary": "Get load balancer rule count metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/LbRuleCountMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/newflowcount": {
+      "get": {
+        "description": "Get metrics related to new flow counts.",
+        "summary": "Get new flow count metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/NewFlowCountMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/processedtraffic": {
+      "get": {
+        "description": "Get metrics related to processed traffic.",
+        "summary": "Get processed traffic metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ProcessedTrafficMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/reqcountperclient": {
+      "get": {
+        "description": "Get metrics related to request counts per client. The additionalProp is client IP address.",
+        "summary": "Get request count per client metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ReqCountPerClientMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/requestcount": {
+      "get": {
+        "description": "Get metrics related to request counts.",
+        "summary": "Get request count metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestCountMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/metrics/servicedisttraffic": {
+      "get": {
+        "description": "Get metrics related to service distribution traffic. The additionalProp is service name.",
+        "summary": "Get service distribution traffic metrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ServiceDistTrafficMetrics"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/nodegraph/all": {
+      "get": {
+        "description": "Retrieve a list of all nodes and edges in the current topology.",
+        "summary": "List current topology",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/NodeGraphShcmea"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/nodegraph/{service}": {
+      "get": {
+        "description": "Retrieve a list of all nodes and edges in the current topology for a specific service.",
+        "summary": "List current topology for a specific service",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Name of the service to filter the topology by.",
+            "name": "service",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/NodeGraphShcmea"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/oauth/{provider}": {
+      "get": {
+        "security": [],
+        "description": "Initiates the OAuth login flow for the specified provider.",
+        "tags": [
+          "auth"
+        ],
+        "summary": "OAuth login",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "OAuth provider",
+            "name": "provider",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Found",
+            "schema": {
+              "$ref": "#/definitions/OauthMessageResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/OauthErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/oauth/{provider}/callback": {
+      "get": {
+        "security": [],
+        "description": "Handles the OAuth callback flow for the specified provider.",
+        "tags": [
+          "auth"
+        ],
+        "summary": "OAuth callback",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "OAuth provider",
+            "name": "provider",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "OAuth code",
+            "name": "code",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "OAuth state",
+            "name": "state",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/OauthLoginResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/OauthErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/OauthErrorResponse"
             }
           }
         }
@@ -12173,6 +13537,32 @@ func init() {
         }
       }
     },
+    "Edge": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "mainstat": {
+          "type": "number"
+        },
+        "secondarystat": {
+          "type": "number"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "thickness": {
+          "type": "integer"
+        }
+      }
+    },
     "EndPoint": {
       "type": "object",
       "properties": {
@@ -12263,6 +13653,29 @@ func init() {
         }
       }
     },
+    "EpDistTrafficMetrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/EpDistTrafficMetricsItems0"
+        }
+      }
+    },
+    "EpDistTrafficMetricsItems0": {
+      "type": "object",
+      "properties": {
+        "dip": {
+          "type": "string"
+        },
+        "ratio": {
+          "type": "number"
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
     "Error": {
       "type": "object",
       "properties": {
@@ -12285,6 +13698,31 @@ func init() {
         "sub-code": {
           "type": "integer",
           "format": "int32"
+        }
+      }
+    },
+    "ErrorCountMetrics": {
+      "type": "object",
+      "properties": {
+        "total_errors": {
+          "type": "number"
+        },
+        "total_errors_per_service": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ErrorCountMetricsTotalErrorsPerServiceItems0"
+          }
+        }
+      }
+    },
+    "ErrorCountMetricsTotalErrorsPerServiceItems0": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
         }
       }
     },
@@ -12447,11 +13885,67 @@ func init() {
         }
       }
     },
+    "FlowCountMetrics": {
+      "type": "object",
+      "properties": {
+        "active_conntrack_count": {
+          "type": "number"
+        },
+        "active_flow_count_sctp": {
+          "type": "number"
+        },
+        "active_flow_count_tcp": {
+          "type": "number"
+        },
+        "active_flow_count_udp": {
+          "type": "number"
+        },
+        "inactive_flow_count": {
+          "type": "number"
+        }
+      }
+    },
+    "FwDropsMetrics": {
+      "type": "object",
+      "properties": {
+        "total_fw_drops": {
+          "type": "number"
+        },
+        "total_fw_drops_per_rule": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FwDropsMetricsTotalFwDropsPerRuleItems0"
+          }
+        }
+      }
+    },
+    "FwDropsMetricsTotalFwDropsPerRuleItems0": {
+      "type": "object",
+      "properties": {
+        "fw_rule": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
     "HealthCheckResponse": {
       "type": "object",
       "properties": {
         "status": {
           "type": "string"
+        }
+      }
+    },
+    "HostCountMetrics": {
+      "type": "object",
+      "properties": {
+        "healthy_host_count": {
+          "type": "number"
+        },
+        "unhealthy_host_count": {
+          "type": "number"
         }
       }
     },
@@ -12487,6 +13981,65 @@ func init() {
         "sync": {
           "description": "Sync - sync state",
           "type": "integer"
+        }
+      }
+    },
+    "LbProcessedTrafficMetrics": {
+      "type": "object",
+      "properties": {
+        "lb_rule_interaction_bytes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LbProcessedTrafficMetricsLbRuleInteractionBytesItems0"
+          }
+        },
+        "lb_rule_interaction_packets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LbProcessedTrafficMetricsLbRuleInteractionPacketsItems0"
+          }
+        }
+      }
+    },
+    "LbProcessedTrafficMetricsLbRuleInteractionBytesItems0": {
+      "type": "object",
+      "properties": {
+        "dip": {
+          "type": "string"
+        },
+        "service": {
+          "type": "string"
+        },
+        "sip": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
+    "LbProcessedTrafficMetricsLbRuleInteractionPacketsItems0": {
+      "type": "object",
+      "properties": {
+        "dip": {
+          "type": "string"
+        },
+        "service": {
+          "type": "string"
+        },
+        "sip": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
+    "LbRuleCountMetrics": {
+      "type": "object",
+      "properties": {
+        "lb_rule_count": {
+          "type": "number"
         }
       }
     },
@@ -12782,11 +14335,35 @@ func init() {
         }
       }
     },
+    "LogArchives": {
+      "type": "object",
+      "properties": {
+        "archives": {
+          "description": "List of log archive filenames.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "LoginResponse": {
       "type": "object",
       "properties": {
         "token": {
           "type": "string"
+        }
+      }
+    },
+    "Logs": {
+      "type": "object",
+      "properties": {
+        "logs": {
+          "description": "List of filtered logs.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -13034,6 +14611,106 @@ func init() {
         },
         "macAddress": {
           "description": "MAC address to neighbor",
+          "type": "string"
+        }
+      }
+    },
+    "NewFlowCountMetrics": {
+      "type": "object",
+      "properties": {
+        "new_flow_count": {
+          "type": "number"
+        }
+      }
+    },
+    "Node": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "mainstat": {
+          "type": "number"
+        },
+        "nodeRadius": {
+          "type": "integer"
+        },
+        "secondarystat": {
+          "type": "number"
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      }
+    },
+    "NodeGraphShcmea": {
+      "type": "object",
+      "properties": {
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Edge"
+          }
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "preferredVisualisationType": {
+              "type": "string"
+            }
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Node"
+          }
+        },
+        "schemaVersion": {
+          "type": "integer"
+        }
+      }
+    },
+    "NodeGraphShcmeaMeta": {
+      "type": "object",
+      "properties": {
+        "preferredVisualisationType": {
+          "type": "string"
+        }
+      }
+    },
+    "OauthErrorResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "OauthLoginResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        }
+      }
+    },
+    "OauthMessageResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
           "type": "string"
         }
       }
@@ -13485,6 +15162,57 @@ func init() {
         }
       }
     },
+    "ProcessedTrafficMetrics": {
+      "type": "object",
+      "properties": {
+        "processed_bytes": {
+          "type": "number"
+        },
+        "processed_packets": {
+          "type": "number"
+        },
+        "processed_sctp_bytes": {
+          "type": "number"
+        },
+        "processed_tcp_bytes": {
+          "type": "number"
+        },
+        "processed_udp_bytes": {
+          "type": "number"
+        }
+      }
+    },
+    "ReqCountPerClientMetrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "RequestCountMetrics": {
+      "type": "object",
+      "properties": {
+        "total_requests": {
+          "type": "number"
+        },
+        "total_requests_per_service": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RequestCountMetricsTotalRequestsPerServiceItems0"
+          }
+        }
+      }
+    },
+    "RequestCountMetricsTotalRequestsPerServiceItems0": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
     "RouteEntry": {
       "type": "object",
       "properties": {
@@ -13561,6 +15289,23 @@ func init() {
         "packets": {
           "description": "Statistic of the egress port bytes.",
           "type": "integer"
+        }
+      }
+    },
+    "ServiceDistTrafficMetrics": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ServiceDistTrafficMetricsAnon"
+      }
+    },
+    "ServiceDistTrafficMetricsAnon": {
+      "type": "object",
+      "properties": {
+        "ratio": {
+          "type": "number"
+        },
+        "value": {
+          "type": "number"
         }
       }
     },
