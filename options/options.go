@@ -1,6 +1,8 @@
 package options
 
 import (
+	"fmt"
+
 	"github.com/jessevdk/go-flags"
 )
 
@@ -47,13 +49,44 @@ var Opts struct {
 	DatabaseUser         string         `long:"databaseuser" description:"Database user" default:"root"`
 	DatabasePasswordPath string         `long:"databasepasswordpath" description:"Database password" default:"/etc/loxilb/mysql_password"`
 	DatabaseName         string         `long:"databasename" description:"Database name" default:"loxilb_db"`
-	// Oauth2 Options
-	Oauth2Enable             bool   `long:"oauth2" description:"Enable user oauth2 service for loxilb"`
-	Oauth2Provider           string `long:"oauth2provider" description:"Oauth2 provider name" default:"google"`
-	Oauth2GoogleClientID     string `long:"oauth2google-clientid" description:"Oauth2 google client id"`
-	Oauth2GoogleClientSecret string `long:"oauth2google-clientsecret" description:"Oauth2 google client secret"`
-	Oauth2GoogleRedirectURL  string `long:"oauth2google-redirecturl" description:"Oauth2 google redirect url"`
-	Oauth2GithubClientID     string `long:"oauth2github-clientid" description:"Oauth2 github client id"`
-	Oauth2GithubClientSecret string `long:"oauth2github-clientsecret" description:"Oauth2 github client secret"`
-	Oauth2GithubRedirectURL  string `long:"oauth2github-redirecturl" description:"Oauth2 github redirect url"`
+
+	// Oauth2 Options as input arguemtns
+	Oauth2Enable   bool   `long:"oauth2" description:"Enable user oauth2 service for loxilb"`
+	Oauth2Provider string `long:"oauth2provider" description:"Oauth2 provider name" default:"google"`
+
+	// Oauth2 secure informations
+	Oauth2GoogleClientID     string `long:"oauth2google-clientid" description:"Oauth2 google client id" env:"OAUTH2_GOOGLE_CLIENT_ID"`
+	Oauth2GoogleClientSecret string `long:"oauth2google-clientsecret" description:"Oauth2 google client secret" env:"OAUTH2_GOOGLE_CLIENT_SECRET"`
+	Oauth2GoogleRedirectURL  string `long:"oauth2google-redirecturl" description:"Oauth2 google redirect url" env:"OAUTH2_GOOGLE_REDIRECT_URL"`
+	Oauth2GithubClientID     string `long:"oauth2github-clientid" description:"Oauth2 github client id" env:"OAUTH2_GITHUB_CLIENT_ID"`
+	Oauth2GithubClientSecret string `long:"oauth2github-clientsecret" description:"Oauth2 github client secret" env:"OAUTH2_GITHUB_CLIENT_SECRET"`
+	Oauth2GithubRedirectURL  string `long:"oauth2github-redirecturl" description:"Oauth2 github redirect url" env:"OAUTH2_GITHUB_REDIRECT_URL"`
+}
+
+// ValidateOpts checks if the required environment variables are set when Oauth2Enable is true
+func ValidateOpts() error {
+	// Check if Oauth2Enable is true
+	if Opts.Oauth2Enable {
+		// check if the oauth2provider is set to google or github
+		if Opts.Oauth2Provider != "google" && Opts.Oauth2Provider != "github" {
+			return fmt.Errorf("oauth2provider must be set to google or github")
+		}
+
+		// chech if the oauth2provider is set to google
+		if Opts.Oauth2Provider == "google" {
+			// check if the required environment variables for google oauth2 are set
+			if Opts.Oauth2GoogleClientID == "" || Opts.Oauth2GoogleClientSecret == "" || Opts.Oauth2GoogleRedirectURL == "" {
+				return fmt.Errorf("Oauth2 google client id, client secret and redirect url are required but not set")
+			}
+		}
+
+		// chech if the oauth2provider is set to github
+		if Opts.Oauth2Provider == "github" {
+			// check if the required environment variables for github oauth2 are set
+			if Opts.Oauth2GithubClientID == "" || Opts.Oauth2GithubClientSecret == "" || Opts.Oauth2GithubRedirectURL == "" {
+				return fmt.Errorf("Oauth2 github client id, client secret and redirect url are required but not set")
+			}
+		}
+	}
+	return nil
 }
