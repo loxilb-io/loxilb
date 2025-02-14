@@ -2,6 +2,7 @@ package options
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/jessevdk/go-flags"
 )
@@ -52,7 +53,7 @@ var Opts struct {
 
 	// Oauth2 Options as input arguemtns
 	Oauth2Enable   bool   `long:"oauth2" description:"Enable user oauth2 service for loxilb"`
-	Oauth2Provider string `long:"oauth2provider" description:"Oauth2 provider name" default:"google"`
+	Oauth2Provider string `long:"oauth2provider" description:"Oauth2 provider names, comma-separated" default:"google"`
 
 	// Oauth2 secure informations
 	Oauth2GoogleClientID     string `long:"oauth2google-clientid" description:"Oauth2 google client id" env:"OAUTH2_GOOGLE_CLIENT_ID"`
@@ -67,24 +68,22 @@ var Opts struct {
 func ValidateOpts() error {
 	// Check if Oauth2Enable is true
 	if Opts.Oauth2Enable {
-		// check if the oauth2provider is set to google or github
-		if Opts.Oauth2Provider != "google" && Opts.Oauth2Provider != "github" {
-			return fmt.Errorf("oauth2provider must be set to google or github")
-		}
+		// Split the Oauth2Provider string into a slice of providers
+		providers := strings.Split(Opts.Oauth2Provider, ",")
 
-		// chech if the oauth2provider is set to google
-		if Opts.Oauth2Provider == "google" {
-			// check if the required environment variables for google oauth2 are set
-			if Opts.Oauth2GoogleClientID == "" || Opts.Oauth2GoogleClientSecret == "" || Opts.Oauth2GoogleRedirectURL == "" {
-				return fmt.Errorf("Oauth2 google client id, client secret and redirect url are required but not set")
-			}
-		}
-
-		// chech if the oauth2provider is set to github
-		if Opts.Oauth2Provider == "github" {
-			// check if the required environment variables for github oauth2 are set
-			if Opts.Oauth2GithubClientID == "" || Opts.Oauth2GithubClientSecret == "" || Opts.Oauth2GithubRedirectURL == "" {
-				return fmt.Errorf("Oauth2 github client id, client secret and redirect url are required but not set")
+		// Iterate over each provider and validate the required environment variables
+		for _, provider := range providers {
+			switch provider {
+			case "google":
+				if Opts.Oauth2GoogleClientID == "" || Opts.Oauth2GoogleClientSecret == "" || Opts.Oauth2GoogleRedirectURL == "" {
+					return fmt.Errorf("Oauth2 google client id, client secret and redirect url are required but not set")
+				}
+			case "github":
+				if Opts.Oauth2GithubClientID == "" || Opts.Oauth2GithubClientSecret == "" || Opts.Oauth2GithubRedirectURL == "" {
+					return fmt.Errorf("Oauth2 github client id, client secret and redirect url are required but not set")
+				}
+			default:
+				return fmt.Errorf("unsupported oauth2 provider: %s", provider)
 			}
 		}
 	}
