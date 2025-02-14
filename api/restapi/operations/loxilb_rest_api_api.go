@@ -195,8 +195,65 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		GetConfigVlanAllHandler: GetConfigVlanAllHandlerFunc(func(params GetConfigVlanAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigVlanAll has not yet been implemented")
 		}),
+		GetLogArchivesHandler: GetLogArchivesHandlerFunc(func(params GetLogArchivesParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetLogArchives has not yet been implemented")
+		}),
+		GetLogArchivesFilenameHandler: GetLogArchivesFilenameHandlerFunc(func(params GetLogArchivesFilenameParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetLogArchivesFilename has not yet been implemented")
+		}),
+		GetLogsHandler: GetLogsHandlerFunc(func(params GetLogsParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetLogs has not yet been implemented")
+		}),
 		GetMetricsHandler: GetMetricsHandlerFunc(func(params GetMetricsParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetMetrics has not yet been implemented")
+		}),
+		GetMetricsEpdisttrafficHandler: GetMetricsEpdisttrafficHandlerFunc(func(params GetMetricsEpdisttrafficParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetMetricsEpdisttraffic has not yet been implemented")
+		}),
+		GetMetricsErrorcountHandler: GetMetricsErrorcountHandlerFunc(func(params GetMetricsErrorcountParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetMetricsErrorcount has not yet been implemented")
+		}),
+		GetMetricsFlowcountHandler: GetMetricsFlowcountHandlerFunc(func(params GetMetricsFlowcountParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetMetricsFlowcount has not yet been implemented")
+		}),
+		GetMetricsFwdropsHandler: GetMetricsFwdropsHandlerFunc(func(params GetMetricsFwdropsParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetMetricsFwdrops has not yet been implemented")
+		}),
+		GetMetricsHostcountHandler: GetMetricsHostcountHandlerFunc(func(params GetMetricsHostcountParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetMetricsHostcount has not yet been implemented")
+		}),
+		GetMetricsLbprocessedtrafficHandler: GetMetricsLbprocessedtrafficHandlerFunc(func(params GetMetricsLbprocessedtrafficParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetMetricsLbprocessedtraffic has not yet been implemented")
+		}),
+		GetMetricsLbrulecountHandler: GetMetricsLbrulecountHandlerFunc(func(params GetMetricsLbrulecountParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetMetricsLbrulecount has not yet been implemented")
+		}),
+		GetMetricsNewflowcountHandler: GetMetricsNewflowcountHandlerFunc(func(params GetMetricsNewflowcountParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetMetricsNewflowcount has not yet been implemented")
+		}),
+		GetMetricsProcessedtrafficHandler: GetMetricsProcessedtrafficHandlerFunc(func(params GetMetricsProcessedtrafficParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetMetricsProcessedtraffic has not yet been implemented")
+		}),
+		GetMetricsReqcountperclientHandler: GetMetricsReqcountperclientHandlerFunc(func(params GetMetricsReqcountperclientParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetMetricsReqcountperclient has not yet been implemented")
+		}),
+		GetMetricsRequestcountHandler: GetMetricsRequestcountHandlerFunc(func(params GetMetricsRequestcountParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetMetricsRequestcount has not yet been implemented")
+		}),
+		GetMetricsServicedisttrafficHandler: GetMetricsServicedisttrafficHandlerFunc(func(params GetMetricsServicedisttrafficParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetMetricsServicedisttraffic has not yet been implemented")
+		}),
+		GetNodegraphAllHandler: GetNodegraphAllHandlerFunc(func(params GetNodegraphAllParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetNodegraphAll has not yet been implemented")
+		}),
+		GetNodegraphServiceHandler: GetNodegraphServiceHandlerFunc(func(params GetNodegraphServiceParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetNodegraphService has not yet been implemented")
+		}),
+		AuthGetOauthProviderHandler: auth.GetOauthProviderHandlerFunc(func(params auth.GetOauthProviderParams) middleware.Responder {
+			return middleware.NotImplemented("operation auth.GetOauthProvider has not yet been implemented")
+		}),
+		AuthGetOauthProviderCallbackHandler: auth.GetOauthProviderCallbackHandlerFunc(func(params auth.GetOauthProviderCallbackParams) middleware.Responder {
+			return middleware.NotImplemented("operation auth.GetOauthProviderCallback has not yet been implemented")
 		}),
 		GetStatusDeviceHandler: GetStatusDeviceHandlerFunc(func(params GetStatusDeviceParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetStatusDevice has not yet been implemented")
@@ -444,8 +501,46 @@ type LoxilbRestAPIAPI struct {
 	GetConfigTunnelVxlanAllHandler GetConfigTunnelVxlanAllHandler
 	// GetConfigVlanAllHandler sets the operation handler for the get config vlan all operation
 	GetConfigVlanAllHandler GetConfigVlanAllHandler
+	// GetLogArchivesHandler sets the operation handler for the get log archives operation
+	GetLogArchivesHandler GetLogArchivesHandler
+	// GetLogArchivesFilenameHandler sets the operation handler for the get log archives filename operation
+	GetLogArchivesFilenameHandler GetLogArchivesFilenameHandler
+	// GetLogsHandler sets the operation handler for the get logs operation
+	GetLogsHandler GetLogsHandler
 	// GetMetricsHandler sets the operation handler for the get metrics operation
 	GetMetricsHandler GetMetricsHandler
+	// GetMetricsEpdisttrafficHandler sets the operation handler for the get metrics epdisttraffic operation
+	GetMetricsEpdisttrafficHandler GetMetricsEpdisttrafficHandler
+	// GetMetricsErrorcountHandler sets the operation handler for the get metrics errorcount operation
+	GetMetricsErrorcountHandler GetMetricsErrorcountHandler
+	// GetMetricsFlowcountHandler sets the operation handler for the get metrics flowcount operation
+	GetMetricsFlowcountHandler GetMetricsFlowcountHandler
+	// GetMetricsFwdropsHandler sets the operation handler for the get metrics fwdrops operation
+	GetMetricsFwdropsHandler GetMetricsFwdropsHandler
+	// GetMetricsHostcountHandler sets the operation handler for the get metrics hostcount operation
+	GetMetricsHostcountHandler GetMetricsHostcountHandler
+	// GetMetricsLbprocessedtrafficHandler sets the operation handler for the get metrics lbprocessedtraffic operation
+	GetMetricsLbprocessedtrafficHandler GetMetricsLbprocessedtrafficHandler
+	// GetMetricsLbrulecountHandler sets the operation handler for the get metrics lbrulecount operation
+	GetMetricsLbrulecountHandler GetMetricsLbrulecountHandler
+	// GetMetricsNewflowcountHandler sets the operation handler for the get metrics newflowcount operation
+	GetMetricsNewflowcountHandler GetMetricsNewflowcountHandler
+	// GetMetricsProcessedtrafficHandler sets the operation handler for the get metrics processedtraffic operation
+	GetMetricsProcessedtrafficHandler GetMetricsProcessedtrafficHandler
+	// GetMetricsReqcountperclientHandler sets the operation handler for the get metrics reqcountperclient operation
+	GetMetricsReqcountperclientHandler GetMetricsReqcountperclientHandler
+	// GetMetricsRequestcountHandler sets the operation handler for the get metrics requestcount operation
+	GetMetricsRequestcountHandler GetMetricsRequestcountHandler
+	// GetMetricsServicedisttrafficHandler sets the operation handler for the get metrics servicedisttraffic operation
+	GetMetricsServicedisttrafficHandler GetMetricsServicedisttrafficHandler
+	// GetNodegraphAllHandler sets the operation handler for the get nodegraph all operation
+	GetNodegraphAllHandler GetNodegraphAllHandler
+	// GetNodegraphServiceHandler sets the operation handler for the get nodegraph service operation
+	GetNodegraphServiceHandler GetNodegraphServiceHandler
+	// AuthGetOauthProviderHandler sets the operation handler for the get oauth provider operation
+	AuthGetOauthProviderHandler auth.GetOauthProviderHandler
+	// AuthGetOauthProviderCallbackHandler sets the operation handler for the get oauth provider callback operation
+	AuthGetOauthProviderCallbackHandler auth.GetOauthProviderCallbackHandler
 	// GetStatusDeviceHandler sets the operation handler for the get status device operation
 	GetStatusDeviceHandler GetStatusDeviceHandler
 	// GetStatusFilesystemHandler sets the operation handler for the get status filesystem operation
@@ -741,8 +836,65 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.GetConfigVlanAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigVlanAllHandler")
 	}
+	if o.GetLogArchivesHandler == nil {
+		unregistered = append(unregistered, "GetLogArchivesHandler")
+	}
+	if o.GetLogArchivesFilenameHandler == nil {
+		unregistered = append(unregistered, "GetLogArchivesFilenameHandler")
+	}
+	if o.GetLogsHandler == nil {
+		unregistered = append(unregistered, "GetLogsHandler")
+	}
 	if o.GetMetricsHandler == nil {
 		unregistered = append(unregistered, "GetMetricsHandler")
+	}
+	if o.GetMetricsEpdisttrafficHandler == nil {
+		unregistered = append(unregistered, "GetMetricsEpdisttrafficHandler")
+	}
+	if o.GetMetricsErrorcountHandler == nil {
+		unregistered = append(unregistered, "GetMetricsErrorcountHandler")
+	}
+	if o.GetMetricsFlowcountHandler == nil {
+		unregistered = append(unregistered, "GetMetricsFlowcountHandler")
+	}
+	if o.GetMetricsFwdropsHandler == nil {
+		unregistered = append(unregistered, "GetMetricsFwdropsHandler")
+	}
+	if o.GetMetricsHostcountHandler == nil {
+		unregistered = append(unregistered, "GetMetricsHostcountHandler")
+	}
+	if o.GetMetricsLbprocessedtrafficHandler == nil {
+		unregistered = append(unregistered, "GetMetricsLbprocessedtrafficHandler")
+	}
+	if o.GetMetricsLbrulecountHandler == nil {
+		unregistered = append(unregistered, "GetMetricsLbrulecountHandler")
+	}
+	if o.GetMetricsNewflowcountHandler == nil {
+		unregistered = append(unregistered, "GetMetricsNewflowcountHandler")
+	}
+	if o.GetMetricsProcessedtrafficHandler == nil {
+		unregistered = append(unregistered, "GetMetricsProcessedtrafficHandler")
+	}
+	if o.GetMetricsReqcountperclientHandler == nil {
+		unregistered = append(unregistered, "GetMetricsReqcountperclientHandler")
+	}
+	if o.GetMetricsRequestcountHandler == nil {
+		unregistered = append(unregistered, "GetMetricsRequestcountHandler")
+	}
+	if o.GetMetricsServicedisttrafficHandler == nil {
+		unregistered = append(unregistered, "GetMetricsServicedisttrafficHandler")
+	}
+	if o.GetNodegraphAllHandler == nil {
+		unregistered = append(unregistered, "GetNodegraphAllHandler")
+	}
+	if o.GetNodegraphServiceHandler == nil {
+		unregistered = append(unregistered, "GetNodegraphServiceHandler")
+	}
+	if o.AuthGetOauthProviderHandler == nil {
+		unregistered = append(unregistered, "auth.GetOauthProviderHandler")
+	}
+	if o.AuthGetOauthProviderCallbackHandler == nil {
+		unregistered = append(unregistered, "auth.GetOauthProviderCallbackHandler")
 	}
 	if o.GetStatusDeviceHandler == nil {
 		unregistered = append(unregistered, "GetStatusDeviceHandler")
@@ -1140,7 +1292,83 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
+	o.handlers["GET"]["/log-archives"] = NewGetLogArchives(o.context, o.GetLogArchivesHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/log-archives/{filename}"] = NewGetLogArchivesFilename(o.context, o.GetLogArchivesFilenameHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/logs"] = NewGetLogs(o.context, o.GetLogsHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
 	o.handlers["GET"]["/metrics"] = NewGetMetrics(o.context, o.GetMetricsHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/metrics/epdisttraffic"] = NewGetMetricsEpdisttraffic(o.context, o.GetMetricsEpdisttrafficHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/metrics/errorcount"] = NewGetMetricsErrorcount(o.context, o.GetMetricsErrorcountHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/metrics/flowcount"] = NewGetMetricsFlowcount(o.context, o.GetMetricsFlowcountHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/metrics/fwdrops"] = NewGetMetricsFwdrops(o.context, o.GetMetricsFwdropsHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/metrics/hostcount"] = NewGetMetricsHostcount(o.context, o.GetMetricsHostcountHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/metrics/lbprocessedtraffic"] = NewGetMetricsLbprocessedtraffic(o.context, o.GetMetricsLbprocessedtrafficHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/metrics/lbrulecount"] = NewGetMetricsLbrulecount(o.context, o.GetMetricsLbrulecountHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/metrics/newflowcount"] = NewGetMetricsNewflowcount(o.context, o.GetMetricsNewflowcountHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/metrics/processedtraffic"] = NewGetMetricsProcessedtraffic(o.context, o.GetMetricsProcessedtrafficHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/metrics/reqcountperclient"] = NewGetMetricsReqcountperclient(o.context, o.GetMetricsReqcountperclientHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/metrics/requestcount"] = NewGetMetricsRequestcount(o.context, o.GetMetricsRequestcountHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/metrics/servicedisttraffic"] = NewGetMetricsServicedisttraffic(o.context, o.GetMetricsServicedisttrafficHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/nodegraph/all"] = NewGetNodegraphAll(o.context, o.GetNodegraphAllHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/nodegraph/{service}"] = NewGetNodegraphService(o.context, o.GetNodegraphServiceHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/oauth/{provider}"] = auth.NewGetOauthProvider(o.context, o.AuthGetOauthProviderHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/oauth/{provider}/callback"] = auth.NewGetOauthProviderCallback(o.context, o.AuthGetOauthProviderCallbackHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

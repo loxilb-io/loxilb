@@ -40,6 +40,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Validate options
+	if err := opts.ValidateOpts(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	if opts.Opts.Version {
 		fmt.Printf("loxilb version: %s %s\n", common.Version, common.BuildInfo)
 		os.Exit(0)

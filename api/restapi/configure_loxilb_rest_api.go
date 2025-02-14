@@ -190,6 +190,29 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.PostConfigBgpPolicyApplyHandler = operations.PostConfigBgpPolicyApplyHandlerFunc(handler.ConfigPostBGPPolicyApply)
 	api.DeleteConfigBgpPolicyApplyHandler = operations.DeleteConfigBgpPolicyApplyHandlerFunc(handler.ConfigDeleteBGPPolicyApply)
 
+	// Metrics
+	api.GetMetricsFlowcountHandler = operations.GetMetricsFlowcountHandlerFunc(handler.ConfigGetFlowCount)
+	api.GetMetricsLbrulecountHandler = operations.GetMetricsLbrulecountHandlerFunc(handler.ConfigGetLbRuleCount)
+	api.GetMetricsNewflowcountHandler = operations.GetMetricsNewflowcountHandlerFunc(handler.ConfigGetNewFlowCount)
+	api.GetMetricsRequestcountHandler = operations.GetMetricsRequestcountHandlerFunc(handler.ConfigGetRequestCount)
+	api.GetMetricsErrorcountHandler = operations.GetMetricsErrorcountHandlerFunc(handler.ConfigGetErrorCount)
+	api.GetMetricsProcessedtrafficHandler = operations.GetMetricsProcessedtrafficHandlerFunc(handler.ConfigGetProcessedTraffic)
+	api.GetMetricsLbprocessedtrafficHandler = operations.GetMetricsLbprocessedtrafficHandlerFunc(handler.ConfigGetLbProcessedTraffic)
+	api.GetMetricsEpdisttrafficHandler = operations.GetMetricsEpdisttrafficHandlerFunc(handler.ConfigGetEpDistTraffic)
+	api.GetMetricsServicedisttrafficHandler = operations.GetMetricsServicedisttrafficHandlerFunc(handler.ConfigGetServiceDistTraffic)
+	api.GetMetricsFwdropsHandler = operations.GetMetricsFwdropsHandlerFunc(handler.ConfigGetFwDrops)
+	api.GetMetricsReqcountperclientHandler = operations.GetMetricsReqcountperclientHandlerFunc(handler.ConfigGetReqCounterPerClient)
+	api.GetMetricsHostcountHandler = operations.GetMetricsHostcountHandlerFunc(handler.ConfigGetHostCount)
+
+	// Log
+	api.GetLogsHandler = operations.GetLogsHandlerFunc(handler.ConfigGetLogs)
+	api.GetLogArchivesHandler = operations.GetLogArchivesHandlerFunc(handler.ConfigGetLogArchives)
+	api.GetLogArchivesFilenameHandler = operations.GetLogArchivesFilenameHandlerFunc(handler.ConfigGetLogArchivesFilename)
+
+	// Nodegraph
+	api.GetNodegraphAllHandler = operations.GetNodegraphAllHandlerFunc(handler.ConfigGetNodeGraph)
+	api.GetNodegraphServiceHandler = operations.GetNodegraphServiceHandlerFunc(handler.ConfigGetNodeGraphService)
+
 	// Version
 	api.GetVersionHandler = operations.GetVersionHandlerFunc(handler.ConfigGetVersion)
 
@@ -204,6 +227,13 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 		api.UsersPostAuthUsersHandler = users.PostAuthUsersHandlerFunc(handler.UsersPostUsers)
 		api.UsersDeleteAuthUsersIDHandler = users.DeleteAuthUsersIDHandlerFunc(handler.UsersDeleteUsers)
 		api.UsersPutAuthUsersIDHandler = users.PutAuthUsersIDHandlerFunc(handler.UsersPutUsers)
+	}
+
+	if opts.Opts.Oauth2Enable {
+		// OAuth2 API
+		handler.InitOAuthConfigs()
+		api.AuthGetOauthProviderHandler = auth.GetOauthProviderHandlerFunc(handler.AuthGetOauthProvider)
+		api.AuthGetOauthProviderCallbackHandler = auth.GetOauthProviderCallbackHandlerFunc(handler.AuthGetOauthProviderCallback)
 	}
 
 	api.PreServerShutdown = func() {}

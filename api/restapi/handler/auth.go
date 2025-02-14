@@ -41,7 +41,11 @@ import (
 //   - error: an error if the token is invalid or parsing fails.
 func BearerAuthAuth(tokenString string) (interface{}, error) {
 	if opts.Opts.UserServiceEnable {
+		// User DB based valaidation
 		return ApiHooks.NetUserValidate(tokenString)
+	} else if opts.Opts.Oauth2Enable {
+		// OAuth2 based validation
+		return ApiHooks.NetOauthUserValidate(tokenString)
 	} else {
 		return true, nil
 	}
@@ -78,6 +82,7 @@ func AuthPostLogout(params auth.PostAuthLogoutParams, principal interface{}) mid
 // Authorized function to handle authorization logic
 // requests are authorized based on the role of the user
 func Authorized() runtime.Authorizer {
+	// TODO: Add more roles and permissions logic for oauth users
 	if opts.Opts.UserServiceEnable {
 		return runtime.AuthorizerFunc(func(param *http.Request, principal interface{}) error {
 			permitInfo := principal.(string)
