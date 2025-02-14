@@ -20,7 +20,7 @@ import (
 type ErrorCountMetrics struct {
 
 	// total errors
-	TotalErrors float64 `json:"total_errors"`
+	TotalErrors float64 `json:"total_errors,omitempty"`
 
 	// total errors per service
 	TotalErrorsPerService []*ErrorCountMetricsTotalErrorsPerServiceItems0 `json:"total_errors_per_service"`
@@ -124,10 +124,10 @@ func (m *ErrorCountMetrics) UnmarshalBinary(b []byte) error {
 type ErrorCountMetricsTotalErrorsPerServiceItems0 struct {
 
 	// name
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 
 	// value
-	Value float64 `json:"value"`
+	Value float64 `json:"value,omitempty"`
 }
 
 // Validate validates this error count metrics total errors per service items0
