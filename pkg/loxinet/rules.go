@@ -2703,7 +2703,6 @@ func epTicker(R *RuleH, helper int) {
 					break
 				}
 			}
-			epHosts = nil
 		}
 	}
 }
