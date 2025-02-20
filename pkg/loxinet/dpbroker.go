@@ -32,7 +32,7 @@ import (
 const (
 	MapNameCt4  = "CT4"
 	MapNameCt6  = "CT6"
-	MapNameNat4 = "NAT4"
+	MapNameNat  = "NAT"
 	MapNameBD   = "BD"
 	MapNameRxBD = "RXBD"
 	MapNameTxBD = "TXBD"

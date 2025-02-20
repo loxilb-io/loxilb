@@ -2149,6 +2149,49 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  '/config/endpointhoststate':
+    post:
+      summary: Sets the state of a host
+      description: Sets the state of a host which can have multiple endpoints
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes of end point
+          schema:
+            $ref: '#/definitions/EndPointHostState'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict.
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintenance mode
+          schema:
+            $ref: '#/definitions/Error'
+
   '/config/endpoint/epipaddress/{ip_address}':
     delete:
       summary: Delete an LB end-point from monitoring
@@ -4452,6 +4495,22 @@ definitions:
       probePort:
         type: integer
         description: The l4port to probe on
+
+  EndPointHostState:
+    type: object
+    properties:
+      hostName:
+        type: string
+        description: Host name in CIDR
+      epPort:
+        type: integer
+        description: The end-point port (0 if not applicable)
+      epProto:
+        type: string
+        description: The end-point prototype (tcp,udp,sctp,icmp,http(s), empty if not applicable)
+      state:
+        type: string
+        description: Host state string ("green", "yellow", "red" )
 
   FirewallOptionEntry:
     type: object

@@ -491,6 +491,29 @@ type EndPointMod struct {
 	CurrState string `json:"currState"`
 }
 
+const (
+	// HostStateGreen - Host is healthy
+	HostStateGreen = "green"
+	// HostStateYellow - Host is under load
+	HostStateYellow = "yellow"
+	// HostStateRed - Host is not healthy
+	HostStateRed = "red"
+	// HostStateUnknown - Host state is not known
+	HostStateUnknown = ""
+)
+
+// EndPointHostMod - Info related to an end-point host entry
+type EndPointHostMod struct {
+	// HostName - hostname in CIDR
+	HostName string `json:"hostName"`
+	// EPPort - The end-point port (0 if not applicable)
+	EPPort uint16 `json:"epPort"`
+	// EPProto - The end-point prototype (empty if not applicable)
+	EPProto string `json:"epProto"`
+	//  State - Host state string
+	State string `json:"state"`
+}
+
 // EpSelect - Selection method of load-balancer end-point
 type EpSelect uint
 
@@ -1096,6 +1119,7 @@ type NetHookInterface interface {
 	NetEpHostAdd(fm *EndPointMod) (int, error)
 	NetEpHostDel(fm *EndPointMod) (int, error)
 	NetEpHostGet() ([]EndPointMod, error)
+	NetEpHostStateSet(fm *EndPointHostMod) (int, error)
 	NetParamSet(param ParamMod) (int, error)
 	NetParamGet(param *ParamMod) (int, error)
 	NetGoBGPNeighGet() ([]GoBGPNeighGetMod, error)
