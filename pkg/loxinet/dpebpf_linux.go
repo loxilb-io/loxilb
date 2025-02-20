@@ -1124,7 +1124,7 @@ func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 	var polTbl []int
 	sync := 0
 	switch {
-	case w.Name == MapNameNat4:
+	case w.Name == MapNameNat:
 		tbl = append(tbl, int(C.LL_DP_NAT_STATS_MAP))
 		sync = 1
 	case w.Name == MapNameBD:

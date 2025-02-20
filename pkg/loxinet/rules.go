@@ -51,6 +51,7 @@ const (
 	RuleTupleErr
 	RuleArgsErr
 	RuleEpNotExistErr
+	RuleEpHostUnkErr
 )
 
 type ruleTMatch uint
@@ -208,6 +209,7 @@ type epHostOpts struct {
 type epHost struct {
 	epKey        string
 	hostName     string
+	hostState    string
 	ruleCount    int
 	inactive     bool
 	initProberOn bool
@@ -2318,6 +2320,10 @@ func (R *RuleH) GetEpHosts() ([]cmn.EndPointMod, error) {
 			ret.CurrState = "ok"
 		}
 
+		if data.hostState == cmn.HostStateRed {
+			ret.CurrState = "red"
+		}
+
 		// Append to slice
 		res = append(res, ret)
 	}
@@ -2330,6 +2336,10 @@ func (R *RuleH) IsEPHostActive(epKey string) bool {
 	ep := R.epMap[epKey]
 	if ep == nil {
 		return true // Are we sure ??
+	}
+
+	if ep.hostState == cmn.HostStateRed {
+		return false
 	}
 
 	return !ep.inactive
@@ -2485,6 +2495,46 @@ func (R *RuleH) DeleteEPHost(apiCall bool, name string, hostName string, probeTy
 	delete(R.epMap, ep.epKey)
 
 	tk.LogIt(tk.LogDebug, "ep-host deleted %v\n", key)
+
+	return 0, nil
+}
+
+// SetEPHostState - Set an end-point host state
+// It will return 0 and nil error, else appropriate return code and error string will be set
+func (R *RuleH) SetEPHostState(hostName string, epPort uint16, epProto string, state string) (int, error) {
+
+	if state != cmn.HostStateGreen && state != cmn.HostStateYellow && state != cmn.HostStateRed {
+		return RuleEpHostUnkErr, errors.New("unknown ep-host-state")
+	}
+
+	key := ""
+	if epPort != 0 && epProto == "" ||
+		epPort == 0 && epProto != "" {
+		return RuleEpHostUnkErr, errors.New("ep-host-state args error")
+	}
+
+	if epProto != "" {
+		key = makeEPKey(hostName, epProto, epPort)
+	}
+
+	R.epMx.Lock()
+	defer R.epMx.Unlock()
+
+	if key != "" {
+		ep := R.epMap[key]
+		if ep == nil {
+			return RuleEpNotExistErr, errors.New("ephost-notfound error")
+		}
+		ep.hostState = state
+		tk.LogIt(tk.LogDebug, "ep %s - %s\n", ep.epKey, ep.hostState)
+	} else {
+		for _, ep := range R.epMap {
+			if ep.hostName == hostName {
+				ep.hostState = state
+				tk.LogIt(tk.LogDebug, "ep %s - %s\n", ep.epKey, ep.hostState)
+			}
+		}
+	}
 
 	return 0, nil
 }
@@ -3163,7 +3213,7 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 							nStat := new(StatDpWorkQ)
 							nStat.Work = DpStatsGetImm
 							nStat.Mark = (((uint32(r.ruleNum)) & 0xfff) << 4) | (uint32(numEndPoints) & 0xf)
-							nStat.Name = MapNameNat4
+							nStat.Name = MapNameNat
 							nStat.Bytes = &bytes
 							nStat.Packets = &packets
 							DpWorkSingle(mh.dp, nStat)
@@ -3177,7 +3227,7 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 						nStat := new(StatDpWorkQ)
 						nStat.Work = work
 						nStat.Mark = (((uint32(r.ruleNum)) & 0xfff) << 4) | (uint32(numEndPoints) & 0xf)
-						nStat.Name = MapNameNat4
+						nStat.Name = MapNameNat
 						nStat.Bytes = &nEP.stat.bytes
 						nStat.Packets = &nEP.stat.packets
 						if work == DpStatsGetImm {

@@ -300,6 +300,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		PostConfigEndpointHandler: PostConfigEndpointHandlerFunc(func(params PostConfigEndpointParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigEndpoint has not yet been implemented")
 		}),
+		PostConfigEndpointhoststateHandler: PostConfigEndpointhoststateHandlerFunc(func(params PostConfigEndpointhoststateParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigEndpointhoststate has not yet been implemented")
+		}),
 		PostConfigFdbHandler: PostConfigFdbHandlerFunc(func(params PostConfigFdbParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigFdb has not yet been implemented")
 		}),
@@ -571,6 +574,8 @@ type LoxilbRestAPIAPI struct {
 	PostConfigCistateHandler PostConfigCistateHandler
 	// PostConfigEndpointHandler sets the operation handler for the post config endpoint operation
 	PostConfigEndpointHandler PostConfigEndpointHandler
+	// PostConfigEndpointhoststateHandler sets the operation handler for the post config endpointhoststate operation
+	PostConfigEndpointhoststateHandler PostConfigEndpointhoststateHandler
 	// PostConfigFdbHandler sets the operation handler for the post config fdb operation
 	PostConfigFdbHandler PostConfigFdbHandler
 	// PostConfigFirewallHandler sets the operation handler for the post config firewall operation
@@ -940,6 +945,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.PostConfigEndpointHandler == nil {
 		unregistered = append(unregistered, "PostConfigEndpointHandler")
+	}
+	if o.PostConfigEndpointhoststateHandler == nil {
+		unregistered = append(unregistered, "PostConfigEndpointhoststateHandler")
 	}
 	if o.PostConfigFdbHandler == nil {
 		unregistered = append(unregistered, "PostConfigFdbHandler")
@@ -1429,6 +1437,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/config/endpoint"] = NewPostConfigEndpoint(o.context, o.PostConfigEndpointHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/endpointhoststate"] = NewPostConfigEndpointhoststate(o.context, o.PostConfigEndpointhoststateHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
