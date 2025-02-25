@@ -219,6 +219,10 @@ func sysctlInit() {
 	utils.WriteFile("/proc/sys/net/ipv4/ip_forward", "1")
 }
 
+func sysctlPostInit() {
+	utils.WriteFile("/proc/sys/net/ipv4/conf/llb0/rp_filter", "0")
+}
+
 func loxiNetInit() {
 	var rpcMode int
 
@@ -385,6 +389,8 @@ func loxiNetInit() {
 	mh.ticker = time.NewTicker(LoxinetTiVal * time.Second)
 	mh.wg.Add(1)
 	go loxiNetTicker(opts.Opts.BgpPeerMode)
+
+	sysctlPostInit()
 
 	mh.ready = true
 }
