@@ -1055,6 +1055,9 @@ func (R *RuleH) addAllowedLbSrc(CIDR string, lbMark uint32) *allowedSrcElem {
 
 addFw:
 	fwarg := cmn.FwRuleArg{SrcIP: srcPref.String(), DstIP: "0.0.0.0/0"}
+	if tk.IsNetIPv6(srcPref.String()) {
+		fwarg.DstIP = "::/0"
+	}
 	fwOpts := cmn.FwOptArg{Allow: true, Mark: srcElem.lbmark | SrcChkFwMark}
 	_, err = R.AddFwRule(fwarg, fwOpts)
 	if err != nil {
@@ -1089,6 +1092,9 @@ func (R *RuleH) deleteAllowedLbSrc(CIDR string, lbMark uint32) error {
 
 	if srcElem.ref == 0 {
 		fwarg := cmn.FwRuleArg{SrcIP: srcElem.srcPref.String(), DstIP: "0.0.0.0/0"}
+		if tk.IsNetIPv6(srcElem.srcPref.String()) {
+			fwarg.DstIP = "::/0"
+		}
 		_, err := R.DeleteFwRule(fwarg)
 		if err != nil {
 			tk.LogIt(tk.LogError, "Failed to delete allowedSRC %s\n", srcElem.srcPref.String())
@@ -1112,11 +1118,12 @@ func (R *RuleH) addLbRuleWithFW(Dst string, dPortMin, dPortMax uint16, proto uin
 
 	// When this routine is called, we are certain all in-args are valid
 	// So, these are not rechecked in this routine
-	if tk.IsNetIPv6(Dst) {
-		return errors.New("proto error")
-	}
 
 	fwarg := cmn.FwRuleArg{SrcIP: "0.0.0.0/0", DstIP: Dst + "/32", DstPortMin: dPortMin, DstPortMax: dPortMax, Proto: proto}
+	if tk.IsNetIPv6(Dst) {
+		fwarg.SrcIP = "::/0"
+		fwarg.DstIP = Dst + "/128"
+	}
 	fwOpts := cmn.FwOptArg{Allow: true, Mark: lbMark<<16 | NatFwMark}
 	_, err := R.AddFwRule(fwarg, fwOpts)
 	if err != nil {
@@ -2073,6 +2080,17 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 	var l4prot rule8Tuple
 
 	// Validate rule args
+	if fwOptArgs.DoSnat {
+		if tk.IsNetIPv6(fwOptArgs.ToIP) {
+			if fwRule.DstIP == "0.0.0.0/0" {
+				fwRule.DstIP = "::/0"
+			}
+			if fwRule.SrcIP == "0.0.0.0/0" {
+				fwRule.SrcIP = "::/0"
+			}
+		}
+	}
+
 	_, dNetAddr, err := net.ParseCIDR(fwRule.DstIP)
 	if err != nil {
 		return RuleTupleErr, errors.New("malformed-rule dst error")
@@ -2170,6 +2188,9 @@ func (R *RuleH) AddFwRule(fwRule cmn.FwRuleArg, fwOptArgs cmn.FwOptArg) (int, er
 		// Create SNAT Rule
 		var servArg cmn.LbServiceArg
 		servArg.ServIP = "0.0.0.0"
+		if tk.IsNetIPv6(fwOpts.opt.snatIP) {
+			servArg.ServIP = "::"
+		}
 		servArg.ServPort = 0
 		servArg.Proto = "none"
 		servArg.BlockNum = uint32(r.ruleNum) | NatFwMark
@@ -2267,6 +2288,16 @@ func (R *RuleH) DeleteFwRule(fwRule cmn.FwRuleArg) (int, error) {
 
 		switch fwOpts := rule.act.action.(type) {
 		case *ruleFwOpts:
+			if tk.IsNetIPv6(fwOpts.opt.snatIP) {
+				servArg.ServIP = "::"
+				if fwRule.DstIP == "0.0.0.0/0" {
+					fwRule.DstIP = "::/0"
+				}
+				if fwRule.SrcIP == "0.0.0.0/0" {
+					fwRule.SrcIP = "::/0"
+				}
+			}
+
 			servArg.Name = fmt.Sprintf("%s:%s:%d", "Masq", fwOpts.opt.snatIP, fwOpts.opt.snatPort)
 			if fwOpts.opt.onDflt {
 				R.DeleteRuleVIP(net.ParseIP(fwOpts.opt.snatIP))
