@@ -137,6 +137,7 @@ type (
 	polAct     C.struct_dp_policer_act
 	mirrTact   C.struct_dp_mirr_tact
 	fw4Ent     C.struct_dp_fwv4_ent
+	fw6Ent     C.struct_dp_fwv6_ent
 	portAct    C.struct_dp_rdr_act
 	mapNoti    C.struct_ll_dp_map_notif
 	vipKey     C.struct_sock_rwr_key
@@ -185,7 +186,7 @@ func dpEbpfTicker() {
 		int(C.LL_DP_BD_STATS_MAP),
 		int(C.LL_DP_TX_BD_STATS_MAP),
 		int(C.LL_DP_SESS4_STATS_MAP),
-		int(C.LL_DP_FW4_STATS_MAP)}
+		int(C.LL_DP_FW_STATS_MAP)}
 	tLen := uint(len(tbls))
 
 	for {
@@ -501,11 +502,7 @@ func osPortIsRunning(portName string) bool {
 	var flags uint16
 	C.memcpy(unsafe.Pointer(&flags), unsafe.Pointer(&ifrStruct[16]), 2)
 
-	if flags&syscall.IFF_RUNNING != 0 {
-		return true
-	}
-
-	return false
+	return flags&syscall.IFF_RUNNING != 0
 }
 
 // DpPortPropMod - routine to work on a ebpf port property request
@@ -1753,9 +1750,7 @@ func (e *DpEbpfH) DpMirrDel(w *MirrDpWorkQ) int {
 	return e.DpMirrMod(w)
 }
 
-// DpFwRuleMod - routine to work on a ebpf fw mod request
-func (e *DpEbpfH) DpFwRuleMod(w *FwDpWorkQ) int {
-
+func (e *DpEbpfH) dpFwRuleMod4(w *FwDpWorkQ) int {
 	fwe := new(fw4Ent)
 
 	C.memset(unsafe.Pointer(fwe), 0, C.sizeof_struct_dp_fwv4_ent)
@@ -1848,6 +1843,124 @@ func (e *DpEbpfH) DpFwRuleMod(w *FwDpWorkQ) int {
 	}
 
 	return 0
+}
+
+func (e *DpEbpfH) dpFwRuleMod6(w *FwDpWorkQ) int {
+	fwe := new(fw6Ent)
+
+	C.memset(unsafe.Pointer(fwe), 0, C.sizeof_struct_dp_fwv6_ent)
+
+	if len(w.DstIP.IP) != 0 {
+		for i, v := range w.DstIP.IP {
+			fwe.k.dest.val[i] = C.uchar(v)
+			fwe.k.dest.valid[i] = C.uchar(w.DstIP.Mask[i])
+		}
+	}
+
+	if len(w.SrcIP.IP) != 0 {
+		for i, v := range w.SrcIP.IP {
+			fwe.k.source.val[i] = C.uchar(v)
+			fwe.k.source.valid[i] = C.uchar(w.SrcIP.Mask[i])
+		}
+	}
+
+	if w.L4SrcMin == w.L4SrcMax {
+		if w.L4SrcMin != 0 {
+			fwe.k.sport.has_range = C.uint(0)
+			ptr := (*C.ushort)(unsafe.Pointer(&fwe.k.sport.u[0]))
+			*ptr = C.ushort(w.L4SrcMin)
+			ptr = (*C.ushort)(unsafe.Pointer(&fwe.k.sport.u[2]))
+			*ptr = C.ushort(0xffff)
+		}
+	} else {
+		fwe.k.sport.has_range = C.uint(1)
+		ptr := (*C.ushort)(unsafe.Pointer(&fwe.k.sport.u[0]))
+		*ptr = C.ushort(w.L4SrcMin)
+		ptr = (*C.ushort)(unsafe.Pointer(&fwe.k.sport.u[2]))
+		*ptr = C.ushort(w.L4SrcMax)
+	}
+
+	if w.L4DstMin == w.L4DstMax {
+		if w.L4DstMin != 0 {
+			fwe.k.dport.has_range = C.uint(0)
+			ptr := (*C.ushort)(unsafe.Pointer(&fwe.k.dport.u[0]))
+			*ptr = C.ushort(w.L4DstMin)
+			ptr = (*C.ushort)(unsafe.Pointer(&fwe.k.dport.u[2]))
+			*ptr = C.ushort(0xffff)
+		}
+	} else {
+		fwe.k.dport.has_range = C.uint(1)
+		ptr := (*C.ushort)(unsafe.Pointer(&fwe.k.dport.u[0]))
+		*ptr = C.ushort(w.L4DstMin)
+		ptr = (*C.ushort)(unsafe.Pointer(&fwe.k.dport.u[2]))
+		*ptr = C.ushort(w.L4DstMax)
+	}
+
+	if w.Port != 0 {
+		fwe.k.inport.val = C.ushort(w.Port)
+		fwe.k.inport.valid = C.ushort(0xffff)
+	}
+
+	if w.Proto != 0 {
+		fwe.k.protocol.val = C.uchar(w.Proto)
+		fwe.k.protocol.valid = C.uchar(255)
+	}
+
+	if w.ZoneNum != 0 {
+		fwe.k.zone.val = C.ushort(w.ZoneNum)
+		fwe.k.zone.valid = C.ushort(0xffff)
+	}
+
+	fwe.fwa.ca.cidx = C.uint(w.Mark)
+	fwe.fwa.ca.oaux = C.ushort(w.Pref) // Overloaded field
+
+	if w.Work == DpCreate {
+		if w.FwType == DpFwFwd {
+			fwe.fwa.ca.act_type = C.DP_SET_NOP
+		} else if w.FwType == DpFwDrop {
+			fwe.fwa.ca.act_type = C.DP_SET_DROP
+		} else if w.FwType == DpFwRdr {
+			fwe.fwa.ca.act_type = C.DP_SET_RDR_PORT
+			pRdr := (*portAct)(getPtrOffset(unsafe.Pointer(&fwe.fwa),
+				C.sizeof_struct_dp_cmn_act))
+			pRdr.oport = C.ushort(w.FwVal1)
+		} else if w.FwType == DpFwTrap {
+			fwe.fwa.ca.act_type = C.DP_SET_TOCP
+		}
+		fwe.fwa.ca.mark = C.uint(w.FwVal2)
+		if w.FwRecord {
+			fwe.fwa.ca.record = C.ushort(1)
+		}
+
+		ret := C.llb_add_map_elem(C.LL_DP_FW6_MAP, unsafe.Pointer(fwe), unsafe.Pointer(nil))
+		if ret != 0 {
+			tk.LogIt(tk.LogError, "ebpf fw6 error\n")
+			return EbpfErrFwAdd
+		}
+	} else if w.Work == DpRemove {
+		C.llb_del_map_elem(C.LL_DP_FW6_MAP, unsafe.Pointer(fwe))
+	}
+
+	return 0
+}
+
+// DpFwRuleMod - routine to work on a ebpf fw mod request
+func (e *DpEbpfH) DpFwRuleMod(w *FwDpWorkQ) int {
+
+	if len(w.DstIP.IP) == 0 && len(w.SrcIP.IP) == 0 {
+		return e.dpFwRuleMod4(w)
+	}
+
+	if tk.IsNetIPv4(w.DstIP.IP.String()) && tk.IsNetIPv6(w.SrcIP.IP.String()) ||
+		tk.IsNetIPv6(w.DstIP.IP.String()) && tk.IsNetIPv4(w.SrcIP.IP.String()) {
+		return EbpfErrFwAdd
+	}
+
+	if tk.IsNetIPv4(w.DstIP.IP.String()) {
+		return e.dpFwRuleMod4(w)
+	}
+
+	return e.dpFwRuleMod6(w)
 }
 
 // DpFwRuleAdd - routine to work on a ebpf fw add request
