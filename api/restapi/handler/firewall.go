@@ -42,11 +42,27 @@ func ConfigPostFW(params operations.PostConfigFirewallParams, principal interfac
 	Rules.SrcPortMin = uint16(params.Attr.RuleArguments.MinSourcePort)
 
 	if Rules.DstIP == "" {
-		Rules.DstIP = "0.0.0.0/0"
+		if Rules.SrcIP == "" {
+			Rules.DstIP = "0.0.0.0/0"
+		} else {
+			if tk.IsNetIPv4(Rules.SrcIP) {
+				Rules.DstIP = "0.0.0.0/0"
+			} else {
+				Rules.DstIP = "::/0"
+			}
+		}
 	}
 
 	if Rules.SrcIP == "" {
-		Rules.SrcIP = "0.0.0.0/0"
+		if Rules.DstIP == "" {
+			Rules.SrcIP = "0.0.0.0/0"
+		} else {
+			if tk.IsNetIPv4(Rules.DstIP) {
+				Rules.SrcIP = "0.0.0.0/0"
+			} else {
+				Rules.SrcIP = "::/0"
+			}
+		}
 	}
 	// opts
 	Opts.Allow = params.Attr.Opts.Allow
@@ -113,11 +129,27 @@ func ConfigDeleteFW(params operations.DeleteConfigFirewallParams, principal inte
 	}
 
 	if Rules.DstIP == "" {
-		Rules.DstIP = "0.0.0.0/0"
+		if Rules.SrcIP == "" {
+			Rules.DstIP = "0.0.0.0/0"
+		} else {
+			if tk.IsNetIPv4(Rules.SrcIP) {
+				Rules.DstIP = "0.0.0.0/0"
+			} else {
+				Rules.DstIP = "::/0"
+			}
+		}
 	}
 
 	if Rules.SrcIP == "" {
-		Rules.SrcIP = "0.0.0.0/0"
+		if Rules.DstIP == "" {
+			Rules.SrcIP = "0.0.0.0/0"
+		} else {
+			if tk.IsNetIPv4(Rules.DstIP) {
+				Rules.SrcIP = "0.0.0.0/0"
+			} else {
+				Rules.SrcIP = "::/0"
+			}
+		}
 	}
 
 	if params.MinSourcePort != nil {

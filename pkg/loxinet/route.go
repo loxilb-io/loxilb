@@ -244,7 +244,7 @@ func (r *RtH) RtAdd(Dst net.IPNet, Zone string, Ra RtAttr, Na []RtNhAttr) (int, 
 			}
 		}
 
-		tk.LogIt(tk.LogError, "rt add - %s:%s exists\n", Dst.String(), Zone)
+		tk.LogIt(tk.LogTrace, "rt add - %s:%s exists\n", Dst.String(), Zone)
 		return RtExistsErr, errors.New("rt exists")
 	}
 
