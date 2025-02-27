@@ -253,7 +253,7 @@ func loxiNetInit() {
 
 		}
 		utils.MkTunFsIfNotExist()
-		sysctlInit()
+		SysctlInit()
 	}
 
 	mh.self = opts.Opts.ClusterSelf
@@ -390,7 +390,7 @@ func loxiNetInit() {
 	mh.wg.Add(1)
 	go loxiNetTicker(opts.Opts.BgpPeerMode)
 
-	sysctlPostInit()
+	SysctlPostInit()
 
 	mh.ready = true
 }

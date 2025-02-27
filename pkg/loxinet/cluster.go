@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"regexp"
-	"strconv"
 	"time"
 
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
@@ -93,7 +91,7 @@ type CIStateH struct {
 	initRules6  bool
 }
 
-func (ci *CIStateH) BFDSessionNotify(instance string, _ string, ciState string) {
+func (ch *CIStateH) BFDSessionNotify(instance string, _ string, ciState string) {
 	var sm cmn.HASMod
 
 	sm.Instance = instance
@@ -102,12 +100,12 @@ func (ci *CIStateH) BFDSessionNotify(instance string, _ string, ciState string) 
 	tk.LogIt(tk.LogInfo, "ci-change instance %s - state %s vip %v\n", instance, ciState, sm.Vip)
 	mh.mtx.Lock()
 	defer mh.mtx.Unlock()
-	ci.CIStateUpdate(sm)
+	ch.CIStateUpdate(sm)
 }
 
-func (ci *CIStateH) startBFDProto(bfdSessConfigArgs bfd.ConfigArgs) {
+func (ch *CIStateH) startBFDProto(bfdSessConfigArgs bfd.ConfigArgs) {
 
-	if ci.Bs == nil {
+	if ch.Bs == nil {
 		return
 	}
 
@@ -116,61 +114,44 @@ func (ci *CIStateH) startBFDProto(bfdSessConfigArgs bfd.ConfigArgs) {
 	time.Sleep(KAInitTiVal * time.Second)
 
 	txInterval := uint32(bfd.BFDDflSysTXIntervalUs)
-	if ci.Interval != 0 && ci.Interval >= bfd.BFDMinSysTXIntervalUs {
-		txInterval = uint32(ci.Interval)
+	if ch.Interval != 0 && ch.Interval >= bfd.BFDMinSysTXIntervalUs {
+		txInterval = uint32(ch.Interval)
 	}
 
-	err := ci.Bs.BFDAddRemote(bfdSessConfigArgs, ci)
+	err := ch.Bs.BFDAddRemote(bfdSessConfigArgs, ch)
 	if err != nil {
 		tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote: %s\n", err.Error())
 		//os.Exit(1)
 		return
 	}
-	tk.LogIt(tk.LogInfo, "KA - Added BFD remote %s:%s:%vus\n", ci.RemoteIP.String(), ci.SourceIP.String(), txInterval)
+	tk.LogIt(tk.LogInfo, "KA - Added BFD remote %s:%s:%vus\n", ch.RemoteIP.String(), ch.SourceIP.String(), txInterval)
 }
 
 // CITicker - Periodic ticker for Cluster module
-func (ci *CIStateH) CITicker() {
+func (ch *CIStateH) CITicker() {
 	// Nothing to do currently
 }
 
 // CISpawn - Spawn CI application
-func (ci *CIStateH) CISpawn() {
+func (ch *CIStateH) CISpawn() {
 	bs := bfd.StructNew(3784)
-	ci.Bs = bs
+	ch.Bs = bs
 	if _, err := os.Stat("/etc/loxilb/BFDconfig.txt"); !errors.Is(err, os.ErrNotExist) {
 		nlp.ApplyBFDConfig()
 		return
 	}
 
-	if ci.SpawnKa {
-		bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: ci.RemoteIP.String(), SourceIP: ci.SourceIP.String(),
+	if ch.SpawnKa {
+		bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: ch.RemoteIP.String(), SourceIP: ch.SourceIP.String(),
 			Port: cmn.BFDPort, Interval: bfd.BFDMinSysTXIntervalUs, Multi: cmn.BFDDefRetryCount, Instance: cmn.CIDefault}
-		go ci.startBFDProto(bfdSessConfigArgs)
+		go ch.startBFDProto(bfdSessConfigArgs)
 	}
-}
-
-func parseInstance(input string) (int, error) {
-	// Define a regex pattern to match "<any-string>-inst<number>"
-	re := regexp.MustCompile(`^[a-zA-Z0-9_-]+-inst(\d+)$`)
-
-	matches := re.FindStringSubmatch(input)
-	if matches == nil || len(matches) < 2 {
-		return 0, fmt.Errorf("no match found in input: %s", input)
-	}
-
-	number, err := strconv.Atoi(matches[1])
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse number: %v", err)
-	}
-
-	return number, nil
 }
 
 // CIStateGetInst - routine to get HA state
-func (h *CIStateH) CIStateGetInst(inst string) (string, error) {
+func (ch *CIStateH) CIStateGetInst(inst string) (string, error) {
 
-	if ci, ok := h.ClusterMap[inst]; ok {
+	if ci, ok := ch.ClusterMap[inst]; ok {
 		return ci.StateStr, nil
 	}
 
@@ -301,18 +282,18 @@ func CIInit(args CIKAArgs) *CIStateH {
 }
 
 // CIDestroy - routine to destroy Cluster context
-func (ci *CIStateH) CIDestroy() {
+func (ch *CIStateH) CIDestroy() {
 
-	if ci.ClusterIf != "" {
+	if ch.ClusterIf != "" {
 		tk.LogIt(tk.LogError, "cluster-dev name\n")
-		_, err := net.InterfaceByName(ci.ClusterIf)
+		_, err := net.InterfaceByName(ch.ClusterIf)
 		if err != nil {
 			tk.LogIt(tk.LogError, "cluster-dev name error\n")
 			return
 		}
 
-		clusterCIDR := ci.ClusterNet
-		clusterCIDR6 := ci.ClusterNet6
+		clusterCIDR := ch.ClusterNet
+		clusterCIDR6 := ch.ClusterNet6
 
 		ip, _, err := net.ParseCIDR(clusterCIDR)
 		if err != nil {
@@ -326,13 +307,13 @@ func (ci *CIStateH) CIDestroy() {
 			return
 		}
 
-		ifIP, err := utils.GetIfaceIPAddr(ci.ClusterIf)
+		ifIP, err := utils.GetIfaceIPAddr(ch.ClusterIf)
 		if err != nil || ifIP == nil {
 			tk.LogIt(tk.LogError, "No IP address found in cluster-dev\n")
 			return
 		}
 
-		ifIP6, _ := utils.GetIfaceIP6Addr(ci.ClusterIf)
+		ifIP6, _ := utils.GetIfaceIP6Addr(ch.ClusterIf)
 		if ifIP6 == nil {
 			tk.LogIt(tk.LogError, "No IP6 address found in cluster-dev\n")
 			ifIP6 = ip6
@@ -378,7 +359,7 @@ func (ci *CIStateH) CIDestroy() {
 }
 
 // CIAddClusterRoute - routine to add a cluster route
-func (h *CIStateH) CIAddClusterRoute(dest string, add bool) {
+func (ch *CIStateH) CIAddClusterRoute(dest string, add bool) {
 
 	if tk.IsNetIPv4(dest) && dest != mh.has.ClusterGw ||
 		tk.IsNetIPv6(dest) && dest != mh.has.ClusterGw6 {
@@ -448,7 +429,7 @@ func (h *CIStateH) CIAddClusterRoute(dest string, add bool) {
 						}
 					}
 				}
-			} else if !h.initRules {
+			} else if !ch.initRules {
 				for i := range mh.has.OGw {
 					if i == 0 {
 						fwarg := cmn.FwRuleArg{SrcIP: mh.has.ClusterNet, DstIP: "0.0.0.0/0"}
@@ -459,7 +440,7 @@ func (h *CIStateH) CIAddClusterRoute(dest string, add bool) {
 						}
 					}
 				}
-				h.initRules = true
+				ch.initRules = true
 			}
 		} else {
 			found = false
@@ -483,7 +464,7 @@ func (h *CIStateH) CIAddClusterRoute(dest string, add bool) {
 						}
 					}
 				}
-			} else if !h.initRules6 {
+			} else if !ch.initRules6 {
 				for i := range mh.has.OGw6 {
 					if i == 0 {
 						fwarg := cmn.FwRuleArg{SrcIP: mh.has.ClusterNet6, DstIP: "0.0.0.0/0"}
@@ -494,17 +475,17 @@ func (h *CIStateH) CIAddClusterRoute(dest string, add bool) {
 						}
 					}
 				}
-				h.initRules6 = true
+				ch.initRules6 = true
 			}
 		}
 	}
 }
 
 // CIStateGet - routine to get HA state
-func (h *CIStateH) CIStateGet() ([]cmn.HASMod, error) {
+func (ch *CIStateH) CIStateGet() ([]cmn.HASMod, error) {
 	var res []cmn.HASMod
 
-	for i, s := range h.ClusterMap {
+	for i, s := range ch.ClusterMap {
 		var temp cmn.HASMod
 		temp.Instance = i
 		temp.State = s.StateStr
@@ -515,8 +496,8 @@ func (h *CIStateH) CIStateGet() ([]cmn.HASMod, error) {
 }
 
 // CIVipGet - routine to get HA state
-func (h *CIStateH) CIVipGet(inst string) (net.IP, error) {
-	if ci, ok := h.ClusterMap[inst]; ok {
+func (ch *CIStateH) CIVipGet(inst string) (net.IP, error) {
+	if ci, ok := ch.ClusterMap[inst]; ok {
 		if ci.Vip != nil && !ci.Vip.IsUnspecified() {
 			return ci.Vip, nil
 		}
@@ -525,21 +506,21 @@ func (h *CIStateH) CIVipGet(inst string) (net.IP, error) {
 }
 
 // IsCIKAMode - routine to get KA mode
-func (h *CIStateH) IsCIKAMode() bool {
+func (ch *CIStateH) IsCIKAMode() bool {
 	return false
 }
 
 // CIStateUpdate - routine to update cluster state
-func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
+func (ch *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 
-	if _, ok := h.ClusterMap[cm.Instance]; !ok {
-		h.ClusterMap[cm.Instance] = &ClusterInstance{State: cmn.CIStateNotDefined,
+	if _, ok := ch.ClusterMap[cm.Instance]; !ok {
+		ch.ClusterMap[cm.Instance] = &ClusterInstance{State: cmn.CIStateNotDefined,
 			StateStr: cmn.CIUnDefStateString,
 			Vip:      net.IPv4zero}
 		tk.LogIt(tk.LogDebug, "[CLUSTER] New Instance %s created\n", cm.Instance)
 	}
 
-	ci, found := h.ClusterMap[cm.Instance]
+	ci, found := ch.ClusterMap[cm.Instance]
 	if !found {
 		tk.LogIt(tk.LogError, "[CLUSTER] New Instance %s find error\n", cm.Instance)
 		return -1, errors.New("cluster instance not found")
@@ -549,11 +530,11 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 		return ci.State, nil
 	}
 
-	if _, ok := h.StateMap[cm.State]; ok {
+	if _, ok := ch.StateMap[cm.State]; ok {
 		tk.LogIt(tk.LogDebug, "[CLUSTER] Instance %s Current State %s Updated State: %s VIP : %s\n",
 			cm.Instance, ci.StateStr, cm.State, cm.Vip.String())
 		ci.StateStr = cm.State
-		ci.State = h.StateMap[cm.State]
+		ci.State = ch.StateMap[cm.State]
 		ci.Vip = cm.Vip
 
 		if mh.bgp != nil {
@@ -569,9 +550,9 @@ func (h *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 }
 
 // ClusterNodeAdd - routine to update cluster nodes
-func (h *CIStateH) ClusterNodeAdd(node cmn.ClusterNodeMod) (int, error) {
+func (ch *CIStateH) ClusterNodeAdd(node cmn.ClusterNodeMod) (int, error) {
 
-	cNode := h.NodeMap[node.Addr.String()]
+	cNode := ch.NodeMap[node.Addr.String()]
 
 	if cNode != nil {
 		return -1, errors.New("existing cnode")
@@ -580,7 +561,7 @@ func (h *CIStateH) ClusterNodeAdd(node cmn.ClusterNodeMod) (int, error) {
 	cNode = new(ClusterNode)
 	cNode.Addr = node.Addr
 	cNode.Egress = node.Egress
-	h.NodeMap[node.Addr.String()] = cNode
+	ch.NodeMap[node.Addr.String()] = cNode
 
 	cNode.DP(DpCreate)
 
@@ -588,24 +569,24 @@ func (h *CIStateH) ClusterNodeAdd(node cmn.ClusterNodeMod) (int, error) {
 }
 
 // ClusterNodeDelete - routine to delete cluster node
-func (h *CIStateH) ClusterNodeDelete(node cmn.ClusterNodeMod) (int, error) {
+func (ch *CIStateH) ClusterNodeDelete(node cmn.ClusterNodeMod) (int, error) {
 
-	cNode := h.NodeMap[node.Addr.String()]
+	cNode := ch.NodeMap[node.Addr.String()]
 
 	if cNode == nil {
 		return -1, errors.New("no such cnode")
 	}
 
-	delete(h.NodeMap, node.Addr.String())
+	delete(ch.NodeMap, node.Addr.String())
 
 	cNode.DP(DpRemove)
 	return 0, nil
 }
 
 // CIBFDSessionAdd - routine to add BFD session
-func (h *CIStateH) CIBFDSessionAdd(bm cmn.BFDMod) (int, error) {
+func (ch *CIStateH) CIBFDSessionAdd(bm cmn.BFDMod) (int, error) {
 
-	if h.Bs == nil {
+	if ch.Bs == nil {
 		return -1, errors.New("bfd not initialized")
 	}
 
@@ -614,7 +595,7 @@ func (h *CIStateH) CIBFDSessionAdd(bm cmn.BFDMod) (int, error) {
 		return -1, errors.New("bfd interval too low")
 	}
 
-	_, found := h.ClusterMap[bm.Instance]
+	_, found := ch.ClusterMap[bm.Instance]
 	if !found {
 		tk.LogIt(tk.LogError, "[CLUSTER] BFD SU - Cluster Instance %s not found\n", bm.Instance)
 		return -1, errors.New("cluster instance not found")
@@ -625,27 +606,27 @@ func (h *CIStateH) CIBFDSessionAdd(bm cmn.BFDMod) (int, error) {
 		return -1, errors.New("remoteIP address malformed")
 	}
 
-	if !h.SpawnKa {
+	if !ch.SpawnKa {
 		myIP := net.ParseIP(bm.SourceIP.String())
 		if myIP == nil {
 			return -1, errors.New("source address malformed")
 		}
 
 		tk.LogIt(tk.LogInfo, "[CLUSTER] Cluster Instance %s starting BFD..\n", bm.Instance)
-		h.SpawnKa = true
+		ch.SpawnKa = true
 
-		h.RemoteIP = bm.RemoteIP
-		h.SourceIP = bm.SourceIP
-		h.Interval = int64(bm.Interval)
+		ch.RemoteIP = bm.RemoteIP
+		ch.SourceIP = bm.SourceIP
+		ch.Interval = int64(bm.Interval)
 		bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: bm.RemoteIP.String(), SourceIP: bm.SourceIP.String(),
 			Port: cmn.BFDPort, Interval: uint32(bm.Interval),
 			Multi: bm.RetryCount, Instance: bm.Instance}
-		go h.startBFDProto(bfdSessConfigArgs)
+		go ch.startBFDProto(bfdSessConfigArgs)
 	} else {
 		bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: bm.RemoteIP.String(), SourceIP: bm.SourceIP.String(),
 			Port: cmn.BFDPort, Interval: uint32(bm.Interval),
 			Multi: bm.RetryCount, Instance: bm.Instance}
-		err := h.Bs.BFDAddRemote(bfdSessConfigArgs, h)
+		err := ch.Bs.BFDAddRemote(bfdSessConfigArgs, ch)
 		if err != nil {
 			tk.LogIt(tk.LogCritical, "KA - Cant add BFD remote: %s\n", err.Error())
 			return -1, err
@@ -656,38 +637,38 @@ func (h *CIStateH) CIBFDSessionAdd(bm cmn.BFDMod) (int, error) {
 }
 
 // CIBFDSessionDel - routine to delete BFD session
-func (h *CIStateH) CIBFDSessionDel(bm cmn.BFDMod) (int, error) {
+func (ch *CIStateH) CIBFDSessionDel(bm cmn.BFDMod) (int, error) {
 
-	if !h.SpawnKa {
+	if !ch.SpawnKa {
 		tk.LogIt(tk.LogError, "[CLUSTER] Cluster Instance %s not running BFD\n", bm.Instance)
 		return -1, errors.New("bfd session not running")
 	}
 
-	_, found := h.ClusterMap[bm.Instance]
+	_, found := ch.ClusterMap[bm.Instance]
 	if !found {
 		tk.LogIt(tk.LogError, "[CLUSTER] BFD SU - Cluster Instance %s not found\n", bm.Instance)
 		return -1, errors.New("cluster instance not found")
 	}
 
 	bfdSessConfigArgs := bfd.ConfigArgs{RemoteIP: bm.RemoteIP.String()}
-	err := h.Bs.BFDDeleteRemote(bfdSessConfigArgs)
+	err := ch.Bs.BFDDeleteRemote(bfdSessConfigArgs)
 	if err != nil {
 		tk.LogIt(tk.LogCritical, "KA - Cant delete BFD remote\n")
 		return -1, err
 	}
-	h.SpawnKa = false
+	ch.SpawnKa = false
 	tk.LogIt(tk.LogInfo, "KA - BFD remote %s:%s deleted\n", bm.Instance, bm.RemoteIP.String())
 	return 0, nil
 }
 
 // CIBFDSessionGet - routine to get BFD session info
-func (h *CIStateH) CIBFDSessionGet() ([]cmn.BFDMod, error) {
-	if !h.SpawnKa || h.Bs == nil {
+func (ch *CIStateH) CIBFDSessionGet() ([]cmn.BFDMod, error) {
+	if !ch.SpawnKa || ch.Bs == nil {
 		tk.LogIt(tk.LogError, "[CLUSTER] BFD sessions not running\n")
 		return nil, errors.New("bfd session not running")
 	}
 
-	return h.Bs.BFDGet()
+	return ch.Bs.BFDGet()
 }
 
 // DP - sync state of cluster-node entity to data-path
