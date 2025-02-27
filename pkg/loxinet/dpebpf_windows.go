@@ -33,3 +33,10 @@ func DpEbpfInit() *DpEbpfH {
 	ne := new(DpEbpfH)
 	return ne
 }
+
+func SysctlInit() {
+
+}
+
+func SysctlPostInit() {
+}

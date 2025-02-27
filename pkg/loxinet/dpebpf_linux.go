@@ -2446,3 +2446,13 @@ func goLinuxArpResolver(dIP C.uint) {
 	goDest := uint32(dIP)
 	utils.ArpResolver(goDest)
 }
+
+func SysctlInit() {
+	utils.WriteFile("/proc/sys/net/ipv4/conf/all/arp_accept", "1")
+	utils.WriteFile("/proc/sys/net/ipv4/conf/default/arp_accept", "1")
+	utils.WriteFile("/proc/sys/net/ipv4/ip_forward", "1")
+}
+
+func SysctlPostInit() {
+	utils.WriteFile("/proc/sys/net/ipv4/conf/llb0/rp_filter", "0")
+}
