@@ -4746,6 +4746,31 @@ func init() {
         }
       }
     },
+    "/meta": {
+      "get": {
+        "description": "Returns metadata about required fields for each POST API.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Metadata"
+        ],
+        "summary": "Get metadata for all POST APIs",
+        "operationId": "getMeta",
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved metadata",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/metrics": {
       "get": {
         "summary": "Scrape metrics from the cache",
@@ -6434,9 +6459,17 @@ func init() {
               "type": "boolean"
             },
             "mode": {
-              "description": "value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)",
+              "description": "value for NAT mode (0-DNAT,1-onearm, 2-fullnat, 3-dsr, 4-fullproxy, 5-hostonearm, 0-default)",
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "enum": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ]
             },
             "monitor": {
               "description": "value for monitoring enabled or not",
@@ -6449,7 +6482,12 @@ func init() {
             "oper": {
               "description": "end-point specific op (0-create, 1-attachEP, 2-detachEP)",
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "enum": [
+                0,
+                1,
+                2
+              ]
             },
             "port": {
               "description": "(Min) port number for the access",
@@ -6499,13 +6537,27 @@ func init() {
               "type": "boolean"
             },
             "security": {
-              "description": "value for Security mode (0-Plain, 1-HTTPs)",
+              "description": "value for Security mode (0-Plain, 1-https, 1-tls, 2-e2ehttps, 0-default)",
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "enum": [
+                0,
+                1,
+                2
+              ]
             },
             "sel": {
-              "description": "value for load balance algorithim",
-              "type": "integer"
+              "description": "value for load balance algorithim(0-rr, 1-hash, 2-priority, 3-persist, 4-lc, 5-n2, 6-n3, 0-default)",
+              "type": "integer",
+              "enum": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ]
             },
             "snat": {
               "description": "snat rule",
@@ -6612,8 +6664,13 @@ func init() {
               "type": "integer"
             },
             "type": {
-              "description": "One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan",
-              "type": "integer"
+              "description": "One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan(0-MirrTypeSpan, 1-MirrTypeRspan, 2-MirrTypeErspan)",
+              "type": "integer",
+              "enum": [
+                0,
+                1,
+                2
+              ]
             },
             "vlan": {
               "description": "For RSPAN we may need to send tagged mirror traffic",
@@ -6843,8 +6900,12 @@ func init() {
               "type": "integer"
             },
             "type": {
-              "description": "policy type",
-              "type": "integer"
+              "description": "policy type(0-TrTCM, 1-SrTCM)",
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
             }
           }
         },
@@ -7284,7 +7345,11 @@ func init() {
           "type": "string"
         },
         "role": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "admin",
+            "viewer"
+          ]
         },
         "username": {
           "type": "string"
@@ -12144,6 +12209,31 @@ func init() {
         }
       }
     },
+    "/meta": {
+      "get": {
+        "description": "Returns metadata about required fields for each POST API.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Metadata"
+        ],
+        "summary": "Get metadata for all POST APIs",
+        "operationId": "getMeta",
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved metadata",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/metrics": {
       "get": {
         "summary": "Scrape metrics from the cache",
@@ -14271,9 +14361,17 @@ func init() {
               "type": "boolean"
             },
             "mode": {
-              "description": "value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)",
+              "description": "value for NAT mode (0-DNAT,1-onearm, 2-fullnat, 3-dsr, 4-fullproxy, 5-hostonearm, 0-default)",
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "enum": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ]
             },
             "monitor": {
               "description": "value for monitoring enabled or not",
@@ -14286,7 +14384,12 @@ func init() {
             "oper": {
               "description": "end-point specific op (0-create, 1-attachEP, 2-detachEP)",
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "enum": [
+                0,
+                1,
+                2
+              ]
             },
             "port": {
               "description": "(Min) port number for the access",
@@ -14336,13 +14439,27 @@ func init() {
               "type": "boolean"
             },
             "security": {
-              "description": "value for Security mode (0-Plain, 1-HTTPs)",
+              "description": "value for Security mode (0-Plain, 1-https, 1-tls, 2-e2ehttps, 0-default)",
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "enum": [
+                0,
+                1,
+                2
+              ]
             },
             "sel": {
-              "description": "value for load balance algorithim",
-              "type": "integer"
+              "description": "value for load balance algorithim(0-rr, 1-hash, 2-priority, 3-persist, 4-lc, 5-n2, 6-n3, 0-default)",
+              "type": "integer",
+              "enum": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ]
             },
             "snat": {
               "description": "snat rule",
@@ -14426,9 +14543,17 @@ func init() {
           "type": "boolean"
         },
         "mode": {
-          "description": "value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)",
+          "description": "value for NAT mode (0-DNAT,1-onearm, 2-fullnat, 3-dsr, 4-fullproxy, 5-hostonearm, 0-default)",
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "enum": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
         },
         "monitor": {
           "description": "value for monitoring enabled or not",
@@ -14441,7 +14566,12 @@ func init() {
         "oper": {
           "description": "end-point specific op (0-create, 1-attachEP, 2-detachEP)",
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "enum": [
+            0,
+            1,
+            2
+          ]
         },
         "port": {
           "description": "(Min) port number for the access",
@@ -14491,13 +14621,27 @@ func init() {
           "type": "boolean"
         },
         "security": {
-          "description": "value for Security mode (0-Plain, 1-HTTPs)",
+          "description": "value for Security mode (0-Plain, 1-https, 1-tls, 2-e2ehttps, 0-default)",
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "enum": [
+            0,
+            1,
+            2
+          ]
         },
         "sel": {
-          "description": "value for load balance algorithim",
-          "type": "integer"
+          "description": "value for load balance algorithim(0-rr, 1-hash, 2-priority, 3-persist, 4-lc, 5-n2, 6-n3, 0-default)",
+          "type": "integer",
+          "enum": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
         },
         "snat": {
           "description": "snat rule",
@@ -14602,8 +14746,13 @@ func init() {
               "type": "integer"
             },
             "type": {
-              "description": "One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan",
-              "type": "integer"
+              "description": "One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan(0-MirrTypeSpan, 1-MirrTypeRspan, 2-MirrTypeErspan)",
+              "type": "integer",
+              "enum": [
+                0,
+                1,
+                2
+              ]
             },
             "vlan": {
               "description": "For RSPAN we may need to send tagged mirror traffic",
@@ -14646,8 +14795,13 @@ func init() {
           "type": "integer"
         },
         "type": {
-          "description": "One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan",
-          "type": "integer"
+          "description": "One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan(0-MirrTypeSpan, 1-MirrTypeRspan, 2-MirrTypeErspan)",
+          "type": "integer",
+          "enum": [
+            0,
+            1,
+            2
+          ]
         },
         "vlan": {
           "description": "For RSPAN we may need to send tagged mirror traffic",
@@ -14925,8 +15079,12 @@ func init() {
               "type": "integer"
             },
             "type": {
-              "description": "policy type",
-              "type": "integer"
+              "description": "policy type(0-TrTCM, 1-SrTCM)",
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
             }
           }
         },
@@ -14969,8 +15127,12 @@ func init() {
           "type": "integer"
         },
         "type": {
-          "description": "policy type",
-          "type": "integer"
+          "description": "policy type(0-TrTCM, 1-SrTCM)",
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ]
         }
       }
     },
@@ -15600,7 +15762,11 @@ func init() {
           "type": "string"
         },
         "role": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "admin",
+            "viewer"
+          ]
         },
         "username": {
           "type": "string"

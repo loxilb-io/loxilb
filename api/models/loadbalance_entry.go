@@ -7,11 +7,13 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // LoadbalanceEntry loadbalance entry
@@ -424,7 +426,8 @@ type LoadbalanceEntryServiceArguments struct {
 	// externally managed rule or not
 	Managed bool `json:"managed,omitempty"`
 
-	// value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)
+	// value for NAT mode (0-DNAT,1-onearm, 2-fullnat, 3-dsr, 4-fullproxy, 5-hostonearm, 0-default)
+	// Enum: [0 1 2 3 4 5]
 	Mode int32 `json:"mode,omitempty"`
 
 	// value for monitoring enabled or not
@@ -434,6 +437,7 @@ type LoadbalanceEntryServiceArguments struct {
 	Name string `json:"name,omitempty"`
 
 	// end-point specific op (0-create, 1-attachEP, 2-detachEP)
+	// Enum: [0 1 2]
 	Oper int32 `json:"oper,omitempty"`
 
 	// (Min) port number for the access
@@ -469,10 +473,12 @@ type LoadbalanceEntryServiceArguments struct {
 	// flag to enable proxy protocol v2
 	Proxyprotocolv2 bool `json:"proxyprotocolv2,omitempty"`
 
-	// value for Security mode (0-Plain, 1-HTTPs)
+	// value for Security mode (0-Plain, 1-https, 1-tls, 2-e2ehttps, 0-default)
+	// Enum: [0 1 2]
 	Security int32 `json:"security,omitempty"`
 
-	// value for load balance algorithim
+	// value for load balance algorithim(0-rr, 1-hash, 2-priority, 3-persist, 4-lc, 5-n2, 6-n3, 0-default)
+	// Enum: [0 1 2 3 4 5 6]
 	Sel int64 `json:"sel,omitempty"`
 
 	// snat rule
@@ -481,6 +487,159 @@ type LoadbalanceEntryServiceArguments struct {
 
 // Validate validates this loadbalance entry service arguments
 func (m *LoadbalanceEntryServiceArguments) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateMode(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateOper(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateSecurity(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateSel(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+var loadbalanceEntryServiceArgumentsTypeModePropEnum []interface{}
+
+func init() {
+	var res []int32
+	if err := json.Unmarshal([]byte(`[0,1,2,3,4,5]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		loadbalanceEntryServiceArgumentsTypeModePropEnum = append(loadbalanceEntryServiceArgumentsTypeModePropEnum, v)
+	}
+}
+
+// prop value enum
+func (m *LoadbalanceEntryServiceArguments) validateModeEnum(path, location string, value int32) error {
+	if err := validate.EnumCase(path, location, value, loadbalanceEntryServiceArgumentsTypeModePropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *LoadbalanceEntryServiceArguments) validateMode(formats strfmt.Registry) error {
+	if swag.IsZero(m.Mode) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateModeEnum("serviceArguments"+"."+"mode", "body", m.Mode); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+var loadbalanceEntryServiceArgumentsTypeOperPropEnum []interface{}
+
+func init() {
+	var res []int32
+	if err := json.Unmarshal([]byte(`[0,1,2]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		loadbalanceEntryServiceArgumentsTypeOperPropEnum = append(loadbalanceEntryServiceArgumentsTypeOperPropEnum, v)
+	}
+}
+
+// prop value enum
+func (m *LoadbalanceEntryServiceArguments) validateOperEnum(path, location string, value int32) error {
+	if err := validate.EnumCase(path, location, value, loadbalanceEntryServiceArgumentsTypeOperPropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *LoadbalanceEntryServiceArguments) validateOper(formats strfmt.Registry) error {
+	if swag.IsZero(m.Oper) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateOperEnum("serviceArguments"+"."+"oper", "body", m.Oper); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+var loadbalanceEntryServiceArgumentsTypeSecurityPropEnum []interface{}
+
+func init() {
+	var res []int32
+	if err := json.Unmarshal([]byte(`[0,1,2]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		loadbalanceEntryServiceArgumentsTypeSecurityPropEnum = append(loadbalanceEntryServiceArgumentsTypeSecurityPropEnum, v)
+	}
+}
+
+// prop value enum
+func (m *LoadbalanceEntryServiceArguments) validateSecurityEnum(path, location string, value int32) error {
+	if err := validate.EnumCase(path, location, value, loadbalanceEntryServiceArgumentsTypeSecurityPropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *LoadbalanceEntryServiceArguments) validateSecurity(formats strfmt.Registry) error {
+	if swag.IsZero(m.Security) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateSecurityEnum("serviceArguments"+"."+"security", "body", m.Security); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+var loadbalanceEntryServiceArgumentsTypeSelPropEnum []interface{}
+
+func init() {
+	var res []int64
+	if err := json.Unmarshal([]byte(`[0,1,2,3,4,5,6]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		loadbalanceEntryServiceArgumentsTypeSelPropEnum = append(loadbalanceEntryServiceArgumentsTypeSelPropEnum, v)
+	}
+}
+
+// prop value enum
+func (m *LoadbalanceEntryServiceArguments) validateSelEnum(path, location string, value int64) error {
+	if err := validate.EnumCase(path, location, value, loadbalanceEntryServiceArgumentsTypeSelPropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *LoadbalanceEntryServiceArguments) validateSel(formats strfmt.Registry) error {
+	if swag.IsZero(m.Sel) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateSelEnum("serviceArguments"+"."+"sel", "body", m.Sel); err != nil {
+		return err
+	}
+
 	return nil
 }
 
