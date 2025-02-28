@@ -7,9 +7,12 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // User user
@@ -27,6 +30,7 @@ type User struct {
 	Password string `json:"password,omitempty"`
 
 	// role
+	// Enum: [admin viewer]
 	Role string `json:"role,omitempty"`
 
 	// username
@@ -35,6 +39,57 @@ type User struct {
 
 // Validate validates this user
 func (m *User) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateRole(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+var userTypeRolePropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["admin","viewer"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		userTypeRolePropEnum = append(userTypeRolePropEnum, v)
+	}
+}
+
+const (
+
+	// UserRoleAdmin captures enum value "admin"
+	UserRoleAdmin string = "admin"
+
+	// UserRoleViewer captures enum value "viewer"
+	UserRoleViewer string = "viewer"
+)
+
+// prop value enum
+func (m *User) validateRoleEnum(path, location string, value string) error {
+	if err := validate.EnumCase(path, location, value, userTypeRolePropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *User) validateRole(formats strfmt.Registry) error {
+	if swag.IsZero(m.Role) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateRoleEnum("role", "body", m.Role); err != nil {
+		return err
+	}
+
 	return nil
 }
 
