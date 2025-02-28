@@ -20,6 +20,7 @@ import (
 	"github.com/go-openapi/swag"
 
 	"github.com/loxilb-io/loxilb/api/restapi/operations/auth"
+	"github.com/loxilb-io/loxilb/api/restapi/operations/metadata"
 	"github.com/loxilb-io/loxilb/api/restapi/operations/users"
 )
 
@@ -354,6 +355,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		UsersPutAuthUsersIDHandler: users.PutAuthUsersIDHandlerFunc(func(params users.PutAuthUsersIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation users.PutAuthUsersID has not yet been implemented")
 		}),
+		MetadataGetMetaHandler: metadata.GetMetaHandlerFunc(func(params metadata.GetMetaParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation metadata.GetMeta has not yet been implemented")
+		}),
 
 		// Applies when the "Authorization" header is set
 		BearerAuthAuth: func(token string) (interface{}, error) {
@@ -610,6 +614,8 @@ type LoxilbRestAPIAPI struct {
 	PostConfigVlanVlanIDMemberHandler PostConfigVlanVlanIDMemberHandler
 	// UsersPutAuthUsersIDHandler sets the operation handler for the put auth users ID operation
 	UsersPutAuthUsersIDHandler users.PutAuthUsersIDHandler
+	// MetadataGetMetaHandler sets the operation handler for the get meta operation
+	MetadataGetMetaHandler metadata.GetMetaHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -999,6 +1005,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.UsersPutAuthUsersIDHandler == nil {
 		unregistered = append(unregistered, "users.PutAuthUsersIDHandler")
+	}
+	if o.MetadataGetMetaHandler == nil {
+		unregistered = append(unregistered, "metadata.GetMetaHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -1509,6 +1518,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
 	o.handlers["PUT"]["/auth/users/{id}"] = users.NewPutAuthUsersID(o.context, o.UsersPutAuthUsersIDHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/meta"] = metadata.NewGetMeta(o.context, o.MetadataGetMetaHandler)
 }
 
 // Serve creates a http handler to serve the API over HTTP
