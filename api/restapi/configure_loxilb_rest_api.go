@@ -28,6 +28,7 @@ import (
 	"github.com/loxilb-io/loxilb/api/restapi/handler"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	"github.com/loxilb-io/loxilb/api/restapi/operations/auth"
+	"github.com/loxilb-io/loxilb/api/restapi/operations/metadata"
 	"github.com/loxilb-io/loxilb/api/restapi/operations/users"
 )
 
@@ -216,6 +217,9 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 
 	// Version
 	api.GetVersionHandler = operations.GetVersionHandlerFunc(handler.ConfigGetVersion)
+
+	// metadata
+	api.MetadataGetMetaHandler = metadata.GetMetaHandlerFunc(handler.ConfigGetMetadata)
 
 	// It works only if the UserServiceEnable option is enabled.
 	if opts.Opts.UserServiceEnable {

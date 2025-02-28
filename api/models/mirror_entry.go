@@ -7,10 +7,12 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // MirrorEntry mirror entry
@@ -169,7 +171,8 @@ type MirrorEntryMirrorInfo struct {
 	// mirror tunnel-id. For ERSPAN we may need to send tunnelled mirror traffic
 	TunnelID int64 `json:"tunnelID,omitempty"`
 
-	// One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan
+	// One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan(0-MirrTypeSpan, 1-MirrTypeRspan, 2-MirrTypeErspan)
+	// Enum: [0 1 2]
 	Type int64 `json:"type,omitempty"`
 
 	// For RSPAN we may need to send tagged mirror traffic
@@ -178,6 +181,48 @@ type MirrorEntryMirrorInfo struct {
 
 // Validate validates this mirror entry mirror info
 func (m *MirrorEntryMirrorInfo) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateType(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+var mirrorEntryMirrorInfoTypeTypePropEnum []interface{}
+
+func init() {
+	var res []int64
+	if err := json.Unmarshal([]byte(`[0,1,2]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		mirrorEntryMirrorInfoTypeTypePropEnum = append(mirrorEntryMirrorInfoTypeTypePropEnum, v)
+	}
+}
+
+// prop value enum
+func (m *MirrorEntryMirrorInfo) validateTypeEnum(path, location string, value int64) error {
+	if err := validate.EnumCase(path, location, value, mirrorEntryMirrorInfoTypeTypePropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *MirrorEntryMirrorInfo) validateType(formats strfmt.Registry) error {
+	if swag.IsZero(m.Type) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateTypeEnum("mirrorInfo"+"."+"type", "body", m.Type); err != nil {
+		return err
+	}
+
 	return nil
 }
 

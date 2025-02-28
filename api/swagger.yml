@@ -26,6 +26,23 @@ produces:
 consumes:
   - application/json
 paths:
+  '/meta':
+    get:
+      summary: "Get metadata for all POST APIs"
+      description: "Returns metadata about required fields for each POST API."
+      operationId: "getMeta"
+      tags:
+        - "Metadata"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "Successfully retrieved metadata"
+          schema:
+            type: object
+            additionalProperties: true
+        "500":
+          description: "Internal Server Error"
 #----------------------------------------------
 # User Management
 #----------------------------------------------
@@ -3726,7 +3743,8 @@ definitions:
             description:  value for access protocol
           sel:
             type: integer
-            description: value for load balance algorithim
+            enum: [0,1,2,3,4,5,6]
+            description: value for load balance algorithim(0-rr, 1-hash, 2-priority, 3-persist, 4-lc, 5-n2, 6-n3, 0-default)
           bgp:
             type: boolean
             description: value for BGP enable or not
@@ -3752,11 +3770,13 @@ definitions:
           mode:
             type: integer
             format: int32
-            description: value for NAT mode (0-DNAT, 1-oneArm, 2-fullNAT)
+            enum: [0,1,2,3,4,5]
+            description: value for NAT mode (0-DNAT,1-onearm, 2-fullnat, 3-dsr, 4-fullproxy, 5-hostonearm, 0-default)
           security:
             type: integer
             format: int32
-            description: value for Security mode (0-Plain, 1-HTTPs)
+            enum: [0,1,2]
+            description: value for Security mode (0-Plain, 1-https, 1-tls, 2-e2ehttps, 0-default)
           block:
             type: integer
             format: uint32
@@ -3782,6 +3802,7 @@ definitions:
           oper:
             type: integer
             format: int32
+            enum: [0,1,2]
             description: end-point specific op (0-create, 1-attachEP, 2-detachEP)
           host:
             type: string
@@ -4080,7 +4101,8 @@ definitions:
         properties:
           type:
             type: integer
-            description: policy type
+            enum: [0,1]
+            description: policy type(0-TrTCM, 1-SrTCM)
           colorAware:
             type: boolean
             description: Policy color for QoS
@@ -4117,7 +4139,8 @@ definitions:
         properties:
           type:
             type: integer
-            description: One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan
+            enum: [0,1,2]
+            description: One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan(0-MirrTypeSpan, 1-MirrTypeRspan, 2-MirrTypeErspan)
           port:
             type: string
             description: Port where mirrored traffic needs to be sent
@@ -4951,6 +4974,7 @@ definitions:
         type: string
       role:
         type: string
+        enum: ["admin", "viewer"]
     type: object
 
   FlowCountMetrics:
