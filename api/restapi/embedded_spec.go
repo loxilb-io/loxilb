@@ -5183,6 +5183,59 @@ func init() {
         }
       }
     },
+    "/oauth/{provider}/token": {
+      "get": {
+        "security": [],
+        "description": "Handles the OAuth token refresh workflow for the specified provider.",
+        "tags": [
+          "auth"
+        ],
+        "summary": "OAuth callback",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "OAuth provider",
+            "name": "provider",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "OAuth access token",
+            "name": "token",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "OAuth refresh token",
+            "name": "refreshtoken",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/OauthTokenResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/OauthErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/OauthErrorResponse"
+            }
+          }
+        }
+      }
+    },
     "/status/device": {
       "get": {
         "description": "Get a basic info (linux command \"uptime, hostnamectl\") in the device or system.",
@@ -6844,10 +6897,20 @@ func init() {
     "OauthLoginResponse": {
       "type": "object",
       "properties": {
+        "expiresin": {
+          "description": "The duration in seconds that the access token is valid for.",
+          "type": "integer"
+        },
         "id": {
+          "description": "The unique identifier for the authenticated user (e.g., Google user ID).",
+          "type": "string"
+        },
+        "refreshtoken": {
+          "description": "The refresh token used to obtain new access tokens once the current one expires.",
           "type": "string"
         },
         "token": {
+          "description": "The access token used for API requests. Typically expires after a short duration.",
           "type": "string"
         }
       }
@@ -6856,6 +6919,19 @@ func init() {
       "type": "object",
       "properties": {
         "message": {
+          "type": "string"
+        }
+      }
+    },
+    "OauthTokenResponse": {
+      "type": "object",
+      "properties": {
+        "expiresin": {
+          "description": "The duration in seconds that the access token is valid for.",
+          "type": "integer"
+        },
+        "token": {
+          "description": "The access token used for API requests. Typically expires after a short duration.",
           "type": "string"
         }
       }
@@ -12646,6 +12722,59 @@ func init() {
         }
       }
     },
+    "/oauth/{provider}/token": {
+      "get": {
+        "security": [],
+        "description": "Handles the OAuth token refresh workflow for the specified provider.",
+        "tags": [
+          "auth"
+        ],
+        "summary": "OAuth callback",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "OAuth provider",
+            "name": "provider",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "OAuth access token",
+            "name": "token",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "OAuth refresh token",
+            "name": "refreshtoken",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/OauthTokenResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/OauthErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/OauthErrorResponse"
+            }
+          }
+        }
+      }
+    },
     "/status/device": {
       "get": {
         "description": "Get a basic info (linux command \"uptime, hostnamectl\") in the device or system.",
@@ -15023,10 +15152,20 @@ func init() {
     "OauthLoginResponse": {
       "type": "object",
       "properties": {
+        "expiresin": {
+          "description": "The duration in seconds that the access token is valid for.",
+          "type": "integer"
+        },
         "id": {
+          "description": "The unique identifier for the authenticated user (e.g., Google user ID).",
+          "type": "string"
+        },
+        "refreshtoken": {
+          "description": "The refresh token used to obtain new access tokens once the current one expires.",
           "type": "string"
         },
         "token": {
+          "description": "The access token used for API requests. Typically expires after a short duration.",
           "type": "string"
         }
       }
@@ -15035,6 +15174,19 @@ func init() {
       "type": "object",
       "properties": {
         "message": {
+          "type": "string"
+        }
+      }
+    },
+    "OauthTokenResponse": {
+      "type": "object",
+      "properties": {
+        "expiresin": {
+          "description": "The duration in seconds that the access token is valid for.",
+          "type": "integer"
+        },
+        "token": {
+          "description": "The access token used for API requests. Typically expires after a short duration.",
           "type": "string"
         }
       }
