@@ -18,6 +18,7 @@ package loxinet
 
 import (
 	"errors"
+	"time"
 
 	cmn "github.com/loxilb-io/loxilb/common"
 	tk "github.com/loxilb-io/loxilib"
@@ -823,17 +824,27 @@ func (na *NetAPIStruct) NetUserValidate(token string) (interface{}, error) {
 	return mh.UserService.ValidateToken(token)
 }
 
-// NetOauthUserLogin - User Log in loxilb using OAuth
-func (na *NetAPIStruct) NetOauthUserLogin(user_email, token string) (string, bool, error) {
-	return mh.OauthUserService.Login(user_email, token)
+// NetUserLogout - Validate a user in loxilb
+func (na *NetAPIStruct) NetUserLogout(tokenString string) error {
+	return mh.UserService.Logout(tokenString)
+}
+
+// NetOauthUserTokenStore - User Log in loxilb using OAuth
+func (na *NetAPIStruct) NetOauthUserTokenStore(userEmail, token, refreshToken string, expiry time.Time) (string, bool, error) {
+	return mh.OauthUserService.StoreOauthTokenCredentials(userEmail, token, refreshToken, expiry)
 }
 
 // NetOauthUserValidate - Validate a user in loxilb using OAuth
 func (na *NetAPIStruct) NetOauthUserValidate(token string) (interface{}, error) {
-	return mh.OauthUserService.ValidateToken(token)
+	return mh.OauthUserService.ValidateOuathToken(token)
 }
 
-// NetUserLogin - Validate a user in loxilb
-func (na *NetAPIStruct) NetUserLogout(tokenString string) error {
-	return mh.UserService.Logout(tokenString)
+// NetOauthValidateAllTokens - Validate all tokens (Access & Refresh) in cache
+func (na *NetAPIStruct) NetOauthValidateAllTokens(token, refreshToken string) (interface{}, error) {
+	return mh.OauthUserService.ValidateOuathTokenWithRefreshToken(token, refreshToken)
+}
+
+// NetOauthDeleteToken - Delete a token credential in cache
+func (na *NetAPIStruct) NetOauthDeleteToken(token string) error {
+	return mh.OauthUserService.DeleteOauthTokenCredential(token)
 }

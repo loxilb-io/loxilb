@@ -256,6 +256,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		AuthGetOauthProviderCallbackHandler: auth.GetOauthProviderCallbackHandlerFunc(func(params auth.GetOauthProviderCallbackParams) middleware.Responder {
 			return middleware.NotImplemented("operation auth.GetOauthProviderCallback has not yet been implemented")
 		}),
+		AuthGetOauthProviderTokenHandler: auth.GetOauthProviderTokenHandlerFunc(func(params auth.GetOauthProviderTokenParams) middleware.Responder {
+			return middleware.NotImplemented("operation auth.GetOauthProviderToken has not yet been implemented")
+		}),
 		GetStatusDeviceHandler: GetStatusDeviceHandlerFunc(func(params GetStatusDeviceParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetStatusDevice has not yet been implemented")
 		}),
@@ -548,6 +551,8 @@ type LoxilbRestAPIAPI struct {
 	AuthGetOauthProviderHandler auth.GetOauthProviderHandler
 	// AuthGetOauthProviderCallbackHandler sets the operation handler for the get oauth provider callback operation
 	AuthGetOauthProviderCallbackHandler auth.GetOauthProviderCallbackHandler
+	// AuthGetOauthProviderTokenHandler sets the operation handler for the get oauth provider token operation
+	AuthGetOauthProviderTokenHandler auth.GetOauthProviderTokenHandler
 	// GetStatusDeviceHandler sets the operation handler for the get status device operation
 	GetStatusDeviceHandler GetStatusDeviceHandler
 	// GetStatusFilesystemHandler sets the operation handler for the get status filesystem operation
@@ -906,6 +911,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.AuthGetOauthProviderCallbackHandler == nil {
 		unregistered = append(unregistered, "auth.GetOauthProviderCallbackHandler")
+	}
+	if o.AuthGetOauthProviderTokenHandler == nil {
+		unregistered = append(unregistered, "auth.GetOauthProviderTokenHandler")
 	}
 	if o.GetStatusDeviceHandler == nil {
 		unregistered = append(unregistered, "GetStatusDeviceHandler")
@@ -1386,6 +1394,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/oauth/{provider}/callback"] = auth.NewGetOauthProviderCallback(o.context, o.AuthGetOauthProviderCallbackHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/oauth/{provider}/token"] = auth.NewGetOauthProviderToken(o.context, o.AuthGetOauthProviderTokenHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

@@ -17,10 +17,16 @@ import (
 // swagger:model OauthLoginResponse
 type OauthLoginResponse struct {
 
-	// id
+	// The duration in seconds that the access token is valid for.
+	ExpiresIn int64 `json:"expires_in,omitempty"`
+
+	// The unique identifier for the authenticated user (e.g., Google user ID).
 	ID string `json:"id,omitempty"`
 
-	// token
+	// The refresh token used to obtain new access tokens once the current one expires.
+	RefreshToken string `json:"refresh_token,omitempty"`
+
+	// The access token used for API requests. Typically expires after a short duration.
 	Token string `json:"token,omitempty"`
 }
 

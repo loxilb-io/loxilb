@@ -20,7 +20,10 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -172,7 +175,7 @@ func AuthGetOauthProvider(params auth.GetOauthProviderParams) middleware.Respond
 	}
 
 	state := GenerateStateToken() // Generate a secure state token
-	tk.LogIt(tk.LogTrace, "Generated state token for OAuth login: "+state)
+	tk.LogIt(tk.LogTrace, "Generated state token for OAuth login:%v\n", state)
 
 	// Can't extract the redirect URL from the OAuth config, so we set it here
 	authURL := oauthConfig.AuthCodeURL(state, oauth2.SetAuthURLParam("redirect_uri", oauthConfig.RedirectURL))
@@ -261,8 +264,8 @@ func AuthGetOauthProviderCallback(params auth.GetOauthProviderCallbackParams) mi
 		}
 	}
 
-	tk.LogIt(tk.LogTrace, "Oauth User logged in email: %s, name: %s ", email, oauthName)
-	loginToken, valid, err := ApiHooks.NetOauthUserLogin(email, token.AccessToken)
+	tk.LogIt(tk.LogInfo, "Oauth User %s logged-in name: %s\n", email, oauthName)
+	loginToken, valid, err := ApiHooks.NetOauthUserTokenStore(email, token.AccessToken, token.RefreshToken, token.Expiry)
 
 	if err != nil {
 		return &ResultResponse{Result: err.Error()}
@@ -270,6 +273,95 @@ func AuthGetOauthProviderCallback(params auth.GetOauthProviderCallbackParams) mi
 	if valid {
 		response.Token = loginToken
 		response.ID = oauthID
+		response.ExpiresIn = int64(token.Expiry.Second())
+		response.RefreshToken = token.RefreshToken
 	}
 	return auth.NewGetOauthProviderCallbackOK().WithPayload(&response)
+}
+
+// RefreshAccessToken refreshes the access token using the provided refresh token.
+// It returns a fresh access token or an error if the refresh fails.
+func RefreshAccessToken(refreshToken string, provider string) (*oauth2.Token, error) {
+	// Get the OAuth config for the specified provider
+	oauthConfig, exists := OAuthConfigs[provider]
+	if !exists {
+		return nil, errors.New("Invalid OAuth provider")
+	}
+
+	// Create a new oauth2.Token with the refresh token
+	token := &oauth2.Token{
+		RefreshToken: refreshToken,
+	}
+
+	// Use the OAuth config to refresh the token
+	newToken, err := oauthConfig.TokenSource(context.Background(), token).Token()
+	if err != nil {
+		return nil, errors.New("failed to refresh access token: " + err.Error())
+	}
+
+	// Return the new access token
+	return newToken, nil
+}
+
+// RefreshTokenHandler refreshes the access token using a provided refresh token and OAuth provider.
+// It returns the new access token and its expiration time, or an error if the refresh fails.
+func RefreshTokenHandler(params auth.GetOauthProviderTokenParams) middleware.Responder {
+	// Assume the refresh_token is passed in some way (e.g., from a user's session or request)
+	accessToken := params.Token // You'll need to extract this from the request or session
+	refreshToken := params.Refreshtoken
+
+	// Assume the provider is either "google" or "github"
+	provider := params.Provider
+
+	cached, err := ApiHooks.NetOauthValidateAllTokens(accessToken, refreshToken)
+	if err != nil {
+		return auth.NewGetOauthProviderCallbackInternalServerError().WithPayload(&models.OauthErrorResponse{
+			Message: fmt.Sprintf("Failed to refresh access token: %v", err),
+		})
+	}
+
+	cacheStrings, ok := cached.(string)
+	if !ok {
+		return auth.NewGetOauthProviderCallbackInternalServerError().WithPayload(&models.OauthErrorResponse{
+			Message: fmt.Sprintf("Failed to refresh access token: invalid cache"),
+		})
+	}
+
+	cacheValues := strings.Split("|", cacheStrings)
+	if len(cacheValues) != 3 {
+		return auth.NewGetOauthProviderCallbackInternalServerError().WithPayload(&models.OauthErrorResponse{
+			Message: fmt.Sprintf("Failed to refresh access token: invalid cache format"),
+		})
+	}
+
+	userEmail := cacheValues[0]
+
+	// Refresh the access token using the refresh token
+	newToken, err := RefreshAccessToken(refreshToken, provider)
+	if err != nil {
+		return auth.NewGetOauthProviderCallbackInternalServerError().WithPayload(&models.OauthErrorResponse{
+			Message: fmt.Sprintf("Failed to refresh access token: %v", err),
+		})
+	}
+
+	err = ApiHooks.NetOauthDeleteToken(accessToken)
+	if err != nil {
+		return auth.NewGetOauthProviderCallbackInternalServerError().WithPayload(&models.OauthErrorResponse{
+			Message: fmt.Sprintf("Failed to refresh access token: %v", err),
+		})
+	}
+
+	tk.LogIt(tk.LogInfo, "Oauth User %s token refreshed\n", userEmail)
+	loginToken, _, err := ApiHooks.NetOauthUserTokenStore(userEmail, newToken.AccessToken, newToken.RefreshToken, newToken.Expiry)
+	if err != nil {
+		return auth.NewGetOauthProviderCallbackInternalServerError().WithPayload(&models.OauthErrorResponse{
+			Message: fmt.Sprintf("Failed to refresh access token: %v", err),
+		})
+	}
+
+	// Return the fresh access token
+	return auth.NewGetOauthProviderTokenOK().WithPayload(&models.OauthTokenResponse{
+		Token:     loginToken,
+		ExpiresIn: int64(newToken.Expiry.Second()),
+	})
 }

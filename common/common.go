@@ -1151,8 +1151,10 @@ type NetHookInterface interface {
 	NetUserValidate(token string) (interface{}, error)
 
 	// OAuth2
-	NetOauthUserLogin(usern_name, token string) (string, bool, error)
+	NetOauthUserTokenStore(userEmail, token, refreshToken string, expiry time.Time) (string, bool, error)
 	NetOauthUserValidate(token string) (interface{}, error)
+	NetOauthValidateAllTokens(token, refreshToken string) (interface{}, error)
+	NetOauthDeleteToken(token string) error
 
 	NetHandlePanic()
 }

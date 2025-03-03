@@ -3689,6 +3689,42 @@ paths:
       summary: OAuth callback
       tags:
       - auth
+  /oauth/{provider}/token:
+    get:
+      description: Handles the OAuth token refresh workflow for the specified provider.
+      parameters:
+      - description: OAuth provider
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: OAuth access token
+        in: query
+        name: token
+        required: true
+        type: string
+      - description: OAuth refresh token
+        in: query
+        name: refreshtoken
+        required: true
+        type: string
+      security: [] # Overrides global security, no authorization required
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/OauthTokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/OauthErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/OauthErrorResponse'
+      summary: OAuth callback
+      tags:
+      - auth
   
 #----------------------------------------------
 # Schema definitions
@@ -5220,8 +5256,26 @@ definitions:
     properties:
       id:
         type: string
+        description: The unique identifier for the authenticated user (e.g., Google user ID).
       token:
         type: string
+        description: The access token used for API requests. Typically expires after a short duration.
+      refresh_token:
+        type: string
+        description: The refresh token used to obtain new access tokens once the current one expires.
+      expires_in:
+        type: integer
+        description: The duration in seconds that the access token is valid for.
+    type: object
+  
+  OauthTokenResponse:
+    properties:
+      token:
+        type: string
+        description: The access token used for API requests. Typically expires after a short duration.
+      expires_in:
+        type: integer
+        description: The duration in seconds that the access token is valid for.
     type: object
 
 securityDefinitions:

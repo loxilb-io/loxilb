@@ -2,11 +2,9 @@ package user
 
 import (
 	"errors"
-	"time"
-
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/loxilb-io/loxilb/pkg/db"
 	"github.com/patrickmn/go-cache"
+	"strings"
+	"time"
 )
 
 const (
@@ -25,8 +23,8 @@ func NewOauthUserService() *OauthUserService {
 	return &OauthUserService{Cache: c}
 }
 
-// ValidateToken validates a token using the in-memory cache and the api callback
-func (s *OauthUserService) ValidateToken(token string) (interface{}, error) {
+// ValidateOauthToken validates a token using the in-memory cache and the api callback
+func (s *OauthUserService) ValidateOuathToken(token string) (interface{}, error) {
 	// Check the cache first
 	if caches, found := s.Cache.Get(token); found {
 		return caches, nil
@@ -35,19 +33,41 @@ func (s *OauthUserService) ValidateToken(token string) (interface{}, error) {
 	}
 }
 
-func (s *OauthUserService) Login(username, token string) (string, bool, error) {
+// ValidateOuthTokenWithRefreshToken validates a token alongwith a refresh token using the in-memory cache
+func (s *OauthUserService) ValidateOuathTokenWithRefreshToken(token, refreshToken string) (interface{}, error) {
+	// Check the cache first
+	if caches, found := s.Cache.Get(token); found {
+		cachedTokenStr, ok := caches.(string)
+		if !ok {
+			return nil, errors.New("invalid token format in cache")
+		}
+		cacheKeys := strings.Split("|", cachedTokenStr)
+		if len(cacheKeys) != 3 {
+			return nil, errors.New("invalid token format in cache")
+		}
+		if cacheKeys[2] != refreshToken {
+			return nil, errors.New("invalid refresh token in cache")
+		}
+		return caches, nil
+	} else {
+		return nil, errors.New("token not found")
+	}
+}
+
+// StoreOauthTokenCredentials stores the Ouath token credentials in cache
+func (s *OauthUserService) StoreOauthTokenCredentials(username, token, refreshToken string, expiry time.Time) (string, bool, error) {
 	// Save token
 	// Store token in cache
 	role := "admin"
 
-	combined := username + "|" + role
-	s.Cache.Set(token, combined, db.TokenExpirationMinutes*time.Minute)
+	combined := username + "|" + role + "|" + refreshToken
+	s.Cache.Set(token, combined, time.Duration(expiry.Second()))
 
 	return token, true, nil
 }
 
-// Logout deletes the token from the cache and the database.
-func (s *OauthUserService) Logout(token string) error {
+// DeleteOauthTokenCredential deletes the token from the cache and the database.
+func (s *OauthUserService) DeleteOauthTokenCredential(token string) error {
 	// Remove the token from the cache
 	if _, found := s.Cache.Get(token); found {
 		s.Cache.Delete(token)
