@@ -332,7 +332,7 @@ func RefreshTokenHandler(params auth.GetOauthProviderTokenParams) middleware.Res
 		})
 	}
 
-	cacheValues := strings.Split("|", cacheStrings)
+	cacheValues := strings.Split(cacheStrings, "|")
 	if len(cacheValues) != 3 {
 		return auth.NewGetOauthProviderCallbackInternalServerError().WithPayload(&models.OauthErrorResponse{
 			Message: fmt.Sprintf("Failed to refresh access token: invalid cache format"),

@@ -41,7 +41,7 @@ func (s *OauthUserService) ValidateOuathTokenWithRefreshToken(token, refreshToke
 		if !ok {
 			return nil, errors.New("invalid token format in cache")
 		}
-		cacheKeys := strings.Split("|", cachedTokenStr)
+		cacheKeys := strings.Split(cachedTokenStr, "|")
 		if len(cacheKeys) != 3 {
 			return nil, errors.New("invalid token format in cache")
 		}
