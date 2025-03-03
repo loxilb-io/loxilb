@@ -269,7 +269,7 @@ func AuthGetOauthProviderCallback(params auth.GetOauthProviderCallbackParams) mi
 		}
 	}
 
-	tk.LogIt(tk.LogInfo, "Oauth User %s logged-in name: %s Refresh token %s\n", email, oauthName, token.RefreshToken)
+	tk.LogIt(tk.LogInfo, "Oauth User %s logged-in name: %s\n", email, oauthName)
 	loginToken, valid, err := ApiHooks.NetOauthUserTokenStore(email, token.AccessToken, token.RefreshToken, token.Expiry)
 
 	if err != nil {
@@ -278,7 +278,7 @@ func AuthGetOauthProviderCallback(params auth.GetOauthProviderCallbackParams) mi
 	if valid {
 		response.Token = loginToken
 		response.ID = oauthID
-		response.Expiresin = int64(token.Expiry.Second())
+		response.Expiresin = int64(token.Expiry.Sub(time.Now()).Seconds())
 		response.Refreshtoken = token.RefreshToken
 	}
 	return auth.NewGetOauthProviderCallbackOK().WithPayload(&response)
@@ -367,6 +367,6 @@ func RefreshTokenHandler(params auth.GetOauthProviderTokenParams) middleware.Res
 	// Return the fresh access token
 	return auth.NewGetOauthProviderTokenOK().WithPayload(&models.OauthTokenResponse{
 		Token:     loginToken,
-		Expiresin: int64(newToken.Expiry.Second()),
+		Expiresin: int64(newToken.Expiry.Sub(time.Now()).Seconds()),
 	})
 }

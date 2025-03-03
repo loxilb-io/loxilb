@@ -239,6 +239,7 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 		handler.InitOAuthConfigs()
 		api.AuthGetOauthProviderHandler = auth.GetOauthProviderHandlerFunc(handler.AuthGetOauthProvider)
 		api.AuthGetOauthProviderCallbackHandler = auth.GetOauthProviderCallbackHandlerFunc(handler.AuthGetOauthProviderCallback)
+		api.AuthGetOauthProviderTokenHandler = auth.GetOauthProviderTokenHandlerFunc(handler.RefreshTokenHandler)
 	}
 
 	api.PreServerShutdown = func() {}

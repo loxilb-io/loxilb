@@ -61,7 +61,7 @@ func (s *OauthUserService) StoreOauthTokenCredentials(username, token, refreshTo
 	role := "admin"
 
 	combined := username + "|" + role + "|" + refreshToken
-	s.Cache.Set(token, combined, time.Duration(expiry.Second()))
+	s.Cache.Set(token, combined, expiry.Sub(time.Now()))
 
 	return token, true, nil
 }

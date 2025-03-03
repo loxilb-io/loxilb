@@ -21,7 +21,6 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"time"
 	"unicode"
 
@@ -277,7 +276,6 @@ func GenerateToken(username, role string, expirationMinutes int) (string, error)
 
 func (s *UserService) saveToken(username, token, role string) error {
 	expirationTime := time.Now().Add(time.Duration(db.TokenExpirationMinutes) * time.Minute)
-	fmt.Printf("expirationTime: %v\n", expirationTime)
 	query := db.InsertTokenQuery
 	_, err := s.DB.Exec(query, token, username, expirationTime, role)
 	return err
