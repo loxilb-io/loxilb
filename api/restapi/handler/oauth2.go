@@ -178,7 +178,12 @@ func AuthGetOauthProvider(params auth.GetOauthProviderParams) middleware.Respond
 	tk.LogIt(tk.LogTrace, "Generated state token for OAuth login:%v\n", state)
 
 	// Can't extract the redirect URL from the OAuth config, so we set it here
-	authURL := oauthConfig.AuthCodeURL(state, oauth2.SetAuthURLParam("redirect_uri", oauthConfig.RedirectURL))
+	authURL := oauthConfig.AuthCodeURL(state,
+		oauth2.SetAuthURLParam("access_type", "offline"),
+		oauth2.SetAuthURLParam("prompt", "consent"), // Forces a new refresh token even if already authorized
+		oauth2.SetAuthURLParam("redirect_uri", oauthConfig.RedirectURL),
+	)
+	//authURL := oauthConfig.AuthCodeURL(state, oauth2.SetAuthURLParam("redirect_uri", oauthConfig.RedirectURL))
 
 	// Return a redirect response
 	return middleware.ResponderFunc(func(w http.ResponseWriter, _ runtime.Producer) {
@@ -264,7 +269,7 @@ func AuthGetOauthProviderCallback(params auth.GetOauthProviderCallbackParams) mi
 		}
 	}
 
-	tk.LogIt(tk.LogInfo, "Oauth User %s logged-in name: %s\n", email, oauthName)
+	tk.LogIt(tk.LogInfo, "Oauth User %s logged-in name: %s Refresh token %s\n", email, oauthName, token.RefreshToken)
 	loginToken, valid, err := ApiHooks.NetOauthUserTokenStore(email, token.AccessToken, token.RefreshToken, token.Expiry)
 
 	if err != nil {
