@@ -18,21 +18,13 @@ import (
 type OauthLoginResponse struct {
 
 	// The duration in seconds that the access token is valid for.
-<<<<<<< HEAD
 	Expiresin int64 `json:"expiresin,omitempty"`
-=======
-	ExpiresIn int64 `json:"expires_in,omitempty"`
->>>>>>> d23c548f81ac49e51717e52321e278597175e781
 
 	// The unique identifier for the authenticated user (e.g., Google user ID).
 	ID string `json:"id,omitempty"`
 
 	// The refresh token used to obtain new access tokens once the current one expires.
-<<<<<<< HEAD
 	Refreshtoken string `json:"refreshtoken,omitempty"`
-=======
-	RefreshToken string `json:"refresh_token,omitempty"`
->>>>>>> d23c548f81ac49e51717e52321e278597175e781
 
 	// The access token used for API requests. Typically expires after a short duration.
 	Token string `json:"token,omitempty"`
