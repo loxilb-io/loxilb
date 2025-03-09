@@ -20,6 +20,7 @@ on:
 jobs:
   build:
     name: perf-single-node
+    if: github.repository == 'loxilb-io/loxilb'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
