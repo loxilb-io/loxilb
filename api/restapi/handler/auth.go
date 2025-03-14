@@ -18,6 +18,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/go-openapi/runtime"
@@ -27,6 +28,7 @@ import (
 	"github.com/loxilb-io/loxilb/api/restapi/operations/auth"
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
+	tk "github.com/loxilb-io/loxilib"
 )
 
 // BearerAuthAuth parses and validates a JWT token string.
@@ -46,6 +48,9 @@ func BearerAuthAuth(tokenString string) (interface{}, error) {
 	} else if opts.Opts.Oauth2Enable {
 		// OAuth2 based validation
 		return ApiHooks.NetOauthUserValidate(tokenString)
+	} else if opts.Opts.ManualTokenEnable {
+		// Manual token based validation
+		return ManualTokenValidate(tokenString)
 	} else {
 		return true, nil
 	}
@@ -108,4 +113,24 @@ func Authorized() runtime.Authorizer {
 
 	}
 
+}
+
+// ManualTokenValidate function
+// This function is used to validate the manual token
+func ManualTokenValidate(tokenString string) (interface{}, error) {
+	manualTokenPath := opts.Opts.ManualTokenPath
+
+	data, err := os.ReadFile(manualTokenPath)
+	if err != nil {
+		// File not found but return invalid token
+		tk.LogIt(tk.LogError, "Manual token file not found: %v\n", err)
+		return nil, errors.New("invalid token")
+	}
+	manualToken := strings.TrimSpace(string(data))
+	// Validate the token
+	if tokenString == manualToken {
+		return true, nil
+	}
+
+	return nil, errors.New("invalid token")
 }
