@@ -51,6 +51,10 @@ var Opts struct {
 	DatabasePasswordPath string         `long:"databasepasswordpath" description:"Database password" default:"/etc/loxilb/mysql_password"`
 	DatabaseName         string         `long:"databasename" description:"Database name" default:"loxilb_db"`
 
+	// manual token
+	ManualTokenEnable bool   `long:"manualtoken" description:"Enable manual token service for loxilb"`
+	ManualTokenPath   string `long:"manualtokenvalue" description:"Path of manual token " default:"/etc/loxilb/manual_token"`
+
 	// Oauth2 Options as input arguemtns
 	Oauth2Enable   bool   `long:"oauth2" description:"Enable user oauth2 service for loxilb"`
 	Oauth2Provider string `long:"oauth2provider" description:"Oauth2 provider names, comma-separated" default:"google"`
