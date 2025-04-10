@@ -42,19 +42,21 @@ Telco-cloud requires load-balancing and communication across various interfaces/
 
 ## Why choose loxilb?
    
-- ```Performs``` much better compared to its competitors across various architectures
-    * [Single-Node Performance](https://loxilb-io.github.io/loxilbdocs/perf-single/)  
-    * [Multi-Node Performance](https://loxilb-io.github.io/loxilbdocs/perf-multi/) 
-    * [Performance on ARM](https://www.loxilb.io/post/running-loxilb-on-aws-graviton2-based-ec2-instance)
-    * [Short Demo on Performance](https://www.youtube.com/watch?v=MJXcM0x6IeQ)
+- ```Performs``` much better compared to its competitors across various architectures   
+  * [Single-Node Performance](https://loxilb-io.github.io/loxilbdocs/perf-single/)  
+  * [Multi-Node Performance](https://loxilb-io.github.io/loxilbdocs/perf-multi/)  
+  * [Performance on ARM](https://www.loxilb.io/post/running-loxilb-on-aws-graviton2-based-ec2-instance)  
+  * [Short Demo on Performance](https://www.youtube.com/watch?v=MJXcM0x6IeQ)
 - Utilizes ebpf which makes it ```flexible``` as well as ```customizable```
-- Advanced ```quality of service``` for workloads (per LB, per end-point or per client)
-- Works with ```any``` Kubernetes distribution/CNI - k8s/k3s/k0s/kind/OpenShift + Calico/Flannel/Cilium/Weave/Multus etc
-- Kube-proxy replacement with loxilb allows ```simple plug-in``` with any existing/deployed pod-networking software
+- Advanced ```quality of service``` for workloads  (per LB, per end-point or per client)
+- Works with ```any``` Kubernetes distribution/CNI  
+  (k8s / k3s / k0s / kind / OpenShift + Calico, Flannel, Cilium, Weave, Multus, etc)
+- Kube-proxy replacement with loxilb allows ```simple plug-in```  with any existing/deployed pod-networking software
 - Extensive support for ```SCTP workloads``` (with multi-homing) on K8s
 - Dual stack with ```NAT66, NAT64``` support for K8s
-- K8s ```multi-cluster``` support (planned 🚧)
-- Runs in ```any``` cloud (public cloud/on-prem) or ```standalone``` environments
+- K8s ```multi-cluster``` support *(planned 🚧)*
+- Runs in ```any``` cloud (public cloud / on-prem) or ```standalone``` environments
+
 
 ## Overall features of loxilb
 - L4/NAT stateful loadbalancer
