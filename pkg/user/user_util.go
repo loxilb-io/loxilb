@@ -24,7 +24,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/loxilb-io/loxilb/pkg/db"
 	tk "github.com/loxilb-io/loxilib"
 	"github.com/patrickmn/go-cache"
@@ -44,7 +44,7 @@ var (
 type Claims struct {
 	Username string `json:"username"`
 	Role     string `json:"role"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 // RetryOperation retries the given operation function up to maxRetries times with a delay between retries.
@@ -261,12 +261,12 @@ func (s *UserService) ValidateToken(token string) (interface{}, error) {
 //   - string: the generated JWT token.
 //   - error: an error if the token generation fails.
 func GenerateToken(username, role string, expirationMinutes int) (string, error) {
-	expiration := time.Now().Add(time.Duration(expirationMinutes) * time.Minute)
+	expiration := jwt.NewNumericDate(time.Now().Add(time.Duration(expirationMinutes) * time.Minute))
 	claims := &Claims{
 		Username: username,
 		Role:     role,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expiration.Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: expiration,
 		},
 	}
 
