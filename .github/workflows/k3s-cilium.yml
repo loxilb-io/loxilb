@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     name: k3s-cilium-sanity
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - run: |
          echo "KUBECONFIG=--kubeconfig=/etc/rancher/k3s/k3s.yaml" >> $GITHUB_ENV

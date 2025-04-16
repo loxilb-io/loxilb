@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     name: k3s-sctpmh-sanity
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - run: sudo apt update
       - run: sudo apt-get -y install bridge-utils iproute2 lksctp-tools iputils-ping
