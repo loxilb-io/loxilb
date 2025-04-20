@@ -1,5 +1,5 @@
 # Download base image ubuntu 20.04 for build
-FROM ubuntu:20.04 as build
+FROM ubuntu:22.04 as build
 
 # Disable Prompt During Packages Installation
 ARG DEBIAN_FRONTEND=noninteractive
@@ -25,7 +25,7 @@ RUN mkdir -p /opt/loxilb && \
     # Arch specific packages - GoLang
     wget https://go.dev/dl/go1.23.0.linux-${arch}.tar.gz && tar -xzf go1.23.0.linux-${arch}.tar.gz --directory /usr/local/ && rm go1.23.0.linux-${arch}.tar.gz && \
     # Dev and util packages
-    apt-get install -y clang llvm libelf-dev libpcap-dev vim net-tools ca-certificates \
+    apt-get install -y clang-14 llvm libelf-dev libpcap-dev vim net-tools ca-certificates \
     elfutils dwarves git libbsd-dev bridge-utils wget unzip build-essential \
     bison flex sudo iproute2 pkg-config tcpdump iputils-ping curl bash-completion && \
     # Install openssl-3.4.1
@@ -63,9 +63,9 @@ RUN mkdir -p /opt/loxilb && \
     wget https://github.com/osrg/gobgp/releases/download/v3.29.0/gobgp_3.29.0_linux_${arch}.tar.gz && \
     tar -xzf gobgp_3.29.0_linux_${arch}.tar.gz &&  rm gobgp_3.29.0_linux_${arch}.tar.gz && \
     mv gobgp* /usr/sbin/ && rm LICENSE README.md && \
-    apt-get purge -y clang llvm libelf-dev libpcap-dev libbsd-dev build-essential \
+    apt-get purge -y clang-14 llvm libelf-dev libpcap-dev libbsd-dev build-essential \
     elfutils dwarves git bison flex wget unzip && apt-get -y autoremove && \
-    apt-get install -y libllvm10 && \
+    apt-get install -y libllvm14 && \
     # cleanup unnecessary packages
     if [ "$arch" = "arm64" ] ; then apt purge -y gcc-multilib-arm-linux-gnueabihf; else apt-get update && apt purge -y gcc-multilib;fi && \
     rm -rf /var/lib/apt/lists/* && apt clean && \
@@ -78,7 +78,7 @@ RUN mkdir -p /opt/loxilb && \
 # COPY ./llb_ebpf_main.o.rep* /opt/loxilb/llb_ebpf_main.o
 # COPY ./llb_xdp_main.o.rep* /opt/loxilb/llb_xdp_main.o
 
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 # LABEL about the loxilb image
 LABEL description="loxilb official docker image"
@@ -91,7 +91,7 @@ ENV PATH="${PATH}:/usr/local/go/bin"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
 
 RUN apt-get update && apt-get install -y --no-install-recommends sudo wget \
-    libbsd-dev iproute2 tcpdump bridge-utils net-tools libllvm10 ca-certificates && \
+    libbsd-dev iproute2 tcpdump bridge-utils net-tools libllvm14 ca-certificates && \
     rm -rf /var/lib/apt/lists/* && apt clean
 
 COPY --from=build /usr/lib64/libbpf* /usr/lib64/
