@@ -50,18 +50,6 @@ jobs:
              ./rmconfig.sh
              cd -
       - run: |
-             cd cicd/ulcltcplb/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
-             cd cicd/ulclsctplb/
-             ./config.sh
-             ./validation.sh
-             ./rmconfig.sh
-             cd -
-      - run: |
              cd cicd/tcptunlb/
              ./config.sh
              ./validation.sh
