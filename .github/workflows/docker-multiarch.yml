@@ -57,8 +57,8 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: .
-        platforms: linux/amd64, linux/arm64
-        #platforms: linux/amd64
+        #platforms: linux/amd64, linux/arm64
+        platforms: linux/amd64
         push: true
         tags: ghcr.io/loxilb-io/loxilb:latest
 

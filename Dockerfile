@@ -21,7 +21,7 @@ RUN mkdir -p /opt/loxilb && \
     mkdir -p /etc/bash_completion.d/ && \
     # Update Ubuntu Software repository
     apt-get update && apt-get install -y wget && \
-    arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && if [ "$arch" = "arm64" ] ; then apt-get install -y gcc-12-arm-linux-gnueabihf; else apt-get update && apt-get install -y  gcc-multilib;fi && \
+    arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && if [ "$arch" = "arm64" ] ; then apt-get install -y gcc-arm-linux-gnueabihf; else apt-get update && apt-get install -y  gcc-multilib;fi && \
     # Arch specific packages - GoLang
     wget https://go.dev/dl/go1.23.0.linux-${arch}.tar.gz && tar -xzf go1.23.0.linux-${arch}.tar.gz --directory /usr/local/ && rm go1.23.0.linux-${arch}.tar.gz && \
     # Dev and util packages
@@ -67,7 +67,7 @@ RUN mkdir -p /opt/loxilb && \
     elfutils dwarves git bison flex wget unzip && apt-get -y autoremove && \
     apt-get install -y libllvm14 && \
     # cleanup unnecessary packages
-    if [ "$arch" = "arm64" ] ; then apt purge -y gcc-multilib-arm-linux-gnueabihf; else apt-get update && apt purge -y gcc-multilib;fi && \
+    if [ "$arch" = "arm64" ] ; then apt purge -y gcc-arm-linux-gnueabihf; else apt-get update && apt purge -y gcc-multilib;fi && \
     rm -rf /var/lib/apt/lists/* && apt clean && \
     echo "if [ -f /etc/bash_completion ] && ! shopt -oq posix; then" >> /root/.bashrc && \
     echo "    . /etc/bash_completion" >> /root/.bashrc && \
