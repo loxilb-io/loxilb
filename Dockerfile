@@ -21,7 +21,7 @@ RUN mkdir -p /opt/loxilb && \
     mkdir -p /etc/bash_completion.d/ && \
     # Update Ubuntu Software repository
     apt-get update && apt-get install -y wget && \
-    arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && if [ "$arch" = "arm64" ] ; then cpus="1" && apt-get install -y gcc-arm-linux-gnueabihf; else cpus=${nproc} && apt-get update && apt-get install -y  gcc-multilib;fi && \
+    arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && if [ "$arch" = "arm64" ] ; then cpus="1" && apt-get install -y gcc-arm-linux-gnueabihf; else cpus=$(nproc) && apt-get update && apt-get install -y  gcc-multilib;fi && \
     # Arch specific packages - GoLang
     wget https://go.dev/dl/go1.23.0.linux-${arch}.tar.gz && tar -xzf go1.23.0.linux-${arch}.tar.gz --directory /usr/local/ && rm go1.23.0.linux-${arch}.tar.gz && \
     # Dev and util packages
@@ -31,7 +31,7 @@ RUN mkdir -p /opt/loxilb && \
     # Install openssl-3.4.1
     wget https://github.com/openssl/openssl/releases/download/openssl-3.4.1/openssl-3.4.1.tar.gz && tar -xvzf openssl-3.4.1.tar.gz && \
     cd openssl-3.4.1 && ./Configure enable-ktls '-Wl,-rpath,$(LIBRPATH)' --prefix=/usr/local/build && \
-    make -j$(cpus) && make install_dev install_modules && cd - && \
+    make -j$cpus && make install_dev install_modules && cd - && \
     cp -a /usr/local/build/include/openssl /usr/include/ && \
     if [ -d /usr/local/build/lib64  ] ; then mv /usr/local/build/lib64  /usr/local/build/lib; fi && \
     cp -fr /usr/local/build/lib/* /usr/lib/ && ldconfig && \
