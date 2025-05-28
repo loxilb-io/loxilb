@@ -94,6 +94,13 @@ func (mh *loxiNetH) NodeWalker(b string) {
 	tk.LogIt(tk.LogDebug, "%s\n", b)
 }
 
+// PrometheusInit - Initialize the Prometheus subsystem
+func (mh *loxiNetH) PrometheusInit() error {
+	prometheus.PrometheusRegister(NetAPIInit(opts.Opts.BgpPeerMode))
+	prometheus.Init()
+	return nil
+}
+
 // ParamSet - Set Loxinet Params
 func (mh *loxiNetH) ParamSet(param cmn.ParamMod) (int, error) {
 	logLevel := LogString2Level(param.LogLevel)
@@ -363,8 +370,7 @@ func loxiNetInit() {
 
 	// Initialize the Prometheus subsystem
 	if opts.Opts.Prometheus {
-		prometheus.PrometheusRegister(NetAPIInit(opts.Opts.BgpPeerMode))
-		prometheus.Init()
+		mh.PrometheusInit()
 	}
 
 	if !opts.Opts.BgpPeerMode {

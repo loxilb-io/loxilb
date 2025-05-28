@@ -1156,5 +1156,6 @@ type NetHookInterface interface {
 	NetOauthValidateAllTokens(token, refreshToken string) (interface{}, error)
 	NetOauthDeleteToken(token string) error
 
+	NetPrometheusEnable() error
 	NetHandlePanic()
 }

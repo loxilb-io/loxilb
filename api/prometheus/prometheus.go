@@ -348,6 +348,32 @@ func PrometheusRegister(hook cmn.NetHookInterface) {
 	hooks = hook
 }
 
+// PrometheusInit initializes the Prometheus metrics and starts the necessary goroutines
+func CheckInit() error {
+	if hooks == nil {
+		return errors.New(http.StatusBadRequest, "Prometheus API hooks are not registered")
+	}
+	if prometheusCtx == nil {
+		return errors.New(http.StatusBadRequest, "Prometheus is not running")
+	}
+	return nil
+}
+
+// OptionStateChange sets the state of Prometheus
+func OptionStateChange(state bool) {
+	options.Opts.Prometheus = state
+}
+
+// PrometheusTurnOff turns off the Prometheus
+// prometheusCtx and hooks are set to nil for garbage collection
+func PrometheusTurnOff() error {
+	prometheusCancel()
+	prometheusCancel = nil
+	prometheusCtx = nil
+	hooks = nil
+	return nil
+}
+
 // Helper functions for shared metrics
 func SetSharedMetric(name string, value float64) {
 	sharedMetrics.Lock()
@@ -845,24 +871,6 @@ func toJSON(v interface{}) string {
 	return string(bytes)
 }
 
-func Off() error {
-	if !options.Opts.Prometheus {
-		return errors.New(http.StatusBadRequest, "already prometheus turned off")
-	}
-	options.Opts.Prometheus = false
-	prometheusCancel()
-	return nil
-}
-
-func TurnOn() error {
-	if options.Opts.Prometheus {
-		return errors.New(http.StatusBadRequest, "already prometheus turned on")
-	}
-	options.Opts.Prometheus = true
-	Init()
-	return nil
-}
-
 func MakeConntrackKey(c cmn.CtInfo) (key ConntrackKey) {
 	return ConntrackKey(fmt.Sprintf("%s|%05d|%s|%05d|%v|%s",
 		c.Sip, c.Sport, c.Dip, c.Dport, c.Proto, c.ServiceName))
@@ -874,17 +882,18 @@ func isErrorState(c cmn.CtInfo) bool {
 }
 
 func RunResetCounts(ctx context.Context) {
+	ticker := time.NewTicker(PromethusLongPeriod)
+	defer ticker.Stop()
 	for {
 		// Statistic reset
 		select {
 		case <-ctx.Done():
 			return
-		default:
+		case <-ticker.C:
 			mutex.Lock()
 			ConntrackStats = map[ConntrackKey]Stats{}
 			mutex.Unlock()
 		}
-		time.Sleep(PromethusLongPeriod)
 	}
 }
 
