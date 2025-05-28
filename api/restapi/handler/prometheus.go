@@ -46,21 +46,35 @@ func ConfigGetPrometheusOption(params operations.GetConfigMetricsParams, princip
 
 func ConfigPostPrometheus(params operations.PostConfigMetricsParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogDebug, "[API] Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	err := prometheus.TurnOn()
+	// Prometheus Init status check
+	if err := prometheus.CheckInit(); err == nil {
+		return &ResultResponse{Result: "Prometheus is already enabled."}
+	}
+
+	// Prometheus on
+	err := ApiHooks.NetPrometheusEnable()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
+	// Prometheus Option state change
+	prometheus.OptionStateChange(true)
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeletePrometheus(params operations.DeleteConfigMetricsParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "[API] Prometheus %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	err := prometheus.Off()
+	// Prometheus Init status check
+	if err := prometheus.CheckInit(); err != nil {
+		return &ResultResponse{Result: "Prometheus is already disabled."}
+	}
+	// Prometheus off
+	err := prometheus.PrometheusTurnOff()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
 		return &ResultResponse{Result: err.Error()}
 	}
-
+	// Prometheus Option state change
+	prometheus.OptionStateChange(false)
 	return &ResultResponse{Result: "Success"}
 }

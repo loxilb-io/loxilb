@@ -848,3 +848,8 @@ func (na *NetAPIStruct) NetOauthValidateAllTokens(token, refreshToken string) (i
 func (na *NetAPIStruct) NetOauthDeleteToken(token string) error {
 	return mh.OauthUserService.DeleteOauthTokenCredential(token)
 }
+
+func (na *NetAPIStruct) NetPrometheusEnable() error {
+	mh.PrometheusInit()
+	return nil
+}
