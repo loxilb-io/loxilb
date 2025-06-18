@@ -30,8 +30,8 @@ func ConfigPostPolicy(params operations.PostConfigPolicyParams, principal interf
 	var polMod cmn.PolMod
 
 	// Ident Setting
-	if params.Attr.PolicyIdent != "" {
-		polMod.Ident = params.Attr.PolicyIdent
+	if params.Attr.PolicyIdent != nil {
+		polMod.Ident = *params.Attr.PolicyIdent
 	}
 
 	// Info Setting
@@ -46,8 +46,12 @@ func ConfigPostPolicy(params operations.PostConfigPolicyParams, principal interf
 
 	// Target Setting
 	if params.Attr.TargetObject != nil {
-		polMod.Target.PolObjName = params.Attr.TargetObject.PolObjName
-		polMod.Target.AttachMent = cmn.PolObjType(params.Attr.TargetObject.Attachment)
+		if params.Attr.TargetObject.PolObjName != nil {
+			polMod.Target.PolObjName = *params.Attr.TargetObject.PolObjName
+		}
+		if params.Attr.TargetObject.Attachment != nil {
+			polMod.Target.AttachMent = cmn.PolObjType(*params.Attr.TargetObject.Attachment)
+		}
 	}
 
 	tk.LogIt(tk.LogDebug, "api: polMod : %v\n", polMod)
@@ -89,7 +93,7 @@ func ConfigGetPolicy(params operations.GetConfigPolicyAllParams, principal inter
 		var tmpInfo models.PolicyEntryPolicyInfo
 		var tmpTarget models.PolicyEntryTargetObject
 		// ID match
-		tmpPol.PolicyIdent = policy.Ident
+		tmpPol.PolicyIdent = &policy.Ident
 		// Info match
 		tmpInfo.ColorAware = policy.Info.ColorAware
 		tmpInfo.CommittedBlkSize = int64(policy.Info.CommittedBlkSize)
@@ -98,8 +102,9 @@ func ConfigGetPolicy(params operations.GetConfigPolicyAllParams, principal inter
 		tmpInfo.PeakInfoRate = int64(policy.Info.PeakInfoRate)
 		tmpInfo.Type = int64(policy.Info.PolType)
 		// Target match
-		tmpTarget.Attachment = int64(policy.Target.AttachMent)
-		tmpTarget.PolObjName = policy.Target.PolObjName
+		attachment := int64(policy.Target.AttachMent)
+		tmpTarget.Attachment = &attachment
+		tmpTarget.PolObjName = &policy.Target.PolObjName
 
 		// Assign policy info and target
 		tmpPol.PolicyInfo = &tmpInfo

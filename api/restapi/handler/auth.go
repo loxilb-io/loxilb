@@ -61,8 +61,12 @@ func BearerAuthAuth(tokenString string) (interface{}, error) {
 func AuthPostLogin(params auth.PostAuthLoginParams) middleware.Responder {
 	var response models.LoginResponse
 	var user cmn.User
-	user.Username = params.User.Username
-	user.Password = params.User.Password
+	if params.User.Username != nil {
+		user.Username = *params.User.Username
+	}
+	if params.User.Password != nil {
+		user.Password = *params.User.Password
+	}
 	token, valid, err := ApiHooks.NetUserLogin(&user)
 	if err != nil {
 		return &ResultResponse{Result: err.Error()}

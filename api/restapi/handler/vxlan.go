@@ -25,7 +25,7 @@ import (
 
 func ConfigPostVxLAN(params operations.PostConfigTunnelVxlanParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: VxLAN %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	ret := loxinlp.AddVxLANBridgeNoHook(int(params.Attr.VxlanID), params.Attr.EpIntf)
+	ret := loxinlp.AddVxLANBridgeNoHook(int(*params.Attr.VxlanID), *params.Attr.EpIntf)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
 	}
@@ -43,7 +43,7 @@ func ConfigDeleteVxLAN(params operations.DeleteConfigTunnelVxlanVxlanIDParams, p
 
 func ConfigPostVxLANPeer(params operations.PostConfigTunnelVxlanVxlanIDPeerParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: VxLAN %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	ret := loxinlp.AddVxLANPeerNoHook(int(params.VxlanID), params.Attr.PeerIP)
+	ret := loxinlp.AddVxLANPeerNoHook(int(params.VxlanID), *params.Attr.PeerIP)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
 	}
@@ -76,9 +76,10 @@ func ConfigGetVxLAN(params operations.GetConfigTunnelVxlanAllParams, principal i
 			// Vxlan Port
 			var tmpResult models.VxlanEntry
 			tmpResult.PeerIP = peers[port.SInfo.OsID]
-			tmpResult.VxlanName = port.Name
-			tmpResult.VxlanID = int64(port.HInfo.TunID)
-			tmpResult.EpIntf = port.HInfo.Real
+			tmpResult.VxlanName = &port.Name
+			vxlanID := int64(port.HInfo.TunID)
+			tmpResult.VxlanID = &vxlanID
+			tmpResult.EpIntf = &port.HInfo.Real
 			result = append(result, &tmpResult)
 
 		}

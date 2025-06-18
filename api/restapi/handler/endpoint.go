@@ -61,7 +61,9 @@ func ConfigPostEndPoint(params operations.PostConfigEndpointParams, principal in
 	tk.LogIt(tk.LogTrace, "api: EndPoint %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 
 	EP := cmn.EndPointMod{}
-	EP.HostName = params.Attr.HostName
+	if params.Attr.HostName != nil {
+		EP.HostName = *params.Attr.HostName
+	}
 	EP.Name = params.Attr.Name
 	EP.ProbeType = params.Attr.ProbeType
 	EP.InActTries = int(params.Attr.InactiveReTries)

@@ -32,7 +32,9 @@ func ConfigPostSession(params operations.PostConfigSessionParams, principal inte
 
 	var sessionMod cmn.SessionMod
 	// Default Setting
-	sessionMod.Ident = params.Attr.Ident
+	if params.Attr.Ident != nil {
+		sessionMod.Ident = *params.Attr.Ident
+	}
 	sessionMod.IP = net.ParseIP(params.Attr.SessionIP)
 	// AnTun Setting
 	sessionMod.AnTun.TeID = uint32(params.Attr.AccessNetworkTunnel.TeID)
@@ -70,7 +72,10 @@ func ConfigPostSessionUlCl(params operations.PostConfigSessionulclParams, princi
 
 	var sessionulclMod cmn.SessionUlClMod
 	// Default Setting
-	sessionulclMod.Ident = params.Attr.UlclIdent
+
+	if params.Attr.UlclIdent != nil {
+		sessionulclMod.Ident = *params.Attr.UlclIdent
+	}
 	// UlCl Argument setting
 	sessionulclMod.Args.Addr = net.ParseIP(params.Attr.UlclArgument.UlclIP)
 	sessionulclMod.Args.Qfi = uint8(params.Attr.UlclArgument.Qfi)
@@ -120,7 +125,7 @@ func ConfigGetSession(params operations.GetConfigSessionAllParams, principal int
 		var tmpCnTun models.SessionEntryCoreNetworkTunnel
 
 		// Session Common match
-		tmpSes.Ident = session.Ident
+		tmpSes.Ident = &session.Ident
 		tmpSes.SessionIP = session.IP.String()
 
 		// Session ANtunnel match
@@ -156,7 +161,7 @@ func ConfigGetSessionUlCl(params operations.GetConfigSessionulclAllParams, princ
 		var tmpulclArg models.SessionUlClEntryUlclArgument
 
 		// UlCl ID match
-		tmpulcl.UlclIdent = ulcl.Ident
+		tmpulcl.UlclIdent = &ulcl.Ident
 
 		// UlCl Args match
 		tmpulclArg.UlclIP = ulcl.Args.Addr.String()
