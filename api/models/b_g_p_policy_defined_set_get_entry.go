@@ -12,6 +12,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // BGPPolicyDefinedSetGetEntry b g p policy defined set get entry
@@ -23,7 +24,8 @@ type BGPPolicyDefinedSetGetEntry struct {
 	List []string `json:"list"`
 
 	// BGP Defined set Entries
-	Name string `json:"name,omitempty"`
+	// Required: true
+	Name *string `json:"name"`
 
 	// prefix list
 	PrefixList []*BGPPolicyPrefix `json:"prefixList"`
@@ -33,6 +35,10 @@ type BGPPolicyDefinedSetGetEntry struct {
 func (m *BGPPolicyDefinedSetGetEntry) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateName(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validatePrefixList(formats); err != nil {
 		res = append(res, err)
 	}
@@ -40,6 +46,15 @@ func (m *BGPPolicyDefinedSetGetEntry) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *BGPPolicyDefinedSetGetEntry) validateName(formats strfmt.Registry) error {
+
+	if err := validate.Required("name", "body", m.Name); err != nil {
+		return err
+	}
+
 	return nil
 }
 

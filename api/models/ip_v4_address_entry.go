@@ -8,8 +8,10 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // IPV4AddressEntry IPv4 address entry
@@ -18,14 +20,47 @@ import (
 type IPV4AddressEntry struct {
 
 	// Name of the interface device to which you want to modify the IP address
-	Dev string `json:"dev,omitempty"`
+	// Required: true
+	Dev *string `json:"dev"`
 
 	// IP address to modify.
-	IPAddress string `json:"ipAddress,omitempty"`
+	// Required: true
+	IPAddress *string `json:"ipAddress"`
 }
 
 // Validate validates this IPv4 address entry
 func (m *IPV4AddressEntry) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateDev(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateIPAddress(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *IPV4AddressEntry) validateDev(formats strfmt.Registry) error {
+
+	if err := validate.Required("dev", "body", m.Dev); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *IPV4AddressEntry) validateIPAddress(formats strfmt.Registry) error {
+
+	if err := validate.Required("ipAddress", "body", m.IPAddress); err != nil {
+		return err
+	}
+
 	return nil
 }
 

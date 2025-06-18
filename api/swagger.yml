@@ -3758,9 +3758,15 @@ definitions:
 
   LoadbalanceEntry:
     type: object
+    required:
+      - serviceArguments
+      - endpoints
     properties:
       serviceArguments:
         type: object
+        required:
+        - externalIP
+        - port
         properties:
           externalIP:
             type: string
@@ -3854,6 +3860,10 @@ definitions:
         type: array
         description: values of End point servers
         items:
+          required:
+            - endpointIP
+            - weight
+            - targetPort
           properties:
             endpointIP:
               type: string
@@ -3891,6 +3901,9 @@ definitions:
   
   RouteEntry:
     type: object
+    required:
+      - destinationIPNet
+      - gateway
     properties:
       destinationIPNet:
         type: string
@@ -3934,7 +3947,65 @@ definitions:
           packets:
             type: integer
             description: Statistic of the egress port bytes.
-      
+
+  K8sConntrackEntry:    
+    type: object
+    properties:
+      destinationPod:
+        type: string
+        description: Pod name of the destination
+      sourcePod:
+        type: string
+        description: Pod name of the soruce
+      destinationNamespace:
+        type: string
+        description: Namespace of the destination
+      sourceNamespace:
+        type: string
+        description: Namespace of the source
+      destinationNode:
+        type: string
+        description: Node of the destination
+      sourceNode:
+        type: string
+        description: Node of the source
+      k8sservName:
+        type: string
+        description: K8s service name 
+      destinationIP:
+        type: string
+        description: IP address for externel access
+      sourceIP:
+        type: string
+        description: IP address for externel access
+      destinationPort:
+        type: integer
+        description:  port number for the access
+      sourcePort:
+        type: integer
+        description:  port number for the access
+      protocol:
+        type: string
+        description:  value for access protocol
+      conntrackState:
+        type: string
+        description:  value for Conntrack state
+      ident:
+        type: string
+        description:  value for Conntrack ident
+      conntrackAct:
+        type: string
+        description:  value for Conntrack Act
+      packets:
+        type: integer
+        description:  Packet counts of the conntrack
+      bytes:
+        type: integer
+        description:  Packet bytes of the conntrack
+      servName:
+        type: string
+        description: Connection's Service Name
+        
   ConntrackEntry:
     type: object
     properties:
@@ -4084,6 +4155,8 @@ definitions:
   
   SessionEntry:
     type: object
+    required:
+      - ident
     properties:
       ident:
         type: string
@@ -4112,6 +4185,8 @@ definitions:
         
   SessionUlClEntry:
     type: object
+    required:
+      - ulclIdent
     properties:
       ulclIdent:
         type: string
@@ -4128,6 +4203,9 @@ definitions:
 
   PolicyEntry:
     type: object
+    required:
+      - policyIdent
+      - targetObject
     properties:
       policyIdent:
         type: string
@@ -4156,6 +4234,9 @@ definitions:
             description: policy type
       targetObject:
         type: object
+        required:
+          - attachment
+          - polObjName
         properties:
           attachment:
             type: integer
@@ -4166,6 +4247,9 @@ definitions:
 
   MirrorEntry:
     type: object
+    required:
+      - mirrorIdent
+      - targetObject
     properties:
       mirrorIdent:
         type: string
@@ -4194,6 +4278,9 @@ definitions:
             description: mirror tunnel-id. For ERSPAN we may need to send tunnelled mirror traffic
       targetObject:
         type: object
+        required:
+          - attachment
+          - mirrObjName
         properties:
           attachment:
             type: integer
@@ -4246,6 +4333,8 @@ definitions:
         
   VlanBridgeEntry:
     type: object
+    required:
+      - vid
     properties:
       vid:
         type: integer
@@ -4287,6 +4376,9 @@ definitions:
         
   IPv4AddressEntry:
     type: object
+    required:
+      - dev
+      - ipAddress
     properties:
       dev:
         type: string
@@ -4316,6 +4408,10 @@ definitions:
 
   NeighborEntry:
     type: object
+    required:
+      - dev
+      - ipAddress
+      - macAddress
     properties:
       ipAddress:
         type: string
@@ -4329,6 +4425,9 @@ definitions:
         
   FDBEntry:
     type: object
+    required:
+      - dev
+      - macAddress
     properties:
       dev:
         type: string
@@ -4429,6 +4528,11 @@ definitions:
   
   VxlanEntry:
     type: object
+    required:
+      - vxlanName
+      - epIntf
+      - vxlanID
+      - peerIP
     properties:
       vxlanName:
         type: string
@@ -4443,6 +4547,9 @@ definitions:
         
   VxlanBridgeEntry:
     type: object
+    required:
+      - epIntf
+      - vxlanID
     properties:
       epIntf:
         type: string
@@ -4451,6 +4558,8 @@ definitions:
         
   VxlanPeerEntry:
     type: object
+    required:
+      - peerIP
     properties:
       peerIP:
         type: string
@@ -4529,6 +4638,8 @@ definitions:
 
   EndPoint:
     type: object
+    required:
+      - hostName
     properties:
       hostName:
         type: string
@@ -4645,6 +4756,9 @@ definitions:
     
   FirewallEntry:
     type: object
+    required:
+      - ruleArguments
+      - opts
     properties:
       ruleArguments:
         $ref: '#/definitions/FirewallRuleEntry'
@@ -4653,13 +4767,19 @@ definitions:
 
   OperParams:
     type: object
+    required:
+      - logLevel
     properties:
       logLevel:
         type: string
+        enum: [debug, info, error, warning, notice, critical, emergency, alert]
         description: Set level to debug,info,error,warning,notice,critical,emergency,alert
   
   BGPNeigh:
     type: object
+    required:
+      - ipAddress
+      - remoteAs
     properties:
       ipAddress:
         type: string
@@ -4676,6 +4796,8 @@ definitions:
 
   BGPPolicyDefinedSetGetEntry:
     type: object
+    required:
+      - name
     properties:
       name:
         type: string
@@ -4691,6 +4813,8 @@ definitions:
           
   BGPPolicyDefinedSetsMod:
     type: object
+    required:
+      - name
     properties:
       name:
         type: string
@@ -4848,17 +4972,23 @@ definitions:
       
   BGPApplyPolicyToNeighborMod:
     type: object
+    required: 
+      - ipAddress
+      - policyType
+      - routeAction
     properties:
       ipAddress:
         type: string
         description: BGP Neighbor IP address
       policyType:
+        enum: ["import", "export"]
         type: string
       policies:
         type: array
         items:
           type: string
       routeAction:
+        enum: ["accept", "reject"]
         type: string
         
   BGPNeighGetEntry:
@@ -4880,6 +5010,9 @@ definitions:
 
   BGPGlobalConfig:
     type: object
+    required:
+      - routerId
+      - localAs
     properties:
       routerId:
         type: string
@@ -5012,6 +5145,10 @@ definitions:
         type: string
         enum: ["admin", "viewer"]
     type: object
+    required:
+      - id
+      - username
+      - password
 
   FlowCountMetrics:
     type: object

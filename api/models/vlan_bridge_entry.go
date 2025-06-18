@@ -8,8 +8,10 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // VlanBridgeEntry vlan bridge entry
@@ -18,11 +20,30 @@ import (
 type VlanBridgeEntry struct {
 
 	// Vlan ID
-	Vid int64 `json:"vid,omitempty"`
+	// Required: true
+	Vid *int64 `json:"vid"`
 }
 
 // Validate validates this vlan bridge entry
 func (m *VlanBridgeEntry) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateVid(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *VlanBridgeEntry) validateVid(formats strfmt.Registry) error {
+
+	if err := validate.Required("vid", "body", m.Vid); err != nil {
+		return err
+	}
+
 	return nil
 }
 

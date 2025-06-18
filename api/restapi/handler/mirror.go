@@ -32,8 +32,8 @@ func ConfigPostMirror(params operations.PostConfigMirrorParams, principal interf
 	var MirrMod cmn.MirrMod
 
 	// Ident Setting
-	if params.Attr.MirrorIdent != "" {
-		MirrMod.Ident = params.Attr.MirrorIdent
+	if params.Attr.MirrorIdent != nil {
+		MirrMod.Ident = *params.Attr.MirrorIdent
 	}
 
 	// Info Setting
@@ -48,8 +48,8 @@ func ConfigPostMirror(params operations.PostConfigMirrorParams, principal interf
 
 	// Target Setting
 	if params.Attr.TargetObject != nil {
-		MirrMod.Target.MirrObjName = params.Attr.TargetObject.MirrObjName
-		MirrMod.Target.AttachMent = cmn.MirrObjType(params.Attr.TargetObject.Attachment)
+		MirrMod.Target.MirrObjName = *params.Attr.TargetObject.MirrObjName
+		MirrMod.Target.AttachMent = cmn.MirrObjType(*params.Attr.TargetObject.Attachment)
 	}
 
 	tk.LogIt(tk.LogDebug, "api: MirrMod : %v\n", MirrMod)

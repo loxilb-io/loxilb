@@ -25,13 +25,15 @@ type LoadbalanceEntry struct {
 	AllowedSources []*LoadbalanceEntryAllowedSourcesItems0 `json:"allowedSources"`
 
 	// values of End point servers
+	// Required: true
 	Endpoints []*LoadbalanceEntryEndpointsItems0 `json:"endpoints"`
 
 	// values of Secondary IPs
 	SecondaryIPs []*LoadbalanceEntrySecondaryIPsItems0 `json:"secondaryIPs"`
 
 	// service arguments
-	ServiceArguments *LoadbalanceEntryServiceArguments `json:"serviceArguments,omitempty"`
+	// Required: true
+	ServiceArguments *LoadbalanceEntryServiceArguments `json:"serviceArguments"`
 }
 
 // Validate validates this loadbalance entry
@@ -87,8 +89,9 @@ func (m *LoadbalanceEntry) validateAllowedSources(formats strfmt.Registry) error
 }
 
 func (m *LoadbalanceEntry) validateEndpoints(formats strfmt.Registry) error {
-	if swag.IsZero(m.Endpoints) { // not required
-		return nil
+
+	if err := validate.Required("endpoints", "body", m.Endpoints); err != nil {
+		return err
 	}
 
 	for i := 0; i < len(m.Endpoints); i++ {
@@ -139,8 +142,9 @@ func (m *LoadbalanceEntry) validateSecondaryIPs(formats strfmt.Registry) error {
 }
 
 func (m *LoadbalanceEntry) validateServiceArguments(formats strfmt.Registry) error {
-	if swag.IsZero(m.ServiceArguments) { // not required
-		return nil
+
+	if err := validate.Required("serviceArguments", "body", m.ServiceArguments); err != nil {
+		return err
 	}
 
 	if m.ServiceArguments != nil {
@@ -323,20 +327,67 @@ type LoadbalanceEntryEndpointsItems0 struct {
 	Counter string `json:"counter,omitempty"`
 
 	// IP address for external access
-	EndpointIP string `json:"endpointIP,omitempty"`
+	// Required: true
+	EndpointIP *string `json:"endpointIP"`
 
 	// state of the endpoint
 	State string `json:"state,omitempty"`
 
 	// port number for access service
-	TargetPort int64 `json:"targetPort,omitempty"`
+	// Required: true
+	TargetPort *int64 `json:"targetPort"`
 
 	// Weight for the load balancing
-	Weight int64 `json:"weight,omitempty"`
+	// Required: true
+	Weight *int64 `json:"weight"`
 }
 
 // Validate validates this loadbalance entry endpoints items0
 func (m *LoadbalanceEntryEndpointsItems0) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateEndpointIP(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateTargetPort(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateWeight(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *LoadbalanceEntryEndpointsItems0) validateEndpointIP(formats strfmt.Registry) error {
+
+	if err := validate.Required("endpointIP", "body", m.EndpointIP); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *LoadbalanceEntryEndpointsItems0) validateTargetPort(formats strfmt.Registry) error {
+
+	if err := validate.Required("targetPort", "body", m.TargetPort); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *LoadbalanceEntryEndpointsItems0) validateWeight(formats strfmt.Registry) error {
+
+	if err := validate.Required("weight", "body", m.Weight); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -415,7 +466,8 @@ type LoadbalanceEntryServiceArguments struct {
 	Egress bool `json:"egress,omitempty"`
 
 	// IP address for external access
-	ExternalIP string `json:"externalIP,omitempty"`
+	// Required: true
+	ExternalIP *string `json:"externalIP"`
 
 	// Ingress specific host URL path
 	Host string `json:"host,omitempty"`
@@ -441,7 +493,8 @@ type LoadbalanceEntryServiceArguments struct {
 	Oper int32 `json:"oper,omitempty"`
 
 	// (Min) port number for the access
-	Port int64 `json:"port,omitempty"`
+	// Required: true
+	Port *int64 `json:"port"`
 
 	// Max port number(range) for the access
 	PortMax int64 `json:"portMax,omitempty"`
@@ -489,11 +542,19 @@ type LoadbalanceEntryServiceArguments struct {
 func (m *LoadbalanceEntryServiceArguments) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateExternalIP(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateMode(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if err := m.validateOper(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validatePort(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -508,6 +569,15 @@ func (m *LoadbalanceEntryServiceArguments) Validate(formats strfmt.Registry) err
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *LoadbalanceEntryServiceArguments) validateExternalIP(formats strfmt.Registry) error {
+
+	if err := validate.Required("serviceArguments"+"."+"externalIP", "body", m.ExternalIP); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -571,6 +641,15 @@ func (m *LoadbalanceEntryServiceArguments) validateOper(formats strfmt.Registry)
 
 	// value enum
 	if err := m.validateOperEnum("serviceArguments"+"."+"oper", "body", m.Oper); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *LoadbalanceEntryServiceArguments) validatePort(formats strfmt.Registry) error {
+
+	if err := validate.Required("serviceArguments"+"."+"port", "body", m.Port); err != nil {
 		return err
 	}
 

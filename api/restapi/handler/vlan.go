@@ -25,7 +25,11 @@ import (
 
 func ConfigPostVLAN(params operations.PostConfigVlanParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Vlan %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	ret := loxinlp.AddVLANNoHook(int(params.Attr.Vid))
+	var vid int
+	if params.Attr.Vid != nil {
+		vid = int(*params.Attr.Vid)
+	}
+	ret := loxinlp.AddVLANNoHook(vid)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
 	}

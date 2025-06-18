@@ -28,9 +28,13 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams, prin
 
 	var lbRules cmn.LbRuleMod
 
-	lbRules.Serv.ServIP = params.Attr.ServiceArguments.ExternalIP
+	if params.Attr.ServiceArguments.ExternalIP != nil {
+		lbRules.Serv.ServIP = *params.Attr.ServiceArguments.ExternalIP
+	}
 	lbRules.Serv.PrivateIP = params.Attr.ServiceArguments.PrivateIP
-	lbRules.Serv.ServPort = uint16(params.Attr.ServiceArguments.Port)
+	if params.Attr.ServiceArguments.Port != nil {
+		lbRules.Serv.ServPort = uint16(*params.Attr.ServiceArguments.Port)
+	}
 	lbRules.Serv.ServPortMax = uint16(params.Attr.ServiceArguments.PortMax)
 	lbRules.Serv.Proto = params.Attr.ServiceArguments.Protocol
 	lbRules.Serv.BlockNum = params.Attr.ServiceArguments.Block
@@ -68,10 +72,24 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams, prin
 	}
 
 	for _, data := range params.Attr.Endpoints {
+
+		var epIP string
+		var epTargetPort uint16
+		var epWeight uint8
+		if data.EndpointIP != nil {
+			epIP = *data.EndpointIP
+		}
+		if data.TargetPort != nil {
+			epTargetPort = uint16(*data.TargetPort)
+		}
+		if data.Weight != nil {
+			epWeight = uint8(*data.Weight)
+		}
+
 		lbRules.Eps = append(lbRules.Eps, cmn.LbEndPointArg{
-			EpIP:   data.EndpointIP,
-			EpPort: uint16(data.TargetPort),
-			Weight: uint8(data.Weight),
+			EpIP:   epIP,
+			EpPort: epTargetPort,
+			Weight: epWeight,
 		})
 	}
 
@@ -219,9 +237,10 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams, pri
 		var tmpSvc models.LoadbalanceEntryServiceArguments
 
 		// Service Arg match
-		tmpSvc.ExternalIP = lb.Serv.ServIP
+		tmpSvc.ExternalIP = &lb.Serv.ServIP
 		tmpSvc.Bgp = lb.Serv.Bgp
-		tmpSvc.Port = int64(lb.Serv.ServPort)
+		port := int64(lb.Serv.ServPort)
+		tmpSvc.Port = &port
 		tmpSvc.PortMax = int64(lb.Serv.ServPortMax)
 		tmpSvc.Protocol = lb.Serv.Proto
 		tmpSvc.Block = uint32(lb.Serv.BlockNum)
@@ -256,9 +275,11 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams, pri
 		// Endpoints match
 		for _, ep := range lb.Eps {
 			tmpEp := new(models.LoadbalanceEntryEndpointsItems0)
-			tmpEp.EndpointIP = ep.EpIP
-			tmpEp.TargetPort = int64(ep.EpPort)
-			tmpEp.Weight = int64(ep.Weight)
+			tmpEp.EndpointIP = &ep.EpIP
+			targetPort := int64(ep.EpPort)
+			tmpEp.TargetPort = &targetPort
+			weight := int64(ep.Weight)
+			tmpEp.Weight = &weight
 			tmpEp.State = ep.State
 			tmpEp.Counter = ep.Counters
 			tmpLB.Endpoints = append(tmpLB.Endpoints, tmpEp)

@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // SessionUlClEntry session ul cl entry
@@ -22,7 +23,8 @@ type SessionUlClEntry struct {
 	UlclArgument *SessionUlClEntryUlclArgument `json:"ulclArgument,omitempty"`
 
 	// IP address and netmask
-	UlclIdent string `json:"ulclIdent,omitempty"`
+	// Required: true
+	UlclIdent *string `json:"ulclIdent"`
 }
 
 // Validate validates this session ul cl entry
@@ -30,6 +32,10 @@ func (m *SessionUlClEntry) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateUlclArgument(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateUlclIdent(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -53,6 +59,15 @@ func (m *SessionUlClEntry) validateUlclArgument(formats strfmt.Registry) error {
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *SessionUlClEntry) validateUlclIdent(formats strfmt.Registry) error {
+
+	if err := validate.Required("ulclIdent", "body", m.UlclIdent); err != nil {
+		return err
 	}
 
 	return nil

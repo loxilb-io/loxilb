@@ -30,8 +30,12 @@ import (
 func UsersPostUsers(params users.PostAuthUsersParams) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: User  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var user cmn.User
-	user.Username = params.User.Username
-	user.Password = params.User.Password
+	if params.User.Username != nil {
+		user.Username = *params.User.Username
+	}
+	if params.User.Password != nil {
+		user.Password = *params.User.Password
+	}
 	user.CreatedAt = time.Now()
 	user.Role = params.User.Role
 	_, err := ApiHooks.NetUserAdd(&user)
@@ -70,9 +74,10 @@ func UsersGetUsers(params users.GetAuthUsersParams, principal interface{}) middl
 	for _, user := range res {
 		var tmpUser models.User
 		// ID match
-		tmpUser.ID = int64(user.ID)
-		tmpUser.Username = user.Username
-		tmpUser.Password = user.Password
+		id := int64(user.ID)
+		tmpUser.ID = &id
+		tmpUser.Username = &user.Username
+		tmpUser.Password = &user.Password
 		tmpUser.CreatedAt = user.CreatedAt.Format(time.RFC3339)
 
 		result = append(result, &tmpUser)
@@ -86,8 +91,12 @@ func UsersGetUsers(params users.GetAuthUsersParams, principal interface{}) middl
 func UsersPutUsers(params users.PutAuthUsersIDParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: User %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var user cmn.User
-	user.Username = params.User.Username
-	user.Password = params.User.Password
+	if params.User.Username != nil {
+		user.Username = *params.User.Username
+	}
+	if params.User.Password != nil {
+		user.Password = *params.User.Password
+	}
 	user.ID = int(params.ID)
 	err := ApiHooks.NetUserUpdate(&user)
 	if err != nil {

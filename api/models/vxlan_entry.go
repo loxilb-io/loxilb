@@ -8,8 +8,10 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // VxlanEntry vxlan entry
@@ -18,20 +20,81 @@ import (
 type VxlanEntry struct {
 
 	// ep intf
-	EpIntf string `json:"epIntf,omitempty"`
+	// Required: true
+	EpIntf *string `json:"epIntf"`
 
 	// peer IP
+	// Required: true
 	PeerIP []string `json:"peerIP"`
 
 	// vxlan ID
-	VxlanID int64 `json:"vxlanID,omitempty"`
+	// Required: true
+	VxlanID *int64 `json:"vxlanID"`
 
 	// vxlan name
-	VxlanName string `json:"vxlanName,omitempty"`
+	// Required: true
+	VxlanName *string `json:"vxlanName"`
 }
 
 // Validate validates this vxlan entry
 func (m *VxlanEntry) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateEpIntf(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validatePeerIP(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateVxlanID(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateVxlanName(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *VxlanEntry) validateEpIntf(formats strfmt.Registry) error {
+
+	if err := validate.Required("epIntf", "body", m.EpIntf); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *VxlanEntry) validatePeerIP(formats strfmt.Registry) error {
+
+	if err := validate.Required("peerIP", "body", m.PeerIP); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *VxlanEntry) validateVxlanID(formats strfmt.Registry) error {
+
+	if err := validate.Required("vxlanID", "body", m.VxlanID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *VxlanEntry) validateVxlanName(formats strfmt.Registry) error {
+
+	if err := validate.Required("vxlanName", "body", m.VxlanName); err != nil {
+		return err
+	}
+
 	return nil
 }
 

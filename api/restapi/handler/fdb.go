@@ -25,7 +25,7 @@ import (
 
 func ConfigPostFDB(params operations.PostConfigFdbParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	ret := loxinlp.AddFDBNoHook(params.Attr.MacAddress, params.Attr.Dev)
+	ret := loxinlp.AddFDBNoHook(*params.Attr.MacAddress, *params.Attr.Dev)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
 	}
@@ -48,8 +48,10 @@ func ConfigGetFDB(params operations.GetConfigFdbAllParams, principal interface{}
 	result = make([]*models.FDBEntry, 0)
 	for _, fdb := range fdbs {
 		var tmpResult models.FDBEntry
-		tmpResult.MacAddress = fdb["macAddress"]
-		tmpResult.Dev = fdb["dev"]
+		mac := fdb["macAddress"]
+		dev := fdb["dev"]
+		tmpResult.MacAddress = &mac
+		tmpResult.Dev = &dev
 		result = append(result, &tmpResult)
 	}
 	return operations.NewGetConfigFdbAllOK().WithPayload(&operations.GetConfigFdbAllOKBody{FdbAttr: result})
