@@ -8,8 +8,10 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // BGPGlobalConfig b g p global config
@@ -24,14 +26,47 @@ type BGPGlobalConfig struct {
 	ListenPort int64 `json:"listenPort,omitempty"`
 
 	// Local AS number
-	LocalAs int64 `json:"localAs,omitempty"`
+	// Required: true
+	LocalAs *int64 `json:"localAs"`
 
 	// BGP Router ID
-	RouterID string `json:"routerId,omitempty"`
+	// Required: true
+	RouterID *string `json:"routerId"`
 }
 
 // Validate validates this b g p global config
 func (m *BGPGlobalConfig) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateLocalAs(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRouterID(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *BGPGlobalConfig) validateLocalAs(formats strfmt.Registry) error {
+
+	if err := validate.Required("localAs", "body", m.LocalAs); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *BGPGlobalConfig) validateRouterID(formats strfmt.Registry) error {
+
+	if err := validate.Required("routerId", "body", m.RouterID); err != nil {
+		return err
+	}
+
 	return nil
 }
 

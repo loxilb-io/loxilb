@@ -24,30 +24,63 @@ type User struct {
 	CreatedAt string `json:"created_at,omitempty"`
 
 	// id
-	ID int64 `json:"id,omitempty"`
+	// Required: true
+	ID *int64 `json:"id"`
 
 	// password
-	Password string `json:"password,omitempty"`
+	// Required: true
+	Password *string `json:"password"`
 
 	// role
 	// Enum: [admin viewer]
 	Role string `json:"role,omitempty"`
 
 	// username
-	Username string `json:"username,omitempty"`
+	// Required: true
+	Username *string `json:"username"`
 }
 
 // Validate validates this user
 func (m *User) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateID(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validatePassword(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateRole(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateUsername(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *User) validateID(formats strfmt.Registry) error {
+
+	if err := validate.Required("id", "body", m.ID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *User) validatePassword(formats strfmt.Registry) error {
+
+	if err := validate.Required("password", "body", m.Password); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -87,6 +120,15 @@ func (m *User) validateRole(formats strfmt.Registry) error {
 
 	// value enum
 	if err := m.validateRoleEnum("role", "body", m.Role); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *User) validateUsername(formats strfmt.Registry) error {
+
+	if err := validate.Required("username", "body", m.Username); err != nil {
 		return err
 	}
 

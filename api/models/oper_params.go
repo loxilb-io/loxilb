@@ -7,9 +7,12 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // OperParams oper params
@@ -18,11 +21,83 @@ import (
 type OperParams struct {
 
 	// Set level to debug,info,error,warning,notice,critical,emergency,alert
-	LogLevel string `json:"logLevel,omitempty"`
+	// Required: true
+	// Enum: [debug info error warning notice critical emergency alert]
+	LogLevel *string `json:"logLevel"`
 }
 
 // Validate validates this oper params
 func (m *OperParams) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateLogLevel(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+var operParamsTypeLogLevelPropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["debug","info","error","warning","notice","critical","emergency","alert"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		operParamsTypeLogLevelPropEnum = append(operParamsTypeLogLevelPropEnum, v)
+	}
+}
+
+const (
+
+	// OperParamsLogLevelDebug captures enum value "debug"
+	OperParamsLogLevelDebug string = "debug"
+
+	// OperParamsLogLevelInfo captures enum value "info"
+	OperParamsLogLevelInfo string = "info"
+
+	// OperParamsLogLevelError captures enum value "error"
+	OperParamsLogLevelError string = "error"
+
+	// OperParamsLogLevelWarning captures enum value "warning"
+	OperParamsLogLevelWarning string = "warning"
+
+	// OperParamsLogLevelNotice captures enum value "notice"
+	OperParamsLogLevelNotice string = "notice"
+
+	// OperParamsLogLevelCritical captures enum value "critical"
+	OperParamsLogLevelCritical string = "critical"
+
+	// OperParamsLogLevelEmergency captures enum value "emergency"
+	OperParamsLogLevelEmergency string = "emergency"
+
+	// OperParamsLogLevelAlert captures enum value "alert"
+	OperParamsLogLevelAlert string = "alert"
+)
+
+// prop value enum
+func (m *OperParams) validateLogLevelEnum(path, location string, value string) error {
+	if err := validate.EnumCase(path, location, value, operParamsTypeLogLevelPropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *OperParams) validateLogLevel(formats strfmt.Registry) error {
+
+	if err := validate.Required("logLevel", "body", m.LogLevel); err != nil {
+		return err
+	}
+
+	// value enum
+	if err := m.validateLogLevelEnum("logLevel", "body", *m.LogLevel); err != nil {
+		return err
+	}
+
 	return nil
 }
 

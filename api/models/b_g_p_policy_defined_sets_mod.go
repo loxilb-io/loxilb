@@ -12,6 +12,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // BGPPolicyDefinedSetsMod b g p policy defined sets mod
@@ -23,7 +24,8 @@ type BGPPolicyDefinedSetsMod struct {
 	List []string `json:"List"`
 
 	// BGP Neighbor IP address
-	Name string `json:"name,omitempty"`
+	// Required: true
+	Name *string `json:"name"`
 
 	// prefix list
 	PrefixList []*BGPPolicyPrefix `json:"prefixList"`
@@ -33,6 +35,10 @@ type BGPPolicyDefinedSetsMod struct {
 func (m *BGPPolicyDefinedSetsMod) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateName(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validatePrefixList(formats); err != nil {
 		res = append(res, err)
 	}
@@ -40,6 +46,15 @@ func (m *BGPPolicyDefinedSetsMod) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *BGPPolicyDefinedSetsMod) validateName(formats strfmt.Registry) error {
+
+	if err := validate.Required("name", "body", m.Name); err != nil {
+		return err
+	}
+
 	return nil
 }
 

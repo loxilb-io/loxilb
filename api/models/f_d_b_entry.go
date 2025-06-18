@@ -8,8 +8,10 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // FDBEntry f d b entry
@@ -18,14 +20,47 @@ import (
 type FDBEntry struct {
 
 	// Name of the interface device to which you want to modify FDB
-	Dev string `json:"dev,omitempty"`
+	// Required: true
+	Dev *string `json:"dev"`
 
 	// MAC address to FDB
-	MacAddress string `json:"macAddress,omitempty"`
+	// Required: true
+	MacAddress *string `json:"macAddress"`
 }
 
 // Validate validates this f d b entry
 func (m *FDBEntry) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateDev(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateMacAddress(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *FDBEntry) validateDev(formats strfmt.Registry) error {
+
+	if err := validate.Required("dev", "body", m.Dev); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *FDBEntry) validateMacAddress(formats strfmt.Registry) error {
+
+	if err := validate.Required("macAddress", "body", m.MacAddress); err != nil {
+		return err
+	}
+
 	return nil
 }
 
