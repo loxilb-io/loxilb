@@ -51,10 +51,12 @@ func ConfigPostBGPNeigh(params operations.PostConfigBgpNeighParams, principal in
 	var bgpNeighMod cmn.GoBGPNeighMod
 
 	// IP address
-	bgpNeighMod.Addr = net.ParseIP(params.Attr.IPAddress)
+	if params.Attr.IPAddress != nil {
+		bgpNeighMod.Addr = net.ParseIP(*params.Attr.IPAddress)
+	}
 
 	// Remote AS
-	bgpNeighMod.RemoteAS = uint32(params.Attr.RemoteAs)
+	bgpNeighMod.RemoteAS = uint32(*params.Attr.RemoteAs)
 
 	// Remote Port
 	bgpNeighMod.RemotePort = uint16(params.Attr.RemotePort)
@@ -95,10 +97,14 @@ func ConfigPostBGPGlobal(params operations.PostConfigBgpGlobalParams, principal 
 	var bgpG cmn.GoBGPGlobalConfig
 
 	// Router ID
-	bgpG.RouterID = params.Attr.RouterID
+	if params.Attr.RouterID != nil {
+		bgpG.RouterID = *params.Attr.RouterID
+	}
 
 	// Local AS
-	bgpG.LocalAs = params.Attr.LocalAs
+	if params.Attr.LocalAs != nil {
+		bgpG.LocalAs = *params.Attr.LocalAs
+	}
 
 	// Export policy list
 	bgpG.SetNHSelf = params.Attr.SetNextHopSelf
@@ -123,7 +129,9 @@ func ConfigPostBGPPolicyDefinedsets(params operations.PostConfigBgpPolicyDefined
 	var bgpPolicyDefinedSet cmn.GoBGPPolicyDefinedSetMod
 
 	// name
-	bgpPolicyDefinedSet.Name = params.Attr.Name
+	if params.Attr.Name != nil {
+		bgpPolicyDefinedSet.Name = *params.Attr.Name
+	}
 	bgpPolicyDefinedSet.DefinedTypeString = params.DefinesetType
 
 	if bgpPolicyDefinedSet.DefinedTypeString == "prefix" || bgpPolicyDefinedSet.DefinedTypeString == "Prefix" {
@@ -173,7 +181,7 @@ func ConfigGetBGPPolicyDefinedSetGet(params operations.GetConfigBgpPolicyDefined
 	result := make([]*models.BGPPolicyDefinedSetGetEntry, 0)
 	for _, df := range res {
 		tmpDf := models.BGPPolicyDefinedSetGetEntry{}
-		tmpDf.Name = df.Name
+		tmpDf.Name = &df.Name
 		tmpDf.List = df.List
 
 		if params.DefinesetType == "prefix" {
@@ -403,10 +411,16 @@ func ConfigPostBGPPolicyApply(params operations.PostConfigBgpPolicyApplyParams, 
 	tk.LogIt(tk.LogTrace, "api: BGP Policy Apply %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var bgpPolicyConfig cmn.GoBGPPolicyApply
 
-	bgpPolicyConfig.NeighIPAddress = params.Attr.IPAddress
-	bgpPolicyConfig.PolicyType = params.Attr.PolicyType
+	if params.Attr.IPAddress != nil {
+		bgpPolicyConfig.NeighIPAddress = *params.Attr.IPAddress
+	}
+	if params.Attr.PolicyType != nil {
+		bgpPolicyConfig.PolicyType = *params.Attr.PolicyType
+	}
 	bgpPolicyConfig.Polices = params.Attr.Policies
-	bgpPolicyConfig.RouteAction = params.Attr.RouteAction
+	if params.Attr.RouteAction != nil {
+		bgpPolicyConfig.RouteAction = *params.Attr.RouteAction
+	}
 	tk.LogIt(tk.LogDebug, "api: GoBGP bgpPolicyConfig : %v\n", bgpPolicyConfig)
 	_, err := ApiHooks.NetGoBGPPolicyApplyAdd(&bgpPolicyConfig)
 	if err != nil {
@@ -420,8 +434,12 @@ func ConfigDeleteBGPPolicyApply(params operations.DeleteConfigBgpPolicyApplyPara
 	tk.LogIt(tk.LogTrace, "api: BGP Policy Apply %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	var bgpPolicyConfig cmn.GoBGPPolicyApply
 
-	bgpPolicyConfig.NeighIPAddress = params.Attr.IPAddress
-	bgpPolicyConfig.PolicyType = params.Attr.PolicyType
+	if params.Attr.IPAddress != nil {
+		bgpPolicyConfig.NeighIPAddress = *params.Attr.IPAddress
+	}
+	if params.Attr.PolicyType != nil {
+		bgpPolicyConfig.PolicyType = *params.Attr.PolicyType
+	}
 	bgpPolicyConfig.Polices = params.Attr.Policies
 	bgpPolicyConfig.RouteAction = "" // No need RouteAction for delete
 	tk.LogIt(tk.LogDebug, "api: GoBGP bgpPolicyConfig : %v\n", bgpPolicyConfig)

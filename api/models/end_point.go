@@ -8,8 +8,10 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // EndPoint end point
@@ -18,7 +20,8 @@ import (
 type EndPoint struct {
 
 	// Host name in CIDR
-	HostName string `json:"hostName,omitempty"`
+	// Required: true
+	HostName *string `json:"hostName"`
 
 	// Number of inactive retries
 	InactiveReTries int64 `json:"inactiveReTries,omitempty"`
@@ -44,6 +47,24 @@ type EndPoint struct {
 
 // Validate validates this end point
 func (m *EndPoint) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateHostName(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *EndPoint) validateHostName(formats strfmt.Registry) error {
+
+	if err := validate.Required("hostName", "body", m.HostName); err != nil {
+		return err
+	}
+
 	return nil
 }
 

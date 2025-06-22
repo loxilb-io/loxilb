@@ -8,8 +8,10 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // BGPNeigh b g p neigh
@@ -18,10 +20,12 @@ import (
 type BGPNeigh struct {
 
 	// BGP Neighbor IP address
-	IPAddress string `json:"ipAddress,omitempty"`
+	// Required: true
+	IPAddress *string `json:"ipAddress"`
 
 	// Remote AS number
-	RemoteAs int64 `json:"remoteAs,omitempty"`
+	// Required: true
+	RemoteAs *int64 `json:"remoteAs"`
 
 	// Remote Connect Port (default 179)
 	RemotePort int64 `json:"remotePort,omitempty"`
@@ -32,6 +36,37 @@ type BGPNeigh struct {
 
 // Validate validates this b g p neigh
 func (m *BGPNeigh) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateIPAddress(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRemoteAs(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *BGPNeigh) validateIPAddress(formats strfmt.Registry) error {
+
+	if err := validate.Required("ipAddress", "body", m.IPAddress); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *BGPNeigh) validateRemoteAs(formats strfmt.Registry) error {
+
+	if err := validate.Required("remoteAs", "body", m.RemoteAs); err != nil {
+		return err
+	}
+
 	return nil
 }
 

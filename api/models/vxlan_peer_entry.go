@@ -8,8 +8,10 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // VxlanPeerEntry vxlan peer entry
@@ -18,11 +20,30 @@ import (
 type VxlanPeerEntry struct {
 
 	// peer IP
-	PeerIP string `json:"peerIP,omitempty"`
+	// Required: true
+	PeerIP *string `json:"peerIP"`
 }
 
 // Validate validates this vxlan peer entry
 func (m *VxlanPeerEntry) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validatePeerIP(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *VxlanPeerEntry) validatePeerIP(formats strfmt.Registry) error {
+
+	if err := validate.Required("peerIP", "body", m.PeerIP); err != nil {
+		return err
+	}
+
 	return nil
 }
 

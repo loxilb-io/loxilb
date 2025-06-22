@@ -8,8 +8,10 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // RouteEntry route entry
@@ -18,10 +20,12 @@ import (
 type RouteEntry struct {
 
 	// IP address and netmask
-	DestinationIPNet string `json:"destinationIPNet,omitempty"`
+	// Required: true
+	DestinationIPNet *string `json:"destinationIPNet"`
 
 	// IP address for nexthop
-	Gateway string `json:"gateway,omitempty"`
+	// Required: true
+	Gateway *string `json:"gateway"`
 
 	// Protocol type of the route like "static"
 	Protocol string `json:"protocol,omitempty"`
@@ -29,6 +33,37 @@ type RouteEntry struct {
 
 // Validate validates this route entry
 func (m *RouteEntry) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateDestinationIPNet(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateGateway(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *RouteEntry) validateDestinationIPNet(formats strfmt.Registry) error {
+
+	if err := validate.Required("destinationIPNet", "body", m.DestinationIPNet); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *RouteEntry) validateGateway(formats strfmt.Registry) error {
+
+	if err := validate.Required("gateway", "body", m.Gateway); err != nil {
+		return err
+	}
+
 	return nil
 }
 

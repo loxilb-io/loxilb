@@ -5385,6 +5385,11 @@ func init() {
   "definitions": {
     "BGPApplyPolicyToNeighborMod": {
       "type": "object",
+      "required": [
+        "ipAddress",
+        "policyType",
+        "routeAction"
+      ],
       "properties": {
         "ipAddress": {
           "description": "BGP Neighbor IP address",
@@ -5397,15 +5402,27 @@ func init() {
           }
         },
         "policyType": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "import",
+            "export"
+          ]
         },
         "routeAction": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "accept",
+            "reject"
+          ]
         }
       }
     },
     "BGPGlobalConfig": {
       "type": "object",
+      "required": [
+        "routerId",
+        "localAs"
+      ],
       "properties": {
         "SetNextHopSelf": {
           "description": "Adds policy to set next hop as self, if enabled",
@@ -5427,6 +5444,10 @@ func init() {
     },
     "BGPNeigh": {
       "type": "object",
+      "required": [
+        "ipAddress",
+        "remoteAs"
+      ],
       "properties": {
         "ipAddress": {
           "description": "BGP Neighbor IP address",
@@ -5469,6 +5490,9 @@ func init() {
     },
     "BGPPolicyDefinedSetGetEntry": {
       "type": "object",
+      "required": [
+        "name"
+      ],
       "properties": {
         "list": {
           "type": "array",
@@ -5490,6 +5514,9 @@ func init() {
     },
     "BGPPolicyDefinedSetsMod": {
       "type": "object",
+      "required": [
+        "name"
+      ],
       "properties": {
         "List": {
           "type": "array",
@@ -5939,6 +5966,9 @@ func init() {
     },
     "EndPoint": {
       "type": "object",
+      "required": [
+        "hostName"
+      ],
       "properties": {
         "hostName": {
           "description": "Host name in CIDR",
@@ -6125,6 +6155,10 @@ func init() {
     },
     "FDBEntry": {
       "type": "object",
+      "required": [
+        "dev",
+        "macAddress"
+      ],
       "properties": {
         "dev": {
           "description": "Name of the interface device to which you want to modify FDB",
@@ -6171,6 +6205,10 @@ func init() {
     },
     "FirewallEntry": {
       "type": "object",
+      "required": [
+        "ruleArguments",
+        "opts"
+      ],
       "properties": {
         "opts": {
           "$ref": "#/definitions/FirewallOptionEntry"
@@ -6337,6 +6375,10 @@ func init() {
     },
     "IPv4AddressEntry": {
       "type": "object",
+      "required": [
+        "dev",
+        "ipAddress"
+      ],
       "properties": {
         "dev": {
           "description": "Name of the interface device to which you want to modify the IP address",
@@ -6366,6 +6408,83 @@ func init() {
         },
         "sync": {
           "description": "Sync - sync state",
+          "type": "integer"
+        }
+      }
+    },
+    "K8sConntrackEntry": {
+      "type": "object",
+      "properties": {
+        "bytes": {
+          "description": "Packet bytes of the conntrack",
+          "type": "integer"
+        },
+        "conntrackAct": {
+          "description": "value for Conntrack Act",
+          "type": "string"
+        },
+        "conntrackState": {
+          "description": "value for Conntrack state",
+          "type": "string"
+        },
+        "destinationIP": {
+          "description": "IP address for externel access",
+          "type": "string"
+        },
+        "destinationNamespace": {
+          "description": "Namespace of the destination",
+          "type": "string"
+        },
+        "destinationNode": {
+          "description": "Node of the destination",
+          "type": "string"
+        },
+        "destinationPod": {
+          "description": "Pod name of the destination",
+          "type": "string"
+        },
+        "destinationPort": {
+          "description": "port number for the access",
+          "type": "integer"
+        },
+        "ident": {
+          "description": "value for Conntrack ident",
+          "type": "string"
+        },
+        "k8sservName": {
+          "description": "K8s service name",
+          "type": "string"
+        },
+        "packets": {
+          "description": "Packet counts of the conntrack",
+          "type": "integer"
+        },
+        "protocol": {
+          "description": "value for access protocol",
+          "type": "string"
+        },
+        "servName": {
+          "description": "Connection's Service Name",
+          "type": "string"
+        },
+        "sourceIP": {
+          "description": "IP address for externel access",
+          "type": "string"
+        },
+        "sourceNamespace": {
+          "description": "Namespace of the source",
+          "type": "string"
+        },
+        "sourceNode": {
+          "description": "Node of the source",
+          "type": "string"
+        },
+        "sourcePod": {
+          "description": "Pod name of the soruce",
+          "type": "string"
+        },
+        "sourcePort": {
+          "description": "port number for the access",
           "type": "integer"
         }
       }
@@ -6425,6 +6544,10 @@ func init() {
     },
     "LoadbalanceEntry": {
       "type": "object",
+      "required": [
+        "serviceArguments",
+        "endpoints"
+      ],
       "properties": {
         "allowedSources": {
           "description": "values of allowed source IP",
@@ -6442,6 +6565,11 @@ func init() {
           "description": "values of End point servers",
           "type": "array",
           "items": {
+            "required": [
+              "endpointIP",
+              "weight",
+              "targetPort"
+            ],
             "properties": {
               "counter": {
                 "description": "traffic counters of the endpoint",
@@ -6480,6 +6608,10 @@ func init() {
         },
         "serviceArguments": {
           "type": "object",
+          "required": [
+            "externalIP",
+            "port"
+          ],
           "properties": {
             "bgp": {
               "description": "value for BGP enable or not",
@@ -6692,6 +6824,10 @@ func init() {
     },
     "MirrorEntry": {
       "type": "object",
+      "required": [
+        "mirrorIdent",
+        "targetObject"
+      ],
       "properties": {
         "mirrorIdent": {
           "description": "Mirror name",
@@ -6733,6 +6869,10 @@ func init() {
         },
         "targetObject": {
           "type": "object",
+          "required": [
+            "attachment",
+            "mirrObjName"
+          ],
           "properties": {
             "attachment": {
               "description": "Target Attachment",
@@ -6806,6 +6946,11 @@ func init() {
     },
     "NeighborEntry": {
       "type": "object",
+      "required": [
+        "dev",
+        "ipAddress",
+        "macAddress"
+      ],
       "properties": {
         "dev": {
           "description": "Name of the interface device to which you want to add neighbor",
@@ -6938,15 +7083,32 @@ func init() {
     },
     "OperParams": {
       "type": "object",
+      "required": [
+        "logLevel"
+      ],
       "properties": {
         "logLevel": {
           "description": "Set level to debug,info,error,warning,notice,critical,emergency,alert",
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "debug",
+            "info",
+            "error",
+            "warning",
+            "notice",
+            "critical",
+            "emergency",
+            "alert"
+          ]
         }
       }
     },
     "PolicyEntry": {
       "type": "object",
+      "required": [
+        "policyIdent",
+        "targetObject"
+      ],
       "properties": {
         "policyIdent": {
           "description": "Policy name",
@@ -6987,6 +7149,10 @@ func init() {
         },
         "targetObject": {
           "type": "object",
+          "required": [
+            "attachment",
+            "polObjName"
+          ],
           "properties": {
             "attachment": {
               "description": "Target Attachment",
@@ -7265,6 +7431,10 @@ func init() {
     },
     "RouteEntry": {
       "type": "object",
+      "required": [
+        "destinationIPNet",
+        "gateway"
+      ],
       "properties": {
         "destinationIPNet": {
           "description": "IP address and netmask",
@@ -7341,6 +7511,9 @@ func init() {
     },
     "SessionEntry": {
       "type": "object",
+      "required": [
+        "ident"
+      ],
       "properties": {
         "accessNetworkTunnel": {
           "type": "object",
@@ -7380,6 +7553,9 @@ func init() {
     },
     "SessionUlClEntry": {
       "type": "object",
+      "required": [
+        "ulclIdent"
+      ],
       "properties": {
         "ulclArgument": {
           "type": "object",
@@ -7410,6 +7586,11 @@ func init() {
     },
     "User": {
       "type": "object",
+      "required": [
+        "id",
+        "username",
+        "password"
+      ],
       "properties": {
         "created_at": {
           "type": "string"
@@ -7447,6 +7628,9 @@ func init() {
     },
     "VlanBridgeEntry": {
       "type": "object",
+      "required": [
+        "vid"
+      ],
       "properties": {
         "vid": {
           "description": "Vlan ID",
@@ -7505,6 +7689,10 @@ func init() {
     },
     "VxlanBridgeEntry": {
       "type": "object",
+      "required": [
+        "epIntf",
+        "vxlanID"
+      ],
       "properties": {
         "epIntf": {
           "type": "string"
@@ -7516,6 +7704,12 @@ func init() {
     },
     "VxlanEntry": {
       "type": "object",
+      "required": [
+        "vxlanName",
+        "epIntf",
+        "vxlanID",
+        "peerIP"
+      ],
       "properties": {
         "epIntf": {
           "type": "string"
@@ -7536,6 +7730,9 @@ func init() {
     },
     "VxlanPeerEntry": {
       "type": "object",
+      "required": [
+        "peerIP"
+      ],
       "properties": {
         "peerIP": {
           "type": "string"
@@ -12924,6 +13121,11 @@ func init() {
   "definitions": {
     "BGPApplyPolicyToNeighborMod": {
       "type": "object",
+      "required": [
+        "ipAddress",
+        "policyType",
+        "routeAction"
+      ],
       "properties": {
         "ipAddress": {
           "description": "BGP Neighbor IP address",
@@ -12936,15 +13138,27 @@ func init() {
           }
         },
         "policyType": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "import",
+            "export"
+          ]
         },
         "routeAction": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "accept",
+            "reject"
+          ]
         }
       }
     },
     "BGPGlobalConfig": {
       "type": "object",
+      "required": [
+        "routerId",
+        "localAs"
+      ],
       "properties": {
         "SetNextHopSelf": {
           "description": "Adds policy to set next hop as self, if enabled",
@@ -12966,6 +13180,10 @@ func init() {
     },
     "BGPNeigh": {
       "type": "object",
+      "required": [
+        "ipAddress",
+        "remoteAs"
+      ],
       "properties": {
         "ipAddress": {
           "description": "BGP Neighbor IP address",
@@ -13008,6 +13226,9 @@ func init() {
     },
     "BGPPolicyDefinedSetGetEntry": {
       "type": "object",
+      "required": [
+        "name"
+      ],
       "properties": {
         "list": {
           "type": "array",
@@ -13029,6 +13250,9 @@ func init() {
     },
     "BGPPolicyDefinedSetsMod": {
       "type": "object",
+      "required": [
+        "name"
+      ],
       "properties": {
         "List": {
           "type": "array",
@@ -13933,6 +14157,9 @@ func init() {
     },
     "EndPoint": {
       "type": "object",
+      "required": [
+        "hostName"
+      ],
       "properties": {
         "hostName": {
           "description": "Host name in CIDR",
@@ -14125,6 +14352,10 @@ func init() {
     },
     "FDBEntry": {
       "type": "object",
+      "required": [
+        "dev",
+        "macAddress"
+      ],
       "properties": {
         "dev": {
           "description": "Name of the interface device to which you want to modify FDB",
@@ -14171,6 +14402,10 @@ func init() {
     },
     "FirewallEntry": {
       "type": "object",
+      "required": [
+        "ruleArguments",
+        "opts"
+      ],
       "properties": {
         "opts": {
           "$ref": "#/definitions/FirewallOptionEntry"
@@ -14340,6 +14575,10 @@ func init() {
     },
     "IPv4AddressEntry": {
       "type": "object",
+      "required": [
+        "dev",
+        "ipAddress"
+      ],
       "properties": {
         "dev": {
           "description": "Name of the interface device to which you want to modify the IP address",
@@ -14369,6 +14608,83 @@ func init() {
         },
         "sync": {
           "description": "Sync - sync state",
+          "type": "integer"
+        }
+      }
+    },
+    "K8sConntrackEntry": {
+      "type": "object",
+      "properties": {
+        "bytes": {
+          "description": "Packet bytes of the conntrack",
+          "type": "integer"
+        },
+        "conntrackAct": {
+          "description": "value for Conntrack Act",
+          "type": "string"
+        },
+        "conntrackState": {
+          "description": "value for Conntrack state",
+          "type": "string"
+        },
+        "destinationIP": {
+          "description": "IP address for externel access",
+          "type": "string"
+        },
+        "destinationNamespace": {
+          "description": "Namespace of the destination",
+          "type": "string"
+        },
+        "destinationNode": {
+          "description": "Node of the destination",
+          "type": "string"
+        },
+        "destinationPod": {
+          "description": "Pod name of the destination",
+          "type": "string"
+        },
+        "destinationPort": {
+          "description": "port number for the access",
+          "type": "integer"
+        },
+        "ident": {
+          "description": "value for Conntrack ident",
+          "type": "string"
+        },
+        "k8sservName": {
+          "description": "K8s service name",
+          "type": "string"
+        },
+        "packets": {
+          "description": "Packet counts of the conntrack",
+          "type": "integer"
+        },
+        "protocol": {
+          "description": "value for access protocol",
+          "type": "string"
+        },
+        "servName": {
+          "description": "Connection's Service Name",
+          "type": "string"
+        },
+        "sourceIP": {
+          "description": "IP address for externel access",
+          "type": "string"
+        },
+        "sourceNamespace": {
+          "description": "Namespace of the source",
+          "type": "string"
+        },
+        "sourceNode": {
+          "description": "Node of the source",
+          "type": "string"
+        },
+        "sourcePod": {
+          "description": "Pod name of the soruce",
+          "type": "string"
+        },
+        "sourcePort": {
+          "description": "port number for the access",
           "type": "integer"
         }
       }
@@ -14434,6 +14750,10 @@ func init() {
     },
     "LoadbalanceEntry": {
       "type": "object",
+      "required": [
+        "serviceArguments",
+        "endpoints"
+      ],
       "properties": {
         "allowedSources": {
           "description": "values of allowed source IP",
@@ -14458,6 +14778,10 @@ func init() {
         },
         "serviceArguments": {
           "type": "object",
+          "required": [
+            "externalIP",
+            "port"
+          ],
           "properties": {
             "bgp": {
               "description": "value for BGP enable or not",
@@ -14607,6 +14931,11 @@ func init() {
       }
     },
     "LoadbalanceEntryEndpointsItems0": {
+      "required": [
+        "endpointIP",
+        "weight",
+        "targetPort"
+      ],
       "properties": {
         "counter": {
           "description": "traffic counters of the endpoint",
@@ -14640,6 +14969,10 @@ func init() {
     },
     "LoadbalanceEntryServiceArguments": {
       "type": "object",
+      "required": [
+        "externalIP",
+        "port"
+      ],
       "properties": {
         "bgp": {
           "description": "value for BGP enable or not",
@@ -14850,6 +15183,10 @@ func init() {
     },
     "MirrorEntry": {
       "type": "object",
+      "required": [
+        "mirrorIdent",
+        "targetObject"
+      ],
       "properties": {
         "mirrorIdent": {
           "description": "Mirror name",
@@ -14891,6 +15228,10 @@ func init() {
         },
         "targetObject": {
           "type": "object",
+          "required": [
+            "attachment",
+            "mirrObjName"
+          ],
           "properties": {
             "attachment": {
               "description": "Target Attachment",
@@ -14940,6 +15281,10 @@ func init() {
     },
     "MirrorEntryTargetObject": {
       "type": "object",
+      "required": [
+        "attachment",
+        "mirrObjName"
+      ],
       "properties": {
         "attachment": {
           "description": "Target Attachment",
@@ -15053,6 +15398,11 @@ func init() {
     },
     "NeighborEntry": {
       "type": "object",
+      "required": [
+        "dev",
+        "ipAddress",
+        "macAddress"
+      ],
       "properties": {
         "dev": {
           "description": "Name of the interface device to which you want to add neighbor",
@@ -15193,15 +15543,32 @@ func init() {
     },
     "OperParams": {
       "type": "object",
+      "required": [
+        "logLevel"
+      ],
       "properties": {
         "logLevel": {
           "description": "Set level to debug,info,error,warning,notice,critical,emergency,alert",
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "debug",
+            "info",
+            "error",
+            "warning",
+            "notice",
+            "critical",
+            "emergency",
+            "alert"
+          ]
         }
       }
     },
     "PolicyEntry": {
       "type": "object",
+      "required": [
+        "policyIdent",
+        "targetObject"
+      ],
       "properties": {
         "policyIdent": {
           "description": "Policy name",
@@ -15242,6 +15609,10 @@ func init() {
         },
         "targetObject": {
           "type": "object",
+          "required": [
+            "attachment",
+            "polObjName"
+          ],
           "properties": {
             "attachment": {
               "description": "Target Attachment",
@@ -15290,6 +15661,10 @@ func init() {
     },
     "PolicyEntryTargetObject": {
       "type": "object",
+      "required": [
+        "attachment",
+        "polObjName"
+      ],
       "properties": {
         "attachment": {
           "description": "Target Attachment",
@@ -15699,6 +16074,10 @@ func init() {
     },
     "RouteEntry": {
       "type": "object",
+      "required": [
+        "destinationIPNet",
+        "gateway"
+      ],
       "properties": {
         "destinationIPNet": {
           "description": "IP address and netmask",
@@ -15795,6 +16174,9 @@ func init() {
     },
     "SessionEntry": {
       "type": "object",
+      "required": [
+        "ident"
+      ],
       "properties": {
         "accessNetworkTunnel": {
           "type": "object",
@@ -15860,6 +16242,9 @@ func init() {
     },
     "SessionUlClEntry": {
       "type": "object",
+      "required": [
+        "ulclIdent"
+      ],
       "properties": {
         "ulclArgument": {
           "type": "object",
@@ -15903,6 +16288,11 @@ func init() {
     },
     "User": {
       "type": "object",
+      "required": [
+        "id",
+        "username",
+        "password"
+      ],
       "properties": {
         "created_at": {
           "type": "string"
@@ -15940,6 +16330,9 @@ func init() {
     },
     "VlanBridgeEntry": {
       "type": "object",
+      "required": [
+        "vid"
+      ],
       "properties": {
         "vid": {
           "description": "Vlan ID",
@@ -16015,6 +16408,10 @@ func init() {
     },
     "VxlanBridgeEntry": {
       "type": "object",
+      "required": [
+        "epIntf",
+        "vxlanID"
+      ],
       "properties": {
         "epIntf": {
           "type": "string"
@@ -16026,6 +16423,12 @@ func init() {
     },
     "VxlanEntry": {
       "type": "object",
+      "required": [
+        "vxlanName",
+        "epIntf",
+        "vxlanID",
+        "peerIP"
+      ],
       "properties": {
         "epIntf": {
           "type": "string"
@@ -16046,6 +16449,9 @@ func init() {
     },
     "VxlanPeerEntry": {
       "type": "object",
+      "required": [
+        "peerIP"
+      ],
       "properties": {
         "peerIP": {
           "type": "string"

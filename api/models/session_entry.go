@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // SessionEntry session entry
@@ -25,7 +26,8 @@ type SessionEntry struct {
 	CoreNetworkTunnel *SessionEntryCoreNetworkTunnel `json:"coreNetworkTunnel,omitempty"`
 
 	// IP address and netmask
-	Ident string `json:"ident,omitempty"`
+	// Required: true
+	Ident *string `json:"ident"`
 
 	// IP address for nexthop
 	SessionIP string `json:"sessionIP,omitempty"`
@@ -40,6 +42,10 @@ func (m *SessionEntry) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateCoreNetworkTunnel(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateIdent(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -82,6 +88,15 @@ func (m *SessionEntry) validateCoreNetworkTunnel(formats strfmt.Registry) error 
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *SessionEntry) validateIdent(formats strfmt.Registry) error {
+
+	if err := validate.Required("ident", "body", m.Ident); err != nil {
+		return err
 	}
 
 	return nil

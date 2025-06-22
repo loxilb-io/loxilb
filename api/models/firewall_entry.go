@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // FirewallEntry firewall entry
@@ -19,10 +20,12 @@ import (
 type FirewallEntry struct {
 
 	// opts
-	Opts *FirewallOptionEntry `json:"opts,omitempty"`
+	// Required: true
+	Opts *FirewallOptionEntry `json:"opts"`
 
 	// rule arguments
-	RuleArguments *FirewallRuleEntry `json:"ruleArguments,omitempty"`
+	// Required: true
+	RuleArguments *FirewallRuleEntry `json:"ruleArguments"`
 }
 
 // Validate validates this firewall entry
@@ -44,8 +47,9 @@ func (m *FirewallEntry) Validate(formats strfmt.Registry) error {
 }
 
 func (m *FirewallEntry) validateOpts(formats strfmt.Registry) error {
-	if swag.IsZero(m.Opts) { // not required
-		return nil
+
+	if err := validate.Required("opts", "body", m.Opts); err != nil {
+		return err
 	}
 
 	if m.Opts != nil {
@@ -63,8 +67,9 @@ func (m *FirewallEntry) validateOpts(formats strfmt.Registry) error {
 }
 
 func (m *FirewallEntry) validateRuleArguments(formats strfmt.Registry) error {
-	if swag.IsZero(m.RuleArguments) { // not required
-		return nil
+
+	if err := validate.Required("ruleArguments", "body", m.RuleArguments); err != nil {
+		return err
 	}
 
 	if m.RuleArguments != nil {

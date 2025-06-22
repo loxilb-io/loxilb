@@ -27,7 +27,7 @@ import (
 
 func ConfigPostIPv4Address(params operations.PostConfigIpv4addressParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: IPv4 address %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	ret := loxinlp.AddAddrNoHook(params.Attr.IPAddress, params.Attr.Dev)
+	ret := loxinlp.AddAddrNoHook(*params.Attr.IPAddress, *params.Attr.Dev)
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}
 	}

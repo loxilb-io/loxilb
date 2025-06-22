@@ -8,8 +8,10 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // NeighborEntry neighbor entry
@@ -18,17 +20,64 @@ import (
 type NeighborEntry struct {
 
 	// Name of the interface device to which you want to add neighbor
-	Dev string `json:"dev,omitempty"`
+	// Required: true
+	Dev *string `json:"dev"`
 
 	// IP address to neighbor
-	IPAddress string `json:"ipAddress,omitempty"`
+	// Required: true
+	IPAddress *string `json:"ipAddress"`
 
 	// MAC address to neighbor
-	MacAddress string `json:"macAddress,omitempty"`
+	// Required: true
+	MacAddress *string `json:"macAddress"`
 }
 
 // Validate validates this neighbor entry
 func (m *NeighborEntry) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateDev(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateIPAddress(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateMacAddress(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *NeighborEntry) validateDev(formats strfmt.Registry) error {
+
+	if err := validate.Required("dev", "body", m.Dev); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *NeighborEntry) validateIPAddress(formats strfmt.Registry) error {
+
+	if err := validate.Required("ipAddress", "body", m.IPAddress); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *NeighborEntry) validateMacAddress(formats strfmt.Registry) error {
+
+	if err := validate.Required("macAddress", "body", m.MacAddress); err != nil {
+		return err
+	}
+
 	return nil
 }
 
