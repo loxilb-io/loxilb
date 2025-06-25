@@ -16,7 +16,6 @@
 package handler
 
 import (
-	"os"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -26,6 +25,8 @@ import (
 
 	tk "github.com/loxilb-io/loxilib"
 )
+
+var EmbeddedSwagger []byte
 
 // Define SwaggerDoc struct
 type SwaggerDoc struct {
@@ -63,11 +64,8 @@ func toStringMap(in map[interface{}]interface{}) map[string]interface{} {
 }
 
 // LoadSwaggerDoc is used to load a Swagger document from a file.
-func LoadSwaggerDoc(filePath string) (*SwaggerDoc, error) {
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, err
-	}
+func LoadSwaggerDoc(data []byte) (*SwaggerDoc, error) {
+
 	var doc SwaggerDoc
 	if err := yaml.Unmarshal(data, &doc); err != nil {
 		return nil, err
@@ -86,8 +84,8 @@ func LoadSwaggerDoc(filePath string) (*SwaggerDoc, error) {
 }
 
 // AutoGenerateMetaData is used to automatically generate metadata as a json format from a Swagger document.
-func AutoGenerateMetaData(swaggerPath string) (map[string]interface{}, error) {
-	doc, err := LoadSwaggerDoc(swaggerPath)
+func AutoGenerateMetaData(swaggerBytes []byte) (map[string]interface{}, error) {
+	doc, err := LoadSwaggerDoc(swaggerBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -99,10 +97,9 @@ func AutoGenerateMetaData(swaggerPath string) (map[string]interface{}, error) {
 // ConfigGetMetadata is used to get metadata from the Swagger document.
 func ConfigGetMetadata(params metadata.GetMetaParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "[API] Metadata %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	swaggerPath := "api/swagger.yml"
-	jsonMeta, err := AutoGenerateMetaData(swaggerPath)
+	jsonMeta, err := AutoGenerateMetaData(EmbeddedSwagger)
 	if err != nil {
-		tk.LogIt(tk.LogError, "메타데이터 생성 실패: %v\n", err)
+		tk.LogIt(tk.LogError, "Fail create metadata: %v\n", err)
 	}
 	return metadata.NewGetMetaOK().WithPayload(jsonMeta)
 }
@@ -114,7 +111,6 @@ func extractMetaData(doc *SwaggerDoc) map[string]interface{} {
 	for path, methods := range doc.Paths {
 		for method, op := range methods {
 			if strings.ToLower(method) == "post" || strings.ToLower(method) == "put" {
-
 				fields := make(map[string]interface{})
 				for _, param := range op.Parameters {
 					if param.Type != "" {

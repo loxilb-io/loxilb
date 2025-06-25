@@ -17,6 +17,7 @@
 package api
 
 import (
+	_ "embed"
 	"log"
 	"os"
 	"runtime/debug"
@@ -40,6 +41,13 @@ var (
 // RegisterAPIHooks - routine to register interface for api
 func RegisterAPIHooks(hooks cmn.NetHookInterface) {
 	handler.ApiHooks = hooks
+}
+
+//go:embed swagger.yml
+var EmbeddedSwagger []byte
+
+func EmbeddedSwaggerInit() {
+	handler.EmbeddedSwagger = EmbeddedSwagger
 }
 
 // WaitAPIServerReady - routine to wait till api server is up
@@ -134,6 +142,7 @@ func RunAPIServer() {
 		os.Exit(0)
 	}
 	ApiReady = true
+	EmbeddedSwaggerInit()
 
 	if err := server.Serve(); err != nil {
 		log.Fatalln(err)
