@@ -22,7 +22,7 @@ type OperParams struct {
 
 	// Set level to debug,info,error,warning,notice,critical,emergency,alert
 	// Required: true
-	// Enum: [debug info error warning notice critical emergency alert]
+	// Enum: [trace debug info error warning notice critical emergency alert]
 	LogLevel *string `json:"logLevel"`
 }
 
@@ -44,7 +44,7 @@ var operParamsTypeLogLevelPropEnum []interface{}
 
 func init() {
 	var res []string
-	if err := json.Unmarshal([]byte(`["debug","info","error","warning","notice","critical","emergency","alert"]`), &res); err != nil {
+	if err := json.Unmarshal([]byte(`["trace","debug","info","error","warning","notice","critical","emergency","alert"]`), &res); err != nil {
 		panic(err)
 	}
 	for _, v := range res {
@@ -53,6 +53,9 @@ func init() {
 }
 
 const (
+
+	// OperParamsLogLevelTrace captures enum value "trace"
+	OperParamsLogLevelTrace string = "trace"
 
 	// OperParamsLogLevelDebug captures enum value "debug"
 	OperParamsLogLevelDebug string = "debug"

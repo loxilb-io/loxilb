@@ -270,8 +270,9 @@ func (m *PolicyEntryPolicyInfo) UnmarshalBinary(b []byte) error {
 // swagger:model PolicyEntryTargetObject
 type PolicyEntryTargetObject struct {
 
-	// Target Attachment
+	// Target Attachment(0-RuleName, 1-PortName)
 	// Required: true
+	// Enum: [0 1]
 	Attachment *int64 `json:"attachment"`
 
 	// Target Names
@@ -297,9 +298,34 @@ func (m *PolicyEntryTargetObject) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
+var policyEntryTargetObjectTypeAttachmentPropEnum []interface{}
+
+func init() {
+	var res []int64
+	if err := json.Unmarshal([]byte(`[0,1]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		policyEntryTargetObjectTypeAttachmentPropEnum = append(policyEntryTargetObjectTypeAttachmentPropEnum, v)
+	}
+}
+
+// prop value enum
+func (m *PolicyEntryTargetObject) validateAttachmentEnum(path, location string, value int64) error {
+	if err := validate.EnumCase(path, location, value, policyEntryTargetObjectTypeAttachmentPropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *PolicyEntryTargetObject) validateAttachment(formats strfmt.Registry) error {
 
 	if err := validate.Required("targetObject"+"."+"attachment", "body", m.Attachment); err != nil {
+		return err
+	}
+
+	// value enum
+	if err := m.validateAttachmentEnum("targetObject"+"."+"attachment", "body", *m.Attachment); err != nil {
 		return err
 	}
 

@@ -1396,6 +1396,155 @@ func init() {
         }
       }
     },
+    "/config/cors": {
+      "post": {
+        "description": "Post full K8s metadata set (Pod, Service, Endpoint, Node, Namespace)",
+        "summary": "Post full K8s metadata set (Pod, Service, Endpoint, Node, Namespace)",
+        "parameters": [
+          {
+            "description": "Attributes for Vlan Interface",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CorsEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. BFD session not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/cors/all": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get all related K8s metadata (Pod, Service, Endpoint, Node, Namespace)",
+        "responses": {
+          "200": {
+            "description": "get cors list",
+            "schema": {
+              "properties": {
+                "corsAttr": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/config/cors/{cors_url}": {
+      "delete": {
+        "description": "Delete a BFD session",
+        "summary": "Delete a BFD session",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "cors url ex) http://localhost:3000",
+            "name": "cors_url",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. BFD session already exists",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/endpoint": {
       "post": {
         "description": "Adds a LB endpoint for monitoring",
@@ -5905,6 +6054,19 @@ func init() {
         }
       }
     },
+    "CorsEntry": {
+      "type": "object",
+      "properties": {
+        "cors": {
+          "description": "Interface device name",
+          "type": "array",
+          "items": {
+            "description": "cors list",
+            "type": "string"
+          }
+        }
+      }
+    },
     "DeviceInfoEntry": {
       "type": "object",
       "properties": {
@@ -6000,7 +6162,16 @@ func init() {
         },
         "probeType": {
           "description": "Type of probe used",
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "tcp",
+            "udp",
+            "sctp",
+            "ping",
+            "http",
+            "https",
+            "none"
+          ]
         }
       }
     },
@@ -6711,11 +6882,26 @@ func init() {
             },
             "probetype": {
               "description": "probe type for any end-point of this entry",
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "tcp",
+                "udp",
+                "sctp",
+                "http",
+                "https",
+                "ping",
+                "none"
+              ]
             },
             "protocol": {
               "description": "value for access protocol",
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "tcp",
+                "udp",
+                "sctp",
+                "icmp"
+              ]
             },
             "proxyprotocolv2": {
               "description": "flag to enable proxy protocol v2",
@@ -6875,8 +7061,12 @@ func init() {
           ],
           "properties": {
             "attachment": {
-              "description": "Target Attachment",
-              "type": "integer"
+              "description": "Target Attachment(0-RuleName, 1-PortName)",
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
             },
             "mirrObjName": {
               "description": "Target Names",
@@ -7091,6 +7281,7 @@ func init() {
           "description": "Set level to debug,info,error,warning,notice,critical,emergency,alert",
           "type": "string",
           "enum": [
+            "trace",
             "debug",
             "info",
             "error",
@@ -7155,8 +7346,12 @@ func init() {
           ],
           "properties": {
             "attachment": {
-              "description": "Target Attachment",
-              "type": "integer"
+              "description": "Target Attachment(0-RuleName, 1-PortName)",
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
             },
             "polObjName": {
               "description": "Target Names",
@@ -9113,6 +9308,155 @@ func init() {
           },
           "401": {
             "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/cors": {
+      "post": {
+        "description": "Post full K8s metadata set (Pod, Service, Endpoint, Node, Namespace)",
+        "summary": "Post full K8s metadata set (Pod, Service, Endpoint, Node, Namespace)",
+        "parameters": [
+          {
+            "description": "Attributes for Vlan Interface",
+            "name": "attr",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CorsEntry"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. BFD session not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/config/cors/all": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get all related K8s metadata (Pod, Service, Endpoint, Node, Namespace)",
+        "responses": {
+          "200": {
+            "description": "get cors list",
+            "schema": {
+              "properties": {
+                "corsAttr": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/config/cors/{cors_url}": {
+      "delete": {
+        "description": "Delete a BFD session",
+        "summary": "Delete a BFD session",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "cors url ex) http://localhost:3000",
+            "name": "cors_url",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Malformed arguments for API call",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "403": {
+            "description": "Capacity insufficient",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Resource Conflict. BFD session already exists",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -14096,6 +14440,19 @@ func init() {
         }
       }
     },
+    "CorsEntry": {
+      "type": "object",
+      "properties": {
+        "cors": {
+          "description": "Interface device name",
+          "type": "array",
+          "items": {
+            "description": "cors list",
+            "type": "string"
+          }
+        }
+      }
+    },
     "DeviceInfoEntry": {
       "type": "object",
       "properties": {
@@ -14191,7 +14548,16 @@ func init() {
         },
         "probeType": {
           "description": "Type of probe used",
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "tcp",
+            "udp",
+            "sctp",
+            "ping",
+            "http",
+            "https",
+            "none"
+          ]
         }
       }
     },
@@ -14881,11 +15247,26 @@ func init() {
             },
             "probetype": {
               "description": "probe type for any end-point of this entry",
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "tcp",
+                "udp",
+                "sctp",
+                "http",
+                "https",
+                "ping",
+                "none"
+              ]
             },
             "protocol": {
               "description": "value for access protocol",
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "tcp",
+                "udp",
+                "sctp",
+                "icmp"
+              ]
             },
             "proxyprotocolv2": {
               "description": "flag to enable proxy protocol v2",
@@ -15072,11 +15453,26 @@ func init() {
         },
         "probetype": {
           "description": "probe type for any end-point of this entry",
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "tcp",
+            "udp",
+            "sctp",
+            "http",
+            "https",
+            "ping",
+            "none"
+          ]
         },
         "protocol": {
           "description": "value for access protocol",
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "tcp",
+            "udp",
+            "sctp",
+            "icmp"
+          ]
         },
         "proxyprotocolv2": {
           "description": "flag to enable proxy protocol v2",
@@ -15234,8 +15630,12 @@ func init() {
           ],
           "properties": {
             "attachment": {
-              "description": "Target Attachment",
-              "type": "integer"
+              "description": "Target Attachment(0-RuleName, 1-PortName)",
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
             },
             "mirrObjName": {
               "description": "Target Names",
@@ -15287,8 +15687,12 @@ func init() {
       ],
       "properties": {
         "attachment": {
-          "description": "Target Attachment",
-          "type": "integer"
+          "description": "Target Attachment(0-RuleName, 1-PortName)",
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ]
         },
         "mirrObjName": {
           "description": "Target Names",
@@ -15551,6 +15955,7 @@ func init() {
           "description": "Set level to debug,info,error,warning,notice,critical,emergency,alert",
           "type": "string",
           "enum": [
+            "trace",
             "debug",
             "info",
             "error",
@@ -15615,8 +16020,12 @@ func init() {
           ],
           "properties": {
             "attachment": {
-              "description": "Target Attachment",
-              "type": "integer"
+              "description": "Target Attachment(0-RuleName, 1-PortName)",
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
             },
             "polObjName": {
               "description": "Target Names",
@@ -15667,8 +16076,12 @@ func init() {
       ],
       "properties": {
         "attachment": {
-          "description": "Target Attachment",
-          "type": "integer"
+          "description": "Target Attachment(0-RuleName, 1-PortName)",
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ]
         },
         "polObjName": {
           "description": "Target Names",

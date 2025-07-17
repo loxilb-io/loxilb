@@ -518,9 +518,11 @@ type LoadbalanceEntryServiceArguments struct {
 	Proberesp string `json:"proberesp,omitempty"`
 
 	// probe type for any end-point of this entry
+	// Enum: [tcp udp sctp http https ping none]
 	Probetype string `json:"probetype,omitempty"`
 
 	// value for access protocol
+	// Enum: [tcp udp sctp icmp]
 	Protocol string `json:"protocol,omitempty"`
 
 	// flag to enable proxy protocol v2
@@ -555,6 +557,14 @@ func (m *LoadbalanceEntryServiceArguments) Validate(formats strfmt.Registry) err
 	}
 
 	if err := m.validatePort(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateProbetype(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateProtocol(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -650,6 +660,111 @@ func (m *LoadbalanceEntryServiceArguments) validateOper(formats strfmt.Registry)
 func (m *LoadbalanceEntryServiceArguments) validatePort(formats strfmt.Registry) error {
 
 	if err := validate.Required("serviceArguments"+"."+"port", "body", m.Port); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+var loadbalanceEntryServiceArgumentsTypeProbetypePropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["tcp","udp","sctp","http","https","ping","none"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		loadbalanceEntryServiceArgumentsTypeProbetypePropEnum = append(loadbalanceEntryServiceArgumentsTypeProbetypePropEnum, v)
+	}
+}
+
+const (
+
+	// LoadbalanceEntryServiceArgumentsProbetypeTCP captures enum value "tcp"
+	LoadbalanceEntryServiceArgumentsProbetypeTCP string = "tcp"
+
+	// LoadbalanceEntryServiceArgumentsProbetypeUDP captures enum value "udp"
+	LoadbalanceEntryServiceArgumentsProbetypeUDP string = "udp"
+
+	// LoadbalanceEntryServiceArgumentsProbetypeSctp captures enum value "sctp"
+	LoadbalanceEntryServiceArgumentsProbetypeSctp string = "sctp"
+
+	// LoadbalanceEntryServiceArgumentsProbetypeHTTP captures enum value "http"
+	LoadbalanceEntryServiceArgumentsProbetypeHTTP string = "http"
+
+	// LoadbalanceEntryServiceArgumentsProbetypeHTTPS captures enum value "https"
+	LoadbalanceEntryServiceArgumentsProbetypeHTTPS string = "https"
+
+	// LoadbalanceEntryServiceArgumentsProbetypePing captures enum value "ping"
+	LoadbalanceEntryServiceArgumentsProbetypePing string = "ping"
+
+	// LoadbalanceEntryServiceArgumentsProbetypeNone captures enum value "none"
+	LoadbalanceEntryServiceArgumentsProbetypeNone string = "none"
+)
+
+// prop value enum
+func (m *LoadbalanceEntryServiceArguments) validateProbetypeEnum(path, location string, value string) error {
+	if err := validate.EnumCase(path, location, value, loadbalanceEntryServiceArgumentsTypeProbetypePropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *LoadbalanceEntryServiceArguments) validateProbetype(formats strfmt.Registry) error {
+	if swag.IsZero(m.Probetype) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateProbetypeEnum("serviceArguments"+"."+"probetype", "body", m.Probetype); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+var loadbalanceEntryServiceArgumentsTypeProtocolPropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["tcp","udp","sctp","icmp"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		loadbalanceEntryServiceArgumentsTypeProtocolPropEnum = append(loadbalanceEntryServiceArgumentsTypeProtocolPropEnum, v)
+	}
+}
+
+const (
+
+	// LoadbalanceEntryServiceArgumentsProtocolTCP captures enum value "tcp"
+	LoadbalanceEntryServiceArgumentsProtocolTCP string = "tcp"
+
+	// LoadbalanceEntryServiceArgumentsProtocolUDP captures enum value "udp"
+	LoadbalanceEntryServiceArgumentsProtocolUDP string = "udp"
+
+	// LoadbalanceEntryServiceArgumentsProtocolSctp captures enum value "sctp"
+	LoadbalanceEntryServiceArgumentsProtocolSctp string = "sctp"
+
+	// LoadbalanceEntryServiceArgumentsProtocolIcmp captures enum value "icmp"
+	LoadbalanceEntryServiceArgumentsProtocolIcmp string = "icmp"
+)
+
+// prop value enum
+func (m *LoadbalanceEntryServiceArguments) validateProtocolEnum(path, location string, value string) error {
+	if err := validate.EnumCase(path, location, value, loadbalanceEntryServiceArgumentsTypeProtocolPropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *LoadbalanceEntryServiceArguments) validateProtocol(formats strfmt.Registry) error {
+	if swag.IsZero(m.Protocol) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateProtocolEnum("serviceArguments"+"."+"protocol", "body", m.Protocol); err != nil {
 		return err
 	}
 
