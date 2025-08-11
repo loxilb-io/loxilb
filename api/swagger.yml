@@ -3725,7 +3725,108 @@ paths:
       summary: OAuth callback
       tags:
       - auth
-  
+#----------------------------------------------
+# CORS
+#----------------------------------------------            
+  '/config/cors/all':
+    get:
+      summary: Get all related K8s metadata (Pod, Service, Endpoint, Node, Namespace)
+      produces:
+        - application/json
+      responses:
+        200:
+          description: get cors list
+          schema:
+            properties:
+              corsAttr:
+                type: array
+                items:
+                  type: string
+    
+  '/config/cors':
+    post:
+      summary: Post full K8s metadata set (Pod, Service, Endpoint, Node, Namespace)
+      description: Post full K8s metadata set (Pod, Service, Endpoint, Node, Namespace)
+      parameters:
+        - name: attr
+          in: body
+          required: true
+          description: Attributes for Vlan Interface
+          schema:
+            $ref: '#/definitions/CorsEntry'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. BFD session not found
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintenance mode
+          schema:
+            $ref: '#/definitions/Error'
+            
+  '/config/cors/{cors_url}':
+    delete:
+      summary: Delete a BFD session
+      description: Delete a BFD session
+      parameters:
+        - name: cors_url
+          in: path
+          type: string
+          required: true
+          description: cors url ex) http://localhost:3000
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Malformed arguments for API call
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Capacity insufficient
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: Resource Conflict. BFD session already exists
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error'
+        '503':
+          description: Maintenance mode
+          schema:
+            $ref: '#/definitions/Error'    
 #----------------------------------------------
 # Schema definitions
 #----------------------------------------------
@@ -3782,6 +3883,7 @@ definitions:
             description:  Max port number(range) for the access
           protocol:
             type: string
+            enum: [tcp, udp, sctp, icmp]
             description:  value for access protocol
           sel:
             type: integer
@@ -3795,6 +3897,7 @@ definitions:
             description: value for monitoring enabled or not
           probetype:
             type: string
+            enum: [tcp, udp, sctp, http, https, ping, none]
             description: probe type for any end-point of this entry
           probeport:
             type: integer
@@ -4240,7 +4343,8 @@ definitions:
         properties:
           attachment:
             type: integer
-            description: Target Attachment
+            enum: [0,1]
+            description: Target Attachment(0-RuleName, 1-PortName)
           polObjName:
             type: string
             description: Target Names            
@@ -4284,7 +4388,8 @@ definitions:
         properties:
           attachment:
             type: integer
-            description: Target Attachment
+            enum: [0,1]
+            description: Target Attachment(0-RuleName, 1-PortName)
           mirrObjName:
             type: string
             description: Target Names            
@@ -4652,6 +4757,7 @@ definitions:
         description: Number of inactive retries
       probeType:
         type: string
+        enum: [tcp, udp, sctp, ping, http, https, none]
         description: Type of probe used
       probeReq:
         type: string
@@ -4772,8 +4878,8 @@ definitions:
     properties:
       logLevel:
         type: string
-        enum: [debug, info, error, warning, notice, critical, emergency, alert]
-        description: Set level to debug,info,error,warning,notice,critical,emergency,alert
+        enum: [trace, debug, info, error, warning, notice, critical, emergency, alert]
+        description: Set level to trace,debug,info,error,warning,notice,critical,emergency,alert
   
   BGPNeigh:
     type: object
@@ -5414,6 +5520,16 @@ definitions:
         type: integer
         description: The duration in seconds that the access token is valid for.
     type: object
+    
+  CorsEntry:
+    type: object
+    properties:
+      cors:
+        type: array
+        description: Interface device name
+        items:
+          type: string
+          description: cors list
 
 securityDefinitions:
   BearerAuth:

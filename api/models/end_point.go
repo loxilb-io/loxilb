@@ -7,6 +7,7 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
@@ -42,6 +43,7 @@ type EndPoint struct {
 	ProbeResp string `json:"probeResp,omitempty"`
 
 	// Type of probe used
+	// Enum: [tcp udp sctp ping http https none]
 	ProbeType string `json:"probeType,omitempty"`
 }
 
@@ -50,6 +52,10 @@ func (m *EndPoint) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateHostName(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateProbeType(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -62,6 +68,63 @@ func (m *EndPoint) Validate(formats strfmt.Registry) error {
 func (m *EndPoint) validateHostName(formats strfmt.Registry) error {
 
 	if err := validate.Required("hostName", "body", m.HostName); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+var endPointTypeProbeTypePropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["tcp","udp","sctp","ping","http","https","none"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		endPointTypeProbeTypePropEnum = append(endPointTypeProbeTypePropEnum, v)
+	}
+}
+
+const (
+
+	// EndPointProbeTypeTCP captures enum value "tcp"
+	EndPointProbeTypeTCP string = "tcp"
+
+	// EndPointProbeTypeUDP captures enum value "udp"
+	EndPointProbeTypeUDP string = "udp"
+
+	// EndPointProbeTypeSctp captures enum value "sctp"
+	EndPointProbeTypeSctp string = "sctp"
+
+	// EndPointProbeTypePing captures enum value "ping"
+	EndPointProbeTypePing string = "ping"
+
+	// EndPointProbeTypeHTTP captures enum value "http"
+	EndPointProbeTypeHTTP string = "http"
+
+	// EndPointProbeTypeHTTPS captures enum value "https"
+	EndPointProbeTypeHTTPS string = "https"
+
+	// EndPointProbeTypeNone captures enum value "none"
+	EndPointProbeTypeNone string = "none"
+)
+
+// prop value enum
+func (m *EndPoint) validateProbeTypeEnum(path, location string, value string) error {
+	if err := validate.EnumCase(path, location, value, endPointTypeProbeTypePropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *EndPoint) validateProbeType(formats strfmt.Registry) error {
+	if swag.IsZero(m.ProbeType) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateProbeTypeEnum("probeType", "body", m.ProbeType); err != nil {
 		return err
 	}
 

@@ -25,6 +25,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/swag"
 
+	"github.com/loxilb-io/loxilb/api/apiutils/cors"
 	"github.com/loxilb-io/loxilb/api/restapi/handler"
 	"github.com/loxilb-io/loxilb/api/restapi/operations"
 	"github.com/loxilb-io/loxilb/api/restapi/operations/auth"
@@ -241,6 +242,10 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 		api.AuthGetOauthProviderCallbackHandler = auth.GetOauthProviderCallbackHandlerFunc(handler.AuthGetOauthProviderCallback)
 		api.AuthGetOauthProviderTokenHandler = auth.GetOauthProviderTokenHandlerFunc(handler.RefreshTokenHandler)
 	}
+	// CORS configuration
+	api.GetConfigCorsAllHandler = operations.GetConfigCorsAllHandlerFunc(handler.ConfigGetCors)
+	api.PostConfigCorsHandler = operations.PostConfigCorsHandlerFunc(handler.ConfigPostCors)
+	api.DeleteConfigCorsCorsURLHandler = operations.DeleteConfigCorsCorsURLHandlerFunc(handler.ConfigDeleteCors)
 
 	api.PreServerShutdown = func() {}
 	api.ServerShutdown = func() {}
@@ -276,8 +281,33 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 	return handler
 }
 
+// CORS adds Cross-Origin Resource Sharing headers to responses
+func corsCheck(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		allowedOrigins := cors.GetCORSManager().GetOrigin()
+		// Set CORS headers
+		origin := r.Header.Get("Origin")
+		if allowedOrigins["*"] {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		} else if allowedOrigins[origin] {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Header().Set("Access-Control-Max-Age", "86400") // 24 hours
+		// Handle preflight OPTIONS requests
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		// Pass request to the next handler
+		handler.ServeHTTP(w, r)
+	})
+}
+
 // The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
 // So this is a good place to plug in a panic handling middleware, logging and metrics.
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
-	return handler
+	return corsCheck(handler)
 }
