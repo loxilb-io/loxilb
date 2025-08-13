@@ -989,6 +989,16 @@ func AddAddrNoHook(address, ifName string) int {
 		tk.LogIt(tk.LogWarning, "nlp: IPv4 Address %v Port %v added Fail\n", address, ifName)
 		return -1
 	}
+	// Check if link is down. If link is down, bring it up
+	if IfName.Attrs().OperState == nlp.OperDown {
+		// Bring link up
+		err = nlp.LinkSetUp(IfName)
+		if err != nil {
+			tk.LogIt(tk.LogWarning, "nlp: IPv4 Address %v Port %v Link Up Fail\n", address, ifName)
+			return -1
+		}
+	}
+
 	return ret
 }
 
