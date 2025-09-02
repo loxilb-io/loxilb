@@ -25,7 +25,7 @@ require (
 	github.com/vishvananda/netlink v1.2.1
 	golang.org/x/crypto v0.36.0
 	golang.org/x/net v0.38.0
-	golang.org/x/oauth2 v0.10.0
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/sys v0.31.0
 	google.golang.org/grpc v1.56.3
 	google.golang.org/protobuf v1.33.0
@@ -36,8 +36,7 @@ require (
 )
 
 require (
-	cloud.google.com/go/compute v1.20.1 // indirect
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11 // indirect
@@ -74,7 +73,6 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/term v0.30.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
