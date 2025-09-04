@@ -20,7 +20,7 @@ import (
 // swagger:model OperParams
 type OperParams struct {
 
-	// Set level to debug,info,error,warning,notice,critical,emergency,alert
+	// Set level to trace,debug,info,error,warning,notice,critical,emergency,alert
 	// Required: true
 	// Enum: [trace debug info error warning notice critical emergency alert]
 	LogLevel *string `json:"logLevel"`
