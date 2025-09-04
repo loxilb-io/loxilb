@@ -443,7 +443,11 @@ func AddVLANNoHook(vlanid int) int {
 	// Check Vlan interface has been added.
 	// Vlan Name : vlan$vlanid (vlan10, vlan100...)
 	VlanName := fmt.Sprintf("vlan%d", vlanid)
-	_, err := nlp.LinkByName(VlanName)
+	vlan, err := nlp.LinkByName(VlanName)
+	if vlan != nil {
+		tk.LogIt(tk.LogWarning, "nlp: Vlan Bridge already added\n")
+		return -1
+	}
 	if err != nil {
 		newBr := &nlp.Bridge{
 			LinkAttrs: nlp.LinkAttrs{
