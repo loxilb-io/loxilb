@@ -30,6 +30,7 @@ paths:
     get:
       summary: "Get metadata for all POST APIs"
       description: "Returns metadata about required fields for each POST API."
+      security: []
       operationId: "getMeta"
       tags:
         - "Metadata"
@@ -3847,6 +3848,8 @@ definitions:
         items:
           type: string
       details:
+        type: string
+      result:
         type: string
 
   PostSuccess:

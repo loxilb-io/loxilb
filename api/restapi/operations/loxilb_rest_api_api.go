@@ -367,7 +367,7 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		UsersPutAuthUsersIDHandler: users.PutAuthUsersIDHandlerFunc(func(params users.PutAuthUsersIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation users.PutAuthUsersID has not yet been implemented")
 		}),
-		MetadataGetMetaHandler: metadata.GetMetaHandlerFunc(func(params metadata.GetMetaParams, principal interface{}) middleware.Responder {
+		MetadataGetMetaHandler: metadata.GetMetaHandlerFunc(func(params metadata.GetMetaParams) middleware.Responder {
 			return middleware.NotImplemented("operation metadata.GetMeta has not yet been implemented")
 		}),
 

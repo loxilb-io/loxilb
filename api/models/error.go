@@ -29,6 +29,9 @@ type Error struct {
 	// message
 	Message string `json:"message,omitempty"`
 
+	// result
+	Result string `json:"result,omitempty"`
+
 	// sub code
 	SubCode int32 `json:"sub-code,omitempty"`
 }

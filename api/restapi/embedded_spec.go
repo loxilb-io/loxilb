@@ -4897,6 +4897,7 @@ func init() {
     },
     "/meta": {
       "get": {
+        "security": [],
         "description": "Returns metadata about required fields for each POST API.",
         "produces": [
           "application/json"
@@ -6288,6 +6289,9 @@ func init() {
         "message": {
           "type": "string"
         },
+        "result": {
+          "type": "string"
+        },
         "sub-code": {
           "type": "integer",
           "format": "int32"
@@ -7278,7 +7282,7 @@ func init() {
       ],
       "properties": {
         "logLevel": {
-          "description": "Set level to debug,info,error,warning,notice,critical,emergency,alert",
+          "description": "Set level to trace,debug,info,error,warning,notice,critical,emergency,alert",
           "type": "string",
           "enum": [
             "trace",
@@ -12828,6 +12832,7 @@ func init() {
     },
     "/meta": {
       "get": {
+        "security": [],
         "description": "Returns metadata about required fields for each POST API.",
         "produces": [
           "application/json"
@@ -14677,6 +14682,9 @@ func init() {
         "message": {
           "type": "string"
         },
+        "result": {
+          "type": "string"
+        },
         "sub-code": {
           "type": "integer",
           "format": "int32"
@@ -15952,7 +15960,7 @@ func init() {
       ],
       "properties": {
         "logLevel": {
-          "description": "Set level to debug,info,error,warning,notice,critical,emergency,alert",
+          "description": "Set level to trace,debug,info,error,warning,notice,critical,emergency,alert",
           "type": "string",
           "enum": [
             "trace",

@@ -12,16 +12,16 @@ import (
 )
 
 // GetMetaHandlerFunc turns a function with the right signature into a get meta handler
-type GetMetaHandlerFunc func(GetMetaParams, interface{}) middleware.Responder
+type GetMetaHandlerFunc func(GetMetaParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetMetaHandlerFunc) Handle(params GetMetaParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn GetMetaHandlerFunc) Handle(params GetMetaParams) middleware.Responder {
+	return fn(params)
 }
 
 // GetMetaHandler interface for that can handle valid get meta params
 type GetMetaHandler interface {
-	Handle(GetMetaParams, interface{}) middleware.Responder
+	Handle(GetMetaParams) middleware.Responder
 }
 
 // NewGetMeta creates a new http.Handler for the get meta operation
@@ -47,25 +47,12 @@ func (o *GetMeta) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		*r = *rCtx
 	}
 	var Params = NewGetMetaParams()
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		*r = *aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc.(interface{}) // this is really a interface{}, I promise
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }
