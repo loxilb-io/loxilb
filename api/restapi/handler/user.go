@@ -41,7 +41,7 @@ func UsersPostUsers(params users.PostAuthUsersParams) middleware.Responder {
 	_, err := ApiHooks.NetUserAdd(&user)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err.Error())
-		return &ResultResponse{Result: "fail"}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -53,7 +53,7 @@ func UsersDeleteUsers(params users.DeleteAuthUsersIDParams, principal interface{
 	err := ApiHooks.NetUserDel(int(params.ID))
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err.Error())
-		return &ResultResponse{Result: "fail"}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -65,7 +65,7 @@ func UsersGetUsers(params users.GetAuthUsersParams, principal interface{}) middl
 	res, err := ApiHooks.NetUserGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err.Error())
-		return &ResultResponse{Result: "fail"}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 
 	// Convert to swagger model
@@ -74,8 +74,7 @@ func UsersGetUsers(params users.GetAuthUsersParams, principal interface{}) middl
 	for _, user := range res {
 		var tmpUser models.User
 		// ID match
-		id := int64(user.ID)
-		tmpUser.ID = &id
+		tmpUser.ID = int64(user.ID)
 		tmpUser.Username = &user.Username
 		tmpUser.Password = &user.Password
 		tmpUser.CreatedAt = user.CreatedAt.Format(time.RFC3339)
@@ -101,7 +100,7 @@ func UsersPutUsers(params users.PutAuthUsersIDParams, principal interface{}) mid
 	err := ApiHooks.NetUserUpdate(&user)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err.Error())
-		return &ResultResponse{Result: "fail"}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }

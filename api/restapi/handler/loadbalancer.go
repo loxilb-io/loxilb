@@ -101,7 +101,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams, prin
 	_, err := ApiHooks.NetLbRuleAdd(&lbRules)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -131,7 +131,7 @@ func ConfigDeleteLoadbalancer(params operations.DeleteConfigLoadbalancerHosturlH
 	_, err := ApiHooks.NetLbRuleDel(&lbRules)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -162,7 +162,7 @@ func ConfigDeleteLoadbalancerPortRange(params operations.DeleteConfigLoadbalance
 	_, err := ApiHooks.NetLbRuleDel(&lbRules)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -189,7 +189,7 @@ func ConfigDeleteLoadbalancerWithoutPath(params operations.DeleteConfigLoadbalan
 	_, err := ApiHooks.NetLbRuleDel(&lbRules)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -216,7 +216,7 @@ func ConfigDeleteLoadbalancerPortRangeWithoutPath(params operations.DeleteConfig
 	_, err := ApiHooks.NetLbRuleDel(&lbRules)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -228,7 +228,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams, pri
 	res, err := ApiHooks.NetLbRuleGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	var result []*models.LoadbalanceEntry
 	result = make([]*models.LoadbalanceEntry, 0)
@@ -296,7 +296,7 @@ func ConfigDeleteAllLoadbalancer(params operations.DeleteConfigLoadbalancerAllPa
 	res, err := ApiHooks.NetLbRuleGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	for _, lbRules := range res {
 
@@ -316,7 +316,7 @@ func ConfigDeleteLoadbalancerByName(params operations.DeleteConfigLoadbalancerNa
 	res, err := ApiHooks.NetLbRuleGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	for _, lbRules := range res {
 

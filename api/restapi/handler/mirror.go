@@ -56,7 +56,7 @@ func ConfigPostMirror(params operations.PostConfigMirrorParams, principal interf
 	_, err := ApiHooks.NetMirrorAdd(&MirrMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -71,7 +71,7 @@ func ConfigDeleteMirror(params operations.DeleteConfigMirrorIdentIdentParams, pr
 	_, err := ApiHooks.NetMirrorDel(&MirrMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -81,7 +81,7 @@ func ConfigGetMirror(params operations.GetConfigMirrorAllParams, principal inter
 	res, err := ApiHooks.NetMirrorGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	var result []*models.MirrorGetEntry
 	result = make([]*models.MirrorGetEntry, 0)

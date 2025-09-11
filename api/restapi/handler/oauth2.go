@@ -273,7 +273,7 @@ func AuthGetOauthProviderCallback(params auth.GetOauthProviderCallbackParams) mi
 	loginToken, valid, err := ApiHooks.NetOauthUserTokenStore(email, token.AccessToken, token.RefreshToken, token.Expiry)
 
 	if err != nil {
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	if valid {
 		response.Token = loginToken

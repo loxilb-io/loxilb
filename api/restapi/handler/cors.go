@@ -32,7 +32,8 @@ func ConfigGetCors(params operations.GetConfigCorsAllParams, principal interface
 	corsList := make([]string, 0, len(res))
 	for cors := range res {
 		if strings.TrimSpace(cors) == "" {
-			return &ResultResponse{Result: "Cors URL cannot be empty"}
+			msg := "Cors URL cannot be empty"
+			return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(msg)}
 		}
 		cors = strings.TrimSpace(cors)
 		if cors == "*" {
@@ -49,18 +50,21 @@ func ConfigPostCors(params operations.PostConfigCorsParams, principal interface{
 	tk.LogIt(tk.LogTrace, "api: Cors %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	for _, corsurl := range params.Attr.Cors {
 		if strings.TrimSpace(corsurl) == "" {
-			return &ResultResponse{Result: "Cors URL cannot be empty"}
+			msg := "Cors URL cannot be empty"
+			return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(msg)}
 		}
 		corsurl = strings.TrimSpace(corsurl)
 		if corsurl == "*" {
-			return &ResultResponse{Result: "failed to add Cors URL: wildcard '*' is not allowed"}
+			msg := "failed to add Cors URL: wildcard '*' is not allowed"
+			return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(msg)}
 		}
 		// Add or update the Cors URL
 		corsManager := cors.GetCORSManager()
 		err := corsManager.AddOrigin(corsurl)
 		if err != nil {
 			tk.LogIt(tk.LogError, "Failed to add Cors URL: %s\n", corsurl)
-			return &ResultResponse{Result: "Failed to add Cors URL: " + err.Error()}
+			msg := "Failed to add Cors URL: " + err.Error()
+			return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(msg)}
 		}
 		// Log the successful addition
 		tk.LogIt(tk.LogDebug, "Cors URL: %s added successfully\n", corsurl)
@@ -73,18 +77,20 @@ func ConfigPostCors(params operations.PostConfigCorsParams, principal interface{
 func ConfigDeleteCors(params operations.DeleteConfigCorsCorsURLParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Cors %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	if strings.TrimSpace(params.CorsURL) == "" {
-		return &ResultResponse{Result: "Cors URL cannot be empty"}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage("Cors URL cannot be empty")}
 	}
 	params.CorsURL = strings.TrimSpace(params.CorsURL)
 	if params.CorsURL == "*" {
-		return &ResultResponse{Result: "failed to delete Cors URL: wildcard '*' is not allowed"}
+		msg := "failed to delete Cors URL: wildcard '*' is not allowed"
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(msg)}
 	}
 	// Remove the Cors URL
 	corsManager := cors.GetCORSManager()
 	err := corsManager.RemoveOrigin(params.CorsURL)
 	if err != nil {
 		tk.LogIt(tk.LogError, "Failed to delete Cors URL: %s\n", params.CorsURL)
-		return &ResultResponse{Result: "Failed to delete Cors URL: " + err.Error()}
+		msg := "Failed to delete Cors URL: " + err.Error()
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(msg)}
 	}
 	// Log the successful deletion
 	tk.LogIt(tk.LogDebug, "Cors URL: %s deleted successfully\n", params.CorsURL)

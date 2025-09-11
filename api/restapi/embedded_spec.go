@@ -72,19 +72,19 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "401": {
             "description": "Unauthorized",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -118,13 +118,65 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/auth/token/upgrade": {
+      "post": {
+        "description": "Using manual token, It need to upgrade the token.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "auth"
+        ],
+        "summary": "Upgrade token",
+        "parameters": [
+          {
+            "description": "license as a token",
+            "name": "token",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateLicenseRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/UpdateLicenseRequest"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -153,7 +205,7 @@ func init() {
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -192,13 +244,13 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -250,13 +302,13 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -297,7 +349,7 @@ func init() {
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -6320,14 +6372,6 @@ func init() {
         }
       }
     },
-    "ErrorResponse": {
-      "type": "object",
-      "properties": {
-        "message": {
-          "type": "string"
-        }
-      }
-    },
     "FDBEntry": {
       "type": "object",
       "required": [
@@ -7783,10 +7827,20 @@ func init() {
         }
       }
     },
+    "UpdateLicenseRequest": {
+      "type": "object",
+      "required": [
+        "license_key"
+      ],
+      "properties": {
+        "license_key": {
+          "type": "string"
+        }
+      }
+    },
     "User": {
       "type": "object",
       "required": [
-        "id",
         "username",
         "password"
       ],
@@ -8007,19 +8061,19 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "401": {
             "description": "Unauthorized",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -8053,13 +8107,65 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/auth/token/upgrade": {
+      "post": {
+        "description": "Using manual token, It need to upgrade the token.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "auth"
+        ],
+        "summary": "Upgrade token",
+        "parameters": [
+          {
+            "description": "license as a token",
+            "name": "token",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateLicenseRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/UpdateLicenseRequest"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -8088,7 +8194,7 @@ func init() {
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -8127,13 +8233,13 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -8185,13 +8291,13 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -8232,7 +8338,7 @@ func init() {
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -14716,14 +14822,6 @@ func init() {
         }
       }
     },
-    "ErrorResponse": {
-      "type": "object",
-      "properties": {
-        "message": {
-          "type": "string"
-        }
-      }
-    },
     "FDBEntry": {
       "type": "object",
       "required": [
@@ -16707,10 +16805,20 @@ func init() {
         }
       }
     },
+    "UpdateLicenseRequest": {
+      "type": "object",
+      "required": [
+        "license_key"
+      ],
+      "properties": {
+        "license_key": {
+          "type": "string"
+        }
+      }
+    },
     "User": {
       "type": "object",
       "required": [
-        "id",
         "username",
         "password"
       ],
