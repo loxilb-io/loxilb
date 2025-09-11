@@ -283,6 +283,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		AuthPostAuthLogoutHandler: auth.PostAuthLogoutHandlerFunc(func(params auth.PostAuthLogoutParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation auth.PostAuthLogout has not yet been implemented")
 		}),
+		AuthPostAuthTokenUpgradeHandler: auth.PostAuthTokenUpgradeHandlerFunc(func(params auth.PostAuthTokenUpgradeParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation auth.PostAuthTokenUpgrade has not yet been implemented")
+		}),
 		UsersPostAuthUsersHandler: users.PostAuthUsersHandlerFunc(func(params users.PostAuthUsersParams) middleware.Responder {
 			return middleware.NotImplemented("operation users.PostAuthUsers has not yet been implemented")
 		}),
@@ -578,6 +581,8 @@ type LoxilbRestAPIAPI struct {
 	AuthPostAuthLoginHandler auth.PostAuthLoginHandler
 	// AuthPostAuthLogoutHandler sets the operation handler for the post auth logout operation
 	AuthPostAuthLogoutHandler auth.PostAuthLogoutHandler
+	// AuthPostAuthTokenUpgradeHandler sets the operation handler for the post auth token upgrade operation
+	AuthPostAuthTokenUpgradeHandler auth.PostAuthTokenUpgradeHandler
 	// UsersPostAuthUsersHandler sets the operation handler for the post auth users operation
 	UsersPostAuthUsersHandler users.PostAuthUsersHandler
 	// PostConfigBfdHandler sets the operation handler for the post config bfd operation
@@ -953,6 +958,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.AuthPostAuthLogoutHandler == nil {
 		unregistered = append(unregistered, "auth.PostAuthLogoutHandler")
+	}
+	if o.AuthPostAuthTokenUpgradeHandler == nil {
+		unregistered = append(unregistered, "auth.PostAuthTokenUpgradeHandler")
 	}
 	if o.UsersPostAuthUsersHandler == nil {
 		unregistered = append(unregistered, "users.PostAuthUsersHandler")
@@ -1454,6 +1462,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/auth/logout"] = auth.NewPostAuthLogout(o.context, o.AuthPostAuthLogoutHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/auth/token/upgrade"] = auth.NewPostAuthTokenUpgrade(o.context, o.AuthPostAuthTokenUpgradeHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

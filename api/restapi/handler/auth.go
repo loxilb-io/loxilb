@@ -69,7 +69,7 @@ func AuthPostLogin(params auth.PostAuthLoginParams) middleware.Responder {
 	}
 	token, valid, err := ApiHooks.NetUserLogin(&user)
 	if err != nil {
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	if valid {
 		response.Token = token
@@ -83,7 +83,7 @@ func AuthPostLogout(params auth.PostAuthLogoutParams, principal interface{}) mid
 	token := params.HTTPRequest.Header.Get("Authorization")
 	err := ApiHooks.NetUserLogout(token)
 	if err != nil {
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return auth.NewPostAuthLogoutOK()
 }
@@ -131,10 +131,29 @@ func ManualTokenValidate(tokenString string) (interface{}, error) {
 		return nil, errors.New("invalid token")
 	}
 	manualToken := strings.TrimSpace(string(data))
-	// Validate the token
 	if tokenString == manualToken {
 		return true, nil
 	}
-
 	return nil, errors.New("invalid token")
+}
+
+func AuthPostManualTokenUpdate(params auth.PostAuthTokenUpgradeParams, principal interface{}) middleware.Responder {
+	token := params.Token.LicenseKey
+	err := UpdateManualToken(*token)
+	if err != nil {
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
+	}
+	return auth.NewPostAuthTokenUpgradeOK().WithPayload(params.Token)
+}
+
+// UpdateManualToken function
+// Licence key as manual token is updated in the file
+func UpdateManualToken(newToken string) error {
+	manualTokenPath := opts.Opts.ManualTokenPath
+	err := os.WriteFile(manualTokenPath, []byte(newToken), 0600)
+	if err != nil {
+		tk.LogIt(tk.LogError, "Failed to update manual token file: %v\n", err)
+		return err
+	}
+	return nil
 }

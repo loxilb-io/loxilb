@@ -221,10 +221,11 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 
 	// metadata
 	api.MetadataGetMetaHandler = metadata.GetMetaHandlerFunc(handler.ConfigGetMetadata)
+	api.AuthPostAuthTokenUpgradeHandler = auth.PostAuthTokenUpgradeHandlerFunc(handler.AuthPostManualTokenUpdate)
 
 	// It works only if the UserServiceEnable option is enabled.
 	if opts.Opts.UserServiceEnable {
-		// login logout api
+		// Authentication API
 		api.AuthPostAuthLoginHandler = auth.PostAuthLoginHandlerFunc(handler.AuthPostLogin)
 		api.AuthPostAuthLogoutHandler = auth.PostAuthLogoutHandlerFunc(handler.AuthPostLogout)
 
