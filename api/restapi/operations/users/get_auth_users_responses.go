@@ -74,7 +74,7 @@ type GetAuthUsersInternalServerError struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.ErrorResponse `json:"body,omitempty"`
+	Payload *models.Error `json:"body,omitempty"`
 }
 
 // NewGetAuthUsersInternalServerError creates GetAuthUsersInternalServerError with default headers values
@@ -84,13 +84,13 @@ func NewGetAuthUsersInternalServerError() *GetAuthUsersInternalServerError {
 }
 
 // WithPayload adds the payload to the get auth users internal server error response
-func (o *GetAuthUsersInternalServerError) WithPayload(payload *models.ErrorResponse) *GetAuthUsersInternalServerError {
+func (o *GetAuthUsersInternalServerError) WithPayload(payload *models.Error) *GetAuthUsersInternalServerError {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get auth users internal server error response
-func (o *GetAuthUsersInternalServerError) SetPayload(payload *models.ErrorResponse) {
+func (o *GetAuthUsersInternalServerError) SetPayload(payload *models.Error) {
 	o.Payload = payload
 }
 

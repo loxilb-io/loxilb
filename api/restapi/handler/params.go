@@ -37,7 +37,7 @@ func ConfigPostParams(params operations.PostConfigParamsParams, principal interf
 	_, err := ApiHooks.NetParamSet(param)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -51,7 +51,7 @@ func ConfigGetParams(params operations.GetConfigParamsParams, principal interfac
 	_, err := ApiHooks.NetParamGet(&param)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	payload.LogLevel = &param.LogLevel
 	tk.LogIt(tk.LogDebug, "api: LogLevel %s\n", param.LogLevel)

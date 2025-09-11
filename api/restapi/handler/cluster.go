@@ -32,7 +32,7 @@ func ConfigGetCIState(params operations.GetConfigCistateAllParams, principal int
 	hasMod, err := ApiHooks.NetCIStateGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	for _, h := range hasMod {
 		var tempResult models.CIStatusGetEntry
@@ -59,7 +59,7 @@ func ConfigPostCIState(params operations.PostConfigCistateParams, principal inte
 	_, err := ApiHooks.NetCIStateMod(&hasMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -71,7 +71,7 @@ func ConfigGetBFDSession(params operations.GetConfigBfdAllParams, principal inte
 	bfdMod, err := ApiHooks.NetBFDGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	for _, h := range bfdMod {
 		var tempResult models.BfdGetEntry
@@ -106,7 +106,7 @@ func ConfigPostBFDSession(params operations.PostConfigBfdParams, principal inter
 	_, err := ApiHooks.NetBFDAdd(&bfdMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -128,7 +128,7 @@ func ConfigDeleteBFDSession(params operations.DeleteConfigBfdRemoteIPRemoteIPPar
 	_, err := ApiHooks.NetBFDDel(&bfdMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }

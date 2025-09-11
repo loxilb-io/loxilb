@@ -29,36 +29,36 @@ func ConfigPostVLAN(params operations.PostConfigVlanParams, principal interface{
 	if params.Attr.Vid != nil {
 		vid = int(*params.Attr.Vid)
 	}
-	ret := loxinlp.AddVLANNoHook(vid)
-	if ret != 0 {
-		return &ResultResponse{Result: "fail"}
+	err := loxinlp.AddVLANNoHook(vid)
+	if err != nil {
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeleteVLAN(params operations.DeleteConfigVlanVlanIDParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Vlan %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	ret := loxinlp.DelVLANNoHook(int(params.VlanID))
-	if ret != 0 {
-		return &ResultResponse{Result: "fail"}
+	err := loxinlp.DelVLANNoHook(int(params.VlanID))
+	if err != nil {
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigPostVLANMember(params operations.PostConfigVlanVlanIDMemberParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Vlan %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	ret := loxinlp.AddVLANMemberNoHook(int(params.VlanID), params.Attr.Dev, params.Attr.Tagged)
-	if ret != 0 {
-		return &ResultResponse{Result: "fail"}
+	err := loxinlp.AddVLANMemberNoHook(int(params.VlanID), params.Attr.Dev, params.Attr.Tagged)
+	if err != nil {
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeleteVLANMember(params operations.DeleteConfigVlanVlanIDMemberIfNameTaggedTaggedParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Vlan %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	ret := loxinlp.DelVLANMemberNoHook(int(params.VlanID), params.IfName, params.Tagged)
-	if ret != 0 {
-		return &ResultResponse{Result: "fail"}
+	err := loxinlp.DelVLANMemberNoHook(int(params.VlanID), params.IfName, params.Tagged)
+	if err != nil {
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }

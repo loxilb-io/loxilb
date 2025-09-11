@@ -58,7 +58,7 @@ func ConfigPostPolicy(params operations.PostConfigPolicyParams, principal interf
 	_, err := ApiHooks.NetPolicerAdd(&polMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -73,7 +73,7 @@ func ConfigDeletePolicy(params operations.DeleteConfigPolicyIdentIdentParams, pr
 	_, err := ApiHooks.NetPolicerDel(&polMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -83,7 +83,7 @@ func ConfigGetPolicy(params operations.GetConfigPolicyAllParams, principal inter
 	res, err := ApiHooks.NetPolicerGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 
 	var result []*models.PolicyEntry

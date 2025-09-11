@@ -24,8 +24,7 @@ type User struct {
 	CreatedAt string `json:"created_at,omitempty"`
 
 	// id
-	// Required: true
-	ID *int64 `json:"id"`
+	ID int64 `json:"id,omitempty"`
 
 	// password
 	// Required: true
@@ -44,10 +43,6 @@ type User struct {
 func (m *User) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateID(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validatePassword(formats); err != nil {
 		res = append(res, err)
 	}
@@ -63,15 +58,6 @@ func (m *User) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *User) validateID(formats strfmt.Registry) error {
-
-	if err := validate.Required("id", "body", m.ID); err != nil {
-		return err
-	}
-
 	return nil
 }
 

@@ -28,7 +28,7 @@ func ConfigGetConntrack(params operations.GetConfigConntrackAllParams, principal
 	res, err := ApiHooks.NetCtInfoGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	var result []*models.ConntrackEntry
 	result = make([]*models.ConntrackEntry, 0)

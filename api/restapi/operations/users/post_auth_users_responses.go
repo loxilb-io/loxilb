@@ -71,7 +71,7 @@ type PostAuthUsersBadRequest struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.ErrorResponse `json:"body,omitempty"`
+	Payload *models.Error `json:"body,omitempty"`
 }
 
 // NewPostAuthUsersBadRequest creates PostAuthUsersBadRequest with default headers values
@@ -81,13 +81,13 @@ func NewPostAuthUsersBadRequest() *PostAuthUsersBadRequest {
 }
 
 // WithPayload adds the payload to the post auth users bad request response
-func (o *PostAuthUsersBadRequest) WithPayload(payload *models.ErrorResponse) *PostAuthUsersBadRequest {
+func (o *PostAuthUsersBadRequest) WithPayload(payload *models.Error) *PostAuthUsersBadRequest {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the post auth users bad request response
-func (o *PostAuthUsersBadRequest) SetPayload(payload *models.ErrorResponse) {
+func (o *PostAuthUsersBadRequest) SetPayload(payload *models.Error) {
 	o.Payload = payload
 }
 
@@ -116,7 +116,7 @@ type PostAuthUsersInternalServerError struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.ErrorResponse `json:"body,omitempty"`
+	Payload *models.Error `json:"body,omitempty"`
 }
 
 // NewPostAuthUsersInternalServerError creates PostAuthUsersInternalServerError with default headers values
@@ -126,13 +126,13 @@ func NewPostAuthUsersInternalServerError() *PostAuthUsersInternalServerError {
 }
 
 // WithPayload adds the payload to the post auth users internal server error response
-func (o *PostAuthUsersInternalServerError) WithPayload(payload *models.ErrorResponse) *PostAuthUsersInternalServerError {
+func (o *PostAuthUsersInternalServerError) WithPayload(payload *models.Error) *PostAuthUsersInternalServerError {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the post auth users internal server error response
-func (o *PostAuthUsersInternalServerError) SetPayload(payload *models.ErrorResponse) {
+func (o *PostAuthUsersInternalServerError) SetPayload(payload *models.Error) {
 	o.Payload = payload
 }
 

@@ -37,7 +37,7 @@ func ConfigGetDevice(params operations.GetStatusDeviceParams, principal interfac
 	res, err := status.DeviceInfoGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return operations.NewGetStatusDeviceOK().WithPayload(res)
 }
@@ -47,7 +47,7 @@ func ConfigGetFileSystem(params operations.GetStatusFilesystemParams, principal 
 	res, err := status.FileSystemInfoGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return operations.NewGetStatusFilesystemOK().WithPayload(&operations.GetStatusFilesystemOKBody{FilesystemAttr: res})
 }
