@@ -1114,6 +1114,122 @@ func (e *DpEbpfH) DpLBRuleDel(w *LBDpWorkQ) int {
 	return DpLBRuleMod(w)
 }
 
+// getNatEpMapFd - Get file descriptor for NAT endpoint map
+func (e *DpEbpfH) getNatEpMapFd() int {
+	// Get map file descriptor using the same pattern as existing code
+	return int(C.llb_map2fd(C.LL_DP_NAT_EP_MAP))
+}
+
+// getNatEpaByMark - Get NAT endpoint actions by mark
+func (e *DpEbpfH) getNatEpaByMark(mark int) unsafe.Pointer {
+	fd := e.getNatEpMapFd()
+	if fd < 0 {
+		return nil
+	}
+
+	// Allocate memory for the EPA structure
+	epa := (*C.struct_dp_nat_epacts)(C.malloc(C.sizeof_struct_dp_nat_epacts))
+	if epa == nil {
+		return nil
+	}
+
+	key := C.uint(mark)
+	ret := C.bpf_map_lookup_elem(C.int(fd), unsafe.Pointer(&key), unsafe.Pointer(epa))
+	if ret != 0 {
+		C.free(unsafe.Pointer(epa))
+		return nil
+	}
+
+	return unsafe.Pointer(epa)
+}
+
+func updateEpaEntry(mark int, epa *C.struct_dp_nat_epacts) int {
+	key := C.uint(mark)
+	ret := C.llb_add_map_elem(C.LL_DP_NAT_EP_MAP, unsafe.Pointer(&key), unsafe.Pointer(epa))
+	return int(ret)
+}
+
+// DpLBSessionReset - Reset session counts for load balancer endpoints
+func (e *DpEbpfH) DpLBSessionReset(w *LBSessionResetWorkQ) int {
+	fd := e.getNatEpMapFd()
+	if fd < 0 {
+		return -1
+	}
+
+	mark := w.Mark
+	epaPtr := e.getNatEpaByMark(mark)
+	if epaPtr == nil {
+		return -1
+	}
+	epa := (*C.struct_dp_nat_epacts)(epaPtr)
+
+	// Ensure memory cleanup
+	defer C.free(epaPtr)
+
+	var result int
+	switch w.ResetType {
+	case ResetAll:
+		result = resetAllSessions(epa, mark)
+	case ResetSpecific:
+		if w.EndpointIdx < 0 {
+			return -1
+		}
+		result = resetSpecificSession(epa, mark, w.EndpointIdx)
+	case ResetSelective:
+		if w.EndpointMask == nil {
+			return -1
+		}
+		result = resetSelectiveSessions(epa, mark, w.EndpointMask)
+	default:
+		return -1
+	}
+
+	return result
+}
+
+// Reset all endpoint session counts
+func resetAllSessions(epa *C.struct_dp_nat_epacts, mark int) int {
+	// Reset all session counts to 0
+	for i := 0; i < int(C.LLB_MAX_NXFRMS); i++ {
+		epa.active_sess[i] = 0
+	}
+	return updateEpaEntry(mark, epa)
+}
+
+// Reset specific endpoint session count
+func resetSpecificSession(epa *C.struct_dp_nat_epacts, mark int, endpointIdx int) int {
+	if endpointIdx >= int(C.LLB_MAX_NXFRMS) {
+		return -1
+	}
+	// Reset specific endpoint session count to 0
+	epa.active_sess[endpointIdx] = 0
+	return updateEpaEntry(mark, epa)
+}
+
+// Reset only specified endpoints, preserve others
+func resetSelectiveSessions(epa *C.struct_dp_nat_epacts, mark int,
+	endpointMask []bool) int {
+
+	// First, preserve current session counts for unchanged endpoints
+	savedCounts := make([]uint16, int(C.LLB_MAX_NXFRMS))
+	for i := 0; i < int(C.LLB_MAX_NXFRMS); i++ {
+		savedCounts[i] = uint16(epa.active_sess[i])
+	}
+
+	// Apply selective reset based on mask (true = reset, false = preserve)
+	for i := 0; i < int(C.LLB_MAX_NXFRMS) && i < len(endpointMask); i++ {
+		if endpointMask[i] {
+			// Reset this endpoint
+			epa.active_sess[i] = 0
+		} else {
+			// Preserve this endpoint with current session count
+			epa.active_sess[i] = C.ushort(savedCounts[i])
+		}
+	}
+
+	return updateEpaEntry(mark, epa)
+}
+
 // DpStat - routine to work on a ebpf map statistics request
 func (e *DpEbpfH) DpStat(w *StatDpWorkQ) int {
 	var packets, bytes, dropPackets uint64

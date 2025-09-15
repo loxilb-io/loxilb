@@ -74,6 +74,16 @@ const (
 	DpInProgressErr
 )
 
+// SessionResetT - type of session reset operation
+type SessionResetT int
+
+// session reset operation types
+const (
+	ResetAll       SessionResetT = iota // Reset all endpoint session counts
+	ResetSpecific  SessionResetT = iota // Reset specific endpoint session count
+	ResetSelective SessionResetT = iota // Reset only changed endpoints, preserve unchanged
+)
+
 // maximum dp work queue lengths
 const (
 	DpWorkQLen = 1024
@@ -311,6 +321,16 @@ type LBDpWorkQ struct {
 	secIP     []net.IP
 }
 
+// LBSessionResetWorkQ - Load balancer session reset work queue
+type LBSessionResetWorkQ struct {
+	Mark        int           // Load balancer rule mark identifier
+	EndpointIdx int           // Specific endpoint index (-1 for selective reset)
+	ResetType   SessionResetT // Type of reset operation
+	Status      *DpStatusT    // Operation status pointer
+	// Selective reset support
+	EndpointMask []bool // Which endpoints to reset (true = reset, false = preserve)
+}
+
 // DpCtInfo - representation of a datapath conntrack information
 type DpCtInfo struct {
 	DIP     net.IP    `json:"dip"`
@@ -440,6 +460,7 @@ type DpHookInterface interface {
 	DpRouteDel(*RouteDpWorkQ) int
 	DpLBRuleAdd(*LBDpWorkQ) int
 	DpLBRuleDel(*LBDpWorkQ) int
+	DpLBSessionReset(*LBSessionResetWorkQ) int
 	DpFwRuleAdd(w *FwDpWorkQ) int
 	DpFwRuleDel(w *FwDpWorkQ) int
 	DpStat(*StatDpWorkQ) int

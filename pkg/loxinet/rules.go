@@ -1808,10 +1808,27 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		eRule.pTO = serv.PersistTimeout
 		eRule.ppv2En = serv.ProxyProtocolV2
 		eRule.act.action.(*ruleLBActs).sel = lBActs.sel
+
+		// Capture old endpoints before updating for selective session reset
+		oldEndPoints := eRule.act.action.(*ruleLBActs).endPoints
+
 		eRule.act.action.(*ruleLBActs).endPoints = retEps
 		eRule.act.action.(*ruleLBActs).mode = lBActs.mode
 		// Managed flag can't be modified on the fly
 		// eRule.managed = serv.Managed
+
+		// Apply selective session reset for endpoint changes
+		if len(delEps) > 0 || len(eRule.act.action.(*ruleLBActs).endPoints) != len(lBActs.endPoints) {
+			tk.LogIt(tk.LogInfo, "[RULE] Applying selective session reset for rule %s (mark=%d)\n",
+				eRule.tuples.String(), int(eRule.ruleNum))
+
+			// Apply selective session reset to preserve session counts for unchanged endpoints
+			err := R.applySelectiveSessionReset(eRule, oldEndPoints, retEps, delEps)
+			if err != nil {
+				tk.LogIt(tk.LogError, "[RULE] Selective session reset failed: %v\n", err)
+				// Continue with rule update even if session reset fails
+			}
+		}
 
 		if !serv.Snat {
 			R.modNatEpHost(eRule, delEps, false, activateProbe, eRule.egress)
@@ -3494,4 +3511,89 @@ func (R *RuleH) IsIPRuleVIP(IP net.IP) bool {
 		return true
 	}
 	return false
+}
+
+// createEndpointMask - Create mask for selective session reset based on endpoint changes
+func (R *RuleH) createEndpointMask(oldEps []ruleLBEp, newEps []ruleLBEp, delEps []ruleLBEp) []bool {
+	endpointMask := make([]bool, len(oldEps))
+
+	// Create maps for efficient lookup
+	newEpMap := make(map[string]bool)
+	for _, ep := range newEps {
+		key := fmt.Sprintf("%s:%d", ep.xIP.String(), ep.xPort)
+		newEpMap[key] = true
+	}
+
+	delEpMap := make(map[string]bool)
+	for _, ep := range delEps {
+		key := fmt.Sprintf("%s:%d", ep.xIP.String(), ep.xPort)
+		delEpMap[key] = true
+	}
+
+	// Determine which endpoints need reset vs preservation
+	for i, oldEp := range oldEps {
+		oldKey := fmt.Sprintf("%s:%d", oldEp.xIP.String(), oldEp.xPort)
+
+		if delEpMap[oldKey] {
+			// Endpoint was deleted, reset it
+			endpointMask[i] = true
+		} else if newEpMap[oldKey] {
+			// Endpoint still exists, preserve its session count
+			endpointMask[i] = false
+			// Note: The eBPF layer will read current session counts automatically
+		} else {
+			// Endpoint was modified/replaced, reset it
+			endpointMask[i] = true
+		}
+	}
+
+	return endpointMask
+}
+
+// applySelectiveSessionReset - Apply selective session reset after endpoint changes
+func (R *RuleH) applySelectiveSessionReset(rule *ruleEnt, oldEps []ruleLBEp, newEps []ruleLBEp, delEps []ruleLBEp) error {
+	if rule == nil {
+		return fmt.Errorf("rule is nil")
+	}
+
+	// Only apply selective reset if we have endpoint changes
+	if len(delEps) == 0 && len(oldEps) == len(newEps) {
+		// No endpoints changed, no need for selective reset
+		return nil
+	}
+
+	// Create endpoint mask for selective reset
+	endpointMask := R.createEndpointMask(oldEps, newEps, delEps)
+
+	// Apply selective session reset
+	w := &LBSessionResetWorkQ{
+		Mark:         int(rule.ruleNum),
+		EndpointIdx:  -1,
+		ResetType:    ResetSelective,
+		Status:       new(DpStatusT),
+		EndpointMask: endpointMask,
+	}
+
+	// Execute the selective reset
+	ret := mh.dp.DpHooks.DpLBSessionReset(w)
+	if ret != 0 {
+		tk.LogIt(tk.LogError, "[RULE] Selective session reset failed for rule mark %d: %d\n", int(rule.ruleNum), ret)
+		return fmt.Errorf("selective session reset failed: %d", ret)
+	}
+
+	// Count changes for logging
+	changedEndpoints := 0
+	preservedEndpoints := 0
+	for _, reset := range endpointMask {
+		if reset {
+			changedEndpoints++
+		} else {
+			preservedEndpoints++
+		}
+	}
+
+	tk.LogIt(tk.LogInfo, "[RULE] Selective session reset completed for rule mark %d: reset=%d, preserved=%d\n",
+		int(rule.ruleNum), changedEndpoints, preservedEndpoints)
+
+	return nil
 }
