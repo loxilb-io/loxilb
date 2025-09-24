@@ -75,7 +75,7 @@ func ResultErrorResponseErrorMessage(msg string) *models.Error {
 		"no such fdb", "no such route", "no such port", "no such mirror",
 		"no such allowed src prefix", "no such policer", "not found interface",
 		"no such ifa", "no such addrs", "vlan not created", "vlan not yet created",
-		"phy port not created", "no-realport", "no realport", "no-user error", "no-rule error",
+		"phy port not created", "no-realport", "no realport", "no-user error", "no-rule error", "file not found",
 	) {
 		return &models.Error{Code: 404, Message: "Resource not found", Result: msg}
 	}
@@ -123,7 +123,8 @@ func ResultErrorResponseErrorMessage(msg string) *models.Error {
 		"host-args error", "hostarm-args error",
 		"password must ", "password must not ", "password must be at least",
 		"Cors URL cannot be empty", "wildcard '*' is not allowed",
-		"Failed to add Cors", "Failed to delete Cors",
+		"Failed to add Cors", "Failed to delete Cors", "filename is required", "file is empty",
+		"no configuration file provided", "invalid json format",
 	) {
 		return &models.Error{Code: 400, Message: "Malformed arguments for API call", Result: msg}
 	}

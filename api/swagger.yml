@@ -3862,6 +3862,56 @@ paths:
           description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'    
+            
+#----------------------------------------------
+# Configration import and export
+#----------------------------------------------            
+  '/config/import':
+    post:
+      summary: Import configurations
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: configuration
+          type: file
+          description: The configuration file to upload.
+      responses:
+        '204':
+          description: OK
+  '/config/export':
+    get:
+      summary: Export all configurations
+      description: Export cluster, endpoint, firewall, loadbalancer, mirror, and policy configurations as a JSON file.
+      parameters:
+        - name: components
+          in: query
+          description: Comma-separated list of components to export (cluster, endpoint, firewall, loadbalancer, mirror, policy). If not specified, all components are exported.
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Configuration JSON file download
+          schema:
+            type: file
+        '400':
+          description: Invalid parameters
+          schema:
+            $ref: '#/definitions/Error' 
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error' 
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error' 
+        '503':
+          description: Maintenance mode
+          schema:
+            $ref: '#/definitions/Error' 
+
 #----------------------------------------------
 # Schema definitions
 #----------------------------------------------

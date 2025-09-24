@@ -248,6 +248,10 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.PostConfigCorsHandler = operations.PostConfigCorsHandlerFunc(handler.ConfigPostCors)
 	api.DeleteConfigCorsCorsURLHandler = operations.DeleteConfigCorsCorsURLHandlerFunc(handler.ConfigDeleteCors)
 
+	// Configuration import and export
+	api.GetConfigExportHandler = operations.GetConfigExportHandlerFunc(handler.ConfigGetExport)
+	api.PostConfigImportHandler = operations.PostConfigImportHandlerFunc(handler.ConfigPostImport)
+
 	api.PreServerShutdown = func() {}
 	api.ServerShutdown = func() {}
 
