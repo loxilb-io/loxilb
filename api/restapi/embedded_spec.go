@@ -1845,6 +1845,55 @@ func init() {
         }
       }
     },
+    "/config/export": {
+      "get": {
+        "description": "Export cluster, endpoint, firewall, loadbalancer, mirror, and policy configurations as a JSON file.",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Export all configurations",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Comma-separated list of components to export (cluster, endpoint, firewall, loadbalancer, mirror, policy). If not specified, all components are exported.",
+            "name": "components",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Configuration JSON file download",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/fdb": {
       "post": {
         "description": "Assign FDB in the device",
@@ -2225,6 +2274,27 @@ func init() {
             "schema": {
               "$ref": "#/definitions/Error"
             }
+          }
+        }
+      }
+    },
+    "/config/import": {
+      "post": {
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "summary": "Import configurations",
+        "parameters": [
+          {
+            "type": "file",
+            "description": "The configuration file to upload.",
+            "name": "configuration",
+            "in": "formData"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
           }
         }
       }
@@ -9834,6 +9904,55 @@ func init() {
         }
       }
     },
+    "/config/export": {
+      "get": {
+        "description": "Export cluster, endpoint, firewall, loadbalancer, mirror, and policy configurations as a JSON file.",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Export all configurations",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Comma-separated list of components to export (cluster, endpoint, firewall, loadbalancer, mirror, policy). If not specified, all components are exported.",
+            "name": "components",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Configuration JSON file download",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/fdb": {
       "post": {
         "description": "Assign FDB in the device",
@@ -10214,6 +10333,27 @@ func init() {
             "schema": {
               "$ref": "#/definitions/Error"
             }
+          }
+        }
+      }
+    },
+    "/config/import": {
+      "post": {
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "summary": "Import configurations",
+        "parameters": [
+          {
+            "type": "file",
+            "description": "The configuration file to upload.",
+            "name": "configuration",
+            "in": "formData"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
           }
         }
       }
