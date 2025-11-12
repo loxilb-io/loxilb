@@ -280,12 +280,16 @@ func (na *NetAPIStruct) NetRouteGet() ([]cmn.RouteGet, error) {
 func (na *NetAPIStruct) NetRouteAdd(rm *cmn.RouteMod) (int, error) {
 	var ret int
 	var err error
+	var cloudPrivateInterfaceID int
 
 	if len(rm.GWs) <= 0 {
 		return RtNhErr, errors.New("invalid gws")
 	}
 	if na.BgpPeerMode {
 		return RtNhErr, errors.New("running in bgp only mode")
+	}
+	if mh.cloudHook != nil {
+		cloudPrivateInterfaceID, _ = mh.cloudHook.CloudGetPrivateInterfaceID()
 	}
 	intfRt := false
 	mlen, _ := rm.Dst.Mask.Size()
@@ -303,7 +307,14 @@ func (na *NetAPIStruct) NetRouteAdd(rm *cmn.RouteMod) (int, error) {
 	if rm.GWs[0].Gw != nil {
 		var na []RtNhAttr
 		for _, gw := range rm.GWs {
-			na = append(na, RtNhAttr{gw.Gw, gw.LinkIndex})
+			linkIndex := gw.LinkIndex
+			cloudGwIp := gw.Gw
+			if rm.Dst.String() == "0.0.0.0/0" && cloudPrivateInterfaceID > 0 {
+				linkIndex = cloudPrivateInterfaceID
+				cloudGwIp = awsCIDRnet.IP.Mask(awsCIDRnet.Mask)
+				cloudGwIp[3]++
+			}
+			na = append(na, RtNhAttr{cloudGwIp, linkIndex})
 		}
 		ret, err = mh.zr.Rt.RtAdd(rm.Dst, RootZone, ra, na)
 
