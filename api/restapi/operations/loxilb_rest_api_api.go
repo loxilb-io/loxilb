@@ -42,7 +42,8 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		APIKeyAuthenticator: security.APIKeyAuth,
 		BearerAuthenticator: security.BearerAuth,
 
-		JSONConsumer: runtime.JSONConsumer(),
+		JSONConsumer:          runtime.JSONConsumer(),
+		MultipartformConsumer: runtime.DiscardConsumer,
 
 		JSONProducer: runtime.JSONProducer(),
 
@@ -156,6 +157,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		}),
 		GetConfigEndpointAllHandler: GetConfigEndpointAllHandlerFunc(func(params GetConfigEndpointAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigEndpointAll has not yet been implemented")
+		}),
+		GetConfigExportHandler: GetConfigExportHandlerFunc(func(params GetConfigExportParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation GetConfigExport has not yet been implemented")
 		}),
 		GetConfigFdbAllHandler: GetConfigFdbAllHandlerFunc(func(params GetConfigFdbAllParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation GetConfigFdbAll has not yet been implemented")
@@ -283,6 +287,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		AuthPostAuthLogoutHandler: auth.PostAuthLogoutHandlerFunc(func(params auth.PostAuthLogoutParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation auth.PostAuthLogout has not yet been implemented")
 		}),
+		AuthPostAuthTokenUpgradeHandler: auth.PostAuthTokenUpgradeHandlerFunc(func(params auth.PostAuthTokenUpgradeParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation auth.PostAuthTokenUpgrade has not yet been implemented")
+		}),
 		UsersPostAuthUsersHandler: users.PostAuthUsersHandlerFunc(func(params users.PostAuthUsersParams) middleware.Responder {
 			return middleware.NotImplemented("operation users.PostAuthUsers has not yet been implemented")
 		}),
@@ -321,6 +328,9 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		}),
 		PostConfigFirewallHandler: PostConfigFirewallHandlerFunc(func(params PostConfigFirewallParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigFirewall has not yet been implemented")
+		}),
+		PostConfigImportHandler: PostConfigImportHandlerFunc(func(params PostConfigImportParams, principal interface{}) middleware.Responder {
+			return middleware.NotImplemented("operation PostConfigImport has not yet been implemented")
 		}),
 		PostConfigIpv4addressHandler: PostConfigIpv4addressHandlerFunc(func(params PostConfigIpv4addressParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostConfigIpv4address has not yet been implemented")
@@ -367,7 +377,7 @@ func NewLoxilbRestAPIAPI(spec *loads.Document) *LoxilbRestAPIAPI {
 		UsersPutAuthUsersIDHandler: users.PutAuthUsersIDHandlerFunc(func(params users.PutAuthUsersIDParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation users.PutAuthUsersID has not yet been implemented")
 		}),
-		MetadataGetMetaHandler: metadata.GetMetaHandlerFunc(func(params metadata.GetMetaParams, principal interface{}) middleware.Responder {
+		MetadataGetMetaHandler: metadata.GetMetaHandlerFunc(func(params metadata.GetMetaParams) middleware.Responder {
 			return middleware.NotImplemented("operation metadata.GetMeta has not yet been implemented")
 		}),
 
@@ -408,6 +418,9 @@ type LoxilbRestAPIAPI struct {
 	// JSONConsumer registers a consumer for the following mime types:
 	//   - application/json
 	JSONConsumer runtime.Consumer
+	// MultipartformConsumer registers a consumer for the following mime types:
+	//   - multipart/form-data
+	MultipartformConsumer runtime.Consumer
 
 	// JSONProducer registers a producer for the following mime types:
 	//   - application/json
@@ -494,6 +507,8 @@ type LoxilbRestAPIAPI struct {
 	GetConfigCorsAllHandler GetConfigCorsAllHandler
 	// GetConfigEndpointAllHandler sets the operation handler for the get config endpoint all operation
 	GetConfigEndpointAllHandler GetConfigEndpointAllHandler
+	// GetConfigExportHandler sets the operation handler for the get config export operation
+	GetConfigExportHandler GetConfigExportHandler
 	// GetConfigFdbAllHandler sets the operation handler for the get config fdb all operation
 	GetConfigFdbAllHandler GetConfigFdbAllHandler
 	// GetConfigFirewallAllHandler sets the operation handler for the get config firewall all operation
@@ -578,6 +593,8 @@ type LoxilbRestAPIAPI struct {
 	AuthPostAuthLoginHandler auth.PostAuthLoginHandler
 	// AuthPostAuthLogoutHandler sets the operation handler for the post auth logout operation
 	AuthPostAuthLogoutHandler auth.PostAuthLogoutHandler
+	// AuthPostAuthTokenUpgradeHandler sets the operation handler for the post auth token upgrade operation
+	AuthPostAuthTokenUpgradeHandler auth.PostAuthTokenUpgradeHandler
 	// UsersPostAuthUsersHandler sets the operation handler for the post auth users operation
 	UsersPostAuthUsersHandler users.PostAuthUsersHandler
 	// PostConfigBfdHandler sets the operation handler for the post config bfd operation
@@ -604,6 +621,8 @@ type LoxilbRestAPIAPI struct {
 	PostConfigFdbHandler PostConfigFdbHandler
 	// PostConfigFirewallHandler sets the operation handler for the post config firewall operation
 	PostConfigFirewallHandler PostConfigFirewallHandler
+	// PostConfigImportHandler sets the operation handler for the post config import operation
+	PostConfigImportHandler PostConfigImportHandler
 	// PostConfigIpv4addressHandler sets the operation handler for the post config ipv4address operation
 	PostConfigIpv4addressHandler PostConfigIpv4addressHandler
 	// PostConfigLoadbalancerHandler sets the operation handler for the post config loadbalancer operation
@@ -707,6 +726,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 
 	if o.JSONConsumer == nil {
 		unregistered = append(unregistered, "JSONConsumer")
+	}
+	if o.MultipartformConsumer == nil {
+		unregistered = append(unregistered, "MultipartformConsumer")
 	}
 
 	if o.JSONProducer == nil {
@@ -827,6 +849,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.GetConfigEndpointAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigEndpointAllHandler")
+	}
+	if o.GetConfigExportHandler == nil {
+		unregistered = append(unregistered, "GetConfigExportHandler")
 	}
 	if o.GetConfigFdbAllHandler == nil {
 		unregistered = append(unregistered, "GetConfigFdbAllHandler")
@@ -954,6 +979,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	if o.AuthPostAuthLogoutHandler == nil {
 		unregistered = append(unregistered, "auth.PostAuthLogoutHandler")
 	}
+	if o.AuthPostAuthTokenUpgradeHandler == nil {
+		unregistered = append(unregistered, "auth.PostAuthTokenUpgradeHandler")
+	}
 	if o.UsersPostAuthUsersHandler == nil {
 		unregistered = append(unregistered, "users.PostAuthUsersHandler")
 	}
@@ -992,6 +1020,9 @@ func (o *LoxilbRestAPIAPI) Validate() error {
 	}
 	if o.PostConfigFirewallHandler == nil {
 		unregistered = append(unregistered, "PostConfigFirewallHandler")
+	}
+	if o.PostConfigImportHandler == nil {
+		unregistered = append(unregistered, "PostConfigImportHandler")
 	}
 	if o.PostConfigIpv4addressHandler == nil {
 		unregistered = append(unregistered, "PostConfigIpv4addressHandler")
@@ -1081,6 +1112,8 @@ func (o *LoxilbRestAPIAPI) ConsumersFor(mediaTypes []string) map[string]runtime.
 		switch mt {
 		case "application/json":
 			result["application/json"] = o.JSONConsumer
+		case "multipart/form-data":
+			result["multipart/form-data"] = o.MultipartformConsumer
 		}
 
 		if c, ok := o.customConsumers[mt]; ok {
@@ -1289,6 +1322,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
+	o.handlers["GET"]["/config/export"] = NewGetConfigExport(o.context, o.GetConfigExportHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
 	o.handlers["GET"]["/config/fdb/all"] = NewGetConfigFdbAll(o.context, o.GetConfigFdbAllHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
@@ -1457,6 +1494,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
+	o.handlers["POST"]["/auth/token/upgrade"] = auth.NewPostAuthTokenUpgrade(o.context, o.AuthPostAuthTokenUpgradeHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
 	o.handlers["POST"]["/auth/users"] = users.NewPostAuthUsers(o.context, o.UsersPostAuthUsersHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
@@ -1506,6 +1547,10 @@ func (o *LoxilbRestAPIAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/config/firewall"] = NewPostConfigFirewall(o.context, o.PostConfigFirewallHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/config/import"] = NewPostConfigImport(o.context, o.PostConfigImportHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

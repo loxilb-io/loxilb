@@ -30,7 +30,7 @@ func ConfigGetBGPNeigh(params operations.GetConfigBgpNeighAllParams, principal i
 	res, err := ApiHooks.NetGoBGPNeighGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	var result []*models.BGPNeighGetEntry
 	result = make([]*models.BGPNeighGetEntry, 0)
@@ -68,7 +68,7 @@ func ConfigPostBGPNeigh(params operations.PostConfigBgpNeighParams, principal in
 	_, err := ApiHooks.NetGoBGPNeighAdd(&bgpNeighMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -87,7 +87,7 @@ func ConfigDeleteBGPNeigh(params operations.DeleteConfigBgpNeighIPAddressParams,
 	_, err := ApiHooks.NetGoBGPNeighDel(&bgpNeighMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -119,7 +119,7 @@ func ConfigPostBGPGlobal(params operations.PostConfigBgpGlobalParams, principal 
 	_, err := ApiHooks.NetGoBGPGCAdd(&bgpG)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -150,7 +150,7 @@ func ConfigPostBGPPolicyDefinedsets(params operations.PostConfigBgpPolicyDefined
 	_, err := ApiHooks.NetGoBGPPolicyDefinedSetAdd(&bgpPolicyDefinedSet)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -166,7 +166,7 @@ func ConfigDeleteBGPPolicyDefinedsets(params operations.DeleteConfigBgpPolicyDef
 	_, err := ApiHooks.NetGoBGPPolicyDefinedSetDel(&bgpPolicyConfig)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -176,7 +176,7 @@ func ConfigGetBGPPolicyDefinedSetGet(params operations.GetConfigBgpPolicyDefined
 	res, err := ApiHooks.NetGoBGPPolicyDefinedSetGet(params.TypeName, params.DefinesetType)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	result := make([]*models.BGPPolicyDefinedSetGetEntry, 0)
 	for _, df := range res {
@@ -288,7 +288,7 @@ func ConfigPostBGPPolicyDefinitions(params operations.PostConfigBgpPolicyDefinit
 	_, err := ApiHooks.NetGoBGPPolicyDefinitionAdd(&bgpPolicyConfig)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -304,7 +304,7 @@ func ConfigDeleteBGPPolicyDefinitions(params operations.DeleteConfigBgpPolicyDef
 	_, err := ApiHooks.NetGoBGPPolicyDefinitionDel(&bgpPolicyConfig)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -314,7 +314,7 @@ func ConfigGetBGPPolicyDefinitions(params operations.GetConfigBgpPolicyDefinitio
 	res, err := ApiHooks.NetGoBGPPolicyDefinitionsGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	result := make([]*models.BGPPolicyDefinitionsMod, 0)
 	for _, df := range res {
@@ -425,7 +425,7 @@ func ConfigPostBGPPolicyApply(params operations.PostConfigBgpPolicyApplyParams, 
 	_, err := ApiHooks.NetGoBGPPolicyApplyAdd(&bgpPolicyConfig)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -446,7 +446,7 @@ func ConfigDeleteBGPPolicyApply(params operations.DeleteConfigBgpPolicyApplyPara
 	_, err := ApiHooks.NetGoBGPPolicyApplyDel(&bgpPolicyConfig)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }

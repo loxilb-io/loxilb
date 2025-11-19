@@ -30,6 +30,7 @@ paths:
     get:
       summary: "Get metadata for all POST APIs"
       description: "Returns metadata about required fields for each POST API."
+      security: []
       operationId: "getMeta"
       tags:
         - "Metadata"
@@ -70,15 +71,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/Error'
       summary: User login
       tags:
       - auth
@@ -99,11 +100,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/Error'
       summary: User logout
       tags:
       - auth
@@ -123,7 +124,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/Error'
       summary: Fetch all users
       tags:
       - users
@@ -149,11 +150,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/Error'
       summary: Create a new user
       tags:
       - users
@@ -180,7 +181,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/Error'
       summary: Delete user
       tags:
       - users
@@ -212,14 +213,48 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/Error'
       summary: Update user
       tags:
       - users
+  '/auth/token/upgrade':
+    post:
+      consumes:
+      - application/json
+      description: Using manual token, It need to upgrade the token.
+      parameters:
+      - description: license as a token
+        in: body
+        name: token
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateLicenseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/UpdateLicenseRequest'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/Error'
+      summary: Upgrade token
+      tags:
+      - auth
 #----------------------------------------------
 # Load Balancer
 #----------------------------------------------
@@ -3827,6 +3862,56 @@ paths:
           description: Maintenance mode
           schema:
             $ref: '#/definitions/Error'    
+            
+#----------------------------------------------
+# Configration import and export
+#----------------------------------------------            
+  '/config/import':
+    post:
+      summary: Import configurations
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: configuration
+          type: file
+          description: The configuration file to upload.
+      responses:
+        '204':
+          description: OK
+  '/config/export':
+    get:
+      summary: Export all configurations
+      description: Export cluster, endpoint, firewall, loadbalancer, mirror, and policy configurations as a JSON file.
+      parameters:
+        - name: components
+          in: query
+          description: Comma-separated list of components to export (cluster, endpoint, firewall, loadbalancer, mirror, policy). If not specified, all components are exported.
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Configuration JSON file download
+          schema:
+            type: file
+        '400':
+          description: Invalid parameters
+          schema:
+            $ref: '#/definitions/Error' 
+        '401':
+          description: Invalid authentication credentials
+          schema:
+            $ref: '#/definitions/Error' 
+        '500':
+          description: Internal service error
+          schema:
+            $ref: '#/definitions/Error' 
+        '503':
+          description: Maintenance mode
+          schema:
+            $ref: '#/definitions/Error' 
+
 #----------------------------------------------
 # Schema definitions
 #----------------------------------------------
@@ -3847,6 +3932,8 @@ definitions:
         items:
           type: string
       details:
+        type: string
+      result:
         type: string
 
   PostSuccess:
@@ -5212,11 +5299,6 @@ definitions:
       service:
         type: string
         description: Load Balancer Service Name
-  ErrorResponse:
-    properties:
-      message:
-        type: string
-    type: object
   HealthCheckResponse:
     properties:
       status:
@@ -5252,7 +5334,6 @@ definitions:
         enum: ["admin", "viewer"]
     type: object
     required:
-      - id
       - username
       - password
 
@@ -5531,6 +5612,13 @@ definitions:
           type: string
           description: cors list
 
+  UpdateLicenseRequest:
+    type: object
+    required:
+      - license_key
+    properties:
+      license_key:
+        type: string
 securityDefinitions:
   BearerAuth:
     type: apiKey

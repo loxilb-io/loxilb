@@ -47,7 +47,7 @@ func ConfigPostSession(params operations.PostConfigSessionParams, principal inte
 	_, err := ApiHooks.NetSessionAdd(&sessionMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -62,7 +62,7 @@ func ConfigDeleteSession(params operations.DeleteConfigSessionIdentIdentParams, 
 	_, err := ApiHooks.NetSessionDel(&sessionMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -84,7 +84,7 @@ func ConfigPostSessionUlCl(params operations.PostConfigSessionulclParams, princi
 	_, err := ApiHooks.NetSessionUlClAdd(&sessionulclMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -103,7 +103,7 @@ func ConfigDeleteSessionUlCl(params operations.DeleteConfigSessionulclIdentIdent
 	_, err := ApiHooks.NetSessionUlClDel(&sessionulclMod)
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -115,7 +115,7 @@ func ConfigGetSession(params operations.GetConfigSessionAllParams, principal int
 	res, err := ApiHooks.NetSessionGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	var result []*models.SessionEntry
 	result = make([]*models.SessionEntry, 0)
@@ -152,7 +152,7 @@ func ConfigGetSessionUlCl(params operations.GetConfigSessionulclAllParams, princ
 	res, err := ApiHooks.NetSessionUlClGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	var result []*models.SessionUlClEntry
 	result = make([]*models.SessionUlClEntry, 0)

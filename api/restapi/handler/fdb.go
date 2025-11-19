@@ -25,18 +25,18 @@ import (
 
 func ConfigPostFDB(params operations.PostConfigFdbParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	ret := loxinlp.AddFDBNoHook(*params.Attr.MacAddress, *params.Attr.Dev)
-	if ret != 0 {
-		return &ResultResponse{Result: "fail"}
+	err := loxinlp.AddFDBNoHook(*params.Attr.MacAddress, *params.Attr.Dev)
+	if err != nil {
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeleteFDB(params operations.DeleteConfigFdbMacAddressDevIfNameParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: FDB %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	ret := loxinlp.DelFDBNoHook(params.MacAddress, params.IfName)
-	if ret != 0 {
-		return &ResultResponse{Result: "fail"}
+	err := loxinlp.DelFDBNoHook(params.MacAddress, params.IfName)
+	if err != nil {
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }

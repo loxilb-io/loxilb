@@ -30,7 +30,7 @@ func ConfigGetPort(params operations.GetConfigPortAllParams, principal interface
 	ports, err := ApiHooks.NetPortGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	var result []*models.PortEntry
 	result = make([]*models.PortEntry, 0)

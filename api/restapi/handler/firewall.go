@@ -91,7 +91,7 @@ func ConfigPostFW(params operations.PostConfigFirewallParams, principal interfac
 	fmt.Printf("FW: %v\n", FW)
 	_, err := ApiHooks.NetFwRuleAdd(&FW)
 	if err != nil {
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -164,7 +164,7 @@ func ConfigDeleteFW(params operations.DeleteConfigFirewallParams, principal inte
 	fmt.Printf("FW: %v\n", FW)
 	ret, err := ApiHooks.NetFwRuleDel(&FW)
 	if err != nil {
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	if ret != 0 {
 		return &ResultResponse{Result: "fail"}

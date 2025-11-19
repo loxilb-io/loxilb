@@ -95,7 +95,7 @@ func AutoGenerateMetaData(swaggerBytes []byte) (map[string]interface{}, error) {
 }
 
 // ConfigGetMetadata is used to get metadata from the Swagger document.
-func ConfigGetMetadata(params metadata.GetMetaParams, principal interface{}) middleware.Responder {
+func ConfigGetMetadata(params metadata.GetMetaParams) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "[API] Metadata %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	jsonMeta, err := AutoGenerateMetaData(EmbeddedSwagger)
 	if err != nil {

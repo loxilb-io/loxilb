@@ -221,10 +221,11 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 
 	// metadata
 	api.MetadataGetMetaHandler = metadata.GetMetaHandlerFunc(handler.ConfigGetMetadata)
+	api.AuthPostAuthTokenUpgradeHandler = auth.PostAuthTokenUpgradeHandlerFunc(handler.AuthPostManualTokenUpdate)
 
 	// It works only if the UserServiceEnable option is enabled.
 	if opts.Opts.UserServiceEnable {
-		// login logout api
+		// Authentication API
 		api.AuthPostAuthLoginHandler = auth.PostAuthLoginHandlerFunc(handler.AuthPostLogin)
 		api.AuthPostAuthLogoutHandler = auth.PostAuthLogoutHandlerFunc(handler.AuthPostLogout)
 
@@ -246,6 +247,10 @@ func configureAPI(api *operations.LoxilbRestAPIAPI) http.Handler {
 	api.GetConfigCorsAllHandler = operations.GetConfigCorsAllHandlerFunc(handler.ConfigGetCors)
 	api.PostConfigCorsHandler = operations.PostConfigCorsHandlerFunc(handler.ConfigPostCors)
 	api.DeleteConfigCorsCorsURLHandler = operations.DeleteConfigCorsCorsURLHandlerFunc(handler.ConfigDeleteCors)
+
+	// Configuration import and export
+	api.GetConfigExportHandler = operations.GetConfigExportHandlerFunc(handler.ConfigGetExport)
+	api.PostConfigImportHandler = operations.PostConfigImportHandlerFunc(handler.ConfigPostImport)
 
 	api.PreServerShutdown = func() {}
 	api.ServerShutdown = func() {}

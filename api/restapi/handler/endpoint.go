@@ -30,7 +30,7 @@ func ConfigGetEndPoint(params operations.GetConfigEndpointAllParams, principal i
 	res, err := ApiHooks.NetEpHostGet()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "api: Error : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	var result []*models.EndPointGetEntry
 	result = make([]*models.EndPointGetEntry, 0)
@@ -74,7 +74,7 @@ func ConfigPostEndPoint(params operations.PostConfigEndpointParams, principal in
 
 	_, err := ApiHooks.NetEpHostAdd(&EP)
 	if err != nil {
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -98,7 +98,7 @@ func ConfigDeleteEndPoint(params operations.DeleteConfigEndpointEpipaddressIPAdd
 	}
 	_, err := ApiHooks.NetEpHostDel(&EP)
 	if err != nil {
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -114,7 +114,7 @@ func ConfigPostEndPointHostState(params operations.PostConfigEndpointhoststatePa
 
 	_, err := ApiHooks.NetEpHostStateSet(&EPHost)
 	if err != nil {
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }

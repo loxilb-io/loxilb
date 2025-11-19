@@ -71,7 +71,7 @@ type DeleteAuthUsersIDInternalServerError struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.ErrorResponse `json:"body,omitempty"`
+	Payload *models.Error `json:"body,omitempty"`
 }
 
 // NewDeleteAuthUsersIDInternalServerError creates DeleteAuthUsersIDInternalServerError with default headers values
@@ -81,13 +81,13 @@ func NewDeleteAuthUsersIDInternalServerError() *DeleteAuthUsersIDInternalServerE
 }
 
 // WithPayload adds the payload to the delete auth users Id internal server error response
-func (o *DeleteAuthUsersIDInternalServerError) WithPayload(payload *models.ErrorResponse) *DeleteAuthUsersIDInternalServerError {
+func (o *DeleteAuthUsersIDInternalServerError) WithPayload(payload *models.Error) *DeleteAuthUsersIDInternalServerError {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the delete auth users Id internal server error response
-func (o *DeleteAuthUsersIDInternalServerError) SetPayload(payload *models.ErrorResponse) {
+func (o *DeleteAuthUsersIDInternalServerError) SetPayload(payload *models.Error) {
 	o.Payload = payload
 }
 

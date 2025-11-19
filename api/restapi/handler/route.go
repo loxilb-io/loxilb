@@ -29,10 +29,10 @@ import (
 
 func ConfigPostRoute(params operations.PostConfigRouteParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Route  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	ret := loxinlp.AddRouteNoHook(*params.Attr.DestinationIPNet, *params.Attr.Gateway, params.Attr.Protocol)
-	if ret != 0 {
-		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", ret)
-		return &ResultResponse{Result: "fail"}
+	err := loxinlp.AddRouteNoHook(*params.Attr.DestinationIPNet, *params.Attr.Gateway, params.Attr.Protocol)
+	if err != nil {
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
@@ -40,10 +40,10 @@ func ConfigPostRoute(params operations.PostConfigRouteParams, principal interfac
 func ConfigDeleteRoute(params operations.DeleteConfigRouteDestinationIPNetIPAddressMaskParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: Route  %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	DstIP := fmt.Sprintf("%s/%d", params.IPAddress, params.Mask)
-	ret := loxinlp.DelRouteNoHook(DstIP)
-	if ret != 0 {
-		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", ret)
-		return &ResultResponse{Result: "fail"}
+	err := loxinlp.DelRouteNoHook(DstIP)
+	if err != nil {
+		tk.LogIt(tk.LogDebug, "api: Error occur : %v\n", err)
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }

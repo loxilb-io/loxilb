@@ -55,7 +55,7 @@ func ConfigPostPrometheus(params operations.PostConfigMetricsParams, principal i
 	err := ApiHooks.NetPrometheusEnable()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	// Prometheus Option state change
 	prometheus.OptionStateChange(true)
@@ -72,7 +72,7 @@ func ConfigDeletePrometheus(params operations.DeleteConfigMetricsParams, princip
 	err := prometheus.PrometheusTurnOff()
 	if err != nil {
 		tk.LogIt(tk.LogDebug, "[API] Error occur : %v\n", err)
-		return &ResultResponse{Result: err.Error()}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	// Prometheus Option state change
 	prometheus.OptionStateChange(false)

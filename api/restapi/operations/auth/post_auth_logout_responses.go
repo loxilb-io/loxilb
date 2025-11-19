@@ -71,7 +71,7 @@ type PostAuthLogoutBadRequest struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.ErrorResponse `json:"body,omitempty"`
+	Payload *models.Error `json:"body,omitempty"`
 }
 
 // NewPostAuthLogoutBadRequest creates PostAuthLogoutBadRequest with default headers values
@@ -81,13 +81,13 @@ func NewPostAuthLogoutBadRequest() *PostAuthLogoutBadRequest {
 }
 
 // WithPayload adds the payload to the post auth logout bad request response
-func (o *PostAuthLogoutBadRequest) WithPayload(payload *models.ErrorResponse) *PostAuthLogoutBadRequest {
+func (o *PostAuthLogoutBadRequest) WithPayload(payload *models.Error) *PostAuthLogoutBadRequest {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the post auth logout bad request response
-func (o *PostAuthLogoutBadRequest) SetPayload(payload *models.ErrorResponse) {
+func (o *PostAuthLogoutBadRequest) SetPayload(payload *models.Error) {
 	o.Payload = payload
 }
 
@@ -116,7 +116,7 @@ type PostAuthLogoutInternalServerError struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.ErrorResponse `json:"body,omitempty"`
+	Payload *models.Error `json:"body,omitempty"`
 }
 
 // NewPostAuthLogoutInternalServerError creates PostAuthLogoutInternalServerError with default headers values
@@ -126,13 +126,13 @@ func NewPostAuthLogoutInternalServerError() *PostAuthLogoutInternalServerError {
 }
 
 // WithPayload adds the payload to the post auth logout internal server error response
-func (o *PostAuthLogoutInternalServerError) WithPayload(payload *models.ErrorResponse) *PostAuthLogoutInternalServerError {
+func (o *PostAuthLogoutInternalServerError) WithPayload(payload *models.Error) *PostAuthLogoutInternalServerError {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the post auth logout internal server error response
-func (o *PostAuthLogoutInternalServerError) SetPayload(payload *models.ErrorResponse) {
+func (o *PostAuthLogoutInternalServerError) SetPayload(payload *models.Error) {
 	o.Payload = payload
 }
 

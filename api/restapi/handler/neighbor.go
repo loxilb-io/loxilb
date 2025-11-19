@@ -27,20 +27,20 @@ import (
 func ConfigPostNeighbor(params operations.PostConfigNeighborParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: IPv4 Neighbor %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
 	if params.Attr.IPAddress == nil || params.Attr.Dev == nil || params.Attr.MacAddress == nil {
-		return &ResultResponse{Result: "fail"}
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage("invalid parameters")}
 	}
-	ret := loxinlp.AddNeighNoHook(*params.Attr.IPAddress, *params.Attr.Dev, *params.Attr.MacAddress)
-	if ret != 0 {
-		return &ResultResponse{Result: "fail"}
+	err := loxinlp.AddNeighNoHook(*params.Attr.IPAddress, *params.Attr.Dev, *params.Attr.MacAddress)
+	if err != nil {
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }
 
 func ConfigDeleteNeighbor(params operations.DeleteConfigNeighborIPAddressDevIfNameParams, principal interface{}) middleware.Responder {
 	tk.LogIt(tk.LogTrace, "api: IPv4 Neighbor   %s API called. url : %s\n", params.HTTPRequest.Method, params.HTTPRequest.URL)
-	ret := loxinlp.DelNeighNoHook(params.IPAddress, params.IfName)
-	if ret != 0 {
-		return &ResultResponse{Result: "fail"}
+	err := loxinlp.DelNeighNoHook(params.IPAddress, params.IfName)
+	if err != nil {
+		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	return &ResultResponse{Result: "Success"}
 }

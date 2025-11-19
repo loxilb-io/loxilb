@@ -44,6 +44,10 @@ const BFDPort = 3784
 const BFDDefRetryCount = 3
 
 const (
+	KAHookScript = "/opt/loxilb/ka_hook.sh"
+)
+
+const (
 	// CIDefault - Default CI Instance name
 	CIDefault = "llb-inst0"
 	// CIMasterStateString - Master state string for a cluster instance

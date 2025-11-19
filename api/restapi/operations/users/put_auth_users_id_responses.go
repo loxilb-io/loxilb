@@ -71,7 +71,7 @@ type PutAuthUsersIDBadRequest struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.ErrorResponse `json:"body,omitempty"`
+	Payload *models.Error `json:"body,omitempty"`
 }
 
 // NewPutAuthUsersIDBadRequest creates PutAuthUsersIDBadRequest with default headers values
@@ -81,13 +81,13 @@ func NewPutAuthUsersIDBadRequest() *PutAuthUsersIDBadRequest {
 }
 
 // WithPayload adds the payload to the put auth users Id bad request response
-func (o *PutAuthUsersIDBadRequest) WithPayload(payload *models.ErrorResponse) *PutAuthUsersIDBadRequest {
+func (o *PutAuthUsersIDBadRequest) WithPayload(payload *models.Error) *PutAuthUsersIDBadRequest {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the put auth users Id bad request response
-func (o *PutAuthUsersIDBadRequest) SetPayload(payload *models.ErrorResponse) {
+func (o *PutAuthUsersIDBadRequest) SetPayload(payload *models.Error) {
 	o.Payload = payload
 }
 
@@ -116,7 +116,7 @@ type PutAuthUsersIDInternalServerError struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.ErrorResponse `json:"body,omitempty"`
+	Payload *models.Error `json:"body,omitempty"`
 }
 
 // NewPutAuthUsersIDInternalServerError creates PutAuthUsersIDInternalServerError with default headers values
@@ -126,13 +126,13 @@ func NewPutAuthUsersIDInternalServerError() *PutAuthUsersIDInternalServerError {
 }
 
 // WithPayload adds the payload to the put auth users Id internal server error response
-func (o *PutAuthUsersIDInternalServerError) WithPayload(payload *models.ErrorResponse) *PutAuthUsersIDInternalServerError {
+func (o *PutAuthUsersIDInternalServerError) WithPayload(payload *models.Error) *PutAuthUsersIDInternalServerError {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the put auth users Id internal server error response
-func (o *PutAuthUsersIDInternalServerError) SetPayload(payload *models.ErrorResponse) {
+func (o *PutAuthUsersIDInternalServerError) SetPayload(payload *models.Error) {
 	o.Payload = payload
 }
 

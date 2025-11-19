@@ -72,19 +72,19 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "401": {
             "description": "Unauthorized",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -118,13 +118,65 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/auth/token/upgrade": {
+      "post": {
+        "description": "Using manual token, It need to upgrade the token.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "auth"
+        ],
+        "summary": "Upgrade token",
+        "parameters": [
+          {
+            "description": "license as a token",
+            "name": "token",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateLicenseRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/UpdateLicenseRequest"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -153,7 +205,7 @@ func init() {
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -192,13 +244,13 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -250,13 +302,13 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -297,7 +349,7 @@ func init() {
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -1793,6 +1845,55 @@ func init() {
         }
       }
     },
+    "/config/export": {
+      "get": {
+        "description": "Export cluster, endpoint, firewall, loadbalancer, mirror, and policy configurations as a JSON file.",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Export all configurations",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Comma-separated list of components to export (cluster, endpoint, firewall, loadbalancer, mirror, policy). If not specified, all components are exported.",
+            "name": "components",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Configuration JSON file download",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/fdb": {
       "post": {
         "description": "Assign FDB in the device",
@@ -2173,6 +2274,27 @@ func init() {
             "schema": {
               "$ref": "#/definitions/Error"
             }
+          }
+        }
+      }
+    },
+    "/config/import": {
+      "post": {
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "summary": "Import configurations",
+        "parameters": [
+          {
+            "type": "file",
+            "description": "The configuration file to upload.",
+            "name": "configuration",
+            "in": "formData"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
           }
         }
       }
@@ -4897,6 +5019,7 @@ func init() {
     },
     "/meta": {
       "get": {
+        "security": [],
         "description": "Returns metadata about required fields for each POST API.",
         "produces": [
           "application/json"
@@ -6288,6 +6411,9 @@ func init() {
         "message": {
           "type": "string"
         },
+        "result": {
+          "type": "string"
+        },
         "sub-code": {
           "type": "integer",
           "format": "int32"
@@ -6313,14 +6439,6 @@ func init() {
               }
             }
           }
-        }
-      }
-    },
-    "ErrorResponse": {
-      "type": "object",
-      "properties": {
-        "message": {
-          "type": "string"
         }
       }
     },
@@ -7278,7 +7396,7 @@ func init() {
       ],
       "properties": {
         "logLevel": {
-          "description": "Set level to debug,info,error,warning,notice,critical,emergency,alert",
+          "description": "Set level to trace,debug,info,error,warning,notice,critical,emergency,alert",
           "type": "string",
           "enum": [
             "trace",
@@ -7779,10 +7897,20 @@ func init() {
         }
       }
     },
+    "UpdateLicenseRequest": {
+      "type": "object",
+      "required": [
+        "license_key"
+      ],
+      "properties": {
+        "license_key": {
+          "type": "string"
+        }
+      }
+    },
     "User": {
       "type": "object",
       "required": [
-        "id",
         "username",
         "password"
       ],
@@ -8003,19 +8131,19 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "401": {
             "description": "Unauthorized",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -8049,13 +8177,65 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/auth/token/upgrade": {
+      "post": {
+        "description": "Using manual token, It need to upgrade the token.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "auth"
+        ],
+        "summary": "Upgrade token",
+        "parameters": [
+          {
+            "description": "license as a token",
+            "name": "token",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateLicenseRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/UpdateLicenseRequest"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -8084,7 +8264,7 @@ func init() {
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -8123,13 +8303,13 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -8181,13 +8361,13 @@ func init() {
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -8228,7 +8408,7 @@ func init() {
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/ErrorResponse"
+              "$ref": "#/definitions/Error"
             }
           }
         }
@@ -9724,6 +9904,55 @@ func init() {
         }
       }
     },
+    "/config/export": {
+      "get": {
+        "description": "Export cluster, endpoint, firewall, loadbalancer, mirror, and policy configurations as a JSON file.",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Export all configurations",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Comma-separated list of components to export (cluster, endpoint, firewall, loadbalancer, mirror, policy). If not specified, all components are exported.",
+            "name": "components",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Configuration JSON file download",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Invalid authentication credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "503": {
+            "description": "Maintenance mode",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/config/fdb": {
       "post": {
         "description": "Assign FDB in the device",
@@ -10104,6 +10333,27 @@ func init() {
             "schema": {
               "$ref": "#/definitions/Error"
             }
+          }
+        }
+      }
+    },
+    "/config/import": {
+      "post": {
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "summary": "Import configurations",
+        "parameters": [
+          {
+            "type": "file",
+            "description": "The configuration file to upload.",
+            "name": "configuration",
+            "in": "formData"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
           }
         }
       }
@@ -12828,6 +13078,7 @@ func init() {
     },
     "/meta": {
       "get": {
+        "security": [],
         "description": "Returns metadata about required fields for each POST API.",
         "produces": [
           "application/json"
@@ -14677,6 +14928,9 @@ func init() {
         "message": {
           "type": "string"
         },
+        "result": {
+          "type": "string"
+        },
         "sub-code": {
           "type": "integer",
           "format": "int32"
@@ -14705,14 +14959,6 @@ func init() {
         },
         "value": {
           "type": "number"
-        }
-      }
-    },
-    "ErrorResponse": {
-      "type": "object",
-      "properties": {
-        "message": {
-          "type": "string"
         }
       }
     },
@@ -15952,7 +16198,7 @@ func init() {
       ],
       "properties": {
         "logLevel": {
-          "description": "Set level to debug,info,error,warning,notice,critical,emergency,alert",
+          "description": "Set level to trace,debug,info,error,warning,notice,critical,emergency,alert",
           "type": "string",
           "enum": [
             "trace",
@@ -16699,10 +16945,20 @@ func init() {
         }
       }
     },
+    "UpdateLicenseRequest": {
+      "type": "object",
+      "required": [
+        "license_key"
+      ],
+      "properties": {
+        "license_key": {
+          "type": "string"
+        }
+      }
+    },
     "User": {
       "type": "object",
       "required": [
-        "id",
         "username",
         "password"
       ],

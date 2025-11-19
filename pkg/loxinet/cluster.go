@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/exec"
 	"time"
 
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
@@ -541,6 +542,21 @@ func (ch *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 			mh.bgp.UpdateCIState(cm.Instance, ci.State, ci.Vip)
 		}
 		go mh.zr.Rules.RulesSyncToClusterState(cm.Instance, cm.State)
+
+		// Update Call the ka_hook.sh script
+		hookScrptCall := func(cm cmn.HASMod) {
+			if _, err := os.Stat(cmn.KAHookScript); !errors.Is(err, os.ErrNotExist) {
+				command := cmn.KAHookScript + " " + cm.Instance + " " + cm.State + " " + ci.Vip.String()
+				cmd := exec.Command("bash", "-c", command)
+				output, err := cmd.Output()
+				if err != nil {
+					tk.LogIt(tk.LogError, "[CLUSTER] Error in applying ka hook : %s", err.Error())
+				} else {
+					tk.LogIt(tk.LogDebug, "[CLUSTER] ka hook output: %v\n", string(output))
+				}
+			}
+		}
+		go hookScrptCall(cm)
 		return ci.State, nil
 	}
 
