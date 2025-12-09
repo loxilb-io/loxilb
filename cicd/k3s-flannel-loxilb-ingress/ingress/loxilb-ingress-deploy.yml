@@ -135,7 +135,7 @@ spec:
             mountPath: /opt/loxilb/cert/server.key
             subPath: server.key
             readOnly: true
-        image: "ghcr.io/loxilb-io/loxilb-ingress:debug"
+        image: "ghcr.io/loxilb-io/loxilb-ingress:latest-u20"
         imagePullPolicy: Always
         command: [ "/bin/loxilb-ingress" ]
         ports:
