@@ -62,6 +62,14 @@ rules:
   verbs:
   - update
 - apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - networking.k8s.io
   resources:
   - ingressclasses
@@ -113,19 +121,30 @@ spec:
         app.kubernetes.io/instance: loxilb-ingress
         app.kubernetes.io/name: loxilb-ingress
     spec:
-      #hostNetwork: true
-      #dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: loxilb-ingress
       containers:
       - name: loxilb-ingress
         volumeMounts:
           - mountPath: "/opt/loxilb/cert/"
-            name: loxilb-ssl
-        image: "ghcr.io/loxilb-io/loxilb-ingress:latest"
+            name: loxilb-ssl-directory
+          - name: loxilb-default-ssl
+            mountPath: /opt/loxilb/cert/server.crt
+            subPath: server.crt
+            readOnly: true
+          - name: loxilb-default-ssl
+            mountPath: /opt/loxilb/cert/server.key
+            subPath: server.key
+            readOnly: true
+        image: "ghcr.io/loxilb-io/loxilb-ingress:debug"
         imagePullPolicy: Always
         command: [ "/bin/loxilb-ingress" ]
         ports:
         - containerPort: 11111
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - SYS_ADMIN
         livenessProbe:
           httpGet:
             path: netlox/v1/config/loadbalancer/all
@@ -134,6 +153,8 @@ spec:
           periodSeconds: 20
           timeoutSeconds: 5
       volumes:
-        - name: loxilb-ssl
+        - name: loxilb-default-ssl
           secret:
             secretName: loxilb-ssl
+        - name: loxilb-ssl-directory
+          emptyDir: {}
