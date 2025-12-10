@@ -27,6 +27,7 @@ type CloudHookInterface interface {
 	CloudUnPrepareVIPNetWork() error
 	CloudDestroyVIPNetWork() error
 	CloudUpdatePrivateIP(vIP net.IP, eIP net.IP, add bool) error
+	CloudGetPrivateInterfaceID() (int, error)
 }
 
 func CloudHookNew(_ string) CloudHookInterface {

@@ -32,5 +32,8 @@ sudo kubectl apply -f loxilb-secret.yml
 sudo kubectl apply -f /vagrant/ingress/loxilb-ingress-deploy.yml
 sudo kubectl apply -f /vagrant/ingress/loxilb-ingress-svc.yml
 sudo kubectl apply -f /vagrant/ingress/loxilb-ingress.yml
+sudo kubectl get secret loxilb-ssl -n kube-system -o yaml \
+  | sed 's/namespace: kube-system/namespace: default/' \
+  | kubectl apply -f -
 sleep 30
 /vagrant/wait_ready.sh

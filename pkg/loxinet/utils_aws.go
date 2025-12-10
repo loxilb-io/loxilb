@@ -20,6 +20,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"net"
+	"strings"
+	"time"
+
+	awsUtil "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -27,10 +33,6 @@ import (
 	utils "github.com/loxilb-io/loxilb/pkg/utils"
 	tk "github.com/loxilb-io/loxilib"
 	nl "github.com/vishvananda/netlink"
-	"io"
-	"net"
-	"strings"
-	"time"
 )
 
 var (
@@ -115,7 +117,6 @@ func awsGetInstanceAvailabilityZone(ctx context.Context) (string, error) {
 }
 
 func awsPrepDFLRoute() error {
-
 	if !setDFLRoute {
 		return nil
 	}
@@ -185,6 +186,7 @@ func (aws *AWSAPIStruct) CloudPrepareVIPNetWork() error {
 	loxilbKey := "loxiType"
 	loxilbIfKeyVal := fmt.Sprintf("loxilb-eni%s", mh.cloudInst)
 	loxilbSubNetKeyVal := fmt.Sprintf("loxilb-subnet%s", mh.cloudInst)
+	loxilbRouteTableKeyVal := fmt.Sprintf("loxilb-routetable%s", mh.cloudInst)
 	filterStr := fmt.Sprintf("%s:%s", "tag", loxilbKey)
 
 	output, err := ec2Client.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
@@ -243,6 +245,32 @@ func (aws *AWSAPIStruct) CloudPrepareVIPNetWork() error {
 		if err != nil {
 			tk.LogIt(tk.LogError, "failed to delete subnet (%s):%s\n", subnet, err)
 			return err
+		}
+	}
+
+	routeTableOutput, err := ec2Client.DescribeRouteTables(ctx3, &ec2.DescribeRouteTablesInput{
+		Filters: []types.Filter{
+			{Name: &filterStr, Values: []string{loxilbRouteTableKeyVal}},
+		},
+	})
+	if err == nil && routeTableOutput != nil {
+		for _, routeTable := range routeTableOutput.RouteTables {
+			if routeTable.Associations != nil {
+				for _, assoc := range routeTable.Associations {
+					if assoc.SubnetId != nil {
+						_, err := ec2Client.DisassociateRouteTable(ctx3, &ec2.DisassociateRouteTableInput{AssociationId: assoc.RouteTableAssociationId})
+						if err != nil {
+							tk.LogIt(tk.LogError, "failed to disassociate RouteTable (%s):%s\n", *assoc.RouteTableAssociationId, err)
+							return err
+						}
+					}
+				}
+			}
+			_, err := ec2Client.DeleteRouteTable(ctx3, &ec2.DeleteRouteTableInput{RouteTableId: routeTable.RouteTableId})
+			if err != nil {
+				tk.LogIt(tk.LogError, "failed to delete RouteTable (%s):%s\n", *routeTable.RouteTableId, err)
+				return err
+			}
 		}
 	}
 
@@ -313,6 +341,55 @@ func (aws *AWSAPIStruct) CloudPrepareVIPNetWork() error {
 	if err != nil {
 		tk.LogIt(tk.LogError, "failed to create subnet for loxilb instance %v:%s\n", vpcID, err)
 		return nil
+	}
+
+	// Associate the IGW with the route table of the subnet: 1. Create the route table for the subnet
+	subnetId := *subOutput.Subnet.SubnetId
+	newRouteTableOutput, err := ec2Client.CreateRouteTable(ctx3, &ec2.CreateRouteTableInput{
+		VpcId: &vpcID,
+		TagSpecifications: []types.TagSpecification{
+			{
+				ResourceType: types.ResourceTypeRouteTable,
+				Tags: []types.Tag{
+					{Key: &loxilbKey, Value: &loxilbRouteTableKeyVal},
+				},
+			},
+		},
+	})
+	if err != nil {
+		tk.LogIt(tk.LogError, "failed to create RouteTable for loxilb instance: %s\n", err)
+		return nil
+	}
+	// Associate the IGW with the route table of the subnet: 2. Associate the route table to the subnet
+	_, err = ec2Client.AssociateRouteTable(ctx3, &ec2.AssociateRouteTableInput{
+		RouteTableId: newRouteTableOutput.RouteTable.RouteTableId,
+		SubnetId:     &subnetId,
+	})
+	if err != nil {
+		tk.LogIt(tk.LogError, "failed to associate RouteTable to subnet %v: %s\n", subnetId, err)
+		return nil
+	}
+
+	// Associate the IGW with the route table of the subnet: 2. Get IGW
+	igwOutput, err := ec2Client.DescribeInternetGateways(ctx, &ec2.DescribeInternetGatewaysInput{
+		Filters: []types.Filter{
+			{Name: awsUtil.String("attachment.vpc-id"), Values: []string{vpcID}},
+		},
+	})
+	if err != nil || len(igwOutput.InternetGateways) == 0 {
+		tk.LogIt(tk.LogError, "err: %v. failed to describe VPC(%s) IGWs\n", err, vpcID)
+		return nil
+	}
+
+	// Associate the IGW with the route table of the subnet: 3. Create a route to the IGW
+	_, err = ec2Client.CreateRoute(ctx, &ec2.CreateRouteInput{
+		RouteTableId:         newRouteTableOutput.RouteTable.RouteTableId,
+		DestinationCidrBlock: awsUtil.String("0.0.0.0/0"),
+		GatewayId:            igwOutput.InternetGateways[0].InternetGatewayId,
+	})
+	if err != nil {
+		tk.LogIt(tk.LogError, "failed to create Route: %s\n", err.Error())
+		tk.LogIt(tk.LogError, "failed to associate RouteTable to IGW.\n")
 	}
 
 	sgList, err := awsImdsGetSecurityGroups(ctx3)
@@ -757,7 +834,8 @@ func (aws *AWSAPIStruct) CloudAPIInit(cloudCIDRBlock string) error {
 	// Using the SDK's default configuration, loading additional config
 	// and credentials values from the environment variables, shared
 	// credentials, and shared configuration files
-	cfg, err := config.LoadDefaultConfig(context.TODO())
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithClientLogMode(awsUtil.LogRequestWithBody|awsUtil.LogResponseWithBody))
 	if err != nil {
 		tk.LogIt(tk.LogError, "failed to load cloud config\n")
 		return err
@@ -842,6 +920,16 @@ func (aws *AWSAPIStruct) CloudUpdatePrivateIP(vIP net.IP, eIP net.IP, add bool) 
 		return err
 	}
 	return awsPrepDFLRoute()
+}
+
+func (aws *AWSAPIStruct) CloudGetPrivateInterfaceID() (int, error) {
+	link, err := nl.LinkByName(intfENIName)
+	if err != nil {
+		tk.LogIt(tk.LogError, "aws: failed to get ENI link (%s). err: %v\n", intfENIName, err)
+		return -1, err
+	}
+
+	return link.Attrs().Index, nil
 }
 
 // AWSCloudHookNew - Create AWS specific API hooks
