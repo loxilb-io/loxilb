@@ -19,10 +19,11 @@ package loxinet
 import (
 	"errors"
 	"fmt"
+	"net"
+
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
 	tk "github.com/loxilb-io/loxilib"
-	"net"
 )
 
 // error codes
@@ -580,8 +581,18 @@ func (rt *Rt) DP(work DpWorkT) int {
 	rtWq.Dst = *rtNet
 	rtWq.RtType = rt.TFlags
 	rtWq.RtMark = int(rt.Mark)
-	rtWq.NMax = len(rt.NextHops)
-	for i := range rt.NextHops {
+
+	// Limit to 8 nexthops (NMark array size)
+	// eBPF kernel only supports up to 4 (DP_MAX_ACTIVE_PATHS)
+	maxNh := len(rt.NextHops)
+	if maxNh > 8 {
+		tk.LogIt(tk.LogWarning, "route %s has %d nexthops, limiting to 8 (eBPF supports max 4)\n",
+			rt.Key.RtCidr, maxNh)
+		maxNh = 8
+	}
+
+	rtWq.NMax = maxNh
+	for i := 0; i < maxNh; i++ {
 		rtWq.NMark[i] = int(rt.RtGetNhMark(i))
 	}
 
