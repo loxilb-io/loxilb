@@ -22,7 +22,7 @@ vagrant ssh master -c 'sudo kubectl get httproute -A' 2> /dev/null
 echo -e "\n\nService Info\n"
 vagrant ssh master -c 'sudo kubectl get svc -A' 2> /dev/null
 echo -e "\n\nEP Info\n"
-vagrant ssh master -c 'sudo kubectl get ep -A' 2> /dev/null
+vagrant ssh master -c 'sudo kubectl get endpointslice -A' 2> /dev/null
 echo -e "\n\nIngress Info\n"
 vagrant ssh master -c 'sudo kubectl get ingress -A' 2> /dev/null
 echo -e "\n\nLB service Info\n"
