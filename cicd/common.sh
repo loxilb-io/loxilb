@@ -166,8 +166,13 @@ spawn_docker_host() {
 ## Get loxilb peer docker IP
 get_llb_peerIP() {
    if [[ "$1" == "llb1" ]]; then
-      llb1IP=$(docker inspect --format='{{.NetworkSettings.IPAddress}}' llb1)
-      if [[ "lb$llb1IP" == "lb" ]];then
+      # Try new format first (Networks map), then fall back to old format
+      llb1IP=$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' llb1 2>/dev/null)
+      if [[ -z "$llb1IP" ]]; then
+        llb1IP=$(docker inspect --format='{{.NetworkSettings.IPAddress}}' llb1 2>/dev/null)
+      fi
+      if [[ "lb$llb1IP" == "lb" ]] || [[ -z "$llb1IP" ]]; then
+        llb1IP="172.17.0.2"
         llb2IP="172.17.0.3"
       else
         read A B C D <<<"${llb1IP//./ }"
@@ -176,9 +181,14 @@ get_llb_peerIP() {
       cluster_opts=" --cluster=$llb2IP --self=0"
       ka_opts=" --ka=$llb2IP:$llb1IP"
     elif [[ "$1" == "llb2" ]]; then
-      llb2IP=$(docker inspect --format='{{.NetworkSettings.IPAddress}}' llb2)
-      if [[ "lb$llb2IP" == "lb" ]];then
+      # Try new format first (Networks map), then fall back to old format
+      llb2IP=$(docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' llb2 2>/dev/null)
+      if [[ -z "$llb2IP" ]]; then
+        llb2IP=$(docker inspect --format='{{.NetworkSettings.IPAddress}}' llb2 2>/dev/null)
+      fi
+      if [[ "lb$llb2IP" == "lb" ]] || [[ -z "$llb2IP" ]]; then
         llb1IP="172.17.0.2"
+        llb2IP="172.17.0.3"
       else
         read A B C D <<<"${llb2IP//./ }"
         llb1IP="$A.$B.$C.$((D-1))"
