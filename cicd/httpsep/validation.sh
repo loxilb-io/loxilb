@@ -44,6 +44,10 @@ function health() {
         sleep 1
     done
 
+    if [ "$1" != "strict" ]; then
+        res=$($hexec l3h1 ./client/client -key 10.10.10.1/key.pem --cert 10.10.10.1/cert.pem  --cacert minica.pem -host 20.20.20.1:2020)
+    fi
+
     for i in {1..4}
     do
     for j in {0..2}
