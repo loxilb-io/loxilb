@@ -26,8 +26,6 @@ disconnect_docker_hosts r2 ep1
 disconnect_docker_hosts r2 ep2
 disconnect_docker_hosts r2 ep3
 
-delete_docker_host ka_llb1
-delete_docker_host ka_llb2
 delete_docker_host llb1
 delete_docker_host llb2
 delete_docker_host user
@@ -46,7 +44,7 @@ fi
 
 sudo apt-get remove bird2 ipvsadm ipset --yes
 docker image rm loxilb-io/sctp-server
-docker images -a | grep "loxilb-io" | awk '{print $3}' | xargs docker rmi
+docker images --filter=reference="loxilb-io/*" -q | xargs -r docker rmi
 echo "#########################################"
 echo "Removed testbed"
 echo "#########################################"
