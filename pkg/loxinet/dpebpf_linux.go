@@ -767,8 +767,7 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 	var act *rtL2NhAct
 	var tunAct *rtTunNhAct
 
-	key := new(nhKey)
-	key.nh_num = C.uint(w.NextHopNum)
+	var key C.uint = C.uint(w.NextHopNum)
 
 	if w.Work == DpCreate {
 		dat := new(nhDat)
@@ -777,7 +776,7 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 			dat.ca.act_type = C.DP_SET_TOCP
 		} else {
 			if w.TunNh {
-				tk.LogIt(tk.LogDebug, "Setting tunNh 0x%x\n", key.nh_num)
+				tk.LogIt(tk.LogDebug, "Setting tunNh 0x%x\n", key)
 				if w.TunType == DpTunIPIP {
 					dat.ca.act_type = C.DP_SET_NEIGH_IPIP
 				} else {
@@ -808,7 +807,7 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 		}
 
 		ret := C.llb_add_map_elem(C.LL_DP_NH_MAP,
-			unsafe.Pointer(key),
+			unsafe.Pointer(&key),
 			unsafe.Pointer(dat))
 		if ret != 0 {
 			return EbpfErrNhAdd
@@ -817,10 +816,10 @@ func DpNextHopMod(w *NextHopDpWorkQ) int {
 	} else if w.Work == DpRemove {
 		dat := new(nhDat)
 		C.memset(unsafe.Pointer(dat), 0, C.sizeof_struct_dp_nh_tact)
-		//C.llb_del_table_elem(C.LL_DP_NH_MAP, unsafe.Pointer(key))
+		//C.llb_del_table_elem(C.LL_DP_NH_MAP, unsafe.Pointer(&key))
 		// eBPF array elements cant be deleted. Instead we just reset it
 		C.llb_add_map_elem(C.LL_DP_NH_MAP,
-			unsafe.Pointer(key),
+			unsafe.Pointer(&key),
 			unsafe.Pointer(dat))
 		return 0
 	}
