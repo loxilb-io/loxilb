@@ -533,9 +533,14 @@ func (na *NetAPIStruct) NetBFDGet() ([]cmn.BFDMod, error) {
 		return nil, errors.New("running in bgp only mode")
 	}
 	mh.mtx.Lock()
-	defer mh.mtx.Unlock()
-
-	return mh.has.CIBFDSessionGet()
+	if !mh.has.SpawnKa || mh.has.Bs == nil {
+		mh.mtx.Unlock()
+		tk.LogIt(tk.LogError, "[CLUSTER] BFD sessions not running\n")
+		return nil, errors.New("bfd session not running")
+	}
+	bp := mh.has.Bs
+	mh.mtx.Unlock()
+	return bp.BFDGet()
 }
 
 // NetBFDAdd - Add BFD Session
