@@ -321,6 +321,22 @@ type LBDpWorkQ struct {
 	secIP     []net.IP
 }
 
+// LBCtDpWorkQ - work queue entry for service-level CT/FC cleanup
+type LBCtDpWorkQ struct {
+	ZoneNum   int
+	ServiceIP net.IP
+	L4Port    uint16
+	Proto     uint8
+	BlockNum  uint32
+	RuleID    uint32
+	FlushMode uint8
+}
+
+const (
+	CtFlushRidMatchOrZero uint8 = iota
+	CtFlushRidZeroOnly
+)
+
 // LBSessionResetWorkQ - Load balancer session reset work queue
 type LBSessionResetWorkQ struct {
 	Mark        int           // Load balancer rule mark identifier
@@ -460,6 +476,7 @@ type DpHookInterface interface {
 	DpRouteDel(*RouteDpWorkQ) int
 	DpLBRuleAdd(*LBDpWorkQ) int
 	DpLBRuleDel(*LBDpWorkQ) int
+	DpLBCtFlush(*LBCtDpWorkQ) int
 	DpLBSessionReset(*LBSessionResetWorkQ) int
 	DpFwRuleAdd(w *FwDpWorkQ) int
 	DpFwRuleDel(w *FwDpWorkQ) int
@@ -819,9 +836,25 @@ func (dp *DpH) DpWorkOnPeerOp(pWq *PeerDpWorkQ) DpRetT {
 }
 
 // DpWorkSingle - routine to work on a single dp work queue request
+// DpSyncBarrier - token sent on ToDpCh to wait for all preceding work to complete
+type DpSyncBarrier struct {
+	Done chan struct{}
+}
+
+// DpBrokerSyncBarrier - enqueue a barrier and block until DpWorker processes it,
+// guaranteeing all work items queued before the barrier are fully applied to BPF maps
+func DpBrokerSyncBarrier(dp *DpH) {
+	b := &DpSyncBarrier{Done: make(chan struct{})}
+	dp.ToDpCh <- b
+	<-b.Done
+}
+
 func DpWorkSingle(dp *DpH, m interface{}) DpRetT {
 	var ret DpRetT
 	switch mq := m.(type) {
+	case *DpSyncBarrier:
+		close(mq.Done)
+		return 0
 	case *MirrDpWorkQ:
 		ret = dp.DpWorkOnMirr(mq)
 	case *PolDpWorkQ:
