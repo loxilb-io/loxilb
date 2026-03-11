@@ -36,6 +36,7 @@ package loxinet
 #include "../../loxilb-ebpf/kernel/loxilb_libdp.h"
 int bpf_map_get_next_key(int fd, const void *key, void *next_key);
 int bpf_map_lookup_elem(int fd, const void *key, void *value);
+int llb_flush_ct_by_nat(void *k, uint32_t rid);
 extern void goMapNotiHandler(struct ll_dp_map_notif *);
 extern void goProxyEntCollector(struct dp_proxy_ct_ent *);
 extern void goLinuxArpResolver(unsigned int);
@@ -1111,6 +1112,49 @@ func (e *DpEbpfH) DpLBRuleAdd(w *LBDpWorkQ) int {
 // DpLBRuleDel - routine to work on a ebpf lb delete request
 func (e *DpEbpfH) DpLBRuleDel(w *LBDpWorkQ) int {
 	return DpLBRuleMod(w)
+}
+
+// DpLBCtFlush - cleanup CT/FC entries for a specific LB service tuple
+func (e *DpEbpfH) DpLBCtFlush(w *LBCtDpWorkQ) int {
+	if w == nil || w.ServiceIP == nil || w.Proto == 0 {
+		return -1
+	}
+
+	key := new(natKey)
+	key.daddr = [4]C.uint{0, 0, 0, 0}
+	if tk.IsNetIPv4(w.ServiceIP.String()) {
+		key.daddr[0] = C.uint(tk.IPtonl(w.ServiceIP))
+		key.v6 = 0
+	} else {
+		convNetIP2DPv6Addr(unsafe.Pointer(&key.daddr[0]), w.ServiceIP)
+		key.v6 = 1
+	}
+
+	key.dport = C.ushort(tk.Htons(w.L4Port))
+	key.l4proto = C.ushort(w.Proto)
+	key.zone = C.ushort(w.ZoneNum)
+
+	rid := w.RuleID
+	if rid == 0 {
+		rid = w.BlockNum
+	}
+
+	encodedRid := rid
+	if w.FlushMode == CtFlushRidZeroOnly {
+		encodedRid = rid | (1 << 31)
+	}
+
+	ret := int(C.llb_flush_ct_by_nat(unsafe.Pointer(key), C.uint(encodedRid)))
+	if ret < 0 {
+		C.llb_age_map_entries(C.LL_DP_CT_MAP)
+		C.llb_age_map_entries(C.LL_DP_FCV4_MAP)
+		return ret
+	}
+
+	tk.LogIt(tk.LogDebug, "[DP] LB CT flush tuple %s:%d proto=%d zone=%d rid=%d aged=%d\n",
+		w.ServiceIP.String(), w.L4Port, w.Proto, w.ZoneNum, rid, ret)
+
+	return 0
 }
 
 // getNatEpMapFd - Get file descriptor for NAT endpoint map

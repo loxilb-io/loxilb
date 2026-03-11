@@ -1839,7 +1839,10 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		eRule.sT = time.Now()
 		eRule.iTO = serv.InactiveTimeout
 		tk.LogIt(tk.LogDebug, "lb-rule updated - %s:%s\n", eRule.tuples.String(), eRule.act.String())
+		R.flushLBCtEntries(eRule, CtFlushRidMatchOrZero)
 		eRule.DP(DpCreate)
+		DpBrokerSyncBarrier(mh.dp)
+		R.flushLBCtEntries(eRule, CtFlushRidZeroOnly)
 
 		return 0, nil
 	} else if serv.Oper == cmn.LBOPDetach {
@@ -1926,8 +1929,11 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 	if r.ruleNum < RtMaximumLbs {
 		R.tables[RtLB].rArr[r.ruleNum] = r
 	}
-	R.addVIPSys(r)
+	R.flushLBCtEntries(r, CtFlushRidMatchOrZero)
 	r.DP(DpCreate)
+	DpBrokerSyncBarrier(mh.dp)
+	R.flushLBCtEntries(r, CtFlushRidZeroOnly)
+	R.addVIPSys(r)
 	tk.LogIt(tk.LogDebug, "lb-rule added - %d:%s-%s\n", r.ruleNum, r.tuples.String(), r.act.String())
 
 	return 0, nil
@@ -2026,12 +2032,43 @@ func (R *RuleH) DeleteLbRule(serv cmn.LbServiceArg) (int, error) {
 	}
 
 	R.deleteVIPSys(rule)
+	R.flushLBCtEntries(rule, CtFlushRidMatchOrZero)
 
 	tk.LogIt(tk.LogDebug, "lb-rule deleted %s-%s\n", rule.tuples.String(), rule.act.String())
 
 	rule.DP(DpRemove)
 
 	return 0, nil
+}
+
+// flushLBCtEntries - service scoped CT/FC cleanup hook before delete/recreate
+func (R *RuleH) flushLBCtEntries(r *ruleEnt, flushMode uint8) {
+	if r == nil || mh.dp == nil || mh.dp.DpHooks == nil {
+		return
+	}
+
+	if r.tuples.l4Prot.val != 132 {
+		return
+	}
+
+	if r.tuples.l4Dst.valMin != r.tuples.l4Dst.valMax {
+		tk.LogIt(tk.LogDebug, "lb-rule ct-flush skipped (port-range) - %s\n", r.tuples.String())
+		return
+	}
+
+	work := &LBCtDpWorkQ{
+		ZoneNum:   r.zone.ZoneNum,
+		ServiceIP: r.RuleVIP2PrivIP(),
+		L4Port:    r.tuples.l4Dst.valMin,
+		Proto:     r.tuples.l4Prot.val,
+		BlockNum:  uint32(r.ruleNum),
+		RuleID:    uint32(r.ruleNum),
+		FlushMode: flushMode,
+	}
+
+	if ret := mh.dp.DpHooks.DpLBCtFlush(work); ret != 0 {
+		tk.LogIt(tk.LogError, "lb-rule ct-flush failed - %s:%d:%d\n", r.tuples.String(), r.ruleNum, ret)
+	}
 }
 
 // GetFwRule - get all Fwrules and pack them into a cmn.FwRuleMod slice
