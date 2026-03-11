@@ -198,13 +198,13 @@ var (
 	unHealthyHostCount = promauto.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "unhealthy_host_count",
-			Help: "Average number of unhealthy targets",
+			Help: "Average number of unhealthy targets.",
 		},
 	)
 	ruleCount = promauto.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "lb_rule_count",
-			Help: "Average number of unhealthy targets",
+			Help: "Total number of load balancing rules.",
 		},
 	)
 	consumedLcus = promauto.NewGauge(
