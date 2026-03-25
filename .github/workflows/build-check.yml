@@ -48,8 +48,9 @@ jobs:
         # sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         echo "Done"
 
-    - name: Build the loxilb Docker image
+    - name: Build the loxilb Docker image (build-check)
       run: |
-        docker build . --tag ghcr.io/loxilb-io/loxilb:latest
-        docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:latest
+        TEST_TAG="ghcr.io/loxilb-io/loxilb:buildcheck-${{ github.run_id }}"
+        docker build --progress=plain -f Dockerfile.buildcheck . --tag "$TEST_TAG"
+        docker run -u root --cap-add SYS_ADMIN --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb-buildcheck "$TEST_TAG"
     - run: echo ${{ github.event.inputs.userInput }}
