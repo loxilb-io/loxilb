@@ -58,6 +58,7 @@ RUN set -eux; \
 FROM openssl-debug AS loxilb-debug
 
 ARG TAG
+ARG USE_DOCKER_BUILDX_ARM64=false
 
 RUN set -eux; \
     wget https://github.com/libbpf/bpftool/releases/download/v7.2.0/bpftool-libbpf-v7.2.0-sources.tar.gz; \
@@ -85,7 +86,7 @@ RUN set -eux; \
     arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/); \
     cd /root/loxilb-io/loxilb/; \
     go get .; \
-    if [[ "$arch" == "arm64" ]]; then \
+    if [[ "$arch" == "arm64" && "$USE_DOCKER_BUILDX_ARM64" == "true" ]]; then \
       DOCKER_BUILDX_ARM64=true make; \
     else \
       make; \
