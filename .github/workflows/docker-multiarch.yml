@@ -27,7 +27,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        ref: ${{ env.BUILD_REF }}
         submodules: recursive
 
     - name: Build amd64 image
@@ -45,7 +44,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        ref: ${{ env.BUILD_REF }}
         submodules: recursive
 
     - name: Build arm64 image
@@ -67,7 +65,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        ref: ${{ env.BUILD_REF }}
         submodules: recursive
 
     - name: Login to GitHub Container Registry
@@ -102,7 +99,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        ref: ${{ env.BUILD_REF }}
         submodules: recursive
 
     - name: Login to GitHub Container Registry
