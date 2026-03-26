@@ -9,10 +9,15 @@ on:
         description: 'Tag Name'
         required: true
         default: 'latest'
+      sourceTag:
+        description: 'Source git ref used inside Dockerfile builds; defaults to main unless overridden'
+        required: false
+        default: ''
 
 env:
   IMAGE_NAME: ghcr.io/loxilb-io/loxilb
   TARGET_TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tagName || 'latest' }}
+  BUILD_REF: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.sourceTag != '' && github.event.inputs.sourceTag || (github.event_name == 'workflow_dispatch' && github.event.inputs.tagName != 'latest' && github.event.inputs.tagName || 'main') }}
 
 jobs:
   build-check-amd64:
@@ -28,7 +33,7 @@ jobs:
       run: |
         docker build \
           --progress=plain \
-          --build-arg TAG=${TARGET_TAG} \
+          --build-arg TAG=${BUILD_REF} \
           --tag ${IMAGE_NAME}:buildcheck-amd64 \
           .
 
@@ -45,7 +50,7 @@ jobs:
       run: |
         docker build \
           --progress=plain \
-          --build-arg TAG=${TARGET_TAG} \
+          --build-arg TAG=${BUILD_REF} \
           --build-arg USE_DOCKER_BUILDX_ARM64=false \
           --tag ${IMAGE_NAME}:buildcheck-arm64 \
           .
@@ -79,7 +84,7 @@ jobs:
         platforms: linux/amd64
         push: true
         build-args: |
-          TAG=${{ env.TARGET_TAG }}
+          TAG=${{ env.BUILD_REF }}
         tags: ${{ env.IMAGE_NAME }}:${{ env.TARGET_TAG }}-amd64
         cache-from: type=gha,scope=amd64
         cache-to: type=gha,mode=max,scope=amd64
@@ -113,7 +118,7 @@ jobs:
         platforms: linux/arm64
         push: true
         build-args: |
-          TAG=${{ env.TARGET_TAG }}
+          TAG=${{ env.BUILD_REF }}
           USE_DOCKER_BUILDX_ARM64=false
         tags: ${{ env.IMAGE_NAME }}:${{ env.TARGET_TAG }}-arm64
         cache-from: type=gha,scope=arm64
