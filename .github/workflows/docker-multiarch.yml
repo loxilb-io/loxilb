@@ -1,77 +1,148 @@
-name:  Docker-Multi-Arch
-  
+name: Docker-Multi-Arch
+
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
-     inputs:
+    inputs:
       tagName:
-        description: 'Tag Name'     
+        description: 'Tag Name'
         required: true
         default: 'latest'
-        
+
+env:
+  IMAGE_NAME: ghcr.io/loxilb-io/loxilb
+  TARGET_TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tagName || 'latest' }}
+
 jobs:
-  build:
+  build-check-amd64:
+    if: github.repository != 'loxilb-io/loxilb'
     runs-on: ubuntu-latest
-    name: build for amd64/arm64
+    name: build check amd64
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
-          submodules: recursive
-    #- name : Checkout Branch
-    #  if:  github.event.inputs.tagName != ''
-    #  run: |
-    #      git fetch --all --tags 
-    #      git checkout ${{ github.event.inputs.tagName }}
+        submodules: recursive
+
+    - name: Build amd64 image
+      run: |
+        docker build \
+          --progress=plain \
+          --build-arg TAG=${TARGET_TAG} \
+          --tag ${IMAGE_NAME}:buildcheck-amd64 \
+          .
+
+  build-check-arm64:
+    if: github.repository != 'loxilb-io/loxilb'
+    runs-on: ubuntu-24.04-arm
+    name: build check arm64
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Build arm64 image
+      run: |
+        docker build \
+          --progress=plain \
+          --build-arg TAG=${TARGET_TAG} \
+          --build-arg USE_DOCKER_BUILDX_ARM64=false \
+          --tag ${IMAGE_NAME}:buildcheck-arm64 \
+          .
+
+  build-amd64:
+    if: github.repository == 'loxilb-io/loxilb'
+    runs-on: ubuntu-latest
+    name: build amd64 image
+    permissions:
+      contents: read
+      packages: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
     - name: Login to GitHub Container Registry
-      uses: docker/login-action@v1
+      uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-        
-    # Setup hardware emulator using QEMU
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
-        
-    # Setup Docker Buildx for multi-arch images
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-      
-    - name: Build Check
-      if: |
-          github.repository != 'loxilb-io/loxilb'
-      uses: docker/build-push-action@v4
+
+    - name: Build and push amd64 image
+      uses: docker/build-push-action@v6
       with:
         context: .
-        platforms: linux/amd64, linux/arm64
-        #platforms: linux/amd64
-        push: false
-        tags: ghcr.io/loxilb-io/loxilb:latest
-          
-    - name: Build and push to latest
-      if: |
-          github.repository == 'loxilb-io/loxilb' 
-          &&  github.event.inputs.tagName == ''          
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        #platforms: linux/amd64, linux/arm64
         platforms: linux/amd64
         push: true
-        tags: ghcr.io/loxilb-io/loxilb:latest
+        build-args: |
+          TAG=${{ env.TARGET_TAG }}
+        tags: ${{ env.IMAGE_NAME }}:${{ env.TARGET_TAG }}-amd64
+        cache-from: type=gha,scope=amd64
+        cache-to: type=gha,mode=max,scope=amd64
 
-    - name: Build and push to given tag
-      if: |
-          github.repository == 'loxilb-io/loxilb' 
-          &&  github.event.inputs.tagName != ''          
-      uses: docker/build-push-action@v4
+  build-arm64:
+    if: github.repository == 'loxilb-io/loxilb'
+    runs-on: ubuntu-24.04-arm
+    name: build arm64 image
+    permissions:
+      contents: read
+      packages: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and push arm64 image
+      uses: docker/build-push-action@v6
       with:
         context: .
-        platforms: linux/amd64, linux/arm64
-        #platforms: linux/amd64
+        platforms: linux/arm64
         push: true
-        build-args: TAG=${{ github.event.inputs.tagName }}
-        tags: ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }}
+        build-args: |
+          TAG=${{ env.TARGET_TAG }}
+          USE_DOCKER_BUILDX_ARM64=false
+        tags: ${{ env.IMAGE_NAME }}:${{ env.TARGET_TAG }}-arm64
+        cache-from: type=gha,scope=arm64
+        cache-to: type=gha,mode=max,scope=arm64
+
+  merge-manifest:
+    if: github.repository == 'loxilb-io/loxilb'
+    runs-on: ubuntu-latest
+    name: merge multi-arch manifest
+    needs: [build-amd64, build-arm64]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Create and push multi-arch manifest
+      run: |
+        docker buildx imagetools create \
+          --tag ${IMAGE_NAME}:${TARGET_TAG} \
+          ${IMAGE_NAME}:${TARGET_TAG}-amd64 \
+          ${IMAGE_NAME}:${TARGET_TAG}-arm64
+        docker buildx imagetools inspect ${IMAGE_NAME}:${TARGET_TAG}
     
