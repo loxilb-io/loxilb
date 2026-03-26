@@ -1,0 +1,62 @@
+name: Docker-ARM64-Native-Debug
+
+on:
+  push:
+    branches: [ "chore/bump-version-v0.9.8.5-beta" ]
+  workflow_dispatch:
+    inputs:
+      tagName:
+        description: 'Tag passed to Dockerfile.debug'
+        required: true
+        default: 'main'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    name: native arm64 debug build
+    env:
+      TAG_NAME: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tagName || 'main' }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build OpenSSL debug target
+      run: |
+        docker buildx build \
+          --progress=plain \
+          --platform linux/arm64 \
+          --load \
+          --build-arg TAG=${TAG_NAME} \
+          --file Dockerfile.debug \
+          --target openssl-debug \
+          --tag loxilb:openssl-debug-arm64 \
+          .
+
+    - name: Build loxilb debug target
+      run: |
+        docker buildx build \
+          --progress=plain \
+          --platform linux/arm64 \
+          --load \
+          --build-arg TAG=${TAG_NAME} \
+          --file Dockerfile.debug \
+          --target smoke-debug \
+          --tag loxilb:smoke-debug-arm64 \
+          .
+
+    - name: Smoke test debug image
+      run: |
+        docker run --rm --platform linux/arm64 loxilb:smoke-debug-arm64 /bin/bash -lc '
+          set -eux
+          uname -m
+          /usr/local/build/bin/openssl version
+          test -x /usr/local/sbin/bpftool
+          test -x /usr/local/sbin/loxicmd
+          test -x /usr/local/sbin/loxilb
+          file /usr/local/sbin/loxilb
+          ldd /usr/local/sbin/loxilb || true
+        '
