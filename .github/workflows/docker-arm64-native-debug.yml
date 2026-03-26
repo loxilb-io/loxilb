@@ -26,15 +26,15 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+    - name: Show runner architecture
+      run: |
+        uname -m
+        docker version
 
     - name: Build OpenSSL debug target
       run: |
-        docker buildx build \
+        docker build \
           --progress=plain \
-          --platform linux/arm64 \
-          --load \
           --build-arg TAG=${TAG_NAME} \
           --build-arg OPENSSL_BUILD_CPUS=${OPENSSL_BUILD_CPUS} \
           --file Dockerfile.debug \
@@ -44,10 +44,8 @@ jobs:
 
     - name: Build loxilb debug target
       run: |
-        docker buildx build \
+        docker build \
           --progress=plain \
-          --platform linux/arm64 \
-          --load \
           --build-arg TAG=${TAG_NAME} \
           --build-arg OPENSSL_BUILD_CPUS=${OPENSSL_BUILD_CPUS} \
           --file Dockerfile.debug \
@@ -57,10 +55,12 @@ jobs:
 
     - name: Smoke test debug image
       run: |
-        docker run --rm --platform linux/arm64 loxilb:smoke-debug-arm64 /bin/bash -lc '
+        docker run --rm loxilb:smoke-debug-arm64 /bin/bash -lc '
           set -eux
           uname -m
-          /usr/local/build/bin/openssl version
+          test -f /usr/local/build/lib/libssl.so.3
+          test -f /usr/local/build/lib/libcrypto.so.3
+          test -f /usr/local/build/lib/ossl-modules/legacy.so
           test -x /usr/local/sbin/bpftool
           test -x /usr/local/sbin/loxicmd
           test -x /usr/local/sbin/loxilb

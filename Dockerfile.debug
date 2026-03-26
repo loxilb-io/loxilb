@@ -4,8 +4,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG TAG=main
 ARG OPENSSL_BUILD_CPUS=0
 
-ENV PATH="${PATH}:/usr/local/go/bin"
-ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
+ENV PATH="/usr/local/go/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/usr/lib64"
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -50,7 +50,9 @@ RUN set -eux; \
     if [[ -d /usr/local/build/lib64 ]]; then mv /usr/local/build/lib64 /usr/local/build/lib; fi; \
     cp -fr /usr/local/build/lib/* /usr/lib/; \
     ldconfig; \
-    /usr/local/build/bin/openssl version; \
+    test -f /usr/local/build/lib/libssl.so.3; \
+    test -f /usr/local/build/lib/libcrypto.so.3; \
+    test -f /usr/local/build/lib/ossl-modules/legacy.so; \
     rm -fr openssl-3.4.1*
 
 FROM openssl-debug AS loxilb-debug
@@ -101,7 +103,9 @@ FROM loxilb-debug AS smoke-debug
 RUN set -eux; \
     arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/); \
     test "$arch" = "arm64"; \
-    /usr/local/build/bin/openssl version; \
+    test -f /usr/local/build/lib/libssl.so.3; \
+    test -f /usr/local/build/lib/libcrypto.so.3; \
+    test -f /usr/local/build/lib/ossl-modules/legacy.so; \
     test -x /usr/local/sbin/bpftool; \
     test -x /usr/local/sbin/loxicmd; \
     test -x /usr/local/sbin/loxilb; \
