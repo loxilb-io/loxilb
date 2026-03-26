@@ -33,6 +33,8 @@ RUN set -eux; \
 
 FROM debug-base AS openssl-debug
 
+ARG OPENSSL_BUILD_CPUS
+
 RUN set -eux; \
     arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/); \
     if [[ "$OPENSSL_BUILD_CPUS" != "0" ]]; then cpus="$OPENSSL_BUILD_CPUS"; else cpus=$(nproc); fi; \
@@ -52,6 +54,8 @@ RUN set -eux; \
     rm -fr openssl-3.4.1*
 
 FROM openssl-debug AS loxilb-debug
+
+ARG TAG
 
 RUN set -eux; \
     wget https://github.com/libbpf/bpftool/releases/download/v7.2.0/bpftool-libbpf-v7.2.0-sources.tar.gz; \
