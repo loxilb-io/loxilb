@@ -2,6 +2,7 @@ FROM ubuntu:22.04 AS debug-base
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TAG=main
+ARG OPENSSL_BUILD_CPUS=0
 
 ENV PATH="${PATH}:/usr/local/go/bin"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
@@ -34,7 +35,8 @@ FROM debug-base AS openssl-debug
 
 RUN set -eux; \
     arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/); \
-    if [[ "$arch" == "arm64" ]]; then cpus=1; else cpus=$(nproc); fi; \
+    if [[ "$OPENSSL_BUILD_CPUS" != "0" ]]; then cpus="$OPENSSL_BUILD_CPUS"; else cpus=$(nproc); fi; \
+    echo "Building OpenSSL on ${arch} with ${cpus} jobs"; \
     wget https://github.com/openssl/openssl/releases/download/openssl-3.4.1/openssl-3.4.1.tar.gz; \
     tar -xvzf openssl-3.4.1.tar.gz; \
     cd openssl-3.4.1; \

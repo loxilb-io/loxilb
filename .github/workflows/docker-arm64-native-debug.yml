@@ -9,6 +9,10 @@ on:
         description: 'Tag passed to Dockerfile.debug'
         required: true
         default: 'main'
+      opensslBuildCpus:
+        description: 'OpenSSL build parallelism, 0 means use nproc'
+        required: true
+        default: '0'
 
 jobs:
   build:
@@ -16,6 +20,7 @@ jobs:
     name: native arm64 debug build
     env:
       TAG_NAME: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tagName || 'main' }}
+      OPENSSL_BUILD_CPUS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.opensslBuildCpus || '0' }}
     steps:
     - uses: actions/checkout@v4
       with:
@@ -31,6 +36,7 @@ jobs:
           --platform linux/arm64 \
           --load \
           --build-arg TAG=${TAG_NAME} \
+          --build-arg OPENSSL_BUILD_CPUS=${OPENSSL_BUILD_CPUS} \
           --file Dockerfile.debug \
           --target openssl-debug \
           --tag loxilb:openssl-debug-arm64 \
@@ -43,6 +49,7 @@ jobs:
           --platform linux/arm64 \
           --load \
           --build-arg TAG=${TAG_NAME} \
+          --build-arg OPENSSL_BUILD_CPUS=${OPENSSL_BUILD_CPUS} \
           --file Dockerfile.debug \
           --target smoke-debug \
           --tag loxilb:smoke-debug-arm64 \
