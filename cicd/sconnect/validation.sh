@@ -90,6 +90,11 @@ for ns1 in "${nslist[@]}"; do
                     fi
                 done
             done
+            # Warm-up ping to trigger ARP resolution before flood test
+            for h1 in "${!hosts1[@]}"
+            do
+                sudo ip netns exec $ns1 ping ${hosts2[h1]} -c 1 -W 5 2>&1> /dev/null
+            done
             for size in ${sizes[@]}
             do
 		        for h1 in "${!hosts1[@]}"
@@ -114,6 +119,11 @@ for ns1 in "${nslist[@]}"; do
         else    
 		    dev2=`sudo ip netns exec $ns2 ip route | grep -v "eth0" | grep "default" | cut -d " " -f 5`
 		    hosts2=( `sudo ip netns exec $ns2 ip addr show dev $dev2 | grep -v "eth0" | grep -w inet | cut -d " " -f 6 | cut -d "/" -f 1` )
+            # Warm-up ping to trigger ARP resolution before flood test
+            for h2 in "${hosts2[@]}"
+            do
+                sudo ip netns exec $ns1 ping $h2 -c 1 -W 5 2>&1> /dev/null
+            done
             for size in ${sizes[@]}
             do
 		        for h1 in "${hosts1[@]}"
