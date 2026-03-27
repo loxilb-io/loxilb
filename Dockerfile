@@ -5,6 +5,8 @@ FROM ubuntu:22.04 as build
 ARG DEBIAN_FRONTEND=noninteractive
 
 ARG TAG=main
+ARG OPENSSL_BUILD_CPUS=0
+ARG USE_DOCKER_BUILDX_ARM64=false
 
 # Env variables
 ENV PATH="${PATH}:/usr/local/go/bin"
@@ -21,7 +23,7 @@ RUN mkdir -p /opt/loxilb && \
     mkdir -p /etc/bash_completion.d/ && \
     # Update Ubuntu Software repository
     apt-get update && apt-get install -y wget && \
-    arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && if [ "$arch" = "arm64" ] ; then cpus="1" && apt-get install -y gcc-arm-linux-gnueabihf; else cpus=$(nproc) && apt-get update && apt-get install -y  gcc-multilib;fi && \
+    arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && echo $arch && if [ "$arch" = "arm64" ] ; then apt-get install -y gcc-arm-linux-gnueabihf; else apt-get update && apt-get install -y gcc-multilib; fi && if [ "$OPENSSL_BUILD_CPUS" != "0" ] ; then cpus=$OPENSSL_BUILD_CPUS; else cpus=$(nproc); fi && \
     # Arch specific packages - GoLang
     wget https://go.dev/dl/go1.24.0.linux-${arch}.tar.gz && tar -xzf go1.24.0.linux-${arch}.tar.gz --directory /usr/local/ && rm go1.24.0.linux-${arch}.tar.gz && \
     # Dev and util packages
@@ -47,10 +49,8 @@ RUN mkdir -p /opt/loxilb && \
     make && cp ./loxicmd /usr/local/sbin/loxicmd && cd - && rm -fr loxicmd && \
     /usr/local/sbin/loxicmd completion bash > /etc/bash_completion.d/loxi_completion && \
     # Install loxilb
-    # git clone --recurse-submodules https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && \
-    cd /root/loxilb-io/loxilb/ && git fetch --all --tags && git checkout $TAG && \
-    cd loxilb-ebpf && git fetch --all --tags && git checkout $TAG && cd .. \
-    go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
+    cd /root/loxilb-io/loxilb/ && \
+    go get . && if [ "$arch" = "arm64" ] && [ "$USE_DOCKER_BUILDX_ARM64" = "true" ] ; then DOCKER_BUILDX_ARM64=true make; \
     else make ;fi && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
     cp tools/k8s/mkllb-url /usr/local/sbin/mkllb-url && \
     cp loxilb-ebpf/utils/mkllb_cgroup.sh /usr/local/sbin/mkllb_cgroup && \
