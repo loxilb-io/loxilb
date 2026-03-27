@@ -1,6 +1,31 @@
 #!/bin/bash
 source ../common.sh
 
+runtime_lxdocker="local/loxilb-ci-ipsec:prep"
+prep_container="loxilb-ipsec-prep"
+
+cleanup_prep_container() {
+	docker rm -f "$prep_container" >/dev/null 2>&1 || true
+}
+
+prepare_runtime_loxilb_image() {
+	if docker image inspect "$runtime_lxdocker" >/dev/null 2>&1; then
+		lxdocker="$runtime_lxdocker"
+		return
+	fi
+
+	echo "Preparing one-time runtime image: $runtime_lxdocker"
+	cleanup_prep_container
+	docker run -dt --entrypoint /bin/bash --name "$prep_container" "$lxdocker"
+	docker exec -i "$prep_container" bash -lc "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y iptables strongswan strongswan-swanctl systemctl iputils-ping curl"
+	docker commit "$prep_container" "$runtime_lxdocker" >/dev/null
+	cleanup_prep_container
+	lxdocker="$runtime_lxdocker"
+}
+
+trap cleanup_prep_container EXIT
+prepare_runtime_loxilb_image
+
 echo "#########################################"
 echo "Spawning all hosts"
 echo "#########################################"
@@ -12,11 +37,6 @@ spawn_docker_host --dock-type loxilb --dock-name rgw2
 spawn_docker_host --dock-type host --dock-name lh1
 spawn_docker_host --dock-type host --dock-name rh1
 spawn_docker_host --dock-type host --dock-name rh2
-
-$dexec lgw1 bash -c "apt-get update && apt-get install -y iputils-ping curl"
-$dexec llb1 bash -c "apt-get update && apt-get install -y iputils-ping curl"
-$dexec rgw1 bash -c "apt-get update && apt-get install -y iputils-ping curl"
-$dexec rgw2 bash -c "apt-get update && apt-get install -y iputils-ping curl"
 
 echo "#########################################"
 echo "Connecting and configuring  hosts"
@@ -119,29 +139,21 @@ config_docker_host --host1 rh1 --host2 rgw1 --ptype phy --addr 192.168.10.10/24 
 config_docker_host --host1 rgw2 --host2 rh2 --ptype phy --addr 192.168.10.3/24
 config_docker_host --host1 rh2 --host2 rgw2 --ptype phy --addr 192.168.10.11/24 --gw 192.168.10.3
 
-#$dexec lgw1 apt-get update
-$dexec lgw1 apt-get install -y iptables strongswan strongswan-swanctl systemctl 
 docker cp lgw1_ipsec_config/ipsec.conf lgw1:/etc/
 docker cp lgw1_ipsec_config/ipsec.secrets lgw1:/etc/
 docker cp lgw1_ipsec_config/charon.conf lgw1:/etc/strongswan.d/
 $dexec lgw1 systemctl restart strongswan-starter
 
-#$dexec llb1 apt-get update
-$dexec llb1 apt-get install -y strongswan strongswan-swanctl systemctl
 docker cp llb1_ipsec_config/ipsec.conf llb1:/etc/
 docker cp llb1_ipsec_config/ipsec.secrets llb1:/etc/
 docker cp llb1_ipsec_config/charon.conf llb1:/etc/strongswan.d/
 $dexec llb1 systemctl restart strongswan-starter
 
-#$dexec rgw1 apt-get update
-$dexec rgw1 apt-get install -y iptables strongswan strongswan-swanctl systemctl 
 docker cp rgw1_ipsec_config/ipsec.conf rgw1:/etc/
 docker cp rgw1_ipsec_config/ipsec.secrets rgw1:/etc/
 docker cp rgw1_ipsec_config/charon.conf rgw1:/etc/strongswan.d/
 $dexec rgw1 systemctl restart strongswan-starter
 
-#$dexec rgw2 apt-get update
-$dexec rgw2 apt-get install -y iptables strongswan strongswan-swanctl systemctl 
 docker cp rgw2_ipsec_config/ipsec.conf rgw2:/etc/
 docker cp rgw2_ipsec_config/ipsec.secrets rgw2:/etc/
 docker cp rgw2_ipsec_config/charon.conf rgw2:/etc/strongswan.d/

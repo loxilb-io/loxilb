@@ -1,6 +1,31 @@
 #!/bin/bash
 source ../common.sh
 
+runtime_lxdocker="local/loxilb-ci-ipsec:prep"
+prep_container="loxilb-ipsec-prep"
+
+cleanup_prep_container() {
+	docker rm -f "$prep_container" >/dev/null 2>&1 || true
+}
+
+prepare_runtime_loxilb_image() {
+	if docker image inspect "$runtime_lxdocker" >/dev/null 2>&1; then
+		lxdocker="$runtime_lxdocker"
+		return
+	fi
+
+	echo "Preparing one-time runtime image: $runtime_lxdocker"
+	cleanup_prep_container
+	docker run -dt --entrypoint /bin/bash --name "$prep_container" "$lxdocker"
+	docker exec -i "$prep_container" bash -lc "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y iptables strongswan strongswan-swanctl systemctl iputils-ping curl"
+	docker commit "$prep_container" "$runtime_lxdocker" >/dev/null
+	cleanup_prep_container
+	lxdocker="$runtime_lxdocker"
+}
+
+trap cleanup_prep_container EXIT
+prepare_runtime_loxilb_image
+
 echo "#########################################"
 echo "Spawning all hosts"
 echo "#########################################"
@@ -57,15 +82,11 @@ $dexec llb2 ip route add 31.31.31.0/24 via 77.77.77.2 dev vti100
 $dexec llb2 ip route add 32.32.32.0/24 via 77.77.77.2 dev vti100
 $dexec llb2 loxicmd create lb 20.20.20.1 --tcp=2020:8080 --endpoints=25.25.25.1:1,26.26.26.1:1
 
-$dexec llb1 apt-get update
-$dexec llb1 apt-get install -y strongswan strongswan-swanctl systemctl
 docker cp llb1_ipsec_config/ipsec.conf llb1:/etc/
 docker cp llb1_ipsec_config/ipsec.secrets llb1:/etc/
 docker cp llb1_ipsec_config/charon.conf llb1:/etc/strongswan.d/
 $dexec llb1 systemctl restart strongswan-starter
 
-$dexec llb2 apt-get update
-$dexec llb2 apt-get install -y strongswan strongswan-swanctl systemctl
 docker cp llb2_ipsec_config/ipsec.conf llb2:/etc/
 docker cp llb2_ipsec_config/ipsec.secrets llb2:/etc/
 docker cp llb2_ipsec_config/charon.conf llb2:/etc/strongswan.d/
