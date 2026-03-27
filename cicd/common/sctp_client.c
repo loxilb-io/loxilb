@@ -8,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/time.h>
 
 #define RECVBUFSIZE     4096
 #define PPID            1234
@@ -17,7 +18,7 @@ int main(int argc, char* argv[])
 
         struct sockaddr_in servaddr = {0};
         struct sockaddr_in laddr[10] = {0};
-        int    sockfd, in, flags, count = 1;
+        int    sockfd, in, flags = 0, count = 1;
         char   *saddr, *laddrs, *addr;
         int    sport, lport, error = 0, secs = 0, i = 0;
         struct sctp_status status = {0};
@@ -104,14 +105,14 @@ int main(int argc, char* argv[])
         getsockopt(sockfd, IPPROTO_SCTP, SCTP_STATUS, &status, &opt_len);
 
         fd_set fds; // will be checked for being ready to read
-        FD_ZERO(&fds);
-        FD_SET(sockfd, &fds);
         struct timeval tv = { 0 };
-        tv.tv_sec = 1;
-        tv.tv_usec = 0;
 
         while(count)
         {
+                FD_ZERO(&fds);
+                FD_SET(sockfd, &fds);
+                tv.tv_sec = 5;
+                tv.tv_usec = 0;
                 strncpy (msg, "hello", strlen("hello"));
                 sctp_sendmsg(sockfd, (const void *)msg, strlen(msg), NULL, 0,htonl(PPID), 0, 0 , 0, 0);
                 //printf("Sending msg to server: %s", msg);
@@ -139,6 +140,8 @@ int main(int argc, char* argv[])
                             fflush(stdout);
                             sleep(1);
                         }
+                } else {
+                        break;
                 }
                 } else {
                     break;
