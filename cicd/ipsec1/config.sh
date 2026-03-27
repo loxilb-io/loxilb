@@ -1,6 +1,31 @@
 #!/bin/bash
 source ../common.sh
 
+runtime_lxdocker="local/loxilb-ci-ipsec:prep"
+prep_container="loxilb-ipsec-prep"
+
+cleanup_prep_container() {
+  docker rm -f "$prep_container" >/dev/null 2>&1 || true
+}
+
+prepare_runtime_loxilb_image() {
+  if docker image inspect "$runtime_lxdocker" >/dev/null 2>&1; then
+    lxdocker="$runtime_lxdocker"
+    return
+  fi
+
+  echo "Preparing one-time runtime image: $runtime_lxdocker"
+  cleanup_prep_container
+  docker run -dt --entrypoint /bin/bash --name "$prep_container" "$lxdocker"
+  docker exec -i "$prep_container" bash -lc "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y iptables strongswan strongswan-swanctl systemctl iputils-ping curl"
+  docker commit "$prep_container" "$runtime_lxdocker" >/dev/null
+  cleanup_prep_container
+  lxdocker="$runtime_lxdocker"
+}
+
+trap cleanup_prep_container EXIT
+prepare_runtime_loxilb_image
+
 echo "#########################################"
 echo "Spawning all hosts"
 echo "#########################################"
