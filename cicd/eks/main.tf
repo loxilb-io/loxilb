@@ -80,7 +80,7 @@ module "ec2_instance" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   name = "loxilb_node"
 
-  ami = "ami-0c016e131d2da56e8"
+  ami = "ami-0cca3168f897b4e10"
   instance_type          = "t3.small"
   key_name               = "aws-osaka"
   monitoring             = true
@@ -99,7 +99,7 @@ module "ec2_instance2" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   name = "host_node"
 
-  ami = "ami-0d126351255167386"
+  ami = "ami-0cca3168f897b4e10"
   instance_type          = "t3.small"
   key_name               = "aws-osaka"
   monitoring             = true
