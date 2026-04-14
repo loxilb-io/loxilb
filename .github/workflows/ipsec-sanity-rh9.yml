@@ -57,4 +57,4 @@ jobs:
               sudo docker stop $(sudo docker ps -a -q)
               sudo docker rm $(sudo docker ps -a -q)
             fi
-            sudo docker image rm ghcr.io/loxilb-io/loxilb:latest
+            sudo docker image rm -f ghcr.io/loxilb-io/loxilb:latest || true
