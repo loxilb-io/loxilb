@@ -70,10 +70,12 @@ EOF
 sudo systemctl restart docker && sudo systemctl restart cri-docker
 sudo docker info | grep Cgroup
 
-# Kernel Forwarding 
+# Kernel Forwarding
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 br_netfilter
 EOF
+
+sudo modprobe br_netfilter
 
 # Install ipvs related modules
 sudo modprobe ip_vs
