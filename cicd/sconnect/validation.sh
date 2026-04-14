@@ -13,7 +13,7 @@ for ns1 in "${nslist[@]}"; do
     ns1L2=0
 	dev1=`sudo ip netns exec $ns1 ip route | grep "default" | cut -d " " -f 5`
     gw1=""
-    if [[ -z "$dev1" || "$dev" == "eth0" ]]
+    if [[ -z "$dev1" || "$dev1" == "eth0" ]]
     then
         # No default route present, will try L2 now
         net1=( `sudo ip netns exec $ns1 ip route | grep -v "eth0" | cut -d " " -f 1` )
@@ -32,7 +32,8 @@ for ns1 in "${nslist[@]}"; do
         for size in ${sizes[@]}
         do
 
-			sudo ip netns exec $ns1 ping $gw1 -f -c 50 -s $size -W 1 2>&1> /dev/null;
+			sudo ip netns exec $ns1 ping $gw1 -c 1 -W 2 -s $size 2>&1> /dev/null;
+			sudo ip netns exec $ns1 ping $gw1 -f -c 50 -s $size -W 2 2>&1> /dev/null;
             if [[ $? -eq 0 ]]
 			then
 			    #echo -e "Ping [OK]"
@@ -96,7 +97,8 @@ for ns1 in "${nslist[@]}"; do
 		        do
 			        #echo -e "(${hosts1[h1]}) \t->\t (${hosts2[h1]}) \t: Packet Size : $size";
                     #echo -e "CMD : sudo ip netns exec $ns1 ping $h2 -f -c 500 -I $h1"
-				    sudo ip netns exec $ns1 ping ${hosts2[h1]} -f -c 50 -s $size -W 1 2>&1> /dev/null;
+				    sudo ip netns exec $ns1 ping ${hosts2[h1]} -c 1 -W 2 -s $size 2>&1> /dev/null;
+				    sudo ip netns exec $ns1 ping ${hosts2[h1]} -f -c 50 -s $size -W 2 2>&1> /dev/null;
 				    if [[ $? -eq 0 ]]
 				    then
 				        #echo -e "Ping [OK]"
@@ -122,7 +124,8 @@ for ns1 in "${nslist[@]}"; do
 			        do
 				        #echo -e "($h1) -> \t($h2) \t: Packet Size : $size";
                         #echo -e "CMD : sudo ip netns exec $ns1 ping $h2 -f -c 500 -I $h1"
-				        sudo ip netns exec $ns1 ping $h2 -f -c 50 -I $h1 -s $size -W 1 2>&1> /dev/null;
+				        sudo ip netns exec $ns1 ping $h2 -c 1 -I $h1 -W 2 -s $size 2>&1> /dev/null;
+				        sudo ip netns exec $ns1 ping $h2 -f -c 50 -I $h1 -s $size -W 2 2>&1> /dev/null;
 				        if [[ $? -eq 0 ]]
 				        then
 					        #echo -e "Ping [OK]"
