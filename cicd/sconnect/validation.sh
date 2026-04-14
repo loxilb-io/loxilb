@@ -1,6 +1,38 @@
 #!/bin/bash
 code=0
 sizes=( 64 100 500 1000 1500 2000 5000 )
+
+# Prime ARP/ND and bridge FDB for (ns -> target) with retries.
+# Retries up to 10 times (~20s) so cold neighbor state recovers from
+# INCOMPLETE/FAILED before the measurement ping runs.
+warmup_pair() {
+    local ns=$1 target=$2 iface=$3
+    local i
+    for i in 1 2 3 4 5 6 7 8 9 10; do
+        if [ -n "$iface" ]; then
+            sudo ip netns exec $ns ping $target -c 1 -W 2 -I $iface >/dev/null 2>&1 && return 0
+        else
+            sudo ip netns exec $ns ping $target -c 1 -W 2 >/dev/null 2>&1 && return 0
+        fi
+    done
+    return 1
+}
+
+# Measurement ping: paced (not -f) so fragment reassembly and bridge
+# FDB learning are not overwhelmed on slow CI runners. Tolerates up to
+# 2 drops out of 10 so transient loss on GitHub runners is not a fail.
+measure_ping() {
+    local ns=$1 target=$2 iface=$3 size=$4
+    local out recv
+    if [ -n "$iface" ]; then
+        out=$(sudo ip netns exec $ns ping $target -c 10 -i 0.2 -W 2 -s $size -I $iface 2>/dev/null)
+    else
+        out=$(sudo ip netns exec $ns ping $target -c 10 -i 0.2 -W 2 -s $size 2>/dev/null)
+    fi
+    recv=$(echo "$out" | awk -F', ' '/packets transmitted/ {print $2}' | awk '{print $1}')
+    [ -n "$recv" ] && [ "$recv" -ge 8 ]
+}
+
 echo "SCENARIO sconnect"
 if [[ $# -gt 0 ]]; then
     nslist=( "$@" )
@@ -29,11 +61,10 @@ for ns1 in "${nslist[@]}"; do
     then
 		echo -e "********************************************************************"
 		printf "%-16s \t->\t %-16s(Gateway)\n" $ns1 $gw1;
+        warmup_pair $ns1 $gw1 ""
         for size in ${sizes[@]}
         do
-
-			sudo ip netns exec $ns1 ping $gw1 -c 1 -W 2 -s $size 2>&1> /dev/null;
-			sudo ip netns exec $ns1 ping $gw1 -f -c 50 -s $size -W 2 2>&1> /dev/null;
+            measure_ping $ns1 $gw1 "" $size
             if [[ $? -eq 0 ]]
 			then
 			    #echo -e "Ping [OK]"
@@ -91,14 +122,15 @@ for ns1 in "${nslist[@]}"; do
                     fi
                 done
             done
+            for h1 in "${!hosts1[@]}"
+            do
+                warmup_pair $ns1 ${hosts2[h1]} ""
+            done
             for size in ${sizes[@]}
             do
 		        for h1 in "${!hosts1[@]}"
 		        do
-			        #echo -e "(${hosts1[h1]}) \t->\t (${hosts2[h1]}) \t: Packet Size : $size";
-                    #echo -e "CMD : sudo ip netns exec $ns1 ping $h2 -f -c 500 -I $h1"
-				    sudo ip netns exec $ns1 ping ${hosts2[h1]} -c 1 -W 2 -s $size 2>&1> /dev/null;
-				    sudo ip netns exec $ns1 ping ${hosts2[h1]} -f -c 50 -s $size -W 2 2>&1> /dev/null;
+                    measure_ping $ns1 ${hosts2[h1]} "" $size
 				    if [[ $? -eq 0 ]]
 				    then
 				        #echo -e "Ping [OK]"
@@ -116,16 +148,20 @@ for ns1 in "${nslist[@]}"; do
         else    
 		    dev2=`sudo ip netns exec $ns2 ip route | grep -v "eth0" | grep "default" | cut -d " " -f 5`
 		    hosts2=( `sudo ip netns exec $ns2 ip addr show dev $dev2 | grep -v "eth0" | grep -w inet | cut -d " " -f 6 | cut -d "/" -f 1` )
+            for h1 in "${hosts1[@]}"
+            do
+                for h2 in "${hosts2[@]}"
+                do
+                    warmup_pair $ns1 $h2 $h1
+                done
+            done
             for size in ${sizes[@]}
             do
 		        for h1 in "${hosts1[@]}"
 		        do
 			        for h2 in "${hosts2[@]}"
 			        do
-				        #echo -e "($h1) -> \t($h2) \t: Packet Size : $size";
-                        #echo -e "CMD : sudo ip netns exec $ns1 ping $h2 -f -c 500 -I $h1"
-				        sudo ip netns exec $ns1 ping $h2 -c 1 -I $h1 -W 2 -s $size 2>&1> /dev/null;
-				        sudo ip netns exec $ns1 ping $h2 -f -c 50 -I $h1 -s $size -W 2 2>&1> /dev/null;
+                        measure_ping $ns1 $h2 $h1 $size
 				        if [[ $? -eq 0 ]]
 				        then
 					        #echo -e "Ping [OK]"
