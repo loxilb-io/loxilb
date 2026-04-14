@@ -82,7 +82,7 @@ module "ec2_instance" {
 
   ami = "ami-0cca3168f897b4e10"
   instance_type          = "t3.small"
-  key_name               = "aws-osaka"
+  key_name               = "for github action"
   monitoring             = true
 
   vpc_security_group_ids = [ module.security-group.security_group_id]
@@ -101,7 +101,7 @@ module "ec2_instance2" {
 
   ami = "ami-0cca3168f897b4e10"
   instance_type          = "t3.small"
-  key_name               = "aws-osaka"
+  key_name               = "for github action"
   monitoring             = true
 
   vpc_security_group_ids = [ module.security-group.security_group_id]
