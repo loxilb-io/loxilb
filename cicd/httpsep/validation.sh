@@ -46,7 +46,16 @@ function health() {
 
     if [ "$1" != "strict" ]; then
         if grep -q "VERSION_ID=\"24" /etc/os-release 2>/dev/null; then
+            # On Ubuntu 24, the first VIP request can advance the RR pointer by one slot.
+            # If it lands on server1, send two more requests so the main check starts from server1 again.
             res=$($hexec l3h1 ./client/client -key 10.10.10.1/key.pem --cert 10.10.10.1/cert.pem  --cacert minica.pem -host 20.20.20.1:2020)
+            if [[ $res == "${servArr[0]}" ]]
+            then
+                for i in {1..2}
+                do
+                    $hexec l3h1 ./client/client -key 10.10.10.1/key.pem --cert 10.10.10.1/cert.pem  --cacert minica.pem -host 20.20.20.1:2020 > /dev/null
+                done
+            fi
         fi
     fi
 
