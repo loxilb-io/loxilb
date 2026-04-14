@@ -3,6 +3,20 @@ name: Docker-Multi-Arch
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'Dockerfile'
+      - '.dockerignore'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Makefile'
+      - 'main.go'
+      - 'api/**'
+      - 'common/**'
+      - 'options/**'
+      - 'pkg/**'
+      - 'loxilb-ebpf/**'
+      - 'tools/**'
+      - '.github/workflows/docker-multiarch.yml'
   workflow_dispatch:
     inputs:
       tagName:
