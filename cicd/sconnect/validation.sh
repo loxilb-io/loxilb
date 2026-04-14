@@ -25,9 +25,9 @@ measure_ping() {
     local ns=$1 target=$2 iface=$3 size=$4
     local out recv
     if [ -n "$iface" ]; then
-        out=$(sudo ip netns exec $ns ping $target -c 10 -i 0.2 -W 2 -s $size -I $iface 2>/dev/null)
+        out=$(sudo ip netns exec $ns ping $target -c 10 -i 0.1 -W 2 -s $size -I $iface 2>/dev/null)
     else
-        out=$(sudo ip netns exec $ns ping $target -c 10 -i 0.2 -W 2 -s $size 2>/dev/null)
+        out=$(sudo ip netns exec $ns ping $target -c 10 -i 0.1 -W 2 -s $size 2>/dev/null)
     fi
     recv=$(echo "$out" | awk -F', ' '/packets transmitted/ {print $2}' | awk '{print $1}')
     [ -n "$recv" ] && [ "$recv" -ge 8 ]
