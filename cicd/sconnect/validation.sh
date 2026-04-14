@@ -18,21 +18,6 @@ warmup_pair() {
     return 1
 }
 
-# Measurement ping: paced (not -f) so fragment reassembly and bridge
-# FDB learning are not overwhelmed on slow CI runners. Tolerates up to
-# 2 drops out of 10 so transient loss on GitHub runners is not a fail.
-measure_ping() {
-    local ns=$1 target=$2 iface=$3 size=$4
-    local out recv
-    if [ -n "$iface" ]; then
-        out=$(sudo ip netns exec $ns ping $target -c 10 -i 0.1 -W 2 -s $size -I $iface 2>/dev/null)
-    else
-        out=$(sudo ip netns exec $ns ping $target -c 10 -i 0.1 -W 2 -s $size 2>/dev/null)
-    fi
-    recv=$(echo "$out" | awk -F', ' '/packets transmitted/ {print $2}' | awk '{print $1}')
-    [ -n "$recv" ] && [ "$recv" -ge 8 ]
-}
-
 echo "SCENARIO sconnect"
 if [[ $# -gt 0 ]]; then
     nslist=( "$@" )
@@ -64,7 +49,7 @@ for ns1 in "${nslist[@]}"; do
         warmup_pair $ns1 $gw1 ""
         for size in ${sizes[@]}
         do
-            measure_ping $ns1 $gw1 "" $size
+			sudo ip netns exec $ns1 ping $gw1 -f -c 50 -s $size -W 2 2>&1> /dev/null;
             if [[ $? -eq 0 ]]
 			then
 			    #echo -e "Ping [OK]"
@@ -130,7 +115,7 @@ for ns1 in "${nslist[@]}"; do
             do
 		        for h1 in "${!hosts1[@]}"
 		        do
-                    measure_ping $ns1 ${hosts2[h1]} "" $size
+				    sudo ip netns exec $ns1 ping ${hosts2[h1]} -f -c 50 -s $size -W 2 2>&1> /dev/null;
 				    if [[ $? -eq 0 ]]
 				    then
 				        #echo -e "Ping [OK]"
@@ -161,7 +146,7 @@ for ns1 in "${nslist[@]}"; do
 		        do
 			        for h2 in "${hosts2[@]}"
 			        do
-                        measure_ping $ns1 $h2 $h1 $size
+				        sudo ip netns exec $ns1 ping $h2 -f -c 50 -I $h1 -s $size -W 2 2>&1> /dev/null;
 				        if [[ $? -eq 0 ]]
 				        then
 					        #echo -e "Ping [OK]"
