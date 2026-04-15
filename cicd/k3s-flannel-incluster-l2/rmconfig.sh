@@ -6,4 +6,5 @@ vagrant destroy -f master1
 vagrant destroy -f master2
 vagrant destroy -f master3
 vagrant destroy -f host
-rm -f extIP
+rm -f extIP master-ip minica-key.pem minica.pem node-token k3s.yaml
+rm -rf cert/ loxilb.io/
