@@ -3,7 +3,7 @@ source ../common.sh
 echo IPSEC-3
 $hexec rh1 node ../common/tcp_server.js server1 &
 
-sleep 10
+sleep 60
 llb1_rx1=`$hexec llb1 ifconfig vti100 | grep "RX packets" | cut -d " " -f 11`
 llb1_tx1=`$hexec llb1 ifconfig vti100 | grep "TX packets" | cut -d " " -f 11`
 llb2_rx1=`$hexec llb2 ifconfig vti100 | grep "RX packets" | cut -d " " -f 11`
