@@ -1,7 +1,23 @@
 #!/bin/bash
 
 function wait_cluster_ready {
-    Res=$(sudo kubectl get pods -A |
+    local output
+
+    if ! output=$(sudo kubectl get nodes 2>&1); then
+        echo "$output"
+        return 1
+    fi
+
+    if [[ -z "$output" ]] || echo "$output" | awk 'NR > 1 && $2 != "Ready" { found=1 } END { exit found ? 0 : 1 }'; then
+        return 1
+    fi
+
+    if ! output=$(sudo kubectl get pods -A 2>&1); then
+        echo "$output"
+        return 1
+    fi
+
+    Res=$(printf '%s\n' "$output" |
     while IFS= read -r line; do
         if [[ "$line" != *"Running"* && "$line" != *"READY"* ]]; then
             echo "not ready"

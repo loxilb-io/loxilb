@@ -6,7 +6,7 @@ sudo mkdir -p /etc/loxilb
 sudo cp /vagrant/lbconfig.txt /etc/loxilb/
 sudo cp /vagrant/EPconfig.txt /etc/loxilb/
 #curl -fL https://get.k3s.io | K3S_TOKEN=${NODE_TOKEN} sh -s - server --server https://192.168.80.10:6443 --disable traefik --disable servicelb --node-ip=192.168.80.11 external-hostname=192.168.80.11 --node-external-ip=192.168.80.11 --disable-cloud-controller -t ${NODE_TOKEN}
-curl -fL https://get.k3s.io | K3S_TOKEN=${NODE_TOKEN} sh -s - server --server https://192.168.80.10:6443 --disable traefik --disable servicelb --node-ip=192.168.80.11 external-hostname=192.168.80.11 --node-external-ip=192.168.80.80 -t ${NODE_TOKEN} --flannel-iface=eth1
+curl -fL https://get.k3s.io | K3S_TOKEN=${NODE_TOKEN} sh -s - server --server https://192.168.80.10:6443 --disable traefik --disable servicelb --node-ip=192.168.80.11 external-hostname=192.168.80.11 --node-external-ip=192.168.80.80 -t ${NODE_TOKEN} --flannel-iface=eth1 --tls-san 192.168.80.80
 curl -sfL https://github.com/loxilb-io/loxilb-ebpf/raw/main/kprobe/install.sh | sh -
 #sudo kubectl apply -f /vagrant/loxilb.yml
 #sudo kubectl apply -f /vagrant/kube-loxilb.yml
