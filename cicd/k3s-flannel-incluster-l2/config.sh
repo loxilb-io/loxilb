@@ -25,6 +25,8 @@ wait_for_service_ip() {
 	local name=$1
 	local attempt=0
 	local lb_ip
+	local svc_output
+    local pod_output
 
 	while true; do
 		lb_ip=$(vagrant ssh master1 -c "sudo kubectl get svc ${name} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'" 2> /dev/null | tr -d '\r' | tail -n 1)
@@ -39,7 +41,15 @@ wait_for_service_ip() {
 			return 1
 		fi
 
+		svc_output=$(vagrant ssh master1 -c "sudo kubectl get svc ${name} -o wide" 2> /dev/null | tr -d '\r')
+        pod_output=$(vagrant ssh master1 -c "sudo kubectl get pods -A" 2> /dev/null | tr -d '\r')
 		echo "Waiting for service/${name} external IP"
+		if [[ -n "${svc_output}" ]]; then
+			echo "${svc_output}"
+		fi
+        if [[ -n "${pod_output}" ]]; then
+            echo "${pod_output}"
+        fi
 		sleep 5
 	done
 }
