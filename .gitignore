@@ -46,6 +46,7 @@
 *.tmp
 *.back
 *.bck
+**/.vagrant/
 
 # Local IDE files
 .vscode/

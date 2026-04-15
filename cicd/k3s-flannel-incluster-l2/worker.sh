@@ -9,4 +9,3 @@ curl -sfL https://get.k3s.io | K3S_TOKEN=${NODE_TOKEN} sh -s - agent --server ht
 #sudo kubectl apply -f /vagrant/nginx.yml
 #sudo kubectl apply -f /vagrant/udp.yml
 #sudo kubectl apply -f /vagrant/sctp.yml
-/vagrant/wait_ready.sh
