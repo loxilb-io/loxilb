@@ -48,6 +48,7 @@ if [[ -f "/usr/local/bin/k3s-uninstall.sh" ]]; then
 fi
 
 sudo apt-get remove bird2 --yes
+sudo rm -f /etc/bird/bird.conf
 
 echo "#########################################"
 echo "Removed testbed"

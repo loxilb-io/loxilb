@@ -5,3 +5,5 @@ vagrant destroy -f master
 vagrant destroy -f llb1
 vagrant destroy -f llb2
 vagrant destroy -f host
+rm -f extIP minica-key.pem minica.pem
+rm -rf cert/ configs/ loxilb.io/

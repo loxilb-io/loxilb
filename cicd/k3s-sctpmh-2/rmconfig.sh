@@ -50,6 +50,7 @@ if [[ -f "/usr/local/bin/k3s-uninstall.sh" ]]; then
 fi
 
 sudo apt-get remove bird2 --yes
+sudo rm -f /etc/bird/bird.conf
 #docker image rm loxilb-io/sctp-server
 #docker images -a | grep "loxilb-io" | awk '{print $3}' | xargs docker rmi
 echo "#########################################"

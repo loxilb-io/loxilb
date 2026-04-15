@@ -13,6 +13,8 @@ delete_docker_host l3ep1
 delete_docker_host l3ep2
 delete_docker_host l3ep3
 
+rm -fr 10.10.10.254/ minica.pem minica-key.pem
+
 echo "#########################################"
 echo "Deleted testbed"
 echo "#########################################"
