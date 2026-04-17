@@ -15,13 +15,13 @@ echo "=== Debug: Pod Status ==="
 vagrant ssh master -c 'sudo kubectl get pods -A -o wide'
 
 echo "=== Debug: Service Events (loxilb-ingress-manager) ==="
-vagrant ssh master -c 'sudo kubectl describe svc loxilb-ingress-manager -n kube-system' 2>&1 | tail -30
+vagrant ssh master -c 'sudo kubectl get endpoint loxilb-ingress-manager -n kube-system' 2>&1 | tail -30
 
 echo "=== Debug: Ingress Events ==="
 vagrant ssh master -c 'sudo kubectl describe ingress -A' 2>&1 | tail -30
 
 echo "=== Debug: kube-loxilb logs ==="
-vagrant ssh master -c 'sudo kubectl logs -n kube-system -l app=kube-loxilb --tail=80' 2>&1
+vagrant ssh master -c 'sudo kubectl logs -n kube-system -l app=kube-loxilb-app --tail=80' 2>&1
 
 echo "=== Debug: loxilb container logs ==="
 vagrant ssh loxilb -c 'sudo docker logs loxilb --tail 80' 2>&1
@@ -49,11 +49,13 @@ print_debug_info() {
   vagrant ssh master -c 'sudo kubectl get svc -A'
   vagrant ssh master -c 'sudo kubectl get nodes -o wide'
   echo "=== Failed Debug: kube-loxilb logs (full) ==="
-  vagrant ssh master -c 'sudo kubectl logs -n kube-system -l app=kube-loxilb --tail=200' 2>&1
+  vagrant ssh master -c 'sudo kubectl logs -n kube-system -l app=kube-loxilb-app --tail=200' 2>&1
   echo "=== Failed Debug: loxilb container logs (full) ==="
   vagrant ssh loxilb -c 'sudo docker logs loxilb --tail 200' 2>&1
   echo "=== Failed Debug: Service describe ==="
   vagrant ssh master -c 'sudo kubectl describe svc loxilb-ingress-manager -n kube-system' 2>&1
+  vagrant ssh master -c 'sudo kubectl get endpoint loxilb-ingress-manager -n kube-system' 2>&1
+
   echo "=== Failed Debug: Ingress describe ==="
   vagrant ssh master -c 'sudo kubectl describe ingress -A' 2>&1
 }
