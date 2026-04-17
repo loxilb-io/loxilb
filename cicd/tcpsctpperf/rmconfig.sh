@@ -17,6 +17,9 @@ do
     delete_docker_host l3ep$i
 done
 
+rm -rf cert/ loxilb.io/
+rm -f minica-key.pem minica.pem
+
 echo "#########################################"
 echo "Deleted testbed"
 echo "#########################################"

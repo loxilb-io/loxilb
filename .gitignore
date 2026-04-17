@@ -46,6 +46,10 @@
 *.tmp
 *.back
 *.bck
+*.pem
+**/*.pem
+**/cert/
+**/loxilb.io/
 **/.vagrant/
 
 # Local IDE files
