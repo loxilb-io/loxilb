@@ -6,3 +6,4 @@ vagrant destroy -f master1
 vagrant destroy -f master2
 vagrant destroy -f master3
 vagrant destroy -f host
+rm -f extIP extIP1 extIP2

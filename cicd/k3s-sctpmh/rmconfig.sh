@@ -43,6 +43,7 @@ if [[ -f "/usr/local/bin/k3s-uninstall.sh" ]]; then
 fi
 
 sudo apt-get remove bird2 ipvsadm ipset --yes
+sudo rm -f /etc/bird/bird.conf
 docker image rm loxilb-io/sctp-server
 docker images --filter=reference="loxilb-io/*" -q | xargs -r docker rmi
 echo "#########################################"
