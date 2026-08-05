@@ -10,6 +10,21 @@ on:
         description: 'Tag Name (e.g 0.9.7 or latest)'     
         required: true
         default: 'latest'
+      buildVmImage:
+        description: 'Build and upload the loxilb qcow2 image'
+        required: true
+        default: true
+        type: boolean
+      smokeTestVmImage:
+        description: 'Boot the qcow2 in QEMU and verify the loxilb service'
+        required: true
+        default: true
+        type: boolean
+      publishRelease:
+        description: 'Publish artifacts to the GitHub release'
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   build:
@@ -27,7 +42,7 @@ jobs:
         with:
              go-version: '>=1.18.0'
       - name: Install Dependencies
-        run: sudo apt-get update  && sudo apt-get -y install clang llvm libelf-dev gcc-multilib libpcap-dev elfutils dwarves git linux-tools-$(uname -r) libbsd-dev bridge-utils unzip build-essential bison flex iproute2
+        run: sudo apt-get update  && sudo apt-get -y install clang llvm libelf-dev gcc-multilib libpcap-dev elfutils dwarves git linux-tools-$(uname -r) libbsd-dev bridge-utils unzip build-essential bison flex iproute2 curl qemu-utils qemu-system-x86 cloud-image-utils libguestfs-tools
       - name: Perform any pre-requisite operations
         run: | 
              sudo mkdir -p /opt/loxilb/
@@ -38,21 +53,64 @@ jobs:
       - name: Build loxilb deb package with latest
         if: github.event.inputs.tagName == ''
         run: git clone https://github.com/loxilb-io/tools.git build-tools && cd build-tools/pkg/ && make major=latest && cd -      
+      - name: Build loxilb Ubuntu qcow2 image
+        if: github.event_name == 'schedule' || github.event.inputs.buildVmImage == 'true'
+        run: |
+          deb_pkg="$(find build-tools/pkg -maxdepth 1 -type f -name '*.deb' | head -n 1)"
+          if [[ -z "$deb_pkg" ]]; then
+            echo "No deb package found under build-tools/pkg"
+            exit 1
+          fi
+
+          release_tag="${{ github.event.inputs.tagName }}"
+          if [[ -z "$release_tag" ]]; then
+            release_tag="latest"
+          fi
+
+          bash ./tools/vm/build-release-qcow2.sh "$release_tag" "$deb_pkg" build-tools/pkg amd64
+      - name: Smoke test loxilb qcow2 image
+        if: github.event.inputs.smokeTestVmImage == 'true' && (github.event_name == 'schedule' || github.event.inputs.buildVmImage == 'true')
+        run: |
+          image_path="$(find build-tools/pkg -maxdepth 1 -type f -name '*.qcow2' | head -n 1)"
+          if [[ -z "$image_path" ]]; then
+            echo "No qcow2 image found under build-tools/pkg"
+            exit 1
+          fi
+
+          bash ./tools/vm/smoke-test-qcow2.sh "$image_path"
+      - name: Prepare release artifacts list
+        run: |
+          echo "RELEASE_ARTIFACTS=build-tools/pkg/*.deb" >> "$GITHUB_ENV"
+          if ls build-tools/pkg/*.qcow2 >/dev/null 2>&1; then
+            echo "RELEASE_ARTIFACTS=build-tools/pkg/*.deb,build-tools/pkg/*.qcow2,build-tools/pkg/*.qcow2.sha256" >> "$GITHUB_ENV"
+          fi
+      - name: Upload build artifacts to workflow run
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: loxilb-build-${{ github.run_id }}
+          path: |
+            build-tools/pkg/*.deb
+            build-tools/pkg/*.qcow2
+            build-tools/pkg/*.qcow2.sha256
+          if-no-files-found: error
       - name: Upload the package to a release with given tag  
         if: |
           github.repository == 'loxilb-io/loxilb' 
+          && (github.event_name == 'schedule' || github.event.inputs.publishRelease == 'true')
           &&  github.event.inputs.tagName != ''
         uses: ncipollo/release-action@v1
         with:
           tag: v${{ github.event.inputs.tagName }}
           allowUpdates: true
-          artifacts: "build-tools/pkg/*.deb"
+          artifacts: ${{ env.RELEASE_ARTIFACTS }}
       - name: Upload the package to a release with latest tag  
         if: |
           github.repository == 'loxilb-io/loxilb' 
+          && (github.event_name == 'schedule' || github.event.inputs.publishRelease == 'true')
           &&  github.event.inputs.tagName == ''
         uses: ncipollo/release-action@v1
         with:
           tag: vlatest
           allowUpdates: true
-          artifacts: "build-tools/pkg/*.deb"
+          artifacts: ${{ env.RELEASE_ARTIFACTS }}

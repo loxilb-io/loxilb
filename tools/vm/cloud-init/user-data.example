@@ -1,0 +1,17 @@
+#cloud-config
+users:
+  - default
+  - name: loxilb
+    gecos: loxilb release user
+    groups: [adm, sudo]
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - REPLACE_WITH_YOUR_PUBLIC_KEY
+
+ssh_pwauth: false
+package_update: false
+
+runcmd:
+  - systemctl enable --now qemu-guest-agent || true
+  - systemctl status loxilb --no-pager || true
