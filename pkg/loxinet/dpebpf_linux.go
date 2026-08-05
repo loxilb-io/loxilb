@@ -948,6 +948,19 @@ func (e *DpEbpfH) DpRouteDel(w *RouteDpWorkQ) int {
 	return DpRouteMod(w)
 }
 
+// setNatKeyDaddr - sets the destination address (and v6 flag) of a natKey
+// to the given IP, leaving mark/dport/l4proto/zone untouched.
+func setNatKeyDaddr(key *natKey, ip net.IP) {
+	key.daddr = [4]C.uint{0, 0, 0, 0}
+	if tk.IsNetIPv4(ip.String()) {
+		key.daddr[0] = C.uint(tk.IPtonl(ip))
+		key.v6 = 0
+	} else {
+		convNetIP2DPv6Addr(unsafe.Pointer(&key.daddr[0]), ip)
+		key.v6 = 1
+	}
+}
+
 // DpLBRuleMod - routine to work on a ebpf lb change request
 func DpLBRuleMod(w *LBDpWorkQ) int {
 
@@ -1087,11 +1100,43 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 			return EbpfErrTmacAdd
 		}
 		tk.LogIt(tk.LogDebug, "[DP] LB rule %s:%v add[OK]\n", w.ServiceIP.String(), key.mark)
+
+		// Add a dataplane NAT entry for each secondary VIP so SCTP packets
+		// addressed to a secondary VIP follow the same action as the primary VIP.
+		// Skip SNAT and fwmark-based NAT entries because they are not keyed on daddr.
+		if w.NatType != DpSnat && w.NatType != DpNat {
+			for _, sip := range w.secIP {
+				sKey := new(natKey)
+				*sKey = *key // Copy mark, dport, l4proto and zone before overriding daddr and v6.
+				setNatKeyDaddr(sKey, sip)
+				sret := C.llb_add_map_elem(C.LL_DP_NAT_MAP,
+					unsafe.Pointer(sKey),
+					unsafe.Pointer(dat))
+				if sret != 0 {
+					// Log the failure and continue after installing the primary entry.
+					tk.LogIt(tk.LogError, "[DP] LB rule secIP %s:%v add[NOK]\n", sip.String(), sKey.mark)
+					continue
+				}
+				tk.LogIt(tk.LogDebug, "[DP] LB rule secIP %s:%v add[OK]\n", sip.String(), sKey.mark)
+			}
+		}
 		return 0
 	} else if w.Work == DpRemove {
 		C.llb_del_map_elem_wval(C.LL_DP_NAT_MAP,
 			unsafe.Pointer(key),
 			unsafe.Pointer(dat))
+
+		// Remove the secondary VIP NAT entries added during create.
+		if w.NatType != DpSnat && w.NatType != DpNat {
+			for _, sip := range w.secIP {
+				sKey := new(natKey)
+				*sKey = *key
+				setNatKeyDaddr(sKey, sip)
+				C.llb_del_map_elem_wval(C.LL_DP_NAT_MAP,
+					unsafe.Pointer(sKey),
+					unsafe.Pointer(dat))
+			}
+		}
 		return 0
 	}
 
