@@ -37,9 +37,18 @@ jobs:
       
     - name: Build and run the loxilb Docker image with given tag
       if: github.event.inputs.tagName != ''
+      env:
+        TAGNAME: ${{ github.event.inputs.tagName }}
       run: |
-          docker build . --tag ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }}
-          docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:${{ github.event.inputs.tagName }}
+          # .dockerignore excludes .git, so the in-container build cannot derive
+          # the release version from a tag -- pass it in. Image tags like
+          # "latest-amd64" name no release, so those stay on the placeholder.
+          version=""
+          if [[ "$TAGNAME" =~ ^v?([0-9]+(\.[0-9]+)+) ]]; then
+            version="${BASH_REMATCH[1]}"
+          fi
+          docker build . --build-arg VERSION="$version" --tag ghcr.io/loxilb-io/loxilb:${TAGNAME}
+          docker run -u root --cap-add SYS_ADMIN  --restart unless-stopped --privileged -dit -v /dev/log:/dev/log --name loxilb ghcr.io/loxilb-io/loxilb:${TAGNAME}
       
     - name: Publish the latest loxilb Docker image
       if: | 

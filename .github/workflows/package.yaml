@@ -55,6 +55,22 @@ jobs:
       - name: Build loxilb deb package with latest
         if: github.event.inputs.tagName == ''
         run: cd build-tools/pkg/ && make major=latest && cd -      
+      - name: Verify the packaged binary reports the requested version
+        if: github.event.inputs.tagName != '' && github.event.inputs.tagName != 'latest'
+        env:
+          TAGNAME: ${{ github.event.inputs.tagName }}
+        run: |
+          # The release version lives in the git tag, not in the source tree, so
+          # this is what confirms the stamping actually happened. Run it before
+          # the qcow2 build so a mis-stamped binary fails in seconds rather than
+          # after the image build and smoke test.
+          deb_pkg="$(find build-tools/pkg -maxdepth 1 -type f -name '*.deb' | head -n 1)"
+          if [[ -z "$deb_pkg" ]]; then
+            echo "No deb package found under build-tools/pkg"
+            exit 1
+          fi
+
+          bash ./tools/ci/check-deb-version.sh "$deb_pkg" "$TAGNAME"
       - name: Build loxilb Ubuntu qcow2 image
         if: github.event_name == 'schedule' || github.event.inputs.buildVmImage == 'true'
         run: |
@@ -79,7 +95,14 @@ jobs:
             exit 1
           fi
 
-          bash ./tools/vm/smoke-test-qcow2.sh "$image_path"
+          # Empty for scheduled/latest builds: those track main and have no
+          # fixed version to assert against.
+          expected_version="${{ github.event.inputs.tagName }}"
+          if [[ "$expected_version" == "latest" ]]; then
+            expected_version=""
+          fi
+
+          bash ./tools/vm/smoke-test-qcow2.sh "$image_path" 900 "$expected_version"
       - name: Prepare release artifacts list
         run: |
           echo "RELEASE_ARTIFACTS=build-tools/pkg/*.deb" >> "$GITHUB_ENV"
