@@ -26,6 +26,22 @@ on:
         default: false
         type: boolean
 
+# True only for a run that publishes a versioned GitHub release -- the one case
+# where a mis-stamped or mis-built artifact reaches users, and so the only case
+# where the version checks below should be able to fail a build.
+#
+# Deliberately excluded:
+#   - scheduled runs, which publish to vlatest; that tracks main and has no
+#     fixed version to verify against (tagName is empty on a schedule event).
+#   - manual runs with publishRelease=false, which only attach artifacts to the
+#     workflow run. Those must stay buildable for any tag, including old ones
+#     whose trees predate version stamping and would legitimately fail a check.
+env:
+  VERSIONED_RELEASE: ${{ github.repository == 'loxilb-io/loxilb'
+    && github.event.inputs.publishRelease == 'true'
+    && github.event.inputs.tagName != ''
+    && github.event.inputs.tagName != 'latest' }}
+
 jobs:
   build:
     name: Build OS packages
@@ -47,6 +63,15 @@ jobs:
         run: | 
              sudo mkdir -p /opt/loxilb/
              sudo apt-get purge -y libssl-dev 2>&1 >> /dev/null  | true
+      - name: Verify the release tags are consistent
+        if: env.VERSIONED_RELEASE == 'true'
+        env:
+          TAGNAME: ${{ github.event.inputs.tagName }}
+        run: |
+          # Runs before anything expensive: the packaging build spends a long
+          # time on an openssl source build before it ever reaches the git
+          # checkouts that would notice a missing tag.
+          bash ./tools/ci/check-release-tags.sh "$TAGNAME"
       - name: Clone packaging tools
         run: git clone https://github.com/loxilb-io/tools.git build-tools
       - name: Build loxilb deb package with given tag
@@ -56,7 +81,7 @@ jobs:
         if: github.event.inputs.tagName == ''
         run: cd build-tools/pkg/ && make major=latest && cd -      
       - name: Verify the packaged binary reports the requested version
-        if: github.event.inputs.tagName != '' && github.event.inputs.tagName != 'latest'
+        if: env.VERSIONED_RELEASE == 'true'
         env:
           TAGNAME: ${{ github.event.inputs.tagName }}
         run: |
@@ -95,11 +120,13 @@ jobs:
             exit 1
           fi
 
-          # Empty for scheduled/latest builds: those track main and have no
-          # fixed version to assert against.
-          expected_version="${{ github.event.inputs.tagName }}"
-          if [[ "$expected_version" == "latest" ]]; then
-            expected_version=""
+          # Only assert the version when this run publishes a versioned release.
+          # Otherwise leave it empty: the smoke test still boots the image and
+          # still prints LOXILB_VERSION_REPORTED, it just does not fail the run
+          # over a version, so artifact-only builds of any tag stay possible.
+          expected_version=""
+          if [[ "$VERSIONED_RELEASE" == "true" ]]; then
+            expected_version="${{ github.event.inputs.tagName }}"
           fi
 
           bash ./tools/vm/smoke-test-qcow2.sh "$image_path" 900 "$expected_version"
