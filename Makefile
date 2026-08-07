@@ -6,6 +6,22 @@ TAG?=latest
 ARM64_TAG?=$(TAG)-arm64
 BRANCH_NAME:=$(shell git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git branch --show-current || echo nogit)
 
+# VERSION stamps the release version into common.Version. The git tag is the
+# source of truth for it -- the source tree carries only a dev placeholder -- so
+# this defaults to the tag when building from an exact tag checkout (which is how
+# the deb/qcow2 packaging builds work) and is empty otherwise. Pass it explicitly
+# with `make VERSION=x.y.z` where no tag is reachable, as the image builds do.
+# When empty no stamp is applied and the placeholder in common/common.go shows
+# through, so a plain `go build` or a branch build still works unchanged.
+VERSION?=$(shell git describe --tags --exact-match 2>/dev/null)
+# `override` so that a leading v is stripped even when VERSION came from the
+# command line, which a plain assignment cannot do.
+override VERSION:=$(patsubst v%,%,$(VERSION))
+LDFLAGS:=-X 'github.com/loxilb-io/loxilb/common.BuildInfo=$(shell date '+%Y_%m_%d_%Hh:%Mm')-$(BRANCH_NAME)'
+ifneq ($(VERSION),)
+LDFLAGS+= -X 'github.com/loxilb-io/loxilb/common.Version=$(VERSION)'
+endif
+
 loxilbid=$(shell docker ps -f name=$(dock) | grep -w $(dock) | cut  -d " "  -f 1 | grep -iv  "CONTAINER")
 
 subsys:
@@ -15,7 +31,7 @@ subsys-clean:
 	cd loxilb-ebpf && $(MAKE) clean
 
 build: subsys
-	@go build -o ${bin} -ldflags="-X 'github.com/loxilb-io/loxilb/common.BuildInfo=${shell date '+%Y_%m_%d_%Hh:%Mm'}-$(BRANCH_NAME)'"
+	@go build -o ${bin} -ldflags="$(LDFLAGS)"
 	
 clean: subsys-clean
 	go clean
@@ -66,11 +82,14 @@ docker-rp-ebpf: docker-run docker-cp-ebpf
 	@docker stop $(dock) 2>&1 >> /dev/null || true
 	@docker rm $(dock) 2>&1 >> /dev/null || true
 
+# VERSION is forwarded into the image build because .dockerignore excludes .git,
+# so the in-container `make` cannot derive it from a tag the way the deb build
+# does. Without it the image falls back to the dev placeholder in common.go.
 docker:
-	docker build -t $(IMAGE):$(TAG) .
+	docker build -t $(IMAGE):$(TAG) --build-arg VERSION=$(VERSION) .
 
 docker-arm64:
-	docker  buildx build --platform linux/arm64 --load -t $(IMAGE):$(ARM64_TAG) .
+	docker  buildx build --platform linux/arm64 --load -t $(IMAGE):$(ARM64_TAG) --build-arg VERSION=$(VERSION) .
 
 lint:
 	golangci-lint run --enable-all

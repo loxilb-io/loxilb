@@ -32,6 +32,10 @@ env:
   IMAGE_NAME: ghcr.io/loxilb-io/loxilb
   TARGET_TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tagName || 'latest' }}
   BUILD_REF: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.sourceTag != '' && github.event.inputs.sourceTag || (github.event_name == 'workflow_dispatch' && github.event.inputs.tagName != 'latest' && github.event.inputs.tagName || 'main') }}
+  # Release version stamped into the binary. .dockerignore excludes .git, so the
+  # in-container build cannot derive it from a tag and it has to be passed in.
+  # Empty for 'latest' (a rolling build of main, which has no release version).
+  RELEASE_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tagName != 'latest' && github.event.inputs.tagName || '' }}
 
 jobs:
   build-check-amd64:
@@ -99,6 +103,7 @@ jobs:
         push: true
         build-args: |
           TAG=${{ env.BUILD_REF }}
+          VERSION=${{ env.RELEASE_VERSION }}
         tags: ${{ env.IMAGE_NAME }}:${{ env.TARGET_TAG }}-amd64
         cache-from: type=gha,scope=amd64
         cache-to: type=gha,mode=max,scope=amd64
@@ -133,6 +138,7 @@ jobs:
         push: true
         build-args: |
           TAG=${{ env.BUILD_REF }}
+          VERSION=${{ env.RELEASE_VERSION }}
           USE_DOCKER_BUILDX_ARM64=false
         tags: ${{ env.IMAGE_NAME }}:${{ env.TARGET_TAG }}-arm64
         cache-from: type=gha,scope=arm64

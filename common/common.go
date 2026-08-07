@@ -21,9 +21,18 @@ import (
 	"time"
 )
 
-const (
-	Version = "0.9.8.6-beta"
-)
+// Version - loxilb version as reported by `loxilb --version` and the /version
+// API.
+//
+// This value is only a development placeholder and is deliberately not a
+// release number: the git tag is the source of truth for released builds, which
+// stamp it at link time via the Makefile's VERSION variable:
+//
+//	-ldflags "-X 'github.com/loxilb-io/loxilb/common.Version=<ver>'"
+//
+// That is why this is a var and not a const -- a const cannot be stamped. A
+// build reporting this placeholder is a build from source, not a release.
+var Version = "0.9.8-dev"
 
 var BuildInfo string = ""
 
