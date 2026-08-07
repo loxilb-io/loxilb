@@ -33,29 +33,77 @@ do
     sleep 1
 done
 
-respArr=( "server1" "server1" "server1"
-          "server1" "server1" "server1"
-          "server1" "server1" "server1"
-          "server1" "server1" "server1"
-          "server1" "server1" "server1"
-          "server1" "server1" "server1"
-          "server1" "server1" "server1"
-          "server1" "server1" "server1"
-          "server1" "server2" "server2"
-          "server2" "server2" "server2"
-          "server2" "server1" )
+# Endpoint weights as configured in config.sh. server3 is deliberately not an
+# endpoint of this rule, so it must receive nothing.
+weightArr=( 80 20 0 )
+nreq=32
+tol=3
+cntArr=( 0 0 0 )
+noResp=0
 
-for i in {0..31}
+# What wRR guarantees is the share of traffic each endpoint gets, not the order
+# the endpoints come back in. The order is an artifact of how weights are
+# expanded into datapath slots: with a 32 slot table the 20% endpoint answered
+# as one run of 6, with the 16 slot table used since the LLB_NAT_STAT_CID fix it
+# answers as two runs of 3. Same share, different sequence. Asserting the exact
+# sequence made this test fail on a change that did not alter the balancing at
+# all, so check the distribution instead.
+for i in $(seq 0 $(( nreq - 1 )))
 do
     res=$($hexec l3h1 curl --max-time 10 -s 20.20.20.1:2020)
     echo $i:$res
-    if [[ $res != "${respArr[i]}" ]]
+    matched=0
+    for k in 0 1 2
+    do
+        if [[ $res == "${servArr[k]}" ]]
+        then
+            cntArr[k]=$(( ${cntArr[k]} + 1 ))
+            matched=1
+            break
+        fi
+    done
+    if [[ $matched == 0 ]]
     then
-        echo "expected ${respArr[i]} rcvd $res"
-        code=1
+        noResp=$(( noResp + 1 ))
     fi
     sleep 1
 done
+
+echo "--- distribution over $nreq requests (tolerance +/-$tol) ---"
+for k in 0 1 2
+do
+    got=${cntArr[k]}
+    if [[ ${weightArr[k]} == 0 ]]
+    then
+        if [[ $got != 0 ]]
+        then
+            echo "${servArr[k]}: $got, expected 0 (not an endpoint of this rule) [FAILED]"
+            code=1
+        else
+            echo "${servArr[k]}: $got, not an endpoint of this rule [OK]"
+        fi
+        continue
+    fi
+    # rounded ideal share for this weight
+    want=$(( (nreq * ${weightArr[k]} + 50) / 100 ))
+    diff=$(( got - want ))
+    if [[ $diff -lt 0 ]]
+    then
+        diff=$(( 0 - diff ))
+    fi
+    if [[ $diff -gt $tol ]]
+    then
+        echo "${servArr[k]}: $got, weight ${weightArr[k]}% expects ~$want [FAILED]"
+        code=1
+    else
+        echo "${servArr[k]}: $got, weight ${weightArr[k]}% expects ~$want [OK]"
+    fi
+done
+if [[ $noResp != 0 ]]
+then
+    echo "$noResp request(s) returned no valid server response [FAILED]"
+    code=1
+fi
 sudo killall -9 node 2>&1 > /dev/null
 if [[ $code == 0 ]]
 then
