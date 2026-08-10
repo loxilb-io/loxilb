@@ -49,7 +49,14 @@ jobs:
     permissions:
       contents: write
       packages: write
+    outputs:
+      # Job-level `if` cannot read the `env` context, so the publish job below
+      # gates on this instead of restating the expression.
+      versioned_release: ${{ steps.release-mode.outputs.versioned }}
     steps:
+      - name: Record the release mode for the publish job
+        id: release-mode
+        run: echo "versioned=$VERSIONED_RELEASE" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v2
         with:
           submodules: recursive
@@ -112,7 +119,10 @@ jobs:
 
           bash ./tools/vm/build-release-qcow2.sh "$release_tag" "$deb_pkg" build-tools/pkg amd64
       - name: Smoke test loxilb qcow2 image
-        if: github.event.inputs.smokeTestVmImage == 'true' && (github.event_name == 'schedule' || github.event.inputs.buildVmImage == 'true')
+        # Mirrors the qcow2 build condition above. A scheduled run has no inputs,
+        # so testing smokeTestVmImage first would compare null to 'true' and skip
+        # the smoke test on exactly the builds nobody is watching.
+        if: github.event_name == 'schedule' || (github.event.inputs.buildVmImage == 'true' && github.event.inputs.smokeTestVmImage == 'true')
         run: |
           image_path="$(find build-tools/pkg -maxdepth 1 -type f -name '*.qcow2' | head -n 1)"
           if [[ -z "$image_path" ]]; then
@@ -146,27 +156,69 @@ jobs:
             build-tools/pkg/*.qcow2
             build-tools/pkg/*.qcow2.sha256
           if-no-files-found: error
-      - name: Upload the package to a release with given tag  
+      # The rolling build stays ungated. It runs nightly and publishes to vlatest,
+      # which tracks main and has no fixed version; putting it behind a reviewer
+      # would leave every nightly run parked until it expired. Versioned releases
+      # are handled by the publish-release job below instead.
+      #
+      # tagName is empty on a schedule and 'latest' on a manual rolling run, and
+      # both produce the same vlatest release.
+      - name: Upload the package to the rolling vlatest release
         if: |
-          github.repository == 'loxilb-io/loxilb' 
+          github.repository == 'loxilb-io/loxilb'
           && (github.event_name == 'schedule' || github.event.inputs.publishRelease == 'true')
-          &&  github.event.inputs.tagName != ''
-        uses: ncipollo/release-action@v1
-        with:
-          tag: v${{ github.event.inputs.tagName }}
-          allowUpdates: true
-          omitBodyDuringUpdate: true
-          replacesArtifacts: true
-          artifacts: ${{ env.RELEASE_ARTIFACTS }}
-      - name: Upload the package to a release with latest tag  
-        if: |
-          github.repository == 'loxilb-io/loxilb' 
-          && (github.event_name == 'schedule' || github.event.inputs.publishRelease == 'true')
-          &&  github.event.inputs.tagName == ''
+          && (github.event.inputs.tagName == '' || github.event.inputs.tagName == 'latest')
         uses: ncipollo/release-action@v1
         with:
           tag: vlatest
           allowUpdates: true
           omitBodyDuringUpdate: true
+          replacesArtifacts: true
+          artifacts: ${{ env.RELEASE_ARTIFACTS }}
+
+  # Split out of `build` for one reason: an environment gate applies to a job, not
+  # to a step. Everything a reviewer needs -- tag consistency, the packaged
+  # binary's own version, a real boot of the qcow2 -- has already been decided by
+  # `build`, so the approval is made against results rather than against a bare
+  # commit id.
+  #
+  # NOTE: the gate only exists once the `release` environment has required
+  # reviewers set in repository settings. GitHub auto-creates an *unprotected*
+  # environment on first use, and an unprotected one runs straight through without
+  # asking anybody.
+  publish-release:
+    name: Publish versioned release
+    needs: build
+    if: needs.build.outputs.versioned_release == 'true'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    environment: release
+    steps:
+      - name: Download the artifacts built above
+        uses: actions/download-artifact@v4
+        with:
+          name: loxilb-build-${{ github.run_id }}
+          path: dist
+      - name: Prepare release artifacts list
+        run: |
+          echo "RELEASE_ARTIFACTS=dist/*.deb" >> "$GITHUB_ENV"
+          if ls dist/*.qcow2 >/dev/null 2>&1; then
+            echo "RELEASE_ARTIFACTS=dist/*.deb,dist/*.qcow2,dist/*.qcow2.sha256" >> "$GITHUB_ENV"
+          fi
+      - name: Attach the artifacts to the release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ github.event.inputs.tagName }}
+          # A release this step creates starts as a draft, so a human still has to
+          # read the notes and press Publish. The omit*DuringUpdate flags keep the
+          # step from touching a release that already exists: notes, draft state
+          # and the prerelease flag stay whatever the human set them to.
+          draft: true
+          allowUpdates: true
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+          omitDraftDuringUpdate: true
+          omitPrereleaseDuringUpdate: true
           replacesArtifacts: true
           artifacts: ${{ env.RELEASE_ARTIFACTS }}
