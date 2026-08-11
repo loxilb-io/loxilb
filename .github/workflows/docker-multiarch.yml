@@ -95,18 +95,38 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Build and push amd64 image
+    # Pushed by digest rather than under a `<tag>-amd64` tag. The per-arch build
+    # is an implementation detail of the multi-arch tag that `merge-manifest`
+    # assembles below; tagging it published that detail permanently, so every
+    # release left two extra tags sitting in the package listing forever.
+    - name: Build and push amd64 image by digest
+      id: build
       uses: docker/build-push-action@v6
       with:
         context: .
         platforms: linux/amd64
-        push: true
         build-args: |
           TAG=${{ env.BUILD_REF }}
           VERSION=${{ env.RELEASE_VERSION }}
-        tags: ${{ env.IMAGE_NAME }}:${{ env.TARGET_TAG }}-amd64
+        outputs: type=image,name=${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
         cache-from: type=gha,scope=amd64
         cache-to: type=gha,mode=max,scope=amd64
+
+    # The digest is handed to merge-manifest as an artifact -- job outputs would
+    # work for two fixed arches, but this stays correct if a third is added.
+    - name: Export the digest
+      run: |
+        mkdir -p /tmp/digests
+        digest="${{ steps.build.outputs.digest }}"
+        touch "/tmp/digests/${digest#sha256:}"
+
+    - name: Upload the digest
+      uses: actions/upload-artifact@v4
+      with:
+        name: digests-amd64
+        path: /tmp/digests/*
+        if-no-files-found: error
+        retention-days: 1
 
   build-arm64:
     if: github.repository == 'loxilb-io/loxilb'
@@ -130,19 +150,34 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Build and push arm64 image
+    # By digest, for the reason given on the amd64 job above.
+    - name: Build and push arm64 image by digest
+      id: build
       uses: docker/build-push-action@v6
       with:
         context: .
         platforms: linux/arm64
-        push: true
         build-args: |
           TAG=${{ env.BUILD_REF }}
           VERSION=${{ env.RELEASE_VERSION }}
           USE_DOCKER_BUILDX_ARM64=false
-        tags: ${{ env.IMAGE_NAME }}:${{ env.TARGET_TAG }}-arm64
+        outputs: type=image,name=${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
         cache-from: type=gha,scope=arm64
         cache-to: type=gha,mode=max,scope=arm64
+
+    - name: Export the digest
+      run: |
+        mkdir -p /tmp/digests
+        digest="${{ steps.build.outputs.digest }}"
+        touch "/tmp/digests/${digest#sha256:}"
+
+    - name: Upload the digest
+      uses: actions/upload-artifact@v4
+      with:
+        name: digests-arm64
+        path: /tmp/digests/*
+        if-no-files-found: error
+        retention-days: 1
 
   merge-manifest:
     if: github.repository == 'loxilb-io/loxilb'
@@ -163,11 +198,20 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
+    - name: Download the per-arch digests
+      uses: actions/download-artifact@v4
+      with:
+        path: /tmp/digests
+        pattern: digests-*
+        merge-multiple: true
+
+    # One file per arch, named after its digest, so the sources are assembled
+    # from the directory listing rather than from a hardcoded arch list.
     - name: Create and push multi-arch manifest
+      working-directory: /tmp/digests
       run: |
         docker buildx imagetools create \
           --tag ${IMAGE_NAME}:${TARGET_TAG} \
-          ${IMAGE_NAME}:${TARGET_TAG}-amd64 \
-          ${IMAGE_NAME}:${TARGET_TAG}-arm64
+          $(printf "${IMAGE_NAME}@sha256:%s " *)
         docker buildx imagetools inspect ${IMAGE_NAME}:${TARGET_TAG}
     
