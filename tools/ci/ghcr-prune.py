@@ -156,6 +156,13 @@ def main():
         default=0,
         help="stop after this many deletions (0 = no limit)",
     )
+    ap.add_argument(
+        "--record",
+        metavar="FILE",
+        help="write the id/digest of every candidate to FILE as JSON. GitHub "
+        "keeps a deleted version restorable for 30 days, but only by id, so "
+        "without this the ids are gone with them.",
+    )
     args = ap.parse_args()
 
     token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
@@ -166,9 +173,19 @@ def main():
     quoted = urllib.parse.quote(package, safe="")
 
     print(f"package: {REGISTRY}/{owner}/{package}")
-    versions = api_paged(
-        f"/orgs/{owner}/packages/container/{quoted}/versions?per_page=100", token
-    )
+    try:
+        versions = api_paged(
+            f"/orgs/{owner}/packages/container/{quoted}/versions?per_page=100", token
+        )
+    except urllib.error.HTTPError as exc:
+        # Worth naming rather than letting a traceback out: callers loop over a
+        # list of packages, so a typo or a package the token cannot see should
+        # read as one clear line among the others.
+        hint = {
+            403: "token lacks read:packages, or cannot see this package",
+            404: "no such container package under this owner",
+        }.get(exc.code, "")
+        raise Fatal(f"cannot list versions of {owner}/{package}: {exc}. {hint}")
     tagged = {
         v["name"]: v["metadata"]["container"]["tags"]
         for v in versions
@@ -214,6 +231,28 @@ def main():
         return 0
 
     print(f"\n  oldest: {orphans[0]['updated_at']}   newest: {orphans[-1]['updated_at']}")
+
+    if args.record:
+        with open(args.record, "w") as fh:
+            json.dump(
+                {
+                    "owner": owner,
+                    "package": package,
+                    "older_than_days": args.older_than_days,
+                    "applied": bool(args.apply),
+                    "versions": [
+                        {
+                            "id": v["id"],
+                            "digest": v["name"],
+                            "updated_at": v["updated_at"],
+                        }
+                        for v in orphans
+                    ],
+                },
+                fh,
+                indent=1,
+            )
+        print(f"  recorded {len(orphans)} candidates to {args.record}")
 
     if not args.apply:
         print("\nDRY RUN -- pass --apply to delete")
