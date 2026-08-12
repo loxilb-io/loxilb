@@ -1,0 +1,86 @@
+name: GHCR-Retention
+
+# GitHub applies no retention to container packages, so every rebuild of a
+# rolling tag leaves its predecessor behind as an untagged version that stays
+# forever. Left alone since 2024 that grew to 699 untagged versions against 71
+# tagged ones.
+#
+# The pruning is deliberately not one of the off-the-shelf "delete untagged"
+# actions: a multi-arch tag is an index whose per-platform children are
+# themselves untagged versions, so deleting by tag-emptiness alone destroys
+# images that are still tagged and still in use. tools/ci/ghcr-prune.py walks
+# the reference graph from every tag first and only removes what nothing tagged
+# can reach. (ghcr.io/loxilb-io/loxilb:v0.9.4 lost its linux/amd64 manifest to
+# exactly this mistake and cannot be pulled on amd64 today.)
+#
+# Scope is this repository's own package and nothing else. GITHUB_TOKEN can
+# only delete versions of packages linked to the repository it came from, and
+# loxilb is the one linked here; kube-loxilb, loxilb-ingress, loxi-ccm and the
+# rest belong to their own repositories. Those want a copy of this workflow in
+# the repository that owns them, not a cross-repository token here.
+
+on:
+  schedule:
+    # Weekly is enough for a 90-day window and keeps the run log readable.
+    - cron: '30 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      olderThanDays:
+        description: 'Only delete orphans last updated at least this many days ago'
+        required: true
+        default: '90'
+      apply:
+        description: 'Actually delete. Leave off for a dry run that only reports.'
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  prune:
+    name: Prune orphaned container versions
+    # A fork has no package of its own to prune, and its GITHUB_TOKEN cannot
+    # touch the upstream org's.
+    if: github.repository == 'loxilb-io/loxilb'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prune
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # A scheduled run deletes; that is the point of a retention policy,
+          # and the script refuses to act on an incomplete reference graph. A
+          # manual run defaults to a dry run so the listing can be reviewed.
+          APPLY: ${{ github.event_name == 'schedule' && 'true' || inputs.apply }}
+          OLDER_THAN: ${{ inputs.olderThanDays || '90' }}
+        run: |
+          # -e and pipefail together are what make a failed prune fail the step.
+          # pipefail alone is not enough: the closing fence echoed after the
+          # pipeline would become the step's exit status and paper over it.
+          # GitHub's default shell already supplies -e, but this does not rely
+          # on that.
+          set -e -u -o pipefail
+          mkdir -p prune-records
+          args=(--owner loxilb-io --package loxilb --older-than-days "$OLDER_THAN"
+                --record prune-records/loxilb.json)
+          if [[ "$APPLY" == "true" ]]; then
+            args+=(--apply)
+          fi
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          python3 tools/ci/ghcr-prune.py "${args[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      # A deleted version is restorable for 30 days, but only by id, and the ids
+      # are unlistable once the versions are gone. The record is the only way
+      # back, so it outlives the run by the length of that window.
+      - name: Upload the deletion record
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prune-record
+          path: prune-records/loxilb.json
+          if-no-files-found: warn
+          retention-days: 30
