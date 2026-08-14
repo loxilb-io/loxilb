@@ -4,12 +4,13 @@ Reproduces loxilb Issue **#1044** / Discussion **#1089** and Issue **#675**: wit
 balancer in `fullnat` mode and PROXY protocol v2 enabled (`--ppv2en`), the **TLS 1.3
 handshake fails** while TLS 1.2 works.
 
-Two *independent* defects in the same eBPF helper (`dp_ins_ppv2()`) are covered:
+Three *independent* defects in the ppv2 datapath are covered:
 
 | case | trigger | issue |
 |------|---------|-------|
 | `REPRO`   | first data packet is a GSO super-packet | #1044 / #1089 |
 | `REPRO-2` | client sends no TCP options (`doff == 20`) | #675 (Windows-only) |
+| `REPRO-3` | the L4 checksum is finalised in software downstream | #675 (offload-off workaround) |
 
 ## REPRO-2 — the Windows failure (#675)
 
@@ -63,6 +64,7 @@ so the client's GSO builds a `gso_size>0` super-packet for the ClientHello.
 | CONTROL-2 | `MTU=320`, offload **OFF** — real multi-segment, not GSO | **OK** |
 | REPRO     | `MTU=320`, offload **ON** — GSO super-packet ClientHello | **FAIL** |
 | REPRO-2   | default MTU, offload ON, client TCP timestamps **off** (`doff=20`) | **FAIL** |
+| REPRO-3   | default MTU, offload ON, loxilb veth **TX csum offload off** | **FAIL** |
 
 Same MTU, same hello: only client segmentation-offload differs. Offload OFF (real
 separate segments) succeeds; offload ON (one GSO super-packet) fails. That rules out
@@ -84,12 +86,46 @@ die immediately after ClientHello:
 > Both are the **same root cause** (GSO + `dp_ins_ppv2`); which one you see depends on
 > where the GSO corruption lands and how the backend (nginx vs Traefik) reacts.
 
+## REPRO-3 — why `--ppv2en` needed offload switched off (#675)
+
+`veth`-to-`veth` never validates TCP checksums: a `CHECKSUM_PARTIAL` skb passes
+through with only the pseudo-header sum in `tcp->check` and the peer trusts it. That
+is why this harness could not see the second half of #675 at all, and why the bug
+survived every CI run. Turning **TX checksum offload off on loxilb's own veths** makes
+the stack finalise the checksum in software on the way out (`skb_checksum_help()`) —
+exactly what a tun device does — and the packets become checkable.
+
+With that one knob, `--ppv2en` was the only variable that mattered:
+
+| same loxilb, same path | forward | return | result |
+|---|---|---|---|
+| `fullnat` | 0/10 bad | 0/7 bad | works |
+| `fullnat --ppv2en` | 19/21 bad | 17/18 bad | stalls |
+
+Every bad checksum was off by exactly the ppv2 header length. Two causes, both fixed
+in loxilb-ebpf:
+
+1. `dp_fixup_ppv2()` maintained `tcp->check` by hand. `seq`/`ack_seq` are inside the L4
+   checksum's own coverage, so the downstream finalisation already accounts for them —
+   folding the delta in as well counted it twice. These were the only places in the
+   datapath writing `tcp->check` directly; everything else uses `bpf_l4_csum_replace()`.
+2. `dp_ins_ppv2()` opens room with `bpf_skb_adjust_room()`, which **resets the skb to
+   `CHECKSUM_NONE`**, and then slides the TCP header down over that room. The
+   pseudo-header sum then ships as if it were a finished checksum. For a payload-less
+   trigger segment (the normal case since the header moved onto the handshake ACK)
+   the fix grows the packet at the tail instead, leaving the TCP header — and therefore
+   `csum_start` — untouched.
+
+A trigger segment that *does* carry payload still takes the `adjust_room` path: correct
+for a complete-checksum ingress (physical NIC), still wrong under `CHECKSUM_PARTIAL`.
+Reachable only through the PEST backstop.
+
 ## Run
 
 ```
 cd cicd/tlsproxyprotov2/
 ./config.sh          # topology + nginx(proxy_protocol,TLS1.2/1.3) + fullnat/ppv2 rule
-./validation.sh      # regression gate: all four cases must pass (EXPECT=fixed, default)
+./validation.sh      # regression gate: all five cases must pass (EXPECT=fixed, default)
 ./rmconfig.sh
 ```
 
@@ -115,11 +151,13 @@ Knobs:
 > succeeds. Accidentally lowering an llb1 veth MTU blackholes the backend's larger response
 > and looks like a datapath bug — it isn't. Restore MTU 9000.
 
-> Note on checksums in this testbed: the docker/veth path does not validate TCP checksums
-> (every packet shows `incorrect` under `tcpdump -vv`, the usual `CHECKSUM_PARTIAL`
-> artifact), so here a corrupt insertion shows up as *content* corruption — nginx's
-> `broken header` — rather than as the silent drop / SACK stall seen on physical NICs.
-> Same defect, different observable.
+> Note on checksums in this testbed: by default the docker/veth path does not validate
+> TCP checksums (every packet shows `incorrect` under `tcpdump -vv`, the usual
+> `CHECKSUM_PARTIAL` artifact), so a corrupt insertion shows up as *content* corruption —
+> nginx's `broken header` — rather than as the silent drop / SACK stall seen on physical
+> NICs. Same defect, different observable. `REPRO-3` removes that blind spot by turning
+> TX checksum offload off on loxilb's veths, which forces the stack to finalise the
+> checksum in software; only then does a wrong checksum actually cost a packet.
 
 ## CI status
 
@@ -135,6 +173,7 @@ Verified 2026-08-14 on `ghcr.io/loxilb-io/loxilb:v0.9.8.8`:
 | CONTROL-2 | OK | OK |
 | REPRO (GSO)     | OK (fixed by loxilb-ebpf#87) | OK |
 | REPRO-2 (doff=20) | **FAIL** | OK |
+| REPRO-3 (L4 csum) | **FAIL** | OK (needs the checksum fix as well) |
 
 The 28-byte segment loxilb emits toward the backend, `doff == 20`, before vs after:
 
