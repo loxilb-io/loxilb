@@ -10,6 +10,37 @@ on:
         description: 'Tag Name (e.g 0.9.7 or latest)'     
         required: true
         default: 'latest'
+      buildVmImage:
+        description: 'Build and upload the loxilb qcow2 image'
+        required: true
+        default: true
+        type: boolean
+      smokeTestVmImage:
+        description: 'Boot the qcow2 in QEMU and verify the loxilb service'
+        required: true
+        default: true
+        type: boolean
+      publishRelease:
+        description: 'Publish artifacts to the GitHub release'
+        required: true
+        default: false
+        type: boolean
+
+# True only for a run that publishes a versioned GitHub release -- the one case
+# where a mis-stamped or mis-built artifact reaches users, and so the only case
+# where the version checks below should be able to fail a build.
+#
+# Deliberately excluded:
+#   - scheduled runs, which publish to vlatest; that tracks main and has no
+#     fixed version to verify against (tagName is empty on a schedule event).
+#   - manual runs with publishRelease=false, which only attach artifacts to the
+#     workflow run. Those must stay buildable for any tag, including old ones
+#     whose trees predate version stamping and would legitimately fail a check.
+env:
+  VERSIONED_RELEASE: ${{ github.repository == 'loxilb-io/loxilb'
+    && github.event.inputs.publishRelease == 'true'
+    && github.event.inputs.tagName != ''
+    && github.event.inputs.tagName != 'latest' }}
 
 jobs:
   build:
@@ -18,7 +49,14 @@ jobs:
     permissions:
       contents: write
       packages: write
+    outputs:
+      # Job-level `if` cannot read the `env` context, so the publish job below
+      # gates on this instead of restating the expression.
+      versioned_release: ${{ steps.release-mode.outputs.versioned }}
     steps:
+      - name: Record the release mode for the publish job
+        id: release-mode
+        run: echo "versioned=$VERSIONED_RELEASE" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v2
         with:
           submodules: recursive
@@ -27,32 +65,160 @@ jobs:
         with:
              go-version: '>=1.18.0'
       - name: Install Dependencies
-        run: sudo apt-get update  && sudo apt-get -y install clang llvm libelf-dev gcc-multilib libpcap-dev elfutils dwarves git linux-tools-$(uname -r) libbsd-dev bridge-utils unzip build-essential bison flex iproute2
+        run: sudo apt-get update  && sudo apt-get -y install clang llvm libelf-dev gcc-multilib libpcap-dev elfutils dwarves git linux-tools-$(uname -r) libbsd-dev bridge-utils unzip build-essential bison flex iproute2 curl qemu-utils qemu-system-x86 cloud-image-utils libguestfs-tools
       - name: Perform any pre-requisite operations
         run: | 
              sudo mkdir -p /opt/loxilb/
              sudo apt-get purge -y libssl-dev 2>&1 >> /dev/null  | true
+      - name: Verify the release tags are consistent
+        if: env.VERSIONED_RELEASE == 'true'
+        env:
+          TAGNAME: ${{ github.event.inputs.tagName }}
+        run: |
+          # Runs before anything expensive: the packaging build spends a long
+          # time on an openssl source build before it ever reaches the git
+          # checkouts that would notice a missing tag.
+          bash ./tools/ci/check-release-tags.sh "$TAGNAME"
+      - name: Clone packaging tools
+        run: git clone https://github.com/loxilb-io/tools.git build-tools
       - name: Build loxilb deb package with given tag
         if: github.event.inputs.tagName != ''
-        run: git clone https://github.com/loxilb-io/tools.git build-tools && cd build-tools/pkg/ && make major=${{ github.event.inputs.tagName }} && cd -
+        run: cd build-tools/pkg/ && make major=${{ github.event.inputs.tagName }} && cd -
       - name: Build loxilb deb package with latest
         if: github.event.inputs.tagName == ''
-        run: git clone https://github.com/loxilb-io/tools.git build-tools && cd build-tools/pkg/ && make major=latest && cd -      
-      - name: Upload the package to a release with given tag  
-        if: |
-          github.repository == 'loxilb-io/loxilb' 
-          &&  github.event.inputs.tagName != ''
-        uses: ncipollo/release-action@v1
+        run: cd build-tools/pkg/ && make major=latest && cd -      
+      - name: Verify the packaged binary reports the requested version
+        if: env.VERSIONED_RELEASE == 'true'
+        env:
+          TAGNAME: ${{ github.event.inputs.tagName }}
+        run: |
+          # The release version lives in the git tag, not in the source tree, so
+          # this is what confirms the stamping actually happened. Run it before
+          # the qcow2 build so a mis-stamped binary fails in seconds rather than
+          # after the image build and smoke test.
+          deb_pkg="$(find build-tools/pkg -maxdepth 1 -type f -name '*.deb' | head -n 1)"
+          if [[ -z "$deb_pkg" ]]; then
+            echo "No deb package found under build-tools/pkg"
+            exit 1
+          fi
+
+          bash ./tools/ci/check-deb-version.sh "$deb_pkg" "$TAGNAME"
+      - name: Build loxilb Ubuntu qcow2 image
+        if: github.event_name == 'schedule' || github.event.inputs.buildVmImage == 'true'
+        run: |
+          deb_pkg="$(find build-tools/pkg -maxdepth 1 -type f -name '*.deb' | head -n 1)"
+          if [[ -z "$deb_pkg" ]]; then
+            echo "No deb package found under build-tools/pkg"
+            exit 1
+          fi
+
+          release_tag="${{ github.event.inputs.tagName }}"
+          if [[ -z "$release_tag" ]]; then
+            release_tag="latest"
+          fi
+
+          bash ./tools/vm/build-release-qcow2.sh "$release_tag" "$deb_pkg" build-tools/pkg amd64
+      - name: Smoke test loxilb qcow2 image
+        # Mirrors the qcow2 build condition above. A scheduled run has no inputs,
+        # so testing smokeTestVmImage first would compare null to 'true' and skip
+        # the smoke test on exactly the builds nobody is watching.
+        if: github.event_name == 'schedule' || (github.event.inputs.buildVmImage == 'true' && github.event.inputs.smokeTestVmImage == 'true')
+        run: |
+          image_path="$(find build-tools/pkg -maxdepth 1 -type f -name '*.qcow2' | head -n 1)"
+          if [[ -z "$image_path" ]]; then
+            echo "No qcow2 image found under build-tools/pkg"
+            exit 1
+          fi
+
+          # Only assert the version when this run publishes a versioned release.
+          # Otherwise leave it empty: the smoke test still boots the image and
+          # still prints LOXILB_VERSION_REPORTED, it just does not fail the run
+          # over a version, so artifact-only builds of any tag stay possible.
+          expected_version=""
+          if [[ "$VERSIONED_RELEASE" == "true" ]]; then
+            expected_version="${{ github.event.inputs.tagName }}"
+          fi
+
+          bash ./tools/vm/smoke-test-qcow2.sh "$image_path" 900 "$expected_version"
+      - name: Prepare release artifacts list
+        run: |
+          echo "RELEASE_ARTIFACTS=build-tools/pkg/*.deb" >> "$GITHUB_ENV"
+          if ls build-tools/pkg/*.qcow2 >/dev/null 2>&1; then
+            echo "RELEASE_ARTIFACTS=build-tools/pkg/*.deb,build-tools/pkg/*.qcow2,build-tools/pkg/*.qcow2.sha256" >> "$GITHUB_ENV"
+          fi
+      - name: Upload build artifacts to workflow run
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
         with:
-          tag: v${{ github.event.inputs.tagName }}
-          allowUpdates: true
-          artifacts: "build-tools/pkg/*.deb"
-      - name: Upload the package to a release with latest tag  
+          name: loxilb-build-${{ github.run_id }}
+          path: |
+            build-tools/pkg/*.deb
+            build-tools/pkg/*.qcow2
+            build-tools/pkg/*.qcow2.sha256
+          if-no-files-found: error
+      # The rolling build stays ungated. It runs nightly and publishes to vlatest,
+      # which tracks main and has no fixed version; putting it behind a reviewer
+      # would leave every nightly run parked until it expired. Versioned releases
+      # are handled by the publish-release job below instead.
+      #
+      # tagName is empty on a schedule and 'latest' on a manual rolling run, and
+      # both produce the same vlatest release.
+      - name: Upload the package to the rolling vlatest release
         if: |
-          github.repository == 'loxilb-io/loxilb' 
-          &&  github.event.inputs.tagName == ''
+          github.repository == 'loxilb-io/loxilb'
+          && (github.event_name == 'schedule' || github.event.inputs.publishRelease == 'true')
+          && (github.event.inputs.tagName == '' || github.event.inputs.tagName == 'latest')
         uses: ncipollo/release-action@v1
         with:
           tag: vlatest
           allowUpdates: true
-          artifacts: "build-tools/pkg/*.deb"
+          omitBodyDuringUpdate: true
+          replacesArtifacts: true
+          artifacts: ${{ env.RELEASE_ARTIFACTS }}
+
+  # Split out of `build` for one reason: an environment gate applies to a job, not
+  # to a step. Everything a reviewer needs -- tag consistency, the packaged
+  # binary's own version, a real boot of the qcow2 -- has already been decided by
+  # `build`, so the approval is made against results rather than against a bare
+  # commit id.
+  #
+  # NOTE: the gate only exists once the `release` environment has required
+  # reviewers set in repository settings. GitHub auto-creates an *unprotected*
+  # environment on first use, and an unprotected one runs straight through without
+  # asking anybody.
+  publish-release:
+    name: Publish versioned release
+    needs: build
+    if: needs.build.outputs.versioned_release == 'true'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    environment: release
+    steps:
+      - name: Download the artifacts built above
+        uses: actions/download-artifact@v4
+        with:
+          name: loxilb-build-${{ github.run_id }}
+          path: dist
+      - name: Prepare release artifacts list
+        run: |
+          echo "RELEASE_ARTIFACTS=dist/*.deb" >> "$GITHUB_ENV"
+          if ls dist/*.qcow2 >/dev/null 2>&1; then
+            echo "RELEASE_ARTIFACTS=dist/*.deb,dist/*.qcow2,dist/*.qcow2.sha256" >> "$GITHUB_ENV"
+          fi
+      - name: Attach the artifacts to the release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ github.event.inputs.tagName }}
+          # A release this step creates starts as a draft, so a human still has to
+          # read the notes and press Publish. The omit*DuringUpdate flags keep the
+          # step from touching a release that already exists: notes, draft state
+          # and the prerelease flag stay whatever the human set them to.
+          draft: true
+          allowUpdates: true
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+          omitDraftDuringUpdate: true
+          omitPrereleaseDuringUpdate: true
+          replacesArtifacts: true
+          artifacts: ${{ env.RELEASE_ARTIFACTS }}

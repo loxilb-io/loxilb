@@ -34,7 +34,7 @@ for ns1 in "${nslist[@]}"; do
     then
         # No default route present, will try L2 now
         net1=( `sudo ip netns exec $ns1 ip route | grep -v "eth0" | cut -d " " -f 1` )
-	    allhosts1=( `sudo ip netns exec $ns1 ip route | grep -v "eth0" cut -d " " -f 9` )
+	    allhosts1=( `sudo ip netns exec $ns1 ip route | grep -v "eth0" | cut -d " " -f 9` )
         ns1L2=1
         echo -e "$ns1 can do only L2"
     else

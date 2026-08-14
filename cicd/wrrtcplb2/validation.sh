@@ -33,30 +33,64 @@ do
     sleep 1
 done
 
-respArr=( "server1" "server1" "server1"
-          "server1" "server1" "server1"
-          "server1" "server1" "server1"
-          "server1" "server1" "server1"
-          "server2" "server2" "server2"
-          "server2" "server2" "server2"
-          "server2" "server2" "server2"
-          "server2" "server2" "server2"
-          "server3" "server3" "server3"
-          "server3" "server3" "server3"
-          "server1" "server1"
-         )
+# Endpoint weights as configured in config.sh.
+weightArr=( 40 40 20 )
+nreq=32
+tol=3
+cntArr=( 0 0 0 )
+noResp=0
 
-for i in {0..31}
+# What wRR guarantees is the share of traffic each endpoint gets, not the order
+# the endpoints come back in. The order is an artifact of how weights are
+# expanded into datapath slots, and it changed when that table went from 32 to
+# 16 slots for the LLB_NAT_STAT_CID fix, without the shares changing at all.
+# Asserting the exact sequence made this test fail on a change that did not
+# alter the balancing, so check the distribution instead.
+for i in $(seq 0 $(( nreq - 1 )))
 do
     res=$($hexec l3h1 curl --max-time 10 -s 20.20.20.1:2020)
     echo $i:$res
-    if [[ $res != "${respArr[i]}" ]]
+    matched=0
+    for k in 0 1 2
+    do
+        if [[ $res == "${servArr[k]}" ]]
+        then
+            cntArr[k]=$(( ${cntArr[k]} + 1 ))
+            matched=1
+            break
+        fi
+    done
+    if [[ $matched == 0 ]]
     then
-        echo "expected ${respArr[i]} rcvd $res"
-        code=1
+        noResp=$(( noResp + 1 ))
     fi
     sleep 1
 done
+
+echo "--- distribution over $nreq requests (tolerance +/-$tol) ---"
+for k in 0 1 2
+do
+    got=${cntArr[k]}
+    # rounded ideal share for this weight
+    want=$(( (nreq * ${weightArr[k]} + 50) / 100 ))
+    diff=$(( got - want ))
+    if [[ $diff -lt 0 ]]
+    then
+        diff=$(( 0 - diff ))
+    fi
+    if [[ $diff -gt $tol ]]
+    then
+        echo "${servArr[k]}: $got, weight ${weightArr[k]}% expects ~$want [FAILED]"
+        code=1
+    else
+        echo "${servArr[k]}: $got, weight ${weightArr[k]}% expects ~$want [OK]"
+    fi
+done
+if [[ $noResp != 0 ]]
+then
+    echo "$noResp request(s) returned no valid server response [FAILED]"
+    code=1
+fi
 sudo killall -9 node 2>&1 > /dev/null
 if [[ $code == 0 ]]
 then

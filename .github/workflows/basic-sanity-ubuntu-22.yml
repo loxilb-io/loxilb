@@ -8,10 +8,14 @@ on:
         description: 'Test Run-Name'     
         required: true
         default: 'Sanity-BuildCI-u22'
-  workflow_run:
-    workflows: ["Build-CI"]
-    types:
-      - completed
+  # A workflow_run trigger chained off "Build-CI" used to sit here. Build-CI
+  # (docker-image.yml) was the amd64-only publisher that Docker-Multi-Arch
+  # replaced, and it has been deleted, so the trigger could never fire again.
+  # Not repointed at Docker-Multi-Arch on purpose: Build-CI was dispatch-only,
+  # whereas Docker-Multi-Arch runs on every push to main touching the build
+  # inputs, so that would newly run this whole sanity suite on each such push.
+  # Worth doing deliberately if the post-publish check is wanted back, rather
+  # than as a side effect of a deletion.
 jobs:
   build:
     name: basic-sanity-ubuntu-22

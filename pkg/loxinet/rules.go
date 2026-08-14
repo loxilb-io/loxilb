@@ -80,6 +80,7 @@ const (
 // constants
 const (
 	MaxLBEndPoints             = 32         // Max number of supported LB end-points
+	MaxLBPrioSlots             = 16         // Max DP slots for wRR expansion; LLB_NAT_STAT_CID keeps only 4 bits of aid so slots beyond 16 alias their stats into slots 0-15
 	DflLbaInactiveTries        = 2          // Default number of inactive tries before LB arm is turned off
 	MaxDflLbaInactiveTries     = 100        // Max number of inactive tries before LB arm is turned off
 	DflLbaCheckTimeout         = 10         // Default timeout for checking LB arms
@@ -245,6 +246,11 @@ type ruleLBActs struct {
 	mode      cmn.LBMode
 	sel       cmn.EpSelect
 	endPoints []ruleLBEp
+	// prioSlotOf[slot] is the endPoints index programmed into that DP
+	// slot for LbSelPrio rules. The DP counts stats per slot, not per
+	// endpoint, so stat collection must fold slots back via this map.
+	// nil until the rule has been programmed to the DP.
+	prioSlotOf []int
 }
 
 type ruleFwOpt struct {
@@ -3079,23 +3085,26 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 			j := 0
 			k := 0
 			var small [MaxLBEndPoints]int
-			var neps [MaxLBEndPoints]ruleLBEp
+			var neps [MaxLBPrioSlots]ruleLBEp
+			slotOf := make([]int, MaxLBPrioSlots)
 			for i, ep := range at.endPoints {
 				if ep.inActiveEP {
 					continue
 				}
 				oEp := &at.endPoints[i]
-				sw := (int(ep.weight) * MaxLBEndPoints) / 100
+				sw := (int(ep.weight) * MaxLBPrioSlots) / 100
 				if sw == 0 {
 					small[k] = i
 					k++
 				}
-				for x := 0; x < sw && j < MaxLBEndPoints; x++ {
+				for x := 0; x < sw && j < MaxLBPrioSlots; x++ {
 					neps[j].xIP = oEp.xIP
 					neps[j].rIP = oEp.rIP
 					neps[j].xPort = oEp.xPort
 					neps[j].inActiveEP = oEp.inActiveEP
+					neps[j].noService = oEp.noService
 					neps[j].weight = oEp.weight
+					slotOf[j] = i
 					if sw == 1 {
 						small[k] = i
 						k++
@@ -3103,23 +3112,26 @@ func (r *ruleEnt) LB2DP(work DpWorkT) int {
 					j++
 				}
 			}
-			if j < MaxLBEndPoints {
+			if j < MaxLBPrioSlots {
 				v := 0
 				if k == 0 {
 					k = len(at.endPoints)
 				}
-				for j < MaxLBEndPoints {
+				for j < MaxLBPrioSlots {
 					idx := small[v%k]
 					oEp := &at.endPoints[idx]
 					neps[j].xIP = oEp.xIP
 					neps[j].rIP = oEp.rIP
 					neps[j].xPort = oEp.xPort
 					neps[j].inActiveEP = oEp.inActiveEP
+					neps[j].noService = oEp.noService
 					neps[j].weight = oEp.weight
+					slotOf[j] = idx
 					j++
 					v++
 				}
 			}
+			at.prioSlotOf = slotOf
 			for _, e := range neps {
 				var ep NatEP
 
@@ -3292,6 +3304,40 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 		if isNat {
 			switch at := r.act.action.(type) {
 			case *ruleLBActs:
+				if at.sel == cmn.LbSelPrio && at.prioSlotOf != nil {
+					// WRR programs weight-expanded slots, so DP counters
+					// are per slot, not per endpoint; fold each slot's
+					// counter back into its owning endpoint
+					totB := make([]uint64, len(at.endPoints))
+					totP := make([]uint64, len(at.endPoints))
+					hasSlot := make([]bool, len(at.endPoints))
+					for s, epi := range at.prioSlotOf {
+						if epi < 0 || epi >= len(at.endPoints) {
+							continue
+						}
+						bytes := uint64(0)
+						packets := uint64(0)
+						nStat := new(StatDpWorkQ)
+						nStat.Work = DpStatsGetImm
+						nStat.Mark = (((uint32(r.ruleNum)) & 0xfff) << 4) | (uint32(s) & 0xf)
+						nStat.Name = MapNameNat
+						nStat.Bytes = &bytes
+						nStat.Packets = &packets
+						DpWorkSingle(mh.dp, nStat)
+						totB[epi] += bytes
+						totP[epi] += packets
+						hasSlot[epi] = true
+					}
+					// Endpoints holding no slot (e.g. detached) keep their
+					// last reading instead of being zeroed
+					for i := range at.endPoints {
+						if hasSlot[i] {
+							at.endPoints[i].stat.bytes = totB[i]
+							at.endPoints[i].stat.packets = totP[i]
+						}
+					}
+					return 0
+				}
 				numEndPoints := 0
 				for i := range at.endPoints {
 					nEP := &at.endPoints[i]
