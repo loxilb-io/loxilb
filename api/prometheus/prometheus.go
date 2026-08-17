@@ -362,6 +362,24 @@ var (
 		},
 	)
 
+	// Collection-pipeline self-diagnostics. Canonical-only.
+	//
+	// These describe the exporter's own view of the datapath rather than
+	// traffic, and exist so a suspicious rate() can be attributed: a burst of
+	// resets explains a traffic counter that appears to jump.
+	counterResetEvents = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: MetricConntrackStatResets,
+			Help: "Total number of conntrack statistics reset events detected (a per-flow cumulative counter that went backwards).",
+		},
+	)
+	closedConnectionsProcessed = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: MetricClosedConnectionsProcessed,
+			Help: "Total number of closed connections whose final metrics were captured, counted once per flow as it leaves the conntrack table.",
+		},
+	)
+
 	// Legacy-only ratio gauges: a ratio is derivable in PromQL from the traffic
 	// counters and a pre-computed one cannot be re-aggregated over a range.
 	endpointLoadDistsPerService = newDualGaugeVec(
@@ -1232,9 +1250,18 @@ func RunActiveConntrackCount(ctx context.Context) {
 			// but were present in the previous conntrack info
 			// This is done to calculate the number of flows that have been closed
 			// and are no longer present in the conntrack table
+			// A key present last sweep and absent now has left the table for
+			// good: prevConntrackInfo is replaced by currentConntrackInfo at the
+			// end of this sweep, so each flow reaches this branch exactly once
+			// and the counter cannot double-count it. Entries still sitting in
+			// the table with CState "closed" are deliberately NOT counted here —
+			// they persist across sweeps, and counting them every sweep is what
+			// would inflate the counter. They are reflected in the
+			// inactive_flow_count gauge instead.
 			for key := range prevConntrackInfo {
 				if !currentConntrackInfo[key] {
 					closedCount++
+					closedConnectionsProcessed.Inc()
 				}
 			}
 
@@ -1361,6 +1388,15 @@ func RunProcessedStatistic(ctx context.Context) {
 
 				var diffBytes uint64
 				var diffPackets uint64
+
+				// A cumulative per-flow counter that went backwards means the
+				// datapath entry was recreated. Taking the current value as the
+				// delta is correct, but the event is worth counting: a burst of
+				// resets is what explains a traffic counter that looks like it
+				// jumped.
+				if prevStats.Bytes > ct.Bytes || prevStats.Packets > ct.Packets {
+					counterResetEvents.Inc()
+				}
 
 				if prevStats.Bytes > ct.Bytes {
 					diffBytes = ct.Bytes

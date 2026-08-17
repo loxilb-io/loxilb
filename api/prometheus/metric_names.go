@@ -63,6 +63,12 @@ const (
 	LegacyMetricInactiveFlowCount = "inactive_flow_count"
 	LegacyMetricConsumedLcus      = "consumed_lcus"
 
+	// Collection-pipeline self-diagnostics. Canonical-only.
+	// `loxilb_conntrack_stat_resets_total` is referenced by the shared
+	// loxilb-alerts.yml rule set.
+	MetricConntrackStatResets        = "loxilb_conntrack_stat_resets_total"
+	MetricClosedConnectionsProcessed = "loxilb_closed_connections_processed_total"
+
 	// -- Load balancer ------------------------------------------------------
 	LegacyMetricLBRuleCount             = "lb_rule_count"
 	MetricLBRuleCount                   = "loxilb_lb_rules"

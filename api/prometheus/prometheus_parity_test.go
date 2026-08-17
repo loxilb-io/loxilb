@@ -78,10 +78,10 @@ func gatherOrZero(t *testing.T, name string) float64 {
 // either name must see the same number.
 func TestDualEmitGaugesAgree(t *testing.T) {
 	cases := []struct {
-		metric         *dualGauge
-		legacy         string
-		canonical      string
-		set            float64
+		metric    *dualGauge
+		legacy    string
+		canonical string
+		set       float64
 	}{
 		{activeConntrackCount, LegacyMetricActiveConntrackCount, MetricActiveConntrackCount, 15},
 		{activeFlowCountTcp, LegacyMetricActiveFlowCountTCP, MetricActiveFlowCountTCP, 7},
@@ -220,6 +220,8 @@ func TestCanonicalOnlyFamiliesAreRegistered(t *testing.T) {
 		MetricFirewallRulesCount,
 		MetricTotalFwDrops,
 		MetricTotalFwDropsPerRule,
+		MetricConntrackStatResets,
+		MetricClosedConnectionsProcessed,
 	} {
 		if _, ok := gather(t, name); !ok {
 			t.Errorf("canonical family %q is absent", name)
