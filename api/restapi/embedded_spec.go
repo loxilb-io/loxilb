@@ -4993,6 +4993,18 @@ func init() {
             "description": "Filter logs containing a specific keyword or phrase.",
             "name": "keyword",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Opaque pagination cursor from a previous response's next_cursor; fetches the next page.",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Specific log file to read (default is the current log file).",
+            "name": "file",
+            "in": "query"
           }
         ],
         "responses": {
@@ -7078,13 +7090,39 @@ func init() {
     },
     "Logs": {
       "type": "object",
+      "required": [
+        "log_count",
+        "total_size",
+        "has_more"
+      ],
       "properties": {
+        "has_more": {
+          "description": "Whether more log lines are available (pass next_cursor to fetch them).",
+          "type": "boolean"
+        },
+        "log_count": {
+          "description": "Number of log lines returned in this page.",
+          "type": "integer"
+        },
+        "log_file": {
+          "description": "Name of the log file the lines were read from.",
+          "type": "string"
+        },
         "logs": {
           "description": "List of filtered logs.",
           "type": "array",
           "items": {
             "type": "string"
           }
+        },
+        "next_cursor": {
+          "description": "Opaque cursor for the next page; present only when has_more is true.",
+          "type": "string"
+        },
+        "total_size": {
+          "description": "Total size of the log file in bytes.",
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -13052,6 +13090,18 @@ func init() {
             "description": "Filter logs containing a specific keyword or phrase.",
             "name": "keyword",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Opaque pagination cursor from a previous response's next_cursor; fetches the next page.",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Specific log file to read (default is the current log file).",
+            "name": "file",
+            "in": "query"
           }
         ],
         "responses": {
@@ -15775,13 +15825,39 @@ func init() {
     },
     "Logs": {
       "type": "object",
+      "required": [
+        "log_count",
+        "total_size",
+        "has_more"
+      ],
       "properties": {
+        "has_more": {
+          "description": "Whether more log lines are available (pass next_cursor to fetch them).",
+          "type": "boolean"
+        },
+        "log_count": {
+          "description": "Number of log lines returned in this page.",
+          "type": "integer"
+        },
+        "log_file": {
+          "description": "Name of the log file the lines were read from.",
+          "type": "string"
+        },
         "logs": {
           "description": "List of filtered logs.",
           "type": "array",
           "items": {
             "type": "string"
           }
+        },
+        "next_cursor": {
+          "description": "Opaque cursor for the next page; present only when has_more is true.",
+          "type": "string"
+        },
+        "total_size": {
+          "description": "Total size of the log file in bytes.",
+          "type": "integer",
+          "format": "int64"
         }
       }
     },

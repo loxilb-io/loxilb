@@ -3551,6 +3551,16 @@ paths:
           required: false
           type: string
           description: Filter logs containing a specific keyword or phrase.
+        - name: cursor
+          in: query
+          required: false
+          type: string
+          description: Opaque pagination cursor from a previous response's next_cursor; fetches the next page.
+        - name: file
+          in: query
+          required: false
+          type: string
+          description: Specific log file to read (default is the current log file).
       responses:
         '200':
           description: Logs fetched successfully
@@ -5491,13 +5501,36 @@ definitions:
 
   Logs:
     type: object
+    # Emitted on every response, including the zero values: a client that pages
+    # must be able to read has_more/log_count without treating "absent" as a
+    # distinct case.
+    required:
+      - log_count
+      - total_size
+      - has_more
     properties:
       logs:
         type: array
         items:
           type: string
         description: List of filtered logs.
-  
+      log_file:
+        type: string
+        description: Name of the log file the lines were read from.
+      log_count:
+        type: integer
+        description: Number of log lines returned in this page.
+      total_size:
+        type: integer
+        format: int64
+        description: Total size of the log file in bytes.
+      has_more:
+        type: boolean
+        description: Whether more log lines are available (pass next_cursor to fetch them).
+      next_cursor:
+        type: string
+        description: Opaque cursor for the next page; present only when has_more is true.
+
   LogArchives:
     type: object
     properties:

@@ -8,8 +8,10 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // Logs logs
@@ -17,12 +19,74 @@ import (
 // swagger:model Logs
 type Logs struct {
 
+	// Whether more log lines are available (pass next_cursor to fetch them).
+	// Required: true
+	HasMore *bool `json:"has_more"`
+
+	// Number of log lines returned in this page.
+	// Required: true
+	LogCount *int64 `json:"log_count"`
+
+	// Name of the log file the lines were read from.
+	LogFile string `json:"log_file,omitempty"`
+
 	// List of filtered logs.
 	Logs []string `json:"logs"`
+
+	// Opaque cursor for the next page; present only when has_more is true.
+	NextCursor string `json:"next_cursor,omitempty"`
+
+	// Total size of the log file in bytes.
+	// Required: true
+	TotalSize *int64 `json:"total_size"`
 }
 
 // Validate validates this logs
 func (m *Logs) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateHasMore(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateLogCount(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateTotalSize(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *Logs) validateHasMore(formats strfmt.Registry) error {
+
+	if err := validate.Required("has_more", "body", m.HasMore); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Logs) validateLogCount(formats strfmt.Registry) error {
+
+	if err := validate.Required("log_count", "body", m.LogCount); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Logs) validateTotalSize(formats strfmt.Registry) error {
+
+	if err := validate.Required("total_size", "body", m.TotalSize); err != nil {
+		return err
+	}
+
 	return nil
 }
 

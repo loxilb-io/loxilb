@@ -16,13 +16,16 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/base64"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
@@ -35,76 +38,199 @@ var (
 	logFilePath = "/var/log/"
 	logFileKey  = "loxilb"
 	archivePath = "/var/log/" // Path where rotated logs are stored
-	mu          sync.Mutex
-	cursorMap   sync.Map // Tracks file cursor per client/session
 )
 
-// Function to extract client IP address from the request
-func getClientIP(r *http.Request) string {
-	// Try to get the IP address from the X-Forwarded-For header
-	ip := r.Header.Get("X-Forwarded-For")
-	if ip != "" {
-		// The X-Forwarded-For header can contain multiple IP addresses, the first one is the client's IP
-		ips := strings.Split(ip, ",")
-		return strings.TrimSpace(ips[0])
-	}
+const (
+	// dpLogFile is written by the eBPF data-plane C library, which keeps its
+	// own FILE*. It is only served when no control-plane log exists.
+	dpLogFile = "loxilbdp.log"
 
-	// If the X-Forwarded-For header is not set, use the remote address
-	ip = r.RemoteAddr
-	if ip != "" {
-		// The remote address can contain the port, so we need to remove it
-		if strings.Contains(ip, ":") {
-			ip = strings.Split(ip, ":")[0]
-		}
-		return ip
-	}
+	defaultLogLines = 100
+	maxLogLines     = 10000
 
-	return ""
+	minLogReadChunk = 4096
+	maxLogReadChunk = 4 << 20
+)
+
+// LogCursor addresses a position in a specific log file. It is handed to the
+// client base64-encoded and handed back verbatim, so the server keeps no
+// per-client paging state: two operators (or two browser tabs) paging the same
+// log cannot disturb each other's position.
+type LogCursor struct {
+	Filename string    `json:"filename"`
+	Offset   int64     `json:"offset"`
+	ModTime  time.Time `json:"mod_time"`
+	FileSize int64     `json:"file_size"`
 }
 
-// Reads the next N lines starting from a given cursor position
-func readNextLines(file *os.File, startPos int64, numLines int) ([]string, int64) {
-	bufferSize := 4096
-	buffer := make([]byte, bufferSize)
+// encodeCursor creates a base64 encoded cursor string
+func encodeCursor(cursor LogCursor) string {
+	cursorStr := fmt.Sprintf("%s:%d:%d:%d",
+		cursor.Filename,
+		cursor.Offset,
+		cursor.ModTime.Unix(),
+		cursor.FileSize)
+	return base64.StdEncoding.EncodeToString([]byte(cursorStr))
+}
 
-	var lines []string
-	var line string
-	currentPos := startPos
+// decodeCursor parses a base64 encoded cursor string
+func decodeCursor(cursorStr string) (*LogCursor, error) {
+	if cursorStr == "" {
+		return nil, nil
+	}
 
-	file.Seek(startPos, os.SEEK_SET) // Start reading from the stored cursor position
+	decoded, err := base64.StdEncoding.DecodeString(cursorStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid cursor format")
+	}
 
-	for len(lines) < numLines {
-		n, err := file.Read(buffer)
-		if err != nil {
+	parts := strings.Split(string(decoded), ":")
+	if len(parts) != 4 {
+		return nil, fmt.Errorf("invalid cursor format")
+	}
+
+	offset, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid offset in cursor")
+	}
+
+	modTime, err := strconv.ParseInt(parts[2], 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid timestamp in cursor")
+	}
+
+	fileSize, err := strconv.ParseInt(parts[3], 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid file size in cursor")
+	}
+
+	return &LogCursor{
+		Filename: parts[0],
+		Offset:   offset,
+		ModTime:  time.Unix(modTime, 0),
+		FileSize: fileSize,
+	}, nil
+}
+
+// cursorValid reports whether a cursor still addresses the file it was minted
+// against. Growth is expected and harmless: the log is appended to while the
+// operator reads it, and paging runs backwards, so bytes added at the end never
+// move an older offset. A file that has shrunk past the cursor was rotated or
+// truncated and the offset now points into unrelated content.
+//
+// The recorded mtime is deliberately not compared. An active log file's mtime
+// changes between any two requests, so requiring it to match would invalidate
+// every cursor on a busy system and silently restart paging from the tail.
+func cursorValid(cursor *LogCursor, filename string, size int64) bool {
+	if cursor == nil {
+		return true // No cursor means start from the newest lines
+	}
+	return cursor.Filename == filename && size >= cursor.Offset
+}
+
+// readChunkFor sizes the backwards read so a typical page is satisfied by one
+// or two syscalls instead of hundreds of 4 KiB steps.
+func readChunkFor(numLines int) int64 {
+	chunk := int64(minLogReadChunk)
+	if want := int64(numLines) * 256; want > chunk {
+		chunk = want
+	}
+	if chunk > maxLogReadChunk {
+		chunk = maxLogReadChunk
+	}
+	return chunk
+}
+
+// readLinesBefore reads up to numLines whole lines ending at endPos and returns
+// them newest-first, along with the absolute offset at which the oldest
+// returned line starts. That offset is the cursor for the next, older page; a
+// zero offset means the beginning of the file has been reached.
+//
+// Reading backwards is what lets a page be re-requested without consuming it:
+// the offset is derived from the file, never from what a client read before.
+func readLinesBefore(file *os.File, endPos int64, numLines int) ([]string, int64) {
+	if endPos <= 0 || numLines <= 0 {
+		return nil, 0
+	}
+
+	chunk := readChunkFor(numLines)
+
+	var content []byte
+	start := endPos // absolute offset of content[0]
+
+	for start > 0 {
+		n := chunk
+		if start < n {
+			n = start
+		}
+		start -= n
+
+		buf := make([]byte, n)
+		if _, err := file.ReadAt(buf, start); err != nil {
+			return nil, 0
+		}
+		content = append(buf, content...)
+
+		// One newline more than the number of lines wanted proves the oldest
+		// candidate line is whole rather than clipped by the chunk boundary.
+		if bytes.Count(content, []byte{'\n'}) > numLines {
 			break
 		}
+	}
 
-		for i := 0; i < n; i++ {
-			if buffer[i] == '\n' {
-				lines = append(lines, strings.TrimSpace(line))
-				line = ""
-
-				if len(lines) >= numLines {
-					currentPos += int64(i + 1)
-					break
-				}
-			} else {
-				line += string(buffer[i])
-			}
+	// When the scan stopped short of the file start, the leading fragment is
+	// the tail of a line belonging to an older page — drop it.
+	scanFrom := 0
+	if start > 0 {
+		nl := bytes.IndexByte(content, '\n')
+		if nl < 0 {
+			return nil, start
 		}
-		currentPos += int64(n)
+		scanFrom = nl + 1
 	}
 
-	if line != "" && len(lines) < numLines {
-		lines = append(lines, strings.TrimSpace(line))
+	type logLine struct {
+		offset int64
+		text   string
 	}
 
-	return lines, currentPos
+	var found []logLine
+	for i := scanFrom; i < len(content); {
+		end := len(content)
+		nl := bytes.IndexByte(content[i:], '\n')
+		if nl >= 0 {
+			end = i + nl
+		}
+		if text := strings.TrimSpace(string(content[i:end])); text != "" {
+			found = append(found, logLine{offset: start + int64(i), text: text})
+		}
+		if nl < 0 {
+			break
+		}
+		i = end + 1
+	}
+
+	if len(found) == 0 {
+		return nil, start
+	}
+	if len(found) > numLines {
+		found = found[len(found)-numLines:]
+	}
+
+	lines := make([]string, 0, len(found))
+	for i := len(found) - 1; i >= 0; i-- {
+		lines = append(lines, found[i].text)
+	}
+
+	// The oldest line handed out this page bounds the next one.
+	return lines, found[0].offset
 }
 
 // Filters logs based on level and keyword
 func filterLogs(lines []string, level, keyword string) []string {
-	var filtered []string
+	// Never nil: a page that filters down to nothing must still serialize as
+	// "logs": [] so clients can read the pagination fields beside it.
+	filtered := []string{}
 	for _, line := range lines {
 		if (level == "" || strings.Contains(line, level)) &&
 			(keyword == "" || strings.Contains(line, keyword)) {
@@ -121,58 +247,143 @@ func derefString(s *string) string {
 	return *s
 }
 
-// Fetch logs using cursor
-func ConfigGetLogs(params operations.GetLogsParams, principal interface{}) middleware.Responder {
-	var result models.Logs
-	clientID := getClientIP(params.HTTPRequest)
-
-	lines := 100 // Default to 100 lines
-	if params.Lines != nil {
-		lines, _ = strconv.Atoi(*params.Lines)
+// isLogFileName reports whether name is a log file this API may serve. The
+// prefix and suffix checks already exclude a path, but separators and parent
+// references are rejected explicitly so the intent survives future edits.
+func isLogFileName(name string, allowGzip bool) bool {
+	if name == "" || name != filepath.Base(name) {
+		return false
 	}
+	if strings.Contains(name, "..") || strings.ContainsAny(name, `/\`) {
+		return false
+	}
+	if !strings.HasPrefix(name, logFileKey) {
+		return false
+	}
+	return strings.HasSuffix(name, ".log") || (allowGzip && strings.HasSuffix(name, ".log.gz"))
+}
 
-	// Find the log file with the random UUID in the name
+// currentLogFile picks the file the endpoint reads when the caller names none:
+// the most recently written loxilb<hostname>.log, falling back to the
+// data-plane log only when no control-plane log exists. Directory order alone
+// is not enough — os.ReadDir sorts by name, so whether loxilbdp.log or
+// loxilb<hostname>.log came first depended on the hostname string.
+func currentLogFile() (string, error) {
 	files, err := os.ReadDir(logFilePath)
 	if err != nil {
-		return operations.NewGetLogsInternalServerError().WithPayload(&models.Error{Message: "Failed to read log directory"})
+		return "", err
 	}
 
-	var logFile string
+	var (
+		name        string
+		latest      time.Time
+		fallback    string
+		fallbackMod time.Time
+	)
+
 	for _, file := range files {
-		if strings.HasPrefix(file.Name(), logFileKey) && strings.HasSuffix(file.Name(), ".log") {
-			logFile = filepath.Join(logFilePath, file.Name())
-			break
+		if file.IsDir() || !isLogFileName(file.Name(), false) {
+			continue
+		}
+		info, err := file.Info()
+		if err != nil {
+			continue // Skip entries we cannot stat
+		}
+
+		if file.Name() == dpLogFile {
+			if fallback == "" || info.ModTime().After(fallbackMod) {
+				fallback, fallbackMod = file.Name(), info.ModTime()
+			}
+			continue
+		}
+		if name == "" || info.ModTime().After(latest) {
+			name, latest = file.Name(), info.ModTime()
 		}
 	}
 
-	if logFile == "" {
+	if name == "" {
+		name = fallback
+	}
+	return name, nil
+}
+
+// Fetch logs using a stateless cursor
+func ConfigGetLogs(params operations.GetLogsParams, principal interface{}) middleware.Responder {
+	lines := defaultLogLines
+	if params.Lines != nil {
+		if n, err := strconv.Atoi(*params.Lines); err == nil && n > 0 {
+			lines = n
+		}
+	}
+	if lines > maxLogLines {
+		lines = maxLogLines
+	}
+
+	cursor, err := decodeCursor(derefString(params.Cursor))
+	if err != nil {
+		return operations.NewGetLogsBadRequest().WithPayload(&models.Error{Message: "Invalid cursor format"})
+	}
+
+	logFileName := derefString(params.File)
+	if logFileName != "" {
+		if !isLogFileName(logFileName, false) {
+			return operations.NewGetLogsBadRequest().WithPayload(&models.Error{Message: "Invalid log file name"})
+		}
+	} else if logFileName, err = currentLogFile(); err != nil {
+		return operations.NewGetLogsInternalServerError().WithPayload(&models.Error{Message: "Failed to read log directory"})
+	}
+
+	if logFileName == "" {
 		return operations.NewGetLogsInternalServerError().WithPayload(&models.Error{Message: "Log file not found"})
 	}
 
-	file, err := os.Open(logFile)
+	file, err := os.Open(filepath.Join(logFilePath, logFileName))
 	if err != nil {
 		return operations.NewGetLogsInternalServerError().WithPayload(&models.Error{Message: "Failed to open log file"})
 	}
 	defer file.Close()
 
-	// Get or initialize the cursor for this client
-	startPos := int64(0)
-	if val, ok := cursorMap.Load(clientID); ok {
-		startPos = val.(int64)
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return operations.NewGetLogsInternalServerError().WithPayload(&models.Error{Message: "Failed to get file info"})
 	}
 
-	// Read the next batch of lines
-	nextLines, nextCursor := readNextLines(file, startPos, lines)
+	// Without a usable cursor, serve the newest lines. A cursor for another
+	// file, or for a file that has since rotated, restarts from the tail
+	// rather than reading from a meaningless offset.
+	endPos := fileInfo.Size()
+	if cursorValid(cursor, logFileName, fileInfo.Size()) && cursor != nil {
+		endPos = cursor.Offset
+	}
 
-	// Update the cursor for this client
-	cursorMap.Store(clientID, nextCursor)
+	pageLines, nextOffset := readLinesBefore(file, endPos, lines)
 
 	// Apply filtering if required
 	level := derefString(params.Level)
 	keyword := derefString(params.Keyword)
-	filteredLines := filterLogs(nextLines, level, keyword)
+	filteredLines := filterLogs(pageLines, level, keyword)
 
-	result.Logs = filteredLines
+	// Older lines remain whenever this page did not reach the file start.
+	hasMore := nextOffset > 0
+	logCount := int64(len(filteredLines))
+	totalSize := fileInfo.Size()
+
+	result := models.Logs{
+		Logs:      filteredLines,
+		LogFile:   logFileName,
+		LogCount:  &logCount,
+		TotalSize: &totalSize,
+		HasMore:   &hasMore,
+	}
+	if hasMore {
+		result.NextCursor = encodeCursor(LogCursor{
+			Filename: logFileName,
+			Offset:   nextOffset,
+			ModTime:  fileInfo.ModTime(),
+			FileSize: fileInfo.Size(),
+		})
+	}
+
 	return operations.NewGetLogsOK().WithPayload(&result)
 }
 
@@ -187,7 +398,7 @@ func ConfigGetLogArchives(params operations.GetLogArchivesParams, principal inte
 
 	var archives []string
 	for _, file := range files {
-		if !file.IsDir() && (strings.HasPrefix(file.Name(), "loxilb") && (strings.HasSuffix(file.Name(), ".log") || strings.HasSuffix(file.Name(), ".log.gz"))) {
+		if !file.IsDir() && isLogFileName(file.Name(), true) {
 			archives = append(archives, file.Name())
 		}
 	}
@@ -202,6 +413,14 @@ func ConfigGetLogArchivesFilename(params operations.GetLogArchivesFilenameParams
 
 	if filename == "" {
 		return operations.NewGetLogsBadRequest().WithPayload(&models.Error{Message: "Filename is required"})
+	}
+
+	// The name is joined onto a server-side directory, so it has to be a bare
+	// log file name. Without this check "../../etc/shadow" reads any file the
+	// process can — and loxilb runs as root with the REST API unauthenticated
+	// unless a user service is enabled.
+	if !isLogFileName(filename, true) {
+		return operations.NewGetLogsBadRequest().WithPayload(&models.Error{Message: "Invalid log file name"})
 	}
 
 	filePath := filepath.Join(archivePath, filename)
@@ -226,6 +445,7 @@ func ConfigGetLogArchivesFilename(params operations.GetLogArchivesFilenameParams
 		defer file.Close()
 		w.Header().Set("Content-Disposition", "attachment; filename="+filename)
 		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Content-Length", strconv.FormatInt(fileInfo.Size(), 10))
 		w.WriteHeader(http.StatusOK)
 		bytesCopied, err := io.Copy(w, file)
 		if err != nil {
