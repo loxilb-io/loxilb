@@ -56,6 +56,7 @@ import (
 	"time"
 	"unsafe"
 
+	prom "github.com/loxilb-io/loxilb/api/prometheus"
 	cmn "github.com/loxilb-io/loxilb/common"
 	utils "github.com/loxilb-io/loxilb/pkg/utils"
 	tk "github.com/loxilb-io/loxilib"
@@ -345,6 +346,10 @@ func DpEbpfInit(clusterEn, rssEn, egrHooks, localSockPolicy, sockMapEn bool, nod
 	ne.ctMap = make(map[string]*DpCtInfo)
 	ne.RssEn = rssEn
 	ne.nID = uint((C.LLB_CT_MAP_ENTRIES / C.LLB_MAX_LB_NODES) * nodeNum)
+	// Publish the conntrack table capacity so a raw entry count can be read as
+	// a utilization ratio. Safe with collection disabled - the gauge is
+	// registered lazily and simply never scraped.
+	prom.SetConntrackMaxEntries(int(C.LLB_CT_MAP_ENTRIES))
 
 	go dpEbpfTicker()
 	for i := 0; i < mapNotifierWorkers; i++ {
