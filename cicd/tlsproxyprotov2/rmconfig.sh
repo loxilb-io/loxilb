@@ -18,7 +18,9 @@ delete_docker_host l3ep1
 delete_docker_host l3ep2
 delete_docker_host l3ep3
 
-rm -rf 10.10.10.254/ minica.pem minica-key.pem nginx.l3ep*.conf apt.l3ep*.log
+# apt.*.log rather than apt.l3ep*.log: config.sh also installs ethtool on l3h1
+# and llb1, and those two logs were being left behind on every teardown.
+rm -rf 10.10.10.254/ minica.pem minica-key.pem nginx.l3ep*.conf apt.*.log
 
 echo "#########################################"
 echo "Deleted testbed"
