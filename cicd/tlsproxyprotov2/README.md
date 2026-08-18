@@ -1,8 +1,42 @@
 # tlsproxyprotov2 — TLS 1.3 + PROXY protocol v2 reproduction
 
-Reproduces loxilb Issue **#1044** / Discussion **#1089**: with a load balancer in
-`fullnat` mode and PROXY protocol v2 enabled (`--ppv2en`), the **TLS 1.3 handshake
-fails** while TLS 1.2 works.
+Reproduces loxilb Issue **#1044** / Discussion **#1089** and Issue **#675**: with a load
+balancer in `fullnat` mode and PROXY protocol v2 enabled (`--ppv2en`), the **TLS 1.3
+handshake fails** while TLS 1.2 works.
+
+Three *independent* defects in the ppv2 datapath are covered:
+
+| case | trigger | issue |
+|------|---------|-------|
+| `REPRO`   | first data packet is a GSO super-packet | #1044 / #1089 |
+| `REPRO-2` | client sends no TCP options (`doff == 20`) | #675 (Windows-only) |
+| `REPRO-3` | the L4 checksum is finalised in software downstream | #675 (offload-off workaround) |
+
+## REPRO-2 — the Windows failure (#675)
+
+`dp_ins_ppv2()` opens a 28-byte hole with `bpf_skb_adjust_room()` and then picks where to
+write the PROXY header based on the TCP **data offset**, because the header goes after the
+TCP options. That dispatch had arms for `doff` 24/28/32/36/40 and a drop for anything
+larger — but **no arm for `doff == 20`** (no options at all), so the hole was left holding
+`skb_push()` leftovers (stale IP/TCP header bytes) and those bytes never entered the
+checksum either.
+
+Which clients hit it is decided by the **TCP timestamp option**:
+
+| client | timestamps | `doff` | result |
+|--------|-----------|--------|--------|
+| Linux / macOS / Android, and curl under WSL | on by default | 32 | works |
+| **Windows 10 / 11** | **off by default** | **20** | **fails** |
+
+That is why the same Windows box worked through WSL and why disabling TSO/GSO/GRO never
+helped — this defect has nothing to do with offload. Depending on whether the path
+validates TCP checksums, the backend either drops the segment (connection stalls, backend
+keeps `ACK 1` and only SACKs the later data) or accepts it and nginx logs
+`broken header while reading PROXY protocol`. Both symptoms appear in issue #675.
+
+`REPRO-2` runs at **default MTU with offload ON** — i.e. it is `CONTROL-1` with exactly one
+variable changed (`sysctl net.ipv4.tcp_timestamps=0` in the client netns), which makes it
+decisive.
 
 Root-cause analysis: [`../../docs/tls13-proxyproto-v2-issue/`](../../docs/tls13-proxyproto-v2-issue/).
 The bug is in the eBPF L4 datapath `dp_ins_ppv2()`, which inserts the 28-byte PROXY v2
@@ -29,6 +63,8 @@ so the client's GSO builds a `gso_size>0` super-packet for the ClientHello.
 | CONTROL-1 | default MTU, offload ON — hello is single-segment | **OK** |
 | CONTROL-2 | `MTU=320`, offload **OFF** — real multi-segment, not GSO | **OK** |
 | REPRO     | `MTU=320`, offload **ON** — GSO super-packet ClientHello | **FAIL** |
+| REPRO-2   | default MTU, offload ON, client TCP timestamps **off** (`doff=20`) | **FAIL** |
+| REPRO-3   | default MTU, offload ON, loxilb veth **TX csum offload off** | **FAIL** |
 
 Same MTU, same hello: only client segmentation-offload differs. Offload OFF (real
 separate segments) succeeds; offload ON (one GSO super-packet) fails. That rules out
@@ -50,16 +86,58 @@ die immediately after ClientHello:
 > Both are the **same root cause** (GSO + `dp_ins_ppv2`); which one you see depends on
 > where the GSO corruption lands and how the backend (nginx vs Traefik) reacts.
 
+## REPRO-3 — why `--ppv2en` needed offload switched off (#675)
+
+`veth`-to-`veth` never validates TCP checksums: a `CHECKSUM_PARTIAL` skb passes
+through with only the pseudo-header sum in `tcp->check` and the peer trusts it. That
+is why this harness could not see the second half of #675 at all, and why the bug
+survived every CI run. Turning **TX checksum offload off on loxilb's own veths** makes
+the stack finalise the checksum in software on the way out (`skb_checksum_help()`) —
+exactly what a tun device does — and the packets become checkable.
+
+With that one knob, `--ppv2en` was the only variable that mattered:
+
+| same loxilb, same path | forward | return | result |
+|---|---|---|---|
+| `fullnat` | 0/10 bad | 0/7 bad | works |
+| `fullnat --ppv2en` | 19/21 bad | 17/18 bad | stalls |
+
+Every bad checksum was off by exactly the ppv2 header length. Two causes, both fixed
+in loxilb-ebpf:
+
+1. `dp_fixup_ppv2()` maintained `tcp->check` by hand. `seq`/`ack_seq` are inside the L4
+   checksum's own coverage, so the downstream finalisation already accounts for them —
+   folding the delta in as well counted it twice. These were the only places in the
+   datapath writing `tcp->check` directly; everything else uses `bpf_l4_csum_replace()`.
+2. `dp_ins_ppv2()` opens room with `bpf_skb_adjust_room()`, which **resets the skb to
+   `CHECKSUM_NONE`**, and then slides the TCP header down over that room. The
+   pseudo-header sum then ships as if it were a finished checksum. For a payload-less
+   trigger segment (the normal case since the header moved onto the handshake ACK)
+   the fix grows the packet at the tail instead, leaving the TCP header — and therefore
+   `csum_start` — untouched.
+
+A trigger segment that *does* carry payload still takes the `adjust_room` path: correct
+for a complete-checksum ingress (physical NIC), still wrong under `CHECKSUM_PARTIAL`.
+Reachability, severity and the proposed fix are written up in
+[`docs/ppv2-csum-offload-issue/`](../../docs/ppv2-csum-offload-issue/).
+
 ## Run
 
 ```
 cd cicd/tlsproxyprotov2/
 ./config.sh          # topology + nginx(proxy_protocol,TLS1.2/1.3) + fullnat/ppv2 rule
-./validation.sh      # prints CONTROL-1/CONTROL-2/REPRO and REPRODUCED/NOT
+./validation.sh      # regression gate: all five cases must pass (EXPECT=fixed, default)
 ./rmconfig.sh
 ```
 
-Knob: `REPRO_MTU=<n> ./validation.sh` to change the forced client PMTU.
+Knobs:
+- `REPRO_MTU=<n> ./validation.sh` — change the forced client PMTU.
+- `EXPECT=bug ./validation.sh` — invert the gate: pass when a defect still reproduces.
+  Use it against a pre-fix image, e.g.
+  `LOXILB_IMAGE=ghcr.io/loxilb-io/loxilb:v0.9.8.8 ./config.sh && EXPECT=bug ./validation.sh`
+- `LOXILB_IMAGE=<img> ./config.sh` — run the testbed on a specific image.
+- `BASE_IMAGE=<img> ./build_deploy.sh` — compile `loxilb-ebpf` from the working tree, layer
+  the objects onto `<img>` as `loxilb:ppv2test`, and redeploy the testbed.
 
 ## Topology / what it exercises (vs cicd/httpsproxy)
 
@@ -74,8 +152,35 @@ Knob: `REPRO_MTU=<n> ./validation.sh` to change the forced client PMTU.
 > succeeds. Accidentally lowering an llb1 veth MTU blackholes the backend's larger response
 > and looks like a datapath bug — it isn't. Restore MTU 9000.
 
+> Note on checksums in this testbed: by default the docker/veth path does not validate
+> TCP checksums (every packet shows `incorrect` under `tcpdump -vv`, the usual
+> `CHECKSUM_PARTIAL` artifact), so a corrupt insertion shows up as *content* corruption —
+> nginx's `broken header` — rather than as the silent drop / SACK stall seen on physical
+> NICs. Same defect, different observable. `REPRO-3` removes that blind spot by turning
+> TX checksum offload off on loxilb's veths, which forces the stack to finalise the
+> checksum in software; only then does a wrong checksum actually cost a packet.
+
 ## CI status
 
-RED until #1044 is fixed (this scenario now exits non-zero when the bug is NOT reproduced,
-i.e. after a fix it must be updated to expect success). Not yet wired into a GitHub workflow;
-run manually, or promote to a sanity workflow once the eBPF fix lands.
+GREEN once both fixes are in the datapath; `./validation.sh` (default `EXPECT=fixed`) is
+the regression gate. Not yet wired into a GitHub workflow; run manually, or promote it to a
+sanity workflow.
+
+Verified 2026-08-14 on `ghcr.io/loxilb-io/loxilb:v0.9.8.8`:
+
+| case | v0.9.8.8 | + `doff == 20` fix |
+|------|----------|--------------------|
+| CONTROL-1 | OK | OK |
+| CONTROL-2 | OK | OK |
+| REPRO (GSO)     | OK (fixed by loxilb-ebpf#87) | OK |
+| REPRO-2 (doff=20) | **FAIL** | OK |
+| REPRO-3 (L4 csum) | **FAIL** | OK (needs the checksum fix as well) |
+
+The 28-byte segment loxilb emits toward the backend, `doff == 20`, before vs after:
+
+```
+before: 0000 0000 0000 0000 0000 93e2 1f90 d3a9 b421 9cea deb0 5010 01ea 5543
+        ^ skb_push leftovers: zero padding + a copy of the TCP header
+after:  0d0a 0d0a 000d 0a51 5549 540a 2111 000c 0a0a 0a01 0a0a 0afe ba60 07e4
+        ^ PROXY v2 signature, TCP/IPv4, len=12, 10.10.10.1 -> 10.10.10.254:2020
+```

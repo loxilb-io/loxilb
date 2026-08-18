@@ -19,7 +19,9 @@ echo "   PPV2DBG symbols in built .o: $(strings $KDIR/llb_ebpf_main.o 2>/dev/nul
 echo "== [2/4] build derived image loxilb:ppv2test =="
 rm -rf /tmp/ppv2img; mkdir -p /tmp/ppv2img
 cp $KDIR/llb_ebpf_main.o $KDIR/llb_ebpf_emain.o /tmp/ppv2img/
-printf 'FROM ghcr.io/loxilb-io/loxilb:latest\nCOPY llb_ebpf_main.o llb_ebpf_emain.o /opt/loxilb/\n' > /tmp/ppv2img/Dockerfile
+BASE_IMAGE="${BASE_IMAGE:-ghcr.io/loxilb-io/loxilb:latest}"
+echo "   base image: $BASE_IMAGE"
+printf 'FROM %s\nCOPY llb_ebpf_main.o llb_ebpf_emain.o /opt/loxilb/\n' "$BASE_IMAGE" > /tmp/ppv2img/Dockerfile
 docker build -t loxilb:ppv2test /tmp/ppv2img >/dev/null 2>&1
 echo "   image built"
 
