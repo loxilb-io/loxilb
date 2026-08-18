@@ -101,8 +101,14 @@ echo "#########################################"
 
 # Cert is issued for the VIP the client dials (10.10.10.254) and lives on the
 # BACKENDS (nginx terminates TLS). Client uses curl --insecure.
+#
+# Use the shared binary rather than a per-scenario copy: ./minica was never
+# committed here, so this scenario could not run from a clean checkout at all.
+# ../common/minica is what cicd/common.sh already calls. It writes the CA pair
+# into the current directory, so the cleanup below and in rmconfig.sh still
+# match.
 rm -fr 10.10.10.254 minica*.pem
-./minica -ip-addresses 10.10.10.254
+../common/minica -ip-addresses 10.10.10.254
 cp 10.10.10.254/cert.pem 10.10.10.254/server.crt
 cp 10.10.10.254/key.pem  10.10.10.254/server.key
 
