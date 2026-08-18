@@ -16,7 +16,10 @@
 package handler
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -257,35 +260,6 @@ func TestCursorValid(t *testing.T) {
 	}
 }
 
-// The archive download joins this name onto a server directory, so anything
-// that can escape it must be rejected.
-func TestIsLogFileNameRejectsTraversal(t *testing.T) {
-	bad := []string{
-		"", "..", "../../etc/shadow", "loxilb/../../etc/shadow",
-		"/etc/shadow", `..\..\windows\system32`, "loxilb../x.log",
-		"passwd", "loxilb.txt", "loxilb.log.gz.exe", "sub/loxilb.log",
-	}
-	for _, name := range bad {
-		if isLogFileName(name, true) {
-			t.Errorf("isLogFileName(%q) = true, want false", name)
-		}
-	}
-
-	good := []string{"loxilb.log", "loxilbhost1.log", "loxilbdp.log"}
-	for _, name := range good {
-		if !isLogFileName(name, false) {
-			t.Errorf("isLogFileName(%q) = false, want true", name)
-		}
-	}
-
-	if isLogFileName("loxilb.log.gz", false) {
-		t.Error("gzip archive accepted where only active logs are allowed")
-	}
-	if !isLogFileName("loxilb.log.gz", true) {
-		t.Error("gzip archive rejected where archives are allowed")
-	}
-}
-
 // An empty result must still serialize as [] so clients can read the
 // pagination fields sitting beside it.
 func TestFilterLogsNeverReturnsNil(t *testing.T) {
@@ -299,46 +273,6 @@ func TestFilterLogsNeverReturnsNil(t *testing.T) {
 	got := filterLogs([]string{"DBG a", "ERR b", "DBG c"}, "DBG", "c")
 	if len(got) != 1 || got[0] != "DBG c" {
 		t.Errorf("filterLogs = %v, want [DBG c]", got)
-	}
-}
-
-func TestCurrentLogFilePrefersControlPlaneLog(t *testing.T) {
-	dir := t.TempDir()
-	origPath := logFilePath
-	logFilePath = dir + "/"
-	t.Cleanup(func() { logFilePath = origPath })
-
-	write := func(name string, age time.Duration) {
-		path := filepath.Join(dir, name)
-		if err := os.WriteFile(path, []byte("x\n"), 0o600); err != nil {
-			t.Fatalf("write %s: %v", name, err)
-		}
-		when := time.Now().Add(-age)
-		if err := os.Chtimes(path, when, when); err != nil {
-			t.Fatalf("chtimes %s: %v", name, err)
-		}
-	}
-
-	// loxilbdp.log sorts before "loxilbhost1.log" by name and is the newer of
-	// the two, so both directory order and mtime alone would pick it.
-	write("loxilbhost1.log", time.Hour)
-	write("loxilbdp.log", time.Minute)
-	write("unrelated.log", time.Minute)
-
-	got, err := currentLogFile()
-	if err != nil {
-		t.Fatalf("currentLogFile: %v", err)
-	}
-	if got != "loxilbhost1.log" {
-		t.Errorf("currentLogFile = %q, want loxilbhost1.log", got)
-	}
-
-	// With no control-plane log present, the data-plane log is the fallback.
-	if err := os.Remove(filepath.Join(dir, "loxilbhost1.log")); err != nil {
-		t.Fatalf("remove: %v", err)
-	}
-	if got, err = currentLogFile(); err != nil || got != "loxilbdp.log" {
-		t.Errorf("currentLogFile = (%q, %v), want (loxilbdp.log, nil)", got, err)
 	}
 }
 
@@ -365,14 +299,23 @@ func getLogs(t *testing.T, params operations.GetLogsParams) *models.Logs {
 	}
 }
 
-// stageLogDir points the handler at a temp directory holding one log file.
-func stageLogDir(t *testing.T, name string, lineCount int) {
+// stageLogDirIn points the handler at an empty temp directory and returns it,
+// for tests that lay down their own fixtures.
+func stageLogDirIn(t *testing.T) string {
 	t.Helper()
 
 	dir := t.TempDir()
 	origPath, origArchive := logFilePath, archivePath
 	logFilePath, archivePath = dir+"/", dir+"/"
 	t.Cleanup(func() { logFilePath, archivePath = origPath, origArchive })
+	return dir
+}
+
+// stageLogDir points the handler at a temp directory holding one log file.
+func stageLogDir(t *testing.T, name string, lineCount int) {
+	t.Helper()
+
+	dir := stageLogDirIn(t)
 
 	var sb strings.Builder
 	for i := 0; i < lineCount; i++ {
@@ -526,20 +469,6 @@ func TestConfigGetLogsRejectsBadInput(t *testing.T) {
 	}
 }
 
-// The archive download joins the caller's name onto a server directory, and the
-// REST API is unauthenticated unless a user service is enabled.
-func TestConfigGetLogArchivesFilenameRejectsTraversal(t *testing.T) {
-	stageLogDir(t, "loxilbhost1.log", 10)
-
-	for _, name := range []string{"../../etc/shadow", "/etc/shadow", "..", "passwd"} {
-		got := ConfigGetLogArchivesFilename(
-			operations.GetLogArchivesFilenameParams{Filename: name}, nil)
-		if _, ok := got.(*operations.GetLogsBadRequest); !ok {
-			t.Errorf("filename %q gave %T, want 400", name, got)
-		}
-	}
-}
-
 // bindLogsRequest runs the generated request binder over a real URL, so query
 // parameters reach the handler exactly as they do in the running server.
 func bindLogsRequest(t *testing.T, rawQuery string) operations.GetLogsParams {
@@ -603,7 +532,7 @@ func TestConfigGetLogsJSONShape(t *testing.T) {
 		t.Fatalf("unmarshal: %v", err)
 	}
 
-	for _, key := range []string{"logs", "log_file", "log_count", "total_size", "has_more", "next_cursor"} {
+	for _, key := range []string{"logs", "log_file", "log_count", "total_size", "has_more", "next_cursor", "scanned_bytes"} {
 		if _, ok := decoded[key]; !ok {
 			t.Errorf("response is missing %q; got keys %v", key, sortedKeys(decoded))
 		}
@@ -627,7 +556,7 @@ func TestConfigGetLogsJSONShape(t *testing.T) {
 	if err := json.Unmarshal(raw, &decoded); err != nil {
 		t.Fatalf("unmarshal empty: %v", err)
 	}
-	for _, key := range []string{"logs", "log_count", "total_size", "has_more"} {
+	for _, key := range []string{"logs", "log_count", "total_size", "has_more", "scanned_bytes"} {
 		if _, ok := decoded[key]; !ok {
 			t.Errorf("empty page is missing %q; got keys %v", key, sortedKeys(decoded))
 		}
@@ -640,6 +569,308 @@ func TestConfigGetLogsJSONShape(t *testing.T) {
 	}
 }
 
+//----------------------------------------------------------------------
+// Filter-aware paging (patch request 1)
+//----------------------------------------------------------------------
+
+// writeSparseLogFile lays down lineCount lines of which only every nth carries
+// the marker, so a filtered read has to scan past long stretches of noise.
+func writeSparseLogFile(t *testing.T, dir, name string, lineCount, nth int, marker string) int {
+	t.Helper()
+
+	matches := 0
+	var sb strings.Builder
+	for i := 0; i < lineCount; i++ {
+		if i%nth == 0 {
+			matches++
+			sb.WriteString(fmt.Sprintf("2026-08-13 05:00:00 %s line-%05d payload\n", marker, i))
+			continue
+		}
+		sb.WriteString(fmt.Sprintf("2026-08-13 05:00:00 INFO line-%05d payload\n", i))
+	}
+	if err := os.WriteFile(filepath.Join(dir, name), []byte(sb.String()), 0o600); err != nil {
+		t.Fatalf("write log: %v", err)
+	}
+	return matches
+}
+
+// The core of the request: a keyword that appears nowhere near the tail must
+// still come back on the first request. The old code filtered one page-sized
+// window, so this returned zero lines beside has_more: true and the client had
+// to page the whole file to find them.
+func TestCollectPageSearchesPastNonMatchingLines(t *testing.T) {
+	dir := t.TempDir()
+	writeSparseLogFile(t, dir, "loxilbhost1.log", 5000, 1000, "ERROR") // 5 matches, oldest first
+
+	file, err := os.Open(filepath.Join(dir, "loxilbhost1.log"))
+	if err != nil {
+		t.Fatalf("open: %v", err)
+	}
+	defer file.Close()
+
+	page, next, scanned := collectPage(file, fileSize(t, file), 10, "", "ERROR", maxFilterScanBytes)
+
+	if len(page) != 5 {
+		t.Fatalf("got %d matches, want 5", len(page))
+	}
+	for _, line := range page {
+		if !strings.Contains(line, "ERROR") {
+			t.Fatalf("non-matching line leaked through: %q", line)
+		}
+	}
+	if !strings.Contains(page[0], "line-04000") {
+		t.Errorf("newest match = %q, want line-04000", page[0])
+	}
+	if next != 0 {
+		t.Errorf("next offset = %d, want 0 (search reached the start of the file)", next)
+	}
+	if scanned != fileSize(t, file) {
+		t.Errorf("scanned = %d, want the whole file (%d)", scanned, fileSize(t, file))
+	}
+}
+
+// Filling the page mid-scan must bound the next page by the last line handed
+// out, so nothing between it and the read boundary is skipped.
+func TestCollectPageFilteredPagingIsGapFree(t *testing.T) {
+	dir := t.TempDir()
+	want := writeSparseLogFile(t, dir, "loxilbhost1.log", 3000, 7, "ERROR")
+
+	file, err := os.Open(filepath.Join(dir, "loxilbhost1.log"))
+	if err != nil {
+		t.Fatalf("open: %v", err)
+	}
+	defer file.Close()
+
+	seen := map[string]bool{}
+	pos := fileSize(t, file)
+	for i := 0; ; i++ {
+		if i > want+10 {
+			t.Fatal("filtered paging did not terminate")
+		}
+		page, next, _ := collectPage(file, pos, 13, "", "ERROR", maxFilterScanBytes)
+		for _, line := range page {
+			if seen[line] {
+				t.Fatalf("line served twice: %q", line)
+			}
+			seen[line] = true
+		}
+		if next <= 0 {
+			break
+		}
+		if next >= pos {
+			t.Fatalf("cursor did not advance backwards: %d -> %d", pos, next)
+		}
+		pos = next
+	}
+
+	if len(seen) != want {
+		t.Errorf("paged over %d matches, want %d", len(seen), want)
+	}
+}
+
+// A query that matches nothing must not run forever: the scan stops at the cap
+// and hands back a cursor so the client can resume rather than restart.
+func TestCollectPageStopsAtScanCap(t *testing.T) {
+	dir := t.TempDir()
+	writeSparseLogFile(t, dir, "loxilbhost1.log", 20000, 1000000, "ERROR") // no marker lines
+
+	file, err := os.Open(filepath.Join(dir, "loxilbhost1.log"))
+	if err != nil {
+		t.Fatalf("open: %v", err)
+	}
+	defer file.Close()
+
+	size := fileSize(t, file)
+	const cap = 50000
+	if size <= cap {
+		t.Fatalf("fixture too small to exercise the cap: %d bytes", size)
+	}
+
+	page, next, scanned := collectPage(file, size, 10, "", "nothing-matches-this", cap)
+
+	if len(page) != 0 {
+		t.Fatalf("got %d lines, want 0", len(page))
+	}
+	if next <= 0 {
+		t.Fatal("hitting the scan cap must hand back a cursor to resume from")
+	}
+	if scanned < cap {
+		t.Errorf("scanned = %d, want at least the cap (%d)", scanned, cap)
+	}
+	if scanned > size {
+		t.Errorf("scanned = %d, more than the file holds (%d)", scanned, size)
+	}
+}
+
+// End to end: one request, not fifty, and the reported metadata matches.
+func TestConfigGetLogsFilteredSearchIsOneRoundTrip(t *testing.T) {
+	dir := stageLogDirIn(t)
+	matches := writeSparseLogFile(t, dir, "loxilbhost1.log", 5000, 500, "ERROR")
+
+	got := getLogs(t, operations.GetLogsParams{Lines: strptr("100"), Keyword: strptr("ERROR")})
+
+	if len(got.Logs) != matches {
+		t.Fatalf("got %d lines, want all %d matches on the first request", len(got.Logs), matches)
+	}
+	if got.HasMore == nil || *got.HasMore {
+		t.Error("has_more = true after the search reached the start of the file")
+	}
+	if got.LogCount == nil || *got.LogCount != int64(matches) {
+		t.Errorf("log_count = %v, want %d", got.LogCount, matches)
+	}
+	if got.ScannedBytes == nil || got.TotalSize == nil {
+		t.Fatal("scanned_bytes/total_size missing")
+	}
+	if *got.ScannedBytes != *got.TotalSize {
+		t.Errorf("scanned_bytes = %d, want the whole file (%d)", *got.ScannedBytes, *got.TotalSize)
+	}
+}
+
+// An unfiltered page reads only as far as it needs to, so scanned_bytes stays
+// far below the file size — that is what makes it a usable progress signal.
+func TestConfigGetLogsUnfilteredScanIsBounded(t *testing.T) {
+	stageLogDir(t, "loxilbhost1.log", 5000)
+
+	got := getLogs(t, operations.GetLogsParams{Lines: strptr("10")})
+
+	if got.ScannedBytes == nil || got.TotalSize == nil {
+		t.Fatal("scanned_bytes/total_size missing")
+	}
+	if *got.ScannedBytes <= 0 || *got.ScannedBytes >= *got.TotalSize {
+		t.Errorf("scanned_bytes = %d, want a small fraction of %d", *got.ScannedBytes, *got.TotalSize)
+	}
+}
+
+//----------------------------------------------------------------------
+// Compressed archives (patch request 2)
+//----------------------------------------------------------------------
+
+// writeGzipLog lays down a rotated, gzipped archive alongside the live log.
+func writeGzipLog(t *testing.T, dir, name string, lineCount int) []string {
+	t.Helper()
+
+	lines := make([]string, 0, lineCount)
+	var raw bytes.Buffer
+	for i := 0; i < lineCount; i++ {
+		line := fmt.Sprintf("2026-08-13 05:00:00 INFO archived-%04d payload", i)
+		lines = append(lines, line)
+		raw.WriteString(line + "\n")
+	}
+
+	var compressed bytes.Buffer
+	zw := gzip.NewWriter(&compressed)
+	if _, err := zw.Write(raw.Bytes()); err != nil {
+		t.Fatalf("gzip write: %v", err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatalf("gzip close: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, name), compressed.Bytes(), 0o600); err != nil {
+		t.Fatalf("write archive: %v", err)
+	}
+	return lines
+}
+
+// A .gz archive used to be opened raw, so it came back as compressed bytes that
+// parsed to zero lines and rendered as an empty table with no error.
+func TestConfigGetLogsReadsGzipArchive(t *testing.T) {
+	dir := stageLogDirIn(t)
+	writeSparseLogFile(t, dir, "loxilbhost1.log", 10, 100, "ERROR")
+	want := writeGzipLog(t, dir, "loxilbhost1-20260815-175401.656.log.gz", 500)
+
+	got := getLogs(t, operations.GetLogsParams{
+		Lines: strptr("50"),
+		File:  strptr("loxilbhost1-20260815-175401.656.log.gz"),
+	})
+
+	if len(got.Logs) != 50 {
+		t.Fatalf("got %d lines from the archive, want 50", len(got.Logs))
+	}
+	if got.Logs[0] != want[len(want)-1] {
+		t.Errorf("newest line = %q, want %q", got.Logs[0], want[len(want)-1])
+	}
+	if got.TotalSize == nil || *got.TotalSize <= 0 {
+		t.Error("total_size must report the uncompressed size the offsets address")
+	}
+	if got.HasMore == nil || !*got.HasMore {
+		t.Fatal("has_more = false with 450 older lines in the archive")
+	}
+
+	// Paging within the archive must behave exactly as it does for a live file.
+	next := getLogs(t, operations.GetLogsParams{
+		Lines:  strptr("50"),
+		File:   strptr("loxilbhost1-20260815-175401.656.log.gz"),
+		Cursor: strptr(got.NextCursor),
+	})
+	if len(next.Logs) != 50 {
+		t.Fatalf("second archive page returned %d lines, want 50", len(next.Logs))
+	}
+	if next.Logs[0] == got.Logs[0] {
+		t.Fatal("second archive page repeats the first")
+	}
+}
+
+// A truncated or non-gzip .gz must say so rather than serve bytes that parse to
+// nothing.
+func TestConfigGetLogsRejectsCorruptArchive(t *testing.T) {
+	dir := stageLogDirIn(t)
+	writeSparseLogFile(t, dir, "loxilbhost1.log", 10, 100, "ERROR")
+	if err := os.WriteFile(filepath.Join(dir, "loxilbbroken.log.gz"), []byte("not gzip at all"), 0o600); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+
+	req, _ := http.NewRequest(http.MethodGet, "/netlox/v1/logs", nil)
+	got := ConfigGetLogs(operations.GetLogsParams{HTTPRequest: req, File: strptr("loxilbbroken.log.gz")}, nil)
+
+	bad, ok := got.(*operations.GetLogsBadRequest)
+	if !ok {
+		t.Fatalf("corrupt archive gave %T, want 400", got)
+	}
+	if bad.Payload == nil || bad.Payload.Message == "" {
+		t.Error("400 carried no explanation")
+	}
+}
+
+//----------------------------------------------------------------------
+// Archive metadata (patch request 3)
+//----------------------------------------------------------------------
+
+// A bare list of names gives an operator nothing to choose on: loxilb958f3310.log
+// carries no timestamp. Size and mtime must ride alongside.
+func TestConfigGetLogArchivesCarriesMetadata(t *testing.T) {
+	dir := stageLogDirIn(t)
+	writeSparseLogFile(t, dir, "loxilbhost1.log", 100, 50, "ERROR")
+	writeGzipLog(t, dir, "loxilbhost1-20260815-175401.656.log.gz", 200)
+
+	req, _ := http.NewRequest(http.MethodGet, "/netlox/v1/log-archives", nil)
+	res := ConfigGetLogArchives(operations.GetLogArchivesParams{HTTPRequest: req}, nil)
+
+	ok, isOK := res.(*operations.GetLogArchivesOK)
+	if !isOK {
+		t.Fatalf("expected 200, got %T", res)
+	}
+	payload := ok.Payload
+
+	if len(payload.Archives) == 0 {
+		t.Fatal("archives list is empty; the existing field must stay populated")
+	}
+	if len(payload.ArchiveInfo) != len(payload.Archives) {
+		t.Fatalf("archive_info has %d entries, archives has %d — they must line up positionally",
+			len(payload.ArchiveInfo), len(payload.Archives))
+	}
+	for i, info := range payload.ArchiveInfo {
+		if info.Name != payload.Archives[i] {
+			t.Errorf("archive_info[%d].name = %q, want %q", i, info.Name, payload.Archives[i])
+		}
+		if info.SizeBytes <= 0 {
+			t.Errorf("%s: size_bytes = %d, want > 0", info.Name, info.SizeBytes)
+		}
+		if time.Time(info.Modified).IsZero() {
+			t.Errorf("%s: modified is zero", info.Name)
+		}
+	}
+}
+
 func sortedKeys(m map[string]interface{}) []string {
 	keys := make([]string, 0, len(m))
 	for k := range m {
@@ -647,4 +878,130 @@ func sortedKeys(m map[string]interface{}) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+//----------------------------------------------------------------------
+// Filename handling
+//
+// These cover the loxilb side of the API, where the REST server may be running
+// unauthenticated and as root. They are kept alongside the shared log tests so
+// a future sync between the two trees cannot quietly drop them.
+//----------------------------------------------------------------------
+
+// resolveLogFile is the only thing standing between a client-supplied ?file=
+// and an arbitrary read: the name is joined onto a server-side directory, so a
+// traversal that slips through reads whatever the process can.
+func TestResolveLogFileRejectsTraversal(t *testing.T) {
+	stageLogDir(t, "loxilbhost1.log", 5)
+
+	bad := []string{
+		"", "..", "../../etc/shadow", "loxilb/../../etc/shadow",
+		"/etc/shadow", `..\..\windows\system32`, "sub/loxilb.log",
+		"passwd", "loxilb.txt", "loxilb.log.gz.exe",
+	}
+	for _, name := range bad {
+		if _, err := resolveLogFile(name); !errors.Is(err, errInvalidLogFilename) {
+			t.Errorf("resolveLogFile(%q) err = %v, want errInvalidLogFilename", name, err)
+		}
+	}
+
+	if _, err := resolveLogFile("loxilbhost1.log"); err != nil {
+		t.Errorf("resolveLogFile(loxilbhost1.log) = %v, want nil", err)
+	}
+	// A well-formed name that is not on disk is a lookup miss, not a rejection.
+	if _, err := resolveLogFile("loxilbabsent.log"); !errors.Is(err, errLogFileNotFound) {
+		t.Errorf("resolveLogFile(absent) err = %v, want errLogFileNotFound", err)
+	}
+}
+
+// The same check on the download endpoint, driven through the handler: this is
+// the path that was demonstrated serving /etc/shadow.
+func TestConfigGetLogArchivesFilenameRejectsTraversal(t *testing.T) {
+	stageLogDir(t, "loxilbhost1.log", 10)
+
+	for _, name := range []string{"../../etc/shadow", "/etc/shadow", "..", "passwd", ""} {
+		got := ConfigGetLogArchivesFilename(
+			operations.GetLogArchivesFilenameParams{Filename: name}, nil)
+		if _, ok := got.(*operations.GetLogsBadRequest); !ok {
+			t.Errorf("filename %q gave %T, want 400", name, got)
+		}
+	}
+}
+
+// ?file= must be rejected before it reaches the filesystem, with 400 rather
+// than a 500 that would distinguish "exists but unreadable" from "absent".
+func TestConfigGetLogsRejectsTraversalFile(t *testing.T) {
+	stageLogDir(t, "loxilbhost1.log", 10)
+
+	req, err := http.NewRequest(http.MethodGet, "/netlox/v1/logs", nil)
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	for _, name := range []string{"../../etc/shadow", "/etc/shadow", "passwd"} {
+		params := operations.GetLogsParams{HTTPRequest: req, File: strptr(name)}
+		if got := ConfigGetLogs(params, nil); !isBadRequest(got) {
+			t.Errorf("file %q gave %T, want 400", name, got)
+		}
+	}
+}
+
+func isBadRequest(r middleware.Responder) bool {
+	_, ok := r.(*operations.GetLogsBadRequest)
+	return ok
+}
+
+// The control-plane log wins over loxilbdp.log even when the data-plane log is
+// newer and sorts first by name, so an operator opening /logs sees the log the
+// rest of the UI talks about.
+func TestConfigGetLogsPrefersControlPlaneLog(t *testing.T) {
+	dir := stageLogDirIn(t)
+
+	write := func(name string, age time.Duration) {
+		path := filepath.Join(dir, name)
+		if err := os.WriteFile(path, []byte("2026-08-13 05:00:00 INFO x\n"), 0o600); err != nil {
+			t.Fatalf("write %s: %v", name, err)
+		}
+		when := time.Now().Add(-age)
+		if err := os.Chtimes(path, when, when); err != nil {
+			t.Fatalf("chtimes %s: %v", name, err)
+		}
+	}
+
+	write("loxilbhost1.log", time.Hour)
+	write("loxilbdp.log", time.Minute)
+	write("unrelated.log", time.Minute)
+
+	if got := getLogs(t, operations.GetLogsParams{}).LogFile; got != "loxilbhost1.log" {
+		t.Errorf("log_file = %q, want loxilbhost1.log", got)
+	}
+
+	// With no control-plane log present, the data-plane log is the fallback.
+	if err := os.Remove(filepath.Join(dir, "loxilbhost1.log")); err != nil {
+		t.Fatalf("remove: %v", err)
+	}
+	if got := getLogs(t, operations.GetLogsParams{}).LogFile; got != "loxilbdp.log" {
+		t.Errorf("log_file = %q, want loxilbdp.log", got)
+	}
+}
+
+// ?lines= is a string in the spec, so anything can arrive in it. A value that
+// does not parse must fall back to the default rather than to zero — which
+// would answer with an empty page — and a huge value must be capped.
+func TestConfigGetLogsBoundsLines(t *testing.T) {
+	stageLogDir(t, "loxilbhost1.log", 300)
+
+	for _, lines := range []string{"abc", "0", "-5", ""} {
+		got := getLogs(t, operations.GetLogsParams{Lines: strptr(lines)})
+		if *got.LogCount != defaultLogLines {
+			t.Errorf("lines=%q gave log_count %d, want %d", lines, *got.LogCount, defaultLogLines)
+		}
+	}
+
+	got := getLogs(t, operations.GetLogsParams{Lines: strptr("999999")})
+	if *got.LogCount != 300 {
+		t.Errorf("lines=999999 gave log_count %d, want 300 (whole file)", *got.LogCount)
+	}
+	if *got.HasMore {
+		t.Error("has_more set after reading the whole file")
+	}
 }

@@ -7,7 +7,9 @@ package models
 
 import (
 	"context"
+	"strconv"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
@@ -17,17 +19,84 @@ import (
 // swagger:model LogArchives
 type LogArchives struct {
 
+	// Per-archive metadata, in the same order as archives. Additive — archives stays populated for existing clients.
+	ArchiveInfo []*LogArchiveInfo `json:"archive_info"`
+
 	// List of log archive filenames.
 	Archives []string `json:"archives"`
 }
 
 // Validate validates this log archives
 func (m *LogArchives) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateArchiveInfo(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
 	return nil
 }
 
-// ContextValidate validates this log archives based on context it is used
+func (m *LogArchives) validateArchiveInfo(formats strfmt.Registry) error {
+	if swag.IsZero(m.ArchiveInfo) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.ArchiveInfo); i++ {
+		if swag.IsZero(m.ArchiveInfo[i]) { // not required
+			continue
+		}
+
+		if m.ArchiveInfo[i] != nil {
+			if err := m.ArchiveInfo[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("archive_info" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("archive_info" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this log archives based on the context it is used
 func (m *LogArchives) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateArchiveInfo(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *LogArchives) contextValidateArchiveInfo(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.ArchiveInfo); i++ {
+
+		if m.ArchiveInfo[i] != nil {
+			if err := m.ArchiveInfo[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("archive_info" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("archive_info" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

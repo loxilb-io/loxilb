@@ -3534,23 +3534,31 @@ paths:
   '/logs':
     get:
       summary: Fetch logs with optional filtering
-      description: Fetch the latest logs from the system with optional filtering by number of lines, log level, or keyword.
+      description: >
+        Fetch log lines newest-first, paging backwards towards the start of the
+        file. When level or keyword is set the server keeps reading backwards
+        until the requested number of *matching* lines has been collected, the
+        start of the file is reached, or the per-request scan cap (32 MiB) is
+        hit — so has_more means "more matches may exist", not merely "more bytes
+        exist". Offsets in next_cursor are byte offsets into the file the page
+        was read from; for a .log.gz archive they address the uncompressed
+        stream.
       parameters:
         - name: lines
           in: query
           required: false
           type: string
-          description: Number of log lines to fetch (default is 100).
+          description: Number of log lines to fetch (default is 100). With level or keyword set this is the number of matching lines.
         - name: level
           in: query
           required: false
           type: string
-          description: Filter logs by level (e.g., INFO, ERROR, DEBUG).
+          description: Filter logs by level (e.g., INFO, ERROR, DEBUG). Matched as a substring, searched backwards across the whole file rather than within one page.
         - name: keyword
           in: query
           required: false
           type: string
-          description: Filter logs containing a specific keyword or phrase.
+          description: Filter logs containing a specific keyword or phrase. Matched as a substring, searched backwards across the whole file rather than within one page.
         - name: cursor
           in: query
           required: false
@@ -3560,7 +3568,7 @@ paths:
           in: query
           required: false
           type: string
-          description: Specific log file to read (default is the current log file).
+          description: Specific log file to read (default is the current log file). Rotated .log.gz archives are accepted and decompressed transparently.
       responses:
         '200':
           description: Logs fetched successfully
@@ -3596,6 +3604,12 @@ paths:
     get:
       summary: Download a specific log archive
       description: Download a log archive file by its name.
+      # The handler streams the raw file; without this override the operation
+      # inherits the global produces [application/json] and go-swagger's
+      # negotiator returns 406 for Accept: application/octet-stream.
+      # NOTE: takes effect in generated code on the next build_api.sh run.
+      produces:
+        - application/octet-stream
       parameters:
         - name: filename
           in: path
@@ -5508,28 +5522,33 @@ definitions:
       - log_count
       - total_size
       - has_more
+      - scanned_bytes
     properties:
       logs:
         type: array
         items:
           type: string
-        description: List of filtered logs.
+        description: Log lines for this page, newest first. Empty rather than null when nothing matched.
       log_file:
         type: string
         description: Name of the log file the lines were read from.
       log_count:
         type: integer
-        description: Number of log lines returned in this page.
+        description: Number of lines in this page — that is, the length of logs after filtering. Not a count of matches in the file.
       total_size:
         type: integer
         format: int64
-        description: Total size of the log file in bytes.
+        description: Size in bytes of the whole log file, independent of this page and of any filter. For a .log.gz archive this is the uncompressed size, since offsets address the decompressed stream.
       has_more:
         type: boolean
-        description: Whether more log lines are available (pass next_cursor to fetch them).
+        description: Whether the backwards scan stopped before the start of the file, i.e. older lines remain to be searched. True implies next_cursor is set. Unfiltered this means more lines exist; filtered it means more matches may exist — the final page of a filtered search can legitimately come back empty.
       next_cursor:
         type: string
-        description: Opaque cursor for the next page; present only when has_more is true.
+        description: Opaque cursor for the next (older) page; present only when has_more is true.
+      scanned_bytes:
+        type: integer
+        format: int64
+        description: Bytes examined to build this page. Equal to the page's own span when unfiltered; larger for a filtered query that had to search backwards past non-matching lines. Compare against total_size to show progress through a long search.
 
   LogArchives:
     type: object
@@ -5539,7 +5558,28 @@ definitions:
         items:
           type: string
         description: List of log archive filenames.
-  
+      archive_info:
+        type: array
+        items:
+          $ref: '#/definitions/LogArchiveInfo'
+        description: Per-archive metadata, in the same order as archives. Additive — archives stays populated for existing clients.
+
+  LogArchiveInfo:
+    type: object
+    properties:
+      name:
+        type: string
+        description: Archive filename, matching an entry in archives.
+      size_bytes:
+        type: integer
+        format: int64
+        description: Size of the archive on disk in bytes (compressed size for .gz).
+      modified:
+        type: string
+        format: date-time
+        description: Last modification time of the archive (RFC3339). The only reliable age signal for names that carry no timestamp.
+
+
   NodeGraphShcmea:
     type: object
     properties:

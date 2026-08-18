@@ -35,19 +35,19 @@ type GetLogsParams struct {
 	  In: query
 	*/
 	Cursor *string
-	/*Specific log file to read (default is the current log file).
+	/*Specific log file to read (default is the current log file). Rotated .log.gz archives are accepted and decompressed transparently.
 	  In: query
 	*/
 	File *string
-	/*Filter logs containing a specific keyword or phrase.
+	/*Filter logs containing a specific keyword or phrase. Matched as a substring, searched backwards across the whole file rather than within one page.
 	  In: query
 	*/
 	Keyword *string
-	/*Filter logs by level (e.g., INFO, ERROR, DEBUG).
+	/*Filter logs by level (e.g., INFO, ERROR, DEBUG). Matched as a substring, searched backwards across the whole file rather than within one page.
 	  In: query
 	*/
 	Level *string
-	/*Number of log lines to fetch (default is 100).
+	/*Number of log lines to fetch (default is 100). With level or keyword set this is the number of matching lines.
 	  In: query
 	*/
 	Lines *string

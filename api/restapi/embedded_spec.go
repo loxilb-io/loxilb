@@ -4933,6 +4933,9 @@ func init() {
     "/log-archives/{filename}": {
       "get": {
         "description": "Download a log archive file by its name.",
+        "produces": [
+          "application/octet-stream"
+        ],
         "summary": "Download a specific log archive",
         "parameters": [
           {
@@ -4973,24 +4976,24 @@ func init() {
     },
     "/logs": {
       "get": {
-        "description": "Fetch the latest logs from the system with optional filtering by number of lines, log level, or keyword.",
+        "description": "Fetch log lines newest-first, paging backwards towards the start of the file. When level or keyword is set the server keeps reading backwards until the requested number of *matching* lines has been collected, the start of the file is reached, or the per-request scan cap (32 MiB) is hit — so has_more means \"more matches may exist\", not merely \"more bytes exist\". Offsets in next_cursor are byte offsets into the file the page was read from; for a .log.gz archive they address the uncompressed stream.\n",
         "summary": "Fetch logs with optional filtering",
         "parameters": [
           {
             "type": "string",
-            "description": "Number of log lines to fetch (default is 100).",
+            "description": "Number of log lines to fetch (default is 100). With level or keyword set this is the number of matching lines.",
             "name": "lines",
             "in": "query"
           },
           {
             "type": "string",
-            "description": "Filter logs by level (e.g., INFO, ERROR, DEBUG).",
+            "description": "Filter logs by level (e.g., INFO, ERROR, DEBUG). Matched as a substring, searched backwards across the whole file rather than within one page.",
             "name": "level",
             "in": "query"
           },
           {
             "type": "string",
-            "description": "Filter logs containing a specific keyword or phrase.",
+            "description": "Filter logs containing a specific keyword or phrase. Matched as a substring, searched backwards across the whole file rather than within one page.",
             "name": "keyword",
             "in": "query"
           },
@@ -5002,7 +5005,7 @@ func init() {
           },
           {
             "type": "string",
-            "description": "Specific log file to read (default is the current log file).",
+            "description": "Specific log file to read (default is the current log file). Rotated .log.gz archives are accepted and decompressed transparently.",
             "name": "file",
             "in": "query"
           }
@@ -7068,9 +7071,35 @@ func init() {
         }
       }
     },
+    "LogArchiveInfo": {
+      "type": "object",
+      "properties": {
+        "modified": {
+          "description": "Last modification time of the archive (RFC3339). The only reliable age signal for names that carry no timestamp.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "name": {
+          "description": "Archive filename, matching an entry in archives.",
+          "type": "string"
+        },
+        "size_bytes": {
+          "description": "Size of the archive on disk in bytes (compressed size for .gz).",
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
     "LogArchives": {
       "type": "object",
       "properties": {
+        "archive_info": {
+          "description": "Per-archive metadata, in the same order as archives. Additive — archives stays populated for existing clients.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LogArchiveInfo"
+          }
+        },
         "archives": {
           "description": "List of log archive filenames.",
           "type": "array",
@@ -7093,15 +7122,16 @@ func init() {
       "required": [
         "log_count",
         "total_size",
-        "has_more"
+        "has_more",
+        "scanned_bytes"
       ],
       "properties": {
         "has_more": {
-          "description": "Whether more log lines are available (pass next_cursor to fetch them).",
+          "description": "Whether the backwards scan stopped before the start of the file, i.e. older lines remain to be searched. True implies next_cursor is set. Unfiltered this means more lines exist; filtered it means more matches may exist — the final page of a filtered search can legitimately come back empty.",
           "type": "boolean"
         },
         "log_count": {
-          "description": "Number of log lines returned in this page.",
+          "description": "Number of lines in this page — that is, the length of logs after filtering. Not a count of matches in the file.",
           "type": "integer"
         },
         "log_file": {
@@ -7109,18 +7139,23 @@ func init() {
           "type": "string"
         },
         "logs": {
-          "description": "List of filtered logs.",
+          "description": "Log lines for this page, newest first. Empty rather than null when nothing matched.",
           "type": "array",
           "items": {
             "type": "string"
           }
         },
         "next_cursor": {
-          "description": "Opaque cursor for the next page; present only when has_more is true.",
+          "description": "Opaque cursor for the next (older) page; present only when has_more is true.",
           "type": "string"
         },
+        "scanned_bytes": {
+          "description": "Bytes examined to build this page. Equal to the page's own span when unfiltered; larger for a filtered query that had to search backwards past non-matching lines. Compare against total_size to show progress through a long search.",
+          "type": "integer",
+          "format": "int64"
+        },
         "total_size": {
-          "description": "Total size of the log file in bytes.",
+          "description": "Size in bytes of the whole log file, independent of this page and of any filter. For a .log.gz archive this is the uncompressed size, since offsets address the decompressed stream.",
           "type": "integer",
           "format": "int64"
         }
@@ -13030,6 +13065,9 @@ func init() {
     "/log-archives/{filename}": {
       "get": {
         "description": "Download a log archive file by its name.",
+        "produces": [
+          "application/octet-stream"
+        ],
         "summary": "Download a specific log archive",
         "parameters": [
           {
@@ -13070,24 +13108,24 @@ func init() {
     },
     "/logs": {
       "get": {
-        "description": "Fetch the latest logs from the system with optional filtering by number of lines, log level, or keyword.",
+        "description": "Fetch log lines newest-first, paging backwards towards the start of the file. When level or keyword is set the server keeps reading backwards until the requested number of *matching* lines has been collected, the start of the file is reached, or the per-request scan cap (32 MiB) is hit — so has_more means \"more matches may exist\", not merely \"more bytes exist\". Offsets in next_cursor are byte offsets into the file the page was read from; for a .log.gz archive they address the uncompressed stream.\n",
         "summary": "Fetch logs with optional filtering",
         "parameters": [
           {
             "type": "string",
-            "description": "Number of log lines to fetch (default is 100).",
+            "description": "Number of log lines to fetch (default is 100). With level or keyword set this is the number of matching lines.",
             "name": "lines",
             "in": "query"
           },
           {
             "type": "string",
-            "description": "Filter logs by level (e.g., INFO, ERROR, DEBUG).",
+            "description": "Filter logs by level (e.g., INFO, ERROR, DEBUG). Matched as a substring, searched backwards across the whole file rather than within one page.",
             "name": "level",
             "in": "query"
           },
           {
             "type": "string",
-            "description": "Filter logs containing a specific keyword or phrase.",
+            "description": "Filter logs containing a specific keyword or phrase. Matched as a substring, searched backwards across the whole file rather than within one page.",
             "name": "keyword",
             "in": "query"
           },
@@ -13099,7 +13137,7 @@ func init() {
           },
           {
             "type": "string",
-            "description": "Specific log file to read (default is the current log file).",
+            "description": "Specific log file to read (default is the current log file). Rotated .log.gz archives are accepted and decompressed transparently.",
             "name": "file",
             "in": "query"
           }
@@ -15803,9 +15841,35 @@ func init() {
         }
       }
     },
+    "LogArchiveInfo": {
+      "type": "object",
+      "properties": {
+        "modified": {
+          "description": "Last modification time of the archive (RFC3339). The only reliable age signal for names that carry no timestamp.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "name": {
+          "description": "Archive filename, matching an entry in archives.",
+          "type": "string"
+        },
+        "size_bytes": {
+          "description": "Size of the archive on disk in bytes (compressed size for .gz).",
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
     "LogArchives": {
       "type": "object",
       "properties": {
+        "archive_info": {
+          "description": "Per-archive metadata, in the same order as archives. Additive — archives stays populated for existing clients.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LogArchiveInfo"
+          }
+        },
         "archives": {
           "description": "List of log archive filenames.",
           "type": "array",
@@ -15828,15 +15892,16 @@ func init() {
       "required": [
         "log_count",
         "total_size",
-        "has_more"
+        "has_more",
+        "scanned_bytes"
       ],
       "properties": {
         "has_more": {
-          "description": "Whether more log lines are available (pass next_cursor to fetch them).",
+          "description": "Whether the backwards scan stopped before the start of the file, i.e. older lines remain to be searched. True implies next_cursor is set. Unfiltered this means more lines exist; filtered it means more matches may exist — the final page of a filtered search can legitimately come back empty.",
           "type": "boolean"
         },
         "log_count": {
-          "description": "Number of log lines returned in this page.",
+          "description": "Number of lines in this page — that is, the length of logs after filtering. Not a count of matches in the file.",
           "type": "integer"
         },
         "log_file": {
@@ -15844,18 +15909,23 @@ func init() {
           "type": "string"
         },
         "logs": {
-          "description": "List of filtered logs.",
+          "description": "Log lines for this page, newest first. Empty rather than null when nothing matched.",
           "type": "array",
           "items": {
             "type": "string"
           }
         },
         "next_cursor": {
-          "description": "Opaque cursor for the next page; present only when has_more is true.",
+          "description": "Opaque cursor for the next (older) page; present only when has_more is true.",
           "type": "string"
         },
+        "scanned_bytes": {
+          "description": "Bytes examined to build this page. Equal to the page's own span when unfiltered; larger for a filtered query that had to search backwards past non-matching lines. Compare against total_size to show progress through a long search.",
+          "type": "integer",
+          "format": "int64"
+        },
         "total_size": {
-          "description": "Total size of the log file in bytes.",
+          "description": "Size in bytes of the whole log file, independent of this page and of any filter. For a .log.gz archive this is the uncompressed size, since offsets address the decompressed stream.",
           "type": "integer",
           "format": "int64"
         }

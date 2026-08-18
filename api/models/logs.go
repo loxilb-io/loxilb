@@ -19,24 +19,28 @@ import (
 // swagger:model Logs
 type Logs struct {
 
-	// Whether more log lines are available (pass next_cursor to fetch them).
+	// Whether the backwards scan stopped before the start of the file, i.e. older lines remain to be searched. True implies next_cursor is set. Unfiltered this means more lines exist; filtered it means more matches may exist — the final page of a filtered search can legitimately come back empty.
 	// Required: true
 	HasMore *bool `json:"has_more"`
 
-	// Number of log lines returned in this page.
+	// Number of lines in this page — that is, the length of logs after filtering. Not a count of matches in the file.
 	// Required: true
 	LogCount *int64 `json:"log_count"`
 
 	// Name of the log file the lines were read from.
 	LogFile string `json:"log_file,omitempty"`
 
-	// List of filtered logs.
+	// Log lines for this page, newest first. Empty rather than null when nothing matched.
 	Logs []string `json:"logs"`
 
-	// Opaque cursor for the next page; present only when has_more is true.
+	// Opaque cursor for the next (older) page; present only when has_more is true.
 	NextCursor string `json:"next_cursor,omitempty"`
 
-	// Total size of the log file in bytes.
+	// Bytes examined to build this page. Equal to the page's own span when unfiltered; larger for a filtered query that had to search backwards past non-matching lines. Compare against total_size to show progress through a long search.
+	// Required: true
+	ScannedBytes *int64 `json:"scanned_bytes"`
+
+	// Size in bytes of the whole log file, independent of this page and of any filter. For a .log.gz archive this is the uncompressed size, since offsets address the decompressed stream.
 	// Required: true
 	TotalSize *int64 `json:"total_size"`
 }
@@ -50,6 +54,10 @@ func (m *Logs) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateLogCount(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateScannedBytes(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -75,6 +83,15 @@ func (m *Logs) validateHasMore(formats strfmt.Registry) error {
 func (m *Logs) validateLogCount(formats strfmt.Registry) error {
 
 	if err := validate.Required("log_count", "body", m.LogCount); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Logs) validateScannedBytes(formats strfmt.Registry) error {
+
+	if err := validate.Required("scanned_bytes", "body", m.ScannedBytes); err != nil {
 		return err
 	}
 
