@@ -348,7 +348,11 @@ func TestParseFwCounterPackets(t *testing.T) {
 		packets uint64
 		ok      bool
 	}{
-		{"0:0", 0, true}, // the exact string that used to fail
+		// The three counter strings observed live on the testbed while the
+		// old strconv.Atoi was rejecting every one of them.
+		{"0:0", 0, true},
+		{"120:7044", 120, true},
+		{"30:1761", 30, true},
 		{"5:100", 5, true},
 		{"12", 12, true},
 		{"", 0, false},
