@@ -27,7 +27,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/go-openapi/runtime"
@@ -42,7 +41,6 @@ var (
 	logFilePath = "/var/log/"
 	logFileKey  = "loxilb"
 	archivePath = "/var/log/" // Path where rotated logs are stored
-	mu          sync.Mutex
 )
 
 const (
@@ -696,8 +694,12 @@ func ConfigGetLogArchives(params operations.GetLogArchivesParams, principal inte
 	var result models.LogArchives
 
 	seen := map[string]bool{}
-	var archives []string
-	var info []*models.LogArchiveInfo
+	// Never nil, for the same reason "logs" is never nil: neither field carries
+	// omitempty, so a nil slice serializes as null and a client that iterates
+	// the list has to special-case it. An empty archive directory is an empty
+	// list, not an absent one.
+	archives := []string{}
+	info := []*models.LogArchiveInfo{}
 	listed := false
 	for _, dir := range archiveDirs() {
 		files, err := os.ReadDir(dir)
