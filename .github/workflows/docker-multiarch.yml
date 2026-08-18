@@ -14,6 +14,12 @@ on:
       - 'common/**'
       - 'options/**'
       - 'pkg/**'
+      # Both forms are needed. A submodule bump changes the gitlink, whose path
+      # is the bare 'loxilb-ebpf' -- 'loxilb-ebpf/**' requires a 'loxilb-ebpf/'
+      # prefix and never matches it, so a datapath-only bump used to skip the
+      # image build entirely. The '/**' form stays for the day the submodule is
+      # vendored in-tree.
+      - 'loxilb-ebpf'
       - 'loxilb-ebpf/**'
       - 'tools/**'
       - '.github/workflows/docker-multiarch.yml'
