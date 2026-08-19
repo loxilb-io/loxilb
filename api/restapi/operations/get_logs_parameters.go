@@ -31,15 +31,23 @@ type GetLogsParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*Filter logs containing a specific keyword or phrase.
+	/*Opaque pagination cursor from a previous response's next_cursor; fetches the next page.
+	  In: query
+	*/
+	Cursor *string
+	/*Specific log file to read (default is the current log file). Rotated .log.gz archives are accepted and decompressed transparently.
+	  In: query
+	*/
+	File *string
+	/*Filter logs containing a specific keyword or phrase. Matched as a substring, searched backwards across the whole file rather than within one page.
 	  In: query
 	*/
 	Keyword *string
-	/*Filter logs by level (e.g., INFO, ERROR, DEBUG).
+	/*Filter logs by level (e.g., INFO, ERROR, DEBUG). Matched as a substring, searched backwards across the whole file rather than within one page.
 	  In: query
 	*/
 	Level *string
-	/*Number of log lines to fetch (default is 100).
+	/*Number of log lines to fetch (default is 100). With level or keyword set this is the number of matching lines.
 	  In: query
 	*/
 	Lines *string
@@ -55,6 +63,16 @@ func (o *GetLogsParams) BindRequest(r *http.Request, route *middleware.MatchedRo
 	o.HTTPRequest = r
 
 	qs := runtime.Values(r.URL.Query())
+
+	qCursor, qhkCursor, _ := qs.GetOK("cursor")
+	if err := o.bindCursor(qCursor, qhkCursor, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qFile, qhkFile, _ := qs.GetOK("file")
+	if err := o.bindFile(qFile, qhkFile, route.Formats); err != nil {
+		res = append(res, err)
+	}
 
 	qKeyword, qhkKeyword, _ := qs.GetOK("keyword")
 	if err := o.bindKeyword(qKeyword, qhkKeyword, route.Formats); err != nil {
@@ -73,6 +91,42 @@ func (o *GetLogsParams) BindRequest(r *http.Request, route *middleware.MatchedRo
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// bindCursor binds and validates parameter Cursor from query.
+func (o *GetLogsParams) bindCursor(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+	o.Cursor = &raw
+
+	return nil
+}
+
+// bindFile binds and validates parameter File from query.
+func (o *GetLogsParams) bindFile(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+	o.File = &raw
+
 	return nil
 }
 

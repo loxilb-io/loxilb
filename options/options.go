@@ -23,6 +23,10 @@ var Opts struct {
 	ClusterNodes         string         `long:"cluster" description:"Comma-separated list of cluter-node IP Addresses" default:"none"`
 	ClusterSelf          int            `long:"self" description:"annonation of self in cluster" default:"0"`
 	LogLevel             string         `long:"loglevel" description:"One of trace,debug,info,error,warning,notice,critical,emergency,alert" default:"debug"`
+	LogMaxSize           int            `long:"log-max-size" description:"Rotate a log file when it exceeds this many MB (0 disables rotation)" default:"50" env:"LOXILB_LOG_MAX_SIZE"`
+	LogMaxBackups        int            `long:"log-max-backups" description:"Rotated files to keep per log, oldest deleted first (0 keeps all until log-max-age)" default:"4" env:"LOXILB_LOG_MAX_BACKUPS"`
+	LogMaxAge            int            `long:"log-max-age" description:"Days to retain rotated log files (0 keeps forever)" default:"28" env:"LOXILB_LOG_MAX_AGE"`
+	LogNoCompress        bool           `long:"log-no-compress" description:"Do not gzip rotated log files" env:"LOXILB_LOG_NO_COMPRESS"`
 	CPUProfile           string         `long:"cpuprofile" description:"Enable cpu profiling and specify file to use" default:"none" env:"CPUPROF"`
 	Prometheus           bool           `short:"p" long:"prometheus" description:"Run prometheus thread"`
 	CRC32SumDisable      bool           `long:"disable-crc32" description:"Disable crc32 checksum update(experimental)"`

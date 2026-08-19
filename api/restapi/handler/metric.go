@@ -87,11 +87,14 @@ func ConfigGetErrorCount(params operations.GetMetricsErrorcountParams, principal
 	metrics := prometheus.GetErrCountSM()
 	result.TotalErrors = metrics.TotalErrors
 
-	tk.LogIt(tk.LogDebug, "ConfigGetErrorCount: TotalErrors: %d\n", result.TotalErrors)
+	// %v, not %d: these counters are float64. %d rendered them as
+	// "%!d(float64=5)", and the mismatch also failed go vet, which blocks the
+	// test binary for this whole package from building.
+	tk.LogIt(tk.LogDebug, "ConfigGetErrorCount: TotalErrors: %v\n", result.TotalErrors)
 
 	// Extract total_errors_per_service
 	for _, serviceMetric := range metrics.TotalErrorsPerService {
-		tk.LogIt(tk.LogDebug, "ConfigGetErrorCount: Service: %s, Value: %d\n", serviceMetric.Name, serviceMetric.Value)
+		tk.LogIt(tk.LogDebug, "ConfigGetErrorCount: Service: %s, Value: %v\n", serviceMetric.Name, serviceMetric.Value)
 
 		result.TotalErrorsPerService = append(result.TotalErrorsPerService, &models.ErrorCountMetricsTotalErrorsPerServiceItems0{
 			Name:  serviceMetric.Name,
