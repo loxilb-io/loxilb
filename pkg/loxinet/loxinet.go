@@ -19,6 +19,7 @@ package loxinet
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -35,6 +36,7 @@ import (
 	prometheus "github.com/loxilb-io/loxilb/api/prometheus"
 	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
+	"github.com/loxilb-io/loxilb/pkg/logrotate"
 	"github.com/loxilb-io/loxilb/pkg/user"
 	utils "github.com/loxilb-io/loxilb/pkg/utils"
 	tk "github.com/loxilb-io/loxilib"
@@ -237,6 +239,34 @@ func loxiNetInit() {
 	logfile := fmt.Sprintf("%s%s.log", "/var/log/loxilb", os.Getenv("HOSTNAME"))
 	logLevel := LogString2Level(opts.Opts.LogLevel)
 	mh.logger = tk.LogItInit(logfile, logLevel, true)
+
+	// Size-rotate every log this process writes — an unrotated log file at the
+	// default debug level is a disk-starvation risk in production, and the
+	// GET /log-archives endpoint has nothing to list without rotation.
+	// loxilib's LogItInit opens a plain append-only file, so re-point all level
+	// writers at a rotating writer for the same path (the fd LogItInit opened
+	// stays unused for the process lifetime).
+	rotCfg := logrotate.Config{
+		MaxSizeMB:  opts.Opts.LogMaxSize,
+		MaxBackups: opts.Opts.LogMaxBackups,
+		MaxAgeDays: opts.Opts.LogMaxAge,
+		Compress:   !opts.Opts.LogNoCompress,
+	}
+	if rw, err := logrotate.New(logfile, rotCfg); err == nil {
+		for _, lg := range []*log.Logger{
+			mh.logger.LogItEmer, mh.logger.LogItAlert, mh.logger.LogItCrit,
+			mh.logger.LogItErr, mh.logger.LogItWarn, mh.logger.LogItNotice,
+			mh.logger.LogItInfo, mh.logger.LogItDebug, mh.logger.LogItTrace,
+		} {
+			lg.SetOutput(rw)
+		}
+	} else {
+		tk.LogIt(tk.LogWarning, "log rotation disabled for %s: %v\n", logfile, err)
+	}
+
+	// The eBPF data-plane C library appends to /var/log/loxilbdp.log with a
+	// FILE* we cannot wrap — rotate it copy-truncate style from a sweeper.
+	logrotate.StartSweeper("/var/log/loxilbdp.log", rotCfg, time.Minute)
 
 	kaArgs := KAString2Mode(opts.Opts.Ka, opts.Opts.ClusterInterface)
 	clusterMode := false

@@ -13,6 +13,8 @@ import (
 
 // GetLogsURL generates an URL for the get logs operation
 type GetLogsURL struct {
+	Cursor  *string
+	File    *string
 	Keyword *string
 	Level   *string
 	Lines   *string
@@ -50,6 +52,22 @@ func (o *GetLogsURL) Build() (*url.URL, error) {
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
 
 	qs := make(url.Values)
+
+	var cursorQ string
+	if o.Cursor != nil {
+		cursorQ = *o.Cursor
+	}
+	if cursorQ != "" {
+		qs.Set("cursor", cursorQ)
+	}
+
+	var fileQ string
+	if o.File != nil {
+		fileQ = *o.File
+	}
+	if fileQ != "" {
+		qs.Set("file", fileQ)
+	}
 
 	var keywordQ string
 	if o.Keyword != nil {

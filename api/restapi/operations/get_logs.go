@@ -34,7 +34,7 @@ func NewGetLogs(ctx *middleware.Context, handler GetLogsHandler) *GetLogs {
 
 # Fetch logs with optional filtering
 
-Fetch the latest logs from the system with optional filtering by number of lines, log level, or keyword.
+Fetch log lines newest-first, paging backwards towards the start of the file. When level or keyword is set the server keeps reading backwards until the requested number of *matching* lines has been collected, the start of the file is reached, or the per-request scan cap (32 MiB) is hit — so has_more means "more matches may exist", not merely "more bytes exist". Offsets in next_cursor are byte offsets into the file the page was read from; for a .log.gz archive they address the uncompressed stream.
 */
 type GetLogs struct {
 	Context *middleware.Context
