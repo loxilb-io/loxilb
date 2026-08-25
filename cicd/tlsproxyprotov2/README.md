@@ -118,8 +118,6 @@ in loxilb-ebpf:
 
 A trigger segment that *does* carry payload still takes the `adjust_room` path: correct
 for a complete-checksum ingress (physical NIC), still wrong under `CHECKSUM_PARTIAL`.
-Reachability, severity and the proposed fix are written up in
-[`docs/ppv2-csum-offload-issue/`](../../docs/ppv2-csum-offload-issue/).
 
 ## Run
 
