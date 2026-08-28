@@ -294,6 +294,147 @@ func TestLoxinet(t *testing.T) {
 		t.Errorf("failed to add nat lb rule for 10.10.10.1\n")
 	}
 
+	// Enable monitoring on the existing rule - the update path must pick up
+	// the changed monitor flag
+	lbServ.Monitor = true
+	_, err = mh.zr.Rules.AddLbRule(lbServ, nil, nil, lbEps[:])
+	if err != nil {
+		t.Errorf("failed to update nat lb rule with monitor on for 10.10.10.1\n")
+	}
+
+	// GetLBRuleByServArgs does not normalize ServPortMax the way AddLbRule
+	// does, so pass it explicitly for the lookups
+	lbSrch := lbServ
+	lbSrch.ServPortMax = lbSrch.ServPort
+	lbRule := mh.zr.Rules.GetLBRuleByServArgs(lbSrch)
+	if lbRule == nil || !lbRule.hChk.actChk {
+		t.Errorf("monitor flag not applied on lb rule update for 10.10.10.1\n")
+	}
+
+	// Simulate a probe-driven down endpoint and turn monitoring off - the
+	// update must clear the probe-driven state so the endpoint returns to
+	// rotation
+	if lbRule != nil {
+		eps := lbRule.act.action.(*ruleLBActs).endPoints
+		for idx := range eps {
+			eps[idx].noService = true
+		}
+	}
+	lbServ.Monitor = false
+	_, err = mh.zr.Rules.AddLbRule(lbServ, nil, nil, lbEps[:])
+	if err != nil {
+		t.Errorf("failed to update nat lb rule with monitor off for 10.10.10.1\n")
+	}
+
+	lbRule = mh.zr.Rules.GetLBRuleByServArgs(lbSrch)
+	if lbRule != nil {
+		if lbRule.hChk.actChk {
+			t.Errorf("monitor flag not cleared on lb rule update for 10.10.10.1\n")
+		}
+		for _, ep := range lbRule.act.action.(*ruleLBActs).endPoints {
+			if ep.noService {
+				t.Errorf("stale noService state after monitor off for 10.10.10.1\n")
+			}
+		}
+	} else {
+		t.Errorf("failed to get nat lb rule for 10.10.10.1\n")
+	}
+
+	// Pin the supported idiom: rule-level monitor with per-end-point probe
+	// settings and no rule-level probetype. The ep-host API entry and the
+	// rule share the key <ip>_<proto>_<targetPort>, so API-set probe options
+	// (e.g. a probe port different from the target port) must survive rule
+	// registration in either order.
+
+	// rule-first order - the rule's ep-host already exists and an API call
+	// on the same key must override its probe options
+	lbServ.Monitor = true
+	_, err = mh.zr.Rules.AddLbRule(lbServ, nil, nil, lbEps[:])
+	if err != nil {
+		t.Errorf("failed to re-enable monitor on nat lb rule for 10.10.10.1\n")
+	}
+
+	epOpts := epHostOpts{probeType: HostProbeConnectTCP, probePort: 5002,
+		probeDuration: 10, inActTryThr: 3}
+	_, err = mh.zr.Rules.AddEPHost(true, "32.32.32.1", "32.32.32.1_tcp_5001", epOpts)
+	if err != nil {
+		t.Errorf("failed to set per-endpoint probe opts for 32.32.32.1_tcp_5001\n")
+	}
+
+	mh.zr.Rules.epMx.Lock()
+	epHostEnt := mh.zr.Rules.epMap["32.32.32.1_tcp_5001"]
+	if epHostEnt == nil {
+		t.Errorf("ep-host 32.32.32.1_tcp_5001 not found\n")
+	} else if epHostEnt.opts.probePort != 5002 || !epHostEnt.opts.probeActivated {
+		t.Errorf("per-endpoint probe opts not applied on rule-owned ep-host\n")
+	}
+	mh.zr.Rules.epMx.Unlock()
+
+	// an ep-host referenced by a rule must not be deletable via the API -
+	// it is reclaimed by rule teardown instead
+	_, err = mh.zr.Rules.DeleteEPHost(true, "32.32.32.1_tcp_5001", "32.32.32.1",
+		HostProbeConnectTCP, 5002)
+	if err == nil {
+		t.Errorf("rule-referred ep-host delete should fail for 32.32.32.1_tcp_5001\n")
+	}
+
+	// probing is stopped by re-POSTing with probeType none, not by delete
+	epOpts.probeType = HostProbeNone
+	epOpts.probePort = 0
+	_, err = mh.zr.Rules.AddEPHost(true, "32.32.32.1", "32.32.32.1_tcp_5001", epOpts)
+	if err != nil {
+		t.Errorf("failed to disable probe for 32.32.32.1_tcp_5001\n")
+	}
+	mh.zr.Rules.epMx.Lock()
+	epHostEnt = mh.zr.Rules.epMap["32.32.32.1_tcp_5001"]
+	if epHostEnt == nil || epHostEnt.opts.probeActivated {
+		t.Errorf("probe not deactivated for 32.32.32.1_tcp_5001\n")
+	}
+	mh.zr.Rules.epMx.Unlock()
+
+	// api-first order - per-endpoint probe opts set before the rule exists
+	// must survive the rule's own ep-host registration
+	epOpts2 := epHostOpts{probeType: HostProbeConnectTCP, probePort: 6002,
+		probeDuration: 10, inActTryThr: 3}
+	_, err = mh.zr.Rules.AddEPHost(true, "33.33.33.1", "33.33.33.1_tcp_6001", epOpts2)
+	if err != nil {
+		t.Errorf("failed to add ep-host 33.33.33.1_tcp_6001\n")
+	}
+
+	lbServ2 := cmn.LbServiceArg{ServIP: "10.10.10.2", ServPort: 6001, Proto: "tcp",
+		Sel: cmn.LbSelRr, Monitor: true}
+	lbEps2 := []cmn.LbEndPointArg{
+		{
+			EpIP:   "33.33.33.1",
+			EpPort: 6001,
+			Weight: 1,
+		},
+	}
+	_, err = mh.zr.Rules.AddLbRule(lbServ2, nil, nil, lbEps2)
+	if err != nil {
+		t.Errorf("failed to add nat lb rule for 10.10.10.2\n")
+	}
+
+	mh.zr.Rules.epMx.Lock()
+	epHostEnt = mh.zr.Rules.epMap["33.33.33.1_tcp_6001"]
+	if epHostEnt == nil {
+		t.Errorf("ep-host 33.33.33.1_tcp_6001 not found\n")
+	} else if epHostEnt.opts.probePort != 6002 || !epHostEnt.opts.probeActivated {
+		t.Errorf("per-endpoint probe opts lost on rule registration for 33.33.33.1_tcp_6001\n")
+	}
+	mh.zr.Rules.epMx.Unlock()
+
+	// rule teardown reclaims the ep-host, including API-created ones
+	_, err = mh.zr.Rules.DeleteLbRule(lbServ2)
+	if err != nil {
+		t.Errorf("failed to delete nat lb rule for 10.10.10.2\n")
+	}
+	mh.zr.Rules.epMx.Lock()
+	if mh.zr.Rules.epMap["33.33.33.1_tcp_6001"] != nil {
+		t.Errorf("ep-host 33.33.33.1_tcp_6001 not reclaimed on rule delete\n")
+	}
+	mh.zr.Rules.epMx.Unlock()
+
 	_, err = mh.zr.Rules.DeleteLbRule(lbServ)
 	if err != nil {
 		t.Errorf("failed to delete nat lb rule for 10.10.10.1\n")

@@ -1599,7 +1599,7 @@ func init() {
     },
     "/config/endpoint": {
       "post": {
-        "description": "Adds a LB endpoint for monitoring",
+        "description": "Adds a LB endpoint for monitoring. The probe only updates the endpoint's currState as reported by GET /config/endpoint/all. It has no effect on traffic forwarding unless the load-balancer rule referencing this endpoint is created with monitor set to true, which makes the rule sync probe results into its endpoint states",
         "summary": "Adds a LB endpoint for monitoring",
         "parameters": [
           {
@@ -1703,7 +1703,7 @@ func init() {
     },
     "/config/endpoint/epipaddress/{ip_address}": {
       "delete": {
-        "description": "Delete an LB end-point from monitoring",
+        "description": "Delete an LB end-point from monitoring. The entry key is derived from the query parameters - pass name, or probe_type and probe_port, exactly as at creation time, or the lookup fails with host-notfound. An end-point referenced by a load-balancer rule cannot be deleted (fails with LB Rule-referred) - it is reclaimed automatically when the rule or the rule end-point is deleted. To stop probing such an end-point instead, re-POST it with probeType none",
         "summary": "Delete an LB end-point from monitoring",
         "parameters": [
           {
@@ -1783,7 +1783,7 @@ func init() {
     },
     "/config/endpointhoststate": {
       "post": {
-        "description": "Sets the state of a host which can have multiple endpoints",
+        "description": "Sets the state of a host which can have multiple endpoints. The state affects traffic forwarding only for load-balancer rules created with monitor set to true; rules without it keep forwarding to the host regardless of this state",
         "summary": "Sets the state of a host",
         "parameters": [
           {
@@ -6279,7 +6279,7 @@ func init() {
           "type": "integer"
         },
         "name": {
-          "description": "Endpoint Identifier",
+          "description": "Endpoint Identifier. If omitted, the entry is keyed as <hostName>_<probeType>_<probePort>. To attach this probe to a load-balancer rule end-point (so the rule's monitor flag gates traffic on it), name must be set to <hostName>_<service-protocol>_<targetPort> of that rule end-point - the key the rule itself registers. This allows the probe port to differ from the rule's target port",
           "type": "string"
         },
         "probeDuration": {
@@ -6961,7 +6961,7 @@ func init() {
               ]
             },
             "monitor": {
-              "description": "value for monitoring enabled or not",
+              "description": "enable end-point liveness monitoring for this rule. When true, end-point probe results (see /config/endpoint) are synced into the rule and probe-failed end-points are taken out of the forwarding rotation. When false, probes still report currState but never affect forwarding. monitor may be set without a rule-level probetype - each end-point then keeps its own probe settings, which can be customized per end-point via /config/endpoint",
               "type": "boolean"
             },
             "name": {
@@ -9731,7 +9731,7 @@ func init() {
     },
     "/config/endpoint": {
       "post": {
-        "description": "Adds a LB endpoint for monitoring",
+        "description": "Adds a LB endpoint for monitoring. The probe only updates the endpoint's currState as reported by GET /config/endpoint/all. It has no effect on traffic forwarding unless the load-balancer rule referencing this endpoint is created with monitor set to true, which makes the rule sync probe results into its endpoint states",
         "summary": "Adds a LB endpoint for monitoring",
         "parameters": [
           {
@@ -9835,7 +9835,7 @@ func init() {
     },
     "/config/endpoint/epipaddress/{ip_address}": {
       "delete": {
-        "description": "Delete an LB end-point from monitoring",
+        "description": "Delete an LB end-point from monitoring. The entry key is derived from the query parameters - pass name, or probe_type and probe_port, exactly as at creation time, or the lookup fails with host-notfound. An end-point referenced by a load-balancer rule cannot be deleted (fails with LB Rule-referred) - it is reclaimed automatically when the rule or the rule end-point is deleted. To stop probing such an end-point instead, re-POST it with probeType none",
         "summary": "Delete an LB end-point from monitoring",
         "parameters": [
           {
@@ -9915,7 +9915,7 @@ func init() {
     },
     "/config/endpointhoststate": {
       "post": {
-        "description": "Sets the state of a host which can have multiple endpoints",
+        "description": "Sets the state of a host which can have multiple endpoints. The state affects traffic forwarding only for load-balancer rules created with monitor set to true; rules without it keep forwarding to the host regardless of this state",
         "summary": "Sets the state of a host",
         "parameters": [
           {
@@ -14866,7 +14866,7 @@ func init() {
           "type": "integer"
         },
         "name": {
-          "description": "Endpoint Identifier",
+          "description": "Endpoint Identifier. If omitted, the entry is keyed as <hostName>_<probeType>_<probePort>. To attach this probe to a load-balancer rule end-point (so the rule's monitor flag gates traffic on it), name must be set to <hostName>_<service-protocol>_<targetPort> of that rule end-point - the key the rule itself registers. This allows the probe port to differ from the rule's target port",
           "type": "string"
         },
         "probeDuration": {
@@ -15527,7 +15527,7 @@ func init() {
               ]
             },
             "monitor": {
-              "description": "value for monitoring enabled or not",
+              "description": "enable end-point liveness monitoring for this rule. When true, end-point probe results (see /config/endpoint) are synced into the rule and probe-failed end-points are taken out of the forwarding rotation. When false, probes still report currState but never affect forwarding. monitor may be set without a rule-level probetype - each end-point then keeps its own probe settings, which can be customized per end-point via /config/endpoint",
               "type": "boolean"
             },
             "name": {
@@ -15733,7 +15733,7 @@ func init() {
           ]
         },
         "monitor": {
-          "description": "value for monitoring enabled or not",
+          "description": "enable end-point liveness monitoring for this rule. When true, end-point probe results (see /config/endpoint) are synced into the rule and probe-failed end-points are taken out of the forwarding rotation. When false, probes still report currState but never affect forwarding. monitor may be set without a rule-level probetype - each end-point then keeps its own probe settings, which can be customized per end-point via /config/endpoint",
           "type": "boolean"
         },
         "name": {
