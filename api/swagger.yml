@@ -4029,7 +4029,9 @@ definitions:
               but never affect forwarding. monitor may be set without a
               rule-level probetype - each end-point then keeps its own probe
               settings, which can be customized per end-point via
-              /config/endpoint
+              /config/endpoint. Setting probetype to any value other than
+              none forces monitor to true - to disable monitoring, omit
+              probetype or set it to none
           probetype:
             type: string
             enum: [tcp, udp, sctp, http, https, ping, none]

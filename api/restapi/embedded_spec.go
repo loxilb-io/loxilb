@@ -6961,7 +6961,7 @@ func init() {
               ]
             },
             "monitor": {
-              "description": "enable end-point liveness monitoring for this rule. When true, end-point probe results (see /config/endpoint) are synced into the rule and probe-failed end-points are taken out of the forwarding rotation. When false, probes still report currState but never affect forwarding. monitor may be set without a rule-level probetype - each end-point then keeps its own probe settings, which can be customized per end-point via /config/endpoint",
+              "description": "enable end-point liveness monitoring for this rule. When true, end-point probe results (see /config/endpoint) are synced into the rule and probe-failed end-points are taken out of the forwarding rotation. When false, probes still report currState but never affect forwarding. monitor may be set without a rule-level probetype - each end-point then keeps its own probe settings, which can be customized per end-point via /config/endpoint. Setting probetype to any value other than none forces monitor to true - to disable monitoring, omit probetype or set it to none",
               "type": "boolean"
             },
             "name": {
@@ -15527,7 +15527,7 @@ func init() {
               ]
             },
             "monitor": {
-              "description": "enable end-point liveness monitoring for this rule. When true, end-point probe results (see /config/endpoint) are synced into the rule and probe-failed end-points are taken out of the forwarding rotation. When false, probes still report currState but never affect forwarding. monitor may be set without a rule-level probetype - each end-point then keeps its own probe settings, which can be customized per end-point via /config/endpoint",
+              "description": "enable end-point liveness monitoring for this rule. When true, end-point probe results (see /config/endpoint) are synced into the rule and probe-failed end-points are taken out of the forwarding rotation. When false, probes still report currState but never affect forwarding. monitor may be set without a rule-level probetype - each end-point then keeps its own probe settings, which can be customized per end-point via /config/endpoint. Setting probetype to any value other than none forces monitor to true - to disable monitoring, omit probetype or set it to none",
               "type": "boolean"
             },
             "name": {
@@ -15733,7 +15733,7 @@ func init() {
           ]
         },
         "monitor": {
-          "description": "enable end-point liveness monitoring for this rule. When true, end-point probe results (see /config/endpoint) are synced into the rule and probe-failed end-points are taken out of the forwarding rotation. When false, probes still report currState but never affect forwarding. monitor may be set without a rule-level probetype - each end-point then keeps its own probe settings, which can be customized per end-point via /config/endpoint",
+          "description": "enable end-point liveness monitoring for this rule. When true, end-point probe results (see /config/endpoint) are synced into the rule and probe-failed end-points are taken out of the forwarding rotation. When false, probes still report currState but never affect forwarding. monitor may be set without a rule-level probetype - each end-point then keeps its own probe settings, which can be customized per end-point via /config/endpoint. Setting probetype to any value other than none forces monitor to true - to disable monitoring, omit probetype or set it to none",
           "type": "boolean"
         },
         "name": {
