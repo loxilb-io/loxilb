@@ -21,7 +21,7 @@ done
 
 for((i=0;i<20;i++))
 do
-stdbuf -oL sctp_darn -H 0.0.0.0 -h $extIP -p $sctp_port -s < /vagrant/input > output
+timeout 20 stdbuf -oL sctp_darn -H 0.0.0.0 -h $extIP -p $sctp_port -s < /vagrant/input > output
 #sleep 1
 exp="New connection, peer addresses
 4.0.5.2:55002
