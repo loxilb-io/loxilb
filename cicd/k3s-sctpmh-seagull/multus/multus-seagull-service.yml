@@ -4,7 +4,7 @@ metadata:
   name: multus-seagull-service
   annotations:
     loxilb.io/poolSelectSecondary: "pool2"
-    loxilb.io/multus-nets: macvlan1,macvlan2
+    loxilb.io/multus-nets: macvlan1
     loxilb.io/lbmode: "fullnat"
     loxilb.io/probetype: "ping"
 spec:

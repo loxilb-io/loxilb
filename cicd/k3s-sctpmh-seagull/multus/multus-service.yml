@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: multus-service
   annotations:
-    loxilb.io/multus-nets: macvlan1,macvlan2
+    loxilb.io/multus-nets: macvlan1
     loxilb.io/lbmode: "onearm"
 spec:
   externalTrafficPolicy: Local
