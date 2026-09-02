@@ -75,6 +75,9 @@ cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 br_netfilter
 EOF
 
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
 # Install ipvs related modules
 sudo modprobe ip_vs
 sudo modprobe ip_vs_rr
