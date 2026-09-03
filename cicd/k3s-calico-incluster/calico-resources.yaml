@@ -1,0 +1,41 @@
+# Calico installation for this scenario.
+#
+# Based on the upstream v3.26.0 manifests/custom-resources.yaml, with two
+# changes that the stock file cannot know about:
+#
+#   nodeAddressAutodetectionV4
+#     The masters sit on two private networks and the workers on only one, so
+#     the default first-found autodetection picks 192.168.90.x on the masters
+#     and 192.168.80.x on the workers. bird then binds BGP to an address the
+#     other side has no route back to, the node-to-node mesh never leaves
+#     Connect/Passive, and calico-node stays 0/1 with "Number of node(s) with
+#     BGP peering established = 0". Pin autodetection to the network every
+#     node shares.
+#
+#   ipPools[0].cidr
+#     The upstream default is 192.168.0.0/16, which overlaps the host networks
+#     this scenario runs on. Use the cluster CIDR k3s is started with instead.
+apiVersion: operator.tigera.io/v1
+kind: Installation
+metadata:
+  name: default
+spec:
+  calicoNetwork:
+    nodeAddressAutodetectionV4:
+      cidrs:
+        - 192.168.80.0/24
+    # Note: The ipPools section cannot be modified post-install.
+    ipPools:
+    - blockSize: 26
+      cidr: 10.42.0.0/16
+      encapsulation: VXLANCrossSubnet
+      natOutgoing: Enabled
+      nodeSelector: all()
+
+---
+
+apiVersion: operator.tigera.io/v1
+kind: APIServer
+metadata:
+  name: default
+spec: {}
