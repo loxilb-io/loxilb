@@ -5,6 +5,10 @@ on:
   # Enable once a few manual runs are green:
   # schedule:
   # - cron: '0 12 * * *'
+  # TEMPORARY (remove before merge): run on pushes to the development branch so the first runs
+  # happen on the upstream hosted runners without the workflow being on the default branch yet.
+  push:
+    branches: [ci/kind-kubevirt-multus]
   workflow_dispatch:
     inputs:
       testName:
