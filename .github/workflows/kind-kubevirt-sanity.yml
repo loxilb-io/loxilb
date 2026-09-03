@@ -77,6 +77,14 @@ jobs:
         working-directory: cicd/kind-kubevirt-multus
         run: EXTENDED=only ./validation_vm_secnet.sh 2>&1 | tee extended.log
 
+      # Case 2b needs kube-loxilb's VM-aware endpoint discovery (VMI status); xfail until that ships.
+      - name: Static-address VM (case 2b, VMI status endpoints) - xfail
+        id: static
+        if: always() && steps.validate.conclusion != 'skipped'
+        continue-on-error: true
+        working-directory: cicd/kind-kubevirt-multus
+        run: ./validation_vm_static.sh 2>&1 | tee static.log
+
       - name: Job summary
         if: always()
         working-directory: cicd/kind-kubevirt-multus
@@ -85,10 +93,11 @@ jobs:
             echo "## kind-kubevirt-multus"
             echo
             echo '```'
-            grep -h -E '^kind-kubevirt-multus.*\[(OK|FAILED)\]' validation.log extended.log 2>/dev/null || echo "(no results)"
+            grep -h -E '^kind-kubevirt-multus.*\[(OK|FAILED)\]' validation.log extended.log static.log 2>/dev/null || echo "(no results)"
             echo '```'
             echo
             echo "extended checks (xfail): ${{ steps.extended.outcome }}"
+            echo "static-address VM (xfail): ${{ steps.static.outcome }}"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload logs

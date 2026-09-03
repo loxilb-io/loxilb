@@ -1,0 +1,64 @@
+# KubeVirt VM whose secondary interface has a STATIC address (cloud-init), attached to the IPAM-less NAD
+# "secnet-static". Nothing in Kubernetes carries this address except the VMI status (guest agent), so it
+# exercises kube-loxilb's VM-aware endpoint discovery. The address survives live migration.
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-static
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        vm: static
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels: { vm: web }
+              topologyKey: kubernetes.io/hostname
+      domain:
+        resources:
+          requests:
+            memory: 1Gi
+        devices:
+          disks:
+            - name: containerdisk
+              disk: { bus: virtio }
+            - name: cloudinitdisk
+              disk: { bus: virtio }
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: secnet
+              bridge: {}
+      networks:
+        - name: default
+          pod: {}
+        - name: secnet
+          multus:
+            networkName: secnet-static
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            networkData: |
+              version: 2
+              ethernets:
+                enp1s0:
+                  dhcp4: true
+                enp2s0:
+                  addresses: [123.123.123.204/28]
+            userData: |
+              #cloud-config
+              password: fedora
+              chpasswd: { expire: False }
+              runcmd:
+                - systemctl disable --now firewalld || true
+                - mkdir -p /srv/www && echo vm-static > /srv/www/index.html
+                - nohup python3 -m http.server 80 --directory /srv/www >/var/log/httpsrv.log 2>&1 &

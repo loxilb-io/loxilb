@@ -48,11 +48,12 @@ count_responses(){
   echo "    :$1 responses  vm=$VM_N pod=$POD_N other=$OTHER_N (of $CURL_COUNT)"
 }
 
-# sustained_ok <port> <rounds> <requests-per-round> <sleep-s>: every request in every round must answer "vm"
+# sustained_ok <port> <rounds> <requests-per-round> <sleep-s> [expected]: every request in every round must
+# answer with the expected body (default "vm")
 sustained_ok(){
-  local port=$1 rounds=$2 n=$3 gap=$4 r i ok bad=0
+  local port=$1 rounds=$2 n=$3 gap=$4 want=${5:-vm} r i ok bad=0
   for r in $(seq 1 "$rounds"); do
-    ok=0; for i in $(seq 1 "$n"); do [ "$(client_curl "$port")" = vm ] && ok=$((ok+1)); done
+    ok=0; for i in $(seq 1 "$n"); do [ "$(client_curl "$port")" = "$want" ] && ok=$((ok+1)); done
     echo "    round $r: $ok/$n ok  (loxilb eps: $(lb_ep_list "$port"))"; [ $ok -eq "$n" ] || bad=$((bad+1))
     [ "$r" -lt "$rounds" ] && sleep "$gap"
   done

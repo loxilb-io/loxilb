@@ -1,0 +1,16 @@
+# Case 2b: the endpoint is the VM's static secondary address, known only from the VMI status.
+apiVersion: v1
+kind: Service
+metadata:
+  name: vm-static-lb
+  annotations:
+    loxilb.io/multus-nets: secnet-static
+    loxilb.io/lbmode: "onearm"
+spec:
+  loadBalancerClass: loxilb.io/loxilb
+  selector:
+    vm: static
+  ports:
+    - port: 55004
+      targetPort: 80
+  type: LoadBalancer

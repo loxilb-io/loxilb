@@ -9,7 +9,8 @@
 #        └─ client container 123.123.123.206
 #
 # Env knobs: CLUSTER, LOXILB_IMAGE, KUBE_LOXILB_IMAGE, CLIENT_IMAGE, CNI_PLUGINS_VERSION,
-#            KUBEVIRT_VERSION, KUBEVIRT_EMULATION (auto|0|1), MTU
+#            KUBEVIRT_VERSION, KUBEVIRT_EMULATION (auto|0|1), MTU,
+#            LOCAL_IMAGES ("img:tag ..." to kind-load, use with IMAGE_PULL_POLICY=IfNotPresent)
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -60,6 +61,11 @@ log "2. kind cluster $CLUSTER (control-plane + 2 workers)"
 kind create cluster --name "$CLUSTER" --config kind-config.yaml --wait 180s
 kubectl config use-context "kind-$CLUSTER" >/dev/null
 
+if [ -n "${LOCAL_IMAGES:-}" ]; then
+  log "2b. loading local images into the kind nodes: $LOCAL_IMAGES"
+  for img in $LOCAL_IMAGES; do kind load docker-image --name "$CLUSTER" "$img"; done
+fi
+
 log "3. secondary L2: docker network $SECNET, eth1 + br-sec + CNI plugins on every node"
 docker network create -o com.docker.network.driver.mtu=$MTU --subnet "$SECNET_SUBNET" --ip-range "$SECNET_DOCKER_RANGE" "$SECNET" >/dev/null
 for n in $(kind get nodes --name "$CLUSTER"); do
@@ -75,11 +81,11 @@ kubectl apply -f multus/multus-daemonset.yml >/dev/null
 kubectl apply -f multus/whereabouts/ >/dev/null
 kubectl -n kube-system rollout status ds/kube-multus-ds --timeout=300s
 kubectl -n kube-system rollout status ds/whereabouts --timeout=300s
-kubectl apply -f multus/nad-secnet.yml
+kubectl apply -f multus/nad-secnet.yml -f multus/nad-secnet-static.yml
 
 log "5. in-cluster loxilb ($LOXILB_IMAGE) + kube-loxilb ($KUBE_LOXILB_IMAGE)"
 sed "s#ghcr.io/loxilb-io/loxilb:latest#${LOXILB_IMAGE}#" yaml/loxilb.yaml | kubectl apply -f - >/dev/null
-sed "s#ghcr.io/loxilb-io/kube-loxilb:latest#${KUBE_LOXILB_IMAGE}#" yaml/kube-loxilb.yaml | kubectl apply -f - >/dev/null
+sed -e "s#ghcr.io/loxilb-io/kube-loxilb:latest#${KUBE_LOXILB_IMAGE}#" -e "s#imagePullPolicy: Always#imagePullPolicy: ${IMAGE_PULL_POLICY:-Always}#" yaml/kube-loxilb.yaml | kubectl apply -f - >/dev/null
 kubectl rollout status ds/loxilb-lb --timeout=300s
 kubectl -n kube-system rollout status deploy/kube-loxilb --timeout=300s
 LP=$(kubectl get pod -l app=loxilb-app -o jsonpath='{.items[0].metadata.name}')

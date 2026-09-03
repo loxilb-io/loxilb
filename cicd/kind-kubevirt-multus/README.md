@@ -34,6 +34,7 @@ failure dumps VMI status, virt-launcher annotations, `loxicmd get lb/ep/ct` and 
 | case1 usepodnetwork | `web-lb-podnet` :55012, `loxilb.io/usepodnetwork` | same |
 | case2 | `vm-secnet-lb` :55003, `loxilb.io/multus-nets: secnet` | loxilb endpoint is the VM's secnet IP and 5/5 requests answer `vm` |
 | case2-ext (`EXTENDED=1`) | same | traffic recovers after `kubectl delete vmi` (new launcher pod, new IP) and after a live migration to the other worker |
+| case2b (`validation_vm_static.sh`) | `vm-static-lb` :55004, `loxilb.io/multus-nets: secnet-static` | the VM's *static* secondary address (no IPAM, known only from the VMI status) is the endpoint, 5/5 answer `vm-static`, and traffic stays up across a live migration. Needs kube-loxilb with VM-aware endpoint discovery |
 
 `EXTENDED=only ./validation_vm_secnet.sh` runs just the extended checks (the workflow runs them as a
 separate, initially `continue-on-error`, step). `CURL_COUNT` (default 20) sets the sample size.
@@ -46,6 +47,7 @@ Environment knobs:
 | `KUBEVIRT_VERSION` | KubeVirt `stable.txt` (fallback v1.9.0) | pin KubeVirt |
 | `KUBEVIRT_EMULATION` | `auto` (1 when `/dev/kvm` is missing in docker) | force TCG emulation |
 | `CNI_PLUGINS_VERSION` | v1.9.1 | reference CNI plugins installed into the nodes (bridge etc.) |
+| `LOCAL_IMAGES`, `IMAGE_PULL_POLICY` | empty, `Always` | `kind load` locally built images (e.g. `LOCAL_IMAGES=ghcr.io/loxilb-io/kube-loxilb:dev KUBE_LOXILB_IMAGE=ghcr.io/loxilb-io/kube-loxilb:dev IMAGE_PULL_POLICY=IfNotPresent`) |
 | `CLUSTER`, `SECNET`, `CLIENT_IMAGE`, `MTU` | `kv`, `secnet`, nettest, 1500 | rarely needed |
 
 ## Things that are not obvious (learned in the Phase 0 probe)

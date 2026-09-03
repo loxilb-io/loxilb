@@ -60,6 +60,14 @@ rules:
       - watch
       - list
   - apiGroups:
+      - kubevirt.io
+    resources:
+      - virtualmachineinstances
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups:
       - authentication.k8s.io
     resources:
       - tokenreviews

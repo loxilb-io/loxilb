@@ -1,0 +1,15 @@
+# Same L2 as "secnet" (br-sec) but without IPAM: for guests that configure their own static address.
+# The pod's network-status carries no IP here, so kube-loxilb must learn the address from the VMI status.
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: secnet-static
+spec:
+  config: '{
+    "cniVersion": "0.3.1",
+    "name": "secnet-static",
+    "type": "bridge",
+    "bridge": "br-sec",
+    "isGateway": false,
+    "ipMasq": false
+  }'
