@@ -35,6 +35,9 @@ jobs:
     # Manual runs are allowed anywhere (forks included); scheduled runs stay on the upstream repository.
     if: github.event_name == 'workflow_dispatch' || github.repository == 'loxilb-io/loxilb'
     timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash          # bash -eo pipefail: a failing script piped into tee must fail the step
     env:
       KIND_VERSION: v0.33.0
       LOXILB_IMAGE: ${{ github.event.inputs.loxilbImage || 'ghcr.io/loxilb-io/loxilb:latest' }}

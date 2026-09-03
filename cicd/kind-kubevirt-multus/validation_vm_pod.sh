@@ -16,8 +16,10 @@ done
 kubectl get svc web-lb-nodeport web-lb-podnet
 loxicmd get lb -o wide | grep -E "EXT IP|5501[12]"
 
-log "guest http up (any answer via :55011)"
-wait_for "first answer via VIP:55011" 300 bash -c "docker exec $CLIENT curl -s -m 3 http://$VIP:55011/ | grep -q ." || true
+log "VM reachable through the VIP (pod answers immediately; the VM path must be up too)"
+for s in web-lb-nodeport:55011 web-lb-podnet:55012; do
+  wait_for "a 'vm' answer via VIP:${s#*:}" 300 bash -c "for i in 1 2 3 4; do docker exec $CLIENT curl -s -m 3 http://$VIP:${s#*:}/ | grep -q '^vm' && exit 0; done; exit 1" || true
+done
 
 log "distribution ($CURL_COUNT requests per service)"
 count_responses 55011; [ $VM_N -gt 0 ] && [ $POD_N -gt 0 ]; check "case1 nodeport-local :55011 (vm=$VM_N pod=$POD_N)" $?

@@ -65,6 +65,10 @@ ensure_workloads(){
   kubectl wait pod/pod-web --for=condition=Ready --timeout=300s >/dev/null && echo "    pod-web Ready on $(kubectl get pod pod-web -o jsonpath='{.spec.nodeName}')"
   wait_for "vmi vm-web exists" 120 kubectl get vmi vm-web
   kubectl wait vmi vm-web --for=condition=Ready --timeout=600s >/dev/null && echo "    vmi vm-web Ready on $(kubectl get vmi vm-web -o jsonpath='{.status.nodeName}') (launcher $(vm_pod))"
+  # VMI Ready only means the domain runs; cloud-init starts the http server ~60 s later. Wait for it via the
+  # secnet ip (reachable from the client) so that neither case counts requests against a booting guest.
+  local vmip; vmip=$(secnet_ip_of_pod "$(vm_pod)")
+  wait_for "guest http up (client → $vmip:80)" 300 bash -c "docker exec $CLIENT curl -s -m 3 http://$vmip/ | grep -q '^vm'"
 }
 
 dump_debug(){
