@@ -27,6 +27,10 @@ on:
         description: 'KubeVirt version (empty = stable.txt)'
         required: false
         default: ''
+      kubeLoxilbRef:
+        description: 'Build kube-loxilb from source: owner/repo@ref (overrides kubeLoxilbImage)'
+        required: false
+        default: ''
 
 jobs:
   test-runner:
@@ -43,6 +47,8 @@ jobs:
       LOXILB_IMAGE: ${{ github.event.inputs.loxilbImage || 'ghcr.io/loxilb-io/loxilb:latest' }}
       KUBE_LOXILB_IMAGE: ${{ github.event.inputs.kubeLoxilbImage || 'ghcr.io/loxilb-io/kube-loxilb:latest' }}
       KUBEVIRT_VERSION: ${{ github.event.inputs.kubevirtVersion }}
+      # TEMPORARY default (remove before merge): push-trigger runs build the kube-loxilb PR branch under test.
+      KUBE_LOXILB_BUILD_FROM: ${{ github.event.inputs.kubeLoxilbRef || 'backguynn/kube-loxilb@feat/kubevirt-vm-endpoints' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -58,6 +64,20 @@ jobs:
           curl -sSLo kind "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
           chmod +x kind && sudo mv kind /usr/local/bin/kind
           kind version && kubectl version --client
+
+      # Feature loop: validate a kube-loxilb development branch without publishing an image.
+      - name: Build kube-loxilb from source (optional)
+        if: env.KUBE_LOXILB_BUILD_FROM != ''
+        run: |
+          repo="${KUBE_LOXILB_BUILD_FROM%@*}"; ref="${KUBE_LOXILB_BUILD_FROM#*@}"
+          git clone --depth 1 --branch "$ref" "https://github.com/$repo.git" /tmp/kube-loxilb
+          (cd /tmp/kube-loxilb && git log --oneline -1)
+          docker build -t kube-loxilb:dev /tmp/kube-loxilb
+          {
+            echo "KUBE_LOXILB_IMAGE=kube-loxilb:dev"
+            echo "LOCAL_IMAGES=kube-loxilb:dev"
+            echo "IMAGE_PULL_POLICY=IfNotPresent"
+          } >> "$GITHUB_ENV"
 
       - name: Bring up the testbed (kind + multus + loxilb + KubeVirt)
         working-directory: cicd/kind-kubevirt-multus
