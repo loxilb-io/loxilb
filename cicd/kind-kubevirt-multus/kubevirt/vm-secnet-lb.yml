@@ -1,0 +1,16 @@
+# Case 2: endpoints are the VM's secondary (multus "secnet") interface; loxilb reaches it over br-sec.
+apiVersion: v1
+kind: Service
+metadata:
+  name: vm-secnet-lb
+  annotations:
+    loxilb.io/multus-nets: secnet
+    loxilb.io/lbmode: "onearm"
+spec:
+  loadBalancerClass: loxilb.io/loxilb
+  selector:
+    vm: web
+  ports:
+    - port: 55003
+      targetPort: 80
+  type: LoadBalancer

@@ -13,3 +13,4 @@
 [![k0s-weave](https://github.com/loxilb-io/loxilb/actions/workflows/k0s-weave.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/k0s-weave.yml)   
 [![liveness-sanity](https://github.com/loxilb-io/loxilb/actions/workflows/liveness-sanity.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/liveness-sanity.yml)   
 [![K3s-Base-Sanity-CI](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-base-sanity.yml/badge.svg?branch=main)](https://github.com/loxilb-io/loxilb/actions/workflows/k3s-base-sanity.yml)    
+[![Kind-KubeVirt-Multus-Sanity-CI](https://github.com/loxilb-io/loxilb/actions/workflows/kind-kubevirt-sanity.yml/badge.svg)](https://github.com/loxilb-io/loxilb/actions/workflows/kind-kubevirt-sanity.yml)    

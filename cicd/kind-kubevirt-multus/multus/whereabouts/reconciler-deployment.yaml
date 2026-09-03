@@ -1,0 +1,53 @@
+# Don't forget to update deployment/whereabouts-chart/templates/reconciler.yaml as well
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whereabouts-reconciler
+  namespace: kube-system
+  labels:
+    tier: node
+    app: whereabouts-reconciler
+spec:
+  # replicas must not be set to more than 1; there is no leader election, so running multiple replicas would cause duplicate reconciliation.
+  replicas: 1
+  selector:
+    matchLabels:
+      name: whereabouts-reconciler
+  template:
+    metadata:
+      labels:
+        tier: node
+        app: whereabouts-reconciler
+        name: whereabouts-reconciler
+    spec:
+      serviceAccountName: whereabouts
+      containers:
+      - name: whereabouts-reconciler
+        command: [ "/ip-reconciler" ]
+        args:
+          - -log-level
+          - debug
+        image: ghcr.io/k8snetworkplumbingwg/whereabouts:v0.9.4
+        env:
+        - name: WHEREABOUTS_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "50Mi"
+          limits:
+            cpu: "100m"
+            memory: "50Mi"
+        volumeMounts:
+        - name: cron-scheduler-configmap
+          mountPath: /cron-schedule
+      volumes:
+      - name: cron-scheduler-configmap
+        configMap:
+          name: whereabouts-config
+          defaultMode: 0744
+          items:
+          - key: "cron-expression"
+            path: "config"

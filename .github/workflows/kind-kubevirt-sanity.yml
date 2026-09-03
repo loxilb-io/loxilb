@@ -1,0 +1,97 @@
+name: Kind-KubeVirt-Multus-Sanity-CI
+# KubeVirt VM + pod behind loxilb LoadBalancer services on a kind cluster (cicd/kind-kubevirt-multus).
+# Runs on a GitHub-hosted runner: kind nodes are privileged containers, so the host's /dev/kvm is used directly.
+on:
+  # Enable once a few manual runs are green:
+  # schedule:
+  # - cron: '0 12 * * *'
+  workflow_dispatch:
+    inputs:
+      testName:
+        description: 'Test Run-Name'
+        required: true
+        default: 'kind-kubevirt-multus'
+      loxilbImage:
+        description: 'loxilb image'
+        required: false
+        default: 'ghcr.io/loxilb-io/loxilb:latest'
+      kubeLoxilbImage:
+        description: 'kube-loxilb image'
+        required: false
+        default: 'ghcr.io/loxilb-io/kube-loxilb:latest'
+      kubevirtVersion:
+        description: 'KubeVirt version (empty = stable.txt)'
+        required: false
+        default: ''
+
+jobs:
+  test-runner:
+    name: kind-kubevirt-multus-sanity
+    runs-on: ubuntu-24.04
+    if: github.repository == 'loxilb-io/loxilb'
+    timeout-minutes: 60
+    env:
+      KIND_VERSION: v0.33.0
+      LOXILB_IMAGE: ${{ github.event.inputs.loxilbImage || 'ghcr.io/loxilb-io/loxilb:latest' }}
+      KUBE_LOXILB_IMAGE: ${{ github.event.inputs.kubeLoxilbImage || 'ghcr.io/loxilb-io/kube-loxilb:latest' }}
+      KUBEVIRT_VERSION: ${{ github.event.inputs.kubevirtVersion }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Runner facts (KVM, docker, resources)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm || true
+          ls -l /dev/kvm || echo "no /dev/kvm on this runner: KubeVirt will fall back to emulation"
+          docker version --format 'docker {{.Server.Version}}'; nproc; free -g | head -2; df -h / | tail -1
+
+      - name: Install kind
+        run: |
+          curl -sSLo kind "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
+          chmod +x kind && sudo mv kind /usr/local/bin/kind
+          kind version && kubectl version --client
+
+      - name: Bring up the testbed (kind + multus + loxilb + KubeVirt)
+        working-directory: cicd/kind-kubevirt-multus
+        run: ./config.sh 2>&1 | tee config.log
+
+      - name: Validate case 1 (VM + pod) and case 2 (VM secondary NIC)
+        id: validate
+        working-directory: cicd/kind-kubevirt-multus
+        run: ./validation.sh 2>&1 | tee validation.log
+
+      # Known gap (plan G7): after a live migration the guest keeps its old secondary IP while kube-loxilb
+      # follows the new launcher pod's annotation. Kept as xfail until kube-loxilb handles VM endpoints.
+      - name: Extended checks (VMI recreate, live migration) - xfail
+        id: extended
+        if: always() && steps.validate.conclusion != 'skipped'
+        continue-on-error: true
+        working-directory: cicd/kind-kubevirt-multus
+        run: EXTENDED=only ./validation_vm_secnet.sh 2>&1 | tee extended.log
+
+      - name: Job summary
+        if: always()
+        working-directory: cicd/kind-kubevirt-multus
+        run: |
+          {
+            echo "## kind-kubevirt-multus"
+            echo
+            echo '```'
+            grep -h -E '^kind-kubevirt-multus.*\[(OK|FAILED)\]' validation.log extended.log 2>/dev/null || echo "(no results)"
+            echo '```'
+            echo
+            echo "extended checks (xfail): ${{ steps.extended.outcome }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kind-kubevirt-multus-logs
+          path: cicd/kind-kubevirt-multus/*.log
+          if-no-files-found: ignore
+
+      - name: Clean test-bed
+        if: always()
+        working-directory: cicd/kind-kubevirt-multus
+        run: ./rmconfig.sh

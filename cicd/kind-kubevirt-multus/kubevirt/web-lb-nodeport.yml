@@ -1,0 +1,17 @@
+# Case 1 (A): default endpoint mode. externalTrafficPolicy Local → loxilb balances across the nodes that
+# host a backend (kv-worker: VM, kv-worker2: pod); kube-proxy delivers locally.
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-lb-nodeport
+  annotations:
+    loxilb.io/lbmode: "onearm"
+spec:
+  loadBalancerClass: loxilb.io/loxilb
+  externalTrafficPolicy: Local
+  selector:
+    web: "yes"
+  ports:
+    - port: 55011
+      targetPort: 80
+  type: LoadBalancer

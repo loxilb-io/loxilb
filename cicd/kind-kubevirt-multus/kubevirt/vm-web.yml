@@ -1,0 +1,60 @@
+# KubeVirt VM shared by both cases. Answers "vm" on :80.
+#  - default interface: masquerade on the pod network  → case 1 (NodePort / usepodnetwork services)
+#  - secnet interface : bridge binding on the multus NAD → case 2 (loxilb.io/multus-nets service)
+# Labels: web=yes joins the case 1 services together with pod-web; vm=web selects only the VM for case 2.
+# Scheduling prefers a node without pod-web (so kv-worker), but stays migratable to kv-worker2.
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-web
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        web: "yes"
+        vm: web
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels: { app: pod-web }
+              topologyKey: kubernetes.io/hostname
+      domain:
+        resources:
+          requests:
+            memory: 1Gi
+        devices:
+          disks:
+            - name: containerdisk
+              disk: { bus: virtio }
+            - name: cloudinitdisk
+              disk: { bus: virtio }
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: secnet
+              bridge: {}
+      networks:
+        - name: default
+          pod: {}
+        - name: secnet
+          multus:
+            networkName: secnet
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              password: fedora
+              chpasswd: { expire: False }
+              runcmd:
+                - systemctl disable --now firewalld || true
+                - mkdir -p /srv/www && echo vm > /srv/www/index.html
+                - nohup python3 -m http.server 80 --directory /srv/www >/var/log/httpsrv.log 2>&1 &

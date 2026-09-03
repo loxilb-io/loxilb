@@ -1,0 +1,157 @@
+# Dont'forget to update deployment/whereabouts-chart/templates/daemonset.yaml as well
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: whereabouts
+  namespace: kube-system
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: whereabouts
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: whereabouts-cni
+subjects:
+- kind: ServiceAccount
+  name: whereabouts
+  namespace: kube-system
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: whereabouts-cni
+rules:
+- apiGroups:
+  - whereabouts.cni.cncf.io
+  resources:
+  - ippools
+  - overlappingrangeipreservations
+  - nodeslicepools
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - '*'
+- apiGroups: [""]
+  resources:
+  - pods
+  verbs:
+  - list
+  - watch
+  - get
+- apiGroups: [""]
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: ["k8s.cni.cncf.io"]
+  resources:
+    - network-attachment-definitions
+  verbs:
+    - get
+    - list
+    - watch
+- apiGroups:
+  - ""
+  - events.k8s.io
+  resources:
+    - events
+  verbs:
+  - create
+  - patch
+  - update
+  - get
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: whereabouts-config
+  namespace: kube-system
+  annotations:
+    kubernetes.io/description: |
+      Configmap containing user customizable cronjob schedule
+data:
+  cron-expression: "30 4 * * *" # Default schedule is once per day at 4:30am. Users may configure this value to their liking.
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: whereabouts
+  namespace: kube-system
+  labels:
+    tier: node
+    app: whereabouts
+spec:
+  selector:
+    matchLabels:
+      name: whereabouts
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        tier: node
+        app: whereabouts
+        name: whereabouts
+    spec:
+      hostNetwork: true
+      serviceAccountName: whereabouts
+      tolerations:
+      - operator: Exists
+        effect: NoSchedule
+      containers:
+      - name: whereabouts
+        command: [ "/bin/sh" ]
+        args:
+          - -c
+          - |
+            SLEEP=false source /install-cni.sh
+            /token-watcher.sh &
+            /ip-control-loop -log-level debug
+        image: ghcr.io/k8snetworkplumbingwg/whereabouts:v0.9.4
+        env:
+        - name: NODENAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: WHEREABOUTS_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "100Mi"
+          limits:
+            cpu: "100m"
+            memory: "200Mi"
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: cnibin
+          mountPath: /host/opt/cni/bin
+        - name: cni-net-dir
+          mountPath: /host/etc/cni/net.d
+      volumes:
+        - name: cnibin
+          hostPath:
+            path: /opt/cni/bin
+        - name: cni-net-dir
+          hostPath:
+            path: /etc/cni/net.d

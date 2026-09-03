@@ -1,0 +1,21 @@
+# Secondary L2 for VMs and pods. Must be the linux "bridge" CNI: KubeVirt bridge binding moves the pod
+# NIC's MAC into the guest, which macvlan cannot deliver to (unicast dropped). br-sec is created on every
+# kind node by config.sh with eth1 (the "secnet" docker network) enslaved.
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: secnet
+spec:
+  config: '{
+    "cniVersion": "0.3.1",
+    "name": "secnet",
+    "type": "bridge",
+    "bridge": "br-sec",
+    "isGateway": false,
+    "ipMasq": false,
+    "ipam": {
+      "type": "whereabouts",
+      "range": "123.123.123.192/28",
+      "exclude": ["123.123.123.205/32", "123.123.123.206/32"]
+    }
+  }'

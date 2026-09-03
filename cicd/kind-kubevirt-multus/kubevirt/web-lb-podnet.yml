@@ -1,0 +1,17 @@
+# Case 1 (B): loxilb targets the pod IPs directly (nginx pod and the VM's virt-launcher pod, whose
+# masquerade binding NATs :80 into the guest).
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-lb-podnet
+  annotations:
+    loxilb.io/lbmode: "onearm"
+    loxilb.io/usepodnetwork: "yes"
+spec:
+  loadBalancerClass: loxilb.io/loxilb
+  selector:
+    web: "yes"
+  ports:
+    - port: 55012
+      targetPort: 80
+  type: LoadBalancer

@@ -1,0 +1,21 @@
+# Plain pod backend for case 1. Answers "pod" on :80. Pinned to kv-worker2 so that the VM (which prefers
+# a node without this pod) lands on kv-worker and the NodePort/Local service gets two node endpoints.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-web
+  labels:
+    app: pod-web
+    web: "yes"
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: kv-worker2
+  containers:
+  - name: web
+    image: nginx:alpine
+    command: ["/bin/sh", "-c", "echo pod > /usr/share/nginx/html/index.html && exec nginx -g 'daemon off;'"]
+    ports:
+    - containerPort: 80
+    readinessProbe:
+      httpGet: { path: /, port: 80 }
+      periodSeconds: 2
