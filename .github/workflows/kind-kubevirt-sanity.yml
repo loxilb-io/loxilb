@@ -28,7 +28,8 @@ jobs:
   test-runner:
     name: kind-kubevirt-multus-sanity
     runs-on: ubuntu-24.04
-    if: github.repository == 'loxilb-io/loxilb'
+    # Manual runs are allowed anywhere (forks included); scheduled runs stay on the upstream repository.
+    if: github.event_name == 'workflow_dispatch' || github.repository == 'loxilb-io/loxilb'
     timeout-minutes: 60
     env:
       KIND_VERSION: v0.33.0
