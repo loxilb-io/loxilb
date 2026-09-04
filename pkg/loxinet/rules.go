@@ -3464,6 +3464,16 @@ func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool) erro
 			R.zone.L3.IfaDelete(dev, utils.IPHostCIDRString(IP))
 		}
 		ev, _, iface := R.zone.L3.IfaSelectAny(IP, false)
+		if ev != 0 || iface == "" || iface == "lo" {
+			// A VIP bound to lo (or one outside every local subnet) has no
+			// L2-adjacent interface of its own. Derive the egress interface
+			// from the system routing table instead, so the gratuitous ARP
+			// always leaves via the actual external-facing interface.
+			if rtIface := utils.RouteGetEgressIfName(IP); rtIface != "" {
+				iface = rtIface
+				ev = 0
+			}
+		}
 		if ev == 0 {
 			ifname := "lo"
 			if tk.IsNetIPv6(IP.String()) {
