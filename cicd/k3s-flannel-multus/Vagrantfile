@@ -16,11 +16,17 @@ Vagrant.configure("2") do |config|
   config.vm.define "bastion" do |bastion|
     bastion.vm.hostname = 'bastion'
     bastion.vm.network :private_network, ip: "4.0.5.3", :netmask => "255.255.255.0"
+    # Client side of the SCTP multihoming paths that kube-loxilb advertises
+    # as pool3 (4.0.3.1/24) and pool2 (4.0.4.1/24).
+    bastion.vm.network :private_network, ip: "4.0.3.3", :netmask => "255.255.255.0"
+    bastion.vm.network :private_network, ip: "4.0.4.3", :netmask => "255.255.255.0"
     bastion.vm.provision :shell, :path => "bastion.sh"
     bastion.vm.provider :virtualbox do |vbox|
         vbox.customize ["modifyvm", :id, "--memory", 2048]
         vbox.customize ["modifyvm", :id, "--cpus", 2]
         vbox.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+        vbox.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
+        vbox.customize ["modifyvm", :id, "--nicpromisc4", "allow-all"]
     end
   end
 
@@ -28,12 +34,19 @@ Vagrant.configure("2") do |config|
     loxilb.vm.hostname = 'llb1'
     loxilb.vm.network :private_network, ip: "4.0.5.2", :netmask => "255.255.255.0"
     loxilb.vm.network :private_network, ip: "4.0.6.149", :netmask => "255.255.255.0"
+    # Secondary SCTP multihoming paths. kube-loxilb hands these out as
+    # pool3 (4.0.3.1/24) and pool2 (4.0.4.1/24), and host_validation.sh
+    # expects both in the peer address list, so they have to exist here.
+    loxilb.vm.network :private_network, ip: "4.0.3.1", :netmask => "255.255.255.0"
+    loxilb.vm.network :private_network, ip: "4.0.4.1", :netmask => "255.255.255.0"
     loxilb.vm.provision :shell, :path => "loxilb.sh"
     loxilb.vm.provider :virtualbox do |vbox|
         vbox.customize ["modifyvm", :id, "--memory", 6000]
         vbox.customize ["modifyvm", :id, "--cpus", 4]
         vbox.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
         vbox.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
+        vbox.customize ["modifyvm", :id, "--nicpromisc4", "allow-all"]
+        vbox.customize ["modifyvm", :id, "--nicpromisc5", "allow-all"]
     end
   end
 

@@ -4,7 +4,7 @@ metadata:
   name: macvlan1
 spec:
   config: '{
-            "cniVersion": "0.3.1",
+            "cniVersion": "1.0.0",
             "type": "macvlan",
             "master": "eth2",
             "mode": "bridge",
@@ -15,13 +15,13 @@ spec:
                          "subnet": "4.0.6.0/24",
                          "rangeStart": "4.0.6.3",
                          "rangeEnd": "4.0.6.100",
-                         "routes": [
-                            {
-                              "dst": "0.0.0.0/0"
-                            }
-                         ],
                          "gateway": "4.0.6.149"
                     } ]
+                ],
+                "routes": [
+                    { "dst": "4.0.5.0/24", "gw": "4.0.6.149" },
+                    { "dst": "4.0.4.0/24", "gw": "4.0.6.149" },
+                    { "dst": "4.0.3.0/24", "gw": "4.0.6.149" }
                 ]
             }
         }'

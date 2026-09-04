@@ -1,5 +1,19 @@
-# This section includes base Calico installation configuration.
-# For more information, see: https://projectcalico.docs.tigera.io/master/reference/installation/api#operator.tigera.io/v1.Installation
+# Calico installation for this scenario.
+#
+# Based on the upstream manifests/custom-resources.yaml, with two changes the
+# stock file cannot know about:
+#
+#   ipPools[*].cidr
+#     The upstream defaults are 192.168.0.0/16 and 2002::0/64, neither of which
+#     is the cluster CIDR k3s is started with here. 192.168.0.0/16 also overlaps
+#     the VirtualBox host-only networks this machine runs its other scenarios on.
+#     Use the CIDRs from --cluster-cidr instead.
+#
+#   nodeAddressAutodetection{V4,V6}
+#     The k3s server runs on the host, which has many interfaces. First-found
+#     autodetection picks an arbitrary one, while k3s is started with
+#     --node-ip=12.12.12.254,8ffe::2. Pin autodetection to the veth pair that
+#     carries those addresses so calico and kubelet agree on the node address.
 apiVersion: operator.tigera.io/v1
 kind: Installation
 metadata:
@@ -7,15 +21,21 @@ metadata:
 spec:
   # Configures Calico networking.
   calicoNetwork:
+    nodeAddressAutodetectionV4:
+      cidrs:
+        - 12.12.12.0/24
+    nodeAddressAutodetectionV6:
+      cidrs:
+        - 8ffe::/96
     # Note: The ipPools section cannot be modified post-install.
     ipPools:
     - blockSize: 26
-      cidr: 192.168.0.0/16
+      cidr: 10.42.0.0/16
       encapsulation: VXLANCrossSubnet
       natOutgoing: Enabled
       nodeSelector: all()
     - blockSize: 122
-      cidr: 2002::0/64
+      cidr: 4dde::/64
       encapsulation: None
       natOutgoing: Enabled
       nodeSelector: all()
@@ -23,10 +43,9 @@ spec:
 ---
 
 # This section configures the Calico API server.
-# For more information, see: https://projectcalico.docs.tigera.io/master/reference/installation/api#operator.tigera.io/v1.APIServer
+# For more information, see: https://docs.tigera.io/calico/latest/reference/installation/api#operator.tigera.io/v1.APIServer
 apiVersion: operator.tigera.io/v1
 kind: APIServer
 metadata:
   name: default
 spec: {}
-

@@ -1,12 +1,5 @@
 #!/bin/bash
-VMs=$(vagrant global-status  | grep -i virtualbox)
-while IFS= read -a VMs; do
-    read -a vm <<< "$VMs"
-    cd ${vm[4]} 2>&1>/dev/null
-    echo "Destroying ${vm[1]}"
-    vagrant destroy -f ${vm[1]}
-    cd - 2>&1>/dev/null
-done <<< "$VMs"
+vagrant destroy -f
 
 vagrant up
 

@@ -1,3 +1,10 @@
+# Not empty on purpose, and not a placeholder.
+# This is stdin for "sctp_darn -s". sctp_darn only opens the SCTP association
+# once it has read a line, and the validation greps the client output for the
+# peer address list that "New connection, peer addresses" introduces when the
+# association comes up. A zero-byte file means no association, no output and a
+# failed check. The blank lines below are the payload; their content does not
+# matter, only that at least one line exists.
 
 
 
