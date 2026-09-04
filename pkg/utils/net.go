@@ -264,6 +264,10 @@ func IsIPHostNetAddr(ip net.IP) bool {
 
 // NetAdvertiseVIP4Req - sends a gratuitous arp reply given the DIP, SIP and interface name
 func NetAdvertiseVIP4Req(AdvIP net.IP, ifName string) (int, error) {
+	if AdvIP == nil || ifName == "" || ifName == "lo" {
+		return -1, errors.New("invalid parameters")
+	}
+
 	bcAddr := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
 	fd, err := syscall.Socket(syscall.AF_PACKET, syscall.SOCK_DGRAM, int(tk.Htons(syscall.ETH_P_ARP)))
 	if err != nil {
@@ -513,6 +517,60 @@ func ArpResolver(dIP uint32) {
 		}
 		return
 	}
+}
+
+// routeLinkName - Given a route, return the name of its egress link.
+// Returns "" when the link can not be resolved or is a loopback (e.g. the
+// local route of a VIP bound to lo)
+func routeLinkName(r nlp.Route) string {
+	link, err := nlp.LinkByIndex(r.LinkIndex)
+	if err != nil {
+		return ""
+	}
+	attrs := link.Attrs()
+	if attrs.Flags&net.FlagLoopback != 0 {
+		return ""
+	}
+	return attrs.Name
+}
+
+// RouteGetEgressIfName - Select the egress interface for reaching dst as per
+// the system routing table. Lookup results on loopback (e.g. the local route
+// of a VIP bound to lo) are skipped, falling back to the egress interface of
+// the default route. Returns "" when no usable egress interface is found.
+func RouteGetEgressIfName(dst net.IP) string {
+	v6 := dst != nil && dst.To4() == nil
+
+	if dst != nil {
+		if routes, err := nlp.RouteGet(dst); err == nil {
+			for _, r := range routes {
+				if name := routeLinkName(r); name != "" {
+					return name
+				}
+			}
+		}
+	}
+
+	// dst may only resolve to a local route on lo; use the default route's
+	// egress interface (the external-facing interface) in that case
+	family := nlp.FAMILY_V4
+	if v6 {
+		family = nlp.FAMILY_V6
+	}
+	routes, err := nlp.RouteList(nil, family)
+	if err != nil {
+		return ""
+	}
+	for _, r := range routes {
+		if r.Dst != nil && !r.Dst.IP.IsUnspecified() {
+			continue
+		}
+		if name := routeLinkName(r); name != "" {
+			return name
+		}
+	}
+
+	return ""
 }
 
 func MkTunFsIfNotExist() error {
