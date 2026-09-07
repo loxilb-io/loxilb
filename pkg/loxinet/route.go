@@ -420,11 +420,21 @@ func (r *RtH) rtDeleteCommon(Dst net.IPNet, Zone string, host bool) (int, error)
 		tR = r.Trie6
 	}
 	ones, _ := Dst.Mask.Size()
-	if (ones != 32 && ones != 128) || !r.Zone.Rules.IsIPRuleVIP(Dst.IP) {
-		tret := tR.DelTrie(Dst.String())
-		if tret != 0 {
+	// Always attempt the trie delete. RtAdd skips the trie insert for host routes
+	// that were rule VIPs at insert time, and IsIPRuleVIP is not guaranteed to
+	// return the same answer at delete time, so the condition goes wrong in both
+	// directions - it leaves stale trie entries behind, and it makes an expected
+	// miss abort the rest of the cleanup. Keep going on a miss: bailing out here
+	// used to leak the RtMap entry, the route mark and the datapath self-route on
+	// every rule VIP removal.
+	if tret := tR.DelTrie(Dst.String()); tret != 0 {
+		if ones == 32 || ones == 128 {
+			// The rule VIP delete path hits this on every removal, so a host
+			// route miss stays at debug. This does cost us the double-delete
+			// signal for host routes, which has no other marker left by then.
+			tk.LogIt(tk.LogDebug, "rt delete - %s:%s lpm not found\n", Dst.String(), Zone)
+		} else {
 			tk.LogIt(tk.LogError, "rt delete - %s:%s lpm not found\n", Dst.String(), Zone)
-			return RtTrieDelErr, errors.New("rt-lpm delete error")
 		}
 	}
 
