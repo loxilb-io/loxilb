@@ -3,6 +3,7 @@ kind: Service
 metadata:
   name: nginx-lb
 spec:
+  loadBalancerClass: loxilb.io/loxilb
   selector:
     app.kubernetes.io/name: proxy
   ports:

@@ -14,4 +14,3 @@ sysctl -w net.ipv4.conf.eth1.arp_accept=1 >> /etc/sysctl.conf
 sysctl -w net.ipv4.conf.eth2.arp_accept=1 >> /etc/sysctl.conf
 
 reboot
-"

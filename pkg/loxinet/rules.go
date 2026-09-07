@@ -950,6 +950,38 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleLBEp, doAddOp bool, liv
 	}
 }
 
+// activateEPHostsProbe - Activate liveness probes on the already-created
+// ep-hosts of a rule's end-points. Needed when monitoring is enabled on an
+// existing rule, since modNatEpHost skips end-points whose ep-host entry
+// already exists. Only the probeActivated flag is flipped so probe options
+// set via the ep-host API are preserved
+func (R *RuleH) activateEPHostsProbe(r *ruleEnt, endpoints []ruleLBEp) {
+	R.epMx.Lock()
+	defer R.epMx.Unlock()
+
+	for idx := range endpoints {
+		nep := &endpoints[idx]
+		pType := HostProbePing
+		var pPort uint16
+		if r.tuples.l4Prot.val == 6 {
+			pType = HostProbeConnectTCP
+			pPort = nep.xPort
+		} else if r.tuples.l4Prot.val == 17 {
+			pType = HostProbeConnectUDP
+			pPort = nep.xPort
+		} else if r.tuples.l4Prot.val == 132 {
+			pType = HostProbeConnectSCTP
+			pPort = nep.xPort
+		}
+
+		ep := R.epMap[makeEPKey(nep.xIP.String(), pType, pPort)]
+		if ep != nil && !ep.opts.probeActivated {
+			ep.opts.probeActivated = true
+			ep.initProberOn = true
+		}
+	}
+}
+
 // GetLBRuleByID - Get a LB rule by its identifier
 func (R *RuleH) GetLBRuleByID(ruleID uint32) *ruleEnt {
 	if ruleID < RtMaximumLbs {
@@ -1730,6 +1762,7 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 
 		if eRule.hChk.prbType != serv.ProbeType || eRule.hChk.prbPort != serv.ProbePort ||
 			eRule.hChk.prbReq != serv.ProbeReq || eRule.hChk.prbResp != serv.ProbeResp ||
+			eRule.hChk.actChk != serv.Monitor ||
 			eRule.pTO != serv.PersistTimeout || eRule.act.action.(*ruleLBActs).sel != lBActs.sel ||
 			eRule.act.action.(*ruleLBActs).mode != lBActs.mode ||
 			eRule.ppv2En != serv.ProxyProtocolV2 ||
@@ -1805,12 +1838,24 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		}
 
 		// Update the rule
+		monitorOn := serv.Monitor && !eRule.hChk.actChk
+		if !serv.Monitor && eRule.hChk.actChk {
+			// Monitoring is being turned off. RulesSync will no longer run
+			// syncEPHostState2Rule for this rule, so clear any probe-driven
+			// endpoint state now or dead-marked endpoints would stay out of
+			// rotation forever
+			for idx := range retEps {
+				retEps[idx].noService = false
+				retEps[idx].inActTries = 0
+			}
+		}
 		eRule.hChk.prbType = serv.ProbeType
 		eRule.hChk.prbPort = serv.ProbePort
 		eRule.hChk.prbReq = serv.ProbeReq
 		eRule.hChk.prbResp = serv.ProbeResp
 		eRule.hChk.prbRetries = serv.ProbeRetries
 		eRule.hChk.prbTimeo = serv.ProbeTimeout
+		eRule.hChk.actChk = serv.Monitor
 		eRule.pTO = serv.PersistTimeout
 		eRule.ppv2En = serv.ProxyProtocolV2
 		eRule.act.action.(*ruleLBActs).sel = lBActs.sel
@@ -1839,6 +1884,11 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		if !serv.Snat {
 			R.modNatEpHost(eRule, delEps, false, activateProbe, eRule.egress)
 			R.modNatEpHost(eRule, retEps, true, activateProbe, eRule.egress)
+			if monitorOn {
+				// modNatEpHost skips end-points whose ep-host already exists,
+				// so probes on them need to be activated explicitly
+				R.activateEPHostsProbe(eRule, retEps)
+			}
 			R.electEPSrc(eRule)
 		}
 

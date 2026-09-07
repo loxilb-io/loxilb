@@ -4,7 +4,7 @@ metadata:
   name: multus-sctp-service
   annotations:
     loxilb.io/poolSelectSecondary: "pool2,pool3"
-    loxilb.io/multus-nets: macvlan1,macvlan2
+    loxilb.io/multus-nets: macvlan1
     loxilb.io/lbmode: "fullnat"
 spec:
   externalTrafficPolicy: Local
