@@ -1,13 +1,14 @@
 #!/bin/bash
+set -e
 vagrant destroy -f
 
 vagrant up
-sudo ip route add 123.123.123.1 via 192.168.90.9
+sudo ip route add 123.123.123.1 via 192.168.90.9 || true
 
 for((i=1; i<=60; i++))
 do
     fin=1
-    pods=$(vagrant ssh master -c 'kubectl get pods -A' 2> /dev/null | grep -v "NAMESPACE")
+    pods=$(vagrant ssh master -c 'kubectl get pods -A' 2> /dev/null | grep -v "NAMESPACE" || true)
 
     while IFS= read -a pods; do
         read -a pod <<< "$pods"
@@ -42,7 +43,7 @@ vagrant ssh master -c 'kubectl apply -f /vagrant/yaml/sctp_fullnat.yml' 2> /dev/
 for((i=1; i<=60; i++))
 do
     fin=1
-    pods=$(vagrant ssh master -c 'kubectl get pods -A' 2> /dev/null | grep -v "NAMESPACE")
+    pods=$(vagrant ssh master -c 'kubectl get pods -A' 2> /dev/null | grep -v "NAMESPACE" || true)
 
     while IFS= read -a pods; do
         read -a pod <<< "$pods"

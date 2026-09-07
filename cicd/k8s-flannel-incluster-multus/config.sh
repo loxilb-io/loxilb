@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 vagrant destroy -f
 
 vagrant up
@@ -6,7 +7,7 @@ vagrant up
 for((i=1; i<=60; i++))
 do
     fin=1
-    pods=$(vagrant ssh master -c 'kubectl get pods -A' 2> /dev/null | grep -v "NAMESPACE")
+    pods=$(vagrant ssh master -c 'kubectl get pods -A' 2> /dev/null | grep -v "NAMESPACE" || true)
 
     while IFS= read -a pods; do
         read -a pod <<< "$pods"
@@ -23,7 +24,7 @@ do
     sleep 10
 done
 
-sudo sysctl net.ipv4.conf.vboxnet1.arp_accept=1
+sudo sysctl net.ipv4.conf.vboxnet1.arp_accept=1 || echo "WARN: could not set arp_accept on vboxnet1"
 
 #Create fullnat Service
 #vagrant ssh master -c 'kubectl apply -f /vagrant/yaml/tcp_onearm.yml' 2> /dev/null
@@ -40,7 +41,7 @@ vagrant ssh master -c 'kubectl apply -f /vagrant/multus/multus-service.yml' 2> /
 for((i=1; i<=60; i++))
 do
     fin=1
-    pods=$(vagrant ssh master -c 'kubectl get pods -A' 2> /dev/null | grep -v "NAMESPACE")
+    pods=$(vagrant ssh master -c 'kubectl get pods -A' 2> /dev/null | grep -v "NAMESPACE" || true)
 
     while IFS= read -a pods; do
         read -a pod <<< "$pods"

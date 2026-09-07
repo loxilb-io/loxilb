@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 vagrant destroy -f
 vagrant up
 sudo ip route add 123.123.123.1 via 192.168.90.9 || true
