@@ -18,11 +18,16 @@ package loxinet
 
 import (
 	"net"
+	"sync"
 
+	opts "github.com/loxilb-io/loxilb/options"
 	"github.com/loxilb-io/loxilb/pkg/utils"
 	tk "github.com/loxilb-io/loxilib"
 	nl "github.com/vishvananda/netlink"
 )
+
+// vipAdvDevWarn - the configured device is reported once, not once per sweep
+var vipAdvDevWarn sync.Once
 
 // vipAdvCtx - state shared by one pass over the VIP map
 //
@@ -211,6 +216,10 @@ func pickEgressCand(cands []utils.EgressCand, isPort func(ifIndex int) bool) int
 // link that cannot carry a well formed ARP or NA never reaches a frame builder
 // no matter which step produced it.
 func (R *RuleH) VipAdvIf(IP net.IP, ctx *vipAdvCtx) string {
+	if ifName := R.vipAdvConfIf(); ifName != "" {
+		return ifName
+	}
+
 	v6 := !tk.IsNetIPv4(IP.String())
 	ifName := ""
 
@@ -231,9 +240,40 @@ func (R *RuleH) VipAdvIf(IP net.IP, ctx *vipAdvCtx) string {
 		return ""
 	}
 	if !utils.AdvIfUsableByName(ifName) {
-		tk.LogIt(tk.LogWarning, "vip-adv: %s - %s cannot carry an advertisement\n", IP.String(), ifName)
+		// The caller reports the resolution failure once, on the transition.
+		// This line only says which link was rejected, so it stays at debug.
+		tk.LogIt(tk.LogDebug, "vip-adv: %s - %s cannot carry an advertisement\n", IP.String(), ifName)
 		return ""
 	}
 
 	return ifName
+}
+
+// vipAdvConfIf - the configured advertise interface, "" when there is none to use
+//
+// The escape hatch for the setups automatic resolution cannot get right:
+// multi-homed hosts where the client facing link is not the one the routing
+// table points at, ECMP, and policy routing. A configured device that loxilb
+// has not registered as a port is refused for the same reason step 4 refuses
+// one, and resolution carries on as if nothing were configured.
+func (R *RuleH) vipAdvConfIf() string {
+	dev := opts.Opts.VIPAdvDev
+	if dev == "" {
+		return ""
+	}
+
+	if R.zone.Ports.PortFindByName(dev) == nil {
+		vipAdvDevWarn.Do(func() {
+			tk.LogIt(tk.LogError, "vip-adv: configured dev %s is not a loxilb port, ignored\n", dev)
+		})
+		return ""
+	}
+	if !utils.AdvIfUsableByName(dev) {
+		vipAdvDevWarn.Do(func() {
+			tk.LogIt(tk.LogError, "vip-adv: configured dev %s cannot carry an advertisement, ignored\n", dev)
+		})
+		return ""
+	}
+
+	return dev
 }

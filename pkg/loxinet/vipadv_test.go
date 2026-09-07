@@ -17,6 +17,7 @@
 package loxinet
 
 import (
+	"net"
 	"testing"
 
 	"github.com/loxilb-io/loxilb/pkg/utils"
@@ -108,4 +109,46 @@ func TestPickEgressCand(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestLogVipAdvIfTransitions - the reporter must stay quiet while a VIP keeps
+// resolving to the same interface, and speak up on every change including the
+// first resolution and the first failure. tk.LogIt is a no-op without a logger,
+// so this checks the state it keeps rather than the lines it writes.
+func TestLogVipAdvIfTransitions(t *testing.T) {
+	const key = "20.20.20.1"
+	ip := net.ParseIP(key)
+
+	R := &RuleH{vipMap: map[string]*vipElem{key: {ref: 1}}}
+	ent := R.vipMap[key]
+
+	steps := []struct {
+		iface  string
+		report bool
+	}{
+		{"", true},      // first pass, nothing resolves
+		{"", false},     // still nothing, stay quiet
+		{"eth0", true},  // resolved at last
+		{"eth0", false}, // unchanged
+		{"eth1", true},  // routing moved
+		{"", true},      // link went away
+		{"eth1", true},  // and came back
+	}
+
+	for i, st := range steps {
+		beforeIf, beforeSet := ent.advIf, ent.advIfSet
+		R.logVipAdvIf(ip, ip, st.iface)
+
+		reported := ent.advIf != beforeIf || ent.advIfSet != beforeSet
+		if reported != st.report {
+			t.Fatalf("step %d (%q): reported %v, want %v", i, st.iface, reported, st.report)
+		}
+		if ent.advIf != st.iface || !ent.advIfSet {
+			t.Fatalf("step %d (%q): state %q set %v", i, st.iface, ent.advIf, ent.advIfSet)
+		}
+	}
+
+	// A VIP that is not in the map must not be tracked or panic.
+	R.logVipAdvIf(ip, net.ParseIP("20.20.20.2"), "eth0")
+	R.logVipAdvIf(ip, nil, "eth0")
 }

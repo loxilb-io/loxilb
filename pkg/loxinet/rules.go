@@ -356,6 +356,11 @@ type vipElem struct {
 	pVIP net.IP
 	inst string
 	egr  bool
+	// advIf - the advertise interface last reported for this VIP, "" for none.
+	// Only ever compared against a fresh resolution so the log can stay quiet
+	// while nothing changes; never read back as an answer.
+	advIf    string
+	advIfSet bool
 }
 
 type allowedSrcElem struct {
@@ -3451,6 +3456,37 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 
 }
 
+// logVipAdvIf - report where a VIP is advertised, only when that changes
+//
+// The sweep comes round about every 40 seconds and almost always resolves to
+// the same interface, so reporting every resolution would bury everything else
+// in the log. eIP is the key the VIP is filed under in vipMap.
+func (R *RuleH) logVipAdvIf(IP net.IP, eIP net.IP, iface string) {
+	if eIP == nil {
+		return
+	}
+
+	vipEnt := R.vipMap[eIP.String()]
+	if vipEnt == nil {
+		return
+	}
+	if vipEnt.advIfSet && vipEnt.advIf == iface {
+		return
+	}
+
+	switch {
+	case iface == "":
+		tk.LogIt(tk.LogInfo, "lb-rule vip %s - no interface to advertise on\n", IP.String())
+	case !vipEnt.advIfSet || vipEnt.advIf == "":
+		tk.LogIt(tk.LogInfo, "lb-rule vip %s - advertising on %s\n", IP.String(), iface)
+	default:
+		tk.LogIt(tk.LogInfo, "lb-rule vip %s - advertising on %s, was %s\n", IP.String(), iface, vipEnt.advIf)
+	}
+
+	vipEnt.advIf = iface
+	vipEnt.advIfSet = true
+}
+
 func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool, ctx *vipAdvCtx) error {
 	if inst == "" {
 		inst = cmn.CIDefault
@@ -3468,6 +3504,7 @@ func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool, ctx 
 			R.zone.L3.IfaDelete(dev, utils.IPHostCIDRString(IP))
 		}
 		iface := R.VipAdvIf(IP, ctx)
+		R.logVipAdvIf(IP, eIP, iface)
 
 		// Binding the address, the cloud hook and the neighbour cleanup do not
 		// depend on having found somewhere to advertise - only the gratuitous
@@ -3516,12 +3553,13 @@ func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool, ctx 
 
 	} else if ciState != cmn.CIUnDefStateString {
 		if utils.IsIPHostAddr(IP.String()) {
+			// IPv4 is always on lo. For IPv6 let DelAddrNoHook ask the kernel
+			// which link carries the address: the delete then does not depend
+			// on the resolution the add used, which may since have changed or
+			// been overridden by configuration.
 			ifname := "lo"
 			if tk.IsNetIPv6(IP.String()) {
-				// May come back empty. DelAddrNoHook then asks the kernel which
-				// link actually carries the address, so the delete does not
-				// depend on the same resolution the add did.
-				ifname = R.VipAdvIf(IP, ctx)
+				ifname = ""
 			}
 			if loxinlp.DelAddrNoHook(utils.IPHostCIDRString(IP), ifname) != 0 {
 				tk.LogIt(tk.LogError, "lb-rule vip %s:%s delete failed\n", IP.String(), ifname)
@@ -3636,7 +3674,7 @@ func (R *RuleH) DeleteRuleVIP(VIP net.IP) {
 		if utils.IsIPHostAddr(xVIP.String()) {
 			ifname := "lo"
 			if tk.IsNetIPv6(xVIP.String()) {
-				ifname = R.VipAdvIf(xVIP, nil)
+				ifname = ""
 			}
 			loxinlp.DelAddrNoHook(utils.IPHostCIDRString(xVIP), ifname)
 			if mh.cloudHook != nil {
