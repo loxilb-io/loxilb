@@ -2940,13 +2940,17 @@ func (R *RuleH) RulesSync() {
 	}
 
 	if time.Duration(time.Since(R.vipST).Seconds()) > time.Duration(VIPSweepDuration) {
+		// One main table dump for the whole pass, and only if some VIP needs
+		// one. The context is dropped at the end of the sweep: nothing about
+		// the resolution is remembered between passes.
+		advCtx := new(vipAdvCtx)
 		for vip, vipElem := range R.vipMap {
 			ip := vipElem.pVIP
 			if ip == nil {
 				ip = net.ParseIP(vip)
 			}
 			if ip != nil {
-				R.AdvRuleVIP(ip, net.ParseIP(vip), vipElem.inst, vipElem.egr)
+				R.AdvRuleVIP(ip, net.ParseIP(vip), vipElem.inst, vipElem.egr, advCtx)
 			}
 		}
 		R.vipST = time.Now()
@@ -3447,7 +3451,7 @@ func (r *ruleEnt) DP(work DpWorkT) int {
 
 }
 
-func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool) error {
+func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool, ctx *vipAdvCtx) error {
 	if inst == "" {
 		inst = cmn.CIDefault
 	}
@@ -3463,36 +3467,45 @@ func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool) erro
 		if ret == 0 {
 			R.zone.L3.IfaDelete(dev, utils.IPHostCIDRString(IP))
 		}
-		ev, _, iface := R.zone.L3.IfaSelectAny(IP, false)
-		if ev == 0 {
-			ifname := "lo"
-			if tk.IsNetIPv6(IP.String()) {
-				ifname = iface
-			}
-			if !utils.IsIPHostAddr(IP.String()) {
-				if mh.cloudHook != nil {
-					err := mh.cloudHook.CloudUpdatePrivateIP(IP, eIP, true)
-					if err != nil {
-						tk.LogIt(tk.LogError, "%s: lb-rule vip %s add failed. err: %v\n", mh.cloudLabel, IP.String(), err)
-						return err
-					}
-				}
+		iface := R.VipAdvIf(IP, ctx)
 
-				if loxinlp.AddAddrNoHook(utils.IPHostCIDRString(IP), ifname) != 0 {
-					tk.LogIt(tk.LogError, "lb-rule vip %s:%s add failed\n", IP.String(), ifname)
-				} else {
-					tk.LogIt(tk.LogInfo, "lb-rule vip %s:%s added\n", IP.String(), ifname)
+		// Binding the address, the cloud hook and the neighbour cleanup do not
+		// depend on having found somewhere to advertise - only the gratuitous
+		// ARP or NA does, so a VIP whose interface does not resolve is still
+		// bound and still serves. IPv6 is the one exception: its bind target is
+		// the port that answers neighbour solicitations for the address, which
+		// is the very thing that failed to resolve.
+		ifname := "lo"
+		if tk.IsNetIPv6(IP.String()) {
+			ifname = iface
+		}
+
+		if !utils.IsIPHostAddr(IP.String()) && ifname != "" {
+			if mh.cloudHook != nil {
+				err := mh.cloudHook.CloudUpdatePrivateIP(IP, eIP, true)
+				if err != nil {
+					tk.LogIt(tk.LogError, "%s: lb-rule vip %s add failed. err: %v\n", mh.cloudLabel, IP.String(), err)
+					return err
 				}
-				loxinlp.DelNeighNoHook(IP.String(), "")
 			}
-			ctx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
+
+			if loxinlp.AddAddrNoHook(utils.IPHostCIDRString(IP), ifname) != 0 {
+				tk.LogIt(tk.LogError, "lb-rule vip %s:%s add failed\n", IP.String(), ifname)
+			} else {
+				tk.LogIt(tk.LogInfo, "lb-rule vip %s:%s added\n", IP.String(), ifname)
+			}
+			loxinlp.DelNeighNoHook(IP.String(), "")
+		}
+
+		if iface != "" {
+			advCtx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
 			defer cancel()
 			rCh := make(chan int)
-			go utils.NetAdvertiseVIPReqWithCtx(ctx, rCh, IP, iface)
+			go utils.NetAdvertiseVIPReqWithCtx(advCtx, rCh, IP, iface)
 			select {
 			case <-rCh:
 				break
-			case <-ctx.Done():
+			case <-advCtx.Done():
 				tk.LogIt(tk.LogInfo, "lb-rule vip %s - iface %s : GratARP timeout\n", IP.String(), iface)
 			}
 		}
@@ -3504,11 +3517,11 @@ func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool) erro
 	} else if ciState != cmn.CIUnDefStateString {
 		if utils.IsIPHostAddr(IP.String()) {
 			ifname := "lo"
-			ev, _, iface := R.zone.L3.IfaSelectAny(IP, false)
-			if ev == 0 {
-				if tk.IsNetIPv6(IP.String()) {
-					ifname = iface
-				}
+			if tk.IsNetIPv6(IP.String()) {
+				// May come back empty. DelAddrNoHook then asks the kernel which
+				// link actually carries the address, so the delete does not
+				// depend on the same resolution the add did.
+				ifname = R.VipAdvIf(IP, ctx)
 			}
 			if loxinlp.DelAddrNoHook(utils.IPHostCIDRString(IP), ifname) != 0 {
 				tk.LogIt(tk.LogError, "lb-rule vip %s:%s delete failed\n", IP.String(), ifname)
@@ -3573,7 +3586,7 @@ func (R *RuleH) RulesSyncToClusterState(inst, ciStateStr string) {
 			ip = net.ParseIP(vip)
 		}
 		if ip != nil {
-			R.AdvRuleVIP(ip, net.ParseIP(vip), vipElem.inst, vipElem.egr)
+			R.AdvRuleVIP(ip, net.ParseIP(vip), vipElem.inst, vipElem.egr, nil)
 		}
 	}
 }
@@ -3601,9 +3614,9 @@ func (R *RuleH) AddRuleVIP(VIP net.IP, pVIP net.IP, inst string, egress bool) {
 
 	if vipEnt.ref == 1 {
 		if pVIP == nil {
-			R.AdvRuleVIP(VIP, VIP, inst, vipEnt.egr)
+			R.AdvRuleVIP(VIP, VIP, inst, vipEnt.egr, nil)
 		} else {
-			R.AdvRuleVIP(pVIP, VIP, inst, vipEnt.egr)
+			R.AdvRuleVIP(pVIP, VIP, inst, vipEnt.egr, nil)
 		}
 	}
 }
@@ -3622,11 +3635,8 @@ func (R *RuleH) DeleteRuleVIP(VIP net.IP) {
 		}
 		if utils.IsIPHostAddr(xVIP.String()) {
 			ifname := "lo"
-			ev, _, iface := R.zone.L3.IfaSelectAny(xVIP, false)
-			if ev == 0 {
-				if tk.IsNetIPv6(xVIP.String()) {
-					ifname = iface
-				}
+			if tk.IsNetIPv6(xVIP.String()) {
+				ifname = R.VipAdvIf(xVIP, nil)
 			}
 			loxinlp.DelAddrNoHook(utils.IPHostCIDRString(xVIP), ifname)
 			if mh.cloudHook != nil {

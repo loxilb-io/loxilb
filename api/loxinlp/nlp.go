@@ -1002,8 +1002,72 @@ func AddAddrNoHook(address, ifName string) int {
 	return ret
 }
 
+// delAddrAnyLink - delete an address without being told which link holds it
+//
+// The VIP delete path can get here with nothing resolved, and guessing lo only
+// works for IPv4. The kernel already knows where the address is, so ask it.
+// DelNeighNoHook does the same thing for neighbours.
+func delAddrAnyLink(address string) int {
+	addr, err := nlp.ParseAddr(address)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "nlp: Address %s Parse Fail\n", address)
+		return -1
+	}
+
+	family := nlp.FAMILY_V4
+	if addr.IP.To4() == nil {
+		family = nlp.FAMILY_V6
+	}
+
+	// A literal nil, never a nil-valued Link: AddrList calls Attrs on anything
+	// that is not nil, so a typed nil would panic instead of listing every link.
+	addrs, err := nlp.AddrList(nil, family)
+	if err != nil {
+		tk.LogIt(tk.LogWarning, "nlp: Address list get Fail: %v\n", err)
+		return -1
+	}
+
+	want, _ := addr.Mask.Size()
+	found := 0
+
+	for i := range addrs {
+		if !addrs[i].IP.Equal(addr.IP) {
+			continue
+		}
+		if ones, _ := addrs[i].Mask.Size(); ones != want {
+			continue
+		}
+
+		link, err := nlp.LinkByIndex(addrs[i].LinkIndex)
+		if err != nil {
+			tk.LogIt(tk.LogWarning, "nlp: Address %v link %d get Fail: %v\n", address, addrs[i].LinkIndex, err)
+			continue
+		}
+		if err := nlp.AddrDel(link, &addrs[i]); err != nil {
+			tk.LogIt(tk.LogWarning, "nlp: Address %v Port %v delete Fail: %v\n", address, link.Attrs().Name, err)
+			return -1
+		}
+
+		tk.LogIt(tk.LogInfo, "nlp: Address %v Port %v deleted\n", address, link.Attrs().Name)
+		found++
+	}
+
+	if found == 0 {
+		// Someone else got there first. Nothing to undo, so this is not a
+		// failure the caller should report.
+		tk.LogIt(tk.LogDebug, "nlp: Address %v not on any link\n", address)
+	} else if found > 1 {
+		tk.LogIt(tk.LogWarning, "nlp: Address %v was on %d links\n", address, found)
+	}
+
+	return 0
+}
+
 func DelAddrNoHook(address, ifName string) int {
 	var ret int
+	if ifName == "" {
+		return delAddrAnyLink(address)
+	}
 	IfName, err := nlp.LinkByName(ifName)
 	if err != nil {
 		_, err := hooks.NetAddrDel(&cmn.IPAddrMod{Dev: ifName, IP: address})
