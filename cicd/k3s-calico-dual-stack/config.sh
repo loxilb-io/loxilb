@@ -187,43 +187,42 @@ if [[ -f "/usr/local/bin/k3s-uninstall.sh" ]]; then
 else
   echo "Start K3s installation"
 
-  # Install k3s without external cloud-manager and disabled servicelb
-  #curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.22.9+k3s1 INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external" K3S_KUBECONFIG_MODE="644" sh -
-  curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.22.9+k3s1 INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --kubelet-arg cloud-provider=external --flannel-backend=none --disable-network-policy --cluster-cidr=10.42.0.0/16,4dde::/64 --service-cidr=10.43.0.0/16,5dde::/108 --node-ip=12.12.12.254,8ffe::2" K3S_KUBECONFIG_MODE="644" sh -
+  # Install k3s without a cloud provider and with servicelb disabled.
+  # The node address is given twice on purpose. k3s uses --node-ip for its own
+  # validation against --cluster-cidr and for the serving certificates, but does not
+  # hand it to kubelet, which then auto-detects the host's primary IPv4 address. That
+  # left the node advertising an address its kubelet certificate does not name, so
+  # 'kubectl logs' and 'kubectl exec' failed and the IPv6 service never found an
+  # endpoint. --kubelet-arg passes the same value straight through to kubelet.
+  # loxi-ccm is unmaintained and is no longer deployed here, so cloud-provider=external
+  # must stay off too: it makes kubelet leave the node with no InternalIP until some
+  # CCM initialises it. Without an address the kubelet serving certificate (issued for
+  # --node-ip) stops matching, calico's host-network typha never gets a pod IP, and
+  # k3s never fills in the coredns NodeHosts key. kube-loxilb provides the
+  # LoadBalancer implementation on its own.
+  curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik --disable servicelb --disable-cloud-controller --flannel-backend=none --disable-network-policy --cluster-cidr=10.42.0.0/16,4dde::/64 --service-cidr=10.43.0.0/16,5dde::/108 --node-ip=12.12.12.254,8ffe::2 --kubelet-arg=node-ip=12.12.12.254,8ffe::2" K3S_KUBECONFIG_MODE="644" sh -
 
   sleep 10
 
-  # Install Calico
-  kubectl $KUBECONFIG create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.0/manifests/tigera-operator.yaml
+  # Install Calico. v3.32 is the line that supports the Kubernetes versions k3s
+  # ships today; v3.26 tops out at 1.27. From v3.29 the operator CRDs ship in
+  # their own manifest and must be applied before tigera-operator.yaml.
+  CALICO_MANIFESTS=https://raw.githubusercontent.com/projectcalico/calico/v3.32.2/manifests
+  kubectl $KUBECONFIG create -f $CALICO_MANIFESTS/operator-crds.yaml
+  kubectl $KUBECONFIG create -f $CALICO_MANIFESTS/tigera-operator.yaml
 
-  #kubectl $KUBECONFIG create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.0/manifests/custom-resources.yaml
+  # Creating the Installation races with CRD registration, which surfaces as
+  # 'no matches for kind "Installation"'.
+  kubectl $KUBECONFIG wait --for condition=established --timeout=180s \
+    crd/installations.operator.tigera.io crd/apiservers.operator.tigera.io
+
   kubectl $KUBECONFIG create -f custom-resources.yaml
 
   # Check kubectl works
   kubectl $KUBECONFIG get pods -A
 
-  # Remove taints in k3s if any (usually happens if started without cloud-manager)
-  kubectl $KUBECONFIG taint nodes --all node.cloudprovider.kubernetes.io/uninitialized=false:NoSchedule-
-
-  # Start loxi-ccm as k3s daemonset
-  kubectl $KUBECONFIG apply -f https://github.com/loxilb-io/loxi-ccm/raw/master/manifests/loxi-ccm-k3s.yaml
-
   echo "End K3s installation"
 fi
-
-# Install Bird to work with k3s
-sudo apt-get install bird2 --yes
-
-sleep 5
-
-sudo cp -f bird_config/bird.conf /etc/bird/bird.conf
-if [ ! -f  /var/log/bird.log ]; then
-  sudo touch /var/log/bird.log
-fi
-sudo chown bird:bird /var/log/bird.log
-sudo systemctl restart bird
-
-sleep 10
 
 # Wait for cluster to be ready
 wait_cluster_ready_full

@@ -16,9 +16,9 @@ sudo kubectl $KUBECONFIG delete -f nginx-svc-lb1.yml >> /dev/null 2>&1
 sudo kubectl $KUBECONFIG delete -f sctp-svc-lb.yml >> /dev/null 2>&1
 sudo kubectl $KUBECONFIG delete -f udp-svc-lb.yml >> /dev/null 2>&1
 sudo kubectl $KUBECONFIG delete -f kube-loxilb.yml >> /dev/null 2>&1
-#sudo kubectl $KUBECONFIG delete -f https://github.com/loxilb-io/loxi-ccm/raw/master/manifests/loxi-ccm-k3s.yaml >> /dev/null 2>&1
-#sudo kubectl $KUBECONFIG delete -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.0/manifests/custom-resources.yaml >> /dev/null 2>&1
-#sudo kubectl $KUBECONFIG delete -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.0/manifests/tigera-operator.yaml >> /dev/null 2>&1
+#sudo kubectl $KUBECONFIG delete -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.2/manifests/custom-resources.yaml >> /dev/null 2>&1
+#sudo kubectl $KUBECONFIG delete -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.2/manifests/tigera-operator.yaml >> /dev/null 2>&1
+#sudo kubectl $KUBECONFIG delete -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.2/manifests/operator-crds.yaml >> /dev/null 2>&1
 
 disconnect_docker_hosts user r1
 disconnect_docker_hosts r1 llb1
@@ -41,9 +41,6 @@ sudo ip link del esysllb2 2>/dev/null
 if [[ -f "/usr/local/bin/k3s-uninstall.sh" ]]; then
   /usr/local/bin/k3s-uninstall.sh
 fi
-
-sudo apt-get remove bird2 --yes
-sudo rm -f /etc/bird/bird.conf
 
 echo "#########################################"
 echo "Removed testbed"

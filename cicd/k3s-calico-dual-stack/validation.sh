@@ -60,9 +60,9 @@ echo -e "\n\nTEST RESULTS"
 echo "*********************************************************************************"
 out=$($hexec user curl -s --connect-timeout 10 http://$extIP:80) 
 if [[ ${out} == *"Welcome to nginx"* ]]; then
-  echo "calico-k3s-dual-cluster (ccm) [OK]"
+  echo "calico-k3s-dual-cluster (kube-loxilb) http [OK]"
 else
-  echo "calico-k3s-dual-cluster (ccm) [FAILED]"
+  echo "calico-k3s-dual-cluster (kube-loxilb) http [FAILED]"
   code=1
 fi
 
