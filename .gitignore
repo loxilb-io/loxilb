@@ -56,7 +56,9 @@
 .vscode/
 
 # Kernel Module Compile Results
-*.mod*
+*.mod
+*.mod.c
+!go.mod
 *.cmd
 .tmp_versions/
 modules.order
@@ -64,3 +66,16 @@ Module.symvers
 Mkfile.old
 dkms.conf
 .DS_Store
+
+# Local build output
+/loxilb
+
+# CICD run artifacts
+cicd/tcpsctpperf/perf*
+cicd/k3s-*/k3s.yaml
+cicd/k3s-*/master-ip
+cicd/k3s-*/node-token
+cicd/.orchestrator/
+
+# Python cache
+__pycache__/
