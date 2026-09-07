@@ -17,6 +17,10 @@ Vagrant.configure("2") do |config|
       node.vm.hostname = "k3s-node#{node_number}"
       ip = node_number + 1
       node.vm.network :private_network, ip: "192.168.82.#{ip}", :netmask => "255.255.255.0"
+      # k3s_common.sh is shared by every scenario under cicd/. Only this
+      # directory is synced to /vagrant, so upload it explicitly. Must come
+      # before the shell provisioner that sources it.
+      node.vm.provision :file, source: File.expand_path("../k3s_common.sh", __dir__), destination: "/home/vagrant/k3s_common.sh"
       node.vm.provision :shell, :path => "k3s-install.sh"
       node.vm.provider :virtualbox do |vbox|
         vbox.customize ["modifyvm", :id, "--memory", 16000]
