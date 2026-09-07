@@ -9,6 +9,13 @@ udp_port=55002
 sctp_port=55003
 
 code=0
+
+# The first datagram through a fresh one-arm flow is lost while loxilb resolves
+# the endpoint's neighbour entry. TCP and SCTP retransmit, the udp_client is a
+# single send and a single receive, so prime the UDP path before counting.
+timeout 5 /vagrant/udp_client $extIP1 $udp_port > /dev/null 2>&1 || true
+sleep 1
+
 echo TCP Service IP: $extIP
 
 ip route list match $extIP | grep $extIP -A 2
@@ -42,7 +49,7 @@ echo SCTP Service IP: $extIP2
 sctp_darn -H 192.168.80.9 -h $extIP2 -p $sctp_port -s < /vagrant/input > output
 #sleep 2
 exp="New connection, peer addresses
-192.168.80.202:55003"
+$extIP2:$sctp_port"
 
 res=`cat output | grep -A 1 "New connection, peer addresses"`
 sudo rm -rf output
