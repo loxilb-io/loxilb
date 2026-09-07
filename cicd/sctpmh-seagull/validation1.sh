@@ -1,12 +1,12 @@
 #!/bin/bash
-source /vagrant/common.sh
+source /home/vagrant/common.sh
 source /vagrant/check_ha.sh
 
 echo -e "sctpmh: SCTP Multihoming Basic Test - Client & EP Uni-homed and LB is Multi-homed\n"
 extIP="20.20.20.1"
 port=2020
 
-check_ha
+check_ha || { echo "NOK" > /vagrant/status1.txt; exit 1; }
 
 echo "SCTP Multihoming service sctp-lb -> $extIP:$port"
 echo -e "------------------------------------------------------------------------------------\n"

@@ -4,10 +4,10 @@ master="llb1"
 backup="llb2"
 
 function check_ha() {
+    count=0
     while : ; do
         status1=$($hexec llb1 curl -sX 'GET' 'http://0.0.0.0:11111/netlox/v1/config/cistate/all' -H 'accept: application/json' | jq -r '.Attr[0].state')
         status2=$($hexec llb2 curl -sX 'GET' 'http://0.0.0.0:11111/netlox/v1/config/cistate/all' -H 'accept: application/json' | jq -r '.Attr[0].state')
-        count=0
         if [[ $status1 == "MASTER" && $status2 == "BACKUP" ]];
         then
             master="llb1"
@@ -22,7 +22,7 @@ function check_ha() {
             count=$(( $count + 1 ))
             if [[ $count -ge 20 ]]; then
                 echo "KA llb1-$status1, llb2-$status2 [NOK] - Exiting" >&2
-                exit 1;
+                exit 1
             fi
             echo "KA llb1-$status1, llb2-$status2 [NOK]" >&2
             sleep 5

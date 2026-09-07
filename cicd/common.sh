@@ -23,7 +23,10 @@ docker_extra_opts=""
 #fi
 
 
-if [ ! -d loxilb.io ]; then
+# The certificate helper lives next to this file on the host. When this file is
+# shipped into a VM (see the file provisioner in the Vagrantfiles) it is not
+# there, and the scenarios that run inside VMs do not use TLS anyway.
+if [ ! -d loxilb.io ] && [ -x ../common/minica ]; then
   ../common/minica --domains loxilb.io
   mkdir cert
   cp minica.pem cert/rootCA.crt

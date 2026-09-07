@@ -16,6 +16,10 @@ Vagrant.configure("2") do |config|
     bastion.vm.hostname = 'bastion'
     #bastion.vm.network :private_network, ip: "4.0.5.3", :netmask => "255.255.255.0"
     bastion.vm.network :private_network, ip: "4.0.4.3", :netmask => "255.255.255.0"
+    # common.sh is shared by every scenario under cicd/. Only this directory is
+    # synced to /vagrant, so upload it explicitly. setup.sh and the validation
+    # scripts source it from there.
+    bastion.vm.provision :file, source: File.expand_path("../common.sh", __dir__), destination: "/home/vagrant/common.sh"
     bastion.vm.provision :shell, :path => "bastion.sh"
     bastion.vm.provider :virtualbox do |vbox|
         vbox.customize ["modifyvm", :id, "--memory", 8196]

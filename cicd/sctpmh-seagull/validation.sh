@@ -7,19 +7,24 @@ border="************************************************************************
 for((j=0,i=1; i<=6; i++, j++)); do
     echo "SCTP Multihoming - Test case #$i"
     echo -e "\n\n\n$border\n"
+    # The VM writes status$i.txt into /vagrant. Start from a clean slate so a
+    # case that dies before writing it cannot inherit a stale verdict.
+    rm -f status$i.txt
     cmd="sudo /vagrant/validation$i.sh"
     vagrant ssh bastion -c "$cmd"
     echo -e "\n\n"
     file=status$i.txt
-    status=`cat $file`
+    status=$(cat $file 2>/dev/null)
     title=${tc[j]}
     echo -e "\n\n"
 
-    if [[ $status == "NOK" ]]; then
+    # Anything but an explicit OK is a failure; a missing or empty status file
+    # means the case died before reaching a verdict.
+    if [[ $status == "OK" ]]; then
+        printf "Test case #%2s - %s%s %s\n" "$i" "$title" "${padding:${#title}}" "[PASSED]";
+    else
         code=1
         printf "Test case #%2s - %s%s %s\n" "$i" "$title" "${padding:${#title}}" "[FAILED]";
-    else
-        printf "Test case #%2s - %s%s %s\n" "$i" "$title" "${padding:${#title}}" "[PASSED]";
     fi
     echo -e "\n\n\n$border\n\n"
 
@@ -30,15 +35,17 @@ echo -e "\n\n\n$border\n"
 printf "================================================== SCTP MULTIHOMING CONSOLIDATED RESULT ==========================================================\n"
 for((j=0,i=1; i<=6; i++, j++)); do
     file=status$i.txt
-    status=`cat $file`
+    status=$(cat $file 2>/dev/null)
     title=${tc[j]}
     echo -e "\n\n"
 
-    if [[ $status == "NOK" ]]; then
+    # Anything but an explicit OK is a failure; a missing or empty status file
+    # means the case died before reaching a verdict.
+    if [[ $status == "OK" ]]; then
+        printf "Test case #%2s - %s%s %s\n" "$i" "$title" "${padding:${#title}}" "[PASSED]";
+    else
         code=1
         printf "Test case #%2s - %s%s %s\n" "$i" "$title" "${padding:${#title}}" "[FAILED]";
-    else
-        printf "Test case #%2s - %s%s %s\n" "$i" "$title" "${padding:${#title}}" "[PASSED]";
     fi
 done
 

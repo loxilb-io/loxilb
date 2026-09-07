@@ -4,7 +4,7 @@ echo "#########################################"
 echo "Removing testbed"
 echo "#########################################"
 
-source /vagrant/common.sh
+source /home/vagrant/common.sh
 
 disconnect_docker_hosts user r1
 disconnect_docker_hosts user r2
