@@ -92,53 +92,97 @@ function restart_mloxilb() {
     echo "New loxilb pid: $pid" >&2
 }
 
-function restart_loxilbs() {
-    if [[ $master == "llb1" ]]; then
-        mpat="cluster=172.17.0.3"
-        mcopts=" --cluster=172.17.0.3"
-        mself=" --self=0"
-        mka=" --ka=172.17.0.3:172.17.0.2"
-        
-        bpat="cluster=172.17.0.2"
-        bcopts=" --cluster=172.17.0.2"
-        bself=" --self=1"
-        bka=" --ka=172.17.0.2:172.17.0.3"
+# Cluster options are a property of the instance (llb1/llb2), not its HA role.
+# _node_opts NODE sets _pat/_copts/_self/_ka for that instance.
+function _node_opts() {
+    if [[ "$1" == "llb1" ]]; then
+        _pat="cluster=172.17.0.3"
+        _copts=" --cluster=172.17.0.3"
+        _self=" --self=0"
+        _ka=" --ka=172.17.0.3:172.17.0.2"
     else
-        mpat="cluster=172.17.0.2"
-        mcopts=" --cluster=172.17.0.2"
-        mself=" --self=1"
-        mka=" --ka=172.17.0.2:172.17.0.3"
-        
-        bpat="cluster=172.17.0.3"
-        bcopts=" --cluster=172.17.0.3"
-        bself=" --self=0"
-        bka=" --ka=172.17.0.3:172.17.0.2"
+        _pat="cluster=172.17.0.2"
+        _copts=" --cluster=172.17.0.2"
+        _self=" --self=1"
+        _ka=" --ka=172.17.0.2:172.17.0.3"
     fi
-    echo "Restarting $master"
-    pid=$(ps -aef | grep $mpat | xargs | cut -d ' ' -f 2)
-    #pid=$(docker exec -i $master ps -aef | grep $mpat | xargs | cut -d ' ' -f 2)
-    echo "Killing $pid" >&2
-    #docker exec -dt $master kill -9 $pid
-    sudo kill -9 $pid
-    docker exec -dt $master ip link del llb0
-    echo "/root/loxilb-io/loxilb/loxilb $mcopts $mself $mka" >&2
-    docker exec -dt $master /root/loxilb-io/loxilb/loxilb $mcopts $mself $mka
-    pid=$(ps -aef | grep $mpat | xargs | cut -d ' ' -f 2)
-    #pid=$(docker exec -i $master ps -aef | grep $mpat | xargs | cut -d ' ' -f 2)
-    echo "New loxilb pid: $pid" >&2
-
-    echo "Restarting $backup"
-    pid=$(ps -aef | grep $bpat | xargs | cut -d ' ' -f 2)
-    #pid=$(docker exec -i $backup ps -aef | grep $bpat | xargs | cut -d ' ' -f 2)
-    echo "Killing $pid" >&2
-    #docker exec -dt $backup kill -9 $pid
-    sudo kill -9 $pid
-    docker exec -dt $backup ip link del llb0
-    echo "/root/loxilb-io/loxilb/loxilb $bcopts $bself $bka" >&2
-    docker exec -dt $backup /root/loxilb-io/loxilb/loxilb $bcopts $bself $bka
-    #pid=$(docker exec -i $backup ps -aef | grep $bpat | xargs | cut -d ' ' -f 2)
-    pid=$(ps -aef | grep $bpat | xargs | cut -d ' ' -f 2)
-    echo "New loxilb pid: $pid" >&2
 }
 
+# Restart a single loxilb instance (kill + relaunch); leaves it coming up.
+function restart_one() {
+    local node="$1"
+    _node_opts "$node"
+    echo "Restarting $node" >&2
+    local pid=$(ps -aef | grep "$_pat" | xargs | cut -d ' ' -f 2)
+    echo "Killing $pid" >&2
+    sudo kill -9 $pid
+    docker exec -dt "$node" ip link del llb0
+    echo "/root/loxilb-io/loxilb/loxilb $_copts $_self $_ka" >&2
+    docker exec -dt "$node" /root/loxilb-io/loxilb/loxilb $_copts $_self $_ka
+    pid=$(ps -aef | grep "$_pat" | xargs | cut -d ' ' -f 2)
+    echo "New $node pid: $pid" >&2
+}
 
+# Confirm the routers point BOTH gateway VIPs at the current MASTER, nudging them
+# if they do not. The failure this guards against is exactly "HA API is healthy
+# but the router ARP is stale/split": the client-side gateway 11.11.11.11 (r1/r2)
+# and the EP-side gateway 10.10.10.10 (r3/r4) are advertised independently and,
+# after a restart, could latch onto different instances, breaking the SCTP
+# handshake. The cistate API alone cannot see this.
+function wait_gw_arp() {
+    local mmac11 mmac10 a1 a2 count=0
+    mmac11=$($hexec $master ip -br link show vlan11 | awk '{print $3}')
+    mmac10=$($hexec $master ip -br link show vlan10 | awk '{print $3}')
+    while : ; do
+        a1=$($hexec r1 ip neigh show 11.11.11.11 | awk '{print $5}')
+        a2=$($hexec r3 ip neigh show 10.10.10.10 | awk '{print $5}')
+        if [[ -n "$mmac11" && -n "$mmac10" && "$a1" == "$mmac11" && "$a2" == "$mmac10" ]]; then
+            echo "GW ARP -> master $master [OK]" >&2
+            return 0
+        fi
+        echo "GW ARP off master (11.11.11.11->$a1 want $mmac11 ; 10.10.10.10->$a2 want $mmac10) - flushing" >&2
+        for r in r1 r2; do $hexec $r ip neigh flush dev vlan11 2>/dev/null; $hexec $r ping -c1 -W1 11.11.11.11 >/dev/null 2>&1; done
+        for r in r3 r4; do $hexec $r ip neigh flush dev vlan10 2>/dev/null; $hexec $r ping -c1 -W1 10.10.10.10 >/dev/null 2>&1; done
+        count=$(( count + 1 ))
+        if [[ $count -ge 10 ]]; then
+            echo "GW ARP still not on master $master after retries [NOK] - continuing" >&2
+            return 1
+        fi
+        sleep 2
+    done
+}
+
+# Restart both loxilbs WITHOUT a simultaneous cold-start race.
+#
+# Restarting both at once let both instances come up as MASTER for a moment;
+# both then sent a gratuitous ARP for the gateway VIPs (11.11.11.11 client-side,
+# 10.10.10.10 EP-side) and the routers could latch onto the instance that a beat
+# later became BACKUP. With the two gateway VIPs latching independently, the
+# forward and return SCTP paths could land on different instances and the
+# association never formed (sctpmh-seagull cases 2 and 3).
+#
+# Here we restart one instance at a time and wait for the cluster to re-stabilise
+# in between, so the two are never cold-starting together. At most one instance
+# ever (re)advertises the VIPs, so the router ARP cannot latch onto a
+# soon-to-be-BACKUP node. Roles may legitimately swap across a restart (the
+# elected MASTER is the higher BFD discriminator, not a fixed node), so we wait
+# on cluster stability via check_ha rather than on a specific node's role.
+function restart_loxilbs() {
+    local m="$master" b="$backup"
+
+    # 1) Restart the current backup. The current master stays up, keeps its role
+    #    and VIPs, and advertises nothing new while the backup is down.
+    restart_one "$b"
+    sleep 3
+    check_ha
+
+    # 2) Restart the other instance. Whichever instance is master now stays up
+    #    and advertises alone while this one restarts; a demoted node withdraws
+    #    its VIPs without advertising, so no two nodes ever advertise at once.
+    restart_one "$m"
+    sleep 3
+    check_ha
+
+    # Confirm the routers actually point both gateway VIPs at the current master.
+    wait_gw_arp
+}
