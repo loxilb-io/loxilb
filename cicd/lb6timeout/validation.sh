@@ -26,7 +26,7 @@ do
         then
             echo "All Servers are not UP"
             echo LB6-TIMEOUT[FAILED]
-            sudo pkill node
+            kill_test_servers
             exit 1
         fi
     fi
@@ -66,6 +66,6 @@ fi
 sudo killall -9 iperf >> /dev/null 2>&1
 sudo kill -9 $ncpid >> /dev/null 2>&1
 sudo killall -9 nc >> /dev/null 2>&1
-sudo killall -9 node >> /dev/null 2>&1
+kill_test_servers
 sudo rm -f nohup.out
 exit $code

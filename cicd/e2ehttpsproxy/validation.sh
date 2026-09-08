@@ -39,5 +39,5 @@ else
 fi
 done
 
-sudo killall -9 node 2>&1 > /dev/null
+kill_test_servers
 exit $code

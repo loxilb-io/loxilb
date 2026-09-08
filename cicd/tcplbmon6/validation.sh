@@ -26,7 +26,7 @@ do
         then
             echo "All Servers are not UP"
             echo tcplbmon6 [FAILED]
-            sudo pkill node
+            kill_test_servers
             exit 1
         fi
     fi
@@ -67,10 +67,10 @@ then
     echo tcplbmon6 p1 [OK]
 else
     echo tcplbmon6 p1 [FAILED]
-    sudo pkill node
+    kill_test_servers
     exit $code
 fi
-sudo pkill node
+kill_test_servers
 $hexec l3ep2 node ../common/tcp_server.js server2 &
 $hexec l3ep3 node ../common/tcp_server.js server3 &
 sleep 130
@@ -92,5 +92,5 @@ else
     exit $code
 fi
 
-sudo pkill node
+kill_test_servers
 exit $code

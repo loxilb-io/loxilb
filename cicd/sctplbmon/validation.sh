@@ -75,7 +75,7 @@ then
     echo SCENARIO-sctplbmon p2 [OK]
 else
     echo SCENARIO-sctplbmon p2 [FAILED]
-    sudo killall -9 node 2>&1 > /dev/null
+    kill_test_servers
     exit $code
 fi
 

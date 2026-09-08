@@ -26,7 +26,7 @@ do
         then
             echo "All Servers are not UP"
             echo SCENARIO-wrrtcplb2 [FAILED]
-            sudo pkill node
+            kill_test_servers
             exit 1
         fi
     fi
@@ -91,7 +91,7 @@ then
     echo "$noResp request(s) returned no valid server response [FAILED]"
     code=1
 fi
-sudo killall -9 node 2>&1 > /dev/null
+kill_test_servers
 if [[ $code == 0 ]]
 then
     echo SCENARIO-wrrtcplb2 [OK]

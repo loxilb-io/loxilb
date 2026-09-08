@@ -27,7 +27,7 @@ function tcp_validate() {
   else
     $hexec r2 ip route list match 20.20.20.1 >&2
     echo "BGP Service Route [NOK]" >&2
-    sudo pkill node
+    kill_test_servers
     return 1
   fi 
 
@@ -49,7 +49,7 @@ function tcp_validate() {
         then
             echo "All TCP Servers are not UP" >&2
             echo CLUSTER-2 [FAILED] >&2
-            sudo pkill node
+            kill_test_servers
             exit 1
         fi
     fi
@@ -85,7 +85,7 @@ function tcp_validate() {
     sleep 1
   done
   done
-  sudo pkill node
+  kill_test_servers
   echo $code
 }
 

@@ -26,7 +26,7 @@ do
         then
             echo "All Servers are not UP"
             echo ONEARM-L2 [FAILED]
-            sudo pkill node
+            kill_test_servers
             exit 1
         fi
     fi
@@ -57,5 +57,5 @@ else
     $dexec llb1 ip neigh
     echo ONEARM-L2 [FAILED]
 fi
-sudo pkill node
+kill_test_servers
 exit $code

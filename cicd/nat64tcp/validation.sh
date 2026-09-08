@@ -27,7 +27,7 @@ do
         then
             echo "All Servers are not UP"
             echo SCENARIO-nat64tcp [FAILED]
-            sudo pkill node
+            kill_test_servers
             exit 1
         fi
     fi
@@ -80,7 +80,7 @@ else
 fi
 
 done
-sudo pkill -9 node
+kill_test_servers
 if [[ $code == 0 ]]
 then
     echo nat64tcp [OK]

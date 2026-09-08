@@ -27,7 +27,7 @@ do
         then
             echo "All Servers are not UP"
             echo SCENARIO-tcplb-lc [FAILED]
-            sudo killall -9 node 2>&1 > /dev/null
+            kill_test_servers
             exit 1
         fi
     fi
@@ -100,7 +100,7 @@ else
 fi
 
 sudo killall -9 nc 2>&1 > /dev/null
-sudo killall -9 node 2>&1 > /dev/null
+kill_test_servers
 rm -f nohup.out
 
 exit $code

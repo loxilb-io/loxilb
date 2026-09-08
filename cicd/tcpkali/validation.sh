@@ -37,7 +37,7 @@ do
         then
             echo "All Servers are not UP"
             echo SCENARIO-tcpkali [FAILED]
-            sudo killall -9 node 2>&1 > /dev/null
+            kill_test_servers
             exit 1
         fi
     fi
@@ -46,7 +46,7 @@ done
 i=$(( $i + 1 ))
 done
 
-sudo killall -9 node 2>&1 > /dev/null
+kill_test_servers
 
 $hexec l3ep1 tcpkali -l 8080 -T $stime 2>&1> /dev/null &
 $hexec l3ep2 tcpkali -l 8080 -T $stime 2>&1> /dev/null &

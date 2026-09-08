@@ -26,7 +26,7 @@ do
         then
             echo "All Servers are not UP"
             echo SCENARIO-k8slb [FAILED]
-            sudo pkill node
+            kill_test_servers
             exit 1
         fi
     fi
@@ -52,6 +52,6 @@ then
 else
     echo SCENARIO-k8slb [FAILED]
 fi
-sudo pkill node
+kill_test_servers
 exit $code
 
