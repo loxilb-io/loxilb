@@ -26,7 +26,7 @@ do
         then
             echo "All Servers are not UP"
             echo nat66tcp [FAILED]
-            sudo pkill node
+            kill_test_servers
             exit 1
         fi
     fi
@@ -68,6 +68,6 @@ then
 else
     echo nat66tcp [FAILED]
 fi
-sudo pkill node
+kill_test_servers
 exit $code
 

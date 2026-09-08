@@ -1,11 +1,11 @@
 #!/bin/bash
-source /vagrant/common.sh
+source /home/vagrant/common.sh
 source /vagrant/check_ha.sh
 echo -e "sctpmh: SCTP Multihoming - E2E Multipath Failover Test. Client, LB and EP all Multihomed\n"
 extIP="133.133.133.1"
 port=2020
 
-check_ha
+check_ha || { echo "NOK" > /vagrant/status4.txt; exit 1; }
 
 echo "SCTP Multihoming service sctp-lb(Multipath traffic) -> $extIP:$port"
 echo -e "------------------------------------------------------------------------------------\n"

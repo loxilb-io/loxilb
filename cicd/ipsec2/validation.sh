@@ -44,14 +44,14 @@ then
          $(expr $llb2_tx2 - $llb2_tx1) != 2000 ]]; then
      echo "IPSec Tunnel Traffic [NOK]"
      echo "IPSEC-2 [FAILED]"
-     sudo pkill node
+     kill_test_servers
      exit 1;
    else
      echo "IPSec Tunnel Traffic [OK]"
    fi
 else
     echo "IPSEC-2 [FAILED]"
-    sudo pkill node
+    kill_test_servers
     exit $code
 fi
 
@@ -73,7 +73,7 @@ do
         then
             echo "All Servers are not UP"
             echo IPSEC-2 [FAILED]
-            sudo pkill node
+            kill_test_servers
             exit 1
         fi
     fi
@@ -113,6 +113,6 @@ then
 else
     echo IPSEC-2 [FAILED]
 fi
-sudo pkill node
+kill_test_servers
 exit $code
 

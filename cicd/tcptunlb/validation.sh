@@ -27,7 +27,7 @@ do
         then
             echo "All Servers are not UP"
             echo SCENARIO-tcptunlb [FAILED]
-            sudo pkill node
+            kill_test_servers
             exit 1
         fi
     fi
@@ -67,6 +67,6 @@ then
 else
     echo SCENARIO-tcptunlb [FAILED]
 fi
-sudo pkill node
+kill_test_servers
 exit $code
 

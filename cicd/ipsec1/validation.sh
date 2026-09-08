@@ -50,7 +50,7 @@ then
    fi
 else
     echo "IPSEC-1 [FAILED]"
-    sudo pkill node
+    kill_test_servers
     exit $code
 fi
 
@@ -72,7 +72,7 @@ do
         then
             echo "All Servers are not UP"
             echo IPSEC-1 [FAILED]
-            sudo pkill node
+            kill_test_servers
             exit 1
         fi
     fi
@@ -112,6 +112,6 @@ then
 else
     echo IPSEC-1 [FAILED]
 fi
-sudo pkill node
+kill_test_servers
 exit $code
 

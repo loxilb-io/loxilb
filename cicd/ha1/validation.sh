@@ -29,7 +29,7 @@ do
         then
             echo "All Servers are not UP" >&2
             echo HA-1 [FAILED] >&2
-            sudo pkill node
+            kill_test_servers
             exit 1
         fi
     fi
@@ -49,7 +49,7 @@ do
     sleep 1
 done
 done
-sudo pkill node
+kill_test_servers
 echo $code
 }
 

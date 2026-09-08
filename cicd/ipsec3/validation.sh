@@ -39,6 +39,6 @@ then
 else
     echo IPSEC-3 [FAILED]
 fi
-sudo pkill node
+kill_test_servers
 exit $code
 

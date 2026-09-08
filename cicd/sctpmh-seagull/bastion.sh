@@ -9,4 +9,3 @@ echo "install sctp /bin/false" >>  /etc/modprobe.d/blacklist.conf
 
 echo "Rebooting Now!"
 reboot
-"

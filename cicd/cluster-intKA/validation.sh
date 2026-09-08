@@ -23,7 +23,7 @@ function myfunc() {
   else
     $hexec r2 ip route list match 20.20.20.1
     echo "BGP Service Route [NOK]" >&2
-    sudo pkill node
+    kill_test_servers
     return 1
   fi
   $hexec r2 ip route replace 1.1.1.0/24 via ${llbIp[$1]}
@@ -43,7 +43,7 @@ function myfunc() {
         then
             echo "All TCP Servers are not UP" >&2
             echo CLUSTER-2 [FAILED] >&2
-            sudo pkill node
+            kill_test_servers
             exit 1
         fi
     fi
@@ -79,7 +79,7 @@ function myfunc() {
     sleep 1
   done
   done
-  sudo pkill node
+  kill_test_servers
   echo "$code"
 }
 

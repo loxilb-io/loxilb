@@ -8,6 +8,20 @@ hn="netns"
 pid=""
 vrn="/var/run/"
 hexec="sudo ip netns exec "
+
+## Stop the node test servers a scenario started, and nothing else.
+## They are launched through "ip netns exec", which changes only the network
+## namespace, so they share the host's PID namespace with every other node
+## process on the machine. "pkill node" therefore also killed unrelated
+## things such as a VS Code remote server. Match the command line of the two
+## server scripts under cicd/common instead of the process name. The [n]
+## keeps the pattern from matching a command line that merely contains it,
+## such as the sudo that runs this pkill or a shell that sourced this file
+## on its command line.
+kill_test_servers() {
+  sudo pkill -9 -f '[n]ode .*/common/tcp_(https_)?server\.js' > /dev/null 2>&1
+  return 0
+}
 dexec="sudo docker exec -i "
 hns="sudo ip netns "
 hexist="$vrn$hn"
@@ -23,7 +37,10 @@ docker_extra_opts=""
 #fi
 
 
-if [ ! -d loxilb.io ]; then
+# The certificate helper lives next to this file on the host. When this file is
+# shipped into a VM (see the file provisioner in the Vagrantfiles) it is not
+# there, and the scenarios that run inside VMs do not use TLS anyway.
+if [ ! -d loxilb.io ] && [ -x ../common/minica ]; then
   ../common/minica --domains loxilb.io
   mkdir cert
   cp minica.pem cert/rootCA.crt

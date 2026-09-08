@@ -25,7 +25,7 @@ do
         if [[ $waitCount == 10 ]];
         then
             echo "All Servers are not UP"
-            sudo killall -9 node 2>&1 > /dev/null
+            kill_test_servers
             echo SCENARIO-tcplbmon [FAILED]
             exit 1
         fi
@@ -51,9 +51,7 @@ then
     echo SCENARIO-tcplbmon p1 [OK]
 else
     echo SCENARIO-tcplbmon p1 [FAILED]
-    $hexec l3ep1 killall -9 node 2>&1 > /dev/null
-    $hexec l3ep2 killall -9 node 2>&1 > /dev/null
-    $hexec l3ep3 killall -9 node 2>&1 > /dev/null
+    kill_test_servers
     exit $code
 fi
 
@@ -76,13 +74,13 @@ then
     echo SCENARIO-tcplbmon p2 [OK]
 else
     echo SCENARIO-tcplbmon p2 [FAILED]
-    sudo killall -9 node 2>&1 > /dev/null
+    kill_test_servers
     exit $code
 fi
 
 $hexec l3ep1 ip addr add 31.31.31.1/24 dev el3ep1llb1
 $hexec l3ep1 ip route add default via 31.31.31.254
-sudo killall -9 node 2>&1 > /dev/null
+kill_test_servers
 $hexec l3ep1 node ../common/tcp_server.js server1 &
 $hexec l3ep2 node ../common/tcp_server.js server2 &
 $hexec l3ep3 node ../common/tcp_server.js server3 &
@@ -109,5 +107,5 @@ else
     echo SCENARIO-tcplbmon p3 [FAILED]
 fi
 
-sudo killall -9 node 2>&1 > /dev/null
+kill_test_servers
 exit $code

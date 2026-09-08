@@ -27,7 +27,7 @@ do
         then
             echo "All Servers are not UP"
             echo SCENARIO-ulcltcplb [FAILED]
-            sudo pkill node
+            kill_test_servers
             exit 1
         fi
     fi
@@ -66,6 +66,6 @@ then
 else
     echo SCENARIO-ulcltcplb [FAILED]
 fi
-sudo pkill node
+kill_test_servers
 exit $code
 

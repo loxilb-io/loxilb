@@ -1,12 +1,12 @@
 #!/bin/bash
-source /vagrant/common.sh
+source /home/vagrant/common.sh
 source /vagrant/check_ha.sh
 
 echo -e "sctpmh: SCTP Multihoming - C2LB HA Failover Test. Client and LB Multihomed, EP is uni-homed\n"
 extIP="20.20.20.1"
 port=2020
 
-check_ha
+check_ha || { echo "NOK" > /vagrant/status5.txt; exit 1; }
 
 echo "SCTP Multihoming service sctp-lb(Multipath traffic) -> $extIP:$port"
 echo -e "------------------------------------------------------------------------------------\n"
@@ -38,7 +38,7 @@ frecover=1
 for((i=0;i<15;i++)) do
     syncOk=$nsyncOk
     if [[ $checkha == 1 ]]; then
-        check_ha
+        check_ha || { echo "NOK" > /vagrant/status5.txt; restart_loxilbs; exit 1; }
         echo -e "\nHA state Master:$master BACKUP-$backup\n"
         nsyncOk=$(checkSync)
         if [[ $nsyncOk == 2 ]]; then #No active connections in Master, no need to continue.

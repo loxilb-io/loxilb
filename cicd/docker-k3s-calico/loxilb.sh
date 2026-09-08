@@ -1,5 +1,5 @@
 source /vagrant/common.sh
-source /vagrant/k3s_common.sh
+source /home/vagrant/k3s_common.sh
 
 export LOXILB_IP=$(ip a |grep global | grep -v '10.0.2.15' | grep -v '192.168.80' | awk '{print $2}' | cut -f1 -d '/')
 

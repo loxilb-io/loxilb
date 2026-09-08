@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source /vagrant/common.sh
+source /home/vagrant/common.sh
 
 echo "#########################################"
 echo "Spawning all hosts"
