@@ -80,8 +80,8 @@ func (xs *XSync) DpWorkOnCtAdd(cti DpCtInfo, ret *int) error {
 	}
 
 	if cti.Proto == "xsync" {
-		mh.dp.SyncMtx.Lock()
-		defer mh.dp.SyncMtx.Unlock()
+		mh.dp.RemoteMtx.Lock()
+		defer mh.dp.RemoteMtx.Unlock()
 
 		for idx := range mh.dp.Remotes {
 			r := &mh.dp.Remotes[idx]
@@ -126,10 +126,11 @@ func (xs *XSync) DpWorkOnCtGet(async int, ret *int) error {
 		return errors.New("Not-Ready")
 	}
 
-	// Most likely need to reset reverse rpc channel
-	mh.dp.DpXsyncRPCReset()
-
 	tk.LogIt(tk.LogDebug, "RPC -  CT Get %d\n", async)
+	// Queue the reverse broadcast without resetting its RPC connection from
+	// inside this request handler. Resetting here needs the same client lock
+	// held by a simultaneous outbound CT Get and can make both peers wait for
+	// each other until the RPC timeout.
 	mh.dp.DpHooks.DpCtGetAsync()
 	*ret = 0
 

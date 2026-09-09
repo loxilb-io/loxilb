@@ -504,14 +504,15 @@ type DpPeer struct {
 
 // DpH - datapath context container
 type DpH struct {
-	ToDpCh   chan interface{}
-	FromDpCh chan interface{}
-	ToFinCh  chan int
-	DpHooks  DpHookInterface
-	SyncMtx  sync.RWMutex
-	Peers    []DpPeer
-	RPC      *XSync
-	Remotes  []XSync
+	ToDpCh    chan interface{}
+	FromDpCh  chan interface{}
+	ToFinCh   chan int
+	DpHooks   DpHookInterface
+	SyncMtx   sync.RWMutex
+	RemoteMtx sync.RWMutex
+	Peers     []DpPeer
+	RPC       *XSync
+	Remotes   []XSync
 }
 
 // DpXsyncRPCReset - Routine to reset Sunc RPC Client connections
@@ -527,8 +528,8 @@ func (dp *DpH) DpXsyncRPCReset() int {
 
 // DpXsyncInSync - Routine to check if remote peer is in sync
 func (dp *DpH) DpXsyncInSync() bool {
-	dp.SyncMtx.Lock()
-	defer dp.SyncMtx.Unlock()
+	dp.RemoteMtx.RLock()
+	defer dp.RemoteMtx.RUnlock()
 
 	return len(dp.Remotes) >= len(mh.has.NodeMap)
 }
