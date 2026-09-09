@@ -17,8 +17,10 @@
 package loxinet
 
 import (
+	"context"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/loxilb-io/loxilb/pkg/utils"
 )
@@ -151,4 +153,98 @@ func TestLogVipAdvIfTransitions(t *testing.T) {
 	// A VIP that is not in the map must not be tracked or panic.
 	R.logVipAdvIf(ip, net.ParseIP("20.20.20.2"), "eth0")
 	R.logVipAdvIf(ip, nil, "eth0")
+}
+
+// burstProbe - a run function that reports when it starts and when its
+// context is cancelled
+type burstProbe struct {
+	started   chan struct{}
+	cancelled chan struct{}
+}
+
+func newBurstProbe() *burstProbe {
+	return &burstProbe{started: make(chan struct{}), cancelled: make(chan struct{})}
+}
+
+func (p *burstProbe) run(ctx context.Context) {
+	close(p.started)
+	<-ctx.Done()
+	close(p.cancelled)
+}
+
+func waitClosed(t *testing.T, ch chan struct{}, what string) {
+	t.Helper()
+	select {
+	case <-ch:
+	case <-time.After(2 * time.Second):
+		t.Fatalf("%s did not happen", what)
+	}
+}
+
+func assertOpen(t *testing.T, ch chan struct{}, what string) {
+	t.Helper()
+	select {
+	case <-ch:
+		t.Fatalf("%s happened, should not have", what)
+	case <-time.After(50 * time.Millisecond):
+	}
+}
+
+func TestVipAdvBurstSchedReplaces(t *testing.T) {
+	var s vipAdvBurstSched
+
+	first := newBurstProbe()
+	s.arm("inst0", first.run)
+	waitClosed(t, first.started, "first burst start")
+	assertOpen(t, first.cancelled, "first burst cancel")
+
+	// A second promotion of the same instance replaces the burst.
+	second := newBurstProbe()
+	s.arm("inst0", second.run)
+	waitClosed(t, first.cancelled, "first burst cancel on replace")
+	waitClosed(t, second.started, "second burst start")
+	assertOpen(t, second.cancelled, "second burst cancel")
+
+	// Another instance runs alongside, untouched.
+	other := newBurstProbe()
+	s.arm("inst1", other.run)
+	waitClosed(t, other.started, "other instance burst start")
+	assertOpen(t, second.cancelled, "second burst cancel by other instance")
+
+	// A demotion (nil run) only stops what is running.
+	s.arm("inst0", nil)
+	waitClosed(t, second.cancelled, "second burst cancel on demotion")
+	assertOpen(t, other.cancelled, "other instance burst cancel by inst0 demotion")
+
+	s.arm("inst1", nil)
+	waitClosed(t, other.cancelled, "other instance burst cancel")
+}
+
+func TestVipAdvBurstSchedForgetsFinished(t *testing.T) {
+	var s vipAdvBurstSched
+
+	done := make(chan struct{})
+	s.arm("inst0", func(ctx context.Context) { close(done) })
+	waitClosed(t, done, "burst run")
+
+	// A finished burst leaves nothing behind, so a later replacement does
+	// not cancel a stranger's context.
+	deadline := time.After(2 * time.Second)
+	for {
+		s.mx.Lock()
+		n := len(s.active)
+		s.mx.Unlock()
+		if n == 0 {
+			break
+		}
+		select {
+		case <-deadline:
+			t.Fatalf("finished burst still registered")
+		case <-time.After(10 * time.Millisecond):
+		}
+	}
+
+	// Demoting an instance with no burst is a no-op.
+	s.arm("inst0", nil)
+	s.arm("never", nil)
 }

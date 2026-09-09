@@ -17,9 +17,12 @@
 package loxinet
 
 import (
+	"context"
 	"net"
 	"sync"
+	"time"
 
+	cmn "github.com/loxilb-io/loxilb/common"
 	opts "github.com/loxilb-io/loxilb/options"
 	"github.com/loxilb-io/loxilb/pkg/utils"
 	tk "github.com/loxilb-io/loxilib"
@@ -276,4 +279,145 @@ func (R *RuleH) vipAdvConfIf() string {
 	}
 
 	return dev
+}
+
+// vipAdvBurst - one running advertisement burst
+type vipAdvBurst struct {
+	cancel context.CancelFunc
+}
+
+// vipAdvBurstSched - at most one advertisement burst per cluster instance
+//
+// A burst belongs to the transition that started it. The next transition of
+// the same instance, whichever way it goes, replaces it: a promotion starts a
+// fresh burst, a demotion just stops the old one, so a master that steps down
+// mid-burst does not keep claiming the VIPs for the peer that took them.
+type vipAdvBurstSched struct {
+	mx     sync.Mutex
+	active map[string]*vipAdvBurst
+}
+
+// arm - drop the burst running for inst, if any, and start run in its place
+//
+// run may be nil, which only does the drop. run gets a context that is
+// cancelled when it is replaced, and is expected to return promptly on it.
+func (s *vipAdvBurstSched) arm(inst string, run func(ctx context.Context)) {
+	s.mx.Lock()
+	defer s.mx.Unlock()
+
+	if s.active == nil {
+		s.active = make(map[string]*vipAdvBurst)
+	}
+	if b := s.active[inst]; b != nil {
+		b.cancel()
+		delete(s.active, inst)
+	}
+	if run == nil {
+		return
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	b := &vipAdvBurst{cancel: cancel}
+	s.active[inst] = b
+
+	go func() {
+		defer func() {
+			cancel()
+			s.mx.Lock()
+			if s.active[inst] == b {
+				delete(s.active, inst)
+			}
+			s.mx.Unlock()
+		}()
+		run(ctx)
+	}()
+}
+
+// vipAdvTarget - a VIP and the interface it is advertised on
+type vipAdvTarget struct {
+	ip    net.IP
+	iface string
+}
+
+// vipAdvBurstOnState - repeat the advertisement after a MASTER transition
+//
+// The transition sends one gratuitous ARP or NA per VIP, and the next one is
+// the sweep's, up to VIPSweepDuration later. One frame is easy to lose - the
+// link may still be coming up, the switch may still be learning - and until
+// the sweep every neighbour keeps its stale entry and forwards to the old
+// master. So send a few more, VIPAdvRepeatInterval apart, the way keepalived
+// does with garp_master_repeat. Rule adds while already master are not
+// repeated: there is no stale entry to overwrite, the first ARP request
+// resolves the VIP on its own.
+//
+// Whatever the new state, a burst still running for the instance is dropped
+// first. The repeats are advertisements only: the bind, cloud hook and
+// neighbour cleanup happened on the transition and are not redone.
+func (R *RuleH) vipAdvBurstOnState(inst, ciStateStr string) {
+	repeat := opts.Opts.VIPAdvRepeat
+	if ciStateStr != cmn.CIMasterStateString || repeat <= 0 {
+		R.vipAdvRep.arm(inst, nil)
+		return
+	}
+
+	tk.LogIt(tk.LogInfo, "lb-rule vip adv - %s master, repeating %d times\n", inst, repeat)
+
+	R.vipAdvRep.arm(inst, func(ctx context.Context) {
+		for i := 0; i < repeat; i++ {
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(VIPAdvRepeatInterval * time.Second):
+			}
+
+			targets := R.vipAdvBurstTargets(inst)
+			if len(targets) == 0 {
+				return
+			}
+			for _, t := range targets {
+				if ctx.Err() != nil {
+					return
+				}
+				tk.LogIt(tk.LogDebug, "lb-rule vip %s - repeat %d/%d on %s\n", t.ip.String(), i+1, repeat, t.iface)
+				vipAdvSend(t.ip, t.iface)
+			}
+		}
+	})
+}
+
+// vipAdvBurstTargets - the VIPs of inst and where each goes, nil once inst is
+// no longer master
+//
+// Resolved fresh under the lock, like the sweep does, so a routing change
+// between repeats is followed rather than remembered. The frames themselves
+// go out after the lock is dropped.
+func (R *RuleH) vipAdvBurstTargets(inst string) []vipAdvTarget {
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	if ciState, _ := mh.has.CIStateGetInst(inst); ciState != cmn.CIMasterStateString {
+		return nil
+	}
+
+	advCtx := new(vipAdvCtx)
+	targets := make([]vipAdvTarget, 0, len(R.vipMap))
+	for vip, vipElem := range R.vipMap {
+		if vipElem.inst != inst {
+			continue
+		}
+		ip := vipElem.pVIP
+		if ip == nil {
+			ip = net.ParseIP(vip)
+		}
+		if ip == nil || ip.IsUnspecified() {
+			continue
+		}
+		iface := R.VipAdvIf(ip, advCtx)
+		if iface == "" {
+			continue
+		}
+		targets = append(targets, vipAdvTarget{ip: ip, iface: iface})
+	}
+
+	return targets
 }
