@@ -48,6 +48,7 @@ var Opts struct {
 	ProxyModeOnly        bool           `long:"proxyonlymode" description:"Run loxilb in proxy mode only, no Datapath"`
 	WhiteList            string         `long:"whitelist" description:"Regex string of whitelisted interface(experimental)" default:"none"`
 	ClusterInterface     string         `long:"clusterinterface" description:"cluster interface for egress HA" default:""`
+	VIPAdvDev            string         `long:"vip-adv-dev" description:"interface to advertise LB rule VIPs on, overrides automatic resolution" default:""`
 	UserServiceEnable    bool           `long:"userservice" description:"Enable user service for loxilb"`
 	DatabaseHost         string         `long:"databasehost" description:"Database host" default:"127.0.0.1"`
 	DatabasePort         int            `long:"databaseport" description:"Database port" default:"3306"`

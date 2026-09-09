@@ -62,6 +62,13 @@ func NetAdvertiseVI64Req(targetIP net.IP, ifName string) (int, error) {
 	if err != nil {
 		return -1, errors.New("intfv6-err")
 	}
+	// newNeighborAdvertisementPayload copies into a fixed size buffer, so a link
+	// without a six byte MAC puts an all-zero target link-layer address option
+	// on the wire. That NA is well formed, and a receiver acting on it maps the
+	// VIP to 00:00:00:00:00:00.
+	if len(ifi.HardwareAddr) != 6 {
+		return -1, errors.New("intfv6-mac-err")
+	}
 
 	srcIP := net.IPv6linklocalallnodes
 	dstIP := net.IPv6linklocalallnodes
@@ -262,8 +269,144 @@ func IsIPHostNetAddr(ip net.IP) bool {
 	return false
 }
 
+// EgressCand - a candidate egress interface for advertising a VIP, taken from
+// a single main table route that covers it
+type EgressCand struct {
+	// PrefixLen - prefix length of the matching route, longest match wins
+	PrefixLen int
+	// Priority - route metric, lowest wins between equal prefix lengths
+	Priority int
+	// IfIndex - OS index of the egress link
+	IfIndex int
+	// IfName - name of the egress link
+	IfName string
+}
+
+// IfLookup - resolves an OS link index to an interface, so tests can supply
+// their own links instead of whatever the host happens to have
+type IfLookup func(index int) (*net.Interface, error)
+
+// AdvIfUsable - can a gratuitous ARP or an unsolicited NA go out of this link
+//
+// The frame builders copy HardwareAddr into the payload, so a link without a
+// six byte MAC yields either a short ARP frame or an NA whose target
+// link-layer address option is all zeros. Go leaves HardwareAddr empty when
+// IFLA_ADDRESS is all zeros, which is the case for lo and for L3-only devices,
+// and loxilb registers such links as ports all the same. A point-to-point link
+// has no L2 neighbours to tell.
+func AdvIfUsable(ifi *net.Interface) bool {
+	if ifi == nil {
+		return false
+	}
+	if ifi.Flags&net.FlagUp == 0 {
+		return false
+	}
+	if ifi.Flags&net.FlagPointToPoint != 0 {
+		return false
+	}
+	return len(ifi.HardwareAddr) == 6
+}
+
+// AdvIfUsableByName - AdvIfUsable for a link named at runtime
+func AdvIfUsableByName(ifName string) bool {
+	if ifName == "" || ifName == "lo" {
+		return false
+	}
+	ifi, err := net.InterfaceByName(ifName)
+	if err != nil {
+		return false
+	}
+	return AdvIfUsable(ifi)
+}
+
+// routeCovers - does rt cover dst, and at what prefix length
+//
+// netlink leaves Dst nil for a default route, so its family comes from the
+// message instead.
+func routeCovers(rt *nlp.Route, dst net.IP, v6 bool) (int, bool) {
+	if rt.Dst == nil {
+		if (rt.Family == unix.AF_INET6) != v6 {
+			return 0, false
+		}
+		return 0, true
+	}
+
+	if (rt.Dst.IP.To4() == nil) != v6 {
+		return 0, false
+	}
+	if !rt.Dst.Contains(dst) {
+		return 0, false
+	}
+
+	ones, _ := rt.Dst.Mask.Size()
+	return ones, true
+}
+
+// MainTableEgressCands - egress candidates for dst out of a main table route dump
+//
+// Every candidate returned covers dst, comes from a unicast route and has an
+// egress link that passes AdvIfUsable. Other route types are dropped because
+// blackhole, unreachable, prohibit and throw carry no RTA_OIF, so their
+// LinkIndex is zero. Multipath routes report their first nexthop, which is not
+// necessarily the one the kernel's per-flow hash picks.
+//
+// The result is deliberately unordered and unfiltered beyond that: the caller
+// knows which links are loxilb ports and must drop the rest before picking the
+// longest prefix, and the lowest Priority between equal prefixes. lookup
+// defaults to net.InterfaceByIndex.
+func MainTableEgressCands(dst net.IP, routes []nlp.Route, lookup IfLookup) []EgressCand {
+	if dst == nil {
+		return nil
+	}
+	if lookup == nil {
+		lookup = net.InterfaceByIndex
+	}
+
+	v6 := dst.To4() == nil
+	cands := make([]EgressCand, 0, 4)
+
+	for i := range routes {
+		rt := &routes[i]
+
+		if rt.Type != unix.RTN_UNICAST {
+			continue
+		}
+
+		prefixLen, ok := routeCovers(rt, dst, v6)
+		if !ok {
+			continue
+		}
+
+		ifIndex := rt.LinkIndex
+		if len(rt.MultiPath) > 0 {
+			ifIndex = rt.MultiPath[0].LinkIndex
+		}
+		if ifIndex <= 0 {
+			continue
+		}
+
+		ifi, err := lookup(ifIndex)
+		if err != nil || !AdvIfUsable(ifi) {
+			continue
+		}
+
+		cands = append(cands, EgressCand{
+			PrefixLen: prefixLen,
+			Priority:  rt.Priority,
+			IfIndex:   ifIndex,
+			IfName:    ifi.Name,
+		})
+	}
+
+	return cands
+}
+
 // NetAdvertiseVIP4Req - sends a gratuitous arp reply given the DIP, SIP and interface name
 func NetAdvertiseVIP4Req(AdvIP net.IP, ifName string) (int, error) {
+	if AdvIP == nil || ifName == "" || ifName == "lo" {
+		return -1, errors.New("invalid parameters")
+	}
+
 	bcAddr := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
 	fd, err := syscall.Socket(syscall.AF_PACKET, syscall.SOCK_DGRAM, int(tk.Htons(syscall.ETH_P_ARP)))
 	if err != nil {
@@ -278,6 +421,12 @@ func NetAdvertiseVIP4Req(AdvIP net.IP, ifName string) (int, error) {
 	ifi, err := net.InterfaceByName(ifName)
 	if err != nil {
 		return -1, errors.New("intf-err")
+	}
+	// The frame below writes HardwareAddr as the sender hardware address without
+	// padding it, so anything but six bytes puts a short, malformed ARP on the
+	// wire. Go leaves HardwareAddr empty when IFLA_ADDRESS is all zeros.
+	if len(ifi.HardwareAddr) != 6 {
+		return -1, errors.New("intf-mac-err")
 	}
 
 	ll := syscall.SockaddrLinklayer{
@@ -417,6 +566,12 @@ func SendArpReq(AdvIP net.IP, ifName string) (int, error) {
 	ifi, err := net.InterfaceByName(ifName)
 	if err != nil {
 		return -1, errors.New("intf-err")
+	}
+	// The frame below writes HardwareAddr as the sender hardware address without
+	// padding it, so anything but six bytes puts a short, malformed ARP on the
+	// wire. Go leaves HardwareAddr empty when IFLA_ADDRESS is all zeros.
+	if len(ifi.HardwareAddr) != 6 {
+		return -1, errors.New("intf-mac-err")
 	}
 
 	ll := syscall.SockaddrLinklayer{
