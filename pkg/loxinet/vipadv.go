@@ -288,10 +288,11 @@ type vipAdvBurst struct {
 
 // vipAdvBurstSched - at most one advertisement burst per cluster instance
 //
-// A burst belongs to the transition that started it. The next transition of
-// the same instance, whichever way it goes, replaces it: a promotion starts a
-// fresh burst, a demotion just stops the old one, so a master that steps down
-// mid-burst does not keep claiming the VIPs for the peer that took them.
+// A burst belongs to the most recently observed state of its instance, not to
+// the transition that happened to start it. Each observation replaces what is
+// running: master starts a fresh burst, anything else just stops the old one,
+// so a master that steps down mid-burst does not keep claiming the VIPs for
+// the peer that took them.
 type vipAdvBurstSched struct {
 	mx     sync.Mutex
 	active map[string]*vipAdvBurst
@@ -339,23 +340,36 @@ type vipAdvTarget struct {
 	iface string
 }
 
-// vipAdvBurstOnState - repeat the advertisement after a MASTER transition
+// vipAdvBurstOnState - repeat the advertisement while the instance is master
 //
-// The transition sends one gratuitous ARP or NA per VIP, and the next one is
-// the sweep's, up to VIPSweepDuration later. One frame is easy to lose - the
-// link may still be coming up, the switch may still be learning - and until
-// the sweep every neighbour keeps its stale entry and forwards to the old
-// master. So send a few more, VIPAdvRepeatInterval apart, the way keepalived
-// does with garp_master_repeat. Rule adds while already master are not
-// repeated: there is no stale entry to overwrite, the first ARP request
-// resolves the VIP on its own.
+// A promotion sends one gratuitous ARP or NA per VIP, and the next one is the
+// sweep's, up to VIPSweepDuration later. One frame is easy to lose - the link
+// may still be coming up, the switch may still be learning - and until the
+// sweep every neighbour keeps its stale entry and forwards to the old master.
+// So send a few more, VIPAdvRepeatInterval apart, the way keepalived does
+// with garp_master_repeat. Rule adds while already master are not repeated:
+// there is no stale entry to overwrite, the first ARP request resolves the
+// VIP on its own.
 //
-// Whatever the new state, a burst still running for the instance is dropped
-// first. The repeats are advertisements only: the bind, cloud hook and
-// neighbour cleanup happened on the transition and are not redone.
-func (R *RuleH) vipAdvBurstOnState(inst, ciStateStr string) {
+// The decision is taken on the state as it is now, not on the transition that
+// got us here. The cluster sync runs as one goroutine per transition with no
+// ordering between them, so a late BACKUP sync must not cancel the burst a
+// newer MASTER sync started. The read and the arm sit under one exclusive
+// lock: state changes happen under the same lock, so whichever sync runs
+// last acts on the true state at that moment. This nests s.mx inside mh.mtx;
+// nothing takes them the other way round - the burst goroutine takes mh.mtx
+// only from vipAdvBurstTargets, after run has been entered, and its cleanup
+// takes s.mx only after run has returned.
+//
+// The repeats are advertisements only: the bind, cloud hook and neighbour
+// cleanup happened on the transition and are not redone.
+func (R *RuleH) vipAdvBurstOnState(inst string) {
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
+	ciState, _ := mh.has.CIStateGetInst(inst)
 	repeat := opts.Opts.VIPAdvRepeat
-	if ciStateStr != cmn.CIMasterStateString || repeat <= 0 {
+	if ciState != cmn.CIMasterStateString || repeat <= 0 {
 		R.vipAdvRep.arm(inst, nil)
 		return
 	}

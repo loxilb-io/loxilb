@@ -3601,6 +3601,12 @@ func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool, ctx 
 	return nil
 }
 
+// RulesSyncToClusterState - bring rules, VIPs and firewall entries in line
+// with a cluster state change
+//
+// Always started with go from CIStateUpdate, one goroutine per transition,
+// and runs without mh.mtx. It must not be called synchronously while mh.mtx
+// is held: vipAdvBurstOnState takes that lock itself.
 func (R *RuleH) RulesSyncToClusterState(inst, ciStateStr string) {
 
 	// For Cloud integrations, certain operations are performed only on default instance state changes
@@ -3637,7 +3643,7 @@ func (R *RuleH) RulesSyncToClusterState(inst, ciStateStr string) {
 		}
 	}
 
-	R.vipAdvBurstOnState(inst, ciStateStr)
+	R.vipAdvBurstOnState(inst)
 }
 
 func (r *ruleEnt) RuleVIP2PrivIP() net.IP {
