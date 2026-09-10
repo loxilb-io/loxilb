@@ -353,6 +353,10 @@ func loxiNetInit() {
 			return
 		}
 
+		// Cluster state changes are applied to the root zone; start applying
+		// them now that it exists.
+		mh.has.CIStartSync()
+
 		if clusterMode {
 			if opts.Opts.Bgp {
 				tk.LogIt(tk.LogInfo, "init-wait cluster mode\n")

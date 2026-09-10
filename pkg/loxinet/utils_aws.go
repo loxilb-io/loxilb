@@ -177,7 +177,13 @@ func (aws *AWSAPIStruct) CloudPrepareVIPNetWork() error {
 		return nil
 	}
 
+	// This runs outside mh.mtx (the cluster sync worker keeps the AWS calls
+	// out of the lock), while the VIP path reads these globals under it from
+	// awsPrepDFLRoute and awsUpdatePrivateIP. So each write takes the lock
+	// for just the assignment.
+	mh.mtx.Lock()
 	setDFLRoute = true
+	mh.mtx.Unlock()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*30))
 	defer cancel()
@@ -415,7 +421,9 @@ func (aws *AWSAPIStruct) CloudPrepareVIPNetWork() error {
 	}
 
 	loxiEniPrivIP := *intfOutput.NetworkInterface.PrivateIpAddress
+	mh.mtx.Lock()
 	loxiEniID = *intfOutput.NetworkInterface.NetworkInterfaceId
+	mh.mtx.Unlock()
 
 	tk.LogIt(tk.LogInfo, "Created interface (%s:%s) for loxilb instance %v\n", *intfOutput.NetworkInterface.NetworkInterfaceId, loxiEniPrivIP, vpcID)
 
@@ -495,7 +503,9 @@ retry:
 			goto retry
 		}
 	} else {
+		mh.mtx.Lock()
 		intfENIName = newIntfName
+		mh.mtx.Unlock()
 	}
 
 	return nil
@@ -615,6 +625,12 @@ func (aws *AWSAPIStruct) CloudDestroyVIPNetWork() error {
 }
 
 func (aws *AWSAPIStruct) CloudUnPrepareVIPNetWork() error {
+	// No AWS calls here, only netlink lookups and the loxilb route table,
+	// which the API changes under mh.mtx. The caller (the cluster sync
+	// worker) does not hold the lock.
+	mh.mtx.Lock()
+	defer mh.mtx.Unlock()
+
 	_, defaultDst, _ := net.ParseCIDR("0.0.0.0/0")
 	if intfENIName == "" {
 		tk.LogIt(tk.LogError, "failed to get ENI intf name (%s)\n", intfENIName)
