@@ -101,6 +101,13 @@ type bfdSession struct {
 	Mutex          sync.RWMutex
 	Notify         Notifer
 	PktDat         [24]byte
+	// Election notifications are decided under Mutex and parked in ntfPending
+	// (latest wins). ntfSig wakes the per-session notifier goroutine, which is
+	// the only path that calls Notify. This keeps Notify (and any lock it takes)
+	// out of BFDMtx/Mutex and out of the ticker and listener goroutines.
+	ntfPending string
+	ntfSig     chan struct{}
+	ntfFin     chan struct{}
 }
 
 type Struct struct {
@@ -124,6 +131,7 @@ func (bs *Struct) BFDAddRemote(args ConfigArgs, cbs Notifer) error {
 	if sess != nil {
 		var update bool
 		if sess.Instance == args.Instance {
+			sess.Mutex.Lock()
 			if args.Interval != 0 && sess.DesMinTxInt != args.Interval {
 				sess.DesMinTxInt = args.Interval
 				sess.ReqMinRxInt = args.Interval
@@ -134,11 +142,14 @@ func (bs *Struct) BFDAddRemote(args ConfigArgs, cbs Notifer) error {
 				sess.MyMulti = args.Multi
 				update = true
 			}
+			sess.Mutex.Unlock()
 			if update {
 				sess.Fin <- true
 				sess.TxTicker.Stop()
 				sess.RxTicker.Stop()
+				sess.Mutex.Lock()
 				sess.State = BFDDown
+				sess.Mutex.Unlock()
 
 				sess.TxTicker = time.NewTicker(time.Duration(sess.DesMinTxInt) * time.Microsecond)
 				sess.RxTicker = time.NewTicker(time.Duration(BFDMinSysRXIntervalUs) * time.Microsecond)
@@ -198,9 +209,11 @@ func (bs *Struct) BFDGet() ([]cmn.BFDMod, error) {
 		temp.SourceIP = s.MyIP
 		port, _ := strconv.Atoi(pair[1])
 		temp.Port = uint16(port)
+		s.Mutex.RLock()
 		temp.Interval = uint64(s.DesMinTxInt)
 		temp.RetryCount = s.MyMulti
 		temp.State = BFDStateMap[uint8(s.State)]
+		s.Mutex.RUnlock()
 		res = append(res, temp)
 	}
 
@@ -275,11 +288,10 @@ func (bs *Struct) bfdStartListener(port uint16) error {
 }
 
 func (b *bfdSession) RunSessionSM(raw *WireRaw) {
-	inst := b.Instance
-	rem := b.RemoteName
-	oldState := b.State
-
 	b.Mutex.Lock()
+	defer b.Mutex.Unlock()
+
+	oldState := b.State
 
 	b.RemMulti = raw.Multi
 	b.RemDisc = raw.Disc
@@ -318,18 +330,15 @@ func (b *bfdSession) RunSessionSM(raw *WireRaw) {
 			}
 		}
 	}
-	newState := b.State
-	b.Mutex.Unlock()
 
-	b.sendStateNotification(newState, oldState, inst, rem)
+	b.electLocked(b.State, oldState)
 }
 
 func (b *bfdSession) checkSessTimeout() {
-	inst := b.Instance
-	rem := b.RemoteName
-	oldState := b.State
-
 	b.Mutex.Lock()
+	defer b.Mutex.Unlock()
+
+	oldState := b.State
 	if b.State == BFDUp {
 		if time.Duration(time.Since(b.LastRxTS).Microseconds()) > time.Duration(b.TimeOut) {
 			b.State = BFDDown
@@ -337,33 +346,63 @@ func (b *bfdSession) checkSessTimeout() {
 			tk.LogIt(tk.LogInfo, "%s: BFD State -> Down (%v:%v)\n", b.RemoteName, b.MyDisc, b.RemDisc)
 		}
 	}
-	newState := b.State
-	b.Mutex.Unlock()
 
-	b.sendStateNotification(newState, oldState, inst, rem)
+	b.electLocked(b.State, oldState)
 }
 
-func (b *bfdSession) sendStateNotification(newState, oldState SessionState, inst string, remote string) {
+// electLocked decides the cluster role for a session-state transition, records
+// it in CiState and queues it for the notifier goroutine. The decision, the
+// CiState write and the queueing happen in one critical section so that the
+// order in which notifications are delivered is the order in which they were
+// decided. Must be called with b.Mutex held for writing.
+func (b *bfdSession) electLocked(newState, oldState SessionState) {
 	if newState == oldState || b.RemDisc == 0 {
 		return
 	}
 
+	var ciState string
 	if newState == BFDUp {
-		ciState := cmn.CIBackupStateString
+		ciState = cmn.CIBackupStateString
 		if b.MyDisc > b.RemDisc {
 			ciState = cmn.CIMasterStateString
 		}
 		tk.LogIt(tk.LogInfo, "%s: State change (%v:%v)\n", b.RemoteName, b.MyDisc, b.RemDisc)
-		b.CiState = ciState
-		b.Notify.BFDSessionNotify(inst, remote, ciState)
 	} else if newState == BFDDown && oldState == BFDUp {
-		ciState := cmn.CIMasterStateString
-		b.CiState = ciState
-		b.Notify.BFDSessionNotify(inst, remote, ciState)
+		ciState = cmn.CIMasterStateString
 	} else if b.RemDisc == b.MyDisc {
-		ciState := cmn.CIUnDefStateString
-		b.CiState = ciState
-		b.Notify.BFDSessionNotify(inst, remote, ciState)
+		ciState = cmn.CIUnDefStateString
+	} else {
+		return
+	}
+
+	b.CiState = ciState
+	b.ntfPending = ciState
+	select {
+	case b.ntfSig <- struct{}{}:
+	default:
+		// notifier already signalled; it will pick up the latest value
+	}
+}
+
+// bfdSessionNotifier delivers queued election results to Notify, one at a
+// time and in decision order. It runs per session and is the only goroutine
+// that calls Notify, so callers of Notify never hold BFDMtx or b.Mutex.
+func (b *bfdSession) bfdSessionNotifier() {
+	for {
+		select {
+		case <-b.ntfFin:
+			return
+		case <-b.ntfSig:
+		}
+
+		b.Mutex.Lock()
+		ciState := b.ntfPending
+		b.ntfPending = ""
+		b.Mutex.Unlock()
+
+		if ciState != "" {
+			b.Notify.BFDSessionNotify(b.Instance, b.RemoteName, ciState)
+		}
 	}
 }
 
@@ -450,16 +489,22 @@ func (b *bfdSession) initialize(remoteIP string, sourceIP string, port uint16, i
 	}
 
 	b.Fin = make(chan bool)
+	b.ntfSig = make(chan struct{}, 1)
+	b.ntfFin = make(chan struct{})
 	b.TxTicker = time.NewTicker(time.Duration(b.DesMinTxInt) * time.Microsecond)
 	b.RxTicker = time.NewTicker(time.Duration(BFDMinSysRXIntervalUs) * time.Microsecond)
 
+	go b.bfdSessionNotifier()
 	go b.bfdSessionTicker()
 	return nil
 }
 
 func (b *bfdSession) destruct() {
+	b.Mutex.Lock()
 	b.State = BFDAdminDown
+	b.Mutex.Unlock()
 	b.Fin <- true
+	close(b.ntfFin)
 	b.TxTicker.Stop()
 	b.RxTicker.Stop()
 	// Signal ADMIN Down to peer
@@ -468,6 +513,8 @@ func (b *bfdSession) destruct() {
 }
 
 func (b *bfdSession) encodeCtrlPacket() error {
+	b.Mutex.RLock()
+	defer b.Mutex.RUnlock()
 
 	b.PktDat[0] = byte(byte(0x1<<5) | byte(0))
 	b.PktDat[1] = (uint8(b.State) << 6)
