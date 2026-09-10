@@ -966,6 +966,52 @@ func setNatKeyDaddr(key *natKey, ip net.IP) {
 	}
 }
 
+// secIPNatActs - the NAT action block to install under a secondary VIP
+//
+// A secondary VIP gets its own copy of the primary's block, and in that copy
+// every endpoint that source-NATs does so from the secondary VIP instead of
+// the primary. The kernel builds the reverse conntrack key from nat_rip
+// (EP -> nat_rip), so with one block shared by all the VIPs every path of an
+// SCTP association had the same reverse key on a node that had not seen the
+// INIT: the first path to arrive got a conntrack entry and every other path
+// was dropped at conntrack creation, for the life of the association. The
+// multipath pre-creation path in the kernel already keys each path on its own
+// VIP; this makes the map install agree with it.
+//
+// Only DNAT-type blocks are touched. An endpoint whose nat_rip is zero (a
+// plain DNAT rule, or an endpoint that is the VIP itself or a local address)
+// is left alone: the kernel then keys the reverse entry on the original
+// daddr, which already is the secondary VIP, and adding a source NAT there
+// would change behaviour. A full-proxy block is returned as is - its
+// endpoints are proxy arguments, not a NAT transform.
+func secIPNatActs(dat *proxyActs, sip net.IP) *proxyActs {
+	if dat.ca.act_type != C.DP_SET_DNAT {
+		return dat
+	}
+
+	sDat := new(proxyActs)
+	*sDat = *dat
+
+	v6 := tk.IsNetIPv6(sip.String())
+	for i := 0; i < int(sDat.nxfrm) && i < len(sDat.nxfrms); i++ {
+		nxfa := (*nxfrmAct)(unsafe.Pointer(&sDat.nxfrms[i]))
+		if nxfa.nat_rip[0] == 0 && nxfa.nat_rip[1] == 0 &&
+			nxfa.nat_rip[2] == 0 && nxfa.nat_rip[3] == 0 {
+			continue
+		}
+		if (nxfa.nv6 == 1) != v6 {
+			continue
+		}
+		if v6 {
+			convNetIP2DPv6Addr(unsafe.Pointer(&nxfa.nat_rip[0]), sip)
+		} else {
+			nxfa.nat_rip = [4]C.uint{C.uint(tk.IPtonl(sip)), 0, 0, 0}
+		}
+	}
+
+	return sDat
+}
+
 // DpLBRuleMod - routine to work on a ebpf lb change request
 func DpLBRuleMod(w *LBDpWorkQ) int {
 
@@ -1109,6 +1155,8 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 		// Add a dataplane NAT entry for each secondary VIP so SCTP packets
 		// addressed to a secondary VIP follow the same action as the primary VIP.
 		// Skip SNAT and fwmark-based NAT entries because they are not keyed on daddr.
+		// The action block is the primary's, except that the secondary VIP
+		// source-NATs from itself: see secIPNatActs.
 		if w.NatType != DpSnat && w.NatType != DpNat {
 			for _, sip := range w.secIP {
 				sKey := new(natKey)
@@ -1116,7 +1164,7 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 				setNatKeyDaddr(sKey, sip)
 				sret := C.llb_add_map_elem(C.LL_DP_NAT_MAP,
 					unsafe.Pointer(sKey),
-					unsafe.Pointer(dat))
+					unsafe.Pointer(secIPNatActs(dat, sip)))
 				if sret != 0 {
 					// Log the failure and continue after installing the primary entry.
 					tk.LogIt(tk.LogError, "[DP] LB rule secIP %s:%v add[NOK]\n", sip.String(), sKey.mark)

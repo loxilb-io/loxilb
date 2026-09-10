@@ -186,3 +186,40 @@ function restart_loxilbs() {
     # Confirm the routers actually point both gateway VIPs at the current master.
     wait_gw_arp
 }
+
+# Restart both loxilbs at once, so that whichever instance is elected MASTER
+# takes over WITHOUT any conntrack state: neither node has seen the INIT of an
+# association that outlives the restart, and neither has a peer to pull
+# conntrack from at start-up. This is the one thing restart_loxilbs is built
+# to avoid, and it is what the CT-less takeover case (validation7) needs.
+#
+# The simultaneous cold start also lets both instances claim the gateway VIPs
+# for a moment, so the routers may latch onto the loser; wait_gw_arp puts them
+# right before the caller looks at traffic.
+function restart_loxilbs_together() {
+    local n pid
+    for n in llb1 llb2; do
+        _node_opts "$n"
+        pid=$(ps -aef | grep "$_pat" | xargs | cut -d ' ' -f 2)
+        echo "Killing $n ($pid)" >&2
+        sudo kill -9 $pid
+    done
+    for n in llb1 llb2; do
+        _node_opts "$n"
+        docker exec -dt "$n" ip link del llb0
+        docker exec -dt "$n" /root/loxilb-io/loxilb/loxilb $_copts $_self $_ka
+    done
+    sleep 3
+    # Two instances electing at the same instant occasionally both settle on
+    # MASTER (BFD comes up on both within the same second and the two state
+    # notifications race). Restarting one of them alone re-runs the election
+    # against a stable peer. The CT-less takeover this helper exists for has
+    # already happened by then.
+    if ! check_ha; then
+        echo "cluster did not settle after the joint restart - restarting llb2 alone" >&2
+        restart_one llb2
+        sleep 3
+        check_ha || return 1
+    fi
+    wait_gw_arp
+}
