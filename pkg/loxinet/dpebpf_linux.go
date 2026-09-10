@@ -103,6 +103,7 @@ const (
 const (
 	dpEbpfLinuxTiVal     = 5
 	ctGCTiValDefault     = 15
+	ctiAddSyncRetries    = 3
 	ctiDeleteSyncRetries = 3
 	blkCtiMaxLen         = 8192
 	mapNotifierChLen     = 8096
@@ -2364,6 +2365,7 @@ func dpCTMapBcast() {
 
 	for _, cti := range mh.dpEbpf.ctMap {
 		if cti.Deleted <= 0 && cti.CState == "est" {
+			cti.SyncRetries = 0
 			cti.XSync = true
 		}
 	}
@@ -2387,37 +2389,46 @@ func cloneDpCtInfo(cti *DpCtInfo) DpCtInfo {
 	return clone
 }
 
-func dpCTMapFinishSync(block []DpCtInfo, deleteOp, succeeded bool) {
-	mh.dpEbpf.mtx.Lock()
-	defer mh.dpEbpf.mtx.Unlock()
+func dpCTMapFinishSync(dp *DpEbpfH, block []DpCtInfo, deleteOp, succeeded bool) {
+	dp.mtx.Lock()
+	defer dp.mtx.Unlock()
 
 	for idx := range block {
 		synced := &block[idx]
 		key := synced.Key()
-		current := mh.dpEbpf.ctMap[key]
+		current := dp.ctMap[key]
 		if current == nil || !current.NTs.Equal(synced.NTs) || current.Deleted != synced.Deleted {
 			continue
 		}
 
 		if succeeded {
 			if deleteOp {
-				delete(mh.dpEbpf.ctMap, key)
+				delete(dp.ctMap, key)
 			} else {
 				current.XSync = false
+				current.SyncRetries = 0
 			}
 			continue
 		}
 
-		// Keep failed additions pending for the next datapath tick. Deletes are
-		// retried a bounded number of times so an unavailable peer cannot retain
-		// stale shadow state forever.
-		if deleteOp && current.Deleted > ctiDeleteSyncRetries {
-			delete(mh.dpEbpf.ctMap, key)
+		if deleteOp {
+			// Deletes are retried a bounded number of times so an unavailable peer
+			// cannot retain stale shadow state forever.
+			if current.Deleted > ctiDeleteSyncRetries {
+				delete(dp.ctMap, key)
+			}
+		} else if current.SyncRetries > ctiAddSyncRetries {
+			// A rejected entry makes the whole block fail, so retain additions for
+			// a few ticks to cover transient rule-ordering and transport failures,
+			// but do not retry an unsendable block forever.
+			current.XSync = false
+			current.SyncRetries = 0
 		}
 	}
 }
 
-func dpCTMapSyncBlocks(op DpSyncOpT, entries []DpCtInfo) {
+func dpCTMapSyncBlocks(dp *DpEbpfH, op DpSyncOpT, entries []DpCtInfo,
+	syncRPC func(DpSyncOpT, interface{}) int) bool {
 	deleteOp := op == DpSyncDelete
 	operation := "Add"
 	if deleteOp {
@@ -2432,10 +2443,16 @@ func dpCTMapSyncBlocks(op DpSyncOpT, entries []DpCtInfo) {
 		block := entries[start:end]
 		tk.LogIt(tk.LogTrace, "[CT] Block %s Sync - \n", operation)
 		started := time.Now()
-		ret := mh.dp.DpXsyncRPC(op, block)
+		ret := syncRPC(op, block)
 		tk.LogIt(tk.LogTrace, "[CT] Block %s Sync %d took %v- \n", operation, len(block), time.Since(started))
-		dpCTMapFinishSync(block, deleteOp, ret == 0)
+		dpCTMapFinishSync(dp, block, deleteOp, ret == 0)
+		if ret != 0 {
+			// The remaining entries stay pending and will be retried on the next
+			// datapath tick. This bounds a peer outage to one failed block per tick.
+			return false
+		}
 	}
+	return true
 }
 
 func dpCTMapChkUpdates() {
@@ -2521,6 +2538,7 @@ func dpCTMapChkUpdates() {
 						if cti.Packets != p+uint64(tact.ctd.pb.packets) {
 							cti.Bytes = b + uint64(tact.ctd.pb.bytes)
 							cti.Packets = p + uint64(tact.ctd.pb.packets)
+							cti.SyncRetries = 0
 							cti.XSync = true
 							cti.NTs = tc
 							cti.LTs = tc
@@ -2536,18 +2554,21 @@ func dpCTMapChkUpdates() {
 				cti.Deleted++
 				blkDelCti = append(blkDelCti, cloneDpCtInfo(cti))
 			} else {
+				cti.SyncRetries++
 				blkCti = append(blkCti, cloneDpCtInfo(cti))
 			}
 		}
 	}
 
-	// Never hold the datapath CT mutex while waiting for a network RPC. Apart
-	// from blocking REST reads, doing so lets two peers deadlock while each
-	// inbound CT add waits for the other peer's local datapath mutex.
+	// Never hold the datapath CT mutex while waiting for a network RPC. Doing so
+	// blocks inbound CT add/delete operations and the map notifier worker, and
+	// lets two peers deadlock while each inbound add waits for the other's mutex.
 	mh.dpEbpf.mtx.Unlock()
 
-	dpCTMapSyncBlocks(DpSyncAdd, blkCti)
-	dpCTMapSyncBlocks(DpSyncDelete, blkDelCti)
+	if !dpCTMapSyncBlocks(mh.dpEbpf, DpSyncAdd, blkCti, mh.dp.DpXsyncRPC) {
+		return
+	}
+	dpCTMapSyncBlocks(mh.dpEbpf, DpSyncDelete, blkDelCti, mh.dp.DpXsyncRPC)
 }
 
 // dpMapNotifierWorker - Work on any map notifications
@@ -2622,6 +2643,7 @@ func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
 	}
 
 	cte.XSync = false
+	cte.SyncRetries = 0
 	cte.NTs = time.Now()
 	//cte.LTs = cti.NTs
 	cte.LTs = time.Now()

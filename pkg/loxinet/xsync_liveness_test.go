@@ -43,9 +43,6 @@ func TestDpCtGetAsyncCoalescesWithoutBlocking(t *testing.T) {
 }
 
 func TestDpCTMapFinishSyncUsesRPCResult(t *testing.T) {
-	original := mh.dpEbpf
-	t.Cleanup(func() { mh.dpEbpf = original })
-
 	ct := &DpCtInfo{
 		DIP:    net.ParseIP("172.30.250.201"),
 		SIP:    net.ParseIP("192.168.64.2"),
@@ -56,24 +53,24 @@ func TestDpCTMapFinishSyncUsesRPCResult(t *testing.T) {
 		NTs:    time.Unix(1, 0),
 		XSync:  true,
 	}
-	mh.dpEbpf = &DpEbpfH{ctMap: map[string]*DpCtInfo{ct.Key(): ct}}
+	dp := &DpEbpfH{ctMap: map[string]*DpCtInfo{ct.Key(): ct}}
 	block := []DpCtInfo{cloneDpCtInfo(ct)}
 
-	dpCTMapFinishSync(block, false, false)
+	dpCTMapFinishSync(dp, block, false, false)
 	if !ct.XSync {
 		t.Fatal("failed CT add was marked synchronized")
 	}
 
-	dpCTMapFinishSync(block, false, true)
+	dpCTMapFinishSync(dp, block, false, true)
 	if ct.XSync {
 		t.Fatal("successful CT add remained pending")
+	}
+	if ct.SyncRetries != 0 {
+		t.Fatalf("successful CT add retry count = %d, want 0", ct.SyncRetries)
 	}
 }
 
 func TestDpCTMapFinishSyncDoesNotAcknowledgeNewerUpdate(t *testing.T) {
-	original := mh.dpEbpf
-	t.Cleanup(func() { mh.dpEbpf = original })
-
 	ct := &DpCtInfo{
 		DIP:    net.ParseIP("172.30.250.202"),
 		SIP:    net.ParseIP("192.168.64.2"),
@@ -84,12 +81,53 @@ func TestDpCTMapFinishSyncDoesNotAcknowledgeNewerUpdate(t *testing.T) {
 		NTs:    time.Unix(1, 0),
 		XSync:  true,
 	}
-	mh.dpEbpf = &DpEbpfH{ctMap: map[string]*DpCtInfo{ct.Key(): ct}}
+	dp := &DpEbpfH{ctMap: map[string]*DpCtInfo{ct.Key(): ct}}
 	block := []DpCtInfo{cloneDpCtInfo(ct)}
 
 	ct.NTs = time.Unix(2, 0)
-	dpCTMapFinishSync(block, false, true)
+	dpCTMapFinishSync(dp, block, false, true)
 	if !ct.XSync {
 		t.Fatal("an old RPC result acknowledged a newer CT update")
+	}
+}
+
+func TestDpCTMapFinishSyncBoundsAddRetries(t *testing.T) {
+	ct := &DpCtInfo{
+		DIP:         net.ParseIP("172.30.250.201"),
+		SIP:         net.ParseIP("192.168.64.2"),
+		Dport:       18081,
+		Sport:       50100,
+		Proto:       "tcp",
+		CState:      "est",
+		NTs:         time.Unix(1, 0),
+		XSync:       true,
+		SyncRetries: ctiAddSyncRetries + 1,
+	}
+	dp := &DpEbpfH{ctMap: map[string]*DpCtInfo{ct.Key(): ct}}
+	block := []DpCtInfo{cloneDpCtInfo(ct)}
+
+	dpCTMapFinishSync(dp, block, false, false)
+	if ct.XSync {
+		t.Fatal("CT add remained pending after exceeding its retry limit")
+	}
+	if ct.SyncRetries != 0 {
+		t.Fatalf("abandoned CT add retry count = %d, want 0", ct.SyncRetries)
+	}
+}
+
+func TestDpCTMapSyncBlocksStopsAfterFailure(t *testing.T) {
+	dp := &DpEbpfH{ctMap: make(map[string]*DpCtInfo)}
+	entries := make([]DpCtInfo, blkCtiMaxLen+1)
+	calls := 0
+	syncRPC := func(_ DpSyncOpT, _ interface{}) int {
+		calls++
+		return -1
+	}
+
+	if dpCTMapSyncBlocks(dp, DpSyncAdd, entries, syncRPC) {
+		t.Fatal("failed CT block sync reported success")
+	}
+	if calls != 1 {
+		t.Fatalf("RPC calls after first failed block = %d, want 1", calls)
 	}
 }

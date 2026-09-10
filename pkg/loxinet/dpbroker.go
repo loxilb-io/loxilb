@@ -367,6 +367,9 @@ type DpCtInfo struct {
 	LTs     time.Time `json:"lts"`
 	NTs     time.Time `json:"nts"`
 	XSync   bool      `json:"xsync"`
+	// SyncRetries is local bookkeeping for bounded CT-add synchronization.
+	// It is intentionally omitted from JSON and the gRPC conversion.
+	SyncRetries int `json:"-"`
 
 	// LB Association Data
 	ServiceIP     net.IP `json:"serviceip"`
@@ -513,17 +516,6 @@ type DpH struct {
 	Peers     []DpPeer
 	RPC       *XSync
 	Remotes   []XSync
-}
-
-// DpXsyncRPCReset - Routine to reset Sunc RPC Client connections
-func (dp *DpH) DpXsyncRPCReset() int {
-	dp.SyncMtx.Lock()
-	defer dp.SyncMtx.Unlock()
-	for idx := range mh.dp.Peers {
-		pe := &mh.dp.Peers[idx]
-		dp.RPC.RPCHooks.RPCReset(pe)
-	}
-	return 0
 }
 
 // DpXsyncInSync - Routine to check if remote peer is in sync
