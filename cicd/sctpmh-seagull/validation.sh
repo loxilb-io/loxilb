@@ -1,10 +1,10 @@
 #!/bin/bash
 code=0
-tc=( "Basic Test - Client & EP Uni-homed and LB is Multi-homed" "Multipath Test, Client and LB Multihomed, EP is uni-homed" "C2LB Multipath Failover Test - Client and LB Multihomed, EP is uni-homed" "E2E Multipath Failover Test - Client, LB and EP all Multihomed" "C2LB HA Failover Test - Client and LB Multihomed, EP is uni-homed" "E2E HA Failover Test. Client, LB and EP all Multihomed" )
+tc=( "Basic Test - Client & EP Uni-homed and LB is Multi-homed" "Multipath Test, Client and LB Multihomed, EP is uni-homed" "C2LB Multipath Failover Test - Client and LB Multihomed, EP is uni-homed" "E2E Multipath Failover Test - Client, LB and EP all Multihomed" "C2LB HA Failover Test - Client and LB Multihomed, EP is uni-homed" "E2E HA Failover Test. Client, LB and EP all Multihomed" "CT-less Takeover Test - both LBs cold-restarted under a live multipath association" )
 padding="............................................................................................................."
 border="**************************************************************************************************************************************************"
 
-for((j=0,i=1; i<=6; i++, j++)); do
+for((j=0,i=1; i<=7; i++, j++)); do
     echo "SCTP Multihoming - Test case #$i"
     echo -e "\n\n\n$border\n"
     # The VM writes status$i.txt into /vagrant. Start from a clean slate so a
@@ -33,7 +33,7 @@ done
 
 echo -e "\n\n\n$border\n"
 printf "================================================== SCTP MULTIHOMING CONSOLIDATED RESULT ==========================================================\n"
-for((j=0,i=1; i<=6; i++, j++)); do
+for((j=0,i=1; i<=7; i++, j++)); do
     file=status$i.txt
     status=$(cat $file 2>/dev/null)
     title=${tc[j]}
