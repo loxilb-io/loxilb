@@ -49,6 +49,7 @@ var Opts struct {
 	WhiteList            string         `long:"whitelist" description:"Regex string of whitelisted interface(experimental)" default:"none"`
 	ClusterInterface     string         `long:"clusterinterface" description:"cluster interface for egress HA" default:""`
 	VIPAdvDev            string         `long:"vip-adv-dev" description:"interface to advertise LB rule VIPs on, overrides automatic resolution" default:""`
+	VIPAdvRepeat         int            `long:"vip-adv-repeat" description:"gratuitous ARP/NA repeats after becoming MASTER, one a second, 0 to disable" default:"3"`
 	UserServiceEnable    bool           `long:"userservice" description:"Enable user service for loxilb"`
 	DatabaseHost         string         `long:"databasehost" description:"Database host" default:"127.0.0.1"`
 	DatabasePort         int            `long:"databaseport" description:"Database port" default:"3306"`
