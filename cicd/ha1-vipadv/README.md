@@ -40,11 +40,21 @@ Before and after an HA transition:
 - which interface each VIP resolved to, read back from the load balancer's log
 - a gratuitous ARP for the IPv4 VIP reaches `r1` on the VLAN, and reaches it
   again on a later sweep
+- the promotion is advertised more than once: at least three gratuitous ARPs
+  for the IPv4 VIP reach `r1` in the seconds after the flip
 
 The repeat matters. A resolver that asks the kernel for a route to the VIP gets
 `local ... dev lo` back once the VIP is bound, so it works on the first pass and
 goes wrong on every one after it. The VIP sweep runs roughly every 40 seconds,
 so the second capture window is what a first pass alone would not catch.
+
+The burst matters for a different reason. The transition sends one gratuitous
+ARP, and the next is the sweep's, up to 30 seconds later. If that one frame is
+lost, every neighbour keeps forwarding to the old master until the sweep. So
+loxilb repeats it `--vip-adv-repeat` times (default 3), a second apart, the way
+keepalived does with `garp_master_repeat`. The check counts frames in an eight
+second window around the flip: the sweep can add one, so two proves nothing,
+and three is the least that shows a repeat happened.
 
 ## Modes
 
