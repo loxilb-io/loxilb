@@ -388,6 +388,14 @@ type RuleH struct {
 	tlsCert    tls.Certificate
 	vipST      time.Time
 	vipAdvRep  vipAdvBurstSched
+
+	// cloudPrepared - whether the cloud VIP network is set up. Owned by the
+	// cluster sync worker, which is the only caller of the cloud prepare and
+	// unprepare hooks; nothing else reads or writes it.
+	cloudPrepared bool
+	// applyTestSeam - test hook, run between the first state read and the
+	// locked section of RulesApplyClusterState; nil outside tests
+	applyTestSeam func()
 }
 
 // RulesInit - initialize the Rules subsystem
@@ -3601,49 +3609,112 @@ func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool, ctx 
 	return nil
 }
 
-// RulesSyncToClusterState - bring rules, VIPs and firewall entries in line
-// with a cluster state change
+// ciApplyMaxRestarts - how many times one RulesApplyClusterState pass may
+// start over because the state moved under it
+const ciApplyMaxRestarts = 3
+
+// RulesApplyClusterState - bring the firewall entries, VIPs and cloud network
+// of a cluster instance in line with its current state
 //
-// Always started with go from CIStateUpdate, one goroutine per transition,
-// and runs without mh.mtx. It must not be called synchronously while mh.mtx
-// is held: vipAdvBurstOnState takes that lock itself.
-func (R *RuleH) RulesSyncToClusterState(inst, ciStateStr string) {
+// Runs on the cluster sync worker only, never with mh.mtx held on entry. The
+// state applied is the one read under mh.mtx here, not the transition that
+// woke the worker: transitions that overlap collapse into their final value.
+// The rules and VIPs are applied under mh.mtx, the way the sweep applies
+// them, so nothing here races an API call. Only the cloud prepare and
+// unprepare hooks, which take seconds, run outside the lock.
+//
+// Returns the state and VIP applied. ok is false when the pass was abandoned
+// because the state kept moving: the change that forced that has already
+// queued the instance again, so the worker does not need to retry.
+func (R *RuleH) RulesApplyClusterState(inst string) (state string, vip net.IP, ok bool) {
+	cloud := mh.cloudHook != nil && inst == cmn.CIDefault
 
-	// For Cloud integrations, certain operations are performed only on default instance state changes
-	if mh.cloudHook != nil && inst == cmn.CIDefault {
-		if ciStateStr == cmn.CIMasterStateString {
-			mh.cloudHook.CloudPrepareVIPNetWork()
-		} else if ciStateStr == cmn.CIBackupStateString {
-			mh.cloudHook.CloudUnPrepareVIPNetWork()
+	for try := 0; ; try++ {
+		mh.mtx.Lock()
+		first, _ := mh.has.CIStateGetInst(inst)
+		mh.mtx.Unlock()
+
+		if R.applyTestSeam != nil {
+			R.applyTestSeam()
 		}
-	}
 
+		// The cloud network has to exist before a VIP can be bound to it,
+		// and it is prepared once per promotion: a failure is not retried
+		// until the next transition.
+		if cloud && first == cmn.CIMasterStateString && !R.cloudPrepared {
+			if err := mh.cloudHook.CloudPrepareVIPNetWork(); err != nil {
+				tk.LogIt(tk.LogError, "%s: vip network prepare failed: %v\n", mh.cloudLabel, err)
+			} else {
+				R.cloudPrepared = true
+			}
+		}
+
+		mh.mtx.Lock()
+		state, vip = mh.has.CIStateVipGetInst(inst)
+
+		// Promoted since the first read, with no cloud network to bind to:
+		// binding now would attach the VIPs to whatever interface is left
+		// from an earlier life. Start over so the prepare step sees MASTER.
+		if cloud && state == cmn.CIMasterStateString &&
+			first != cmn.CIMasterStateString && !R.cloudPrepared {
+			mh.mtx.Unlock()
+			if try < ciApplyMaxRestarts {
+				tk.LogIt(tk.LogInfo, "[CLUSTER] %s promoted during sync, restarting the pass\n", inst)
+				continue
+			}
+			tk.LogIt(tk.LogError, "[CLUSTER] %s state keeps moving, sync pass abandoned\n", inst)
+			return "", nil, false
+		}
+
+		R.rulesApplyStateLocked(inst, state)
+		mh.mtx.Unlock()
+
+		// A failed unprepare still counts as unprepared: the next promotion
+		// then rebuilds the network instead of binding to the remains.
+		if cloud && state == cmn.CIBackupStateString && R.cloudPrepared {
+			if err := mh.cloudHook.CloudUnPrepareVIPNetWork(); err != nil {
+				tk.LogIt(tk.LogError, "%s: vip network unprepare failed: %v\n", mh.cloudLabel, err)
+			}
+			R.cloudPrepared = false
+		}
+
+		return state, vip, true
+	}
+}
+
+// rulesApplyStateLocked - the part of RulesApplyClusterState that runs under
+// mh.mtx: firewall entries that follow the default instance, the VIP bind or
+// unbind of every VIP of the instance, and the advertisement burst
+func (R *RuleH) rulesApplyStateLocked(inst, state string) {
 	if inst == cmn.CIDefault {
 		for _, eFw := range R.tables[RtFw].eMap {
-			if eFw.act.action.(*ruleFwOpts).opt.onDflt {
-				if ciStateStr == cmn.CIMasterStateString || ciStateStr != cmn.CIBackupStateString {
-					eFw.Fw2DP(DpCreate)
-				} else if ciStateStr == cmn.CIBackupStateString {
-					eFw.Fw2DP(DpRemove)
-				}
+			if !eFw.act.action.(*ruleFwOpts).opt.onDflt {
+				continue
+			}
+			if state != cmn.CIBackupStateString {
+				eFw.Fw2DP(DpCreate)
+			} else {
+				eFw.Fw2DP(DpRemove)
 			}
 		}
 	}
 
-	for vip, vipElem := range R.vipMap {
+	// One main table dump for the whole pass, as in the sweep.
+	advCtx := new(vipAdvCtx)
+	for vipStr, vipElem := range R.vipMap {
 		if vipElem.inst != inst {
 			continue
 		}
 		ip := vipElem.pVIP
 		if ip == nil {
-			ip = net.ParseIP(vip)
+			ip = net.ParseIP(vipStr)
 		}
 		if ip != nil {
-			R.AdvRuleVIP(ip, net.ParseIP(vip), vipElem.inst, vipElem.egr, nil)
+			R.AdvRuleVIP(ip, net.ParseIP(vipStr), vipElem.inst, vipElem.egr, advCtx)
 		}
 	}
 
-	R.vipAdvBurstOnState(inst)
+	R.vipAdvBurstOnStateLocked(inst)
 }
 
 func (r *ruleEnt) RuleVIP2PrivIP() net.IP {

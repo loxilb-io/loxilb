@@ -22,6 +22,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"sync"
 	"time"
 
 	nlp "github.com/loxilb-io/loxilb/api/loxinlp"
@@ -90,6 +91,24 @@ type CIStateH struct {
 	OSrc6       string
 	initRules   bool
 	initRules6  bool
+
+	// mx guards ClusterMap, the fields of its entries and the sync mailbox
+	// below. It nests inside mh.mtx (mh.mtx -> mx); nothing takes the two the
+	// other way round, and nothing calls out of this package while holding
+	// it. Readers that only want the state of an instance take it shared, so
+	// they no longer need mh.mtx for that.
+	mx sync.RWMutex
+
+	// Cluster state changes are not applied by the caller of CIStateUpdate.
+	// The caller records the instance in syncDirty and wakes the sync worker
+	// (CIStartSync) through syncSig; the worker applies the state the
+	// instance is in when it gets to it. Overlapping transitions collapse
+	// into their final value, in the order they were decided, and nothing is
+	// applied from a stale copy of the state.
+	syncDirty map[string]struct{}
+	syncSig   chan struct{}
+	syncFin   chan struct{}
+	syncOnce  sync.Once
 }
 
 func (ch *CIStateH) BFDSessionNotify(instance string, _ string, ciState string) {
@@ -151,12 +170,36 @@ func (ch *CIStateH) CISpawn() {
 
 // CIStateGetInst - routine to get HA state
 func (ch *CIStateH) CIStateGetInst(inst string) (string, error) {
+	ch.mx.RLock()
+	defer ch.mx.RUnlock()
 
 	if ci, ok := ch.ClusterMap[inst]; ok {
 		return ci.StateStr, nil
 	}
 
 	return cmn.CIUnDefStateString, errors.New("not found")
+}
+
+// CIStateVipGetInst - the HA state of an instance together with its VIP,
+// read in one go so the pair is consistent
+func (ch *CIStateH) CIStateVipGetInst(inst string) (string, net.IP) {
+	ch.mx.RLock()
+	defer ch.mx.RUnlock()
+
+	if ci, ok := ch.ClusterMap[inst]; ok {
+		return ci.StateStr, ci.Vip
+	}
+
+	return cmn.CIUnDefStateString, net.IPv4zero
+}
+
+// ciInstExists - whether a cluster instance is known
+func (ch *CIStateH) ciInstExists(inst string) bool {
+	ch.mx.RLock()
+	defer ch.mx.RUnlock()
+
+	_, found := ch.ClusterMap[inst]
+	return found
 }
 
 // CIInit - routine to initialize Cluster context
@@ -173,6 +216,12 @@ func CIInit(args CIKAArgs) *CIStateH {
 	nCIh.SourceIP = args.SourceIP
 	nCIh.Interval = args.Interval
 	nCIh.ClusterMap = make(map[string]*ClusterInstance)
+	// The mailbox exists from the start so that CIDestroy can always close it;
+	// the worker itself is started later by CIStartSync, once the zones it
+	// applies state to exist.
+	nCIh.syncDirty = make(map[string]struct{})
+	nCIh.syncSig = make(chan struct{}, 1)
+	nCIh.syncFin = make(chan struct{})
 
 	if _, ok := nCIh.ClusterMap[cmn.CIDefault]; !ok {
 		ci := &ClusterInstance{State: cmn.CIStateNotDefined,
@@ -284,6 +333,7 @@ func CIInit(args CIKAArgs) *CIStateH {
 
 // CIDestroy - routine to destroy Cluster context
 func (ch *CIStateH) CIDestroy() {
+	ch.syncOnce.Do(func() { close(ch.syncFin) })
 
 	if ch.ClusterIf != "" {
 		tk.LogIt(tk.LogError, "cluster-dev name\n")
@@ -486,6 +536,9 @@ func (ch *CIStateH) CIAddClusterRoute(dest string, add bool) {
 func (ch *CIStateH) CIStateGet() ([]cmn.HASMod, error) {
 	var res []cmn.HASMod
 
+	ch.mx.RLock()
+	defer ch.mx.RUnlock()
+
 	for i, s := range ch.ClusterMap {
 		var temp cmn.HASMod
 		temp.Instance = i
@@ -498,6 +551,9 @@ func (ch *CIStateH) CIStateGet() ([]cmn.HASMod, error) {
 
 // CIVipGet - routine to get HA state
 func (ch *CIStateH) CIVipGet(inst string) (net.IP, error) {
+	ch.mx.RLock()
+	defer ch.mx.RUnlock()
+
 	if ci, ok := ch.ClusterMap[inst]; ok {
 		if ci.Vip != nil && !ci.Vip.IsUnspecified() {
 			return ci.Vip, nil
@@ -512,57 +568,124 @@ func (ch *CIStateH) IsCIKAMode() bool {
 }
 
 // CIStateUpdate - routine to update cluster state
+//
+// Called with mh.mtx held. It records the new state and queues the instance
+// for the sync worker; it does not apply the state itself, and it never
+// blocks on the worker.
 func (ch *CIStateH) CIStateUpdate(cm cmn.HASMod) (int, error) {
 
-	if _, ok := ch.ClusterMap[cm.Instance]; !ok {
-		ch.ClusterMap[cm.Instance] = &ClusterInstance{State: cmn.CIStateNotDefined,
+	ch.mx.Lock()
+	ci, found := ch.ClusterMap[cm.Instance]
+	if !found {
+		ci = &ClusterInstance{State: cmn.CIStateNotDefined,
 			StateStr: cmn.CIUnDefStateString,
 			Vip:      net.IPv4zero}
+		ch.ClusterMap[cm.Instance] = ci
 		tk.LogIt(tk.LogDebug, "[CLUSTER] New Instance %s created\n", cm.Instance)
 	}
 
-	ci, found := ch.ClusterMap[cm.Instance]
-	if !found {
-		tk.LogIt(tk.LogError, "[CLUSTER] New Instance %s find error\n", cm.Instance)
-		return -1, errors.New("cluster instance not found")
-	}
-
 	if ci.StateStr == cm.State {
-		return ci.State, nil
+		state := ci.State
+		ch.mx.Unlock()
+		return state, nil
 	}
 
-	if _, ok := ch.StateMap[cm.State]; ok {
-		tk.LogIt(tk.LogDebug, "[CLUSTER] Instance %s Current State %s Updated State: %s VIP : %s\n",
-			cm.Instance, ci.StateStr, cm.State, cm.Vip.String())
-		ci.StateStr = cm.State
-		ci.State = ch.StateMap[cm.State]
-		ci.Vip = cm.Vip
+	newState, ok := ch.StateMap[cm.State]
+	if !ok {
+		state := ci.State
+		ch.mx.Unlock()
+		tk.LogIt(tk.LogError, "[CLUSTER] Invalid State: %s\n", cm.State)
+		return state, errors.New("invalid cluster-state")
+	}
 
-		if mh.bgp != nil {
-			mh.bgp.UpdateCIState(cm.Instance, ci.State, ci.Vip)
+	tk.LogIt(tk.LogDebug, "[CLUSTER] Instance %s Current State %s Updated State: %s VIP : %s\n",
+		cm.Instance, ci.StateStr, cm.State, cm.Vip.String())
+	ci.StateStr = cm.State
+	ci.State = newState
+	ci.Vip = cm.Vip
+	state, vip := ci.State, ci.Vip
+	ch.syncDirty[cm.Instance] = struct{}{}
+	ch.mx.Unlock()
+
+	// UpdateCIState reads the state back through CIStateGetInst, so it must
+	// run after mx is released.
+	if mh.bgp != nil {
+		mh.bgp.UpdateCIState(cm.Instance, state, vip)
+	}
+
+	select {
+	case ch.syncSig <- struct{}{}:
+	default:
+		// worker already signalled; it drains syncDirty as a whole
+	}
+	return state, nil
+}
+
+// CIStartSync - start the goroutine that applies cluster state changes
+//
+// Called once the zones exist: the worker applies state to mh.zr. Changes
+// recorded before this point wait in the mailbox and are applied as soon as
+// the worker runs.
+func (ch *CIStateH) CIStartSync() {
+	go ch.ciSyncWorker(
+		func(inst string) (string, net.IP, bool) { return mh.zr.Rules.RulesApplyClusterState(inst) },
+		ciRunKAHook)
+}
+
+// ciSyncWorker - apply queued cluster state changes, one instance at a time
+//
+// apply brings an instance in line with its current state and returns what
+// it applied; hook is told about it afterwards. Both run outside every lock
+// of this package. The dirty set is taken as a whole before any instance is
+// applied, so a state change that lands while an instance is being applied
+// is never lost: it marks the instance again and wakes the worker for
+// another pass. An abandoned pass (apply returns false) relies on exactly
+// that.
+func (ch *CIStateH) ciSyncWorker(apply func(string) (string, net.IP, bool), hook func(inst, state, vip string)) {
+	// The hook is only told about a change of the state applied: a pass that
+	// re-applies the same state after a flip-back, or after an abandoned
+	// pass, is idempotent for the rules but would run the script twice.
+	lastHooked := make(map[string]string)
+
+	for {
+		select {
+		case <-ch.syncFin:
+			return
+		case <-ch.syncSig:
 		}
-		go mh.zr.Rules.RulesSyncToClusterState(cm.Instance, cm.State)
 
-		// Update Call the ka_hook.sh script
-		hookScrptCall := func(cm cmn.HASMod) {
-			if _, err := os.Stat(cmn.KAHookScript); !errors.Is(err, os.ErrNotExist) {
-				command := cmn.KAHookScript + " " + cm.Instance + " " + cm.State + " " + ci.Vip.String()
-				cmd := exec.Command("bash", "-c", command)
-				output, err := cmd.Output()
-				if err != nil {
-					tk.LogIt(tk.LogError, "[CLUSTER] Error in applying ka hook : %s", err.Error())
-				} else {
-					tk.LogIt(tk.LogDebug, "[CLUSTER] ka hook output: %v\n", string(output))
-				}
+		ch.mx.Lock()
+		dirty := ch.syncDirty
+		ch.syncDirty = make(map[string]struct{})
+		ch.mx.Unlock()
+
+		for inst := range dirty {
+			state, vip, ok := apply(inst)
+			if !ok {
+				continue
 			}
+			if lastHooked[inst] == state {
+				continue
+			}
+			lastHooked[inst] = state
+			hook(inst, state, vip.String())
 		}
-		go hookScrptCall(cm)
-		return ci.State, nil
 	}
+}
 
-	tk.LogIt(tk.LogError, "[CLUSTER] Invalid State: %s\n", cm.State)
-	return ci.State, errors.New("invalid cluster-state")
-
+// ciRunKAHook - run the ka hook script, if there is one, for a state change
+func ciRunKAHook(inst, state, vip string) {
+	if _, err := os.Stat(cmn.KAHookScript); errors.Is(err, os.ErrNotExist) {
+		return
+	}
+	command := cmn.KAHookScript + " " + inst + " " + state + " " + vip
+	cmd := exec.Command("bash", "-c", command)
+	output, err := cmd.Output()
+	if err != nil {
+		tk.LogIt(tk.LogError, "[CLUSTER] Error in applying ka hook : %s", err.Error())
+	} else {
+		tk.LogIt(tk.LogDebug, "[CLUSTER] ka hook output: %v\n", string(output))
+	}
 }
 
 // ClusterNodeAdd - routine to update cluster nodes
@@ -611,8 +734,7 @@ func (ch *CIStateH) CIBFDSessionAdd(bm cmn.BFDMod) (int, error) {
 		return -1, errors.New("bfd interval too low")
 	}
 
-	_, found := ch.ClusterMap[bm.Instance]
-	if !found {
+	if !ch.ciInstExists(bm.Instance) {
 		tk.LogIt(tk.LogError, "[CLUSTER] BFD SU - Cluster Instance %s not found\n", bm.Instance)
 		return -1, errors.New("cluster instance not found")
 	}
@@ -660,8 +782,7 @@ func (ch *CIStateH) CIBFDSessionDel(bm cmn.BFDMod) (int, error) {
 		return -1, errors.New("bfd session not running")
 	}
 
-	_, found := ch.ClusterMap[bm.Instance]
-	if !found {
+	if !ch.ciInstExists(bm.Instance) {
 		tk.LogIt(tk.LogError, "[CLUSTER] BFD SU - Cluster Instance %s not found\n", bm.Instance)
 		return -1, errors.New("cluster instance not found")
 	}
