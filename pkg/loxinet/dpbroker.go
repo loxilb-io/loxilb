@@ -367,6 +367,9 @@ type DpCtInfo struct {
 	LTs     time.Time `json:"lts"`
 	NTs     time.Time `json:"nts"`
 	XSync   bool      `json:"xsync"`
+	// SyncRetries is local bookkeeping for bounded CT-add synchronization.
+	// It is intentionally omitted from JSON and the gRPC conversion.
+	SyncRetries int `json:"-"`
 
 	// LB Association Data
 	ServiceIP     net.IP `json:"serviceip"`
@@ -504,31 +507,21 @@ type DpPeer struct {
 
 // DpH - datapath context container
 type DpH struct {
-	ToDpCh   chan interface{}
-	FromDpCh chan interface{}
-	ToFinCh  chan int
-	DpHooks  DpHookInterface
-	SyncMtx  sync.RWMutex
-	Peers    []DpPeer
-	RPC      *XSync
-	Remotes  []XSync
-}
-
-// DpXsyncRPCReset - Routine to reset Sunc RPC Client connections
-func (dp *DpH) DpXsyncRPCReset() int {
-	dp.SyncMtx.Lock()
-	defer dp.SyncMtx.Unlock()
-	for idx := range mh.dp.Peers {
-		pe := &mh.dp.Peers[idx]
-		dp.RPC.RPCHooks.RPCReset(pe)
-	}
-	return 0
+	ToDpCh    chan interface{}
+	FromDpCh  chan interface{}
+	ToFinCh   chan int
+	DpHooks   DpHookInterface
+	SyncMtx   sync.RWMutex
+	RemoteMtx sync.RWMutex
+	Peers     []DpPeer
+	RPC       *XSync
+	Remotes   []XSync
 }
 
 // DpXsyncInSync - Routine to check if remote peer is in sync
 func (dp *DpH) DpXsyncInSync() bool {
-	dp.SyncMtx.Lock()
-	defer dp.SyncMtx.Unlock()
+	dp.RemoteMtx.RLock()
+	defer dp.RemoteMtx.RUnlock()
 
 	return len(dp.Remotes) >= len(mh.has.NodeMap)
 }
