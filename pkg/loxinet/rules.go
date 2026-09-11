@@ -94,6 +94,7 @@ const (
 	EndPointCheckerDuration    = 2          // Duration at which ep-helpers will run
 	MaxEndPointSweeps          = 20         // Maximum end-point sweeps per round
 	VIPSweepDuration           = 30         // Duration of periodic VIP maintenance
+	VIPAdvRepeatInterval       = 1          // Seconds between the repeated advertisements after a MASTER transition
 	DefaultPersistTimeOut      = 10800      // Default persistent LB session timeout
 	NatFwMark                  = 0x80000000 // NAT Marker
 	SrcChkFwMark               = 0x40000000 // Src check Marker
@@ -386,6 +387,7 @@ type RuleH struct {
 	rootCAPool *x509.CertPool
 	tlsCert    tls.Certificate
 	vipST      time.Time
+	vipAdvRep  vipAdvBurstSched
 }
 
 // RulesInit - initialize the Rules subsystem
@@ -3487,6 +3489,22 @@ func (R *RuleH) logVipAdvIf(IP net.IP, eIP net.IP, iface string) {
 	vipEnt.advIfSet = true
 }
 
+// vipAdvSend - one gratuitous ARP or NA for IP out of iface
+//
+// The reply channel is buffered so a sender that finishes after the deadline
+// has somewhere to put its answer instead of blocking forever.
+func vipAdvSend(IP net.IP, iface string) {
+	advCtx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
+	defer cancel()
+	rCh := make(chan int, 1)
+	go utils.NetAdvertiseVIPReqWithCtx(advCtx, rCh, IP, iface)
+	select {
+	case <-rCh:
+	case <-advCtx.Done():
+		tk.LogIt(tk.LogInfo, "lb-rule vip %s - iface %s : GratARP timeout\n", IP.String(), iface)
+	}
+}
+
 func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool, ctx *vipAdvCtx) error {
 	if inst == "" {
 		inst = cmn.CIDefault
@@ -3535,16 +3553,7 @@ func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool, ctx 
 		}
 
 		if iface != "" {
-			advCtx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
-			defer cancel()
-			rCh := make(chan int)
-			go utils.NetAdvertiseVIPReqWithCtx(advCtx, rCh, IP, iface)
-			select {
-			case <-rCh:
-				break
-			case <-advCtx.Done():
-				tk.LogIt(tk.LogInfo, "lb-rule vip %s - iface %s : GratARP timeout\n", IP.String(), iface)
-			}
+			vipAdvSend(IP, iface)
 		}
 
 		if egress {
@@ -3592,6 +3601,12 @@ func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool, ctx 
 	return nil
 }
 
+// RulesSyncToClusterState - bring rules, VIPs and firewall entries in line
+// with a cluster state change
+//
+// Always started with go from CIStateUpdate, one goroutine per transition,
+// and runs without mh.mtx. It must not be called synchronously while mh.mtx
+// is held: vipAdvBurstOnState takes that lock itself.
 func (R *RuleH) RulesSyncToClusterState(inst, ciStateStr string) {
 
 	// For Cloud integrations, certain operations are performed only on default instance state changes
@@ -3627,6 +3642,8 @@ func (R *RuleH) RulesSyncToClusterState(inst, ciStateStr string) {
 			R.AdvRuleVIP(ip, net.ParseIP(vip), vipElem.inst, vipElem.egr, nil)
 		}
 	}
+
+	R.vipAdvBurstOnState(inst)
 }
 
 func (r *ruleEnt) RuleVIP2PrivIP() net.IP {

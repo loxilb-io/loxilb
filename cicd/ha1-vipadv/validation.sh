@@ -81,6 +81,34 @@ garp_seen() {
     [[ -n "$out" ]]
 }
 
+# garp_capture_start <seconds> <file> - collect gratuitous ARPs for the v4 VIP
+# on r1's VLAN 11 into file, in the background, for the given time
+garp_capture_start() {
+    $hexec r1 timeout $1 tcpdump -l -n -i vlan11 \
+          'arp and arp[14:4] = 0x14141401' > $2 2>/dev/null &
+    # tcpdump takes a moment to attach; the flip must not outrun it.
+    sleep 1
+}
+
+# check_garp_burst <capture file> <phase> - the promotion was advertised more
+# than once
+#
+# The transition sends one gratuitous ARP and --vip-adv-repeat (default 3)
+# more follow a second apart, so the window holds four. The periodic sweep may
+# add one of its own, so a count of two proves nothing: transition plus sweep
+# gets there without any repeat. Three does, with one frame to spare for loss.
+check_garp_burst() {
+    local file=$1 phase=$2
+    local n=$(grep -c . $file 2>/dev/null)
+
+    if [[ $n -ge 3 ]]; then
+        echo "VIPADV $phase garp repeated on promotion ($n in window) [OK]"
+        return 0
+    fi
+    echo "VIPADV $phase garp not repeated on promotion ($n in window, want >= 3) [FAILED]"
+    return 1
+}
+
 check_vip_adv() {
     local master=$1 backup=$2 phase=$3
     local rc=0
@@ -164,6 +192,17 @@ echo "Master:$master Backup:$backup"
 
 check_vip_adv $master $backup Phase-1 || code=1
 
+# The burst check needs the capture running before the promotion lands. It is
+# a tcpdump on the host like garp_seen, with the same reasons to skip.
+burst_check="yes"
+if [[ -z "$advdev" ]] || ! command -v tcpdump >/dev/null 2>&1; then
+    burst_check="no"
+fi
+burst_file=$(mktemp)
+if [[ $burst_check == "yes" ]]; then
+    garp_capture_start 8 $burst_file
+fi
+
 echo "VIPADV flipping HA state through the API"
 set_ci_state $master BACKUP
 set_ci_state $backup MASTER
@@ -179,6 +218,14 @@ else
     echo "VIPADV HA flip [FAILED]"
     exit 1
 fi
+
+if [[ $burst_check == "yes" ]]; then
+    wait
+    check_garp_burst $burst_file Phase-2 || code=1
+else
+    echo "VIPADV Phase-2 garp burst check skipped"
+fi
+rm -f $burst_file
 
 # The demoted master has to give both VIPs up, and the promoted one take them.
 # One sweep is about 40 seconds; allow two.
