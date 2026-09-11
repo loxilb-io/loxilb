@@ -103,6 +103,7 @@ const (
 const (
 	dpEbpfLinuxTiVal     = 5
 	ctGCTiValDefault     = 15
+	ctiAddSyncRetries    = 3
 	ctiDeleteSyncRetries = 3
 	blkCtiMaxLen         = 8192
 	mapNotifierChLen     = 8096
@@ -341,7 +342,9 @@ func DpEbpfInit(clusterEn, rssEn, egrHooks, localSockPolicy, sockMapEn bool, nod
 	for i := 0; i < mapNotifierWorkers; i++ {
 		ne.ToFinCh[i] = make(chan int)
 	}
-	ne.ctBcast = make(chan bool)
+	// Coalesce concurrent full-sync requests and, importantly, never block an
+	// inbound RPC handler waiting for the datapath ticker to receive the event.
+	ne.ctBcast = make(chan bool, 1)
 	ne.ticker = time.NewTicker(dpEbpfLinuxTiVal * time.Second)
 	ne.ctMap = make(map[string]*DpCtInfo)
 	ne.RssEn = rssEn
@@ -2410,6 +2413,7 @@ func dpCTMapBcast() {
 
 	for _, cti := range mh.dpEbpf.ctMap {
 		if cti.Deleted <= 0 && cti.CState == "est" {
+			cti.SyncRetries = 0
 			cti.XSync = true
 		}
 	}
@@ -2423,9 +2427,84 @@ func dpCTMapBcast() {
 	tk.LogIt(tk.LogInfo, "[CT]  CTBcast Complete \n")
 }
 
+func cloneDpCtInfo(cti *DpCtInfo) DpCtInfo {
+	clone := *cti
+	clone.DIP = append(net.IP(nil), cti.DIP...)
+	clone.SIP = append(net.IP(nil), cti.SIP...)
+	clone.ServiceIP = append(net.IP(nil), cti.ServiceIP...)
+	clone.PKey = append([]byte(nil), cti.PKey...)
+	clone.PVal = append([]byte(nil), cti.PVal...)
+	return clone
+}
+
+func dpCTMapFinishSync(dp *DpEbpfH, block []DpCtInfo, deleteOp, succeeded bool) {
+	dp.mtx.Lock()
+	defer dp.mtx.Unlock()
+
+	for idx := range block {
+		synced := &block[idx]
+		key := synced.Key()
+		current := dp.ctMap[key]
+		if current == nil || !current.NTs.Equal(synced.NTs) || current.Deleted != synced.Deleted {
+			continue
+		}
+
+		if succeeded {
+			if deleteOp {
+				delete(dp.ctMap, key)
+			} else {
+				current.XSync = false
+				current.SyncRetries = 0
+			}
+			continue
+		}
+
+		if deleteOp {
+			// Deletes are retried a bounded number of times so an unavailable peer
+			// cannot retain stale shadow state forever.
+			if current.Deleted > ctiDeleteSyncRetries {
+				delete(dp.ctMap, key)
+			}
+		} else if current.SyncRetries > ctiAddSyncRetries {
+			// A rejected entry makes the whole block fail, so retain additions for
+			// a few ticks to cover transient rule-ordering and transport failures,
+			// but do not retry an unsendable block forever.
+			current.XSync = false
+			current.SyncRetries = 0
+		}
+	}
+}
+
+func dpCTMapSyncBlocks(dp *DpEbpfH, op DpSyncOpT, entries []DpCtInfo,
+	syncRPC func(DpSyncOpT, interface{}) int) bool {
+	deleteOp := op == DpSyncDelete
+	operation := "Add"
+	if deleteOp {
+		operation = "Del"
+	}
+
+	for start := 0; start < len(entries); start += blkCtiMaxLen {
+		end := start + blkCtiMaxLen
+		if end > len(entries) {
+			end = len(entries)
+		}
+		block := entries[start:end]
+		tk.LogIt(tk.LogTrace, "[CT] Block %s Sync - \n", operation)
+		started := time.Now()
+		ret := syncRPC(op, block)
+		tk.LogIt(tk.LogTrace, "[CT] Block %s Sync %d took %v- \n", operation, len(block), time.Since(started))
+		dpCTMapFinishSync(dp, block, deleteOp, ret == 0)
+		if ret != 0 {
+			// The remaining entries stay pending and will be retried on the next
+			// datapath tick. This bounds a peer outage to one failed block per tick.
+			return false
+		}
+	}
+	return true
+}
+
 func dpCTMapChkUpdates() {
 	mh.dpEbpf.mtx.Lock()
-	defer mh.dpEbpf.mtx.Unlock()
 	var tact C.struct_dp_ct_tact
 	var act *C.struct_dp_ct_dat
 	var blkCti []DpCtInfo
@@ -2507,6 +2586,7 @@ func dpCTMapChkUpdates() {
 						if cti.Packets != p+uint64(tact.ctd.pb.packets) {
 							cti.Bytes = b + uint64(tact.ctd.pb.bytes)
 							cti.Packets = p + uint64(tact.ctd.pb.packets)
+							cti.SyncRetries = 0
 							cti.XSync = true
 							cti.NTs = tc
 							cti.LTs = tc
@@ -2518,55 +2598,25 @@ func dpCTMapChkUpdates() {
 		if cti.XSync == true &&
 			time.Duration(tc.Sub(cti.NTs).Seconds()) >= time.Duration(10) {
 			tk.LogIt(tk.LogTrace, "[CT] Sync - %s\n", cti.String())
-
-			ret := 0
 			if cti.Deleted > 0 {
-				//ret = mh.dp.DpXsyncRPC(DpSyncDelete, cti)
-				blkDelCti = append(blkDelCti, *cti)
 				cti.Deleted++
+				blkDelCti = append(blkDelCti, cloneDpCtInfo(cti))
 			} else {
-				blkCti = append(blkCti, *cti)
-				//ret = mh.dp.DpXsyncRPC(DpSyncAdd, cti)
-			}
-			if ret == 0 || cti.Deleted > ctiDeleteSyncRetries {
-				cti.XSync = false
-
-				if cti.Deleted > 0 {
-					delete(mh.dpEbpf.ctMap, cti.Key())
-					// This is a strange fix - See comment above. Do we still need it ?
-					// C.llb_del_map_elem(C.LL_DP_CT_MAP, unsafe.Pointer(&cti.PKey[0]))
-				}
+				cti.SyncRetries++
+				blkCti = append(blkCti, cloneDpCtInfo(cti))
 			}
 		}
-
-		if len(blkCti) >= blkCtiMaxLen {
-			tk.LogIt(tk.LogTrace, "[CT] Block Add Sync - \n")
-			tc1 := time.Now()
-			mh.dp.DpXsyncRPC(DpSyncAdd, blkCti)
-			tc2 := time.Now()
-			tk.LogIt(tk.LogTrace, "[CT] Block Add Sync %d took %v- \n", len(blkCti), time.Duration(tc2.Sub(tc1)))
-			blkCti = nil
-		}
-
-		if len(blkDelCti) >= blkCtiMaxLen {
-			tk.LogIt(tk.LogTrace, "[CT] Block Del Sync - \n")
-			mh.dp.DpXsyncRPC(DpSyncDelete, blkDelCti)
-			blkDelCti = nil
-		}
 	}
 
-	if len(blkCti) > 0 {
-		tc1 := time.Now()
-		tk.LogIt(tk.LogTrace, "[CT] Block Add Sync - \n")
-		mh.dp.DpXsyncRPC(DpSyncAdd, blkCti)
-		tc2 := time.Now()
-		tk.LogIt(tk.LogTrace, "[CT] Block Add Sync %d took %v- \n", len(blkCti), time.Duration(tc2.Sub(tc1)))
-	}
+	// Never hold the datapath CT mutex while waiting for a network RPC. Doing so
+	// blocks inbound CT add/delete operations and the map notifier worker, and
+	// lets two peers deadlock while each inbound add waits for the other's mutex.
+	mh.dpEbpf.mtx.Unlock()
 
-	if len(blkDelCti) > 0 {
-		tk.LogIt(tk.LogTrace, "[CT] Block Del Sync - \n")
-		mh.dp.DpXsyncRPC(DpSyncDelete, blkDelCti)
+	if !dpCTMapSyncBlocks(mh.dpEbpf, DpSyncAdd, blkCti, mh.dp.DpXsyncRPC) {
+		return
 	}
+	dpCTMapSyncBlocks(mh.dpEbpf, DpSyncDelete, blkDelCti, mh.dp.DpXsyncRPC)
 }
 
 // dpMapNotifierWorker - Work on any map notifications
@@ -2641,6 +2691,7 @@ func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
 	}
 
 	cte.XSync = false
+	cte.SyncRetries = 0
 	cte.NTs = time.Now()
 	//cte.LTs = cti.NTs
 	cte.LTs = time.Now()
@@ -2680,7 +2731,10 @@ func (e *DpEbpfH) DpCtDel(w *DpCtInfo) int {
 
 // DpCtGetAsync - routine to work on a ebpf ct get async request
 func (e *DpEbpfH) DpCtGetAsync() {
-	e.ctBcast <- true
+	select {
+	case e.ctBcast <- true:
+	default:
+	}
 }
 
 // DpTakeLock - routine to take underlying DP lock
