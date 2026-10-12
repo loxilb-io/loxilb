@@ -124,6 +124,10 @@ Read more in the loxilb-inference-gateway [repository](https://github.com/loxilb
 #### loxilb in standalone mode
 - [Run loxilb standalone](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/standalone.md)
 
+#### loxilb as inference gateway (LLM serving)
+- [loxilb-inference-gateway : Installation](https://loxilb-io.github.io/loxilbdocs-inference-gateway/latest/getting-started/installation/)
+- [loxilb-inference-gateway : Quickstart](https://loxilb-io.github.io/loxilbdocs-inference-gateway/latest/getting-started/quickstart/)
+
 ## Advanced Guides    
 - [How-To : Service-group zones with loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/service-zones.md)
 - [How-To : Access end-points outside K8s](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/ext-ep.md)
