@@ -84,6 +84,7 @@ Read more in the loxilb-inference-gateway [repository](https://github.com/loxilb
 - Optimized implementation for features like [Conntrack](https://thermalcircle.de/doku.php?id=blog:linux:connection_tracking_1_modules_and_hooks), QoS, etc
 - Full compatibility for ipvs (ipvs policies can be auto inherited)
 - Policy oriented L7 proxy support - HTTP1.0, 1.1, 2.0, 3.0   
+- LLM-serving extensions (KV-cache-aware routing, Prefill/Decode disaggregation, MCP gateway) available in the [loxilb-inference-gateway](https://github.com/loxilb-io/loxilb-inference-gateway) fork
 
 ## Components of loxilb 
 - GoLang based control plane components
