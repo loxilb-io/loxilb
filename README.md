@@ -42,6 +42,20 @@ Telco-cloud requires load-balancing and communication across various interfaces/
 - SIP support is needed to enable cloud-native VOIP
 - N32 requires support for Security Edge Protection Proxy(SEPP)
 
+## AI Inference with loxilb
+For LLM serving fleets, [loxilb-inference-gateway](https://github.com/loxilb-io/loxilb-inference-gateway) is a fork of loxilb that adds L7 and LLM-serving features. It keeps the same GoLang/eBPF data path and adds routing that is aware of how inference engines such as vLLM, SGLang, TensorRT-LLM and llama.cpp serve requests. Every AI capability is opt-in per load-balancer rule. With no AI feature enabled, it behaves exactly like upstream loxilb.
+
+It is built on this project and is licensed under Apache-2.0, the same as loxilb. Some of its capabilities:
+
+| Capability | What it does |
+|:-----------|:-------------|
+| [KV-cache-aware routing](https://loxilb-io.github.io/loxilbdocs-inference-gateway/latest/ai-gateway/kv-caching/) | Sends each request to the endpoint whose KV cache already holds the longest prefix of the prompt |
+| [Prefill/Decode disaggregation](https://loxilb-io.github.io/loxilbdocs-inference-gateway/latest/ai-gateway/pd-disaggregation/) | Splits each request across prefill and decode pools, with KV-transfer coordination and session affinity |
+| [MCP gateway](https://loxilb-io.github.io/loxilbdocs-inference-gateway/latest/ai-gateway/mcp-gateway/) | MCP stateless validation and per-request selection, or legacy session routing |
+| [AI traffic governance](https://loxilb-io.github.io/loxilbdocs-inference-gateway/latest/ai-gateway/ai-traffic-governance/) | API keys, JWT, model authorization and request/token quotas, enforced before dispatch |
+
+Read more in the loxilb-inference-gateway [repository](https://github.com/loxilb-io/loxilb-inference-gateway) and [documentation](https://loxilb-io.github.io/loxilbdocs-inference-gateway/latest/).
+
 ## Why choose loxilb?
    
 - ```Performs``` much better compared to its competitors across various architectures   
