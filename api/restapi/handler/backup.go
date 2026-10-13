@@ -46,66 +46,26 @@ type DumpFile struct {
 func ConfigGetExport(params operations.GetConfigExportParams, principal any) middleware.Responder {
 	timestamp := time.Now().Format("20060102-150405")
 	filename := fmt.Sprintf("loxilb-config-%s.json", timestamp)
-	if filename == "" {
-		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage("Filename is required")}
-	}
 
-	filePath := filepath.Join(os.TempDir(), filename)
-	file, err := os.Create(filePath)
-	if err != nil {
-		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage("File not found")}
-	}
-
-	// Dump current configuration to the file
 	exportConfig, errRes := DumpConfiguration()
 	if errRes != nil {
-		os.Remove(filePath) // Clean up on error
 		return errRes
 	}
-	// Convert to JSON with indentation for readability
 	jsonData, err := json.MarshalIndent(exportConfig, "", "  ")
 	if err != nil {
 		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage("Failed to marshal JSON: " + err.Error())}
 	}
-	// Write JSON data to file
-	_, err = file.Write(jsonData)
-	if err != nil {
-		file.Close()
-		os.Remove(filePath) // Clean up on error
-		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage("Failed to write JSON to file: " + err.Error())}
-	}
 
-	// Reset file pointer to beginning for reading
-	_, err = file.Seek(0, 0)
-	if err != nil {
-		file.Close()
-		os.Remove(filePath)
-		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage("Failed to reset file pointer: " + err.Error())}
-	}
-
-	// Check if the file is empty
-	fileInfo, err := file.Stat()
-	if err != nil {
-		file.Close()
-		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage("Failed to get file info")}
-	}
-	if fileInfo.Size() == 0 {
-		file.Close()
-		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage("File is empty")}
-	}
-
-	// Set headers and send the file
 	return middleware.ResponderFunc(func(w http.ResponseWriter, _ runtime.Producer) {
-		defer file.Close()
 		w.Header().Set("Content-Disposition", "attachment; filename="+filename)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		bytesCopied, err := io.Copy(w, file)
+		bytesWritten, err := w.Write(jsonData)
 		if err != nil {
-			tk.LogIt(tk.LogError, "Failed to copy file content: %s, error: %v\n", filePath, err)
+			tk.LogIt(tk.LogError, "Failed to write configuration export response: %v\n", err)
 		} else {
-			tk.LogIt(tk.LogDebug, "Successfully copied %d bytes from file: %s\n", bytesCopied, filePath)
+			tk.LogIt(tk.LogDebug, "Successfully wrote %d bytes to configuration export response\n", bytesWritten)
 		}
 	})
 }
