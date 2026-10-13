@@ -4,6 +4,8 @@
 [![Website](https://img.shields.io/static/v1?label=www&message=loxilb.io&color=blue?style=for-the-badge&logo=appveyor)](https://www.loxilb.io) [![eBPF Emerging Project](https://img.shields.io/badge/ebpf.io-Emerging--App-success)](https://ebpf.io/projects#loxilb) [![Go Report Card](https://goreportcard.com/badge/github.com/loxilb-io/loxilb)](https://goreportcard.com/report/github.com/loxilb-io/loxilb) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8472/badge)](https://www.bestpractices.dev/projects/8472) ![Docker-Multi-Arch](https://github.com/loxilb-io/loxilb/actions/workflows/docker-multiarch.yml/badge.svg) ![sanity workflow](https://github.com/loxilb-io/loxilb/actions/workflows/basic-sanity.yml/badge.svg)   
 ![apache](https://img.shields.io/badge/license-Apache-blue.svg) [![Info][docs-shield]][docs-url] [![Slack](https://img.shields.io/badge/community-join%20slack-blue)](https://join.slack.com/t/loxilb/shared_invite/zt-2b3xx14wg-P7WHj5C~OEON_jviF0ghcQ) 
 
+**New:** [loxilb-inference-gateway](https://github.com/loxilb-io/loxilb-inference-gateway) is a fork of loxilb that adds L7 and LLM-serving features. With no AI feature enabled, it behaves exactly like upstream loxilb.
+
 ## What is loxilb
 loxilb is an open source cloud-native load-balancer based on GoLang/eBPF with the goal of achieving cross-compatibility across a wide range of on-prem, public-cloud or hybrid K8s environments. loxilb is being developed to support the adoption of cloud-native tech in telco, mobility, and edge computing.
 
@@ -40,6 +42,20 @@ Telco-cloud requires load-balancing and communication across various interfaces/
 - SIP support is needed to enable cloud-native VOIP
 - N32 requires support for Security Edge Protection Proxy(SEPP)
 
+## AI Inference with loxilb
+For LLM serving fleets, [loxilb-inference-gateway](https://github.com/loxilb-io/loxilb-inference-gateway) is a fork of loxilb that adds L7 and LLM-serving features. It keeps the same GoLang/eBPF data path and adds routing that is aware of how inference engines such as vLLM, SGLang, TensorRT-LLM and llama.cpp serve requests. Every AI capability is opt-in per load-balancer rule. With no AI feature enabled, it behaves exactly like upstream loxilb.
+
+It is built on this project and is licensed under Apache-2.0, the same as loxilb. Some of its capabilities:
+
+| Capability | What it does |
+|:-----------|:-------------|
+| [KV-cache-aware routing](https://loxilb-io.github.io/loxilbdocs-inference-gateway/latest/ai-gateway/kv-caching/) | Sends each request to the endpoint whose KV cache already holds the longest prefix of the prompt |
+| [Prefill/Decode disaggregation](https://loxilb-io.github.io/loxilbdocs-inference-gateway/latest/ai-gateway/pd-disaggregation/) | Splits each request across prefill and decode pools, with KV-transfer coordination and session affinity |
+| [MCP gateway](https://loxilb-io.github.io/loxilbdocs-inference-gateway/latest/ai-gateway/mcp-gateway/) | MCP stateless validation and per-request selection, or legacy session routing |
+| [AI traffic governance](https://loxilb-io.github.io/loxilbdocs-inference-gateway/latest/ai-gateway/ai-traffic-governance/) | API keys, JWT, model authorization and request/token quotas, enforced before dispatch |
+
+Read more in the loxilb-inference-gateway [repository](https://github.com/loxilb-io/loxilb-inference-gateway) and [documentation](https://loxilb-io.github.io/loxilbdocs-inference-gateway/latest/).
+
 ## Why choose loxilb?
    
 - ```Performs``` much better compared to its competitors across various architectures   
@@ -68,6 +84,7 @@ Telco-cloud requires load-balancing and communication across various interfaces/
 - Optimized implementation for features like [Conntrack](https://thermalcircle.de/doku.php?id=blog:linux:connection_tracking_1_modules_and_hooks), QoS, etc
 - Full compatibility for ipvs (ipvs policies can be auto inherited)
 - Policy oriented L7 proxy support - HTTP1.0, 1.1, 2.0, 3.0   
+- LLM-serving extensions (KV-cache-aware routing, Prefill/Decode disaggregation, MCP gateway) available in the [loxilb-inference-gateway](https://github.com/loxilb-io/loxilb-inference-gateway) fork
 
 ## Components of loxilb 
 - GoLang based control plane components
@@ -106,6 +123,10 @@ Telco-cloud requires load-balancing and communication across various interfaces/
 
 #### loxilb in standalone mode
 - [Run loxilb standalone](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/standalone.md)
+
+#### loxilb as inference gateway (LLM serving)
+- [loxilb-inference-gateway : Installation](https://loxilb-io.github.io/loxilbdocs-inference-gateway/latest/getting-started/installation/)
+- [loxilb-inference-gateway : Quickstart](https://loxilb-io.github.io/loxilbdocs-inference-gateway/latest/getting-started/quickstart/)
 
 ## Advanced Guides    
 - [How-To : Service-group zones with loxilb](https://github.com/loxilb-io/loxilbdocs/blob/main/docs/service-zones.md)
