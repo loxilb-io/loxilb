@@ -101,16 +101,16 @@ func NlpRegister(hook cmn.NetHookInterface) {
 }
 
 func NlpIsBlackListedIntf(name string, masterIdx int) bool {
-	if nNl.WhiteList != "none" {
-		filter := nNl.WLRgx.MatchString(name)
-		return !filter
-	}
-
-	if name == "lo" {
+	// --nonlp skips NlpInit; periodic L3 reconciliation still calls here.
+	// No netlink policy means no interface may enter reconciliation.
+	if nNl == nil {
 		return true
 	}
-	filter := nNl.BLRgx.MatchString(name)
-	return filter
+
+	if nNl.WhiteList != "none" {
+		return !nNl.WLRgx.MatchString(name)
+	}
+	return name == "lo" || nNl.BLRgx.MatchString(name)
 }
 
 func applyAllConfig(name string) bool {
