@@ -3513,6 +3513,23 @@ func vipAdvSend(IP net.IP, iface string) {
 	}
 }
 
+// vipBindIf - returns the interface name a VIP should be bound to.
+//
+// For IPv6, the bind target is the port that answers neighbour solicitations
+// for the address (iface). For IPv4, an L2 adjacent VIP (one residing within
+// a local port's subnet) must be bound to that port so the interface answers
+// ARP requests targeting the VIP. A routed VIP whose interface is not directly
+// connected falls back to "lo".
+func (R *RuleH) vipBindIf(IP net.IP, iface string) string {
+	if tk.IsNetIPv6(IP.String()) {
+		return iface
+	}
+	if R.vipAdvIfaIf(IP) != "" && iface != "" {
+		return iface
+	}
+	return "lo"
+}
+
 func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool, ctx *vipAdvCtx) error {
 	if inst == "" {
 		inst = cmn.CIDefault
@@ -3535,13 +3552,11 @@ func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool, ctx 
 		// Binding the address, the cloud hook and the neighbour cleanup do not
 		// depend on having found somewhere to advertise - only the gratuitous
 		// ARP or NA does, so a VIP whose interface does not resolve is still
-		// bound and still serves. IPv6 is the one exception: its bind target is
-		// the port that answers neighbour solicitations for the address, which
-		// is the very thing that failed to resolve.
-		ifname := "lo"
-		if tk.IsNetIPv6(IP.String()) {
-			ifname = iface
-		}
+		// bound and still serves on lo. For IPv6, the bind target is the port
+		// that answers neighbour solicitations for the address. For IPv4, an L2
+		// adjacent VIP (residing within a local port's subnet) must be bound to
+		// that port so the interface answers ARP requests targeting the VIP.
+		ifname := R.vipBindIf(IP, iface)
 
 		if !utils.IsIPHostAddr(IP.String()) && ifname != "" {
 			if mh.cloudHook != nil {
@@ -3570,14 +3585,11 @@ func (R *RuleH) AdvRuleVIP(IP net.IP, eIP net.IP, inst string, egress bool, ctx 
 
 	} else if ciState != cmn.CIUnDefStateString {
 		if utils.IsIPHostAddr(IP.String()) {
-			// IPv4 is always on lo. For IPv6 let DelAddrNoHook ask the kernel
-			// which link carries the address: the delete then does not depend
-			// on the resolution the add used, which may since have changed or
-			// been overridden by configuration.
-			ifname := "lo"
-			if tk.IsNetIPv6(IP.String()) {
-				ifname = ""
-			}
+			// For both IPv4 and IPv6, let DelAddrNoHook ask the kernel which link
+			// carries the address: the delete then does not depend on whether the
+			// VIP was bound to lo (routed) or a data port (L2 adjacent/IPv6), which
+			// may have changed or been overridden by configuration.
+			ifname := ""
 			if loxinlp.DelAddrNoHook(utils.IPHostCIDRString(IP), ifname) != 0 {
 				tk.LogIt(tk.LogError, "lb-rule vip %s:%s delete failed\n", IP.String(), ifname)
 			} else {
@@ -3760,10 +3772,7 @@ func (R *RuleH) DeleteRuleVIP(VIP net.IP) {
 			xVIP = vipEnt.pVIP
 		}
 		if utils.IsIPHostAddr(xVIP.String()) {
-			ifname := "lo"
-			if tk.IsNetIPv6(xVIP.String()) {
-				ifname = ""
-			}
+			ifname := ""
 			loxinlp.DelAddrNoHook(utils.IPHostCIDRString(xVIP), ifname)
 			if mh.cloudHook != nil {
 				err := mh.cloudHook.CloudUpdatePrivateIP(xVIP, VIP, false)
