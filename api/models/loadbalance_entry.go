@@ -508,7 +508,7 @@ type LoadbalanceEntryServiceArguments struct {
 	// value for probe timer (in seconds)
 	ProbeTimeout uint32 `json:"probeTimeout,omitempty"`
 
-	// probe port if probetype is tcp/udp/sctp
+	// probe port if probetype is tcp/udp/sctp/http/https
 	Probeport uint16 `json:"probeport,omitempty"`
 
 	// probe request string

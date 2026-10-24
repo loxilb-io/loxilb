@@ -7001,7 +7001,7 @@ func init() {
               "format": "uint32"
             },
             "probeport": {
-              "description": "probe port if probetype is tcp/udp/sctp",
+              "description": "probe port if probetype is tcp/udp/sctp/http/https",
               "type": "integer",
               "format": "uint16"
             },
@@ -15567,7 +15567,7 @@ func init() {
               "format": "uint32"
             },
             "probeport": {
-              "description": "probe port if probetype is tcp/udp/sctp",
+              "description": "probe port if probetype is tcp/udp/sctp/http/https",
               "type": "integer",
               "format": "uint16"
             },
@@ -15773,7 +15773,7 @@ func init() {
           "format": "uint32"
         },
         "probeport": {
-          "description": "probe port if probetype is tcp/udp/sctp",
+          "description": "probe port if probetype is tcp/udp/sctp/http/https",
           "type": "integer",
           "format": "uint16"
         },

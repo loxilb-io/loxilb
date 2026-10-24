@@ -1621,6 +1621,8 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		if serv.ProbeType != HostProbeConnectSCTP &&
 			serv.ProbeType != HostProbeConnectTCP &&
 			serv.ProbeType != HostProbeConnectUDP &&
+			serv.ProbeType != HostProbeHTTP &&
+			serv.ProbeType != HostProbeHTTPS &&
 			serv.ProbeType != HostProbePing &&
 			serv.ProbeType != HostProbeNone {
 			return RuleArgsErr, errors.New("malformed-service-ptype error")
@@ -1628,7 +1630,9 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 
 		if (serv.ProbeType == HostProbeConnectSCTP ||
 			serv.ProbeType == HostProbeConnectTCP ||
-			serv.ProbeType == HostProbeConnectUDP) &&
+			serv.ProbeType == HostProbeConnectUDP ||
+			serv.ProbeType == HostProbeHTTP ||
+			serv.ProbeType == HostProbeHTTPS) &&
 			(serv.ProbePort == 0) {
 			return RuleArgsErr, errors.New("malformed-service-pport error")
 		}

@@ -4039,7 +4039,7 @@ definitions:
           probeport:
             type: integer
             format: uint16
-            description: probe port if probetype is tcp/udp/sctp
+            description: probe port if probetype is tcp/udp/sctp/http/https
           probereq:
             type: string
             description: probe request string
