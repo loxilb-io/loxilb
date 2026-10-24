@@ -49,6 +49,7 @@ func ConfigPostLoadbalancer(params operations.PostConfigLoadbalancerParams, prin
 	lbRules.Serv.ProbePort = params.Attr.ServiceArguments.Probeport
 	lbRules.Serv.ProbeReq = params.Attr.ServiceArguments.Probereq
 	lbRules.Serv.ProbeResp = params.Attr.ServiceArguments.Proberesp
+	lbRules.Serv.ProbeSNI = params.Attr.ServiceArguments.Probesni
 	lbRules.Serv.ProbeTimeout = params.Attr.ServiceArguments.ProbeTimeout
 	lbRules.Serv.ProbeRetries = int(params.Attr.ServiceArguments.ProbeRetries)
 	lbRules.Serv.Name = params.Attr.ServiceArguments.Name
@@ -252,6 +253,7 @@ func ConfigGetLoadbalancer(params operations.GetConfigLoadbalancerAllParams, pri
 		tmpSvc.Managed = lb.Serv.Managed
 		tmpSvc.Probetype = lb.Serv.ProbeType
 		tmpSvc.Probeport = lb.Serv.ProbePort
+		tmpSvc.Probesni = lb.Serv.ProbeSNI
 		tmpSvc.Name = lb.Serv.Name
 		tmpSvc.Snat = lb.Serv.Snat
 		tmpSvc.Host = lb.Serv.HostUrl

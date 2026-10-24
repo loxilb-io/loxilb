@@ -201,6 +201,7 @@ type epHostOpts struct {
 	probeType         string
 	probeReq          string
 	probeResp         string
+	probeSNI          string
 	probeDuration     uint32
 	currProbeDuration uint32
 	probePort         uint16
@@ -287,6 +288,7 @@ type ruleProbe struct {
 	prbPort    uint16
 	prbReq     string
 	prbResp    string
+	prbSNI     string
 	prbTimeo   uint32
 	prbRetries int
 }
@@ -821,6 +823,7 @@ func (R *RuleH) GetLBRule() ([]cmn.LbRuleMod, error) {
 		ret.Serv.ProbePort = data.hChk.prbPort
 		ret.Serv.ProbeReq = data.hChk.prbReq
 		ret.Serv.ProbeResp = data.hChk.prbResp
+		ret.Serv.ProbeSNI = data.hChk.prbSNI
 		ret.Serv.Name = data.name
 		ret.Serv.HostUrl = data.tuples.path
 		ret.Serv.ProxyProtocolV2 = data.ppv2En
@@ -926,6 +929,7 @@ func (R *RuleH) modNatEpHost(r *ruleEnt, endpoints []ruleLBEp, doAddOp bool, liv
 			hopts.probePort = r.hChk.prbPort
 			hopts.probeReq = r.hChk.prbReq
 			hopts.probeResp = r.hChk.prbResp
+			hopts.probeSNI = r.hChk.prbSNI
 		} else {
 			hopts.probeType = pType
 			hopts.probePort = pPort
@@ -1621,6 +1625,8 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		if serv.ProbeType != HostProbeConnectSCTP &&
 			serv.ProbeType != HostProbeConnectTCP &&
 			serv.ProbeType != HostProbeConnectUDP &&
+			serv.ProbeType != HostProbeHTTP &&
+			serv.ProbeType != HostProbeHTTPS &&
 			serv.ProbeType != HostProbePing &&
 			serv.ProbeType != HostProbeNone {
 			return RuleArgsErr, errors.New("malformed-service-ptype error")
@@ -1628,7 +1634,9 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 
 		if (serv.ProbeType == HostProbeConnectSCTP ||
 			serv.ProbeType == HostProbeConnectTCP ||
-			serv.ProbeType == HostProbeConnectUDP) &&
+			serv.ProbeType == HostProbeConnectUDP ||
+			serv.ProbeType == HostProbeHTTP ||
+			serv.ProbeType == HostProbeHTTPS) &&
 			(serv.ProbePort == 0) {
 			return RuleArgsErr, errors.New("malformed-service-pport error")
 		}
@@ -1644,6 +1652,10 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		}
 	} else if serv.ProbePort != 0 {
 		return RuleArgsErr, errors.New("malformed-service-pport error")
+	}
+
+	if serv.ProbeSNI != "" && serv.ProbeType != HostProbeHTTPS {
+		return RuleArgsErr, errors.New("malformed-service-psni error")
 	}
 
 	// Currently support a maximum of MaxLBEndPoints
@@ -1777,6 +1789,7 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 
 		if eRule.hChk.prbType != serv.ProbeType || eRule.hChk.prbPort != serv.ProbePort ||
 			eRule.hChk.prbReq != serv.ProbeReq || eRule.hChk.prbResp != serv.ProbeResp ||
+			eRule.hChk.prbSNI != serv.ProbeSNI ||
 			eRule.hChk.actChk != serv.Monitor ||
 			eRule.pTO != serv.PersistTimeout || eRule.act.action.(*ruleLBActs).sel != lBActs.sel ||
 			eRule.act.action.(*ruleLBActs).mode != lBActs.mode ||
@@ -1868,6 +1881,7 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 		eRule.hChk.prbPort = serv.ProbePort
 		eRule.hChk.prbReq = serv.ProbeReq
 		eRule.hChk.prbResp = serv.ProbeResp
+		eRule.hChk.prbSNI = serv.ProbeSNI
 		eRule.hChk.prbRetries = serv.ProbeRetries
 		eRule.hChk.prbTimeo = serv.ProbeTimeout
 		eRule.hChk.actChk = serv.Monitor
@@ -1953,6 +1967,7 @@ func (R *RuleH) AddLbRule(serv cmn.LbServiceArg, servSecIPs []cmn.LbSecIPArg, al
 	r.hChk.prbPort = serv.ProbePort
 	r.hChk.prbReq = serv.ProbeReq
 	r.hChk.prbResp = serv.ProbeResp
+	r.hChk.prbSNI = serv.ProbeSNI
 	r.hChk.prbRetries = serv.ProbeRetries
 	r.hChk.prbTimeo = serv.ProbeTimeout
 	r.hChk.actChk = serv.Monitor
@@ -2843,7 +2858,7 @@ func (R *RuleH) epCheckNow(ep *epHost) {
 		}
 
 		urlStr := fmt.Sprintf("https://%s:%d/%s", addr.String(), ep.opts.probePort, ep.opts.probeReq)
-		sOk := utils.HTTPSProber(urlStr, R.tlsCert, R.rootCAPool, ep.opts.probeResp)
+		sOk := utils.HTTPSProber(urlStr, ep.opts.probeSNI, R.tlsCert, R.rootCAPool, ep.opts.probeResp)
 		//tk.LogIt(tk.LogDebug, "[PROBE] https ep - URL[%s:%s] Resp[%s] %v\n", ep.hostName, urlStr, ep.opts.probeResp, sOk)
 		ep.transitionEPState(sOk, inActTryThr)
 	} else {

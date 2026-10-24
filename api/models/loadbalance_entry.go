@@ -508,7 +508,7 @@ type LoadbalanceEntryServiceArguments struct {
 	// value for probe timer (in seconds)
 	ProbeTimeout uint32 `json:"probeTimeout,omitempty"`
 
-	// probe port if probetype is tcp/udp/sctp
+	// probe port if probetype is tcp/udp/sctp/http/https
 	Probeport uint16 `json:"probeport,omitempty"`
 
 	// probe request string
@@ -516,6 +516,9 @@ type LoadbalanceEntryServiceArguments struct {
 
 	// probe response string
 	Proberesp string `json:"proberesp,omitempty"`
+
+	// TLS server name (SNI) sent in the handshake if probetype is https. The end-point certificate is verified against this name instead of the end-point IP address
+	Probesni string `json:"probesni,omitempty"`
 
 	// probe type for any end-point of this entry
 	// Enum: [tcp udp sctp http https ping none]
