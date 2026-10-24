@@ -7013,6 +7013,10 @@ func init() {
               "description": "probe response string",
               "type": "string"
             },
+            "probesni": {
+              "description": "TLS server name (SNI) sent in the handshake if probetype is https. The end-point certificate is verified against this name instead of the end-point IP address",
+              "type": "string"
+            },
             "probetype": {
               "description": "probe type for any end-point of this entry",
               "type": "string",
@@ -15579,6 +15583,10 @@ func init() {
               "description": "probe response string",
               "type": "string"
             },
+            "probesni": {
+              "description": "TLS server name (SNI) sent in the handshake if probetype is https. The end-point certificate is verified against this name instead of the end-point IP address",
+              "type": "string"
+            },
             "probetype": {
               "description": "probe type for any end-point of this entry",
               "type": "string",
@@ -15783,6 +15791,10 @@ func init() {
         },
         "proberesp": {
           "description": "probe response string",
+          "type": "string"
+        },
+        "probesni": {
+          "description": "TLS server name (SNI) sent in the handshake if probetype is https. The end-point certificate is verified against this name instead of the end-point IP address",
           "type": "string"
         },
         "probetype": {
