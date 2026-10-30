@@ -373,6 +373,15 @@ var (
 			Help: "Total number of conntrack statistics reset events detected (a per-flow cumulative counter that went backwards).",
 		},
 	)
+	// Fed from the datapath ticker (ct_fail_stats_map), not from a collection
+	// goroutine, so it counts with collection off as well.
+	ctInsertFailures = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: MetricCtInsertFailures,
+			Help: "Total number of packets the datapath could not create a conntrack entry for, by reason: map_full (table full), half_ins (only one direction fit, rolled back), xkey_exist / xkey_miss (unpaired entry found).",
+		},
+		[]string{"reason"},
+	)
 	closedConnectionsProcessed = promauto.NewCounter(
 		prometheus.CounterOpts{
 			Name: MetricClosedConnectionsProcessed,

@@ -168,6 +168,43 @@ type DpEbpfH struct {
 	ToFinCh [mapNotifierWorkers]chan int
 	mtx     sync.RWMutex
 	ctMap   map[string]*DpCtInfo
+	ctFail  [len(ctFailReasons)]uint64
+}
+
+// ctFailReasons - reason labels of ct_fail_stats_map, by index (enum llb_ct_fail)
+var ctFailReasons = [...]string{"map_full", "half_ins", "xkey_exist", "xkey_miss"}
+
+// dpCtFailStats - reads the datapath's conntrack failure counters, adds the
+// increase since the last tick to the prometheus counter and logs one line
+// per tick when any of them increased
+func dpCtFailStats() {
+	var incr []string
+
+	for i, reason := range ctFailReasons {
+		var b C.longlong
+		var p C.longlong
+
+		ret := C.llb_fetch_map_stats_cached(C.int(C.LL_DP_CT_FAIL_STATS_MAP), C.uint(i), C.int(1),
+			unsafe.Pointer(&b), unsafe.Pointer(&p))
+		if ret != 0 {
+			return
+		}
+
+		cur := uint64(p)
+		prev := mh.dpEbpf.ctFail[i]
+		mh.dpEbpf.ctFail[i] = cur
+		if cur < prev {
+			prev = 0
+		}
+		prom.AddCtInsertFailures(reason, cur-prev)
+		if cur > prev {
+			incr = append(incr, fmt.Sprintf("%s +%d (total %d)", reason, cur-prev, cur))
+		}
+	}
+
+	if len(incr) > 0 {
+		tk.LogIt(tk.LogWarning, "conntrack insert failures: %s\n", strings.Join(incr, ", "))
+	}
 }
 
 // dpEbpfTicker - this ticker routine runs every DpEbpfLinuxTiVal seconds
@@ -215,6 +252,7 @@ func dpEbpfTicker() {
 			// This routine caches stats in a local statsDB
 			// which can be collected from a separate gothread
 			C.llb_collect_map_stats(C.int(tbls[sel]))
+			dpCtFailStats()
 
 			// Age any entries related to Conntrack
 			/* No need to fetch all stats in this fashion */

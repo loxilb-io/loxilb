@@ -47,6 +47,9 @@ const (
 	// into a utilization ratio.
 	MetricConntrackMaxEntries = "loxilb_conntrack_max_entries"
 
+	// Packets the datapath could not track, by reason. Canonical-only.
+	MetricCtInsertFailures = "loxilb_ct_insert_failures_total"
+
 	LegacyMetricActiveFlowCountTCP  = "active_flow_count_tcp"
 	MetricActiveFlowCountTCP        = "loxilb_active_flow_count_tcp"
 	LegacyMetricActiveFlowCountUDP  = "active_flow_count_udp"

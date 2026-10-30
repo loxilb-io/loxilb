@@ -269,3 +269,11 @@ func SetConntrackMaxEntries(n int) {
 	}
 	conntrackMaxEntries.Set(float64(n))
 }
+
+// AddCtInsertFailures adds n datapath conntrack insert failures for reason.
+// Called with n = 0 as well, so that every reason has a series from the first
+// datapath tick on. Like SetConntrackMaxEntries, called from the datapath and
+// must stay safe to call with collection off.
+func AddCtInsertFailures(reason string, n uint64) {
+	ctInsertFailures.WithLabelValues(reason).Add(float64(n))
+}

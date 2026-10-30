@@ -21,6 +21,7 @@ import (
 
 	cmn "github.com/loxilb-io/loxilb/common"
 	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 )
 
 // The Prometheus exposition is not covered by the swagger contract, so nothing
@@ -427,6 +428,31 @@ func TestCollectLbRuleTrafficSeedsThenReportsDeltas(t *testing.T) {
 	collectLbRuleTraffic([]cmn.LbRuleMod{rule})
 	if got := mustGather(t, MetricProcessedBytesTotal) - bytesBefore; got != 2400 {
 		t.Errorf("after a counter reset total advanced to %v, want 2400 (2000 + full 400)", got)
+	}
+}
+
+// TestAddCtInsertFailures — a zero add creates the reason's series at 0, a
+// non-zero add advances only that reason.
+func TestAddCtInsertFailures(t *testing.T) {
+	value := func(reason string) float64 {
+		var m dto.Metric
+		if err := ctInsertFailures.WithLabelValues(reason).Write(&m); err != nil {
+			t.Fatalf("write %s: %v", reason, err)
+		}
+		return m.GetCounter().GetValue()
+	}
+
+	AddCtInsertFailures("xkey_miss", 0)
+	if got := value("xkey_miss"); got != 0 {
+		t.Errorf("xkey_miss after zero add = %v, want 0", got)
+	}
+	before := gatherOrZero(t, MetricCtInsertFailures)
+	AddCtInsertFailures("map_full", 7)
+	if got := mustGather(t, MetricCtInsertFailures) - before; got != 7 {
+		t.Errorf("%s advanced by %v, want 7", MetricCtInsertFailures, got)
+	}
+	if got := value("xkey_miss"); got != 0 {
+		t.Errorf("xkey_miss after map_full add = %v, want 0", got)
 	}
 }
 
