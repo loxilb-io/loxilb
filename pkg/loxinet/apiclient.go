@@ -185,6 +185,11 @@ func (na *NetAPIStruct) NetAddrAdd(am *cmn.IPAddrMod) (int, error) {
 	defer mh.mtx.Unlock()
 
 	ret, err := mh.zr.L3.IfaAdd(am.Dev, am.IP)
+	// Not on lo, where a MASTER binds every VIP, and not on what is not a port
+	// (llb-rule-* ifas): such an address never gives a rule a source
+	if err == nil && am.Dev != "lo" && mh.zr.Ports.PortFindByName(am.Dev) != nil {
+		mh.zr.Rules.RulesSrcElect()
+	}
 	return ret, err
 }
 

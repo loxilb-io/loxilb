@@ -365,6 +365,13 @@ func (l3 *L3H) IfaFindAddr(Obj string, addr net.IP) (int, net.IP) {
 	return L3AddrErr, net.IPv4(0, 0, 0, 0)
 }
 
+// ifaIsRuleVIP - Check if an address is known only as the VIP of a lb-rule. Such
+// an address is not on any interface, so it can not be a source for other traffic
+func (l3 *L3H) ifaIsRuleVIP(addr net.IP) bool {
+	ret, _ := l3.IfaFindAddr(fmt.Sprintf("llb-rule-%s", addr.String()), addr)
+	return ret == 0
+}
+
 // IfaSelectAny - Given any dest ip address, select optimal interface source ip address
 // This is useful to determine source ip address when sending traffic to the given ip address
 func (l3 *L3H) IfaSelectAny(addr net.IP, findAny bool) (int, net.IP, string) {
@@ -422,7 +429,7 @@ func (l3 *L3H) IfaSelectAny(addr net.IP, findAny bool) (int, net.IP, string) {
 				return 0, ifaEnt.IfaAddr, ifa.Key.Obj
 			}
 
-			if firstIP == nil {
+			if firstIP == nil && !l3.ifaIsRuleVIP(ifaEnt.IfaAddr) {
 				firstIP = &ifaEnt.IfaAddr
 				firstIfObj = ifa.Key.Obj
 			}
