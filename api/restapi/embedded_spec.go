@@ -7001,7 +7001,7 @@ func init() {
               "format": "uint32"
             },
             "probeport": {
-              "description": "probe port if probetype is tcp/udp/sctp",
+              "description": "probe port if probetype is tcp/udp/sctp/http/https",
               "type": "integer",
               "format": "uint16"
             },
@@ -7011,6 +7011,10 @@ func init() {
             },
             "proberesp": {
               "description": "probe response string",
+              "type": "string"
+            },
+            "probesni": {
+              "description": "TLS server name (SNI) sent in the handshake if probetype is https. The end-point certificate is verified against this name instead of the end-point IP address",
               "type": "string"
             },
             "probetype": {
@@ -15567,7 +15571,7 @@ func init() {
               "format": "uint32"
             },
             "probeport": {
-              "description": "probe port if probetype is tcp/udp/sctp",
+              "description": "probe port if probetype is tcp/udp/sctp/http/https",
               "type": "integer",
               "format": "uint16"
             },
@@ -15577,6 +15581,10 @@ func init() {
             },
             "proberesp": {
               "description": "probe response string",
+              "type": "string"
+            },
+            "probesni": {
+              "description": "TLS server name (SNI) sent in the handshake if probetype is https. The end-point certificate is verified against this name instead of the end-point IP address",
               "type": "string"
             },
             "probetype": {
@@ -15773,7 +15781,7 @@ func init() {
           "format": "uint32"
         },
         "probeport": {
-          "description": "probe port if probetype is tcp/udp/sctp",
+          "description": "probe port if probetype is tcp/udp/sctp/http/https",
           "type": "integer",
           "format": "uint16"
         },
@@ -15783,6 +15791,10 @@ func init() {
         },
         "proberesp": {
           "description": "probe response string",
+          "type": "string"
+        },
+        "probesni": {
+          "description": "TLS server name (SNI) sent in the handshake if probetype is https. The end-point certificate is verified against this name instead of the end-point IP address",
           "type": "string"
         },
         "probetype": {

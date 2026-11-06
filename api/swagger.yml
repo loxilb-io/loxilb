@@ -4039,13 +4039,19 @@ definitions:
           probeport:
             type: integer
             format: uint16
-            description: probe port if probetype is tcp/udp/sctp
+            description: probe port if probetype is tcp/udp/sctp/http/https
           probereq:
             type: string
             description: probe request string
           proberesp:
             type: string
             description: probe response string
+          probesni:
+            type: string
+            description: >-
+              TLS server name (SNI) sent in the handshake if probetype is
+              https. The end-point certificate is verified against this name
+              instead of the end-point IP address
           managed:
             type: boolean
             description: externally managed rule or not

@@ -191,7 +191,8 @@ func checksum(data []byte) uint16 {
 
 // HTTPSProber - Do a https probe for given url
 // returns true/false depending on whether probing was successful
-func HTTPSProber(urls string, cert tls.Certificate, certPool *x509.CertPool, resp string) bool {
+// If serverName is set, it is sent as SNI and the server certificate is verified against it
+func HTTPSProber(urls string, serverName string, cert tls.Certificate, certPool *x509.CertPool, resp string) bool {
 	var err error
 	var req *http.Request
 	var res *http.Response
@@ -201,7 +202,7 @@ func HTTPSProber(urls string, cert tls.Certificate, certPool *x509.CertPool, res
 		Transport: &http.Transport{
 			IdleConnTimeout: 5 * time.Second,
 			TLSClientConfig: &tls.Config{Certificates: []tls.Certificate{cert},
-				RootCAs: certPool}},
+				RootCAs: certPool, ServerName: serverName}},
 	}
 	if req, err = http.NewRequest(http.MethodGet, urls, nil); err != nil {
 		tk.LogIt(tk.LogError, "unable to create http request: %s\n", err)

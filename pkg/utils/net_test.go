@@ -17,8 +17,12 @@
 package utils
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	nlp "github.com/vishvananda/netlink"
@@ -185,6 +189,58 @@ func TestAdvertiseReqParamGuards(t *testing.T) {
 			ret, err := tc.call()
 			if ret == 0 || err == nil {
 				t.Fatalf("accepted bad parameters: ret %d err %v", ret, err)
+			}
+		})
+	}
+}
+
+// TestHTTPSProberServerName - the probe must send the configured server name
+// as SNI and verify the end-point certificate against it. httptest's
+// certificate is valid for 127.0.0.1 and example.com only.
+func TestHTTPSProberServerName(t *testing.T) {
+	sniCh := make(chan string, 1)
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sniCh <- r.TLS.ServerName
+		fmt.Fprint(w, "OK")
+	}))
+	defer srv.Close()
+
+	certPool := x509.NewCertPool()
+	certPool.AddCert(srv.Certificate())
+
+	tests := []struct {
+		name       string
+		serverName string
+		resp       string
+		want       bool
+		reached    bool
+		wantSNI    string
+	}{
+		{"no server name", "", "OK", true, true, ""},
+		{"matching server name", "example.com", "OK", true, true, "example.com"},
+		{"response mismatch", "example.com", "NOK", false, true, "example.com"},
+		{"server name not in certificate", "other.example.net", "", false, false, ""},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := HTTPSProber(srv.URL, tc.serverName, tls.Certificate{}, certPool, tc.resp)
+			if got != tc.want {
+				t.Fatalf("HTTPSProber = %v, want %v", got, tc.want)
+			}
+
+			select {
+			case sni := <-sniCh:
+				if !tc.reached {
+					t.Fatalf("probe reached the server with SNI %q", sni)
+				}
+				if sni != tc.wantSNI {
+					t.Fatalf("server saw SNI %q, want %q", sni, tc.wantSNI)
+				}
+			default:
+				if tc.reached {
+					t.Fatalf("probe never reached the server")
+				}
 			}
 		})
 	}
