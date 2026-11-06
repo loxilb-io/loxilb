@@ -204,9 +204,7 @@ func dpEbpfTicker() {
 			dpCTMapBcast()
 			continue
 		case <-mh.dpEbpf.trigGC:
-			C.llb_age_map_entries(C.LL_DP_CT_MAP)
-			C.llb_age_map_entries(C.LL_DP_FCV4_MAP)
-			mh.dpEbpf.gcTS = time.Now()
+			mh.dpEbpf.ctGCIfDue()
 		case t := <-mh.dpEbpf.ticker.C:
 			sel := mh.dpEbpf.tbN % tLen
 			tk.LogIt(-1, "DP Tick at for selector %v:%d\n", t, sel)
@@ -220,11 +218,7 @@ func dpEbpfTicker() {
 			/* No need to fetch all stats in this fashion */
 			//C.llb_collect_map_stats(C.int(C.LL_DP_CT_STATS_MAP))
 			/* Per entry stats will be fetched in C.ll_ct_map_ent_has_aged */
-			if mh.dpEbpf.gcTiVal == 0 || time.Duration(time.Since(mh.dpEbpf.gcTS).Seconds()) > time.Duration(mh.dpEbpf.gcTiVal) {
-				C.llb_age_map_entries(C.LL_DP_CT_MAP)
-				C.llb_age_map_entries(C.LL_DP_FCV4_MAP)
-				mh.dpEbpf.gcTS = time.Now()
-			}
+			mh.dpEbpf.ctGCIfDue()
 
 			// This means around 10s from start
 			if !mh.dpEbpf.CtSync {
@@ -335,7 +329,7 @@ func DpEbpfInit(clusterEn, rssEn, egrHooks, localSockPolicy, sockMapEn bool, nod
 
 	ne := new(DpEbpfH)
 	ne.tDone = make(chan bool)
-	ne.trigGC = make(chan bool)
+	ne.trigGC = make(chan bool, 1)
 	ne.gcTS = time.Now()
 	ne.gcTiVal = ctGCTiValDefault
 	ne.ToMapCh = make(chan interface{}, mapNotifierChLen)
@@ -2747,9 +2741,23 @@ func (e *DpEbpfH) DpRelLock() {
 	C.llb_xh_unlock()
 }
 
-// DpTableGC - Work on table garbage collection
+// DpTableGC - Work on table garbage collection. A reader asks for a sweep and
+// goes on: it never waits for the worker, and a sweep runs only if it is due
 func (e *DpEbpfH) DpTableGC() {
-	e.trigGC <- true
+	select {
+	case e.trigGC <- true:
+	default:
+	}
+}
+
+// ctGCIfDue - sweep the CT and FC maps if the last sweep is older than the GC
+// interval. Runs only in the DP ticker goroutine, which owns gcTS
+func (e *DpEbpfH) ctGCIfDue() {
+	if e.gcTiVal == 0 || time.Duration(time.Since(e.gcTS).Seconds()) > time.Duration(e.gcTiVal) {
+		C.llb_age_map_entries(C.LL_DP_CT_MAP)
+		C.llb_age_map_entries(C.LL_DP_FCV4_MAP)
+		e.gcTS = time.Now()
+	}
 }
 
 //export goLinuxArpResolver
