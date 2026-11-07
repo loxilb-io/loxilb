@@ -1246,7 +1246,17 @@ func (R *RuleH) electEPSrc(r *ruleEnt) bool {
 					mode = "fullnat"
 					if !mh.has.IsCIKAMode() {
 						sip = r.RuleVIP2PrivIP()
-						if np.xIP.Equal(sip) {
+						if tk.IsNetIPv6(sip.String()) && tk.IsNetIPv4(np.xIP.String()) {
+							// NAT64: an IPv6 VIP can't source IPv4 traffic and the datapath
+							// drops NAT64 with no source, so use a local IPv4 address that
+							// the end-point can reply to
+							e, sip, _ = R.zone.L3.IfaSelectAny(np.xIP, true)
+							if e != 0 || !tk.IsNetIPv4(sip.String()) {
+								tk.LogIt(tk.LogDebug, "Failed to find suitable source for %s\n", np.xIP.String())
+								sip = net.IPv4(0, 0, 0, 0)
+								addrRslv = true
+							}
+						} else if np.xIP.Equal(sip) {
 							sip = net.IPv4(0, 0, 0, 0)
 						} else if utils.IsIPHostAddr(np.xIP.String()) {
 							sip = net.IPv4(0, 0, 0, 0)
