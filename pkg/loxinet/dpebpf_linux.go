@@ -481,39 +481,6 @@ func getPtrOffset(ptr unsafe.Pointer, size uintptr) unsafe.Pointer {
 	return unsafe.Pointer(uintptr(ptr) + size)
 }
 
-func osPortIsRunning(portName string) bool {
-	sfd, err := syscall.Socket(syscall.AF_INET,
-		syscall.SOCK_DGRAM,
-		syscall.IPPROTO_IP)
-	if err != nil {
-		tk.LogIt(tk.LogError, "Error %s", err)
-		return false
-	}
-
-	ifstr := C.CString(portName)
-	ifrStruct := make([]byte, 32)
-	C.memcpy(unsafe.Pointer(&ifrStruct[0]), unsafe.Pointer(ifstr), 16)
-
-	r0, _, err := syscall.Syscall(syscall.SYS_IOCTL,
-		uintptr(sfd),
-		syscall.SIOCGIFFLAGS,
-		uintptr(unsafe.Pointer(&ifrStruct[0])))
-	if r0 != 0 {
-		C.free(unsafe.Pointer(ifstr))
-		syscall.Close(sfd)
-		tk.LogIt(tk.LogError, "Error %s", err)
-		return false
-	}
-
-	C.free(unsafe.Pointer(ifstr))
-	syscall.Close(sfd)
-
-	var flags uint16
-	C.memcpy(unsafe.Pointer(&flags), unsafe.Pointer(&ifrStruct[16]), 2)
-
-	return flags&syscall.IFF_RUNNING != 0
-}
-
 // DpPortPropMod - routine to work on a ebpf port property request
 func (e *DpEbpfH) DpPortPropMod(w *PortDpWorkQ) int {
 	var txK C.uint
