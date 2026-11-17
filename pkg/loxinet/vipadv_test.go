@@ -248,3 +248,102 @@ func TestVipAdvBurstSchedForgetsFinished(t *testing.T) {
 	s.arm("inst0", nil)
 	s.arm("never", nil)
 }
+
+func TestVipBindIf(t *testing.T) {
+	_, v4Net1, err := net.ParseCIDR("11.11.12.1/24")
+	if err != nil {
+		t.Fatalf("parse CIDR: %v", err)
+	}
+	_, v4Eth0, err := net.ParseCIDR("192.168.1.1/24")
+	if err != nil {
+		t.Fatalf("parse CIDR: %v", err)
+	}
+	_, v6Net1, err := net.ParseCIDR("2001:db8:11::1/64")
+	if err != nil {
+		t.Fatalf("parse CIDR: %v", err)
+	}
+
+	R := &RuleH{
+		zone: &Zone{
+			L3: &L3H{
+				IfaMap: map[IfaKey]*Ifa{
+					{Obj: "net1"}: {
+						Key: IfaKey{Obj: "net1"},
+						Ifas: []*IfaEnt{
+							{
+								IfaAddr: net.ParseIP("11.11.12.1"),
+								IfaNet:  *v4Net1,
+							},
+							{
+								IfaAddr: net.ParseIP("2001:db8:11::1"),
+								IfaNet:  *v6Net1,
+							},
+						},
+					},
+					{Obj: "eth0"}: {
+						Key: IfaKey{Obj: "eth0"},
+						Ifas: []*IfaEnt{
+							{
+								IfaAddr: net.ParseIP("192.168.1.1"),
+								IfaNet:  *v4Eth0,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	tests := []struct {
+		name  string
+		ip    string
+		iface string
+		want  string
+	}{
+		{
+			name:  "L2-adjacent IPv4 VIP binds to data interface for ARP response",
+			ip:    "11.11.12.175",
+			iface: "net1",
+			want:  "net1",
+		},
+		{
+			name:  "L2-adjacent IPv4 VIP on eth0 binds to eth0",
+			ip:    "192.168.1.100",
+			iface: "eth0",
+			want:  "eth0",
+		},
+		{
+			name:  "routed IPv4 VIP falls back to lo",
+			ip:    "20.20.20.1",
+			iface: "net1",
+			want:  "lo",
+		},
+		{
+			name:  "IPv4 VIP with unresolved interface falls back to lo",
+			ip:    "11.11.12.175",
+			iface: "",
+			want:  "lo",
+		},
+		{
+			name:  "L2-adjacent IPv6 VIP binds to resolved interface",
+			ip:    "2001:db8:11::100",
+			iface: "net1",
+			want:  "net1",
+		},
+		{
+			name:  "IPv6 VIP with unresolved interface returns empty",
+			ip:    "2001:db8:11::100",
+			iface: "",
+			want:  "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := R.vipBindIf(net.ParseIP(tc.ip), tc.iface)
+			if got != tc.want {
+				t.Errorf("vipBindIf(%s, %q) = %q, want %q", tc.ip, tc.iface, got, tc.want)
+			}
+		})
+	}
+}
