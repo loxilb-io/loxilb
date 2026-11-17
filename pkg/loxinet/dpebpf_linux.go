@@ -41,7 +41,7 @@ extern void goMapNotiHandler(struct ll_dp_map_notif *);
 extern void goProxyEntCollector(struct dp_proxy_ct_ent *);
 extern void goLinuxArpResolver(unsigned int);
 #cgo CFLAGS:  -I./../../loxilb-ebpf/libbpf/src/ -I./../../loxilb-ebpf/common
-#cgo LDFLAGS: -L. -L/lib64 -L./../../loxilb-ebpf/kernel -L./../../loxilb-ebpf/libbpf/src/build/usr/lib64/ -Wl,-rpath=/lib64/ -l:./../../loxilb-ebpf/kernel/libloxilbdp.a -l:./../../loxilb-ebpf/libbpf/src/libbpf.a -lelf -lz -lssl -lcrypto
+#cgo LDFLAGS: -L/lib64 -Wl,-rpath=/lib64/ ${SRCDIR}/../../loxilb-ebpf/kernel/libloxilbdp.a ${SRCDIR}/../../loxilb-ebpf/libbpf/src/libbpf.a -lelf -lz -lssl -lcrypto
 */
 import "C"
 import (
