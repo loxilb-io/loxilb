@@ -425,7 +425,9 @@ func (e *DpEbpfH) loadEbpfPgm(name string) int {
 		return 0
 	}
 	ifStr := C.CString(name)
+	defer C.free(unsafe.Pointer(ifStr))
 	xSection := C.CString(string(C.XDP_LL_SEC_DEFAULT))
+	defer C.free(unsafe.Pointer(xSection))
 	link, err := nlp.LinkByName(name)
 	if err != nil {
 		tk.LogIt(tk.LogWarning, "[DP] Port %s not found\n", name)
@@ -435,6 +437,7 @@ func (e *DpEbpfH) loadEbpfPgm(name string) int {
 		C.llb_dp_link_attach(ifStr, xSection, C.LL_BPF_MOUNT_XDP, 0)
 	}
 	section := C.CString(string(C.TC_LL_SEC_DEFAULT))
+	defer C.free(unsafe.Pointer(section))
 	C.llb_dp_link_attach(ifStr, section, C.LL_BPF_MOUNT_TC, 0)
 
 	filters, err := nlp.FilterList(link, nlp.HANDLE_MIN_INGRESS)
@@ -451,9 +454,6 @@ func (e *DpEbpfH) loadEbpfPgm(name string) int {
 			}
 		}
 	}
-	C.free(unsafe.Pointer(ifStr))
-	C.free(unsafe.Pointer(xSection))
-	C.free(unsafe.Pointer(section))
 	return int(ret)
 }
 
@@ -1142,6 +1142,7 @@ func DpLBRuleMod(w *LBDpWorkQ) int {
 	}
 
 	hostURLStr := C.CString(w.HostURL)
+	defer C.free(unsafe.Pointer(hostURLStr))
 	C.memcpy(unsafe.Pointer(&dat.host_url[0]), unsafe.Pointer(hostURLStr), C.ulong(len(w.HostURL))+1)
 
 	if w.Work == DpCreate {
