@@ -54,3 +54,20 @@ spec:
       - name: http-service
         namespace: default
         port: 80
+---
+# The route is in kube-system and its backend in default, and a reference into
+# another namespace is served only when a ReferenceGrant there permits it.
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: test-http-route-backend
+  namespace: default
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: kube-system
+  to:
+    - group: ""
+      kind: Service
+      name: http-service
