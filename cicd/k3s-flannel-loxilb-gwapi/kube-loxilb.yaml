@@ -44,6 +44,20 @@ rules:
       - update
       - delete
   - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  - apiGroups:
       - gateway.networking.k8s.io
     resources:
       - gatewayclasses
@@ -51,8 +65,29 @@ rules:
       - gateways
       - gateways/status
       - tcproutes
+      - tcproutes/status
       - udproutes
+      - udproutes/status
       - httproutes
+      - httproutes/status
+    verbs: ["get", "watch", "list", "patch", "update"]
+  - apiGroups:
+      - gateway.networking.k8s.io
+    resources:
+      - referencegrants
+    verbs: ["get", "watch", "list"]
+  - apiGroups:
+      - inference.networking.k8s.io
+    resources:
+      - inferencepools
+      - inferencepools/status
+    verbs: ["get", "watch", "list", "patch", "update"]
+  - apiGroups:
+      - jwtauthprofile.loxilb.io
+    resources:
+      - jwtauthprofiles
+      - jwtauthprofiles/status
+      - jwtauthprofiles/finalizers
     verbs: ["get", "watch", "list", "patch", "update"]
   - apiGroups:
       - networking.k8s.io
@@ -70,6 +105,19 @@ rules:
       - discovery.k8s.io
     resources:
       - endpointslices
+    verbs:
+      - get
+      - watch
+      - list
+      # A Gateway's ingress service has its endpoints written: the
+      # loxilb-ingress pods, wherever they run.
+      - create
+      - update
+      - delete
+  - apiGroups:
+      - kubevirt.io
+    resources:
+      - virtualmachineinstances
     verbs:
       - get
       - watch
@@ -138,7 +186,22 @@ rules:
       - create
       - update
       - delete
-
+  - apiGroups:
+      - loxiurl.loxilb.io
+    resources:
+      - loxiurls
+    verbs:
+      - get
+      - watch
+      - list
+      - create
+      - update
+      - delete
+  - apiGroups:
+      - egress.loxilb.io
+    resources:
+      - egresses
+    verbs: ["get", "watch", "list", "patch", "update"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
