@@ -627,6 +627,8 @@ type LbServiceArg struct {
 	ProbeReq string `json:"probereq"`
 	// ProbeResp - Response string for liveness check
 	ProbeResp string `json:"proberesp"`
+	// ProbeSNI - TLS server name (SNI) for https liveness check
+	ProbeSNI string `json:"probesni"`
 	// ProbeTimeout - Probe Timeout
 	ProbeTimeout uint32 `json:"probeTimeout"`
 	// ProbeRetries - Probe Retries
