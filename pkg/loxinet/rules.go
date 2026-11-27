@@ -1236,7 +1236,9 @@ func (R *RuleH) electEPSrc(r *ruleEnt) bool {
 					mode = "onearm"
 					e, sip, _ = R.zone.L3.IfaSelectAny(np.xIP, true)
 					if e != 0 {
-						tk.LogIt(tk.LogDebug, "Failed to find suitable source for %s\n", np.xIP.String())
+						if !r.addrRslv && !addrRslv {
+							tk.LogIt(tk.LogInfo, "lb-rule %s: no usable source for %s yet, not programmed until there is one\n", r.tuples.String(), np.xIP.String())
+						}
 						addrRslv = true
 					}
 					if np.xIP.Equal(sip) {
@@ -2915,6 +2917,26 @@ func epTicker(R *RuleH, helper int) {
 					break
 				}
 			}
+		}
+	}
+}
+
+// RulesSrcElect - A port got an address. Rules waiting for a source, and one-arm
+// rules which source from an interface address, need not wait for the next
+// RulesSync. Only sources are elected here: host associations, and so any
+// re-create of a hostonearm rule, stay with RulesSync
+func (R *RuleH) RulesSrcElect() {
+	tk.LogIt(tk.LogDebug, "port address added: electing lb-rule sources\n")
+	for _, rule := range R.tables[RtLB].eMap {
+		at, ok := rule.act.action.(*ruleLBActs)
+		if !ok {
+			continue
+		}
+		if !rule.addrRslv && at.mode != cmn.LBModeOneArm && at.mode != cmn.LBModeHostOneArm {
+			continue
+		}
+		if R.electEPSrc(rule) || rule.sync != 0 {
+			rule.DP(DpCreate)
 		}
 	}
 }
