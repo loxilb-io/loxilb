@@ -189,3 +189,33 @@ func TestAdvertiseReqParamGuards(t *testing.T) {
 		})
 	}
 }
+
+// TestConvertToSolicitedNodeMulticast - the mapping must be correct and must
+// not alias the net.IPv6unspecified global. Assigning that global and copying
+// into it would corrupt it for the whole process and make every call share one
+// backing array, so a second call would silently rewrite the first result.
+func TestConvertToSolicitedNodeMulticast(t *testing.T) {
+	// Snapshot the stdlib global so we can prove the call leaves it untouched.
+	zeroBefore := append(net.IP(nil), net.IPv6unspecified...)
+
+	first := ConvertToSolicitedNodeMulticast(net.ParseIP("2001:db8::1"))
+	wantFirst := net.ParseIP("ff02::1:ff00:1")
+	if !first.Equal(wantFirst) {
+		t.Fatalf("first mapping = %v, want %v", first, wantFirst)
+	}
+
+	// The net.IPv6unspecified global must still be all zeros.
+	if !net.IPv6unspecified.Equal(zeroBefore) || !net.IPv6unspecified.IsUnspecified() {
+		t.Fatalf("net.IPv6unspecified was mutated to %v", net.IPv6unspecified)
+	}
+
+	// A second call must not disturb the first result (no shared backing array).
+	second := ConvertToSolicitedNodeMulticast(net.ParseIP("2001:db8::2:3:4"))
+	wantSecond := net.ParseIP("ff02::1:ff03:4")
+	if !second.Equal(wantSecond) {
+		t.Fatalf("second mapping = %v, want %v", second, wantSecond)
+	}
+	if !first.Equal(wantFirst) {
+		t.Fatalf("first result changed to %v after a second call", first)
+	}
+}

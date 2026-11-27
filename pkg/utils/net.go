@@ -152,8 +152,13 @@ func ConvertToSolicitedNodeMulticast(ip net.IP) net.IP {
 
 	last24 := ip[len(ip)-3:] // Last 3 bytes of the IPv6 address
 
-	solicitedNode := net.IPv6unspecified
-	copy(solicitedNode[:], net.ParseIP("ff02::1:ff00:0")[:])
+	// Start from a freshly allocated buffer. net.IPv6unspecified is a package
+	// level slice in the standard library, so assigning it here would share its
+	// backing array: copying into solicitedNode would then corrupt
+	// net.IPv6unspecified process wide, and every call would return the same
+	// backing array, so a later call would overwrite an earlier call's result.
+	solicitedNode := make(net.IP, net.IPv6len)
+	copy(solicitedNode, net.ParseIP("ff02::1:ff00:0"))
 	copy(solicitedNode[13:], last24)
 
 	return solicitedNode
