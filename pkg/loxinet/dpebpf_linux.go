@@ -52,6 +52,7 @@ import (
 	"runtime/debug"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 	"unsafe"
@@ -151,6 +152,9 @@ type (
 var (
 	proxyCtInfo []*DpCtInfo
 )
+
+// ctWalkLen - entries found by the last DpTableGet walk of the CT map
+var ctWalkLen atomic.Int64
 
 // DpEbpfH - context container
 type DpEbpfH struct {
@@ -1778,7 +1782,8 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 	}
 
 	if tbl == C.LL_DP_CT_MAP {
-		ctMap := make(map[string]*DpCtInfo)
+		// The last walk's size: the map's maximum would be far too much
+		ctMap := make(map[string]*DpCtInfo, ctWalkLen.Load())
 		var key *C.struct_dp_ct_key
 		nextKey := new(C.struct_dp_ct_key)
 		var tact C.struct_dp_ct_tact
@@ -1830,6 +1835,7 @@ func (e *DpEbpfH) DpTableGet(w *TableDpWorkQ) (DpRetT, error) {
 			}
 		}
 		proxyCtInfo = nil
+		ctWalkLen.Store(int64(len(ctMap)))
 
 		return ctMap, nil
 	}

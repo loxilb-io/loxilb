@@ -18,6 +18,7 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -136,7 +137,23 @@ type Stats struct {
 	Bytes   uint64
 	Packets uint64
 }
-type ConntrackKey string
+
+// ConntrackKey identifies a flow in the metrics. It holds no pointers but its
+// two strings, which come from constants and rule names and so are shared.
+type ConntrackKey struct {
+	Sip, Dip     [16]byte
+	Sport, Dport uint16
+	Proto        string
+	ServiceName  string
+}
+
+// flowEntry is what the metrics keep of a conntrack entry. A conntrack entry's
+// own key also has its ident, so several can map to one ConntrackKey: the
+// counters count entries, and Stats is the last one's.
+type flowEntry struct {
+	Stats
+	nActive, nClosed, nErr uint32
+}
 
 type SharedMetric struct {
 	Name   string            `json:"name"`
@@ -145,14 +162,17 @@ type SharedMetric struct {
 }
 
 var (
-	hooks                  cmn.NetHookInterface
-	ConntrackInfo          []cmn.CtInfo
-	EndPointInfo           []cmn.EndPointMod
-	LBRuleInfo             []cmn.LbRuleMod
-	FWRuleInfo             []cmn.FwRuleMod
-	err                    error
-	mutex                  *sync.Mutex
-	ConntrackStats         map[ConntrackKey]Stats // Key [string] : sip dip pro sport dport
+	hooks        cmn.NetHookInterface
+	EndPointInfo []cmn.EndPointMod
+	LBRuleInfo   []cmn.LbRuleMod
+	FWRuleInfo   []cmn.FwRuleMod
+	mutex        *sync.Mutex
+	// conntrackFlows and ConntrackStats are the last read's flows, and
+	// prevConntrackInfo and prevConntrackStats what each sweep saw last. A map
+	// is never changed once built, so they share it instead of copying. Only
+	// ConntrackStats is ever reset.
+	conntrackFlows         map[ConntrackKey]flowEntry
+	ConntrackStats         map[ConntrackKey]flowEntry
 	PreFlowCounts          int
 	PromethusDefaultPeriod = 10 * time.Second
 	PromethusPartialPeriod = (PromethusDefaultPeriod / 6)
@@ -394,8 +414,8 @@ var (
 		[]string{"service"},
 	)
 
-	prevConntrackStats = make(map[ConntrackKey]Stats)
-	prevConntrackInfo  = make(map[ConntrackKey]bool)
+	prevConntrackStats = make(map[ConntrackKey]flowEntry)
+	prevConntrackInfo  = make(map[ConntrackKey]flowEntry)
 
 	// Baselines for the cumulative data-plane counters. The exporter reports
 	// deltas, so it must remember what it last saw per endpoint / per rule.
@@ -914,7 +934,7 @@ func Init() {
 	prometheusCtx, prometheusCancel = context.WithCancel(context.Background())
 
 	// Make Conntrack Statistic map
-	ConntrackStats = make(map[ConntrackKey]Stats)
+	ConntrackStats = make(map[ConntrackKey]flowEntry)
 	mutex = &sync.Mutex{}
 
 	// Reset the data-plane counter baselines so a re-enable starts fresh and
@@ -947,9 +967,86 @@ func toJSON(v interface{}) string {
 }
 
 func MakeConntrackKey(c cmn.CtInfo) (key ConntrackKey) {
-	return ConntrackKey(fmt.Sprintf("%s|%05d|%s|%05d|%v|%s",
-		c.Sip, c.Sport, c.Dip, c.Dport, c.Proto, c.ServiceName))
+	copy(key.Sip[:], c.Sip.To16())
+	copy(key.Dip[:], c.Dip.To16())
+	key.Sport = c.Sport
+	key.Dport = c.Dport
+	key.Proto = c.Proto
+	key.ServiceName = c.ServiceName
+	return key
 }
+
+// keyIP gives an address of a ConntrackKey in the form of net.IP.String
+func keyIP(addr [16]byte) string {
+	return net.IP(addr[:]).String()
+}
+
+// buildConntrackFlows makes the per-flow map of one conntrack read
+func buildConntrackFlows(info []cmn.CtInfo) map[ConntrackKey]flowEntry {
+	flows := make(map[ConntrackKey]flowEntry, len(info))
+	for i := range info {
+		ct := &info[i]
+		key := MakeConntrackKey(*ct)
+		e := flows[key]
+		e.Stats = Stats{Bytes: ct.Bytes, Packets: ct.Pkts}
+		if ct.CState == conntrackStateClosed {
+			e.nClosed++
+		} else {
+			e.nActive++
+			if isErrorState(*ct) {
+				e.nErr++
+			}
+		}
+		flows[key] = e
+	}
+	return flows
+}
+
+// flowCounts is the result of one sweep of the active flows
+type flowCounts struct {
+	tcp, udp, sctp, closed, active, newFlows, errors, left int
+	newRequests, newErrors                                 map[string]int
+}
+
+// countFlows counts the flows of a read, given those of the previous sweep. A
+// flow is new if it was not active then, and it has left if it was but no
+// longer is: left is also part of closed
+func countFlows(cur, prev map[ConntrackKey]flowEntry) flowCounts {
+	c := flowCounts{newRequests: make(map[string]int), newErrors: make(map[string]int)}
+	for key, e := range cur {
+		n := int(e.nActive)
+		c.closed += int(e.nClosed)
+		if n == 0 {
+			continue
+		}
+		if prev[key].nActive == 0 {
+			c.newFlows += n
+			c.newRequests[key.ServiceName] += n
+		}
+		c.active += n
+		switch key.Proto {
+		case "tcp":
+			c.tcp += n
+		case "udp":
+			c.udp += n
+		case "sctp":
+			c.sctp += n
+		}
+		if e.nErr > 0 {
+			c.errors += int(e.nErr)
+			c.newErrors[key.ServiceName] += int(e.nErr)
+		}
+	}
+	for key, e := range prev {
+		if e.nActive > 0 && cur[key].nActive == 0 {
+			c.closed++
+			c.left++
+		}
+	}
+	return c
+}
+
+const conntrackStateClosed = "closed"
 
 func isErrorState(c cmn.CtInfo) bool {
 	// Define your error conditions here.
@@ -966,7 +1063,7 @@ func RunResetCounts(ctx context.Context) {
 			return
 		case <-ticker.C:
 			mutex.Lock()
-			ConntrackStats = map[ConntrackKey]Stats{}
+			ConntrackStats = map[ConntrackKey]flowEntry{}
 			mutex.Unlock()
 		}
 	}
@@ -980,22 +1077,19 @@ func RunGetConntrack(ctx context.Context) {
 		default:
 		}
 
-		ConntrackInfo, err = hooks.NetCtInfoGet()
+		info, err := hooks.NetCtInfoGet()
 		if err != nil {
 			tk.LogIt(tk.LogDebug, "[Prometheus] Error occurred while getting conntrack info: %v\n", err)
+			mutex.Lock()
+			conntrackFlows = nil
+			mutex.Unlock()
 			continue
 		}
-		localStats := make(map[ConntrackKey]Stats, len(ConntrackInfo))
-		for _, ct := range ConntrackInfo {
-			key := MakeConntrackKey(ct)
-			localStats[key] = Stats{
-				Bytes:   ct.Bytes,
-				Packets: ct.Pkts,
-			}
-		}
+		flows := buildConntrackFlows(info)
 
 		mutex.Lock()
-		ConntrackStats = localStats
+		conntrackFlows = flows
+		ConntrackStats = flows
 		mutex.Unlock()
 
 		time.Sleep(PromethusDefaultPeriod)
@@ -1190,80 +1284,23 @@ func RunActiveConntrackCount(ctx context.Context) {
 			return
 		default:
 			mutex.Lock()
-			info := make([]cmn.CtInfo, len(ConntrackInfo))
-			copy(info, ConntrackInfo)
+			flows := conntrackFlows
 			mutex.Unlock()
 
-			// Initialize counters
-			var (
-				tcpCount    int
-				udpCount    int
-				sctpCount   int
-				closedCount int
-				activeCount int
-				newFlows    int
-				errorCount  int
-				newRequests = make(map[string]int)
-				newErrors   = make(map[string]int)
-			)
+			counts := countFlows(flows, prevConntrackInfo)
+			activeCount, closedCount, newFlows, errorCount := counts.active, counts.closed, counts.newFlows, counts.errors
+			tcpCount, udpCount, sctpCount := counts.tcp, counts.udp, counts.sctp
+			newRequests, newErrors := counts.newRequests, counts.newErrors
 
-			// Constants for protocol and state
-			const (
-				ProtoTCP    = "tcp"
-				ProtoUDP    = "udp"
-				ProtoSCTP   = "sctp"
-				StateClosed = "closed"
-			)
-
-			currentConntrackInfo := make(map[ConntrackKey]bool)
-
-			for _, ct := range info {
-				if ct.CState == StateClosed {
-					closedCount++
-				} else {
-					// Generate key and check for new flows
-					key := MakeConntrackKey(ct)
-					if !prevConntrackInfo[key] {
-						newFlows++
-						newRequests[ct.ServiceName]++
-					}
-					activeCount++
-					switch ct.Proto {
-					case ProtoTCP:
-						tcpCount++
-					case ProtoUDP:
-						udpCount++
-					case ProtoSCTP:
-						sctpCount++
-					}
-					currentConntrackInfo[key] = true
-
-					// Check for error state
-					if isErrorState(ct) {
-						errorCount++
-						newErrors[ct.ServiceName]++
-					}
-				}
-			}
-
-			// Calculate deleted flows which are not present in the current conntrack info
-			// but were present in the previous conntrack info
-			// This is done to calculate the number of flows that have been closed
-			// and are no longer present in the conntrack table
 			// A key present last sweep and absent now has left the table for
-			// good: prevConntrackInfo is replaced by currentConntrackInfo at the
-			// end of this sweep, so each flow reaches this branch exactly once
-			// and the counter cannot double-count it. Entries still sitting in
-			// the table with CState "closed" are deliberately NOT counted here —
-			// they persist across sweeps, and counting them every sweep is what
-			// would inflate the counter. They are reflected in the
-			// inactive_flow_count gauge instead.
-			for key := range prevConntrackInfo {
-				if !currentConntrackInfo[key] {
-					closedCount++
-					closedConnectionsProcessed.Inc()
-				}
-			}
+			// good: prevConntrackInfo is replaced at the end of this sweep, so
+			// each flow is counted here exactly once and the counter cannot
+			// double-count it. Entries still sitting in the table with CState
+			// "closed" are deliberately NOT counted here -- they persist across
+			// sweeps, and counting them every sweep is what would inflate the
+			// counter. They are reflected in the inactive_flow_count gauge
+			// instead.
+			closedConnectionsProcessed.Add(float64(counts.left))
 
 			// Update Prometheus metrics
 			activeConntrackCount.Set(float64(activeCount))
@@ -1314,7 +1351,7 @@ func RunActiveConntrackCount(ctx context.Context) {
 
 			// Update the previous conntrack info
 			mutex.Lock()
-			prevConntrackInfo = currentConntrackInfo
+			prevConntrackInfo = flows
 			mutex.Unlock()
 		}
 		time.Sleep(PromethusDefaultPeriod)
@@ -1356,14 +1393,6 @@ func RunHostCount(ctx context.Context) {
 	}
 }
 
-func parseConntrackKey(key ConntrackKey) (sip, sport, dip, dport, proto, serviceName string) {
-	parts := strings.Split(string(key), "|")
-	if len(parts) == 6 {
-		return parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]
-	}
-	return "", "", "", "", "", ""
-}
-
 func RunProcessedStatistic(ctx context.Context) {
 	for {
 		select {
@@ -1371,20 +1400,14 @@ func RunProcessedStatistic(ctx context.Context) {
 			return
 		default:
 			mutex.Lock()
-			localPrevConntrackStats := make(map[ConntrackKey]Stats, len(ConntrackStats))
+			localPrevConntrackStats := ConntrackStats
 			serviceTraffic := make(map[string]float64)
 			serviceDipTraffic := make(map[string]map[string]float64)
-
-			for k, ct := range ConntrackStats {
-				localPrevConntrackStats[k] = ct
-			}
 			mutex.Unlock()
 
 			for k, ct := range localPrevConntrackStats {
-				prevStats, exists := prevConntrackStats[k]
-				if !exists {
-					prevStats = Stats{Bytes: 0, Packets: 0}
-				}
+				// The zero value, if the flow is new
+				prevStats := prevConntrackStats[k]
 
 				var diffBytes uint64
 				var diffPackets uint64
@@ -1417,7 +1440,7 @@ func RunProcessedStatistic(ctx context.Context) {
 					// collectLbRuleTraffic — adding the sweep deltas on top
 					// would double-count. This path owns only what needs flow
 					// identity, which exists nowhere else.
-					sip, _, dip, _, _, serviceName := parseConntrackKey(k)
+					sip, dip, serviceName := keyIP(k.Sip), keyIP(k.Dip), k.ServiceName
 					lbRuleInteractionBytes.WithLabelValues(serviceName, sip, dip).Add(float64(diffBytes))
 					lbRuleInteractionPackets.WithLabelValues(serviceName, sip, dip).Add(float64(diffPackets))
 

@@ -926,6 +926,7 @@ func (dp *DpH) DpMapGetCt4() []cmn.CtInfo {
 
 	switch r := ret.(type) {
 	case map[string]*DpCtInfo:
+		CtInfoArr = make([]cmn.CtInfo, 0, len(r))
 		for _, dCti := range r {
 			servName = "-"
 			mh.mtx.Lock()

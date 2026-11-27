@@ -31,7 +31,7 @@ func ConfigGetConntrack(params operations.GetConfigConntrackAllParams, principal
 		return &ErrorResponse{Payload: ResultErrorResponseErrorMessage(err.Error())}
 	}
 	var result []*models.ConntrackEntry
-	result = make([]*models.ConntrackEntry, 0)
+	result = make([]*models.ConntrackEntry, 0, len(res))
 	for _, conntrack := range res {
 		var tmpResult models.ConntrackEntry
 		tmpResult.Bytes = int64(conntrack.Bytes)
